@@ -56,7 +56,7 @@
       <rsc_colocation id="rsc_colocation-master-1" score="INFINITY" rsc="msPostgresql" rsc-role="Master" with-rsc="A-master">
         <!--### Resource Colocation ###-->
       </rsc_colocation>
-      <rsc_order id="test-order-1" score="0" first="A-master" first-action="start" then="msPostgresql" then-action="promote" symmetrical="false">
+      <rsc_order id="test-order-1" kind="Optional" first="A-master" first-action="start" then="msPostgresql" then-action="promote" symmetrical="false">
         <!--### Resource Order ###-->
       </rsc_order>
     </constraints>

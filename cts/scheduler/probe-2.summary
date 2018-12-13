@@ -7,14 +7,14 @@ Online: [ wc01 ]
      fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+ Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc02 ]
      Slaves: [ wc01 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc02
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc02
      mysql-server	(ocf::heartbeat:mysql):	Started wc02
- Master/Slave Set: ms_drbd_www [drbd_www]
+ Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Slaves: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]
@@ -106,7 +106,6 @@ Executing cluster transition:
  * Pseudo action:   ms_drbd_mysql_post_notify_stopped_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms_drbd_mysql_pre_notify_promote_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_promote_0
@@ -134,14 +133,14 @@ Online: [ wc01 ]
      fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+ Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc01
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc01
      mysql-server	(ocf::heartbeat:mysql):	Started wc01
- Master/Slave Set: ms_drbd_www [drbd_www]
+ Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]

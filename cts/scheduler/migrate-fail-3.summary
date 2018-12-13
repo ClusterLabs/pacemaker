@@ -13,7 +13,6 @@ Executing cluster transition:
  * Resource action: test-vm         stop on hex-13
  * Pseudo action:   load_stopped_hex-14
  * Pseudo action:   load_stopped_hex-13
- * Pseudo action:   all_stopped
  * Resource action: test-vm         start on hex-13
 
 Revised cluster status:

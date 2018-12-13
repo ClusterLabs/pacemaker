@@ -20,7 +20,6 @@ Executing cluster transition:
  * Pseudo action:   foo_stopped_0
  * Pseudo action:   bar_stop_0
  * Resource action: rsc3            stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   bar_stopped_0
  * Pseudo action:   bar_start_0
  * Resource action: rsc3            start on node1

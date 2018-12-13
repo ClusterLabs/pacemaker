@@ -30,7 +30,7 @@
           <resource_ref id="rsc4"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_order id="template1-order" score="INFINITY">
+      <rsc_order id="template1-order">
         <resource_set id="template1-order-0">
           <resource_ref id="rsc4"/>
         </resource_set>

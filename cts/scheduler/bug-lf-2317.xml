@@ -63,7 +63,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="ms_drbd_r0" first-action="promote" id="drbd0predHostingIsg" score="INFINITY" then="HostingIsg" then-action="start"/>
+      <rsc_order first="ms_drbd_r0" first-action="promote" id="drbd0predHostingIsg" then="HostingIsg" then-action="start"/>
     </constraints>
     <op_defaults/>
   </configuration>

@@ -45,7 +45,6 @@ Executing cluster transition:
  * Resource action: prmFsPostgreSQLDB1-1 stop on act1
  * Resource action: prmExPostgreSQLDB1 stop on act1
  * Pseudo action:   load_stopped_act1
- * Pseudo action:   all_stopped
  * Pseudo action:   grpPostgreSQLDB1_stopped_0
  * Pseudo action:   grpPostgreSQLDB1_start_0
  * Resource action: prmExPostgreSQLDB1 start on sby1

@@ -104,16 +104,16 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" kind="Optional"/>
       <rsc_location id="sles10_location" rsc="sles10">
         <rule id="pref_sles10_location" score="INFINITY">
           <expression attribute="#uname" operation="eq" value="node1" id="expression.id22453"/>
         </rule>
       </rsc_location>
-      <rsc_order id="vm1orderconstraints-01" first="imagestorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="vm1orderconstraints-02" first="configstorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="vm1orderconstraints-01" first="imagestorecloneset" then="sles10" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="vm1orderconstraints-02" first="configstorecloneset" then="sles10" then-action="start" first-action="start" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

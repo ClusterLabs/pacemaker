@@ -4409,8 +4409,8 @@
       <rsc_location id="loc-node-params-mgmt01" node="mgmt01" rsc="cl-node-params" score="-INFINITY"/>
       <rsc_colocation id="clvmd-with-dlm" rsc="cl-clvmd" score="INFINITY" with-rsc="cl-dlm"/>
       <rsc_colocation id="libvirtd-with-node-params" rsc="cl-libvirtd" score="INFINITY" with-rsc="cl-node-params"/>
-      <rsc_order first="cl-dlm" first-action="start" id="clvmd-after-dlm" score="INFINITY" then="cl-clvmd" then-action="start"/>
-      <rsc_order first="cl-node-params" first-action="start" id="libvirtd-after-node-params" score="INFINITY" then="cl-libvirtd" then-action="start"/>
+      <rsc_order first="cl-dlm" first-action="start" id="clvmd-after-dlm" then="cl-clvmd" then-action="start"/>
+      <rsc_order first="cl-node-params" first-action="start" id="libvirtd-after-node-params" then="cl-libvirtd" then-action="start"/>
       <rsc_location id="loc-vlan1-if-mgmt01" node="mgmt01" rsc="cl-vlan1-if" score="-INFINITY"/>
       <rsc_location id="loc-vlan101-if-mgmt01" node="mgmt01" rsc="cl-vlan101-if" score="-INFINITY"/>
       <rsc_location id="loc-vlan102-if-mgmt01" node="mgmt01" rsc="cl-vlan102-if" score="-INFINITY"/>
@@ -4429,14 +4429,14 @@
       <rsc_colocation id="vds-ok-pool-1-iscsi-with-multipathd" rsc="cl-vds-ok-pool-1-iscsi" score="INFINITY" with-rsc="cl-multipathd"/>
       <rsc_colocation id="vds-ok-pool-1-vg-with-blkdev" rsc="cl-vds-ok-pool-1-vg" score="INFINITY" with-rsc="cl-vds-ok-pool-1-iscsi"/>
       <rsc_colocation id="vds-ok-pool-1-vg-with-clvmd" rsc="cl-vds-ok-pool-1-vg" score="INFINITY" with-rsc="cl-clvmd"/>
-      <rsc_order first="cl-iscsid" first-action="start" id="vds-ok-pool-0-iscsi-after-iscsid" score="INFINITY" then="cl-vds-ok-pool-0-iscsi" then-action="start"/>
-      <rsc_order first="cl-multipathd" first-action="start" id="vds-ok-pool-0-iscsi-after-multipathd" score="INFINITY" then="cl-vds-ok-pool-0-iscsi" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-iscsi" first-action="start" id="vds-ok-pool-0-vg-after-blkdev" score="INFINITY" then="cl-vds-ok-pool-0-vg" then-action="start"/>
-      <rsc_order first="cl-clvmd" first-action="start" id="vds-ok-pool-0-vg-after-clvmd" score="INFINITY" then="cl-vds-ok-pool-0-vg" then-action="start"/>
-      <rsc_order first="cl-iscsid" first-action="start" id="vds-ok-pool-1-iscsi-after-iscsid" score="INFINITY" then="cl-vds-ok-pool-1-iscsi" then-action="start"/>
-      <rsc_order first="cl-multipathd" first-action="start" id="vds-ok-pool-1-iscsi-after-multipathd" score="INFINITY" then="cl-vds-ok-pool-1-iscsi" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-iscsi" first-action="start" id="vds-ok-pool-1-vg-after-blkdev" score="INFINITY" then="cl-vds-ok-pool-1-vg" then-action="start"/>
-      <rsc_order first="cl-clvmd" first-action="start" id="vds-ok-pool-1-vg-after-clvmd" score="INFINITY" then="cl-vds-ok-pool-1-vg" then-action="start"/>
+      <rsc_order first="cl-iscsid" first-action="start" id="vds-ok-pool-0-iscsi-after-iscsid" then="cl-vds-ok-pool-0-iscsi" then-action="start"/>
+      <rsc_order first="cl-multipathd" first-action="start" id="vds-ok-pool-0-iscsi-after-multipathd" then="cl-vds-ok-pool-0-iscsi" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-iscsi" first-action="start" id="vds-ok-pool-0-vg-after-blkdev" then="cl-vds-ok-pool-0-vg" then-action="start"/>
+      <rsc_order first="cl-clvmd" first-action="start" id="vds-ok-pool-0-vg-after-clvmd" then="cl-vds-ok-pool-0-vg" then-action="start"/>
+      <rsc_order first="cl-iscsid" first-action="start" id="vds-ok-pool-1-iscsi-after-iscsid" then="cl-vds-ok-pool-1-iscsi" then-action="start"/>
+      <rsc_order first="cl-multipathd" first-action="start" id="vds-ok-pool-1-iscsi-after-multipathd" then="cl-vds-ok-pool-1-iscsi" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-iscsi" first-action="start" id="vds-ok-pool-1-vg-after-blkdev" then="cl-vds-ok-pool-1-vg" then-action="start"/>
+      <rsc_order first="cl-clvmd" first-action="start" id="vds-ok-pool-1-vg-after-clvmd" then="cl-vds-ok-pool-1-vg" then-action="start"/>
       <rsc_location id="loc-libvirt-images-pool-mgmt01" node="mgmt01" rsc="cl-libvirt-images-pool" score="-INFINITY"/>
       <rsc_location id="loc-vds-ok-pool-0-pool-mgmt01" node="mgmt01" rsc="cl-vds-ok-pool-0-pool" score="-INFINITY"/>
       <rsc_location id="loc-vds-ok-pool-1-pool-mgmt01" node="mgmt01" rsc="cl-vds-ok-pool-1-pool" score="-INFINITY"/>
@@ -4446,21 +4446,21 @@
       <rsc_colocation id="vds-ok-pool-0-pool-with-vg" rsc="cl-vds-ok-pool-0-pool" score="INFINITY" with-rsc="cl-vds-ok-pool-0-vg"/>
       <rsc_colocation id="vds-ok-pool-1-pool-with-libvirtd" rsc="cl-vds-ok-pool-1-pool" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vds-ok-pool-1-pool-with-vg" rsc="cl-vds-ok-pool-1-pool" score="INFINITY" with-rsc="cl-vds-ok-pool-1-vg"/>
-      <rsc_order first="cl-libvirt-images-fs" first-action="start" id="libvirt-images-pool-after-fs" score="INFINITY" then="cl-libvirt-images-pool" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="libvirt-images-pool-after-libvirtd" score="INFINITY" then="cl-libvirt-images-pool" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vds-ok-pool-0-pool-after-libvirtd" score="INFINITY" then="cl-vds-ok-pool-0-pool" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-vg" first-action="start" id="vds-ok-pool-0-pool-after-vg" score="INFINITY" then="cl-vds-ok-pool-0-pool" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vds-ok-pool-1-pool-after-libvirtd" score="INFINITY" then="cl-vds-ok-pool-1-pool" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-vg" first-action="start" id="vds-ok-pool-1-pool-after-vg" score="INFINITY" then="cl-vds-ok-pool-1-pool" then-action="start"/>
+      <rsc_order first="cl-libvirt-images-fs" first-action="start" id="libvirt-images-pool-after-fs" then="cl-libvirt-images-pool" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="libvirt-images-pool-after-libvirtd" then="cl-libvirt-images-pool" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vds-ok-pool-0-pool-after-libvirtd" then="cl-vds-ok-pool-0-pool" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-vg" first-action="start" id="vds-ok-pool-0-pool-after-vg" then="cl-vds-ok-pool-0-pool" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vds-ok-pool-1-pool-after-libvirtd" then="cl-vds-ok-pool-1-pool" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-vg" first-action="start" id="vds-ok-pool-1-pool-after-vg" then="cl-vds-ok-pool-1-pool" then-action="start"/>
       <rsc_colocation id="git.vds-ok.com-vm-with-libvirtd" rsc="git.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="git.vds-ok.com-vm-with-netif-0" rsc="git.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan4-if"/>
       <rsc_colocation id="git.vds-ok.com-vm-with-storage-0" rsc="git.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="git.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="git.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan4-if" first-action="start" id="git.vds-ok.com-vm-after-netif-0" score="INFINITY" then="git.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="git.vds-ok.com-vm-after-storage-0" score="INFINITY" then="git.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="git.vds-ok.com-vm-after-libvirtd" then="git.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan4-if" first-action="start" id="git.vds-ok.com-vm-after-netif-0" then="git.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="git.vds-ok.com-vm-after-storage-0" then="git.vds-ok.com-vm" then-action="start"/>
       <rsc_location id="loc-libvirt-qpid-mgmt01" node="mgmt01" rsc="cl-libvirt-qpid" score="-INFINITY"/>
       <rsc_colocation id="libvirt-qpid-with-libvirtd" rsc="cl-libvirt-qpid" score="INFINITY" with-rsc="cl-libvirtd"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="libvirt-qpid-after-libvirtd" score="INFINITY" then="cl-libvirt-qpid" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="libvirt-qpid-after-libvirtd" then="cl-libvirt-qpid" then-action="start"/>
       <rsc_colocation id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirt-qpid" rsc="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-qpid"/>
       <rsc_colocation id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirtd" rsc="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirt-qpid" rsc="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-qpid"/>
@@ -4493,443 +4493,443 @@
       <rsc_colocation id="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirtd" rsc="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirt-qpid" rsc="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-qpid"/>
       <rsc_colocation id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-with-libvirtd" rsc="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" score="INFINITY" then="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-qpid" first-action="start" id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirt-qpid" then="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm-after-libvirtd" then="vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="f13-x64-devel.vds-ok.com-vm-with-libvirtd" rsc="f13-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="f13-x64-devel.vds-ok.com-vm-with-netif-0" rsc="f13-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan5-if"/>
       <rsc_colocation id="f13-x64-devel.vds-ok.com-vm-with-storage-0" rsc="f13-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan5-if" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-netif-0" score="INFINITY" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-storage-0" score="INFINITY" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-libvirtd" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan5-if" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-netif-0" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-storage-0" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="eu2.ca-pages.com-vm-with-libvirtd" rsc="eu2.ca-pages.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="eu2.ca-pages.com-vm-with-netif-0" rsc="eu2.ca-pages.com-vm" score="INFINITY" with-rsc="cl-vlan101-if"/>
       <rsc_colocation id="eu2.ca-pages.com-vm-with-storage-0" rsc="eu2.ca-pages.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="eu2.ca-pages.com-vm-after-libvirtd" score="INFINITY" then="eu2.ca-pages.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="eu2.ca-pages.com-vm-after-netif-0" score="INFINITY" then="eu2.ca-pages.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="eu2.ca-pages.com-vm-after-storage-0" score="INFINITY" then="eu2.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="eu2.ca-pages.com-vm-after-libvirtd" then="eu2.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="eu2.ca-pages.com-vm-after-netif-0" then="eu2.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="eu2.ca-pages.com-vm-after-storage-0" then="eu2.ca-pages.com-vm" then-action="start"/>
       <rsc_colocation id="zakaz.transferrus.ru-vm-with-libvirtd" rsc="zakaz.transferrus.ru-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="zakaz.transferrus.ru-vm-with-netif-0" rsc="zakaz.transferrus.ru-vm" score="INFINITY" with-rsc="cl-vlan101-if"/>
       <rsc_colocation id="zakaz.transferrus.ru-vm-with-storage-0" rsc="zakaz.transferrus.ru-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="zakaz.transferrus.ru-vm-after-libvirtd" score="INFINITY" then="zakaz.transferrus.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="zakaz.transferrus.ru-vm-after-netif-0" score="INFINITY" then="zakaz.transferrus.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="zakaz.transferrus.ru-vm-after-storage-0" score="INFINITY" then="zakaz.transferrus.ru-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="zakaz.transferrus.ru-vm-after-libvirtd" then="zakaz.transferrus.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="zakaz.transferrus.ru-vm-after-netif-0" then="zakaz.transferrus.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="zakaz.transferrus.ru-vm-after-storage-0" then="zakaz.transferrus.ru-vm" then-action="start"/>
       <rsc_location id="loc-vlan200-if-mgmt01" node="mgmt01" rsc="cl-vlan200-if" score="-INFINITY"/>
       <rsc_colocation id="anbriz-gw-vm-with-libvirtd" rsc="anbriz-gw-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="anbriz-gw-vm-with-netif-0" rsc="anbriz-gw-vm" score="INFINITY" with-rsc="cl-vlan101-if"/>
       <rsc_colocation id="anbriz-gw-vm-with-netif-1" rsc="anbriz-gw-vm" score="INFINITY" with-rsc="cl-vlan200-if"/>
       <rsc_colocation id="anbriz-gw-vm-with-storage-0" rsc="anbriz-gw-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="anbriz-gw-vm-after-libvirtd" score="INFINITY" then="anbriz-gw-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="anbriz-gw-vm-after-netif-0" score="INFINITY" then="anbriz-gw-vm" then-action="start"/>
-      <rsc_order first="cl-vlan200-if" first-action="start" id="anbriz-gw-vm-after-netif-1" score="INFINITY" then="anbriz-gw-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="anbriz-gw-vm-after-storage-0" score="INFINITY" then="anbriz-gw-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="anbriz-gw-vm-after-libvirtd" then="anbriz-gw-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="anbriz-gw-vm-after-netif-0" then="anbriz-gw-vm" then-action="start"/>
+      <rsc_order first="cl-vlan200-if" first-action="start" id="anbriz-gw-vm-after-netif-1" then="anbriz-gw-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="anbriz-gw-vm-after-storage-0" then="anbriz-gw-vm" then-action="start"/>
       <rsc_colocation id="anbriz-work-vm-with-libvirtd" rsc="anbriz-work-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="anbriz-work-vm-with-netif-0" rsc="anbriz-work-vm" score="INFINITY" with-rsc="cl-vlan200-if"/>
       <rsc_colocation id="anbriz-work-vm-with-storage-0" rsc="anbriz-work-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="anbriz-work-vm-after-libvirtd" score="INFINITY" then="anbriz-work-vm" then-action="start"/>
-      <rsc_order first="cl-vlan200-if" first-action="start" id="anbriz-work-vm-after-netif-0" score="INFINITY" then="anbriz-work-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="anbriz-work-vm-after-storage-0" score="INFINITY" then="anbriz-work-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="anbriz-work-vm-after-libvirtd" then="anbriz-work-vm" then-action="start"/>
+      <rsc_order first="cl-vlan200-if" first-action="start" id="anbriz-work-vm-after-netif-0" then="anbriz-work-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="anbriz-work-vm-after-storage-0" then="anbriz-work-vm" then-action="start"/>
       <rsc_colocation id="lenny-x32-devel-vm-with-libvirtd" rsc="lenny-x32-devel-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="lenny-x32-devel-vm-with-netif-0" rsc="lenny-x32-devel-vm" score="INFINITY" with-rsc="cl-vlan5-if"/>
       <rsc_colocation id="lenny-x32-devel-vm-with-storage-0" rsc="lenny-x32-devel-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="lenny-x32-devel-vm-after-libvirtd" score="INFINITY" then="lenny-x32-devel-vm" then-action="start"/>
-      <rsc_order first="cl-vlan5-if" first-action="start" id="lenny-x32-devel-vm-after-netif-0" score="INFINITY" then="lenny-x32-devel-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="lenny-x32-devel-vm-after-storage-0" score="INFINITY" then="lenny-x32-devel-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="lenny-x32-devel-vm-after-libvirtd" then="lenny-x32-devel-vm" then-action="start"/>
+      <rsc_order first="cl-vlan5-if" first-action="start" id="lenny-x32-devel-vm-after-netif-0" then="lenny-x32-devel-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="lenny-x32-devel-vm-after-storage-0" then="lenny-x32-devel-vm" then-action="start"/>
       <rsc_colocation id="vptest1.vds-ok.com-vm-with-libvirtd" rsc="vptest1.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest1.vds-ok.com-vm-with-netif-0" rsc="vptest1.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest1.vds-ok.com-vm-with-storage-0" rsc="vptest1.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest1.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest1.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest1.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest1.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest1.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest1.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest1.vds-ok.com-vm-after-libvirtd" then="vptest1.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest1.vds-ok.com-vm-after-netif-0" then="vptest1.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest1.vds-ok.com-vm-after-storage-0" then="vptest1.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest2.vds-ok.com-vm-with-libvirtd" rsc="vptest2.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest2.vds-ok.com-vm-with-netif-0" rsc="vptest2.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest2.vds-ok.com-vm-with-storage-0" rsc="vptest2.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest2.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest2.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest2.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest2.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest2.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest2.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest2.vds-ok.com-vm-after-libvirtd" then="vptest2.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest2.vds-ok.com-vm-after-netif-0" then="vptest2.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest2.vds-ok.com-vm-after-storage-0" then="vptest2.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest3.vds-ok.com-vm-with-libvirtd" rsc="vptest3.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest3.vds-ok.com-vm-with-netif-0" rsc="vptest3.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest3.vds-ok.com-vm-with-storage-0" rsc="vptest3.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest3.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest3.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest3.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest3.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest3.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest3.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest3.vds-ok.com-vm-after-libvirtd" then="vptest3.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest3.vds-ok.com-vm-after-netif-0" then="vptest3.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest3.vds-ok.com-vm-after-storage-0" then="vptest3.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest4.vds-ok.com-vm-with-libvirtd" rsc="vptest4.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest4.vds-ok.com-vm-with-netif-0" rsc="vptest4.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest4.vds-ok.com-vm-with-storage-0" rsc="vptest4.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest4.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest4.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest4.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest4.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest4.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest4.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest4.vds-ok.com-vm-after-libvirtd" then="vptest4.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest4.vds-ok.com-vm-after-netif-0" then="vptest4.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest4.vds-ok.com-vm-after-storage-0" then="vptest4.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest5.vds-ok.com-vm-with-libvirtd" rsc="vptest5.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest5.vds-ok.com-vm-with-netif-0" rsc="vptest5.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest5.vds-ok.com-vm-with-storage-0" rsc="vptest5.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest5.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest5.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest5.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest5.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest5.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest5.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest5.vds-ok.com-vm-after-libvirtd" then="vptest5.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest5.vds-ok.com-vm-after-netif-0" then="vptest5.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest5.vds-ok.com-vm-after-storage-0" then="vptest5.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest6.vds-ok.com-vm-with-libvirtd" rsc="vptest6.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest6.vds-ok.com-vm-with-netif-0" rsc="vptest6.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest6.vds-ok.com-vm-with-storage-0" rsc="vptest6.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest6.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest6.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest6.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest6.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest6.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest6.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest6.vds-ok.com-vm-after-libvirtd" then="vptest6.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest6.vds-ok.com-vm-after-netif-0" then="vptest6.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest6.vds-ok.com-vm-after-storage-0" then="vptest6.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest7.vds-ok.com-vm-with-libvirtd" rsc="vptest7.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest7.vds-ok.com-vm-with-netif-0" rsc="vptest7.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest7.vds-ok.com-vm-with-storage-0" rsc="vptest7.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest7.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest7.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest7.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest7.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest7.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest7.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest7.vds-ok.com-vm-after-libvirtd" then="vptest7.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest7.vds-ok.com-vm-after-netif-0" then="vptest7.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest7.vds-ok.com-vm-after-storage-0" then="vptest7.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest8.vds-ok.com-vm-with-libvirtd" rsc="vptest8.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest8.vds-ok.com-vm-with-netif-0" rsc="vptest8.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest8.vds-ok.com-vm-with-storage-0" rsc="vptest8.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest8.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest8.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest8.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest8.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest8.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest8.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest8.vds-ok.com-vm-after-libvirtd" then="vptest8.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest8.vds-ok.com-vm-after-netif-0" then="vptest8.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest8.vds-ok.com-vm-after-storage-0" then="vptest8.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest9.vds-ok.com-vm-with-libvirtd" rsc="vptest9.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest9.vds-ok.com-vm-with-netif-0" rsc="vptest9.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest9.vds-ok.com-vm-with-storage-0" rsc="vptest9.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest9.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest9.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest9.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest9.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest9.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest9.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest9.vds-ok.com-vm-after-libvirtd" then="vptest9.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest9.vds-ok.com-vm-after-netif-0" then="vptest9.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest9.vds-ok.com-vm-after-storage-0" then="vptest9.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest10.vds-ok.com-vm-with-libvirtd" rsc="vptest10.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest10.vds-ok.com-vm-with-netif-0" rsc="vptest10.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest10.vds-ok.com-vm-with-storage-0" rsc="vptest10.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest10.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest10.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest10.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest10.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest10.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest10.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest10.vds-ok.com-vm-after-libvirtd" then="vptest10.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest10.vds-ok.com-vm-after-netif-0" then="vptest10.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest10.vds-ok.com-vm-after-storage-0" then="vptest10.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest11.vds-ok.com-vm-with-libvirtd" rsc="vptest11.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest11.vds-ok.com-vm-with-netif-0" rsc="vptest11.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest11.vds-ok.com-vm-with-storage-0" rsc="vptest11.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest11.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest11.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest11.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest11.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest11.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest11.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest11.vds-ok.com-vm-after-libvirtd" then="vptest11.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest11.vds-ok.com-vm-after-netif-0" then="vptest11.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest11.vds-ok.com-vm-after-storage-0" then="vptest11.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest12.vds-ok.com-vm-with-libvirtd" rsc="vptest12.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest12.vds-ok.com-vm-with-netif-0" rsc="vptest12.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest12.vds-ok.com-vm-with-storage-0" rsc="vptest12.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest12.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest12.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest12.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest12.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest12.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest12.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest12.vds-ok.com-vm-after-libvirtd" then="vptest12.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest12.vds-ok.com-vm-after-netif-0" then="vptest12.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest12.vds-ok.com-vm-after-storage-0" then="vptest12.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest13.vds-ok.com-vm-with-libvirtd" rsc="vptest13.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest13.vds-ok.com-vm-with-netif-0" rsc="vptest13.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest13.vds-ok.com-vm-with-storage-0" rsc="vptest13.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest13.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest13.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest13.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest13.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest13.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest13.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest13.vds-ok.com-vm-after-libvirtd" then="vptest13.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest13.vds-ok.com-vm-after-netif-0" then="vptest13.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest13.vds-ok.com-vm-after-storage-0" then="vptest13.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest14.vds-ok.com-vm-with-libvirtd" rsc="vptest14.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest14.vds-ok.com-vm-with-netif-0" rsc="vptest14.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest14.vds-ok.com-vm-with-storage-0" rsc="vptest14.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest14.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest14.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest14.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest14.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest14.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest14.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest14.vds-ok.com-vm-after-libvirtd" then="vptest14.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest14.vds-ok.com-vm-after-netif-0" then="vptest14.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest14.vds-ok.com-vm-after-storage-0" then="vptest14.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest15.vds-ok.com-vm-with-libvirtd" rsc="vptest15.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest15.vds-ok.com-vm-with-netif-0" rsc="vptest15.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest15.vds-ok.com-vm-with-storage-0" rsc="vptest15.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest15.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest15.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest15.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest15.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest15.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest15.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest15.vds-ok.com-vm-after-libvirtd" then="vptest15.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest15.vds-ok.com-vm-after-netif-0" then="vptest15.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest15.vds-ok.com-vm-after-storage-0" then="vptest15.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest16.vds-ok.com-vm-with-libvirtd" rsc="vptest16.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest16.vds-ok.com-vm-with-netif-0" rsc="vptest16.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest16.vds-ok.com-vm-with-storage-0" rsc="vptest16.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest16.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest16.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest16.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest16.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest16.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest16.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest16.vds-ok.com-vm-after-libvirtd" then="vptest16.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest16.vds-ok.com-vm-after-netif-0" then="vptest16.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest16.vds-ok.com-vm-after-storage-0" then="vptest16.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest17.vds-ok.com-vm-with-libvirtd" rsc="vptest17.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest17.vds-ok.com-vm-with-netif-0" rsc="vptest17.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest17.vds-ok.com-vm-with-storage-0" rsc="vptest17.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest17.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest17.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest17.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest17.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest17.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest17.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest17.vds-ok.com-vm-after-libvirtd" then="vptest17.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest17.vds-ok.com-vm-after-netif-0" then="vptest17.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest17.vds-ok.com-vm-after-storage-0" then="vptest17.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest18.vds-ok.com-vm-with-libvirtd" rsc="vptest18.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest18.vds-ok.com-vm-with-netif-0" rsc="vptest18.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest18.vds-ok.com-vm-with-storage-0" rsc="vptest18.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest18.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest18.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest18.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest18.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest18.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest18.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest18.vds-ok.com-vm-after-libvirtd" then="vptest18.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest18.vds-ok.com-vm-after-netif-0" then="vptest18.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest18.vds-ok.com-vm-after-storage-0" then="vptest18.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest19.vds-ok.com-vm-with-libvirtd" rsc="vptest19.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest19.vds-ok.com-vm-with-netif-0" rsc="vptest19.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest19.vds-ok.com-vm-with-storage-0" rsc="vptest19.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest19.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest19.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest19.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest19.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest19.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest19.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest19.vds-ok.com-vm-after-libvirtd" then="vptest19.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest19.vds-ok.com-vm-after-netif-0" then="vptest19.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest19.vds-ok.com-vm-after-storage-0" then="vptest19.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest20.vds-ok.com-vm-with-libvirtd" rsc="vptest20.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest20.vds-ok.com-vm-with-netif-0" rsc="vptest20.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest20.vds-ok.com-vm-with-storage-0" rsc="vptest20.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest20.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest20.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest20.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest20.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest20.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest20.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest20.vds-ok.com-vm-after-libvirtd" then="vptest20.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest20.vds-ok.com-vm-after-netif-0" then="vptest20.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest20.vds-ok.com-vm-after-storage-0" then="vptest20.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest21.vds-ok.com-vm-with-libvirtd" rsc="vptest21.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest21.vds-ok.com-vm-with-netif-0" rsc="vptest21.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest21.vds-ok.com-vm-with-storage-0" rsc="vptest21.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest21.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest21.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest21.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest21.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest21.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest21.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest21.vds-ok.com-vm-after-libvirtd" then="vptest21.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest21.vds-ok.com-vm-after-netif-0" then="vptest21.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest21.vds-ok.com-vm-after-storage-0" then="vptest21.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest22.vds-ok.com-vm-with-libvirtd" rsc="vptest22.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest22.vds-ok.com-vm-with-netif-0" rsc="vptest22.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest22.vds-ok.com-vm-with-storage-0" rsc="vptest22.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest22.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest22.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest22.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest22.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest22.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest22.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest22.vds-ok.com-vm-after-libvirtd" then="vptest22.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest22.vds-ok.com-vm-after-netif-0" then="vptest22.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest22.vds-ok.com-vm-after-storage-0" then="vptest22.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest23.vds-ok.com-vm-with-libvirtd" rsc="vptest23.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest23.vds-ok.com-vm-with-netif-0" rsc="vptest23.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest23.vds-ok.com-vm-with-storage-0" rsc="vptest23.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest23.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest23.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest23.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest23.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest23.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest23.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest23.vds-ok.com-vm-after-libvirtd" then="vptest23.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest23.vds-ok.com-vm-after-netif-0" then="vptest23.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest23.vds-ok.com-vm-after-storage-0" then="vptest23.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest24.vds-ok.com-vm-with-libvirtd" rsc="vptest24.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest24.vds-ok.com-vm-with-netif-0" rsc="vptest24.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest24.vds-ok.com-vm-with-storage-0" rsc="vptest24.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest24.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest24.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest24.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest24.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest24.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest24.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest24.vds-ok.com-vm-after-libvirtd" then="vptest24.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest24.vds-ok.com-vm-after-netif-0" then="vptest24.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest24.vds-ok.com-vm-after-storage-0" then="vptest24.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest25.vds-ok.com-vm-with-libvirtd" rsc="vptest25.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest25.vds-ok.com-vm-with-netif-0" rsc="vptest25.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest25.vds-ok.com-vm-with-storage-0" rsc="vptest25.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest25.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest25.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest25.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest25.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest25.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest25.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest25.vds-ok.com-vm-after-libvirtd" then="vptest25.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest25.vds-ok.com-vm-after-netif-0" then="vptest25.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest25.vds-ok.com-vm-after-storage-0" then="vptest25.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest26.vds-ok.com-vm-with-libvirtd" rsc="vptest26.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest26.vds-ok.com-vm-with-netif-0" rsc="vptest26.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest26.vds-ok.com-vm-with-storage-0" rsc="vptest26.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest26.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest26.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest26.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest26.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest26.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest26.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest26.vds-ok.com-vm-after-libvirtd" then="vptest26.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest26.vds-ok.com-vm-after-netif-0" then="vptest26.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest26.vds-ok.com-vm-after-storage-0" then="vptest26.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest27.vds-ok.com-vm-with-libvirtd" rsc="vptest27.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest27.vds-ok.com-vm-with-netif-0" rsc="vptest27.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest27.vds-ok.com-vm-with-storage-0" rsc="vptest27.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest27.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest27.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest27.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest27.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest27.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest27.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest27.vds-ok.com-vm-after-libvirtd" then="vptest27.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest27.vds-ok.com-vm-after-netif-0" then="vptest27.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest27.vds-ok.com-vm-after-storage-0" then="vptest27.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest28.vds-ok.com-vm-with-libvirtd" rsc="vptest28.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest28.vds-ok.com-vm-with-netif-0" rsc="vptest28.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest28.vds-ok.com-vm-with-storage-0" rsc="vptest28.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest28.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest28.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest28.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest28.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest28.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest28.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest28.vds-ok.com-vm-after-libvirtd" then="vptest28.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest28.vds-ok.com-vm-after-netif-0" then="vptest28.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest28.vds-ok.com-vm-after-storage-0" then="vptest28.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest29.vds-ok.com-vm-with-libvirtd" rsc="vptest29.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest29.vds-ok.com-vm-with-netif-0" rsc="vptest29.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest29.vds-ok.com-vm-with-storage-0" rsc="vptest29.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest29.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest29.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest29.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest29.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest29.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest29.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest29.vds-ok.com-vm-after-libvirtd" then="vptest29.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest29.vds-ok.com-vm-after-netif-0" then="vptest29.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest29.vds-ok.com-vm-after-storage-0" then="vptest29.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest30.vds-ok.com-vm-with-libvirtd" rsc="vptest30.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest30.vds-ok.com-vm-with-netif-0" rsc="vptest30.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest30.vds-ok.com-vm-with-storage-0" rsc="vptest30.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest30.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest30.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest30.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest30.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest30.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest30.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest30.vds-ok.com-vm-after-libvirtd" then="vptest30.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest30.vds-ok.com-vm-after-netif-0" then="vptest30.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest30.vds-ok.com-vm-after-storage-0" then="vptest30.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest31.vds-ok.com-vm-with-libvirtd" rsc="vptest31.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest31.vds-ok.com-vm-with-netif-0" rsc="vptest31.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest31.vds-ok.com-vm-with-storage-0" rsc="vptest31.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest31.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest31.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest31.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest31.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest31.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest31.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest31.vds-ok.com-vm-after-libvirtd" then="vptest31.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest31.vds-ok.com-vm-after-netif-0" then="vptest31.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest31.vds-ok.com-vm-after-storage-0" then="vptest31.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest32.vds-ok.com-vm-with-libvirtd" rsc="vptest32.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest32.vds-ok.com-vm-with-netif-0" rsc="vptest32.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest32.vds-ok.com-vm-with-storage-0" rsc="vptest32.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest32.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest32.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest32.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest32.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest32.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest32.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest32.vds-ok.com-vm-after-libvirtd" then="vptest32.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest32.vds-ok.com-vm-after-netif-0" then="vptest32.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest32.vds-ok.com-vm-after-storage-0" then="vptest32.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest33.vds-ok.com-vm-with-libvirtd" rsc="vptest33.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest33.vds-ok.com-vm-with-netif-0" rsc="vptest33.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest33.vds-ok.com-vm-with-storage-0" rsc="vptest33.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest33.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest33.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest33.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest33.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest33.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest33.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest33.vds-ok.com-vm-after-libvirtd" then="vptest33.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest33.vds-ok.com-vm-after-netif-0" then="vptest33.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest33.vds-ok.com-vm-after-storage-0" then="vptest33.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest34.vds-ok.com-vm-with-libvirtd" rsc="vptest34.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest34.vds-ok.com-vm-with-netif-0" rsc="vptest34.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest34.vds-ok.com-vm-with-storage-0" rsc="vptest34.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest34.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest34.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest34.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest34.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest34.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest34.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest34.vds-ok.com-vm-after-libvirtd" then="vptest34.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest34.vds-ok.com-vm-after-netif-0" then="vptest34.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest34.vds-ok.com-vm-after-storage-0" then="vptest34.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest35.vds-ok.com-vm-with-libvirtd" rsc="vptest35.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest35.vds-ok.com-vm-with-netif-0" rsc="vptest35.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest35.vds-ok.com-vm-with-storage-0" rsc="vptest35.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest35.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest35.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest35.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest35.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest35.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest35.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest35.vds-ok.com-vm-after-libvirtd" then="vptest35.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest35.vds-ok.com-vm-after-netif-0" then="vptest35.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest35.vds-ok.com-vm-after-storage-0" then="vptest35.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest36.vds-ok.com-vm-with-libvirtd" rsc="vptest36.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest36.vds-ok.com-vm-with-netif-0" rsc="vptest36.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest36.vds-ok.com-vm-with-storage-0" rsc="vptest36.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest36.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest36.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest36.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest36.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest36.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest36.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest36.vds-ok.com-vm-after-libvirtd" then="vptest36.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest36.vds-ok.com-vm-after-netif-0" then="vptest36.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest36.vds-ok.com-vm-after-storage-0" then="vptest36.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest37.vds-ok.com-vm-with-libvirtd" rsc="vptest37.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest37.vds-ok.com-vm-with-netif-0" rsc="vptest37.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest37.vds-ok.com-vm-with-storage-0" rsc="vptest37.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest37.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest37.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest37.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest37.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest37.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest37.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest37.vds-ok.com-vm-after-libvirtd" then="vptest37.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest37.vds-ok.com-vm-after-netif-0" then="vptest37.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest37.vds-ok.com-vm-after-storage-0" then="vptest37.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest38.vds-ok.com-vm-with-libvirtd" rsc="vptest38.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest38.vds-ok.com-vm-with-netif-0" rsc="vptest38.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest38.vds-ok.com-vm-with-storage-0" rsc="vptest38.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest38.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest38.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest38.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest38.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest38.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest38.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest38.vds-ok.com-vm-after-libvirtd" then="vptest38.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest38.vds-ok.com-vm-after-netif-0" then="vptest38.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest38.vds-ok.com-vm-after-storage-0" then="vptest38.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest39.vds-ok.com-vm-with-libvirtd" rsc="vptest39.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest39.vds-ok.com-vm-with-netif-0" rsc="vptest39.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest39.vds-ok.com-vm-with-storage-0" rsc="vptest39.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest39.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest39.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest39.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest39.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest39.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest39.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest39.vds-ok.com-vm-after-libvirtd" then="vptest39.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest39.vds-ok.com-vm-after-netif-0" then="vptest39.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest39.vds-ok.com-vm-after-storage-0" then="vptest39.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest40.vds-ok.com-vm-with-libvirtd" rsc="vptest40.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest40.vds-ok.com-vm-with-netif-0" rsc="vptest40.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest40.vds-ok.com-vm-with-storage-0" rsc="vptest40.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest40.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest40.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest40.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest40.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest40.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest40.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest40.vds-ok.com-vm-after-libvirtd" then="vptest40.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest40.vds-ok.com-vm-after-netif-0" then="vptest40.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest40.vds-ok.com-vm-after-storage-0" then="vptest40.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest41.vds-ok.com-vm-with-libvirtd" rsc="vptest41.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest41.vds-ok.com-vm-with-netif-0" rsc="vptest41.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest41.vds-ok.com-vm-with-storage-0" rsc="vptest41.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest41.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest41.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest41.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest41.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest41.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest41.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest41.vds-ok.com-vm-after-libvirtd" then="vptest41.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest41.vds-ok.com-vm-after-netif-0" then="vptest41.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest41.vds-ok.com-vm-after-storage-0" then="vptest41.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest42.vds-ok.com-vm-with-libvirtd" rsc="vptest42.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest42.vds-ok.com-vm-with-netif-0" rsc="vptest42.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest42.vds-ok.com-vm-with-storage-0" rsc="vptest42.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest42.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest42.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest42.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest42.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest42.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest42.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest42.vds-ok.com-vm-after-libvirtd" then="vptest42.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest42.vds-ok.com-vm-after-netif-0" then="vptest42.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest42.vds-ok.com-vm-after-storage-0" then="vptest42.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest43.vds-ok.com-vm-with-libvirtd" rsc="vptest43.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest43.vds-ok.com-vm-with-netif-0" rsc="vptest43.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest43.vds-ok.com-vm-with-storage-0" rsc="vptest43.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest43.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest43.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest43.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest43.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest43.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest43.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest43.vds-ok.com-vm-after-libvirtd" then="vptest43.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest43.vds-ok.com-vm-after-netif-0" then="vptest43.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest43.vds-ok.com-vm-after-storage-0" then="vptest43.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest44.vds-ok.com-vm-with-libvirtd" rsc="vptest44.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest44.vds-ok.com-vm-with-netif-0" rsc="vptest44.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest44.vds-ok.com-vm-with-storage-0" rsc="vptest44.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest44.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest44.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest44.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest44.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest44.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest44.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest44.vds-ok.com-vm-after-libvirtd" then="vptest44.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest44.vds-ok.com-vm-after-netif-0" then="vptest44.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest44.vds-ok.com-vm-after-storage-0" then="vptest44.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest45.vds-ok.com-vm-with-libvirtd" rsc="vptest45.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest45.vds-ok.com-vm-with-netif-0" rsc="vptest45.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest45.vds-ok.com-vm-with-storage-0" rsc="vptest45.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest45.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest45.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest45.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest45.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest45.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest45.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest45.vds-ok.com-vm-after-libvirtd" then="vptest45.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest45.vds-ok.com-vm-after-netif-0" then="vptest45.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest45.vds-ok.com-vm-after-storage-0" then="vptest45.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest46.vds-ok.com-vm-with-libvirtd" rsc="vptest46.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest46.vds-ok.com-vm-with-netif-0" rsc="vptest46.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest46.vds-ok.com-vm-with-storage-0" rsc="vptest46.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest46.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest46.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest46.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest46.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest46.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest46.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest46.vds-ok.com-vm-after-libvirtd" then="vptest46.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest46.vds-ok.com-vm-after-netif-0" then="vptest46.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest46.vds-ok.com-vm-after-storage-0" then="vptest46.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest47.vds-ok.com-vm-with-libvirtd" rsc="vptest47.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest47.vds-ok.com-vm-with-netif-0" rsc="vptest47.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest47.vds-ok.com-vm-with-storage-0" rsc="vptest47.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest47.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest47.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest47.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest47.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest47.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest47.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest47.vds-ok.com-vm-after-libvirtd" then="vptest47.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest47.vds-ok.com-vm-after-netif-0" then="vptest47.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest47.vds-ok.com-vm-after-storage-0" then="vptest47.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest48.vds-ok.com-vm-with-libvirtd" rsc="vptest48.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest48.vds-ok.com-vm-with-netif-0" rsc="vptest48.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest48.vds-ok.com-vm-with-storage-0" rsc="vptest48.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest48.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest48.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest48.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest48.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest48.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest48.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest48.vds-ok.com-vm-after-libvirtd" then="vptest48.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest48.vds-ok.com-vm-after-netif-0" then="vptest48.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest48.vds-ok.com-vm-after-storage-0" then="vptest48.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest49.vds-ok.com-vm-with-libvirtd" rsc="vptest49.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest49.vds-ok.com-vm-with-netif-0" rsc="vptest49.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest49.vds-ok.com-vm-with-storage-0" rsc="vptest49.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest49.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest49.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest49.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest49.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest49.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest49.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest49.vds-ok.com-vm-after-libvirtd" then="vptest49.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest49.vds-ok.com-vm-after-netif-0" then="vptest49.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest49.vds-ok.com-vm-after-storage-0" then="vptest49.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest50.vds-ok.com-vm-with-libvirtd" rsc="vptest50.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest50.vds-ok.com-vm-with-netif-0" rsc="vptest50.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest50.vds-ok.com-vm-with-storage-0" rsc="vptest50.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest50.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest50.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest50.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest50.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest50.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest50.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest50.vds-ok.com-vm-after-libvirtd" then="vptest50.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest50.vds-ok.com-vm-after-netif-0" then="vptest50.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest50.vds-ok.com-vm-after-storage-0" then="vptest50.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest51.vds-ok.com-vm-with-libvirtd" rsc="vptest51.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest51.vds-ok.com-vm-with-netif-0" rsc="vptest51.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest51.vds-ok.com-vm-with-storage-0" rsc="vptest51.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest51.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest51.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest51.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest51.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest51.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest51.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest51.vds-ok.com-vm-after-libvirtd" then="vptest51.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest51.vds-ok.com-vm-after-netif-0" then="vptest51.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest51.vds-ok.com-vm-after-storage-0" then="vptest51.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest52.vds-ok.com-vm-with-libvirtd" rsc="vptest52.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest52.vds-ok.com-vm-with-netif-0" rsc="vptest52.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest52.vds-ok.com-vm-with-storage-0" rsc="vptest52.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest52.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest52.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest52.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest52.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest52.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest52.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest52.vds-ok.com-vm-after-libvirtd" then="vptest52.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest52.vds-ok.com-vm-after-netif-0" then="vptest52.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest52.vds-ok.com-vm-after-storage-0" then="vptest52.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest53.vds-ok.com-vm-with-libvirtd" rsc="vptest53.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest53.vds-ok.com-vm-with-netif-0" rsc="vptest53.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest53.vds-ok.com-vm-with-storage-0" rsc="vptest53.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest53.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest53.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest53.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest53.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest53.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest53.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest53.vds-ok.com-vm-after-libvirtd" then="vptest53.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest53.vds-ok.com-vm-after-netif-0" then="vptest53.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest53.vds-ok.com-vm-after-storage-0" then="vptest53.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest54.vds-ok.com-vm-with-libvirtd" rsc="vptest54.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest54.vds-ok.com-vm-with-netif-0" rsc="vptest54.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest54.vds-ok.com-vm-with-storage-0" rsc="vptest54.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest54.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest54.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest54.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest54.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest54.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest54.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest54.vds-ok.com-vm-after-libvirtd" then="vptest54.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest54.vds-ok.com-vm-after-netif-0" then="vptest54.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest54.vds-ok.com-vm-after-storage-0" then="vptest54.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest55.vds-ok.com-vm-with-libvirtd" rsc="vptest55.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest55.vds-ok.com-vm-with-netif-0" rsc="vptest55.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest55.vds-ok.com-vm-with-storage-0" rsc="vptest55.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest55.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest55.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest55.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest55.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest55.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest55.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest55.vds-ok.com-vm-after-libvirtd" then="vptest55.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest55.vds-ok.com-vm-after-netif-0" then="vptest55.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest55.vds-ok.com-vm-after-storage-0" then="vptest55.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest56.vds-ok.com-vm-with-libvirtd" rsc="vptest56.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest56.vds-ok.com-vm-with-netif-0" rsc="vptest56.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest56.vds-ok.com-vm-with-storage-0" rsc="vptest56.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest56.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest56.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest56.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest56.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest56.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest56.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest56.vds-ok.com-vm-after-libvirtd" then="vptest56.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest56.vds-ok.com-vm-after-netif-0" then="vptest56.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest56.vds-ok.com-vm-after-storage-0" then="vptest56.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest57.vds-ok.com-vm-with-libvirtd" rsc="vptest57.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest57.vds-ok.com-vm-with-netif-0" rsc="vptest57.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest57.vds-ok.com-vm-with-storage-0" rsc="vptest57.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest57.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest57.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest57.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest57.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest57.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest57.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest57.vds-ok.com-vm-after-libvirtd" then="vptest57.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest57.vds-ok.com-vm-after-netif-0" then="vptest57.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest57.vds-ok.com-vm-after-storage-0" then="vptest57.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest58.vds-ok.com-vm-with-libvirtd" rsc="vptest58.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest58.vds-ok.com-vm-with-netif-0" rsc="vptest58.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest58.vds-ok.com-vm-with-storage-0" rsc="vptest58.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest58.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest58.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest58.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest58.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest58.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest58.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest58.vds-ok.com-vm-after-libvirtd" then="vptest58.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest58.vds-ok.com-vm-after-netif-0" then="vptest58.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest58.vds-ok.com-vm-after-storage-0" then="vptest58.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest59.vds-ok.com-vm-with-libvirtd" rsc="vptest59.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest59.vds-ok.com-vm-with-netif-0" rsc="vptest59.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest59.vds-ok.com-vm-with-storage-0" rsc="vptest59.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest59.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest59.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest59.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest59.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest59.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest59.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest59.vds-ok.com-vm-after-libvirtd" then="vptest59.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest59.vds-ok.com-vm-after-netif-0" then="vptest59.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="vptest59.vds-ok.com-vm-after-storage-0" then="vptest59.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest60.vds-ok.com-vm-with-libvirtd" rsc="vptest60.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="vptest60.vds-ok.com-vm-with-netif-0" rsc="vptest60.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="vptest60.vds-ok.com-vm-with-storage-0" rsc="vptest60.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="vptest60.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="vptest60.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest60.vds-ok.com-vm-after-netif-0" score="INFINITY" then="vptest60.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest60.vds-ok.com-vm-after-storage-0" score="INFINITY" then="vptest60.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="vptest60.vds-ok.com-vm-after-libvirtd" then="vptest60.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="vptest60.vds-ok.com-vm-after-netif-0" then="vptest60.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="vptest60.vds-ok.com-vm-after-storage-0" then="vptest60.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="sl6-x64-devel.vds-ok.com-vm-with-libvirtd" rsc="sl6-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="sl6-x64-devel.vds-ok.com-vm-with-netif-0" rsc="sl6-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="sl6-x64-devel.vds-ok.com-vm-with-storage-0" rsc="sl6-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-netif-0" score="INFINITY" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-storage-0" score="INFINITY" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-libvirtd" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-netif-0" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-storage-0" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="dist.express-consult.org-vm-with-libvirtd" rsc="dist.express-consult.org-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="dist.express-consult.org-vm-with-netif-0" rsc="dist.express-consult.org-vm" score="INFINITY" with-rsc="cl-vlan101-if"/>
       <rsc_colocation id="dist.express-consult.org-vm-with-storage-0" rsc="dist.express-consult.org-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
@@ -4951,29 +4951,29 @@
       <rsc_colocation id="ubuntu9.10-gotin-vm-with-libvirtd" rsc="ubuntu9.10-gotin-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="ubuntu9.10-gotin-vm-with-netif-0" rsc="ubuntu9.10-gotin-vm" score="INFINITY" with-rsc="cl-vlan101-if"/>
       <rsc_colocation id="ubuntu9.10-gotin-vm-with-storage-0" rsc="ubuntu9.10-gotin-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-0-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="dist.express-consult.org-vm-after-libvirtd" score="INFINITY" then="dist.express-consult.org-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="dist.express-consult.org-vm-after-netif-0" score="INFINITY" then="dist.express-consult.org-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="dist.express-consult.org-vm-after-storage-0" score="INFINITY" then="dist.express-consult.org-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="eu1.ca-pages.com-vm-after-libvirtd" score="INFINITY" then="eu1.ca-pages.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="eu1.ca-pages.com-vm-after-netif-0" score="INFINITY" then="eu1.ca-pages.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="eu1.ca-pages.com-vm-after-storage-0" score="INFINITY" then="eu1.ca-pages.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="gotin-bbb-vm-after-libvirtd" score="INFINITY" then="gotin-bbb-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="gotin-bbb-vm-after-netif-0" score="INFINITY" then="gotin-bbb-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="gotin-bbb-vm-after-storage-0" score="INFINITY" then="gotin-bbb-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="maxb-c55-vm-after-libvirtd" score="INFINITY" then="maxb-c55-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="maxb-c55-vm-after-netif-0" score="INFINITY" then="maxb-c55-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="maxb-c55-vm-after-storage-0" score="INFINITY" then="maxb-c55-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="metae.ru-vm-after-libvirtd" score="INFINITY" then="metae.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="metae.ru-vm-after-netif-0" score="INFINITY" then="metae.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="metae.ru-vm-after-storage-0" score="INFINITY" then="metae.ru-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="rodovoepomestie.ru-vm-after-libvirtd" score="INFINITY" then="rodovoepomestie.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="rodovoepomestie.ru-vm-after-netif-0" score="INFINITY" then="rodovoepomestie.ru-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="rodovoepomestie.ru-vm-after-storage-0" score="INFINITY" then="rodovoepomestie.ru-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="ubuntu9.10-gotin-vm-after-libvirtd" score="INFINITY" then="ubuntu9.10-gotin-vm" then-action="start"/>
-      <rsc_order first="cl-vlan101-if" first-action="start" id="ubuntu9.10-gotin-vm-after-netif-0" score="INFINITY" then="ubuntu9.10-gotin-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="ubuntu9.10-gotin-vm-after-storage-0" score="INFINITY" then="ubuntu9.10-gotin-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="dist.express-consult.org-vm-after-libvirtd" then="dist.express-consult.org-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="dist.express-consult.org-vm-after-netif-0" then="dist.express-consult.org-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="dist.express-consult.org-vm-after-storage-0" then="dist.express-consult.org-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="eu1.ca-pages.com-vm-after-libvirtd" then="eu1.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="eu1.ca-pages.com-vm-after-netif-0" then="eu1.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="eu1.ca-pages.com-vm-after-storage-0" then="eu1.ca-pages.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="gotin-bbb-vm-after-libvirtd" then="gotin-bbb-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="gotin-bbb-vm-after-netif-0" then="gotin-bbb-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="gotin-bbb-vm-after-storage-0" then="gotin-bbb-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="maxb-c55-vm-after-libvirtd" then="maxb-c55-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="maxb-c55-vm-after-netif-0" then="maxb-c55-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="maxb-c55-vm-after-storage-0" then="maxb-c55-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="metae.ru-vm-after-libvirtd" then="metae.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="metae.ru-vm-after-netif-0" then="metae.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="metae.ru-vm-after-storage-0" then="metae.ru-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="rodovoepomestie.ru-vm-after-libvirtd" then="rodovoepomestie.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="rodovoepomestie.ru-vm-after-netif-0" then="rodovoepomestie.ru-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="rodovoepomestie.ru-vm-after-storage-0" then="rodovoepomestie.ru-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="ubuntu9.10-gotin-vm-after-libvirtd" then="ubuntu9.10-gotin-vm" then-action="start"/>
+      <rsc_order first="cl-vlan101-if" first-action="start" id="ubuntu9.10-gotin-vm-after-netif-0" then="ubuntu9.10-gotin-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-0-pool" first-action="start" id="ubuntu9.10-gotin-vm-after-storage-0" then="ubuntu9.10-gotin-vm" then-action="start"/>
       <rsc_colocation id="vptest14.vds-ok.com-vm-with-install-fs" rsc="vptest14.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest14.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest14.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest14.vds-ok.com-vm-after-install-fs" then="vptest14.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="vptest1.vds-ok.com-vm-with-install-fs" rsc="vptest1.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
       <rsc_colocation id="vptest10.vds-ok.com-vm-with-install-fs" rsc="vptest10.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
       <rsc_colocation id="vptest11.vds-ok.com-vm-with-install-fs" rsc="vptest11.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
@@ -5033,88 +5033,88 @@
       <rsc_colocation id="vptest7.vds-ok.com-vm-with-install-fs" rsc="vptest7.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
       <rsc_colocation id="vptest8.vds-ok.com-vm-with-install-fs" rsc="vptest8.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
       <rsc_colocation id="vptest9.vds-ok.com-vm-with-install-fs" rsc="vptest9.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest1.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest1.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest10.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest10.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest11.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest11.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest12.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest12.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest13.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest13.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest15.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest15.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest16.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest16.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest17.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest17.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest18.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest18.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest19.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest19.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest2.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest2.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest20.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest20.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest21.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest21.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest22.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest22.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest23.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest23.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest24.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest24.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest25.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest25.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest26.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest26.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest27.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest27.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest28.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest28.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest29.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest29.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest3.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest3.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest30.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest30.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest31.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest31.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest32.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest32.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest33.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest33.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest34.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest34.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest35.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest35.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest36.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest36.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest37.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest37.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest38.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest38.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest39.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest39.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest4.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest4.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest40.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest40.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest41.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest41.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest42.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest42.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest43.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest43.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest44.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest44.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest45.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest45.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest46.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest46.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest47.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest47.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest48.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest48.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest49.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest49.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest5.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest5.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest50.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest50.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest51.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest51.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest52.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest52.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest53.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest53.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest54.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest54.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest55.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest55.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest56.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest56.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest57.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest57.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest58.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest58.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest59.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest59.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest6.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest6.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest60.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest60.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest7.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest7.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest8.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest8.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest9.vds-ok.com-vm-after-install-fs" score="INFINITY" then="vptest9.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest1.vds-ok.com-vm-after-install-fs" then="vptest1.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest10.vds-ok.com-vm-after-install-fs" then="vptest10.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest11.vds-ok.com-vm-after-install-fs" then="vptest11.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest12.vds-ok.com-vm-after-install-fs" then="vptest12.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest13.vds-ok.com-vm-after-install-fs" then="vptest13.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest15.vds-ok.com-vm-after-install-fs" then="vptest15.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest16.vds-ok.com-vm-after-install-fs" then="vptest16.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest17.vds-ok.com-vm-after-install-fs" then="vptest17.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest18.vds-ok.com-vm-after-install-fs" then="vptest18.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest19.vds-ok.com-vm-after-install-fs" then="vptest19.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest2.vds-ok.com-vm-after-install-fs" then="vptest2.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest20.vds-ok.com-vm-after-install-fs" then="vptest20.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest21.vds-ok.com-vm-after-install-fs" then="vptest21.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest22.vds-ok.com-vm-after-install-fs" then="vptest22.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest23.vds-ok.com-vm-after-install-fs" then="vptest23.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest24.vds-ok.com-vm-after-install-fs" then="vptest24.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest25.vds-ok.com-vm-after-install-fs" then="vptest25.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest26.vds-ok.com-vm-after-install-fs" then="vptest26.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest27.vds-ok.com-vm-after-install-fs" then="vptest27.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest28.vds-ok.com-vm-after-install-fs" then="vptest28.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest29.vds-ok.com-vm-after-install-fs" then="vptest29.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest3.vds-ok.com-vm-after-install-fs" then="vptest3.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest30.vds-ok.com-vm-after-install-fs" then="vptest30.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest31.vds-ok.com-vm-after-install-fs" then="vptest31.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest32.vds-ok.com-vm-after-install-fs" then="vptest32.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest33.vds-ok.com-vm-after-install-fs" then="vptest33.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest34.vds-ok.com-vm-after-install-fs" then="vptest34.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest35.vds-ok.com-vm-after-install-fs" then="vptest35.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest36.vds-ok.com-vm-after-install-fs" then="vptest36.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest37.vds-ok.com-vm-after-install-fs" then="vptest37.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest38.vds-ok.com-vm-after-install-fs" then="vptest38.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest39.vds-ok.com-vm-after-install-fs" then="vptest39.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest4.vds-ok.com-vm-after-install-fs" then="vptest4.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest40.vds-ok.com-vm-after-install-fs" then="vptest40.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest41.vds-ok.com-vm-after-install-fs" then="vptest41.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest42.vds-ok.com-vm-after-install-fs" then="vptest42.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest43.vds-ok.com-vm-after-install-fs" then="vptest43.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest44.vds-ok.com-vm-after-install-fs" then="vptest44.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest45.vds-ok.com-vm-after-install-fs" then="vptest45.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest46.vds-ok.com-vm-after-install-fs" then="vptest46.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest47.vds-ok.com-vm-after-install-fs" then="vptest47.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest48.vds-ok.com-vm-after-install-fs" then="vptest48.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest49.vds-ok.com-vm-after-install-fs" then="vptest49.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest5.vds-ok.com-vm-after-install-fs" then="vptest5.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest50.vds-ok.com-vm-after-install-fs" then="vptest50.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest51.vds-ok.com-vm-after-install-fs" then="vptest51.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest52.vds-ok.com-vm-after-install-fs" then="vptest52.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest53.vds-ok.com-vm-after-install-fs" then="vptest53.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest54.vds-ok.com-vm-after-install-fs" then="vptest54.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest55.vds-ok.com-vm-after-install-fs" then="vptest55.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest56.vds-ok.com-vm-after-install-fs" then="vptest56.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest57.vds-ok.com-vm-after-install-fs" then="vptest57.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest58.vds-ok.com-vm-after-install-fs" then="vptest58.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest59.vds-ok.com-vm-after-install-fs" then="vptest59.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest6.vds-ok.com-vm-after-install-fs" then="vptest6.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest60.vds-ok.com-vm-after-install-fs" then="vptest60.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest7.vds-ok.com-vm-after-install-fs" then="vptest7.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest8.vds-ok.com-vm-after-install-fs" then="vptest8.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="vptest9.vds-ok.com-vm-after-install-fs" then="vptest9.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="f13-x64-devel.vds-ok.com-vm-with-cdrom-0" rsc="f13-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-images-pool"/>
-      <rsc_order first="cl-libvirt-images-pool" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-cdrom-0" score="INFINITY" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-images-pool" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-cdrom-0" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="c5-x64-devel.vds-ok.com-vm-with-libvirtd" rsc="c5-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="c5-x64-devel.vds-ok.com-vm-with-netif-0" rsc="c5-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vlan5-if"/>
       <rsc_colocation id="c5-x64-devel.vds-ok.com-vm-with-storage-0" rsc="c5-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-libvirtd" score="INFINITY" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vlan5-if" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-netif-0" score="INFINITY" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-storage-0" score="INFINITY" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-libvirtd" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vlan5-if" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-netif-0" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-storage-0" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="sl6-x64-devel.vds-ok.com-vm-with-install-fs" rsc="sl6-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-install-fs" score="INFINITY" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="sl6-x64-devel.vds-ok.com-vm-after-install-fs" then="sl6-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_location id="loc-mcast-test-net-mgmt01" node="mgmt01" rsc="cl-mcast-test-net" score="-INFINITY"/>
       <rsc_colocation id="c5-x64-devel.vds-ok.com-vm-with-netif-1" rsc="c5-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-mcast-test-net"/>
       <rsc_colocation id="f13-x64-devel.vds-ok.com-vm-with-netif-1" rsc="f13-x64-devel.vds-ok.com-vm" score="INFINITY" with-rsc="cl-mcast-test-net"/>
-      <rsc_order first="cl-mcast-test-net" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-netif-1" score="INFINITY" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
-      <rsc_order first="cl-mcast-test-net" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-netif-1" score="INFINITY" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-mcast-test-net" first-action="start" id="c5-x64-devel.vds-ok.com-vm-after-netif-1" then="c5-x64-devel.vds-ok.com-vm" then-action="start"/>
+      <rsc_order first="cl-mcast-test-net" first-action="start" id="f13-x64-devel.vds-ok.com-vm-after-netif-1" then="f13-x64-devel.vds-ok.com-vm" then-action="start"/>
       <rsc_colocation id="dist.fly-uni.org-vm-with-install-fs" rsc="dist.fly-uni.org-vm" score="INFINITY" with-rsc="cl-libvirt-install-fs"/>
       <rsc_colocation id="dist.fly-uni.org-vm-with-libvirtd" rsc="dist.fly-uni.org-vm" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="dist.fly-uni.org-vm-with-netif-0" rsc="dist.fly-uni.org-vm" score="INFINITY" with-rsc="cl-vlan900-if"/>
       <rsc_colocation id="dist.fly-uni.org-vm-with-storage-0" rsc="dist.fly-uni.org-vm" score="INFINITY" with-rsc="cl-vds-ok-pool-1-pool"/>
-      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="dist.fly-uni.org-vm-after-install-fs" score="INFINITY" then="dist.fly-uni.org-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="dist.fly-uni.org-vm-after-libvirtd" score="INFINITY" then="dist.fly-uni.org-vm" then-action="start"/>
-      <rsc_order first="cl-vlan900-if" first-action="start" id="dist.fly-uni.org-vm-after-netif-0" score="INFINITY" then="dist.fly-uni.org-vm" then-action="start"/>
-      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="dist.fly-uni.org-vm-after-storage-0" score="INFINITY" then="dist.fly-uni.org-vm" then-action="start"/>
+      <rsc_order first="cl-libvirt-install-fs" first-action="start" id="dist.fly-uni.org-vm-after-install-fs" then="dist.fly-uni.org-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="dist.fly-uni.org-vm-after-libvirtd" then="dist.fly-uni.org-vm" then-action="start"/>
+      <rsc_order first="cl-vlan900-if" first-action="start" id="dist.fly-uni.org-vm-after-netif-0" then="dist.fly-uni.org-vm" then-action="start"/>
+      <rsc_order first="cl-vds-ok-pool-1-pool" first-action="start" id="dist.fly-uni.org-vm-after-storage-0" then="dist.fly-uni.org-vm" then-action="start"/>
       <rsc_location id="cli-standby-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" rsc="vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm">
         <rule id="cli-standby-rule-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" score="-INFINITY">
           <expression attribute="#uname" id="cli-standby-expr-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" operation="eq" value="v03-a"/>

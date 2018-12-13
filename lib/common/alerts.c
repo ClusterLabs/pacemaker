@@ -35,7 +35,8 @@ const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =
     [CRM_alert_attribute_name]     = {"CRM_notify_attribute_name",     "CRM_alert_attribute_name",     NULL},
     [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL},
     [CRM_alert_timestamp_epoch]     = {"CRM_notify_timestamp_epoch",     "CRM_alert_timestamp_epoch",     NULL},
-    [CRM_alert_timestamp_usec]     = {"CRM_notify_timestamp_usec",     "CRM_alert_timestamp_usec",     NULL}
+    [CRM_alert_timestamp_usec]     = {"CRM_notify_timestamp_usec",     "CRM_alert_timestamp_usec",     NULL},
+    [CRM_alert_exec_time]     = {"CRM_notify_exec_time",     "CRM_alert_exec_time",     NULL}
 };
 
 void

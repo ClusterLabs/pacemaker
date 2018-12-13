@@ -281,7 +281,9 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
@@ -301,8 +303,9 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     get_group_variant_data(group_data, rsc_lh);
 
     if (group_data->colocated) {
-        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child, rsc_rh,
-                                                         constraint);
+        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
+                                                         rsc_rh, constraint,
+                                                         data_set);
         return;
 
     } else if (constraint->score >= INFINITY) {
@@ -314,12 +317,15 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint);
+        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint,
+                                           data_set);
     }
 }
 
 void
-group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     GListPtr gIter = rsc_rh->children;
     group_variant_data_t *group_data = NULL;
@@ -336,12 +342,16 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     } else if (group_data->colocated && group_data->first_child) {
         if (constraint->score >= INFINITY) {
             /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(rsc_lh, group_data->last_child,
-                                                            constraint);
+            group_data->last_child->cmds->rsc_colocation_rh(rsc_lh,
+                                                            group_data->last_child,
+                                                            constraint,
+                                                            data_set);
         } else {
             /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(rsc_lh, group_data->first_child,
-                                                             constraint);
+            group_data->first_child->cmds->rsc_colocation_rh(rsc_lh,
+                                                             group_data->first_child,
+                                                             constraint,
+                                                             data_set);
         }
 
         return;
@@ -355,7 +365,8 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
+        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
+                                           data_set);
     }
 }
 
@@ -401,21 +412,25 @@ group_action_flags(action_t * action, node_t * node)
 }
 
 enum pe_graph_flags
-group_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                     enum pe_action_flags flags, enum pe_action_flags filter,
+                     enum pe_ordering type, pe_working_set_t *data_set)
 {
     GListPtr gIter = then->rsc->children;
     enum pe_graph_flags changed = pe_graph_none;
 
     CRM_ASSERT(then->rsc != NULL);
-    changed |= native_update_actions(first, then, node, flags, filter, type);
+    changed |= native_update_actions(first, then, node, flags, filter, type,
+                                     data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
         action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
-            changed |= child->cmds->update_actions(first, child_action, node, flags, filter, type);
+            changed |= child->cmds->update_actions(first, child_action, node,
+                                                   flags, filter, type,
+                                                   data_set);
         }
     }
 
@@ -423,7 +438,7 @@ group_update_actions(action_t * first, action_t * then, node_t * node, enum pe_a
 }
 
 void
-group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = rsc->children;
     GListPtr saved = constraint->node_list_rh;

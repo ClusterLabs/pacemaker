@@ -536,19 +536,19 @@
       <rsc_colocation id="Libvirtd_With_Filesystem" rsc="LibvirtdClone" score="INFINITY" with-rsc="FilesystemClone"/>
       <rsc_colocation id="Temperature_With_Filesystem" rsc="CronAmbientTemperature" score="INFINITY" with-rsc="FilesystemClone"/>
       <rsc_colocation id="Tftp_With_Filesystem" rsc="TftpClone" score="INFINITY" with-rsc="FilesystemClone"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Cups" score="INFINITY" then="CupsClone"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Dhcp" score="INFINITY" then="DhcpGroup"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Exports" score="INFINITY" then="ExportsClone"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_IP" score="INFINITY" then="IPClone"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Libvirtd" score="INFINITY" then="LibvirtdClone"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Temperature" score="INFINITY" then="CronAmbientTemperature"/>
-      <rsc_order first="FilesystemClone" id="Filesystem_Before_Tftp" score="INFINITY" then="TftpClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Cups" then="CupsClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Dhcp" then="DhcpGroup"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Exports" then="ExportsClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_IP" then="IPClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Libvirtd" then="LibvirtdClone"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Temperature" then="CronAmbientTemperature"/>
+      <rsc_order first="FilesystemClone" id="Filesystem_Before_Tftp" then="TftpClone"/>
       <rsc_colocation id="Filesystem_With_Admin" rsc="FilesystemClone" score="INFINITY" with-rsc="AdminClone" with-rsc-role="Master"/>
-      <rsc_order first="AdminClone" first-action="promote" id="Admin_Before_Filesystem" score="INFINITY" then="FilesystemClone" then-action="start"/>
+      <rsc_order first="AdminClone" first-action="promote" id="Admin_Before_Filesystem" then="FilesystemClone" then-action="start"/>
       <rsc_colocation id="KVM-guest_With_Libvirtd" rsc="KVM-guest" score="INFINITY" with-rsc="LibvirtdClone"/>
       <rsc_colocation id="Proxy_With_Libvirtd" rsc="Proxy" score="INFINITY" with-rsc="LibvirtdClone"/>
-      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_KVM-guest" score="INFINITY" then="KVM-guest"/>
-      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_Proxy" score="INFINITY" then="Proxy"/>
+      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_KVM-guest" then="KVM-guest"/>
+      <rsc_order first="LibvirtdClone" id="Libvirtd_Before_Proxy" then="Proxy"/>
       <rsc_location id="cli-prefer-Proxy" rsc="Proxy">
         <rule id="cli-prefer-rule-Proxy" score="INFINITY">
           <expression attribute="#uname" id="cli-prefer-expr-Proxy" operation="eq" value="orestes-corosync.nevis.columbia.edu"/>

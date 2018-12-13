@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Advanced Configuration =
 
 [[s-recurring-start]]
@@ -198,6 +199,9 @@ To change the current node's standby status, use `-v` instead of `-G`:
 
 Again, you can change another host's value by supplying a hostname with `--node`.
 
+A cluster node in standby mode will not run resources, but still contributes to
+quorum, and may fence or be fenced by nodes.
+
 ==== Moving One Resource ====
 
 When only one resource is required to move, we could do this by creating
@@ -301,7 +305,7 @@ you'll need to create a clone.  A template for this can be found below
 along with a description of the most interesting parameters.
           
 .Common Options for a 'ping' Resource
-[width="95%",cols="1m,4<",options="header",align="center"]
+[width="95%",cols="1m,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -536,7 +540,7 @@ indicator of node health. Node health attributes may have one of the following
 values:
 
 .Allowed Values for Node Health Attributes
-[width="95%",cols="1,3<",options="header",align="center"]
+[width="95%",cols="1,<3",options="header",align="center"]
 |=========================================================
 
 |Value
@@ -574,7 +578,7 @@ changes in node health attributes, and how it translates +red+, +yellow+, and
 Allowed values are:
 
 .Node Health Strategies
-[width="95%",cols="1m,3<",options="header",align="center"]
+[width="95%",cols="1m,<3",options="header",align="center"]
 |=========================================================
 
 |Value

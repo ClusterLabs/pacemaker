@@ -7,7 +7,7 @@ RemoteOnline: [ remote1 ]
  remote1	(ocf::pacemaker:remote):	Started node1 (UNCLEAN)
  killer	(stonith:fence_xvm):	Started node2
  rsc1	(ocf::pacemaker:Dummy):	Started remote1
- Master/Slave Set: rsc2-master [rsc2]
+ Clone Set: rsc2-master [rsc2] (promotable)
      rsc2	(ocf::pacemaker:Stateful):	Master node1 (UNCLEAN)
      Masters: [ node2 ]
      Stopped: [ remote1 ]
@@ -25,7 +25,8 @@ Executing cluster transition:
  * Resource action: rsc1            monitor on node2
  * Fencing node1 (reboot)
  * Fencing remote1 (reboot)
- * Pseudo action:   stonith_complete
+ * Resource action: killer          start on node2
+ * Resource action: killer          monitor=60000 on node2
  * Pseudo action:   rsc1_stop_0
  * Pseudo action:   rsc2-master_demote_0
  * Pseudo action:   remote1_stop_0
@@ -36,9 +37,6 @@ Executing cluster transition:
  * Resource action: rsc1            monitor=10000 on node2
  * Pseudo action:   rsc2_stop_0
  * Pseudo action:   rsc2-master_stopped_0
- * Pseudo action:   all_stopped
- * Resource action: killer          start on node2
- * Resource action: killer          monitor=60000 on node2
 
 Revised cluster status:
 Online: [ node2 ]
@@ -48,7 +46,7 @@ RemoteOFFLINE: [ remote1 ]
  remote1	(ocf::pacemaker:remote):	Stopped
  killer	(stonith:fence_xvm):	Started node2
  rsc1	(ocf::pacemaker:Dummy):	Started node2
- Master/Slave Set: rsc2-master [rsc2]
+ Clone Set: rsc2-master [rsc2] (promotable)
      Masters: [ node2 ]
      Stopped: [ node1 remote1 ]
 

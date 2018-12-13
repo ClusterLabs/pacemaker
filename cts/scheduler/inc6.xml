@@ -87,10 +87,10 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" score="0"/>
-      <rsc_order id="order2" first="rsc3" then="rsc4" score="0"/>
-      <rsc_order id="order3" first="rsc5" then="rsc6" score="0"/>
-      <rsc_order id="order4" first="rsc7" then="rsc8" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" kind="Optional"/>
+      <rsc_order id="order2" first="rsc3" then="rsc4" kind="Optional"/>
+      <rsc_order id="order3" first="rsc5" then="rsc6" kind="Optional"/>
+      <rsc_order id="order4" first="rsc7" then="rsc8" kind="Optional"/>
     </constraints>
   </configuration>
   <status>
@@ -252,9 +252,6 @@
           </lrm_resource>
           <lrm_resource id="child_rsc6:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-0_monitor_0" operation="monitor" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="7" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
-          </lrm_resource>
-          <lrm_resource id="child_rsc6:1" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc6-child_rsc6-1_monitor_0" operation="monitor" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="7" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
           <lrm_resource id="child_rsc6:2" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-2_monitor_0" operation="monitor" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="7" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>

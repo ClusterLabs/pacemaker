@@ -14,8 +14,6 @@ Transition Summary:
 Executing cluster transition:
  * Fencing hs21d (reboot)
  * Fencing hs21c (reboot)
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 OFFLINE: [ hs21c hs21d ]

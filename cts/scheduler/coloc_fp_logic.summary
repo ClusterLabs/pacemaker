@@ -10,7 +10,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: A               stop on node1
- * Pseudo action:   all_stopped
  * Resource action: A               start on node2
  * Resource action: A               monitor=10000 on node2
 

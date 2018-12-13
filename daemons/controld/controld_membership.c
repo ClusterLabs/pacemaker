@@ -40,8 +40,6 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         crm_update_peer_join(__FUNCTION__, node, crm_join_none);
 
         if(node && node->uname) {
-            election_remove(fsa_election, node->uname);
-
             if (safe_str_eq(fsa_our_uname, node->uname)) {
                 crm_err("We're not part of the cluster anymore");
                 register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -163,7 +161,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     if (!is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
             value = OFFLINESTATUS;
-            if (node->processes & proc_flags) {
+            if (is_set(node->processes, crm_get_cluster_proc())) {
                 value = ONLINESTATUS;
             }
             crm_xml_add(node_state, XML_NODE_IS_PEER, value);

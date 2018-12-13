@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Advanced Resource Types =
 
 [[group-resources]]
@@ -74,7 +75,7 @@ mount, an IP address, and an application that uses them.
 
 === Group Properties ===
 .Properties of a Group Resource
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -188,7 +189,7 @@ to manage entering and exiting the special role.
 === Clone Properties ===
 
 .Properties of a Clone Resource
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -207,7 +208,7 @@ to manage entering and exiting the special role.
 +priority, target-role, is-managed+
 
 .Clone-specific configuration options
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -369,7 +370,7 @@ master role, and colocation constraints may contain +rsc-role+ and/or
 +with-rsc-role+ fields.
           
 .Additional colocation constraint options for promotable clone resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -434,7 +435,7 @@ Placement is then performed as normal.
 ==== Using Promotable Clone Resources in Colocation Sets ====
 
 .Additional colocation set options relevant to promotable clone resources
-[width="95%",cols="1m,1,6<",options="header",align="center"]
+[width="95%",cols="1m,1,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -476,7 +477,7 @@ and +B+'s masters.
 ==== Using Promotable Clone Resources in Ordered Sets ====
 
 .Additional ordered set options relevant to promotable clone resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -538,6 +539,14 @@ for the clone temporarily and let the cluster adjust, then set it back
 to 1 if you want the default behavior to apply again.
 ====
 
+[IMPORTANT]
+====
+If +resource-stickiness+ is set in the +rsc_defaults+ section, it will
+apply to clone instances as well. This means an explicit +resource-stickiness+
+of 0 in +rsc_defaults+ works differently from the implicit default used when
++resource-stickiness+ is not specified.
+====
+
 === Clone Resource Agent Requirements ===
 
 Any resource can be used as an anonymous clone, as it requires no
@@ -581,7 +590,7 @@ on the agent to report its status (including role) accurately and does
 not indicate to the agent what role it currently believes it to be in.
 
 .Role implications of OCF return codes
-[width="95%",cols="1,1<",options="header",align="center"]
+[width="95%",cols="1,<1",options="header",align="center"]
 |=========================================================
 
 |Monitor Return Code
@@ -617,7 +626,7 @@ additional context, can be used to calculate the current state of the cluster
 and what is about to happen to it.
 
 .Environment variables supplied with Clone notify actions
-[width="95%",cols="5,3<",options="header",align="center"]
+[width="95%",cols="5,<3",options="header",align="center"]
 |=========================================================
 
 |Variable
@@ -692,6 +701,11 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 -------
 ======
 
+[NOTE]
+====
+Pacemaker will log but otherwise ignore failures of notify actions.
+====
+
 ==== Interpretation of Notification Variables ====
 
 .Pre-notification (stop):
@@ -730,45 +744,45 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 ==== Extra Notifications for Promotable Clones ====
 
 .Extra environment variables supplied for promotable clones
-[width="95%",cols="5,3<",options="header",align="center"]
+[width="95%",cols="5,<3",options="header",align="center"]
 |=========================================================
 
-|_OCF_RESKEY_CRM_meta_notify_master_resource_
+|OCF_RESKEY_CRM_meta_notify_master_resource
 |Resources that are running in +Master+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_resource]
  indexterm:[master_resource,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_slave_resource_
+|OCF_RESKEY_CRM_meta_notify_slave_resource
 |Resources that are running in +Slave+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_resource]
  indexterm:[slave_resource,Notification Environment Variable]
    
-|_OCF_RESKEY_CRM_meta_notify_promote_resource_
+|OCF_RESKEY_CRM_meta_notify_promote_resource
 |Resources to be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_resource]
  indexterm:[promote_resource,Notification Environment Variable]
    
-|_OCF_RESKEY_CRM_meta_notify_demote_resource_
+|OCF_RESKEY_CRM_meta_notify_demote_resource
 |Resources to be demoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_resource]
  indexterm:[demote_resource,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_promote_uname_
+|OCF_RESKEY_CRM_meta_notify_promote_uname
 |Nodes on which resources will be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_uname]
  indexterm:[promote_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_demote_uname_
+|OCF_RESKEY_CRM_meta_notify_demote_uname
 |Nodes on which resources will be demoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_uname]
  indexterm:[demote_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_master_uname_
+|OCF_RESKEY_CRM_meta_notify_master_uname
 |Nodes on which resources are running in +Master+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_uname]
  indexterm:[master_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_slave_uname_
+|OCF_RESKEY_CRM_meta_notify_slave_uname
 |Nodes on which resources are running in +Slave+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_uname]
  indexterm:[slave_uname,Notification Environment Variable]
@@ -993,7 +1007,7 @@ association with Docker, Inc. is implied.]
 === Bundle Properties ===
 
 .Properties of a Bundle
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1024,7 +1038,7 @@ a bundle's Docker container. The user must ensure that resource agent is
 installed on every node allowed to run the bundle.
 
 .Properties of a Bundle's Docker Element
-[width="95%",cols="3m,4,5<",options="header",align="center"]
+[width="95%",cols="3m,4,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1099,7 +1113,7 @@ a bundle's rkt container. The user must ensure that resource agent is
 installed on every node allowed to run the bundle.
 
 .Properties of a Bundle's rkt Element
-[width="95%",cols="3m,4,5<",options="header",align="center"]
+[width="95%",cols="3m,4,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1168,7 +1182,7 @@ A bundle may optionally contain one +<network>+ element.
 indexterm:[bundle,network]
 
 .Properties of a Bundle's Network Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1236,7 +1250,7 @@ Additionally, a +<network>+ element may optionally contain one or more
 indexterm:[bundle,network,port-mapping]
 
 .Properties of a Bundle's Port-Mapping Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1292,7 +1306,7 @@ elements.
 indexterm:[bundle,storage,storage-mapping]
 
 .Properties of a Bundle's Storage-Mapping Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1418,13 +1432,15 @@ local node for cluster-defined attributes such as +#uname+.
 
 If +container-attribute-target+ is +host+, the cluster will pass additional
 environment variables to the primitive's resource agent that allow it to set
-node attributes appropriately: +container_attribute_target+ (identical to the
-meta-attribute value) and +physical_host+ (the name of the underlying host).
+node attributes appropriately: +CRM_meta_container_attribute_target+ (identical
+to the meta-attribute value) and +CRM_meta_physical_host+ (the name of the
+underlying host).
 
 [NOTE]
 ====
-It is up to the resource agent to check for the additional variables and use
-them when setting node attributes.
+When called by a resource agent, the attrd_updater and crm_attribute commands
+will automatically check those environment variables and set attributes
+appropriately.
 ====
 
 === Bundle Meta-Attributes ===
@@ -1440,8 +1456,10 @@ This includes options such as +priority+, +target-role+, and +is-managed+. See
 Restarting pacemaker while a bundle is unmanaged or the cluster is in
 maintenance mode may cause the bundle to fail.
 
-Bundles may not be cloned or included in groups. This includes the bundle's
-primitive and any resources implicitly created by Pacemaker for the bundle.
+Bundles may not be explicitly cloned or included in groups. This includes the
+bundle's primitive and any resources implicitly created by Pacemaker for the
+bundle. (If +replicas+ is greater than 1, the bundle will behave like a clone
+implicitly.)
 
 Bundles do not have instance attributes, utilization attributes, or operations,
 though a bundle's primitive may have them.

@@ -9,7 +9,7 @@ Online: [ node1 node2 ]
      rsc3	(ocf::pacemaker:Dummy):	Stopped 
  Clone Set: clone4 [rsc4]
      Stopped: [ node1 node2 ]
- Master/Slave Set: ms5 [rsc5]
+ Clone Set: ms5 [rsc5] (promotable)
      Slaves: [ node1 node2 ]
 
 Transition Summary:
@@ -37,6 +37,6 @@ Online: [ node1 node2 ]
      rsc3	(ocf::pacemaker:Dummy):	Started node1
  Clone Set: clone4 [rsc4]
      Stopped: [ node1 node2 ]
- Master/Slave Set: ms5 [rsc5]
+ Clone Set: ms5 [rsc5] (promotable)
      Slaves: [ node1 node2 ]
 

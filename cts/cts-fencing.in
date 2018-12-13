@@ -14,11 +14,41 @@ import sys
 import subprocess
 import shlex
 import time
+import tempfile
 
-FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
+# Where to find test binaries
+# Prefer the source tree if available
+BUILD_DIR = "@abs_top_builddir@"
+TEST_DIR = sys.path[0]
+
+AUTOGEN_COROSYNC_TEMPLATE = """
+totem {
+    version: 2
+    cluster_name: cts-fencing
+    crypto_cipher: none
+    crypto_hash: none
+    transport: udp
+}
+
+nodelist {
+    node {
+        nodeid: 1
+        name: %s
+        ring0_addr: 127.0.0.1
+    }
+}
+
+logging {
+    debug: off
+    to_syslog: no
+    to_stderr: no
+    to_logfile: yes
+    logfile: %s
+}
+"""
 
 # These values must be kept in sync with include/crm/crm.h
-class CrmExit:
+class CrmExit(object):
     OK                   =   0
     ERROR                =   1
     INVALID_PARAM        =   2
@@ -55,6 +85,26 @@ class CrmExit:
     OLD                  = 110
     TIMEOUT              = 124
     MAX                  = 255
+
+
+def update_path():
+    """ Set the PATH environment variable appropriately for the tests """
+
+    new_path = os.environ['PATH']
+    if os.path.exists("%s/cts-fencing.in" % TEST_DIR):
+        print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
+        # For pacemaker-fenced and cts-fence-helper
+        new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
+        new_path = "%s/tools:%s" % (BUILD_DIR, new_path) # For stonith_admin
+        new_path = "%s/cts:%s" % (BUILD_DIR, new_path)   # For cts-support
+
+    else:
+        print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
+        # For pacemaker-fenced, cts-fence-helper, and cts-support
+        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
+
+    print('Using PATH="{}"'.format(new_path))
+    os.environ['PATH'] = new_path
 
 
 def pipe_output(pipes, stdout=True, stderr=False):
@@ -193,7 +243,7 @@ class Test(object):
         if os.path.exists("/tmp/stonith-regression.log"):
             os.remove('/tmp/stonith-regression.log')
 
-        cmd = "@CRM_DAEMON_DIR@/pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
+        cmd = "pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
         self.stonith_process = subprocess.Popen(shlex.split(cmd))
 
         time.sleep(1)
@@ -389,9 +439,7 @@ class Tests(object):
     def __init__(self, verbose=0):
         self.tests = []
         self.verbose = verbose
-        self.autogen_corosync_cfg = 0
-        if not os.path.exists("/etc/corosync/corosync.conf"):
-            self.autogen_corosync_cfg = 1
+        self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
@@ -497,10 +545,10 @@ class Tests(object):
             verbose_arg = "-V"
 
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
-        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-t %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg))
 
         test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
-        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-m %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg))
 
     def build_custom_timeout_tests(self):
         """ Register tests to verify custom timeout usage """
@@ -1241,54 +1289,20 @@ class Tests(object):
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
-        if self.autogen_corosync_cfg and use_corosync:
-            corosync_conf = ("""
-totem {
-        version: 2
-        crypto_cipher: none
-        crypto_hash: none
-
-        nodeid:         101
-        secauth:        off
-
-        interface {
-                ttl: 1
-                ringnumber: 0
-                mcastport: 6666
-                mcastaddr: 226.94.1.1
-                bindnetaddr: 127.0.0.1
-        }
-}
-
-logging {
-        debug: off
-        fileline: off
-        to_syslog: no
-        to_stderr: no
-        syslog_facility: daemon
-        timestamp: on
-        to_logfile: yes
-        logfile: @CRM_LOG_DIR@/corosync.test.log
-        logfile_priority: info
-}
-""")
-
-            os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
-
         if use_corosync:
+            if self.autogen_corosync_cfg:
+                (handle, self.autogen_corosync_log) = tempfile.mkstemp(prefix="cts-fencing-",
+                                                                       suffix=".corosync.log")
+                os.close(handle)
+                corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
+                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), self.autogen_corosync_log))
+                corosync_cfg.close()
+
             ### make sure we are in control ###
             killall("corosync")
             self.start_corosync()
 
-        os.system("cp %s @sbindir@/fence_dummy" % FENCE_DUMMY)
-
-        # modifies dummy agent to do require unfencing
-        os.system("sed 's/on_target=/automatic=/g' %s > @sbindir@/fence_dummy_auto_unfence" % FENCE_DUMMY)
-        os.system("chmod 711 @sbindir@/fence_dummy_auto_unfence")
-
-        # modifies dummy agent to not advertise reboot
-        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > @sbindir@/fence_dummy_no_reboot" % FENCE_DUMMY)
-        os.system("chmod 711 @sbindir@/fence_dummy_no_reboot")
+        subprocess.call(["cts-support", "install"])
 
     def cleanup_environment(self, use_corosync):
         """ Clean up the host after executing desired tests """
@@ -1296,19 +1310,17 @@ logging {
         if use_corosync:
             killall("corosync")
 
-            if self.verbose and os.path.exists('@CRM_LOG_DIR@/corosync.test.log'):
-                print("Corosync output")
-                logfile = io.open('@CRM_LOG_DIR@/corosync.test.log', 'rt')
-                for line in logfile.readlines():
-                    print(line.strip())
-                os.remove('@CRM_LOG_DIR@/corosync.test.log')
+            if self.autogen_corosync_cfg:
+                if self.verbose:
+                    print("Corosync output")
+                    logfile = io.open(self.autogen_corosync_log, 'rt')
+                    for line in logfile.readlines():
+                        print(line.strip())
+                    logfile.close()
+                os.remove(self.autogen_corosync_log)
+                os.remove("/etc/corosync/corosync.conf")
 
-        if self.autogen_corosync_cfg:
-            os.system("rm -f /etc/corosync/corosync.conf")
-
-        os.system("rm -f @sbindir@/fence_dummy")
-        os.system("rm -f @sbindir@/fence_dummy_auto_unfence")
-        os.system("rm -f @sbindir@/fence_dummy_no_reboot")
+        subprocess.call(["cts-support", "uninstall"])
 
 class TestOptions(object):
     """ Option handler """
@@ -1372,6 +1384,8 @@ class TestOptions(object):
 
 def main(argv):
     """ Run fencing regression tests as specified by arguments """
+
+    update_path()
 
     opts = TestOptions()
     opts.build_options(argv)

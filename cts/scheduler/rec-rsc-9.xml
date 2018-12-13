@@ -38,8 +38,8 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order_recover-1" first="bar" then="rsc1" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="order_recover-2" first="bar" then="foo" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="order_recover-1" first="bar" then="rsc1" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="order_recover-2" first="bar" then="foo" then-action="start" first-action="start" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

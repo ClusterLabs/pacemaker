@@ -1,5 +1,11 @@
+:compat-mode: legacy
 = Resource Constraints =
 
+//// 
+We prefer [[ch-constraints]], but older versions of asciidoc don't deal well
+with that construct for chapter headings
+////
+anchor:ch-constraints[Chapter 7, Alerts]
 indexterm:[Resource,Constraints]
 
 == Scores ==
@@ -60,7 +66,7 @@ configuration might be simpler.
 === Location Properties ===
 
 .Properties of a rsc_location Constraint
-[width="95%",cols="2m,1,5<a",options="header",align="center"]
+[width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -108,7 +114,7 @@ indexterm:[Constraints,Location,score]
 
 |resource-discovery
 |always
-|Whether Pacemaker should perform resource discovery (that is, check whether
+a|Whether Pacemaker should perform resource discovery (that is, check whether
  the resource is already running) for this resource on this node. This should
  normally be left as the default, so that rogue instances of a service can be
  stopped when they are running where they are not supposed to be. However,
@@ -250,7 +256,7 @@ alternatively, a group (see <<group-resources>>).
 === Ordering Properties ===
 
 .Properties of a rsc_order Constraint
-[width="95%",cols="1m,1,4<a",options="header",align="center"]
+[width="95%",cols="1m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -292,8 +298,8 @@ indexterm:[Constraints,Ordering,then]
  indexterm:[Constraints,Ordering,then-action]
 
 |kind
-|
-|How to enforce the constraint. Allowed values:
+|Mandatory
+a|How to enforce the constraint. Allowed values:
 
 * +Optional:+ Just a suggestion. Only applies if both resources are
   executing the specified actions. Any change in state by the +first+ resource
@@ -383,7 +389,7 @@ constraint, or alternatively, a group (see <<group-resources>>).
 === Colocation Properties ===
 
 .Properties of a rsc_colocation Constraint
-[width="95%",cols="1m,1,4<",options="header",align="center"]
+[width="95%",cols="1m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -525,7 +531,7 @@ A resource set has a number of properties that can be set,
 though not all have an effect in all contexts.
 
 .Properties of a resource_set
-[width="95%",cols="2m,1,5<a",options="header",align="center"]
+[width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
 |Field

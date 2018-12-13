@@ -55,7 +55,7 @@
       <rsc_location id="world3-loc-2" rsc="world3" node="ubuntu_2" score="500"/>
       <rsc_location id="world4-loc-1" rsc="world4" node="ubuntu_1" score="500"/>
       <rsc_location id="world4-loc-2" rsc="world4" node="ubuntu_2" score="500"/>
-      <rsc_order id="order-1" score="INFINITY">
+      <rsc_order id="order-1">
         <resource_set id="order-1-set-1" sequential="true">
           <resource_ref id="world1"/>
           <resource_ref id="world2"/>

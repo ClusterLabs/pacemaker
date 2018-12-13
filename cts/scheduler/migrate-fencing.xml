@@ -178,7 +178,7 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="lsb-with-group" rsc="lsb-dummy" score="INFINITY" with-rsc="group-1"/>
-      <rsc_order first="group-1" id="lsb-after-group" score="INFINITY" symmetrical="true" then="lsb-dummy"/>
+      <rsc_order first="group-1" id="lsb-after-group" symmetrical="true" then="lsb-dummy"/>
       <rsc_location id="m1-is-connected" rsc="master-1">
         <rule boolean-op="or" id="m1-is-connected-rule" score="-INFINITY">
           <expression attribute="connected" id="m1-is-connected-expression" operation="lt" value="1"/>
@@ -186,7 +186,7 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="group-with-master" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Master"/>
-      <rsc_order first="master-1" first-action="promote" id="group-after-master" score="INFINITY" symmetrical="true" then="group-1" then-action="start"/>
+      <rsc_order first="master-1" first-action="promote" id="group-after-master" symmetrical="true" then="group-1" then-action="start"/>
     </constraints>
     <rsc_defaults/>
   </configuration>

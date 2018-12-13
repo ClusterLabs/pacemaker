@@ -1,0 +1,50 @@
+# Copyright 2018 Red Hat, Inc.
+# Author: Jan Pokorny <jpokorny@redhat.com>
+# Part of pacemaker project
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+define pcmk
+    # shelling avoids necessity to have an inferior around
+    shell printf '%s %s\n' 'Available commands' \
+                 '(all require an inferior, just break on main or so):\n'
+    shell printf '%s\t%s\n' pcmk-follow-daemon \
+                 'Convenient pacemakerd to particular daemon descent'
+end
+document pcmk
+Show possible pcmk namespace rooted user-defined convenience commands.
+end
+
+# XXX one would expect that order of pcmk_children naturally matches
+#     the actual sequential ordering, but that's governed with start_seq
+define pcmk-follow-daemon
+    dont-repeat
+    set $d = $arg0
+    eval "set $d_alt = \"pacemaker-%s\"", $d
+    set $cont = 1
+    break start_child
+    cont
+    while ($cont)
+        if (!strcmp(child->name, $d) || !strcmp(child->name, $d_alt))
+            set $cont = 0
+            set follow-fork-mode child
+            break getrlimit
+            continue
+            set follow-fork-mode parent  # restore
+        else
+            if (child->start_seq == sizeof(pcmk_children)/sizeof(*pcmk_children) - 1)
+                set $cont = 0
+                printf "no such daemon: %s (%s)\n", $d, $d_alt
+                set follow-fork-mode parent  # restore
+            else
+                continue
+            end
+        end
+    end
+end
+document pcmk-follow-daemon
+Convenient way to follow into particular daemon when starting debugging
+from the master control process of pacemaker (pacemakerd).
+For "pacemaker-" prefixed daemons, this very prefix is not needed.
+
+Example:  pcmk-follow-daemon "controld"
+end

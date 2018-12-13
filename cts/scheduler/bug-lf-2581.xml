@@ -127,8 +127,8 @@
     <constraints>
       <rsc_colocation id="AZ-with-BC-group-1" rsc="BC-group-1" score="INFINITY" with-rsc="AZ-clone"/>
       <rsc_colocation id="AZ-with-BC-group-2" rsc="BC-group-2" score="INFINITY" with-rsc="AZ-clone"/>
-      <rsc_order first="AZ-clone" id="AZ-before-BC-group-1" score="INFINITY" symmetrical="true" then="BC-group-1"/>
-      <rsc_order first="AZ-clone" id="AZ-before-BC-group-2" score="INFINITY" symmetrical="true" then="BC-group-2"/>
+      <rsc_order first="AZ-clone" id="AZ-before-BC-group-1" symmetrical="true" then="BC-group-1"/>
+      <rsc_order first="AZ-clone" id="AZ-before-BC-group-2" symmetrical="true" then="BC-group-2"/>
     </constraints>
   </configuration>
   <status>

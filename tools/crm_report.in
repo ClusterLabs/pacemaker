@@ -15,13 +15,13 @@ eval set -- "$TEMP"
 
 progname=$(basename "$0")
 rsh="ssh -T"
-times=""
 tests=""
 nodes=""
 compress=1
 cluster="any"
 ssh_user="root"
 search_logs=1
+sos_mode=0
 report_data=`dirname $0`
 maxdepth=5
 
@@ -121,7 +121,7 @@ while true; do
 	-u|--user)      ssh_user="$2"; shift; shift;;
         -D|--max-depth)     maxdepth="$2"; shift; shift;;
 	-M) search_logs=0; shift;;
-        --sos-mode) search_logs=0; nodes="$host"; shift;;
+        --sos-mode) sos_mode=1; nodes="$host"; shift;;
 	--dest) DESTDIR=$2; shift; shift;;
 	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
 	-h|--help) usage; exit 0;;
@@ -176,6 +176,7 @@ CLUSTER=$cluster
 LOG_PATTERNS="$log_patterns"
 EXTRA_LOGS="$extra_logs"
 SEARCH_LOGS=$search_logs
+SOS_MODE=$sos_mode
 verbose=$verbose
 maxdepth=$maxdepth
 EOF
@@ -227,10 +228,18 @@ EOF
 # check if files have same content in the cluster
 #
 cibdiff() {
-    d1=`dirname $1`
-    d2=`dirname $2`
-    if [ -f $d1/RUNNING -a -f $d2/RUNNING ] ||
-	[ -f $d1/STOPPED -a -f $d2/STOPPED ]; then
+    d1=$(dirname $1)
+    d2=$(dirname $2)
+
+    if [ -f "$d1/RUNNING" ] && [ ! -f "$d2/RUNNING" ]; then
+        DIFF_OK=0
+    elif [ -f "$d1/STOPPED" ] && [ ! -f "$d2/STOPPED" ]; then
+        DIFF_OK=0
+    else
+        DIFF_OK=1
+    fi
+
+    if [ $DIFF_OK -eq 1 ]; then
 	if which crm_diff > /dev/null 2>&1; then
 	    crm_diff -c -n $1 -o $2
 	else
@@ -250,18 +259,17 @@ diffcheck() {
 	echo "$2 does not exist"
 	return 1
     }
-    case `basename $1` in
-	$CIB_F)  cibdiff $1 $2;;
-	$B_CONF) diff -u $1 $2;; # confdiff?
-	*)       diff -u $1 $2;;
-esac
+    case $(basename "$1") in
+        $CIB_F)  cibdiff $1 $2 ;;
+        *)       diff -u $1 $2 ;;
+    esac
 }
 
 #
 # remove duplicates if files are same, make links instead
 #
 consolidate() {
-    for n in $NODES; do
+    for n in $nodes; do
 	if [ -f $1/$2 ]; then
 	    rm $1/$n/$2
 	else
@@ -274,7 +282,7 @@ consolidate() {
 analyze_one() {
     rc=0
     node0=""
-    for n in $NODES; do
+    for n in $nodes; do
 	if [ "$node0" ]; then
 	    diffcheck $1/$node0/$2 $1/$n/$2
 	    rc=$(($rc+$?))
@@ -286,7 +294,7 @@ analyze_one() {
 }
 
 analyze() {
-    flist="$MEMBERSHIP_F $CIB_F $CRM_MON_F $B_CONF $SYSINFO_F"
+    flist="$MEMBERSHIP_F $CIB_F $CRM_MON_F $SYSINFO_F"
     for f in $flist; do
 	printf "Diff $f... "
 	ls $1/*/$f >/dev/null 2>&1 || {

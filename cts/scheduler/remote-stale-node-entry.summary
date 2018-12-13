@@ -11,7 +11,7 @@ RemoteOFFLINE: [ remote1 ]
  migrator	(ocf::pacemaker:Dummy):	Stopped 
  Clone Set: Connectivity [ping-1]
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
  Resource Group: group-1
      r192.168.122.204	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -100,7 +100,7 @@ RemoteOFFLINE: [ remote1 ]
  Clone Set: Connectivity [ping-1]
      Started: [ rhel7-node1 rhel7-node2 rhel7-node3 ]
      Stopped: [ remote1 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
  Resource Group: group-1
      r192.168.122.204	(ocf::heartbeat:IPaddr2):	Stopped 

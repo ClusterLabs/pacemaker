@@ -25,16 +25,16 @@ bool BE_QUIET = FALSE;
 bool scope_master = FALSE;
 int cib_options = cib_sync_call;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 
-#define message_timeout_ms 60*1000
+#define MESSAGE_TIMEOUT_S 60
 
 static gboolean
 resource_ipc_timeout(gpointer data)
 {
-    fprintf(stderr, "No messages received in %d seconds.. aborting\n",
-            (int)message_timeout_ms / 1000);
-    crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
+    fprintf(stderr, "Aborting because no messages received in %d seconds\n",
+            MESSAGE_TIMEOUT_S);
+    crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
     return crm_exit(CRM_EX_TIMEOUT);
 }
 
@@ -53,12 +53,12 @@ start_mainloop(void)
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
-    fprintf(stderr, "Waiting for %d replies from the controller",
-            crmd_replies_needed);
-    crm_debug("Waiting for %d replies from the controller",
-              crmd_replies_needed);
+    fprintf(stderr, "Waiting for %d repl%s from the controller",
+            crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
+    crm_debug("Waiting for %d repl%s from the controller",
+              crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
 
-    g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
+    g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
     g_main_loop_run(mainloop);
 }
 
@@ -247,10 +247,16 @@ static struct crm_option long_options[] = {
     {
         "clear", no_argument, NULL, 'U',
         "\t\tRemove all constraints created by the --ban and/or --move commands.\n"
-        "\t\t\t\tRequires: --resource. Optional: --node, --master.\n"
+        "\t\t\t\tRequires: --resource. Optional: --node, --master, --expired.\n"
         "\t\t\t\tIf --node is not specified, all constraints created by --ban and --move\n"
         "\t\t\t\twill be removed for the named resource. If --node and --force are specified,\n"
-        "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node."
+        "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node.\n"
+        "\t\t\t\tIf --expired is specified, only those constraints whose lifetimes have expired will\n"
+        "\t\t\t\tbe removed.\n"
+    },
+    {
+        "expired", no_argument, NULL, 'e',
+        "\t\tModifies the --clear argument to remove constraints with expired lifetimes.\n"
     },
     {
         "lifetime", required_argument, NULL, 'u',
@@ -411,7 +417,7 @@ main(int argc, char **argv)
 
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
-    pe_working_set_t data_set = { 0, };
+    pe_working_set_t *data_set = NULL;
     cib_t *cib_conn = NULL;
     resource_t *rsc = NULL;
     bool recursive = FALSE;
@@ -420,6 +426,7 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    // whether command requires controller connection
+    bool clear_expired = FALSE;
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -604,6 +611,10 @@ main(int argc, char **argv)
             case 'T':
                 timeout_ms = crm_get_msec(optarg);
                 break;
+            case 'e':
+                clear_expired = TRUE;
+                require_resource = FALSE;
+                break;
 
             case 'C':
             case 'R':
@@ -714,6 +725,12 @@ main(int argc, char **argv)
         require_resource = FALSE;
     }
 
+    // --expired without --clear/-U doesn't make sense
+    if (clear_expired == TRUE && rsc_cmd != 'U') {
+        CMD_ERR("--expired requires --clear or -U");
+        argerr++;
+    }
+
     if (optind < argc
         && argv[optind] != NULL
         && rsc_cmd == 0
@@ -762,8 +779,6 @@ main(int argc, char **argv)
         cib_options |= cib_quorum_override;
     }
 
-    data_set.input = NULL; /* make clean-up easier */
-
     if (require_resource && !rsc_id) {
         CMD_ERR("Must supply a resource id with -r");
         rc = -ENXIO;
@@ -798,17 +813,21 @@ main(int argc, char **argv)
         }
 
         /* Populate the working set instance */
-        set_working_set_defaults(&data_set);
-        rc = update_working_set_xml(&data_set, &cib_xml_copy);
+        data_set = pe_new_working_set();
+        if (data_set == NULL) {
+            rc = -ENOMEM;
+            goto bail;
+        }
+        rc = update_working_set_xml(data_set, &cib_xml_copy);
         if (rc != pcmk_ok) {
             goto bail;
         }
-        cluster_status(&data_set);
+        cluster_status(data_set);
     }
 
     // If command requires that resource exist if specified, find it
     if (find_flags && rsc_id) {
-        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+        rsc = pe_find_resource_with_flags(data_set->resources, rsc_id,
                                           find_flags);
         if (rsc == NULL) {
             CMD_ERR("Resource '%s' not found", rsc_id);
@@ -838,14 +857,14 @@ main(int argc, char **argv)
     /* Handle rsc_cmd appropriately */
     if (rsc_cmd == 'L') {
         rc = pcmk_ok;
-        cli_resource_print_list(&data_set, FALSE);
+        cli_resource_print_list(data_set, FALSE);
 
     } else if (rsc_cmd == 'l') {
         int found = 0;
         GListPtr lpc = NULL;
 
         rc = pcmk_ok;
-        for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
+        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
             rsc = (resource_t *) lpc->data;
 
             found++;
@@ -858,6 +877,10 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
+        /* We don't pass data_set because rsc needs to stay valid for the entire
+         * lifetime of cli_resource_restart(), but it will reset and update the
+         * working set multiple times, so it needs to use its own copy.
+         */
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
@@ -866,21 +889,22 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd) {
         // validate, force-(stop|start|demote|promote|check)
         rc = cli_resource_execute(rsc, rsc_id, rsc_long_cmd, override_params,
-                                  timeout_ms, cib_conn, &data_set);
+                                  timeout_ms, cib_conn, data_set);
         if (rc >= 0) {
             is_ocf_rc = 1;
         }
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                   data_set->input);
 
-        unpack_constraints(cib_constraints, &data_set);
+        unpack_constraints(cib_constraints, data_set);
 
         // Constraints apply to group/clone, not member/instance
         rsc = uber_parent(rsc);
 
-        for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
+        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
             resource_t *r = (resource_t *) lpc->data;
 
             clear_bit(r->flags, pe_rsc_allocating);
@@ -891,7 +915,7 @@ main(int argc, char **argv)
         fprintf(stdout, "* %s\n", rsc->id);
         cli_resource_print_location(rsc, NULL);
 
-        for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
+        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
             resource_t *r = (resource_t *) lpc->data;
 
             clear_bit(r->flags, pe_rsc_allocating);
@@ -903,54 +927,57 @@ main(int argc, char **argv)
         GListPtr lpc = NULL;
 
         rc = pcmk_ok;
-        for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
+        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
             rsc = (resource_t *) lpc->data;
             cli_resource_print_cts(rsc);
         }
-        cli_resource_print_cts_constraints(&data_set);
+        cli_resource_print_cts_constraints(data_set);
 
     } else if (rsc_cmd == 'F') {
-        rc = cli_resource_fail(crmd_channel, host_uname, rsc_id, &data_set);
+        rc = cli_resource_fail(crmd_channel, host_uname, rsc_id, data_set);
         if (rc == pcmk_ok) {
             start_mainloop();
         }
 
     } else if (rsc_cmd == 'O') {
-        rc = cli_resource_print_operations(rsc_id, host_uname, TRUE, &data_set);
+        rc = cli_resource_print_operations(rsc_id, host_uname, TRUE, data_set);
 
     } else if (rsc_cmd == 'o') {
-        rc = cli_resource_print_operations(rsc_id, host_uname, FALSE, &data_set);
+        rc = cli_resource_print_operations(rsc_id, host_uname, FALSE, data_set);
 
     } else if (rsc_cmd == 'W') {
-        rc = cli_resource_search(rsc, rsc_id, &data_set);
+        rc = cli_resource_search(rsc, rsc_id, data_set);
         if (rc >= 0) {
             rc = pcmk_ok;
         }
 
     } else if (rsc_cmd == 'q') {
-        rc = cli_resource_print(rsc, &data_set, TRUE);
+        rc = cli_resource_print(rsc, data_set, TRUE);
 
     } else if (rsc_cmd == 'w') {
-        rc = cli_resource_print(rsc, &data_set, FALSE);
+        rc = cli_resource_print(rsc, data_set, FALSE);
 
     } else if (rsc_cmd == 'Y') {
         node_t *dest = NULL;
 
         if (host_uname) {
-            dest = pe_find_node(data_set.nodes, host_uname);
+            dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 rc = -pcmk_err_node_unknown;
                 goto bail;
             }
         }
-        cli_resource_why(cib_conn, data_set.resources, rsc, dest);
+        cli_resource_why(cib_conn, data_set->resources, rsc, dest);
         rc = pcmk_ok;
 
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
 
-        if (host_uname) {
-            dest = pe_find_node(data_set.nodes, host_uname);
+        if (clear_expired == TRUE) {
+            rc = cli_resource_clear_all_expired(data_set->input, cib_conn, rsc_id, host_uname, scope_master);
+
+        } else if (host_uname) {
+            dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 rc = -pcmk_err_node_unknown;
                 goto bail;
@@ -958,14 +985,14 @@ main(int argc, char **argv)
             rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn);
 
         } else {
-            rc = cli_resource_clear(rsc_id, NULL, data_set.nodes, cib_conn);
+            rc = cli_resource_clear(rsc_id, NULL, data_set->nodes, cib_conn);
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {
-        rc = cli_resource_move(rsc, rsc_id, host_uname, cib_conn, &data_set);
+        rc = cli_resource_move(rsc, rsc_id, host_uname, cib_conn, data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        node_t *dest = pe_find_node(data_set.nodes, host_uname);
+        node_t *dest = pe_find_node(data_set->nodes, host_uname);
 
         if (dest == NULL) {
             rc = -pcmk_err_node_unknown;
@@ -1005,20 +1032,23 @@ main(int argc, char **argv)
                 exit_code = CRM_EX_USAGE;
                 CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).",
                         rsc_id, nactive, count);
-                CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
-                CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
-                        " --ban --master --node <name>", rsc_id);
+                CMD_ERR("To prevent '%s' from running on a specific location, "
+                        "specify a node.", rsc_id);
+                CMD_ERR("To prevent '%s' from being promoted at a specific "
+                        "location, specify a node and the master option.",
+                        rsc_id);
             }
 
         } else {
             rc = -EINVAL;
             exit_code = CRM_EX_USAGE;
             CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, nactive);
-            CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
+            CMD_ERR("To prevent '%s' from running on a specific location, "
+                    "specify a node.", rsc_id);
         }
 
     } else if (rsc_cmd == 'G') {
-        rc = cli_resource_print_property(rsc, prop_name, &data_set);
+        rc = cli_resource_print_property(rsc, prop_name, data_set);
 
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
@@ -1044,7 +1074,7 @@ main(int argc, char **argv)
         free_xml(msg_data);
 
     } else if (rsc_cmd == 'g') {
-        rc = cli_resource_print_attribute(rsc, prop_name, &data_set);
+        rc = cli_resource_print_attribute(rsc, prop_name, data_set);
 
     } else if (rsc_cmd == 'p') {
         if (prop_value == NULL || strlen(prop_value) == 0) {
@@ -1056,12 +1086,12 @@ main(int argc, char **argv)
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_update_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, prop_value, recursive,
-                                           cib_conn, &data_set);
+                                           cib_conn, data_set);
 
     } else if (rsc_cmd == 'd') {
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
-                                           prop_name, cib_conn, &data_set);
+                                           prop_name, cib_conn, data_set);
 
     } else if ((rsc_cmd == 'C') && rsc) {
         if (do_force == FALSE) {
@@ -1072,7 +1102,7 @@ main(int argc, char **argv)
         crm_debug("Erasing failures of %s (%s requested) on %s",
                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
         rc = cli_resource_delete(crmd_channel, host_uname, rsc,
-                                 operation, interval_spec, TRUE, &data_set);
+                                 operation, interval_spec, TRUE, data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1085,7 +1115,10 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'C') {
         rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval_spec,
-                             &data_set);
+                             data_set);
+        if (rc == pcmk_ok) {
+            start_mainloop();
+        }
 
     } else if ((rsc_cmd == 'R') && rsc) {
         if (do_force == FALSE) {
@@ -1096,7 +1129,7 @@ main(int argc, char **argv)
         crm_debug("Re-checking the state of %s (%s requested) on %s",
                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
         rc = cli_resource_delete(crmd_channel, host_uname, rsc,
-                                 NULL, 0, FALSE, &data_set);
+                                 NULL, 0, FALSE, data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1114,7 +1147,7 @@ main(int argc, char **argv)
         int attr_options = attrd_opt_none;
 
         if (host_uname) {
-            node_t *node = pe_find_node(data_set.nodes, host_uname);
+            node_t *node = pe_find_node(data_set->nodes, host_uname);
 
             if (node && is_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);
@@ -1179,10 +1212,7 @@ main(int argc, char **argv)
   bail:
 
     free(our_pid);
-
-    if (data_set.input != NULL) {
-        cleanup_alloc_calculations(&data_set);
-    }
+    pe_free_working_set(data_set);
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
@@ -1194,7 +1224,7 @@ main(int argc, char **argv)
     } else if (rc != pcmk_ok) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
         if (rc == -pcmk_err_no_quorum) {
-            CMD_ERR("To ignore quorum, use --force");
+            CMD_ERR("To ignore quorum, use the force option");
         }
         if (exit_code == CRM_EX_OK) {
             exit_code = crm_errno2exit(rc);

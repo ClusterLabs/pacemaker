@@ -39,6 +39,7 @@ extern const char *attr_set_type;
 int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn);
 int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);
 int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);
+int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool scope_master);
 
 /* print */
 void cli_resource_print_cts(resource_t * rsc);
@@ -68,7 +69,8 @@ int cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 int cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
-int cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib);
+int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
+                         cib_t *cib);
 int cli_resource_move(resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
                       pe_working_set_t *data_set);
@@ -93,7 +95,6 @@ void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
                       node_t *node);
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\

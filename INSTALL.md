@@ -26,7 +26,7 @@
 * systemd-devel (systemd support)
 * dbus-devel (systemd/upstart resource support)
 * cluster-glue-libs-devel (Linux-HA style fencing agents)
-* asciidoc (documentation)
+* asciidoc or asciidoctor (documentation)
 * help2man (documentation)
 * publican (documentation)
 * inkscape (documentation)

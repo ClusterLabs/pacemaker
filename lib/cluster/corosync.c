@@ -17,11 +17,14 @@
  */
 
 #include <crm_internal.h>
-#include <bzlib.h>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <inttypes.h>  /* U64T ~ PRIu64 */
+
+#include <bzlib.h>
 
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
@@ -184,16 +187,16 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
     if (quorate != crm_have_quorum) {
         if (quorate) {
-            crm_notice("Quorum acquired " CRM_XS " membership=" U64T " members=%lu",
+            crm_notice("Quorum acquired " CRM_XS " membership=%" U64T " members=%lu",
                        ring_id, (long unsigned int)view_list_entries);
         } else {
-            crm_warn("Quorum lost " CRM_XS " membership=" U64T " members=%lu",
+            crm_warn("Quorum lost " CRM_XS " membership=%" U64T " members=%lu",
                      ring_id, (long unsigned int)view_list_entries);
         }
         crm_have_quorum = quorate;
 
     } else {
-        crm_info("Quorum %s " CRM_XS " membership=" U64T " members=%lu",
+        crm_info("Quorum %s " CRM_XS " membership=%" U64T " members=%lu",
                  (quorate? "retained" : "still lost"), ring_id,
                  (long unsigned int)view_list_entries);
     }

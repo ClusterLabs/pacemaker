@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "drbd_float:0_post_notify_promote_0 sambuca.linbit" -> "ms_drbd_float_confirmed-post_notify_promoted_0" [ style = bold]
 "drbd_float:0_post_notify_promote_0 sambuca.linbit" [ style=bold color="green" fontcolor="black" ]
 "drbd_float:0_post_notify_start_0 sambuca.linbit" -> "ms_drbd_float_confirmed-post_notify_running_0" [ style = bold]
@@ -13,7 +12,6 @@ digraph "g" {
 "drbd_float:0_start_0 sambuca.linbit" -> "drbd_float:0_promote_0 sambuca.linbit" [ style = bold]
 "drbd_float:0_start_0 sambuca.linbit" -> "ms_drbd_float_running_0" [ style = bold]
 "drbd_float:0_start_0 sambuca.linbit" [ style=bold color="green" fontcolor="black" ]
-"drbd_float:0_stop_0 sambuca.linbit" -> "all_stopped" [ style = bold]
 "drbd_float:0_stop_0 sambuca.linbit" -> "drbd_float:0_start_0 sambuca.linbit" [ style = bold]
 "drbd_float:0_stop_0 sambuca.linbit" -> "ms_drbd_float_stopped_0" [ style = bold]
 "drbd_float:0_stop_0 sambuca.linbit" [ style=bold color="green" fontcolor="black" ]
@@ -28,7 +26,6 @@ digraph "g" {
 "ms_drbd_float_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange" ]
 "ms_drbd_float_confirmed-post_notify_running_0" -> "ms_drbd_float_pre_notify_promote_0" [ style = bold]
 "ms_drbd_float_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange" ]
-"ms_drbd_float_confirmed-post_notify_stopped_0" -> "all_stopped" [ style = bold]
 "ms_drbd_float_confirmed-post_notify_stopped_0" -> "ms_drbd_float_pre_notify_promote_0" [ style = bold]
 "ms_drbd_float_confirmed-post_notify_stopped_0" -> "ms_drbd_float_pre_notify_start_0" [ style = bold]
 "ms_drbd_float_confirmed-post_notify_stopped_0" [ style=bold color="green" fontcolor="orange" ]

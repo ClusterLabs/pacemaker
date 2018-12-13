@@ -13,11 +13,8 @@
 "A_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
 "A_stop_0 rhel7-auto1" -> "A-clone_stopped_0" [ style = bold]
 "A_stop_0 rhel7-auto1" -> "A_start_0 <none>" [ style = dashed]
-"A_stop_0 rhel7-auto1" -> "all_stopped" [ style = bold]
 "A_stop_0 rhel7-auto1" [ style=bold color="green" fontcolor="black"]
 "A_stop_0 rhel7-auto3" -> "A-clone_stopped_0" [ style = bold]
 "A_stop_0 rhel7-auto3" -> "A_start_0 <none>" [ style = dashed]
-"A_stop_0 rhel7-auto3" -> "all_stopped" [ style = bold]
 "A_stop_0 rhel7-auto3" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 }

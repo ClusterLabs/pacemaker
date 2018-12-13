@@ -59,8 +59,8 @@
           <expression id="expression.id22131" attribute="#uname" operation="eq" value="sel3"/>
         </rule>
       </rsc_location>
-      <rsc_order id="drbd0_before_fs0" first="ms-drbd0" then="fs0" then-action="start" first-action="promote" score="0"/>
-      <rsc_order id="sf_before_fs0" first="ms-sf" then="fs0" then-action="start" first-action="promote" score="0"/>
+      <rsc_order id="drbd0_before_fs0" first="ms-drbd0" then="fs0" then-action="start" first-action="promote" kind="Optional"/>
+      <rsc_order id="sf_before_fs0" first="ms-sf" then="fs0" then-action="start" first-action="promote" kind="Optional"/>
       <rsc_colocation id="fs0_on_drbd0" rsc="fs0" with-rsc="ms-drbd0" with-rsc-role="Master" score="INFINITY"/>
     </constraints>
   </configuration>

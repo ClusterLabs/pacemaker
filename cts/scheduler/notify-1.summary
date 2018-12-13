@@ -35,7 +35,6 @@ Executing cluster transition:
  * Resource action: child_rsc1:1    notify on node1
  * Pseudo action:   rsc1_confirmed-post_notify_running_0
  * Pseudo action:   rsc2_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 ]

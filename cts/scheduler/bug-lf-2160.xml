@@ -49,7 +49,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="clone-dom0-iscsi1" id="domU-test01-iscsi1-order1" score="0" then="domU-test01"/>
+      <rsc_order first="clone-dom0-iscsi1" id="domU-test01-iscsi1-order1" kind="Optional" then="domU-test01"/>
       <rsc_colocation id="domU-test01-iscsi1-colocation1" rsc="domU-test01" score="+INFINITY" with-rsc="clone-dom0-iscsi1"/>
     </constraints>
     <op_defaults/>

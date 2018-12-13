@@ -6,7 +6,7 @@ Online: [ hpn07 hpn08 ]
  p_dummy2	(ocf::pacemaker:Dummy):	Stopped 
  p_dummy4	(ocf::pacemaker:Dummy):	Stopped 
  p_dummy3	(ocf::pacemaker:Dummy):	Stopped 
- Master/Slave Set: ms_stateful1 [p_stateful1]
+ Clone Set: ms_stateful1 [p_stateful1] (promotable)
      Masters: [ hpn07 ]
      Slaves: [ hpn08 ]
 
@@ -58,7 +58,7 @@ Online: [ hpn07 hpn08 ]
  p_dummy2	(ocf::pacemaker:Dummy):	Started hpn08
  p_dummy4	(ocf::pacemaker:Dummy):	Started hpn07
  p_dummy3	(ocf::pacemaker:Dummy):	Started hpn08
- Master/Slave Set: ms_stateful1 [p_stateful1]
+ Clone Set: ms_stateful1 [p_stateful1] (promotable)
      Masters: [ hpn07 ]
      Slaves: [ hpn08 ]
 

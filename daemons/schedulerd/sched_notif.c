@@ -412,13 +412,6 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
     if (start && end) {
         order_actions(n_data->pre_done, n_data->post, pe_order_optional);
     }
-
-    if (safe_str_eq(action, RSC_STOP)) {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        order_actions(n_data->post_done, all_stopped, pe_order_optional);
-    }
-
     return n_data;
 }
 
@@ -632,6 +625,28 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
     return required;
 }
 
+/*
+ * \internal
+ * \brief Find any remote connection start relevant to an action
+ *
+ * \param[in] action  Action to chek
+ *
+ * \return If action is behind a remote connection, connection's start
+ */
+static pe_action_t *
+find_remote_start(pe_action_t *action)
+{
+    if (action && action->node) {
+        pe_resource_t *remote_rsc = action->node->details->remote_rsc;
+
+        if (remote_rsc) {
+            return find_first_action(remote_rsc->actions, NULL, RSC_START,
+                                     NULL);
+        }
+    }
+    return NULL;
+}
+
 void
 create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
@@ -739,6 +754,20 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
                         rsc->id);
 
         } else if (task == start_rsc || task == action_promote) {
+
+            if (start) {
+                pe_action_t *remote_start = find_remote_start(start);
+
+                if (remote_start
+                    && is_not_set(remote_start->flags, pe_action_runnable)) {
+                    /* Start and promote actions for a clone instance behind
+                     * a Pacemaker Remote connection happen after the
+                     * connection starts. If the connection start is blocked, do
+                     * not schedule notifications for these actions.
+                     */
+                    return;
+                }
+            }
             if (task != start_rsc || start == NULL || is_set(start->flags, pe_action_optional)) {
                 pe_notify(rsc, rsc->allocated_to, n_data->pre, n_data->pre_done, n_data, data_set);
             }

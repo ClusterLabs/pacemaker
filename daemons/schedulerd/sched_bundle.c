@@ -119,7 +119,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
     containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
     distribute_children(rsc, containers, nodes,
                         container_data->replicas, container_data->replicas_per_host, data_set);
@@ -357,7 +357,7 @@ find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_
 
 static resource_t *
 find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filter,
-                      gboolean current)
+                      gboolean current, pe_working_set_t *data_set)
 {
     GListPtr scratch = NULL;
     resource_t *pair = NULL;
@@ -369,7 +369,7 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
+    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
     for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -387,7 +387,9 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
 }
 
 void
-container_rsc_colocation_lh(resource_t * rsc, resource_t * rsc_rh, rsc_colocation_t * constraint)
+container_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
+                            rsc_colocation_t *constraint,
+                            pe_working_set_t *data_set)
 {
     /* -- Never called --
      *
@@ -429,7 +431,9 @@ int copies_per_node(resource_t * rsc)
 }
 
 void
-container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocation_t * constraint)
+container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+                            rsc_colocation_t *constraint,
+                            pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;
     container_variant_data_t *container_data = NULL;
@@ -444,11 +448,14 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
         return;
 
     } else if(constraint->rsc_lh->variant > pe_group) {
-        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc, RSC_ROLE_UNKNOWN, FALSE);
+        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc,
+                                                     RSC_ROLE_UNKNOWN, FALSE,
+                                                     data_set);
 
         if (rh_child) {
             pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
-            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
+            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint,
+                                            data_set);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);
@@ -469,7 +476,8 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         if (constraint->score < INFINITY) {
-            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker, constraint);
+            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker,
+                                                   constraint, data_set);
 
         } else {
             node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
@@ -577,8 +585,11 @@ tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
 }
 
 static enum pe_graph_flags
-container_update_interleave_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
+                                    pe_node_t *node, enum pe_action_flags flags,
+                                    enum pe_action_flags filter,
+                                    enum pe_ordering type,
+                                    pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr children = NULL;
@@ -593,8 +604,11 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
 
     children = get_containers_or_children(then->rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *then_child = (resource_t *) gIter->data;
-        resource_t *first_child = find_compatible_child(then_child, first->rsc, RSC_ROLE_UNKNOWN, current);
+        pe_resource_t *then_child = gIter->data;
+        pe_resource_t *first_child = find_compatible_child(then_child,
+                                                           first->rsc,
+                                                           RSC_ROLE_UNKNOWN,
+                                                           current, data_set);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
@@ -686,9 +700,10 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
                 changed |= (pe_graph_updated_first | pe_graph_updated_then);
             }
             if(first_action && then_action) {
-                changed |= then_child->cmds->update_actions(first_action, then_action, node,
-                                                            first_child->cmds->action_flags(first_action, node),
-                                                            filter, type);
+                changed |= then_child->cmds->update_actions(first_action,
+                    then_action, node,
+                    first_child->cmds->action_flags(first_action, node),
+                    filter, type, data_set);
             } else {
                 crm_err("Nothing found either for %s (%p) or %s (%p) %s",
                         first_child->id, first_action,
@@ -735,22 +750,26 @@ bool can_interleave_actions(pe_action_t *first, pe_action_t *then)
 }
 
 enum pe_graph_flags
-container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+container_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                         enum pe_action_flags flags,
+                         enum pe_action_flags filter, enum pe_ordering type,
+                         pe_working_set_t *data_set)
 {
     enum pe_graph_flags changed = pe_graph_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = container_update_interleave_actions(first, then, node, flags, filter, type);
+        changed = container_update_interleave_actions(first, then, node, flags,
+                                                      filter, type, data_set);
 
     } else if(then->rsc) {
         GListPtr gIter = NULL;
         GListPtr children = NULL;
 
         // Handle the 'primitive' ordering case
-        changed |= native_update_actions(first, then, node, flags, filter, type);
+        changed |= native_update_actions(first, then, node, flags, filter,
+                                         type, data_set);
 
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);
@@ -763,14 +782,14 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
 
                 if (is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |=
-                        then_child->cmds->update_actions(first, then_child_action, node, flags, filter, type);
+                    then_child_changed |= then_child->cmds->update_actions(first,
+                        then_child_action, node, flags, filter, type, data_set);
                 }
                 changed |= then_child_changed;
                 if (then_child_changed & pe_graph_updated_then) {
                     for (GListPtr lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         action_wrapper_t *next = (action_wrapper_t *) lpc->data;
-                        update_action(next->action);
+                        update_action(next->action, data_set);
                     }
                 }
             }
@@ -784,7 +803,7 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
 }
 
 void
-container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+container_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     container_variant_data_t *container_data = NULL;
     get_container_variant_data(container_data, rsc);
@@ -833,10 +852,19 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
             const char *calculated_addr = container_fix_remote_addr_in(tuple->remote, nvpair, "value");
 
             if (calculated_addr) {
-                crm_trace("Fixed addr for %s on %s", tuple->remote->id, calculated_addr);
+                crm_trace("Set address for bundle connection %s to bundle host %s",
+                          tuple->remote->id, calculated_addr);
                 g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
             } else {
-                crm_err("Could not fix addr for %s", tuple->remote->id);
+                /* The only way to get here is if the remote connection is
+                 * neither currently running nor scheduled to run. That means we
+                 * won't be doing any operations that require addr (only start
+                 * requires it; we additionally use it to compare digests when
+                 * unpacking status, promote, and migrate_from history, but
+                 * that's already happened by this point).
+                 */
+                crm_info("Unable to determine address for bundle %s remote connection",
+                         rsc->id);
             }
         }
         if(tuple->ip) {

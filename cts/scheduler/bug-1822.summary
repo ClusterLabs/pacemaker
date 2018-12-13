@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ process1a process2b ]
 
- Master/Slave Set: ms-sf [ms-sf_group] (unique)
+ Clone Set: ms-sf [ms-sf_group] (promotable) (unique)
      Resource Group: ms-sf_group:0
          master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b 
          master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 
@@ -27,14 +27,13 @@ Executing cluster transition:
  * Resource action: master_slave_Stateful:1 stop on process1a
  * Resource action: master_slave_procdctl:1 stop on process1a
  * Cluster action:  do_shutdown on process1a
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-sf_group:1_stopped_0
  * Pseudo action:   ms-sf_stopped_0
 
 Revised cluster status:
 Online: [ process1a process2b ]
 
- Master/Slave Set: ms-sf [ms-sf_group] (unique)
+ Clone Set: ms-sf [ms-sf_group] (promotable) (unique)
      Resource Group: ms-sf_group:0
          master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b 
          master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped 

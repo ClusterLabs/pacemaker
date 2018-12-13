@@ -44,7 +44,6 @@ Executing cluster transition:
  * Resource action: o2cb:0          stop on qa-suse-4
  * Resource action: o2cb:2          stop on qa-suse-3
  * Resource action: o2cb:3          stop on qa-suse-2
- * Pseudo action:   all_stopped
  * Pseudo action:   o2stage:0_stopped_0
  * Pseudo action:   o2stage:1_stopped_0
  * Pseudo action:   o2stage:2_stopped_0

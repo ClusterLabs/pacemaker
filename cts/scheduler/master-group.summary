@@ -4,7 +4,7 @@ Online: [ rh44-1 rh44-2 ]
 
  Resource Group: test
      resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
- Master/Slave Set: ms-sf [grp_ms_sf] (unique)
+ Clone Set: ms-sf [grp_ms_sf] (promotable) (unique)
      Resource Group: grp_ms_sf:0
          master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Slave rh44-2 
      Resource Group: grp_ms_sf:1
@@ -27,7 +27,7 @@ Online: [ rh44-1 rh44-2 ]
 
  Resource Group: test
      resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
- Master/Slave Set: ms-sf [grp_ms_sf] (unique)
+ Clone Set: ms-sf [grp_ms_sf] (promotable) (unique)
      Resource Group: grp_ms_sf:0
          master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Slave rh44-2 
      Resource Group: grp_ms_sf:1

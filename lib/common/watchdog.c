@@ -33,56 +33,13 @@ enum pcmk_panic_flags
     pcmk_panic_shutdown = 0x04,
 };
 
-#define SYSRQ "/proc/sys/kernel/sysrq"
-
-void
-sysrq_init(void)
-{
-#if SUPPORT_PROCFS
-    static bool need_init = true;
-    FILE* procf;
-    int c;
-
-    if(need_init) {
-        need_init = false;
-    } else {
-        return;
-    }
-
-    procf = fopen(SYSRQ, "r");
-    if (!procf) {
-        crm_perror(LOG_WARNING, "Cannot open "SYSRQ" for read");
-        return;
-    }
-    if (fscanf(procf, "%d", &c) != 1) {
-        crm_perror(LOG_ERR, "Parsing "SYSRQ" failed");
-        c = 0;
-    }
-    fclose(procf);
-    if (c == 1)
-        return;
-
-    /* 8 for debugging dumps of processes, 128 for reboot/poweroff */
-    c |= 136;
-    procf = fopen(SYSRQ, "w");
-    if (!procf) {
-        crm_perror(LOG_ERR, "Cannot write to "SYSRQ);
-        return;
-    }
-    fprintf(procf, "%d", c);
-    fclose(procf);
-#endif // SUPPORT_PROCFS
-    return;
-}
-
 static void
 sysrq_trigger(char t)
 {
 #if SUPPORT_PROCFS
     FILE *procf;
 
-    sysrq_init();
-
+    // Root can always write here, regardless of kernel.sysrq value
     procf = fopen("/proc/sysrq-trigger", "a");
     if (!procf) {
         crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");

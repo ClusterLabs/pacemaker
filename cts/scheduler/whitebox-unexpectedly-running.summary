@@ -17,8 +17,6 @@ Executing cluster transition:
  * Resource action: remote1         monitor on 18builder
  * Resource action: remote2         monitor on 18builder
  * Pseudo action:   stonith-remote2-reboot on remote2
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
  * Resource action: FAKE-crashed    start on 18builder
  * Resource action: remote1         start on 18builder
  * Resource action: remote2         start on 18builder

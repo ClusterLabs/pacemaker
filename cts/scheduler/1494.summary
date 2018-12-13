@@ -14,7 +14,6 @@ Executing cluster transition:
  * Pseudo action:   ima_cloneid_stop_0
  * Resource action: ima_rscid:0     stop on hb1
  * Pseudo action:   ima_cloneid_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ hb1 hb2 ]

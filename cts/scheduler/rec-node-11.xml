@@ -34,7 +34,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="group1" then="rsc3" then-action="stop" first-action="stop" score="0"/>
+      <rsc_order id="order1" first="group1" then="rsc3" then-action="stop" first-action="stop" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

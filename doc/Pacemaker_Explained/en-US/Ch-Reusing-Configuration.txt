@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Reusing Parts of the Configuration =
 
 Pacemaker provides multiple ways to simplify the configuration XML by reusing
@@ -305,6 +306,9 @@ The same principle applies for +meta_attributes+ and
 </primitive>
 -------
 =====
+
++id-ref+ can similarly be used with +resource_set+ (in any constraint type),
++nvpair+, and +operations+.
 
 == Tagging Configuration Elements ==
 

@@ -37,7 +37,7 @@ crm_cluster_t crm_cluster;
 GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
-gboolean preserve_status = FALSE;
+static gboolean preserve_status = FALSE;
 
 /* volatile because it may be changed in a signal handler */
 volatile gboolean cib_writes_enabled = TRUE;
@@ -73,7 +73,6 @@ static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\tThis text"},
     {"verbose", 0, 0, 'V', "\tIncrease debug output"},
 
-    {"per-action-cib", 0, 0, 'a', "\tAdvanced use only"},
     {"stand-alone",    0, 0, 's', "\tAdvanced use only"},
     {"disk-writes",    0, 0, 'w', "\tAdvanced use only"},
     {"cib-root",       1, 0, 'r', "\tAdvanced use only"},

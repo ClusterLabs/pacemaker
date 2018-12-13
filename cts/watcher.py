@@ -47,8 +47,8 @@ class SearchObj(object):
         self.logger.debug(message)
 
     def harvest(self, delegate=None):
-        async = self.harvest_async(delegate)
-        async.join()
+        async_task = self.harvest_async(delegate)
+        async_task.join()
 
     def harvest_async(self, delegate=None):
         self.log("Not implemented")

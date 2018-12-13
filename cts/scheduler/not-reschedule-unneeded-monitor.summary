@@ -18,7 +18,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: sle12-kvm       stop on castor
- * Pseudo action:   all_stopped
  * Resource action: sle12-kvm       start on kimball
  * Resource action: sle12-kvm       monitor=10000 on kimball
 

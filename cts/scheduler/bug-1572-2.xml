@@ -91,7 +91,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="drbd_before_fs-1" first="ms_drbd_7788" then="grp_pgsql_mirror" then-action="start" first-action="promote" score="0"/>
+      <rsc_order id="drbd_before_fs-1" first="ms_drbd_7788" then="grp_pgsql_mirror" then-action="start" first-action="promote" kind="Optional"/>
       <rsc_colocation id="fs_on_drbd_master" rsc="grp_pgsql_mirror" with-rsc="ms_drbd_7788" with-rsc-role="Master" score="INFINITY"/>
     </constraints>
   </configuration>

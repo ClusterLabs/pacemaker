@@ -51,7 +51,7 @@
       <primitive id="depends" class="lsb" type="postfix"/>
     </resources>
     <constraints>
-      <rsc_order id="o-1" first="group_1" then="depends" then-action="start" first-action="start" score="INFINITY"/>
+      <rsc_order id="o-1" first="group_1" then="depends" then-action="start" first-action="start"/>
     </constraints>
   </configuration>
   <status>

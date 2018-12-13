@@ -19,7 +19,6 @@ Executing cluster transition:
  * Resource action: myclone         stop on f20node1
  * Pseudo action:   myclone-clone_stopped_0
  * Pseudo action:   myclone-clone_start_0
- * Pseudo action:   all_stopped
  * Resource action: myclone         start on f20node2
  * Pseudo action:   myclone-clone_running_0
  * Resource action: vm              start on f20node2

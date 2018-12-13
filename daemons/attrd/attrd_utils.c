@@ -46,7 +46,7 @@ void
 attrd_shutdown(int nsig)
 {
     shutting_down = TRUE;
-    if ((mloop != NULL) && g_main_is_running(mloop)) {
+    if ((mloop != NULL) && g_main_loop_is_running(mloop)) {
         g_main_loop_quit(mloop);
     } else {
         crm_exit(CRM_EX_OK);

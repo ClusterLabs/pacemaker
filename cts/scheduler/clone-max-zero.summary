@@ -34,7 +34,6 @@ Executing cluster transition:
  * Resource action: dlm:1           stop on c001n12
  * Resource action: dlm:0           stop on c001n11
  * Pseudo action:   dlm-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ c001n11 c001n12 ]

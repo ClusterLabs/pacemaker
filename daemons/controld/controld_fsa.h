@@ -78,21 +78,8 @@ enum crmd_fsa_state {
       If the election algorithm is triggered, we enter the S_ELECTION state
       from where we can either go back to the S_NOT_DC state or progress
       to the S_INTEGRATION state (or S_RELEASE_DC if we used to be the DC
-      but aren't anymore).
-
-      The election algorithm has been adapted from
-      http://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR521
-
-      Loosely known as the Bully Algorithm, its major points are:
-      - Election is initiated by any node (N) that notices that the controller
-        is no longer responding
-      - Concurrent multiple elections are possible
-      - Algorithm:
-        + N sends ELECTION messages to all nodes that occur earlier in the
-          cluster layer's membership list
-        + If no one responds, N wins and becomes controller
-        + N sends out CONTROLLER messages to all other nodes in the partition
-        + If one of higher-ups answers, it takes over. N is done.
+      but aren't anymore). See the libcrmcluster API documentation for more
+      information about the election algorithm.
 
       Once the election is complete, if we are the DC, we enter the
       S_INTEGRATION state which is a DC-in-waiting style state.  We are
@@ -100,7 +87,7 @@ enum crmd_fsa_state {
       up-to-date picture of the cluster.  There may of course be times
       when this fails, so we should go back to the S_RECOVERY stage and
       check everything is ok.  We may also end up here if a new node came
-      online, since each node is authorative on itself and we would want
+      online, since each node is authoritative about itself, and we would want
       to incorporate its information into the CIB.
 
       Once we have the latest CIB, we then enter the S_POLICY_ENGINE state
@@ -500,9 +487,7 @@ extern GListPtr fsa_message_queue;
 
 extern char *fsa_cluster_name;
 
-extern election_t *fsa_election;
 extern fsa_timer_t *election_trigger;
-extern fsa_timer_t *election_timeout;
 extern fsa_timer_t *shutdown_escalation_timer;
 extern fsa_timer_t *transition_timer;
 extern fsa_timer_t *integration_timer;

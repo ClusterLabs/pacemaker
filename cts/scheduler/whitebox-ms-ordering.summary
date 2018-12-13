@@ -5,7 +5,7 @@ Online: [ 18node1 18node2 18node3 ]
  shooter	(stonith:fence_xvm):	Started 18node2 
  container1	(ocf::heartbeat:VirtualDomain):	FAILED 
  container2	(ocf::heartbeat:VirtualDomain):	FAILED 
- Master/Slave Set: lxc-ms-master [lxc-ms]
+ Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Stopped: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
@@ -37,24 +37,22 @@ Executing cluster transition:
  * Resource action: lxc2            monitor on 18node1
  * Pseudo action:   stonith-lxc2-reboot on lxc2
  * Pseudo action:   stonith-lxc1-reboot on lxc1
- * Pseudo action:   stonith_complete
  * Resource action: container1      start on 18node1
  * Resource action: container2      start on 18node1
  * Pseudo action:   lxc-ms_demote_0
  * Pseudo action:   lxc-ms-master_demoted_0
  * Pseudo action:   lxc-ms-master_stop_0
+ * Resource action: lxc1            start on 18node1
+ * Resource action: lxc2            start on 18node1
  * Pseudo action:   lxc-ms_stop_0
  * Pseudo action:   lxc-ms_stop_0
  * Pseudo action:   lxc-ms-master_stopped_0
  * Pseudo action:   lxc-ms-master_start_0
- * Pseudo action:   all_stopped
- * Resource action: lxc1            start on 18node1
- * Resource action: lxc2            start on 18node1
+ * Resource action: lxc1            monitor=30000 on 18node1
+ * Resource action: lxc2            monitor=30000 on 18node1
  * Resource action: lxc-ms          start on lxc1
  * Resource action: lxc-ms          start on lxc2
  * Pseudo action:   lxc-ms-master_running_0
- * Resource action: lxc1            monitor=30000 on 18node1
- * Resource action: lxc2            monitor=30000 on 18node1
  * Resource action: lxc-ms          monitor=10000 on lxc2
  * Pseudo action:   lxc-ms-master_promote_0
  * Resource action: lxc-ms          promote on lxc1
@@ -67,7 +65,7 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  shooter	(stonith:fence_xvm):	Started 18node2 
  container1	(ocf::heartbeat:VirtualDomain):	Started 18node1 
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node1 
- Master/Slave Set: lxc-ms-master [lxc-ms]
+ Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]
 

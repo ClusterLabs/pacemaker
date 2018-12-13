@@ -63,7 +63,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="c_dummy" id="clone-before-ms-group" score="INFINITY" then="ms_stateful"/>
+      <rsc_order first="c_dummy" id="clone-before-ms-group" then="ms_stateful"/>
     </constraints>
     <acls/>
   </configuration>

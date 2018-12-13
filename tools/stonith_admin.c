@@ -14,10 +14,11 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -46,7 +47,12 @@ static struct crm_option long_options[] = {
     {   "quiet", no_argument, NULL, 'q',
         "\tBe less descriptive in output."
     },
-
+    {   "cleanup", no_argument, NULL, 'c',
+        "\tCleanup wherever appropriate."
+    },
+    {   "broadcast", no_argument, NULL, 'b',
+        "Broadcast wherever appropriate."
+    },
     {   "-spacer-", no_argument, NULL, '-', "\nDevice definition commands:" },
 
     {   "register", required_argument, NULL, 'R',
@@ -91,9 +97,10 @@ static struct crm_option long_options[] = {
     },
     {   "history", required_argument, NULL, 'H',
         "Show last successful fencing operation for named node\n"
-        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
-        "\t\t\t(show only the operation's epoch timestamp),\n"
-        "\t\t\t--verbose (show all recorded and pending operations)."
+        "\t\t\t(or '*' for all nodes). Optional: --timeout, --cleanup,\n"
+        "\t\t\t--quiet (show only the operation's epoch timestamp),\n"
+        "\t\t\t--verbose (show all recorded and pending operations),\n"
+        "\t\t\t--broadcast (update history from all nodes available)."
     },
     {   "last", required_argument, NULL, 'h',
         "Indicate when the named node was last fenced.\n"
@@ -173,9 +180,9 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 struct {
     stonith_t *st;
     const char *target;
@@ -344,13 +351,23 @@ print_fence_event(stonith_history_t *event)
 }
 
 static int
-show_history(stonith_t *st, const char *target, int timeout, int quiet,
-             int verbose)
+handle_history(stonith_t *st, const char *target, int timeout, int quiet,
+             int verbose, int cleanup, int broadcast)
 {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = 0;
 
-    rc = st->cmds->history(st, st_opts,
+    if (!quiet) {
+        if (cleanup) {
+            printf("cleaning up fencing-history%s%s\n",
+                   target?" for node ":"", target?target:"");
+        }
+        if (broadcast) {
+            printf("gather fencing-history from all nodes\n");
+        }
+    }
+    rc = st->cmds->history(st, st_opts | (cleanup?st_opt_cleanup:0) |
+                           (broadcast?st_opt_broadcast:0),
                            (safe_str_eq(target, "*")? NULL : target),
                            &history, timeout);
     for (hp = history; hp; hp = hp->next) {
@@ -431,6 +448,8 @@ main(int argc, char **argv)
     int flag;
     int rc = 0;
     int quiet = 0;
+    int cleanup = 0;
+    int broadcast = 0;
     int verbose = 0;
     int argerr = 0;
     int timeout = 120;
@@ -439,6 +458,7 @@ main(int argc, char **argv)
     int no_connect = 0;
     int tolerance = 0;
     int as_nodeid = FALSE;
+    bool required_agent = false;
 
     char *name = NULL;
     char *value = NULL;
@@ -478,6 +498,7 @@ main(int argc, char **argv)
             case 'I':
             case 'K':
                 no_connect = 1;
+                required_agent = true;
                 /* fall through */
             case 'L':
                 action = flag;
@@ -485,8 +506,16 @@ main(int argc, char **argv)
             case 'q':
                 quiet = 1;
                 break;
-            case 'Q':
+            case 'c':
+                cleanup = 1;
+                break;
+            case 'b':
+                broadcast = 1;
+                break;
             case 'R':
+                required_agent = true;
+                /* fall through */
+            case 'Q':
             case 'D':
             case 's':
                 action = flag;
@@ -506,6 +535,7 @@ main(int argc, char **argv)
             case 'M':
                 no_connect = 1;
                 action = flag;
+                required_agent = true;
                 break;
             case 't':
                 timeout = crm_atoi(optarg, NULL);
@@ -577,7 +607,12 @@ main(int argc, char **argv)
         }
     }
 
-    if (optind > argc) {
+    if (optind > argc || action == 0) {
+        ++argerr;
+    }
+
+    if (required_agent && agent == NULL) {
+        printf("Please specify an agent to query using -a,--agent [value]\n");
         ++argerr;
     }
 
@@ -673,11 +708,7 @@ main(int argc, char **argv)
             rc = handle_level(st, target, fence_level, devices, action == 'r');
             break;
         case 'M':
-            if (agent == NULL) {
-                printf("Please specify an agent to query using -a,--agent [value]\n");
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            } else {
+            {
                 char *buffer = NULL;
 
                 rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
@@ -717,14 +748,10 @@ main(int argc, char **argv)
             }
             break;
         case 'H':
-            rc = show_history(st, target, timeout, quiet, verbose);
+            rc = handle_history(st, target, timeout, quiet,
+                                verbose, cleanup, broadcast);
             break;
         case 'K':
-            if (agent == NULL) {
-                printf("Please specify an agent to validate with --agent\n");
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
             device = (devices? devices->key : NULL);
             rc = validate(st, agent, device, params, timeout, quiet);
             break;

@@ -146,7 +146,6 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i									\
 	    -e 's:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g'		\
 	    -e 's:%{name}-libs:lib%{name}3:g'					\
-	    -e 's@Requires:\( *\)%{python_pkg}\(-devel\)\? @Requires:\1python-curses python-xml %{python_pkg}\2 @' \
 	    -e 's: libtool-ltdl-devel\(%{?_isa}\)\?::g'				\
 	    -e 's:bzip2-devel:libbz2-devel:g'					\
 	    -e 's:docbook-style-xsl:docbook-xsl-stylesheets:g'			\
@@ -359,9 +358,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons tools; \
-		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
-	done
+	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=25 -q replace lib daemons tools
 
 clang:
 	test -e $(CLANG_analyzer)

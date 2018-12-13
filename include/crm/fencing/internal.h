@@ -86,6 +86,7 @@ xmlNode *create_device_registration_xml(const char *id,
 #  define F_STONITH_DATE          "st_date"
 #  define F_STONITH_STATE         "st_state"
 #  define F_STONITH_ACTIVE        "st_active"
+#  define F_STONITH_DIFFERENTIAL  "st_differential"
 
 #  define F_STONITH_DEVICE        "st_device_id"
 #  define F_STONITH_ACTION        "st_device_action"

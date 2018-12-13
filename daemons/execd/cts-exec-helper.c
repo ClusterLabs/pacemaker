@@ -48,10 +48,9 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-cib_t *cib_conn = NULL;
+static cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
 static int exec_call_opts = 0;
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 static gboolean start_test(gpointer user_data);
 static void try_connect(void);
 
@@ -75,8 +74,8 @@ static struct {
     lrmd_key_value_t *params;
 } options;
 
-GMainLoop *mainloop = NULL;
-lrmd_t *lrmd_conn = NULL;
+static GMainLoop *mainloop = NULL;
+static lrmd_t *lrmd_conn = NULL;
 
 static char event_buf_v0[1024];
 
@@ -352,7 +351,7 @@ static int
 generate_params(void)
 {
     int rc = 0;
-    pe_working_set_t data_set;
+    pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
     resource_t *rsc = NULL;
     GHashTable *params = NULL;
@@ -363,7 +362,11 @@ generate_params(void)
         return 0;
     }
 
-    set_working_set_defaults(&data_set);
+    data_set = pe_new_working_set();
+    if (data_set == NULL) {
+        crm_crit("Could not allocate working set");
+        return -ENOMEM;
+    }
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
@@ -390,12 +393,12 @@ generate_params(void)
         goto param_gen_bail;
     }
 
-    data_set.input = cib_xml_copy;
-    data_set.now = crm_time_new(NULL);
+    data_set->input = cib_xml_copy;
+    data_set->now = crm_time_new(NULL);
 
-    cluster_status(&data_set);
+    cluster_status(data_set);
     if (options.rsc_id) {
-        rsc = pe_find_resource_with_flags(data_set.resources, options.rsc_id,
+        rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
                                           pe_find_renamed|pe_find_any);
     }
 
@@ -408,8 +411,8 @@ generate_params(void)
     params = crm_str_table_new();
     meta = crm_str_table_new();
 
-    get_rsc_attributes(params, rsc, NULL, &data_set);
-    get_meta_attributes(meta, rsc, NULL, &data_set);
+    get_rsc_attributes(params, rsc, NULL, data_set);
+    get_meta_attributes(meta, rsc, NULL, data_set);
 
     if (params) {
         char *key = NULL;
@@ -437,8 +440,7 @@ generate_params(void)
     }
 
   param_gen_bail:
-
-    cleanup_alloc_calculations(&data_set);
+    pe_free_working_set(data_set);
     return rc;
 }
 

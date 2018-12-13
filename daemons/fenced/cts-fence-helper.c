@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -41,10 +30,10 @@
 
 #include <crm/common/mainloop.h>
 
-GMainLoop *mainloop = NULL;
-crm_trigger_t *trig = NULL;
-int mainloop_iter = 0;
-int callback_rc = 0;
+static GMainLoop *mainloop = NULL;
+static crm_trigger_t *trig = NULL;
+static int mainloop_iter = 0;
+static int callback_rc = 0;
 typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 #define MAINLOOP_DEFAULT_TIMEOUT 2
@@ -63,14 +52,10 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 /* *INDENT-OFF* */
 enum test_modes {
-    /* class dev test using a very specific environment */
-    test_standard = 0,
-    /* watch notifications only */
-    test_passive,
-    /* sanity test stonith client api using fence_dummy */
-    test_api_sanity,
-    /* sanity test mainloop code with async respones. */
-    test_api_mainloop,
+    test_standard = 0,  // test using a specific developer environment
+    test_passive,       // watch notifications only
+    test_api_sanity,    // sanity-test stonith client API using fence_dummy
+    test_api_mainloop,  // sanity-test mainloop code with async responses
 };
 
 static struct crm_option long_options[] = {
@@ -85,11 +70,11 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-stonith_t *st = NULL;
-struct pollfd pollfd;
-int st_opts = st_opt_sync_call;
-int expected_notifications = 0;
-int verbose = 0;
+static stonith_t *st = NULL;
+static struct pollfd pollfd;
+static int st_opts = st_opt_sync_call;
+static int expected_notifications = 0;
+static int verbose = 0;
 
 static void
 dispatch_helper(int timeout)
@@ -605,6 +590,7 @@ main(int argc, char **argv)
 
     enum test_modes mode = test_standard;
 
+    crm_log_cli_init("cts-fence-helper");
     crm_set_options(NULL, "mode [options]", long_options,
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");

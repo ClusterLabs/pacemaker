@@ -13,7 +13,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   group-1_stop_0
  * Resource action: r192.168.122.115 stop on pcmk-1
- * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
 
 Revised cluster status:

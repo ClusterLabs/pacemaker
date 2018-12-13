@@ -21,6 +21,8 @@
 #include <crm/fencing/internal.h>
 
 crm_trigger_t *stonith_reconnect = NULL;
+static crm_trigger_t *stonith_history_sync_trigger = NULL;
+static mainloop_timer_t *stonith_history_sync_timer = NULL;
 
 /*
  * stonith cleanup list
@@ -267,7 +269,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
                st_event->origin, st_event->id);
 
     if (st_event->result == pcmk_ok) {
-        crm_node_t *peer = crm_find_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
+        crm_node_t *peer = crm_find_known_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
         const char *uuid = NULL;
         gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
@@ -328,6 +330,59 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
         crmd_peer_down(peer, TRUE);
      }
+}
+
+static gboolean
+do_stonith_history_sync(gpointer user_data)
+{
+    if (stonith_api && (stonith_api->state != stonith_disconnected)) {
+        stonith_history_t *history = NULL;
+
+        stonith_api->cmds->history(stonith_api,
+                                   st_opt_sync_call | st_opt_broadcast,
+                                   NULL, &history, 5);
+        stonith_history_free(history);
+        return TRUE;
+    } else {
+        crm_info("Skip triggering stonith history-sync as stonith is disconnected");
+        return FALSE;
+    }
+}
+
+static gboolean
+stonith_history_sync_set_trigger(gpointer user_data)
+{
+    mainloop_set_trigger(stonith_history_sync_trigger);
+    return FALSE;
+}
+
+void
+te_trigger_stonith_history_sync(void)
+{
+    /* trigger a sync in 5s to give more nodes the
+     * chance to show up so that we don't create
+     * unnecessary stonith-history-sync traffic
+     */
+
+    /* as we are finally checking the stonith-connection
+     * in do_stonith_history_sync we should be fine
+     * leaving stonith_history_sync_time & stonith_history_sync_trigger
+     * around
+     */
+    if (stonith_history_sync_trigger == NULL) {
+        stonith_history_sync_trigger =
+            mainloop_add_trigger(G_PRIORITY_LOW,
+                                 do_stonith_history_sync, NULL);
+    }
+
+    if(stonith_history_sync_timer == NULL) {
+        stonith_history_sync_timer =
+            mainloop_timer_add("history_sync", 5000,
+                               FALSE, stonith_history_sync_set_trigger,
+                               NULL);
+    }
+    crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
+    mainloop_timer_start(stonith_history_sync_timer);
 }
 
 gboolean

@@ -23,7 +23,6 @@ Executing cluster transition:
  * Pseudo action:   rsc1_running_0
  * Resource action: child_rsc2:0    stop on node1
  * Pseudo action:   rsc2_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 ]

@@ -60,7 +60,6 @@ Executing cluster transition:
  * Resource action: clnUMdummy02:0  stop on srv01
  * Resource action: clnUMdummy01:1  stop on srv04
  * Resource action: clnUMdummy01:0  stop on srv01
- * Pseudo action:   all_stopped
  * Pseudo action:   clnUmResource:0_stopped_0
  * Pseudo action:   clnUmResource:1_stopped_0
  * Pseudo action:   clnUMgroup01_stopped_0

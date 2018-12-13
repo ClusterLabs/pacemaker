@@ -62,7 +62,6 @@ Executing cluster transition:
  * Resource action: storage:1       notify on metal-2
  * Resource action: storage:2       notify on metal-3
  * Pseudo action:   storage-clone_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ metal-1 metal-2 metal-3 ]

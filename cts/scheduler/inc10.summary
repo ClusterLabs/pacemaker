@@ -30,7 +30,6 @@ Executing cluster transition:
  * Resource action: ocfs2:3         notify on xen-1
  * Resource action: ocfs2:0         notify on xen-4
  * Pseudo action:   ocfs2-clone_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby

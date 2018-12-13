@@ -4,33 +4,32 @@
 %BOOK_ENTITIES;
 ]>
 <bookinfo id="book-Pacemaker_Development-Pacemaker_Development">
-	<title>Pacemaker Development</title>
-	<subtitle>Working with the Pacemaker Code Base</subtitle>
-	<!--
-		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
-		Increment EDITION when the syntax of the documented software
-		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
-		simple textual changes (corrections, translations, etc.).
-		Changing the revision is only necessary when releasing a new
-		version of Pacemaker or publishing the documents to the Web.
-	-->
-	<edition>2</edition>
-	<pubsnumber>0</pubsnumber>
-	<abstract>
-		<para>
-			This document has guidelines and tips for developers
-			interested in editing Pacemaker source code and
-			submitting changes for inclusion in the project.
-		</para>
-	</abstract>
-	<corpauthor>
-		<inlinemediaobject>
-			<imageobject>
-				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
-			</imageobject>
-		</inlinemediaobject>
-	</corpauthor>
-	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+        <title>Pacemaker Development</title>
+        <subtitle>Working with the Pacemaker Code Base</subtitle>
+        <!--
+                EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+                Increment EDITION when the syntax of the documented software
+                changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
+                simple textual changes (corrections, translations, etc.).
+                Changing the revision is only necessary when releasing a new
+                version of Pacemaker or publishing the documents to the Web.
+        -->
+        <edition>2</edition>
+        <pubsnumber>2</pubsnumber>
+        <abstract>
+                <para>
+                        This document has guidelines and tips for developers
+                        interested in editing Pacemaker source code and
+                        submitting changes for inclusion in the project.
+                </para>
+        </abstract>
+        <corpauthor>
+                <inlinemediaobject>
+                        <imageobject>
+                                <imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+                        </imageobject>
+                </inlinemediaobject>
+        </corpauthor>
+        <xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+        <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </bookinfo>
-

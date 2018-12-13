@@ -8,7 +8,7 @@ Online: [ hex-1 hex-2 hex-3 ]
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-2 
  Clone Set: fs2 [fs-ocfs-2]
      Started: [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r0 [drbd-r0]
+ Clone Set: ms-r0 [drbd-r0] (promotable)
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
  Resource Group: md0-group
@@ -23,7 +23,7 @@ Online: [ hex-1 hex-2 hex-3 ]
  Resource Group: r0-group
      fs-r0	(ocf::heartbeat:Filesystem):	Started hex-1 
      dummy2	(ocf::heartbeat:Delay):	Started hex-1 
- Master/Slave Set: ms-r1 [drbd-r1]
+ Clone Set: ms-r1 [drbd-r1] (promotable)
      Slaves: [ hex-2 hex-3 ]
 
 Transition Summary:
@@ -53,7 +53,7 @@ Online: [ hex-1 hex-2 hex-3 ]
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-2 
  Clone Set: fs2 [fs-ocfs-2]
      Started: [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r0 [drbd-r0]
+ Clone Set: ms-r0 [drbd-r0] (promotable)
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
  Resource Group: md0-group
@@ -68,7 +68,7 @@ Online: [ hex-1 hex-2 hex-3 ]
  Resource Group: r0-group
      fs-r0	(ocf::heartbeat:Filesystem):	Started hex-1 
      dummy2	(ocf::heartbeat:Delay):	Started hex-1 
- Master/Slave Set: ms-r1 [drbd-r1]
+ Clone Set: ms-r1 [drbd-r1] (promotable)
      Masters: [ hex-3 ]
      Slaves: [ hex-2 ]
 

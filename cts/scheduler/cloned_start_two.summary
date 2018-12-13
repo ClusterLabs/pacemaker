@@ -23,7 +23,6 @@ Executing cluster transition:
  * Pseudo action:   FAKECLONE-clone_running_0
  * Resource action: FAKECLONE2      stop on c7auto3
  * Pseudo action:   FAKECLONE2-clone_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory
  * Resource action: FAKECLONE       monitor=10000 on c7auto2
  * Resource action: FAKECLONE       monitor=10000 on c7auto1

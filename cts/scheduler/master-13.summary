@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ frigg odin ]
 
- Master/Slave Set: ms_drbd [drbd0]
+ Clone Set: ms_drbd [drbd0] (promotable)
      Masters: [ frigg ]
      Slaves: [ odin ]
  Resource Group: group
@@ -51,7 +51,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ frigg odin ]
 
- Master/Slave Set: ms_drbd [drbd0]
+ Clone Set: ms_drbd [drbd0] (promotable)
      Masters: [ odin ]
      Slaves: [ frigg ]
  Resource Group: group

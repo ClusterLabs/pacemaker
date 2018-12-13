@@ -233,9 +233,9 @@
       <rsc_colocation id="c4" score="INFINITY" rsc="prmVM2" with-rsc="clnPing"/>
       <rsc_colocation id="c5" score="INFINITY" rsc="prmVM2" with-rsc="clnDiskd1"/>
       <rsc_colocation id="c6" score="INFINITY" rsc="prmVM2" with-rsc="clnDiskd2"/>
-      <rsc_order id="o4" score="0" first="clnPing" then="prmVM2" symmetrical="false"/>
-      <rsc_order id="o5" score="0" first="clnDiskd1" then="prmVM2" symmetrical="false"/>
-      <rsc_order id="o6" score="0" first="clnDiskd2" then="prmVM2" symmetrical="false"/>
+      <rsc_order id="o4" kind="Optional" first="clnPing" then="prmVM2" symmetrical="false"/>
+      <rsc_order id="o5" kind="Optional" first="clnDiskd1" then="prmVM2" symmetrical="false"/>
+      <rsc_order id="o6" kind="Optional" first="clnDiskd2" then="prmVM2" symmetrical="false"/>
       <rsc_location id="cli-ban-prmVM2-on-bl460g1n7" rsc="prmVM2" role="Started" node="bl460g1n7" score="-INFINITY"/>
     </constraints>
     <fencing-topology>

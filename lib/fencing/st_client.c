@@ -503,8 +503,8 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             alias = g_hash_table_lookup(port_map, victim);
         }
 
-        /* Always supply the node's name too:
-         *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
+        /* Always supply the node's name, too:
+         * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
          */
         append_arg("nodename", victim, &arg_list);
         if (victim_nodeid) {
@@ -1309,7 +1309,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (rc == 0) {
         xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_ERR);
+        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_TRACE);
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
@@ -1333,6 +1333,9 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             last = kvp;
         }
     }
+
+    free_xml(output);
+
     return rc;
 }
 

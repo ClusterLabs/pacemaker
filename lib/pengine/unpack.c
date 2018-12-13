@@ -18,6 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <unpack.h>
+#include <pe_status_private.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
 
@@ -1139,6 +1140,21 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
+    /* Now that we know where resources are, we can schedule stops of containers
+     * with failed bundle connections
+     */
+    if (data_set->stop_needed != NULL) {
+        for (GList *item = data_set->stop_needed; item; item = item->next) {
+            pe_resource_t *container = item->data;
+            pe_node_t *node = pe__current_node(container);
+
+            if (node) {
+                stop_action(container, node, FALSE);
+            }
+        }
+        g_list_free(data_set->stop_needed);
+    }
+
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *this_node = gIter->data;
 
@@ -1556,8 +1572,6 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     return rsc;
 }
 
-extern resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
-
 /*!
  * \internal
  * \brief Create orphan instance for anonymous clone resource history
@@ -1566,7 +1580,7 @@ static pe_resource_t *
 create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
                         pe_node_t *node, pe_working_set_t *data_set)
 {
-    pe_resource_t *top = create_child_clone(parent, -1, data_set);
+    pe_resource_t *top = pe__create_clone_child(parent, data_set);
 
     // find_rsc() because we might be a cloned group
     pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
@@ -1588,7 +1602,7 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
  * \param[in] data_set  Cluster information
  * \param[in] node      Node on which to check for instance
  * \param[in] parent    Clone to check
- * \param[in] rsc_id    ID of (clone or cloned) resource being searched for
+ * \param[in] rsc_id    Name of cloned resource in history (without instance)
  */
 static resource_t *
 find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent,
@@ -1609,23 +1623,22 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
-        /* Check whether this instance is already known to be active anywhere.
-         *
-         * "Active" in this case means known to be active at this stage of
-         * unpacking. Because this function is called for a resource before the
-         * resource's individual operation history entries are unpacked,
-         * locations will generally be NULL.
+        /* Check whether this instance is already known to be active or pending
+         * anywhere, at this stage of unpacking. Because this function is called
+         * for a resource before the resource's individual operation history
+         * entries are unpacked, locations will generally not contain the
+         * desired node.
          *
          * However, there are three exceptions:
          * (1) when child is a cloned group and we have already unpacked the
-         *     history of another member of the group;
+         *     history of another member of the group on the same node;
          * (2) when we've already unpacked the history of another numbered
          *     instance on the same node (which can happen if globally-unique
          *     was flipped from true to false); and
          * (3) when we re-run calculations on the same data set as part of a
          *     simulation.
          */
-        child->fns->location(child, &locations, TRUE);
+        child->fns->location(child, &locations, 2);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,
@@ -1634,27 +1647,30 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             CRM_LOG_ASSERT(locations->next == NULL);
 
             if (((pe_node_t *)locations->data)->details == node->details) {
-                /* This instance is active on the requested node, so check for
-                 * a corresponding configured resource. We use find_rsc()
-                 * because child may be a cloned group, and we need the
-                 * particular member corresponding to rsc_id.
+                /* This child instance is active on the requested node, so check
+                 * for a corresponding configured resource. We use find_rsc()
+                 * instead of child because child may be a cloned group, and we
+                 * need the particular member corresponding to rsc_id.
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 if (rsc) {
-                    pe_rsc_trace(parent, "Resource %s, active", rsc->id);
-
-                    /* If there are multiple active instances of an anonymous
-                     * clone in a single node's history (which can happen if
-                     * globally-unique is switched from true to false), we want
-                     * to consider the instances beyond the first as orphans.
+                    /* If there are multiple instance history entries for an
+                     * anonymous clone in a single node's history (which can
+                     * happen if globally-unique is switched from true to
+                     * false), we want to consider the instances beyond the
+                     * first as orphans, even if there are inactive instance
+                     * numbers available.
                      */
                     if (rsc->running_on) {
-                        crm_notice("Now-anonymous clone %s has multiple instances active on %s",
+                        crm_notice("Active (now-)anonymous clone %s has "
+                                   "multiple (orphan) instance histories on %s",
                                    parent->id, node->details->uname);
                         skip_inactive = TRUE;
                         rsc = NULL;
+                    } else {
+                        pe_rsc_trace(parent, "Resource %s, active", rsc->id);
                     }
                 }
             }
@@ -1667,6 +1683,14 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
                 // Remember one inactive instance in case we don't find active
                 inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
                                                           pe_find_clone);
+
+                /* ... but don't use it if it was already associated with a
+                 * pending action on another node
+                 */
+                if (inactive_instance && inactive_instance->pending_node
+                    && (inactive_instance->pending_node->details != node->details)) {
+                    inactive_instance = NULL;
+                }
             }
         }
     }
@@ -1723,20 +1747,16 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 
         if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
+            parent = uber_parent(clone0);
+            crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
         } else {
-            crm_trace("%s is not known as %s either", rsc_id, clone0_id);
+            crm_trace("%s is not known as %s either (orphan)",
+                      rsc_id, clone0_id);
         }
-
-        /* Grab the parent clone even if this a different unique instance,
-         * so we can remember the clone name, which will be the same.
-         */
-        parent = uber_parent(clone0);
         free(clone0_id);
 
-        crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
-
     } else if (rsc->variant > pe_native) {
-        crm_trace("%s is no longer a primitive resource, the lrm_resource entry is obsolete",
+        crm_trace("Resource history for %s is orphaned because it is no longer primitive",
                   rsc_id);
         return NULL;
 
@@ -1922,7 +1942,15 @@ process_rsc_state(resource_t * rsc, node_t * node,
         case action_fail_restart_container:
             set_bit(rsc->flags, pe_rsc_failed);
 
-            if (rsc->container) {
+            if (rsc->container && pe_rsc_is_bundled(rsc)) {
+                /* A bundle's remote connection can run on a different node than
+                 * the bundle's container. We don't necessarily know where the
+                 * container is running yet, so remember it and add a stop
+                 * action for it later.
+                 */
+                data_set->stop_needed = g_list_prepend(data_set->stop_needed,
+                                                       rsc->container);
+            } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
                 stop_action(rsc, node, FALSE);
@@ -2246,7 +2274,8 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
             continue;
         }
 
-        pe_rsc_trace(rsc, "Mapped orphaned rsc %s's container to  %s", rsc->id, container_id);
+        pe_rsc_trace(rsc, "Mapped container of orphaned resource %s to %s",
+                     rsc->id, container_id);
         rsc->container = container;
         container->fillers = g_list_append(container->fillers, rsc);
     }
@@ -2852,53 +2881,59 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (expired) {
-        if (failure_timeout > 0) {
-            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                 xml_op, data_set)) {
+        if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default, xml_op,
+                             data_set)) {
 
-                if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
-                                     xml_op, data_set) == 0) {
-                    clear_reason = "it expired";
-                } else {
-                    expired = FALSE;
-                }
+            // There is a fail count ignoring timeout
 
-            } else if (rsc->remote_reconnect_ms
-                       && strstr(ID(xml_op), "last_failure")) {
-                /* always clear last failure when reconnect interval is set */
-                clear_reason = "reconnect interval is set";
+            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
+                                 xml_op, data_set) == 0) {
+                // There is no fail count considering timeout
+                clear_reason = "it expired";
+
+            } else {
+                expired = FALSE;
             }
+
+        } else if (rsc->remote_reconnect_ms
+                   && strstr(ID(xml_op), "last_failure")) {
+            // Always clear last failure when reconnect interval is set
+            clear_reason = "reconnect interval is set";
         }
 
     } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
-        op_digest_cache_t *digest_data = NULL;
+        if (container_fix_remote_addr(rsc)) {
+            /* We haven't allocated resources yet, so we can't reliably
+             * substitute addr parameters for the REMOTE_CONTAINER_HACK.
+             * When that's needed, defer the check until later.
+             */
+            pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
+                                data_set);
 
-        digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+        } else {
+            op_digest_cache_t *digest_data = NULL;
 
-        if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
-            crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
-                      key, node->details->id);
-        } else if(container_fix_remote_addr(rsc) && digest_data->rc != RSC_DIGEST_MATCH) {
-            // We can't sanely check the changing 'addr' attribute. Yet
-            crm_trace("Ignoring rsc op %s/%s on node %s", rsc->id, key, node->details->id);
-
-        } else if (digest_data->rc != RSC_DIGEST_MATCH) {
-            clear_reason = "resource parameters have changed";
+            digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+            switch (digest_data->rc) {
+                case RSC_DIGEST_UNKNOWN:
+                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                              rsc->id, key, node->details->id);
+                    break;
+                case RSC_DIGEST_MATCH:
+                    break;
+                default:
+                    clear_reason = "resource parameters have changed";
+                    break;
+            }
         }
     }
 
     if (clear_reason != NULL) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
-        char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-        action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
-                                           node, FALSE, TRUE, data_set);
-
-        add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-        crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-                   rsc->id, node->details->uname, clear_reason, clear_op->uuid);
+        pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
+                                                    data_set);
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_ms
@@ -3104,11 +3139,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      node->details->uname, rsc->id);
     }
 
-    if (status == PCMK_LRM_OP_ERROR) {
-        /* Older versions set this if rc != 0 but it's up to us to decide */
-        status = PCMK_LRM_OP_DONE;
-    }
-
     if(status != PCMK_LRM_OP_NOT_INSTALLED) {
         expired = check_operation_expiry(rsc, node, rc, xml_op, data_set);
     }
@@ -3192,9 +3222,10 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      * native.c:native_pending_task().
                      */
                     /*rsc->pending_task = strdup("probe");*/
-
+                    /*rsc->pending_node = node;*/
                 } else {
                     rsc->pending_task = strdup(task);
+                    rsc->pending_node = node;
                 }
             }
             break;

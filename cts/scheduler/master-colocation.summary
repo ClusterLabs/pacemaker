@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ box1 box2 ]
 
- Master/Slave Set: ms-conntrackd [conntrackd-stateful]
+ Clone Set: ms-conntrackd [conntrackd-stateful] (promotable)
      Slaves: [ box1 box2 ]
  Resource Group: virtualips
      externalip	(ocf::heartbeat:IPaddr2):	Started box2
@@ -22,7 +22,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ box1 box2 ]
 
- Master/Slave Set: ms-conntrackd [conntrackd-stateful]
+ Clone Set: ms-conntrackd [conntrackd-stateful] (promotable)
      Masters: [ box2 ]
      Slaves: [ box1 ]
  Resource Group: virtualips

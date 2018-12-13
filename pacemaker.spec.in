@@ -13,7 +13,7 @@
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
-%global pcmkversion 2.0.0
+%global pcmkversion 2.0.1
 %global specversion 1
 
 ## Upstream commit (or git tag, such as "Pacemaker-" plus the
@@ -81,29 +81,35 @@
 %endif
 %endif
 
-## Turn off auto-compilation of Python files outside site-packages directory,
-## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
+## Turn off auto-compilation of Python files outside Python specific paths,
+## so there's no risk that unexpected "__python" macro gets picked to do the
+## RPM-native byte-compiling there (only "{_datadir}/pacemaker/tests" affected)
+## -- distro-dependent tricks or automake's fallback to be applied there
+%if %{defined _python_bytecompile_extra}
+%global _python_bytecompile_extra 0
+%else
+### the statement effectively means no RPM-native byte-compiling will occur at
+### all, so distro-dependent tricks for Python-specific packages to be applied
 %global __os_install_post %(echo '%{__os_install_post}' | {
                             sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
+%endif
 
 ## Values that differ by Python major version
 %if 0%{?python_major} > 2
-%global python_path /usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}
-%global python_pkg python3
-%global python_min 3.2
-%define py_site %{?python3_sitelib}%{!?python3_sitelib:%(
-  python3 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%global python_name python3
+%global python_path %{?__python3}%{!?__python3:/usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}}
+%define python_site %{?python3_sitelib}%{!?python3_sitelib:%(
+  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
 %if 0%{?python_major} > 1
-%global python_path /usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}
-%global python_pkg python2
-%global python_min 2.7
-%define py_site %{?python2_sitelib}%{!?python2_sitelib:%(
-  python2 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%global python_name python2
+%global python_path %{?__python2}%{!?__python2:/usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}}
+%define python_site %{?python2_sitelib}%{!?python2_sitelib:%(
+  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
-%global python_min 2.7
-%global python_pkg python
-%define py_site %{?python_sitelib}%{!?python_sitelib:%(
+%global python_name python
+%global python_path %{?__python}%{!?__python:/usr/bin/python%{?python_pkgversion}}
+%define python_site %{?python_sitelib}%{!?python_sitelib:%(
   python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %endif
 %endif
@@ -195,8 +201,8 @@ Group:         System Environment/Daemons
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Requires:      resource-agents
-Requires:      %{name}-libs = %{version}-%{release}
-Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 %if !%{defined _unitdir}
 Requires:      procps-ng
@@ -204,9 +210,8 @@ Requires:      psmisc
 %endif
 %{?systemd_requires}
 
-# Pacemaker requires a minimum Python functionality
-Requires:      %{python_pkg} >= %{python_min}
-BuildRequires: %{python_pkg}-devel >= %{python_min}
+Requires:      %{python_path}
+BuildRequires: %{python_name}-devel
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 0.13.0
@@ -243,6 +248,8 @@ BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
+
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -262,7 +269,10 @@ Available rpmbuild rebuild options:
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+Recommends:    pcmk-cluster-manager = %{version}-%{release}
+%endif
 Requires:      perl-TimeDate
 Requires:      procps-ng
 Requires:      psmisc
@@ -281,6 +291,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
+Requires:      %{name}-schemas = %{version}-%{release}
 
 %description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -293,7 +304,7 @@ nodes and those just running the CLI tools.
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -311,7 +322,7 @@ License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
 %if !%{defined _unitdir}
@@ -319,6 +330,7 @@ Requires:      procps-ng
 %endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -332,7 +344,6 @@ nodes not running the full corosync/cluster stack.
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
-Requires:      %{name}-cts = %{version}-%{release}
 Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      libuuid-devel%{?_isa} libtool-ltdl-devel%{?_isa}
@@ -352,7 +363,7 @@ for developing tools for Pacemaker.
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{python_pkg} >= %{python_min}
+Requires:      %{python_path}
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      procps-ng
 Requires:      psmisc
@@ -362,7 +373,7 @@ BuildArch:     noarch
 %if %{defined systemd_requires}
 
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
-Requires:      %{python_pkg}-systemd
+Requires:      %{python_name}-systemd
 %else
 %if 0%{?fedora} > 20 || 0%{?rhel} > 6
 Requires:      systemd-python
@@ -382,6 +393,17 @@ BuildArch:     noarch
 
 %description   doc
 Documentation for Pacemaker.
+
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager.
+
+%package       schemas
+License:       GPLv2+
+Summary:       Schemas and upgrade stylesheets for Pacemaker
+BuildArch:     noarch
+
+%description   schemas
+Schemas and upgrade stylesheets for Pacemaker
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -411,7 +433,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 ./autogen.sh
 
 %{configure}                                                                    \
-        %{?python_path:        PYTHON=%{python_path}}                           \
+        PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
         %{!?with_legacy_links: --disable-legacy-links}                          \
         %{?with_profiling:     --with-profiling}                                \
@@ -439,7 +461,13 @@ make %{_smp_mflags} V=1 all
 exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 
 %install
-make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
+# skip automake-native Python byte-compilation, since RPM-native one (possibly
+# distro-confined to Python-specific directories, which is currently the only
+# relevant place, anyway) assures proper intrinsic alignment with wider system
+# (such as with py_byte_compile macro, which is concurrent Fedora/EL specific)
+make install \
+  DESTDIR=%{buildroot} V=1 docdir=%{pcmk_docdir} \
+  %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 daemons/pacemakerd/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
@@ -460,10 +488,24 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
+# For now, don't package the servicelog-related binaries built only for
+# ppc64le when certain dependencies are installed. If they get more exercise by
+# advanced users, we can reconsider.
+rm -f %{buildroot}/%{_sbindir}/notifyServicelogEvent
+rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
+
 # Don't ship init scripts for systemd based platforms
 %if %{defined _unitdir}
 rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
+%endif
+
+# Byte-compile Python sources where suitable and the distro procedures known
+%if %{defined py_byte_compile}
+%{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
+%if !%{defined _python_bytecompile_extra}
+%{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
+%endif
 %endif
 
 %if %{with coverage}
@@ -675,6 +717,8 @@ exit 0
 %exclude %{_datadir}/pacemaker/alerts
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
+%exclude %{_datadir}/pacemaker/*.rng
+%exclude %{_datadir}/pacemaker/*.xsl
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
@@ -756,7 +800,7 @@ exit 0
 %license licenses/CC-BY-SA-4.0
 
 %files cts
-%{py_site}/cts
+%{python_site}/cts
 %{_datadir}/pacemaker/tests
 
 %{_libexecdir}/pacemaker/cts-log-watcher
@@ -776,6 +820,11 @@ exit 0
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
+
+%files schemas
+%license licenses/GPLv2
+%{_datadir}/pacemaker/*.rng
+%{_datadir}/pacemaker/*.xsl
 
 %changelog
 

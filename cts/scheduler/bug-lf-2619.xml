@@ -169,11 +169,11 @@
       </rsc_colocation>
       <rsc_colocation id="grp2_colocation-4" rsc="grpPostgreSQLDB2" score="INFINITY" with-rsc="clnPingd"/>
       <rsc_colocation id="grp3_colocation-7" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnPingd"/>
-      <rsc_order first="clnPingd" id="grp1_order-1" score="0" then="grpPostgreSQLDB1">
+      <rsc_order first="clnPingd" id="grp1_order-1" kind="Optional" then="grpPostgreSQLDB1">
         <!--### Resource Order ###-->
       </rsc_order>
-      <rsc_order first="clnPingd" id="grp2_order-4" score="0" then="grpPostgreSQLDB2"/>
-      <rsc_order first="clnPingd" id="grp3_order-7" score="0" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnPingd" id="grp2_order-4" kind="Optional" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnPingd" id="grp3_order-7" kind="Optional" then="grpPostgreSQLDB3"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

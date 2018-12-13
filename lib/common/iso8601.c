@@ -1373,7 +1373,7 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
 {
     const char *mark_s;
     int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
-        date_len = 0, nano_digits = 0, fmt_len;
+        date_len = 0, nano_digits = 0;
     char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
     struct tm tm;
     crm_time_t dt;
@@ -1386,11 +1386,11 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
     sprintf(nano_s, "%06d000", hr_dt->useconds);
 
     while ((format[scanned_pos]) != '\0') {
-        fmt_len = 0;
         mark_s = strchr(&format[scanned_pos], '%');
         if (mark_s) {
+            int fmt_len = 1;
+
             fmt_pos = mark_s - format;
-            fmt_len = 1;
             while ((format[fmt_pos+fmt_len] != '\0') &&
                 (format[fmt_pos+fmt_len] >= '0') &&
                 (format[fmt_pos+fmt_len] <= '9')) {

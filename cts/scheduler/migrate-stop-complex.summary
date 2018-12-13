@@ -27,7 +27,6 @@ Executing cluster transition:
  * Resource action: dom0-iscsi1-cnx1:0 stop on dom0-02
  * Resource action: bottom:0        stop on dom0-02
  * Pseudo action:   clone-bottom_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   domU-test01_start_0
  * Pseudo action:   dom0-iscsi1:1_stopped_0
  * Pseudo action:   clone-dom0-iscsi1_stopped_0

@@ -23,7 +23,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order-1" score="INFINITY">
+      <rsc_order id="order-1">
         <resource_set id="order-1-0">
           <resource_ref id="clone-rsc"/>
         </resource_set>
