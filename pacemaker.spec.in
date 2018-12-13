@@ -201,8 +201,8 @@ Group:         System Environment/Daemons
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Requires:      resource-agents
-Requires:      %{name}-libs = %{version}-%{release}
-Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 %if !%{defined _unitdir}
 Requires:      procps-ng
@@ -248,6 +248,8 @@ BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
+
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -267,7 +269,10 @@ Available rpmbuild rebuild options:
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+Recommends:    pcmk-cluster-manager = %{version}-%{release}
+%endif
 Requires:      perl-TimeDate
 Requires:      procps-ng
 Requires:      psmisc
@@ -286,6 +291,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
+Requires:      %{name}-schemas = %{version}-%{release}
 
 %description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -298,7 +304,7 @@ nodes and those just running the CLI tools.
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -316,7 +322,7 @@ License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
 %if !%{defined _unitdir}
@@ -324,6 +330,7 @@ Requires:      procps-ng
 %endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -386,6 +393,17 @@ BuildArch:     noarch
 
 %description   doc
 Documentation for Pacemaker.
+
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager.
+
+%package       schemas
+License:       GPLv2+
+Summary:       Schemas and upgrade stylesheets for Pacemaker
+BuildArch:     noarch
+
+%description   schemas
+Schemas and upgrade stylesheets for Pacemaker
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -699,6 +717,8 @@ exit 0
 %exclude %{_datadir}/pacemaker/alerts
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
+%exclude %{_datadir}/pacemaker/*.rng
+%exclude %{_datadir}/pacemaker/*.xsl
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
@@ -800,6 +820,11 @@ exit 0
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
+
+%files schemas
+%license licenses/GPLv2
+%{_datadir}/pacemaker/*.rng
+%{_datadir}/pacemaker/*.xsl
 
 %changelog
 
