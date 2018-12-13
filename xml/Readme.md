@@ -23,7 +23,8 @@ A versioned schema offers transparent backward and forward compatibility.
 
 | Pacemaker | Latest Schema | Changed
 | --------- | ------------- | ----------------------------------------------
-| `2.0.0`   | `3.0`         | `constraints`, `resources`
+| `2.0.1`   | `3.2`         | `resources`
+| `2.0.0`   | `3.1`         | `constraints`, `resources`
 | `1.1.18`  | `2.10`        | `resources`, `alerts`
 | `1.1.17`  | `2.9`         | `resources`, `rule`
 | `1.1.16`  | `2.6`         | `constraints`
@@ -58,7 +59,7 @@ use it.
 ## Stable features ##
 
 The current stable version is determined at runtime when
-crm_schema_init() scans the CRM_SCHEMA_DIRECTORY.
+crm\_schema\_init() scans the CRM\_SCHEMA\_DIRECTORY.
 
 It will have the form `pacemaker-${X}.${Y}` and the highest
 `${X}.${Y}` wins.
@@ -113,7 +114,7 @@ itself, allowing for more sophistication down the road.
 1. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
    changes"`. This way, the actual change will be obvious in the commit history.
 1. Modify `${base}-${X}.${Y}.rng` as required.
-1. If required, add an XSLT file, and update `xslt_SCRIPTS` in `xml/Makefile.am`.
+1. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
 1. Commit
 1. `make -C xml clean; make -C xml all` to rebuild the schemas in the local
    source directory.

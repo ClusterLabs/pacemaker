@@ -1,3 +1,60 @@
+* Wed Dec 12 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc1
+- Changesets: 481
+ 164 files changed, 7717 insertions(+), 4398 deletions(-)
+
+- Features added since Pacemaker-2.0.0
+  + fencing: SBD may now be used in a cluster that has guest nodes or bundles
+  + fencing: synchronize fencing history among all nodes
+  + fencing: stonith_admin now has option to clear fence history
+  + tools: crm_mon now supports showing fencing action failures and history
+  + tools: crm_resource --clear supports new --expired option
+  + Pacemaker Remote: option to restrict TLS Diffie-Hellman prime length
+
+- Changes since Pacemaker-2.0.0
+  + tools: restore stonith_admin ability to confirm unseen nodes are down
+    (regression since 1.1.12)
+  + Pacemaker Remote: avoid unnecessary downtime when moving resource to
+    Pacemaker Remote node that fails to come up (regression since 1.1.18)
+  + tools: crm_resource -C could fail to clean up all failures in one run
+    (regression since 2.0.0)
+  + build: spec file now puts XML schemas in new pacemaker-schemas package
+  + build: spec file now provides virtual pcmk-cluster-manager package
+  + pacemaker-attrd: wait a short time before re-attempting failed writes
+  + pacemaker-attrd: ignore attribute delays when writing after node (re-)join
+  + CIB: inform originator of CIB upgrade failure
+  + controller: support resource agents that require node name even for meta-data
+  + controller: don't record pending clone notifications in CIB
+  + controller: DC detects completion of another node's shutdown more accurately
+  + controller: shut down DC if unable to update node attributes
+  + controller: handle corosync peer/join notifications for new node in any order
+  + executor: cancel recurring monitors if fence device registration is lost
+  + fencing: check for fence device update when resource defaults change
+  + fencing: fix possible pacemaker-fenced crash with stonith_admin misuse
+  + fencing: limit fencing history to 500 entries
+  + fencing: stonith_admin now complains if no action option is specified
+  + pacemakerd: Linux kernel.sysrq is no longer modified
+  + scheduler: avoid unnecessary recovery of cleaned guest nodes and bundles
+  + scheduler: ensure failures that cause fencing are not expired until fencing completes
+  + scheduler: start unique clone instances in numerical order
+  + scheduler: convert unique clones to anonymous clones if not supported by standard
+  + scheduler: associate pending tasks with correct clone instance
+  + scheduler: don't send clone notifications to a stopped remote node
+  + scheduler: ensure bundle clone notifications are directed to correct host
+  + scheduler: avoid improper monitor rescheduling or fail count clearing for bundles
+  + scheduler: honor asymmetric orderings even when restarting
+  + ACLs: assume unprivileged ACL user if can't get user info
+  + Pacemaker Remote: get Diffie-Hellman prime bit length from GnuTLS API
+  + libcrmservice: order systemd resources relative to pacemaker_remote
+  + libpe_status: add public API constructor/destructor for pe_working_set_t
+  + tools: make crm_mon CIB connection errors non-fatal if previously successful
+  + tools: improve crm_mon messages when generating HTML output
+  + tools: crm_mon cluster connection failure is now "critical" in nagios mode
+  + tools: crm_mon listing of standby nodes now shows if they still have active resources
+  + tools: crm_diff now ignores attribute ordering when comparing in CIB mode
+  + tools: improve crm_report detection of logs, CIB directory, running processes
+  + tools: crm_verify returns reliable exit codes
+  + tools: crm_simulate simulated resource history uses same name as live cluster would
+
 * Fri Jul 6 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-1
 - Changesets: 885
 - Diff:       549 files changed, 89865 insertions(+), 95100 deletions(-)

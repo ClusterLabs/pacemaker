@@ -26,5 +26,3 @@ gboolean cluster_connect_cfg(uint32_t * nodeid);
 gboolean cluster_disconnect_cfg(void);
 
 void pcmk_shutdown(int nsig);
-
-void sysrq_init(void);
