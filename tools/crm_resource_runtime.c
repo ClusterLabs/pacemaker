@@ -988,8 +988,8 @@ get_active_resources(const char *host, GList *rsc_list)
     return active;
 }
 
-static GList*
-subtract_lists(GList *from, GList *items) 
+GList*
+subtract_lists(GList *from, GList *items, GCompareFunc cmp)
 {
     GList *item = NULL;
     GList *result = g_list_copy(from);
@@ -999,7 +999,7 @@ subtract_lists(GList *from, GList *items)
         for (candidate = from; candidate != NULL; candidate = candidate->next) {
             crm_info("Comparing %s with %s", (const char *) candidate->data,
                      (const char *) item->data);
-            if(strcmp(candidate->data, item->data) == 0) {
+            if(cmp(candidate->data, item->data) == 0) {
                 result = g_list_remove(result, candidate->data);
                 break;
             }
@@ -1332,7 +1332,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     target_active = get_active_resources(host, data_set->resources);
     dump_list(target_active, "Target");
 
-    list_delta = subtract_lists(current_active, target_active);
+    list_delta = subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
     fprintf(stdout, "Waiting for %d resources to stop:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
@@ -1361,7 +1361,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
             }
             current_active = get_active_resources(host, data_set->resources);
             g_list_free(list_delta);
-            list_delta = subtract_lists(current_active, target_active);
+            list_delta = subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
@@ -1405,7 +1405,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (list_delta) {
         g_list_free(list_delta);
     }
-    list_delta = subtract_lists(target_active, current_active);
+    list_delta = subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
@@ -1440,7 +1440,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
              */
             current_active = get_active_resources(NULL, data_set->resources);
             g_list_free(list_delta);
-            list_delta = subtract_lists(target_active, current_active);
+            list_delta = subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
@@ -1949,7 +1949,7 @@ cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,node_t
     const char* host_uname =  node->details->uname;
     GListPtr allResources = node->details->allocated_rsc;
     GListPtr activeResources = node->details->running_rsc;
-    GListPtr unactiveResources = subtract_lists(allResources,activeResources);
+    GListPtr unactiveResources = subtract_lists(allResources,activeResources,(GCompareFunc) strcmp);
     GListPtr lpc = NULL;
 
     for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
