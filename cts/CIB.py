@@ -407,24 +407,11 @@ class CIB11(ConfigBase):
         g.add_child(self.NewIP())
 
         if self.CM.Env["have_systemd"]:
-            # It would be better to put the python in a separate file, so we
-            # could loop "while True" rather than sleep for 24 hours. We can't
-            # put a loop in a single-line python command; only simple commands
-            # may be separated by semicolon in python.
-            dummy_service_file = """
-[Unit]
-Description=Dummy resource that takes a while to start
-
-[Service]
-Type=notify
-ExecStart=/usr/bin/python -c 'import time, systemd.daemon; time.sleep(10); systemd.daemon.notify("READY=1"); time.sleep(86400)'
-ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
-"""
-
-            os.system("cat <<-END >/tmp/DummySD.service\n%s\nEND" % (dummy_service_file))
-
-            self.CM.install_helper("DummySD.service", destdir="/usr/lib/systemd/system/", sourcedir="/tmp")
-            sysd = Resource(self.Factory, "petulant", "DummySD",  "service")
+            
+            self.CM.install_helper("pacemaker-cts-dummyd.service", destdir="/usr/lib/systemd/system/")
+            self.CM.install_helper("pacemaker-cts-dummyd", destdir=CTSvars.CRM_DAEMON_DIR)
+            sysd = Resource(self.Factory, "petulant",
+                            "pacemaker-cts-dummyd", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
         else:
