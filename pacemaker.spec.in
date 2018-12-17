@@ -248,6 +248,7 @@ BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
+Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
 %description
@@ -330,6 +331,7 @@ Requires:      procps-ng
 %endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
+Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
 %description remote
