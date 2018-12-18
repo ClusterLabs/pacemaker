@@ -251,6 +251,9 @@ BuildRequires: inkscape asciidoc publican
 Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
+# Pacemaker uses the crypto/md5 module from gnulib
+Provides:      bundled(gnulib)
+
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
