@@ -34,6 +34,7 @@ static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "\tThis text"},
     {"version",        0, 0, '$', "\tVersion information"  },
+    {"quiet",          0, 0, 'Q', "\tDisplay only essential output"},
     {"verbose",        0, 0, 'V', "\tSpecify multiple times to increase debug output\n"},
     
     {"-spacer-",	1, 0, '-', "\nData sources:"},
@@ -68,13 +69,17 @@ main(int argc, char **argv)
     cib_t *cib_conn = NULL;
     int rc = pcmk_ok;
 
-    bool verbose = FALSE;
+    int verbose = 1;
     gboolean xml_stdin = FALSE;
     const char *xml_tag = NULL;
     const char *xml_file = NULL;
     const char *xml_string = NULL;
 
+    unsigned int default_log_level = LOG_ERR;
+
     crm_log_cli_init("crm_verify");
+    default_log_level = get_crm_log_level();
+    crm_enable_stderr(TRUE);
     crm_set_options(NULL, "[modifiers] data_source", long_options,
                     "check a Pacemaker configuration for errors"
                     "\n\nCheck the well-formedness of a complete Pacemaker XML configuration,"
@@ -103,8 +108,13 @@ main(int argc, char **argv)
             case 'S':
                 cib_save = optarg;
                 break;
+            case 'Q':
+                verbose = 0;
+                set_crm_log_level(default_log_level);
+                crm_enable_stderr(FALSE);
+                break;
             case 'V':
-                verbose = TRUE;
+                verbose++;
                 crm_bump_log_level(argc, argv);
                 break;
             case 'L':
@@ -245,15 +255,15 @@ main(int argc, char **argv)
 
     if (crm_config_error) {
         fprintf(stderr, "Errors found during check: config not valid\n");
-        if (verbose == FALSE) {
-            fprintf(stderr, "  -V may provide more details\n");
+        if (verbose == 0) {
+            fprintf(stderr, "  Run without -Q for more details\n");
         }
         rc = -pcmk_err_schema_validation;
 
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
-        if (verbose == FALSE) {
-            fprintf(stderr, "  Use -V -V for more details\n");
+        if (verbose < 2) {
+            fprintf(stderr, "  Use -V without -Q for more details\n");
         }
         rc = -pcmk_err_schema_validation;
     }
