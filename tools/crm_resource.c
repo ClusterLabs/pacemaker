@@ -267,10 +267,16 @@ static struct crm_option long_options[] = {
     {
         "clear", no_argument, NULL, 'U',
         "\t\tRemove all constraints created by the --ban and/or --move commands.\n"
-        "\t\t\t\tRequires: --resource. Optional: --node, --master.\n"
+        "\t\t\t\tRequires: --resource. Optional: --node, --master, --expired.\n"
         "\t\t\t\tIf --node is not specified, all constraints created by --ban and --move\n"
         "\t\t\t\twill be removed for the named resource. If --node and --force are specified,\n"
-        "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node."
+        "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node.\n"
+        "\t\t\t\tIf --expired is specified, only those constraints whose lifetimes have expired will\n"
+        "\t\t\t\tbe removed.\n"
+    },
+    {
+        "expired", no_argument, NULL, 'e',
+        "\t\tModifies the --clear argument to remove constraints with expired lifetimes.\n"
     },
     {
         "lifetime", required_argument, NULL, 'u',
@@ -448,6 +454,7 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+    bool clear_expired = FALSE;
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -631,6 +638,10 @@ main(int argc, char **argv)
             case 'T':
                 timeout_ms = crm_get_msec(optarg);
                 break;
+            case 'e':
+                clear_expired = TRUE;
+                require_resource = FALSE;
+                break;
 
             case 'C':
             case 'R':
@@ -744,6 +755,12 @@ main(int argc, char **argv)
     // Catch the case where the user didn't specify a command
     if (rsc_cmd == 'L') {
         require_resource = FALSE;
+    }
+
+    // --expired without --clear/-U doesn't make sense
+    if (clear_expired == TRUE && rsc_cmd != 'U') {
+        CMD_ERR("--expired requires --clear or -U");
+        argerr++;
     }
 
     if (optind < argc
@@ -989,7 +1006,10 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
 
-        if (host_uname) {
+        if (clear_expired == TRUE) {
+            rc = cli_resource_clear_all_expired(data_set->input, cib_conn, rsc_id, host_uname, scope_master);
+
+        } else if (host_uname) {
             dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 CMD_ERR("Unknown node: %s", host_uname);
