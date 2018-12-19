@@ -1,3 +1,11 @@
+* Wed Dec 19 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc2
+- Changesets: 12
+- Diff:       2 files changed, 6 insertions(+), 2 deletions(-)
+
+- Changes since Pacemaker-2.0.1-rc1
+  + libpe_status: avoid double free of stop_needed list (regression in 2.0.1-rc1)
+  + tools: stonith_admin -I doesn't require an agent (regression in 2.0.1-rc1)
+
 * Wed Dec 12 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc1
 - Changesets: 481
  164 files changed, 7717 insertions(+), 4398 deletions(-)
@@ -15,6 +23,9 @@
     (regression since 1.1.12)
   + Pacemaker Remote: avoid unnecessary downtime when moving resource to
     Pacemaker Remote node that fails to come up (regression since 1.1.18)
+  + scheduler: clone notifications could be scheduled for a stopped
+    Pacemaker Remote node and block all further cluster actions
+    (regression since 2.0.0)
   + tools: crm_resource -C could fail to clean up all failures in one run
     (regression since 2.0.0)
   + build: spec file now puts XML schemas in new pacemaker-schemas package
@@ -38,7 +49,6 @@
   + scheduler: start unique clone instances in numerical order
   + scheduler: convert unique clones to anonymous clones if not supported by standard
   + scheduler: associate pending tasks with correct clone instance
-  + scheduler: don't send clone notifications to a stopped remote node
   + scheduler: ensure bundle clone notifications are directed to correct host
   + scheduler: avoid improper monitor rescheduling or fail count clearing for bundles
   + scheduler: honor asymmetric orderings even when restarting

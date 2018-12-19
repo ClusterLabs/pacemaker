@@ -117,17 +117,6 @@ def output_from_command(command):
     return pipe_output(test).split("\n")
 
 
-def write_file(filename, contents, executable=False):
-    """ Create a file. """
-
-    print("Installing %s ..." % (filename))
-    f = io.open(filename, "w+")
-    f.write(contents)
-    f.close()
-    if executable:
-        os.chmod(filename, EXECMODE)
-
-
 class TestError(Exception):
     """ Base class for exceptions in this module """
     pass

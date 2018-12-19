@@ -495,14 +495,17 @@ main(int argc, char **argv)
             case '?':
                 crm_help(flag, CRM_EX_OK);
                 break;
-            case 'I':
+
             case 'K':
-                no_connect = 1;
                 required_agent = true;
+                /* fall through */
+            case 'I':
+                no_connect = 1;
                 /* fall through */
             case 'L':
                 action = flag;
                 break;
+
             case 'q':
                 quiet = 1;
                 break;
