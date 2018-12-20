@@ -11,6 +11,7 @@
  164 files changed, 7717 insertions(+), 4398 deletions(-)
 
 - Features added since Pacemaker-2.0.0
+  + Pacemaker bundles now support podman container management
   + fencing: SBD may now be used in a cluster that has guest nodes or bundles
   + fencing: synchronize fencing history among all nodes
   + fencing: stonith_admin now has option to clear fence history
