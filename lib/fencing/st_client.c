@@ -152,9 +152,9 @@ stonith_text2namespace(const char *namespace_s)
  * \return Namespace name as string
  */
 const char *
-stonith_namespace2text(enum stonith_namespace namespace)
+stonith_namespace2text(enum stonith_namespace st_namespace)
 {
-    switch (namespace) {
+    switch (st_namespace) {
         case st_namespace_any:      return "any";
         case st_namespace_rhcs:     return "stonith-ng";
         case st_namespace_internal: return "internal";

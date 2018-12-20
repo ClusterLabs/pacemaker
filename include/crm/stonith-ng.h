@@ -83,7 +83,7 @@ enum stonith_namespace {
 };
 
 enum stonith_namespace stonith_text2namespace(const char *namespace_s);
-const char *stonith_namespace2text(enum stonith_namespace namespace);
+const char *stonith_namespace2text(enum stonith_namespace st_namespace);
 enum stonith_namespace stonith_get_namespace(const char *agent,
                                              const char *namespace_s);
 
