@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -126,12 +126,20 @@ attrd_declare_winner()
 void
 attrd_remove_voter(const crm_node_t *peer)
 {
+    election_remove(writer, peer->uname);
     if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
         free(peer_writer);
         peer_writer = NULL;
         crm_notice("Lost attribute writer %s", peer->uname);
+
+        /* If the writer received attribute updates during its shutdown, it will
+         * not have written them to the CIB. Ensure we get a new writer so they
+         * are written out. This means that every node that sees the writer
+         * leave will start a new election, but that's better than losing
+         * attributes.
+         */
+        attrd_start_election_if_needed();
     }
-    election_remove(writer, peer->uname);
 }
 
 void
