@@ -91,7 +91,7 @@ script:
 - test $MAINT_EXTRA -ne 0 || test ${CC} = cov-build
   || { make && ./cts/cts-regression -V cli scheduler exec; }
 - test $MAINT_EXTRA -ne 0 || test ${CC} != cov-build
-  || export CC=gcc; bash ./travisci_build_coverity_scan.sh
+  || export CC=gcc; bash ./maint/travisci_build_coverity_scan.sh
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files

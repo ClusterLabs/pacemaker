@@ -347,7 +347,6 @@ changelog:
 	@make changes > ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
-	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
 DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
 
