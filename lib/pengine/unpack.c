@@ -2932,19 +2932,31 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (clear_reason != NULL) {
-        node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+        // Schedule clearing of the fail count
         pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
                                                     data_set);
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)
-            && rsc->remote_reconnect_ms
-            && remote_node
-            && remote_node->details->unclean) {
+            && rsc->remote_reconnect_ms) {
 
-            action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL, data_set);
-            crm_notice("Waiting for %s to complete before clearing %s failure for remote node %s", fence?fence->uuid:"nil", task, rsc->id);
+            pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
 
-            order_actions(fence, clear_op, pe_order_implies_then);
+            if (remote_node) {
+                /* If we're clearing a remote connection due to a reconnect
+                 * interval, we want to wait until any scheduled fencing
+                 * completes.
+                 *
+                 * We could limit this to remote_node->details->unclean, but at
+                 * this point, that's always true (it won't be reliable until
+                 * after unpack_node_loop() is done).
+                 */
+                pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
+                                                 data_set);
+
+                crm_info("Clearing %s failure will wait until any scheduled "
+                         "fencing of %s completes", task, rsc->id);
+                order_actions(fence, clear_op, pe_order_implies_then);
+            }
         }
     }
 

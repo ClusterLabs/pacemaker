@@ -530,11 +530,6 @@ void do_pe_invoke(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t *msg_data);
 
-/* A_ERROR */
-void do_error(long long action, enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
 /* A_LOG */
 void do_log(long long action, enum crmd_fsa_cause cause,
             enum crmd_fsa_state cur_state,
@@ -665,11 +660,6 @@ void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                                  enum crmd_fsa_input current_input,
                                  fsa_data_t *msg_data);
 
-/* A_UPDATE_NODESTATUS */
-void do_update_node_status(long long action, enum crmd_fsa_cause cause,
-                           enum crmd_fsa_state cur_state,
-                           enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
 /* A_LRM_INVOKE */
 void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
                    enum crmd_fsa_state cur_state,
@@ -682,11 +672,6 @@ void do_lrm_event(long long action, enum crmd_fsa_cause cause,
 
 /* A_TE_INVOKE, A_TE_CANCEL */
 void do_te_invoke(long long action, enum crmd_fsa_cause cause,
-                  enum crmd_fsa_state cur_state,
-                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
-/* A_TE_INVOKE */
-void do_te_copyto(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
