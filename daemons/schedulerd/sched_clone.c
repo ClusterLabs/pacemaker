@@ -442,18 +442,19 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit,
 
     backup = node_hash_dup(rsc->allowed_nodes);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
+    if (chosen && prefer && (chosen->details != prefer->details)) {
+        crm_info("Not pre-allocating %s to %s because %s is better",
+                 rsc->id, prefer->details->uname, chosen->details->uname);
+        g_hash_table_destroy(rsc->allowed_nodes);
+        rsc->allowed_nodes = backup;
+        native_deallocate(rsc);
+        chosen = NULL;
+        backup = NULL;
+    }
     if (chosen) {
-        node_t *local_node = parent_node_instance(rsc, chosen);
-        if (prefer && (chosen->details != prefer->details)) {
-            crm_notice("Pre-allocation failed: got %s instead of %s",
-                       chosen->details->uname, prefer->details->uname);
-            g_hash_table_destroy(rsc->allowed_nodes);
-            rsc->allowed_nodes = backup;
-            native_deallocate(rsc);
-            chosen = NULL;
-            backup = NULL;
+        pe_node_t *local_node = parent_node_instance(rsc, chosen);
 
-        } else if (local_node) {
+        if (local_node) {
             local_node->count++;
 
         } else if (is_set(rsc->flags, pe_rsc_managed)) {
