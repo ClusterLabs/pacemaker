@@ -2971,7 +2971,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="1">
+<cib epoch="43" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3022,7 +3022,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="44" num_updates="0" admin_epoch="1">
+<cib epoch="45" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
