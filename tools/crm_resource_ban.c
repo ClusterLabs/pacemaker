@@ -228,15 +228,19 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
 }
 
 static int
-resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn)
+resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
+                                bool clear_ban_constraints)
 {
     int rc = pcmk_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
-    location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
-    crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
+
+    if (clear_ban_constraints == TRUE) {
+        location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+        crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
+    }
 
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
@@ -255,7 +259,8 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 }
 
 int
-cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn)
+cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
+                   bool clear_ban_constraints)
 {
     int rc = pcmk_ok;
 
@@ -271,7 +276,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
          * to try the second clear method.
          */
         if (rc == pcmk_ok) {
-            rc = resource_clear_node_in_location(rsc_id, host, cib_conn);
+            rc = resource_clear_node_in_location(rsc_id, host, cib_conn, clear_ban_constraints);
         }
 
     } else {
@@ -283,7 +288,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
         for(; n; n = n->next) {
             node_t *target = n->data;
 
-            rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn);
+            rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn, clear_ban_constraints);
             if (rc != pcmk_ok) {
                 break;
             }
