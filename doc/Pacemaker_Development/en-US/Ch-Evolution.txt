@@ -36,8 +36,8 @@ https://github.com/ClusterLabs/pacemaker/commit/55ab749bf0f0143bd1cd050c1bbe302a
 pre-2.0 commit 55ab749bf].
 
 The codebase for heartbeat used to be hosted at http://hg.linux-ha.org,
-but since that does not appear working anymore, an archive checkout
-from 2016 is shared at https://gitlab.com/poki/archived-heartbeat[
+but since that does not appear reliably available recently, an archive
+checkout from 2016 is shared at https://gitlab.com/poki/archived-heartbeat[
 as a dedicated read-only repository], and anchored there, the most
 notable commits are:
 
@@ -46,6 +46,14 @@ notable commits are:
 
 * https://gitlab.com/poki/archived-heartbeat/commit/74573ac6182785820d765ec76c5d70086381931a[
   drop of now-detached Pacemaker code]
+
+Regarding the Pacemaker's split from heartbeat, it evolved stepwise
+(as opposed to one-off cut), and the last step of full dependency is depicted
+in https://www.kernel.org/doc/ols/2008/ols2008v1-pages-85-100.pdf#page=14[
+The Corosync Cluster Engine] paper, fig. 10.
+This article also provides a good reference regarding wider historical
+context of the tangentially (and deeper in some cases) meeting components
+around that time.
 
 === Influence of 'heartbeat' on Pacemaker ===
 
