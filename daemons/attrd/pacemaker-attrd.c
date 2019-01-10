@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -81,10 +81,17 @@ attrd_cpg_destroy(gpointer unused)
 static void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
-    crm_notice("Updating all attributes after %s event", event);
+    if (attrd_shutting_down()) {
+        return;
+    }
+
     if (attrd_election_won()) {
+        crm_notice("Updating all attributes after %s event", event);
         write_attributes(TRUE, FALSE);
     }
+
+    // Check for changes in alerts
+    mainloop_set_trigger(attrd_config_read);
 }
 
 static void
@@ -198,22 +205,6 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    // We have no attribute values in memory, wipe the CIB to match
-    attrd_erase_attrs();
-
-    // Set a trigger for reading the CIB (for the alerts section)
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
-
-    // Always read the CIB at start-up
-    mainloop_set_trigger(attrd_config_read);
-
-    /* Set a private attribute for ourselves with the protocol version we
-     * support. This lets all nodes determine the minimum supported version
-     * across all nodes. It also ensures that the writer learns our node name,
-     * so it can send our attributes to the CIB.
-     */
-    attrd_broadcast_protocol();
-
     return pcmk_ok;
 
   cleanup:
@@ -222,6 +213,25 @@ attrd_cib_connect(int max_retry)
     the_cib = NULL;
     return -ENOTCONN;
 }
+
+/*!
+ * \internal
+ * \brief Prepare the CIB after cluster is connected
+ */
+static void
+attrd_cib_init()
+{
+    // We have no attribute values in memory, wipe the CIB to match
+    attrd_erase_attrs();
+
+    // Set a trigger for reading the CIB (for the alerts section)
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    // Always read the CIB at start-up
+    mainloop_set_trigger(attrd_config_read);
+}
+
+static qb_ipcs_service_t *ipcs = NULL;
 
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
@@ -288,6 +298,16 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+void
+attrd_ipc_fini()
+{
+    if (ipcs != NULL) {
+        crm_client_disconnect_all(ipcs);
+        qb_ipcs_destroy(ipcs);
+        ipcs = NULL;
+    }
+}
+
 static int
 attrd_cluster_connect()
 {
@@ -322,7 +342,6 @@ main(int argc, char **argv)
     int flag = 0;
     int index = 0;
     int argerr = 0;
-    qb_ipcs_service_t *ipcs = NULL;
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
@@ -361,19 +380,32 @@ main(int argc, char **argv)
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
+    /* Connect to the CIB before connecting to the cluster or listening for IPC.
+     * This allows us to assume the CIB is connected whenever we process a
+     * cluster or IPC message (which also avoids start-up race conditions).
+     */
+    if (attrd_cib_connect(10) != pcmk_ok) {
+        attrd_exit_status = CRM_EX_FATAL;
+        goto done;
+    }
+    crm_info("CIB connection active");
+
     if (attrd_cluster_connect() != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }
     crm_info("Cluster connection active");
 
+    // Initialization that requires the cluster to be connected
     attrd_election_init();
+    attrd_cib_init();
 
-    if (attrd_cib_connect(10) != pcmk_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        goto done;
-    }
-    crm_info("CIB connection active");
+    /* Set a private attribute for ourselves with the protocol version we
+     * support. This lets all nodes determine the minimum supported version
+     * across all nodes. It also ensures that the writer learns our node name,
+     * so it can send our attributes to the CIB.
+     */
+    attrd_broadcast_protocol();
 
     attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     crm_info("Accepting attribute updates");
@@ -383,14 +415,10 @@ main(int argc, char **argv)
     crm_info("Shutting down attribute manager");
 
     attrd_election_fini();
-    if (ipcs) {
-        crm_client_disconnect_all(ipcs);
-        qb_ipcs_destroy(ipcs);
-        g_hash_table_destroy(attributes);
-    }
-
+    attrd_ipc_fini();
     attrd_lrmd_disconnect();
     attrd_cib_disconnect();
+    g_hash_table_destroy(attributes);
 
     return crm_exit(attrd_exit_status);
 }
