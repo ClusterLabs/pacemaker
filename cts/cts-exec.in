@@ -387,9 +387,9 @@ class Tests(object):
                 # all systemd tests to fail.
                 import systemd.daemon
             except ImportError:
-                print("Fatal error: python systemd bindings not found. Is package installed?",
-                      file=sys.stderr)
-                sys.exit(CrmExit.ERROR)
+                print("Python systemd bindings not found.")
+                print("The tests for systemd class are not going to be run.")
+                self.rsc_classes.remove("systemd")
 
         print("Testing resource classes", repr(self.rsc_classes))
 
