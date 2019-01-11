@@ -367,6 +367,23 @@ function test_tools() {
     desc="Delete resource child meta attribute"
     cmd="crm_resource -r test-primitive --meta -d is-managed"
     test_assert 0
+ 
+    desc="Specify a lifetime when moving a resource"
+    cmd="crm_resource -r dummy --move --node node2 --lifetime=PT1H"
+    test_assert $CRM_EX_OK
+
+    desc="Try to move a resource previously moved with a lifetime"
+    cmd="crm_resource -r dummy --move --node node1"
+    test_assert $CRM_EX_OK
+
+    desc="Ban dummy from node1 for a short time"
+    cmd="crm_resource -r dummy -B -N node1 --lifetime=PT1S"
+    test_assert $CRM_EX_OK
+
+    desc="Remove expired constraints"
+    sleep 2
+    cmd="crm_resource --clear --expired"
+    test_assert $CRM_EX_OK
 
     rm -f /tmp/$$.existing.xml /tmp/$$.resources.xml
 }
@@ -752,7 +769,8 @@ for t in $tests; do
     echo "Testing $t"
     test_$t > $test_home/regression.$t.out
 
-    sed -i -e 's/cib-last-written.*>/>/'\
+    sed -E \
+        -i -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
@@ -761,10 +779,12 @@ for t in $tests; do
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/[0-9][0-9]*\.||'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/acl\.c:\([0-9][0-9]*\)/acl.c:NNN/' \
-        -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
-        -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
-        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
+        -e 's/acl\.c:([0-9][0-9]*)/acl.c:NNN/' \
+        -e 's/schemas\.c:([0-9][0-9]*)/schemas.c:NNN/' \
+        -e 's/constraints\.:([0-9][0-9]*)/constraints.:NNN/' \
+        -e 's/(validation \([0-9][0-9]* of )[0-9][0-9]*(\).*)/\1X\2/' \
+        -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
+        -e 's/ end=\"[-: 0123456789]+Z?\"/ end=\"\"/' \
 	$test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
