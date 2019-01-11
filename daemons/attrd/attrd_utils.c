@@ -8,6 +8,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <glib.h>
 #include <regex.h>
@@ -21,7 +22,9 @@
 
 cib_t *the_cib = NULL;
 
-static gboolean shutting_down = FALSE;
+// volatile because attrd_shutdown() can be called for a signal
+static volatile bool shutting_down = FALSE;
+
 static GMainLoop *mloop = NULL;
 
 /*!
@@ -45,11 +48,25 @@ attrd_shutting_down()
 void
 attrd_shutdown(int nsig)
 {
+    // Tell various functions not to do anthing
     shutting_down = TRUE;
-    if ((mloop != NULL) && g_main_loop_is_running(mloop)) {
-        g_main_loop_quit(mloop);
-    } else {
+
+    // Don't respond to signals while shutting down
+    mainloop_destroy_signal(SIGTERM);
+    mainloop_destroy_signal(SIGCHLD);
+    mainloop_destroy_signal(SIGPIPE);
+    mainloop_destroy_signal(SIGUSR1);
+    mainloop_destroy_signal(SIGUSR2);
+    mainloop_destroy_signal(SIGTRAP);
+
+    if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
+        /* If there's no main loop active, just exit. This should be possible
+         * only if we get SIGTERM in brief windows at start-up and shutdown.
+         */
         crm_exit(CRM_EX_OK);
+    } else {
+        g_main_loop_quit(mloop);
+        g_main_loop_unref(mloop);
     }
 }
 
@@ -175,11 +192,10 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 void
 attrd_cib_disconnect()
 {
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-        the_cib = NULL;
-    }
+    CRM_CHECK(the_cib != NULL, return);
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    the_cib = NULL;
 }
 
 /* strlen("value") */

@@ -297,8 +297,6 @@ attrd_client_update(xmlNode *xml)
         }
     }
 
-    attrd_start_election_if_needed();
-
     crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
               (attrd_election_won()? " (writer)" : ""));
 
@@ -568,6 +566,14 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
+        return;
+    }
+
+    if (attrd_shutting_down()) {
+        /* If we're shutting down, we want to continue responding to election
+         * ops as long as we're a cluster member (because our vote may be
+         * needed). Ignore all other messages.
+         */
         return;
     }
 
@@ -1018,7 +1024,13 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     }
 
     if (a->changed && attrd_election_won()) {
-        /* If we're re-attempting a write because the original failed, delay
+        if (rc == pcmk_ok) {
+            /* We deferred a write of a new update because this update was in
+             * progress. Write out the new value without additional delay.
+             */
+            write_attribute(a, FALSE);
+
+        /* We're re-attempting a write because the original failed; delay
          * the next attempt so we don't potentially flood the CIB manager
          * and logs with a zillion attempts per second.
          *
@@ -1027,7 +1039,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
          * if all peers similarly fail to write this attribute (which may
          * indicate a corrupted attribute entry rather than a CIB issue).
          */
-        if (a->timer) {
+        } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
             if (!mainloop_timer_running(a->timer)) {
                 crm_trace("Delayed re-attempted write (%dms) for %s",
@@ -1067,7 +1079,7 @@ write_attributes(bool all, bool ignore_delay)
             /* When forced write flag is set, ignore delay. */
             write_attribute(a, (a->force_write ? TRUE : ignore_delay));
         } else {
-            crm_debug("Skipping unchanged attribute %s", a->id);
+            crm_trace("Skipping unchanged attribute %s", a->id);
         }
     }
 }
@@ -1163,12 +1175,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
     if (!a->is_private) {
 
         /* Defer the write if now's not a good time */
-        if (the_cib == NULL) {
-            crm_info("Write out of '%s' delayed: cib not connected", a->id);
-            return;
-
-        } else if (a->update && (a->update < last_cib_op_done)) {
+        CRM_CHECK(the_cib != NULL, return);
+        if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
+            a->update = 0; // Don't log this message again
 
         } else if (a->update) {
             crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
@@ -1275,7 +1285,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->update, cib_updates, s_if_plural(cib_updates),
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
 
-        the_cib->cmds->register_callback_full(the_cib, a->update, 120, FALSE,
+        the_cib->cmds->register_callback_full(the_cib, a->update,
+                                              CIB_OP_TIMEOUT_S, FALSE,
                                               strdup(a->id),
                                               "attrd_cib_callback",
                                               attrd_cib_callback, free);

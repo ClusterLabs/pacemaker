@@ -1,3 +1,16 @@
+* Thu Jan 10 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc3
+- Changesets: 27
+- Diff:       20 files changed, 375 insertions(+), 195 deletions(-)
+
+- Changes since Pacemaker-2.0.1-rc2
+  + attrd: start new election immediately if writer is lost
+  + attrd: detect alert configuration changes when CIB is entirely replaced
+  + controller: avoid transition timeout if resource cleaned while operation
+    is in-flight (regression in 2.0.1-rc1)
+  + libstonithd: restore C++ compatibility (regression in 2.0.1-rc1)
+  + tools: fix crm_resource --clear when lifetime was used with ban/move
+  + tools: fix crm_resource --move when lifetime was used with previous move
+
 * Wed Dec 19 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc2
 - Changesets: 12
 - Diff:       2 files changed, 6 insertions(+), 2 deletions(-)
