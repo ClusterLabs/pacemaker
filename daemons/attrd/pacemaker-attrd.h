@@ -22,6 +22,7 @@ gboolean attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
                     qb_ipcs_msg_process_fn dispatch_fn);
+void attrd_ipc_fini(void);
 
 void attrd_cib_disconnect(void);
 
@@ -110,6 +111,8 @@ GHashTable *attributes;
 
 #define attrd_send_ack(client, id, flags) \
     crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
+
+#define CIB_OP_TIMEOUT_S 120
 
 void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);

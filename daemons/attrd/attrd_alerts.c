@@ -111,26 +111,23 @@ attrd_read_options(gpointer user_data)
 {
     int call_id;
 
-    if (the_cib) {
-        call_id = the_cib->cmds->query(the_cib, XPATH_ALERTS, NULL,
-                                       cib_xpath | cib_scope_local);
+    CRM_CHECK(the_cib != NULL, return TRUE);
 
-        the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE,
-                                              NULL,
-                                              "config_query_callback",
-                                              config_query_callback, free);
+    call_id = the_cib->cmds->query(the_cib, XPATH_ALERTS, NULL,
+                                   cib_xpath | cib_scope_local);
 
-        crm_trace("Querying the CIB... call %d", call_id);
-    } else {
-        crm_err("Could not check for alerts configuration: CIB connection not active");
-    }
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, NULL,
+                                          "config_query_callback",
+                                          config_query_callback, free);
+
+    crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 
 void
 attrd_cib_updated_cb(const char *event, xmlNode * msg)
 {
-    if (crm_patchset_contains_alert(msg, FALSE)) {
+    if (!attrd_shutting_down() && crm_patchset_contains_alert(msg, FALSE)) {
         mainloop_set_trigger(attrd_config_read);
     }
 }

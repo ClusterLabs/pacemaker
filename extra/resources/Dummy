@@ -114,6 +114,10 @@ END
 trap sigterm_handler TERM
 sigterm_handler() {
     ocf_log info "They use TERM to bring us down. No such luck."
+
+    # Since we're likely going to get KILLed, clean up any monitor
+    # serialization in progress, so the next probe doesn't return an error.
+    rm -f "${VERIFY_SERIALIZED_FILE}"
     return
 }
 
@@ -171,6 +175,7 @@ dummy_monitor() {
             # two monitor ops have occurred at the same time.
             # This verifies a condition in pacemaker-execd regression tests.
             ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
+            ocf_exit_reason "alternate universe collision"
             return $OCF_ERR_GENERIC
         fi
 

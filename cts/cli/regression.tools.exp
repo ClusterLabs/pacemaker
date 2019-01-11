@@ -2970,3 +2970,204 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 </cib>
 =#=#=#= End test: Delete resource child meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Delete resource child meta attribute
+=#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
+Migration will take effect until:
+=#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
+<cib epoch="43" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started">
+        <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
+          <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="node2" type="string"/>
+          <date_expression id="cli-prefer-lifetime-end-dummy" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Specify a lifetime when moving a resource - OK (0) =#=#=#=
+* Passed: crm_resource   - Specify a lifetime when moving a resource
+=#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
+=#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
+<cib epoch="45" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Try to move a resource previously moved with a lifetime - OK (0) =#=#=#=
+* Passed: crm_resource   - Try to move a resource previously moved with a lifetime
+=#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
+WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
+	This will be the case even if node1 is the last node in the cluster
+Migration will take effect until:
+=#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
+<cib epoch="46" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started">
+        <rule id="cli-ban-dummy-on-node1-rule" score="-INFINITY" boolean-op="and">
+          <expression id="cli-ban-dummy-on-node1-expr" attribute="#uname" operation="eq" value="node1" type="string"/>
+          <date_expression id="cli-ban-dummy-on-node1-lifetime" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Ban dummy from node1 for a short time - OK (0) =#=#=#=
+* Passed: crm_resource   - Ban dummy from node1 for a short time
+=#=#=#= Begin test: Remove expired constraints =#=#=#=
+Removing constraint: cli-ban-dummy-on-node1
+=#=#=#= Current cib after: Remove expired constraints =#=#=#=
+<cib epoch="47" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Remove expired constraints - OK (0) =#=#=#=
+* Passed: crm_resource   - Remove expired constraints
