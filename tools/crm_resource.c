@@ -1016,10 +1016,10 @@ main(int argc, char **argv)
                 rc = -ENXIO;
                 goto bail;
             }
-            rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn);
+            rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn, TRUE);
 
         } else {
-            rc = cli_resource_clear(rsc_id, NULL, data_set->nodes, cib_conn);
+            rc = cli_resource_clear(rsc_id, NULL, data_set->nodes, cib_conn, TRUE);
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {

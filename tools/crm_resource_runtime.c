@@ -1410,7 +1410,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(rsc_id, host, NULL, cib);
+        rc = cli_resource_clear(rsc_id, host, NULL, cib, TRUE);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, NULL,
@@ -1492,7 +1492,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(rsc_id, host, NULL, cib);
+        cli_resource_clear(rsc_id, host, NULL, cib, TRUE);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE,
@@ -1910,8 +1910,11 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
         }
     }
 
-    /* Clear any previous constraints for 'dest' */
-    cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib);
+    /* Clear any previous prefer constraints across all nodes. */
+    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, FALSE);
+
+    /* Clear any previous ban constraints on 'dest'. */
+    cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib, TRUE);
 
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(rsc_id, dest->details->uname, cib);
