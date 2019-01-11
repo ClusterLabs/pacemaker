@@ -191,37 +191,56 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
     return rc;
 }
 
-int
-cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn)
+/* Nodes can be specified two different ways in the CIB, so we have two different
+ * functions to try clearing out any constraints on them:
+ *
+ * (1) The node could be given by attribute=/value= in an expression XML node.
+ * That's what resource_clear_node_in_expr handles.  That XML looks like this:
+ *
+ * <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started">
+ *   <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
+ *     <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="test02" type="string"/>
+ *     <date_expression id="cli-prefer-lifetime-end-dummy" operation="lt" end="2018-12-12 14:05:37 -05:00"/>
+ *   </rule>
+ * </rsc_location>
+ *
+ * (2) The mode could be given by node= in an rsc_location XML node.  That's
+ * what resource_clear_node_in_location handles.  That XML looks like this:
+ *
+ * <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+ */
+static int
+resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_conn)
+{
+    int rc = pcmk_ok;
+    char *xpath_string = NULL;
+
+    xpath_string = crm_strdup_printf("//rsc_location[@id='cli-prefer-%s'][rule[@id='cli-prefer-rule-%s']/expression[@attribute='#uname' and @value='%s']]",
+                                     rsc_id, rsc_id, host);
+
+    rc = cib_conn->cmds->delete(cib_conn, xpath_string, NULL, cib_xpath | cib_options);
+    if (rc == -ENXIO) {
+        rc = pcmk_ok;
+    }
+
+    free(xpath_string);
+    return rc;
+}
+
+static int
+resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn)
 {
     int rc = pcmk_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
-    if(cib_conn == NULL) {
-        return -ENOTCONN;
-    }
-
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
-
-    if(host) {
-        location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
-        crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
-
-    } else {
-        GListPtr n = allnodes;
-        for(; n; n = n->next) {
-            node_t *target = n->data;
-
-            location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
-            crm_xml_set_id(location, "cli-ban-%s-on-%s",
-                           rsc_id, target->details->uname);
-        }
-    }
+    location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+    crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
-    if(host && do_force == FALSE) {
+    if (do_force == FALSE) {
         crm_xml_add(location, XML_CIB_TAG_NODE, host);
     }
 
@@ -229,13 +248,48 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
     rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
     if (rc == -ENXIO) {
         rc = pcmk_ok;
-
-    } else if (rc != pcmk_ok) {
-        goto bail;
     }
 
-  bail:
-    free_xml(fragment);
+    free(fragment);
+    return rc;
+}
+
+int
+cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn)
+{
+    int rc = pcmk_ok;
+
+    if(cib_conn == NULL) {
+        return -ENOTCONN;
+    }
+
+    if (host) {
+        rc = resource_clear_node_in_expr(rsc_id, host, cib_conn);
+
+        /* rc does not tell us whether the previous operation did anything, only
+         * whether it failed or not.  Thus, as long as it did not fail, we need
+         * to try the second clear method.
+         */
+        if (rc == pcmk_ok) {
+            rc = resource_clear_node_in_location(rsc_id, host, cib_conn);
+        }
+
+    } else {
+        GListPtr n = allnodes;
+
+        /* Iterate over all nodes, attempting to clear the constraint from each.
+         * On the first error, abort.
+         */
+        for(; n; n = n->next) {
+            node_t *target = n->data;
+
+            rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn);
+            if (rc != pcmk_ok) {
+                break;
+            }
+        }
+    }
+
     return rc;
 }
 
