@@ -997,7 +997,7 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
     const char *offset = NULL;
 
     if (output == NULL) {
-        level = LOG_DEBUG;
+        level = LOG_TRACE;
         output = "-- empty --";
     }
 
