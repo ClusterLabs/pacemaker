@@ -769,7 +769,8 @@ for t in $tests; do
     echo "Testing $t"
     test_$t > $test_home/regression.$t.out
 
-    sed -i -e 's/cib-last-written.*>/>/'\
+    sed -E \
+        -i -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
@@ -778,12 +779,12 @@ for t in $tests; do
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/[0-9][0-9]*\.||'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/acl\.c:\([0-9][0-9]*\)/acl.c:NNN/' \
-        -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
-        -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
-        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
+        -e 's/acl\.c:([0-9][0-9]*)/acl.c:NNN/' \
+        -e 's/schemas\.c:([0-9][0-9]*)/schemas.c:NNN/' \
+        -e 's/constraints\.:([0-9][0-9]*)/constraints.:NNN/' \
+        -e 's/(validation \([0-9][0-9]* of )[0-9][0-9]*(\).*)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
-        -e 's/ end=\"[-: 0123456789]*Z\?\"/ end=\"\"/' \
+        -e 's/ end=\"[-: 0123456789]+Z?\"/ end=\"\"/' \
 	$test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
