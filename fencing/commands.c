@@ -1972,13 +1972,14 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
     if (cmd->victim != NULL) {
         do_crm_log(rc == 0 ? LOG_NOTICE : LOG_ERR,
                    "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d (%s)%s%s",
-                   cmd->action, pid, cmd->id, cmd->client_name, cmd->victim, cmd->device, rc,
-                   pcmk_strerror(rc), next ? ". Trying: " : "", next ? next : "");
+                   cmd->action, pid, cmd->id, cmd->client_name, cmd->victim,
+                   cmd->device, rc, pcmk_strerror(rc),
+                   (next? ", retrying with " : ""), (next ? next : ""));
     } else {
         do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
                             "Operation '%s' [%d] for device '%s' returned: %d (%s)%s%s",
                             cmd->action, pid, cmd->device, rc, pcmk_strerror(rc),
-                            next ? ". Trying: " : "", next ? next : "");
+                            (next? ", retrying with " : ""), (next ? next : ""));
     }
 
     if (output) {
@@ -2141,7 +2142,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, cmd->device, output);
+        log_operation(cmd, rc, pid, next_device->id, output);
 
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */

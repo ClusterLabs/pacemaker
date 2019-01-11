@@ -144,6 +144,17 @@ cluster_status(pe_working_set_t * data_set)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Free a list of pe_resource_t
+ *
+ * \param[in] resources  List to free
+ *
+ * \note When a working set's resource list is freed, that includes the original
+ *       storage for the uname and id of any Pacemaker Remote nodes in the
+ *       working set's node list, so take care not to use those afterward.
+ * \todo Refactor pe_node_t to strdup() the node name.
+ */
 static void
 pe_free_resources(GListPtr resources)
 {
@@ -177,32 +188,36 @@ pe_free_actions(GListPtr actions)
 static void
 pe_free_nodes(GListPtr nodes)
 {
-    GListPtr iterator = nodes;
+    for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
+        pe_node_t *node = (pe_node_t *) iterator->data;
 
-    while (iterator != NULL) {
-        node_t *node = (node_t *) iterator->data;
-        struct node_shared_s *details = node->details;
-
-        iterator = iterator->next;
-
-        crm_trace("deleting node");
-        print_node("delete", node, FALSE);
-
-        if (details != NULL) {
-            crm_trace("%s is being deleted", details->uname);
-            if (details->attrs != NULL) {
-                g_hash_table_destroy(details->attrs);
-            }
-            if (details->utilization != NULL) {
-                g_hash_table_destroy(details->utilization);
-            }
-            if (details->digest_cache != NULL) {
-                g_hash_table_destroy(details->digest_cache);
-            }
-            g_list_free(details->running_rsc);
-            g_list_free(details->allocated_rsc);
-            free(details);
+        // Shouldn't be possible, but to be safe ...
+        if (node == NULL) {
+            continue;
         }
+        if (node->details == NULL) {
+            free(node);
+            continue;
+        }
+
+        /* This is called after pe_free_resources(), which means that we can't
+         * use node->details->uname for Pacemaker Remote nodes.
+         */
+        crm_trace("Freeing node %s", (is_remote_node(node)?
+                  "(Pacemaker Remote)" : node->details->uname));
+
+        if (node->details->attrs != NULL) {
+            g_hash_table_destroy(node->details->attrs);
+        }
+        if (node->details->utilization != NULL) {
+            g_hash_table_destroy(node->details->utilization);
+        }
+        if (node->details->digest_cache != NULL) {
+            g_hash_table_destroy(node->details->digest_cache);
+        }
+        g_list_free(node->details->running_rsc);
+        g_list_free(node->details->allocated_rsc);
+        free(node->details);
         free(node);
     }
     if (nodes != NULL) {

@@ -1509,27 +1509,35 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
 GListPtr
 find_actions_exact(GListPtr input, const char *key, node_t * on_node)
 {
-    GListPtr gIter = input;
-    GListPtr result = NULL;
+    GList *result = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+    if (on_node == NULL) {
+        crm_trace("Not searching for action %s because node not specified",
+                  key);
+        return NULL;
+    }
 
-        crm_trace("Matching %s against %s", key, action->uuid);
-        if (safe_str_neq(key, action->uuid)) {
-            crm_trace("Key mismatch: %s vs. %s", key, action->uuid);
-            continue;
+    for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
-        } else if (on_node == NULL || action->node == NULL) {
-            crm_trace("on_node=%p, action->node=%p", on_node, action->node);
-            continue;
+        if (action->node == NULL) {
+            crm_trace("Skipping comparison of %s vs action %s without node",
+                      key, action->uuid);
 
-        } else if (safe_str_eq(on_node->details->id, action->node->details->id)) {
+        } else if (safe_str_neq(key, action->uuid)) {
+            crm_trace("Desired action %s doesn't match %s", key, action->uuid);
+
+        } else if (safe_str_neq(on_node->details->id,
+                                action->node->details->id)) {
+            crm_trace("Action %s desired node ID %s doesn't match %s",
+                      key, on_node->details->id, action->node->details->id);
+
+        } else {
+            crm_trace("Action %s matches", key);
             result = g_list_prepend(result, action);
         }
-        crm_trace("Node mismatch: %s vs. %s", on_node->details->id, action->node->details->id);
     }
 
     return result;

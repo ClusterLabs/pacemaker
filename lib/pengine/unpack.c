@@ -1285,6 +1285,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             }
         }
         g_list_free(data_set->stop_needed);
+        data_set->stop_needed = NULL;
     }
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {

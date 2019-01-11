@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -96,6 +96,9 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
     if (attrd_election_won()) {
         write_attributes(TRUE, FALSE);
     }
+
+    // Check for changes in alerts
+    mainloop_set_trigger(attrd_config_read);
 }
 
 static void

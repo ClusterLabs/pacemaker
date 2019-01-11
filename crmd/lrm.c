@@ -2497,6 +2497,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     int update_id = 0;
     gboolean remove = FALSE;
     gboolean removed = FALSE;
+    bool need_direct_ack = FALSE;
     lrmd_rsc_info_t *rsc = NULL;
     const char *node_name = NULL;
 
@@ -2527,7 +2528,6 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                     op_key, op->rsc_id);
         }
     }
-    CRM_LOG_ASSERT(rsc != NULL); // If it's still NULL, there's a bug somewhere
 
     // Get node name if available (from executor state or action XML)
     if (lrm_state) {
@@ -2559,51 +2559,81 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {
+        /* We might not record the result, so directly acknowledge it to the
+         * originator instead, so it doesn't time out waiting for the result
+         * (especially important if part of a transition).
+         */
+        need_direct_ack = TRUE;
+
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
+                // We should record the result, and happily, we can
                 update_id = do_update_resource(node_name, rsc, op);
+                need_direct_ack = FALSE;
+
+            } else if (op->rsc_deleted) {
+                /* We shouldn't record the result (likely the resource was
+                 * refreshed, cleaned, or removed while this operation was
+                 * in flight).
+                 */
+                crm_notice("Not recording %s result in CIB because "
+                           "resource information was removed since it was initiated",
+                           op_key);
             } else {
-                // @TODO Should we direct ack?
-                crm_err("Unable to record %s result in CIB: %s",
-                        op_key,
+                /* This shouldn't be possible; the executor didn't consider the
+                 * resource deleted, but we couldn't find resource or node
+                 * information.
+                 */
+                crm_err("Unable to record %s result in CIB: %s", op_key,
                         (node_name? "No resource information" : "No node name"));
             }
-        } else {
-            send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
         }
+
     } else if (op->interval == 0) {
-        /* This will occur when "crm resource cleanup" is called while actions are in-flight */
-        crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
-        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
+        /* A non-recurring operation was cancelled. Most likely, the
+         * never-initiated action was removed from the executor's pending
+         * operations list upon resource removal.
+         */
+        need_direct_ack = TRUE;
 
     } else if (pending == NULL) {
-        /* We don't need to do anything for cancelled ops
-         * that are not in our pending op list. There are no
-         * transition actions waiting on these operations. */
+        /* This recurring operation was cancelled, but was not pending. No
+         * transition actions are waiting on it, nothing needs to be done.
+         */
 
     } else if (op->user_data == NULL) {
-        /* At this point we have a pending entry, but no transition
-         * key present in the user_data field. report this */
-        crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
+        /* This recurring operation was cancelled and pending, but we don't
+         * have a transition key. This should never happen.
+         */
+        crm_err("Recurring operation %s was cancelled without transition information",
+                op_key);
 
     } else if (pending->remove) {
-        /* The tengine canceled this op, we have been waiting for the cancel to finish. */
+        /* This recurring operation was cancelled (by us) and pending, and we
+         * have been waiting for it to finish.
+         */
         if (lrm_state) {
             erase_lrm_history_by_op(lrm_state, op);
         }
 
     } else if (op->rsc_deleted) {
-        /* The tengine initiated this op, but it was cancelled outside of the
-         * tengine's control during a resource cleanup/re-probe request. The tengine
-         * must be alerted that this operation completed, otherwise the tengine
-         * will continue waiting for this update to occur until it is timed out.
-         * We don't want this update going to the cib though, so use a direct ack. */
-        crm_trace("Op %s (call=%d): cancelled due to rsc deletion", op_key, op->call_id);
-        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
+        /* This recurring operation was cancelled (but not by us, and the
+         * executor does not have resource information, likely due to resource
+         * cleanup, refresh, or removal) and pending.
+         */
+        crm_debug("Recurring op %s was cancelled due to resource deletion",
+                  op_key);
+        need_direct_ack = TRUE;
 
     } else {
-        /* Before a stop is called, no need to direct ack */
-        crm_trace("Op %s (call=%d): no delete event required", op_key, op->call_id);
+        /* This recurring operation was cancelled (but not by us, likely by the
+         * executor before stopping the resource) and pending. We don't need to
+         * do anything special.
+         */
+    }
+
+    if (need_direct_ack) {
+        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
     }
 
     if(remove == FALSE) {
