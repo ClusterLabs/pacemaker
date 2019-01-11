@@ -900,8 +900,12 @@ main(int argc, char **argv)
                     v_provider ? v_provider : "",
                     v_agent ? v_agent : "");
             argerr++;
+        }
 
-        } else {
+        if (argerr == 0) {
+            rc = cli_resource_execute_from_params("test", v_class, v_provider, v_agent,
+                                                  "validate-all", validate_options,
+                                                  override_params, timeout_ms);
             exit_code = crm_errno2exit(rc);
             return crm_exit(exit_code);
         }

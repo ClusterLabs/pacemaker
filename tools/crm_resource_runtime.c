@@ -1638,94 +1638,59 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 }
 
 int
-cli_resource_execute(resource_t *rsc, const char *requested_name,
-                     const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
+cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
+                                 const char *rsc_prov, const char *rsc_type,
+                                 const char *action, GHashTable *params,
+                                 GHashTable *override_hash, int timeout_ms)
 {
+    GHashTable *params_copy = NULL;
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
-    const char *rid = NULL;
-    const char *rtype = NULL;
-    const char *rprov = NULL;
-    const char *rclass = NULL;
-    const char *action = NULL;
-    GHashTable *params = NULL;
 
-    if (safe_str_eq(rsc_action, "validate")) {
-        action = "validate-all";
-
-    } else if (safe_str_eq(rsc_action, "force-check")) {
-        action = "monitor";
-
-    } else if (safe_str_eq(rsc_action, "force-stop")) {
-        action = rsc_action+6;
-
-    } else if (safe_str_eq(rsc_action, "force-start")
-               || safe_str_eq(rsc_action, "force-demote")
-               || safe_str_eq(rsc_action, "force-promote")) {
-        action = rsc_action+6;
-
-        if(pe_rsc_is_clone(rsc)) {
-            rc = cli_resource_search(rsc, requested_name, data_set);
-            if(rc > 0 && do_force == FALSE) {
-                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
-                        action, rsc->id);
-                CMD_ERR("Try setting target-role=Stopped first or specifying "
-                        "the force option");
-                crm_exit(CRM_EX_UNSAFE);
-            }
-        }
-    }
-
-    if(pe_rsc_is_clone(rsc)) {
-        /* Grab the first child resource in the hope it's not a group */
-        rsc = rsc->children->data;
-    }
-
-    if(rsc->variant == pe_group) {
-        CMD_ERR("Sorry, the %s option doesn't support group resources",
-                rsc_action);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    }
-
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (safe_str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH)) {
         CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
-                rsc_action, rclass);
+                action, rsc_class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
-    params = generate_resource_params(rsc, data_set);
+    /* If no timeout was provided, grab the default. */
+    if (timeout_ms == 0) {
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    }
 
     /* add meta_timeout env needed by some resource agents */
-    if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
-    }
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
                         crm_strdup_printf("%d", timeout_ms));
 
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+    /* resources_action_create frees the params hash table it's passed, but we
+     * may need to reuse it in a second call to resources_action_create.  Thus
+     * we'll make a copy here so that gets freed and the original remains for
+     * reuse.
+     */
+    params_copy = crm_str_table_dup(params);
 
-    op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
-                                 timeout_ms, params, 0);
+    op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
+                                 timeout_ms, params_copy, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
-        op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
-                                     timeout_ms, params, 0);
+        params_copy = crm_str_table_dup(params);
+        op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
+                                     timeout_ms, params_copy, 0);
+
+        /* Callers of cli_resource_execute expect that the params hash table will
+         * be freed.  That function uses this one, so for that reason and for
+         * making the two act the same, we should free the hash table here too.
+         */
+        g_hash_table_destroy(params);
 
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
-
         return crm_exit(CRM_EX_DATAERR);
     }
-
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
     if(resource_verbose > 1) {
@@ -1746,7 +1711,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
             printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
-                   rsc->id, name, value);
+                   rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
@@ -1755,13 +1720,15 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         int more, lpc, last;
         char *local_copy = NULL;
 
+        rc = op->rc;
+
         if (op->status == PCMK_LRM_OP_DONE) {
             printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                    services_ocf_exitcode_str(op->rc), op->rc);
         } else {
             printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                    services_lrm_status_str(op->status), op->status);
         }
 
@@ -1797,10 +1764,84 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
             }
             free(local_copy);
         }
+    } else {
+        rc = op->rc == 0 ? pcmk_err_generic : op->rc;
     }
-  done:
-    rc = op->rc;
+
+done:
     services_action_free(op);
+    /* See comment above about why we free params here. */
+    g_hash_table_destroy(params);
+    return rc;
+}
+
+int
+cli_resource_execute(resource_t *rsc, const char *requested_name,
+                     const char *rsc_action, GHashTable *override_hash,
+                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
+{
+    int rc = pcmk_ok;
+    const char *rid = NULL;
+    const char *rtype = NULL;
+    const char *rprov = NULL;
+    const char *rclass = NULL;
+    const char *action = NULL;
+    GHashTable *params = NULL;
+
+    if (safe_str_eq(rsc_action, "validate")) {
+        action = "validate-all";
+
+    } else if (safe_str_eq(rsc_action, "force-check")) {
+        action = "monitor";
+
+    } else if (safe_str_eq(rsc_action, "force-stop")) {
+        action = rsc_action+6;
+
+    } else if (safe_str_eq(rsc_action, "force-start")
+               || safe_str_eq(rsc_action, "force-demote")
+               || safe_str_eq(rsc_action, "force-promote")) {
+        action = rsc_action+6;
+
+        if(pe_rsc_is_clone(rsc)) {
+            rc = cli_resource_search(rsc, requested_name, data_set);
+            if(rc > 0 && do_force == FALSE) {
+                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
+                        action, rsc->id);
+                CMD_ERR("Try setting target-role=Stopped first or specifying "
+                        "the force option");
+                crm_exit(CRM_EX_UNSAFE);
+            }
+        }
+
+    } else {
+        action = rsc_action;
+    }
+
+    if(pe_rsc_is_clone(rsc)) {
+        /* Grab the first child resource in the hope it's not a group */
+        rsc = rsc->children->data;
+    }
+
+    if(rsc->variant == pe_group) {
+        CMD_ERR("Sorry, the %s option doesn't support group resources",
+                rsc_action);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    }
+
+    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+
+    params = generate_resource_params(rsc, data_set);
+
+    if (timeout_ms == 0) {
+        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
+    }
+
+    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+
+    rc = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
+                                          params, override_hash, timeout_ms);
     return rc;
 }
 
