@@ -228,6 +228,17 @@ typedef struct svc_action_s {
  */
     GList *resources_list_standards(void);
 
+/**
+ * Does the given standard, provider, and agent describe a resource that can exist?
+ *
+ * \param[in] standard  Which class of agent does the resource belong to?
+ * \param[in] provider  What provides the agent (NULL for most standards)?
+ * \param[in] agent     What is the name of the agent?
+ *
+ * \return A boolean
+ */
+    gboolean resources_agent_exists(const char *standard, const char *provider, const char *agent);
+
 svc_action_t *services_action_create(const char *name, const char *action,
                                      guint interval_ms, int timeout /* ms */);
 
