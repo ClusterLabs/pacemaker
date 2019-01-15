@@ -57,13 +57,41 @@ install-exec-local:
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_BLACKBOX_DIR)
 	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_LOG_DIR)
 	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_BUNDLE_DIR)
+ # leaving a space here to work around automake's conditionals
+ ifeq ($(host_os),linux-gnu)
+	getent group $(CRM_DAEMON_GROUP) >/dev/null \
+	 || groupadd -r $(CRM_DAEMON_GROUP) \
+	 || echo 'cannot add group $(CRM_DAEMON_GROUP)'
+	getent passwd $(CRM_DAEMON_USER) >/dev/null \
+	 || useradd -r -g $(CRM_DAEMON_GROUP) -s /sbin/nologin \
+	     -c "cluster user" $(CRM_DAEMON_USER) \
+	 || echo 'cannot add user $(CRM_DAEMON_USER)'
+ else ifneq ($(strip $(filter solaris%,$(host_os))),)
+	getent group $(CRM_DAEMON_GROUP) >/dev/null \
+	 || groupadd $(CRM_DAEMON_GROUP) \
+	 || echo 'cannot add group $(CRM_DAEMON_GROUP)'
+	getent passwd $(CRM_DAEMON_USER) >/dev/null \
+	 || useradd -g $(CRM_DAEMON_GROUP) -s /usr/bin/false \
+	     -c "cluster user" $(CRM_DAEMON_USER) \
+	 || echo 'cannot add user $(CRM_DAEMON_USER)'
+ else ifneq ($(strip $(filter freebsd%,$(host_os))),)
+	pw showgroup $(CRM_DAEMON_GROUP) >/dev/null \
+	 || pw groupadd $(CRM_DAEMON_GROUP) \
+	 || echo 'cannot add group $(CRM_DAEMON_GROUP)'
+	pw showuser $(CRM_DAEMON_USER) >/dev/null \
+	 || pw useradd -g $(CRM_DAEMON_GROUP) \
+	     -c "cluster user" $(CRM_DAEMON_USER) \
+	 || echo 'cannot add user $(CRM_DAEMON_USER)'
+ else
+	echo 'unknown platform $(host_os): cannot check/add group $(CRM_DAEMON_GROUP)'
+	echo 'unknown platform $(host_os): cannot check/add user $(CRM_DAEMON_USER)'
+ endif
 	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PACEMAKER_CONFIG_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CORE_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BLACKBOX_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_LOG_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BUNDLE_DIR)
-# Use chown because the user/group may not exist
 
 clean-generic:
 	rm -f $(TARFILE) *.tar.bz2 *.sed
