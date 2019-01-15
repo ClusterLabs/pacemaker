@@ -983,6 +983,7 @@ resources_list_standards(void)
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_OCF));
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_SERVICE));
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_STONITH));
 
 #if SUPPORT_SYSTEMD
     agents = systemd_unit_listall();
