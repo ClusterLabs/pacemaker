@@ -1,9 +1,8 @@
-# Copyright 2018 the Pacemaker project contributors
+# Copyright 2018-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
-# Author: Jan Pokorny <jpokorny@redhat.com>
-# Part of pacemaker project
-# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# SPDX-License-Identifier: FSFAP
 
 define pcmk
     # shelling avoids necessity to have an inferior around
@@ -26,7 +25,7 @@ define pcmk-follow-daemon
     break start_child
     cont
     while ($cont)
-        if (!strcmp(child->name, $d) || !strcmp(child->name, $d_alt))
+        if (!(int)strcmp(child->name, $d) || !(int)strcmp(child->name, $d_alt))
             set $cont = 0
             set follow-fork-mode child
             break getrlimit
