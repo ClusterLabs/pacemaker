@@ -296,6 +296,8 @@ Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
 Requires:      %{name}-schemas = %{version}-%{release}
+# sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
+Conflicts:     sbd < 1.4.0
 
 %description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
