@@ -263,6 +263,8 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
+# sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
+Conflicts:     sbd < 1.4.0
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
