@@ -42,13 +42,14 @@ ctslib_PYTHON	=	__init__.py		\
 			remote.py		\
 			watcher.py
 
-cts_DATA	=	README.md cts.supp
+cts_DATA	=	README.md cts.supp pacemaker-cts-dummyd.service
 
 cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
 			LSBDummy		\
 			HBDummy		\
+			pacemaker-cts-dummyd	\
 			$(top_srcdir)/fencing/fence_dummy
 
 SUBDIRS	= benchmark

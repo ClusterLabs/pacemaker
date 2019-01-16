@@ -2068,6 +2068,7 @@ cts/Makefile					        	\
 	cts/benchmark/Makefile					\
 	cts/benchmark/clubench					\
 	cts/lxc_autogen.sh					\
+	cts/pacemaker-cts-dummyd.service			\
 cib/Makefile							\
 attrd/Makefile							\
 crmd/Makefile							\
@@ -2129,6 +2130,8 @@ tools/Makefile							\
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)
+
+AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
 
 dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()

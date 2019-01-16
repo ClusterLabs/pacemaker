@@ -1,0 +1,6 @@
+[Unit]
+Description=Dummy daemon for Pacemaker CTS testing
+
+[Service]
+Type=notify
+ExecStart=@CRM_DAEMON_DIR@/pacemaker-cts-dummyd 10
