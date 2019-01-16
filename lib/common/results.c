@@ -176,6 +176,7 @@ pcmk_errorname(int rc)
         case pcmk_err_multiple: return "pcmk_err_multiple";
         case pcmk_err_node_unknown: return "pcmk_err_node_unknown";
         case pcmk_err_already: return "pcmk_err_already";
+        case pcmk_err_bad_nvpair: return "pcmk_err_bad_nvpair";
     }
     return "Unknown";
 }
@@ -220,6 +221,8 @@ pcmk_strerror(int rc)
             return "Node not found";
         case pcmk_err_already:
             return "Situation already as requested";
+        case pcmk_err_bad_nvpair:
+            return "Bad name/value pair given";
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";
 
@@ -364,6 +367,9 @@ crm_errno2exit(int rc)
         case pcmk_err_schema_validation:
         case pcmk_err_transform_failed:
             return CRM_EX_CONFIG;
+
+        case pcmk_err_bad_nvpair:
+            return CRM_EX_INVALID_PARAM;
 
         case EACCES:
             return CRM_EX_INSUFFICIENT_PRIV;
