@@ -3030,6 +3030,16 @@ class RemoteStonithd(RemoteDriver):
         if not RemoteDriver.is_applicable(self):
             return False
 
+        # Cluster nodes would be reused as remote nodes in pacemaker-remote tests.
+        # For RemoteStonithd, if pacemaker service was enabled at boot, after the
+        # remote node got fenced, the cluster node would join instead of the
+        # expected remote one. Meanwhile pacemaker_remote would not be able to
+        # start. Depending on the chances, the situations might not be able to be
+        # orchestrated gracefully any more.
+        if self.Env["at-boot"] == 1:
+            self.logger.log("%s is not able to run with pacemaker service enabled at boot." % self.name)
+            return False
+
         if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
