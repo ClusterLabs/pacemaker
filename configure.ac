@@ -416,6 +416,8 @@ case "$host_os" in
         ;;
     *solaris*)
         AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
+        # get getpwnam_r declaration right
+        CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
         ;;
     *linux*)
         AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
