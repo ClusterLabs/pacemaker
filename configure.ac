@@ -131,14 +131,6 @@ dnl ===============================================
 dnl Configure Options
 dnl ===============================================
 
-dnl Some systems, like Solaris require a custom package name
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
-    [ PKGNAME="$withval" ],
-    [ PKGNAME="LXHAhb" ],
-  )
-AC_SUBST(PKGNAME)
-
 AC_ARG_ENABLE([ansi],
     [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
 
