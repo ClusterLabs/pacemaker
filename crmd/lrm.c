@@ -2480,7 +2480,7 @@ unescape_newlines(const char *string)
     ret = strdup(string);
     pch = strstr(ret, escaped_newline);
     while (pch != NULL) {
-        strncpy(pch, "\n ", 2);
+        memcpy(pch, "\n ", 2);
         pch = strstr(pch, escaped_newline);
     }
 
