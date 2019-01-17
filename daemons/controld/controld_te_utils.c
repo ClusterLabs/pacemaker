@@ -229,7 +229,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
          */
 
 #ifdef RB_HALT_SYSTEM
-        reboot(RB_HALT_SYSTEM);
+        pcmk__reboot(RB_HALT_SYSTEM);
 #endif
 
         /*

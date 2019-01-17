@@ -100,8 +100,8 @@ pcmk_panic_local(void)
     } else {
         sysrq_trigger('b');
     }
-    /* reboot(RB_HALT_SYSTEM); rc = errno; */
-    reboot(RB_AUTOBOOT);
+    /* pcmk__reboot(RB_HALT_SYSTEM); */
+    pcmk__reboot(RB_AUTOBOOT);
     rc = errno;
 
     do_crm_log_always(LOG_EMERG, "Reboot failed, escalating to %d: %s (%d)", ppid, pcmk_strerror(rc), rc);

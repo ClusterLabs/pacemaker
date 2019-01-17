@@ -183,4 +183,32 @@ typedef union
 #    define __FUNCTION__ "__FUNCTION__"
 #  endif
 
+
+/* ad-hoc portability helpers */
+
+#include <unistd.h>
+#include <sys/reboot.h>
+
+/*!
+ * \internal
+ * \brief reboot(2) (as in sys/reboot.h) compatibility wrapper for non-linuxen
+ *
+ * \param[in] cmd  One of supported, enumerated commands (RB_HALT_SYSTEM, etc.)
+ *
+ * \return Success/failure indication per platform, if the call returns at all.
+ *
+ * \note This is a very superficial wrapper to barely make Solaris/OpenIndiana
+ *       compile.  More elaboration can arrive later.
+ */
+static inline int
+pcmk__reboot(int cmd)
+{
+#ifdef ON_SOLARIS
+    char ignore = '\0';
+    return reboot(cmd, &ignore);
+#else
+    return reboot(cmd);
+#endif
+}
+
 #endif                          /* PORTABILITY_H */
