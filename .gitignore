@@ -102,6 +102,8 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
+/cts/pacemaker-cts-dummyd
+/cts/pacemaker-cts-dummyd.service
 doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
@@ -163,7 +165,6 @@ lib/gnu/stdalign.h
 /cts/cts-scheduler
 /cts/cts-support
 /cts/fence_dummy
-/cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
 /cts/scheduler/
 /daemons
