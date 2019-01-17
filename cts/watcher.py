@@ -31,7 +31,7 @@ class SearchObj(object):
         self.offset = "EOF"
 
         if host == None:
-            host = "localhost"
+            self.host = "localhost"
 
     def __str__(self):
         if self.host:
@@ -63,8 +63,7 @@ class FileObj(SearchObj):
     def __init__(self, filename, host=None, name=None):
         SearchObj.__init__(self, filename, host, name)
 
-        if host is not None:
-            self.harvest()
+        self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
         for line in outLines:
