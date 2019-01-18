@@ -224,21 +224,26 @@ class Environment:
                 # default
                 self["syslogd"] = "rsyslog"
 
+    def service_is_enabled(self, node, service):
+        if self["have_systemd"]:
+            # Systemd
+
+            # With "systemctl is-enabled", we should check if the service is
+            # explicitly "enabled" instead of the return code. For example it returns
+            # 0 if the service is "static" or "indirect", but they don't really count
+            # as "enabled".
+            return not self.rsh(node, "systemctl is-enabled %s | grep enabled" % service)
+
+        else:
+            # SYS-V
+            return not self.rsh(node, "chkconfig --list | grep -e %s.*on" % service)
+
     def detect_at_boot(self):
         # Detect if the cluster starts at boot
         if not "at-boot" in self.data:
-            atboot = 0
-
-            if self["have_systemd"]:
-            # Systemd
-                atboot = atboot or not self.rsh(self.target, "systemctl is-enabled heartbeat.service")
-                atboot = atboot or not self.rsh(self.target, "systemctl is-enabled corosync.service")
-                atboot = atboot or not self.rsh(self.target, "systemctl is-enabled pacemaker.service")
-            else:
-                # SYS-V
-                atboot = atboot or not self.rsh(self.target, "chkconfig --list | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
-
-            self["at-boot"] = atboot
+            self["at-boot"] = self.service_is_enabled(self.target, "heartbeat") \
+                              or self.service_is_enabled(self.target, "corosync") \
+                              or self.service_is_enabled(self.target, "pacemaker")
 
     def detect_ip_offset(self):
         # Try to determin an offset for IPaddr resources
