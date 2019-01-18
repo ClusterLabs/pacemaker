@@ -224,6 +224,24 @@ class Environment:
                 # default
                 self["syslogd"] = "rsyslog"
 
+    def disable_service(self, node, service):
+        if self["have_systemd"]:
+            # Systemd
+            return self.rsh(node, "systemctl disable %s" % service)
+
+        else:
+            # SYS-V
+            return self.rsh(node, "chkconfig %s off" % service)
+
+    def enable_service(self, node, service):
+        if self["have_systemd"]:
+            # Systemd
+            return self.rsh(node, "systemctl enable %s" % service)
+
+        else:
+            # SYS-V
+            return self.rsh(node, "chkconfig %s on" % service)
+
     def service_is_enabled(self, node, service):
         if self["have_systemd"]:
             # Systemd
