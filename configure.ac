@@ -182,6 +182,12 @@ AC_ARG_ENABLE(legacy-links,
 )
 AM_CONDITIONAL(BUILD_LEGACY_LINKS, test "x${LEGACY_LINKS}" = "xyes")
 
+AC_ARG_ENABLE(hash-affected-tests,
+    [  --disable-hash-affected-tests  Skip hash-sensitive scheduler tests (try ~ autodetect)],
+    [ HASH_AFFECTED="${enableval}" ],
+    [ HASH_AFFECTED=yes ],
+)
+
 AC_ARG_WITH(corosync,
     [  --with-corosync  Support the Corosync messaging and membership layer ],
     [ SUPPORT_CS=$withval ],
@@ -687,6 +693,12 @@ fi
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
+# cf. https://bugs.clusterlabs.org/show_bug.cgi?id=5378
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.59.0],
+                  [test "x$HASH_AFFECTED" != xtry || HASH_AFFECTED=no],
+                  [test "x$HASH_AFFECTED" != xtry || HASH_AFFECTED=yes])
+test "x$HASH_AFFECTED" = xno && HASH_AFFECTED='#' || HASH_AFFECTED=
+AC_SUBST([HASH_AFFECTED])
 
 #
 # Where is dlopen?
