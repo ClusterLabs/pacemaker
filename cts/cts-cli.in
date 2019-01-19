@@ -938,7 +938,7 @@ for t in $tests; do
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
-        -e 's/ end=\"[-: 0123456789]*Z\?\"/ end=\"\"/' \
+        -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
