@@ -28,6 +28,7 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			controld	\
 			Dummy		\
 			HealthCPU	\
+                        HealthIOWait    \
 			HealthSMART	\
 			ifspeed		\
 			o2cb		\
