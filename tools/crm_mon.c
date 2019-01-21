@@ -3175,7 +3175,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                     fprintf(stream, " completed=\"%s\"", run_at_s?run_at_s:"");
                     break;
                 default:
-                    fprintf(stream, " state=\"pending\"");
+                    break;
             }
             fprintf(stream, " />\n");
             break;
@@ -3189,8 +3189,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                              action_s, event->target,
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
-                             ((!fence_full_history) && (output_format != mon_output_xml))?
-                             "last-successful":"completed",
+                             fence_full_history?"completed":"last-successful",
                              run_at_s?run_at_s:"");
                     break;
                 case st_failed:
@@ -3199,8 +3198,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                              action_s, event->target,
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
-                             ((!fence_full_history) && (output_format != mon_output_xml))?
-                             "last-failed":"completed",
+                             fence_full_history?"completed":"last-failed",
                              run_at_s?run_at_s:"");
                     break;
                 default:
@@ -3219,9 +3217,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                                     action_s, event->target,
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
-                                    ((!fence_full_history) &&
-                                     (output_format != mon_output_xml))?
-                                    "last-successful":"completed",
+                                    fence_full_history?"completed":"last-successful",
                                     run_at_s?run_at_s:"");
                     break;
                 case st_failed:
@@ -3230,9 +3226,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                                     action_s, event->target,
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
-                                    ((!fence_full_history) &&
-                                     (output_format != mon_output_xml))?
-                                    "last-failed":"completed",
+                                    fence_full_history?"completed":"last-failed",
                                     run_at_s?run_at_s:"");
                     break;
                 default:
