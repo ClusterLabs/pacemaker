@@ -2674,6 +2674,22 @@ class RemoteDriver(CTSTest):
         if not self.failed:
             self.remote_node_added = 1
 
+    def disable_services(self, node):
+        self.corosync_enabled = self.Env.service_is_enabled(node, "corosync")
+        if self.corosync_enabled:
+            self.Env.disable_service(node, "corosync")
+
+        self.pacemaker_enabled = self.Env.service_is_enabled(node, "pacemaker")
+        if self.pacemaker_enabled:
+            self.Env.disable_service(node, "pacemaker")
+
+    def restore_services(self, node):
+        if self.corosync_enabled:
+            self.Env.enable_service(node, "corosync")
+
+        if self.pacemaker_enabled:
+            self.Env.enable_service(node, "pacemaker")
+
     def stop_pcmk_remote(self, node):
         # disable pcmk remote
         for i in range(10):
@@ -2703,6 +2719,15 @@ class RemoteDriver(CTSTest):
         self.rsh(node, "killall -CONT pacemaker-remoted")
 
     def start_metal(self, node):
+        # Cluster nodes are reused as remote nodes in remote tests. If cluster
+        # services were enabled at boot, in case the remote node got fenced, the
+        # cluster node would join instead of the expected remote one. Meanwhile
+        # pacemaker_remote would not be able to start. Depending on the chances,
+        # the situations might not be able to be orchestrated gracefully any more.
+        #
+        # Temporarily disable any enabled cluster serivces.
+        self.disable_services(node)
+
         pcmk_started = 0
 
         # make sure the resource doesn't already exist for some reason
@@ -2875,6 +2900,8 @@ class RemoteDriver(CTSTest):
             return
 
     def cleanup_metal(self, node):
+        self.restore_services(node)
+
         if self.pcmk_started == 0:
             return
 
