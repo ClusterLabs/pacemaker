@@ -1623,8 +1623,6 @@ stage6(pe_working_set_t * data_set)
         crm_trace("Ordering shutdowns before %s on %s (DC)",
                   dc_down->task, dc_down->node->details->uname);
 
-        add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
         for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
             action_t *node_stop = (action_t *) gIter->data;
 
