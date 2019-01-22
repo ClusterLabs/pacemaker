@@ -591,7 +591,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* Tell operation_finalize() not to reschedule the operation */
     op->cancel = TRUE;
 
-    /* Stop tracking it as a recurring operation, and stop its timer */
+    /* Stop tracking it as a recurring operation, and stop its repeat timer */
     cancel_recurring_action(op);
 
     /* If the op has a PID, it's an in-flight child process, so kill it.
@@ -610,19 +610,22 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
         goto done;
     }
 
-    /* In-flight systemd and upstart ops don't have a pid. The relevant handlers
-     * will call operation_finalize() when the operation completes.
-     * @TODO: Can we request early termination, maybe using
-     * dbus_pending_call_cancel()?
-     */
+#if SUPPORT_DBUS
+    // In-flight systemd and upstart ops don't have a pid
     if (inflight_systemd_or_upstart(op)) {
-        crm_info("Will cancel %s op %s when in-flight instance completes",
-                 op->standard, op->id);
-        cancelled = FALSE;
-        goto done;
-    }
+        inflight_ops = g_list_remove(inflight_ops, op);
 
-    /* Otherwise, operation is not in-flight, just report as cancelled */
+        /* This will cause any result that comes in later to be discarded, so we
+         * don't call the callback and free the operation twice.
+         */
+        services_action_cleanup(op);
+    }
+#endif
+
+    // The rest of this is essentially equivalent to operation_finalize(),
+    // except without calling handle_blocked_ops()
+
+    // Report operation as cancelled
     op->status = PCMK_LRM_OP_CANCELLED;
     if (op->opaque->callback) {
         op->opaque->callback(op);
@@ -631,6 +634,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     blocked_ops = g_list_remove(blocked_ops, op);
     services_action_free(op);
     cancelled = TRUE;
+    // @TODO Initiate handle_blocked_ops() asynchronously
 
 done:
     free(id);
