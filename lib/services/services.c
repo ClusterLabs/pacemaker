@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -538,7 +538,7 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
 void
 services_action_cleanup(svc_action_t * op)
 {
-    if(op->opaque == NULL) {
+    if ((op == NULL) || (op->opaque == NULL)) {
         return;
     }
 
@@ -550,13 +550,16 @@ services_action_cleanup(svc_action_t * op)
     }
 
     if(op->opaque->pending) {
-        crm_trace("Cleaning up pending dbus call %p %s for %s", op->opaque->pending, op->action, op->rsc);
-        if(dbus_pending_call_get_completed(op->opaque->pending)) {
-            crm_warn("Pending dbus call %s for %s did not complete", op->action, op->rsc);
+        if (dbus_pending_call_get_completed(op->opaque->pending)) {
+            // This should never be the case
+            crm_warn("Result of %s op %s was unhandled",
+                     op->standard, op->id);
+        } else {
+            crm_debug("Will ignore any result of canceled %s op %s",
+                      op->standard, op->id);
         }
         dbus_pending_call_cancel(op->opaque->pending);
-        dbus_pending_call_unref(op->opaque->pending);
-        op->opaque->pending = NULL;
+        services_set_op_pending(op, NULL);
     }
 #endif
 
