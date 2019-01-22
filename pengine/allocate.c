@@ -1549,7 +1549,6 @@ stage6(pe_working_set_t * data_set)
 {
     action_t *dc_down = NULL;
     action_t *stonith_op = NULL;
-    action_t *last_stonith = NULL;
     gboolean integrity_lost = FALSE;
     gboolean need_stonith = TRUE;
     GListPtr gIter;
@@ -1597,16 +1596,24 @@ stage6(pe_working_set_t * data_set)
             stonith_constraints(node, stonith_op, data_set);
 
             if (node->details->is_dc) {
+                // Remember if the DC is being fenced
                 dc_down = stonith_op;
 
-            } else if (is_set(data_set->flags, pe_flag_concurrent_fencing) == FALSE) {
-                if (last_stonith) {
-                    order_actions(last_stonith, stonith_op, pe_order_optional);
-                }
-                last_stonith = stonith_op;
-
             } else {
-                stonith_ops = g_list_append(stonith_ops, stonith_op);
+
+                if (is_not_set(data_set->flags, pe_flag_concurrent_fencing)
+                    && (stonith_ops != NULL)) {
+                    /* Concurrent fencing is disabled, so order each non-DC
+                     * fencing in a chain. If there is any DC fencing or
+                     * shutdown, it will be ordered after the last action in the
+                     * chain later.
+                     */
+                    order_actions((pe_action_t *) stonith_ops->data,
+                                  stonith_op, pe_order_optional);
+                }
+
+                // Remember all non-DC fencing actions in a separate list
+                stonith_ops = g_list_prepend(stonith_ops, stonith_op);
             }
 
         } else if (node->details->online && node->details->shutdown &&
@@ -1640,11 +1647,6 @@ stage6(pe_working_set_t * data_set)
     }
 
     if (dc_down != NULL) {
-        GListPtr gIter = NULL;
-
-        crm_trace("Ordering shutdowns before %s on %s (DC)",
-                  dc_down->task, dc_down->node->details->uname);
-
         for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
             action_t *node_stop = (action_t *) gIter->data;
 
@@ -1654,28 +1656,31 @@ stage6(pe_working_set_t * data_set)
                 continue;
             }
 
-            crm_debug("Ordering shutdown on %s before %s on %s",
+            crm_debug("Ordering shutdown on %s before %s on DC %s",
                       node_stop->node->details->uname,
                       dc_down->task, dc_down->node->details->uname);
 
             order_actions(node_stop, dc_down, pe_order_optional);
         }
 
-        if (last_stonith) {
-            if (dc_down != last_stonith) {
-                order_actions(last_stonith, dc_down, pe_order_optional);
+        // Order any non-DC fencing before any DC fencing or shutdown
+
+        if (is_set(data_set->flags, pe_flag_concurrent_fencing)) {
+            /* With concurrent fencing, order each non-DC fencing action
+             * separately before any DC fencing or shutdown.
+             */
+            for (gIter = stonith_ops; gIter != NULL; gIter = gIter->next) {
+                order_actions((pe_action_t *) gIter->data, dc_down,
+                              pe_order_optional);
             }
-
-        } else {
-            GListPtr gIter2 = NULL;
-
-            for (gIter2 = stonith_ops; gIter2 != NULL; gIter2 = gIter2->next) {
-                stonith_op = (action_t *) gIter2->data;
-
-                if (dc_down != stonith_op) {
-                    order_actions(stonith_op, dc_down, pe_order_optional);
-                }
-            }
+        } else if (stonith_ops) {
+            /* Without concurrent fencing, the non-DC fencing actions are
+             * already ordered relative to each other, so we just need to order
+             * the DC fencing after the last action in the chain (which is the
+             * first item in the list).
+             */
+            order_actions((pe_action_t *) stonith_ops->data, dc_down,
+                          pe_order_optional);
         }
     }
     g_list_free(stonith_ops);
