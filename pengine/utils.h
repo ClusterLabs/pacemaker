@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -63,6 +63,7 @@ extern void calculate_utilization(GHashTable * current_utilization,
 
 extern void process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set);
 pe_action_t *create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set);
+pe_action_t *sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set);
 
 #  define LOAD_STOPPED "load_stopped"
 
