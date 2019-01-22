@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1593,15 +1593,7 @@ stage6(pe_working_set_t * data_set)
                  * if we can come up with a good use for this in the future, we will. */
                     is_remote_node(node) == FALSE) {
 
-            action_t *down_op = NULL;
-
-            crm_notice("Scheduling Node %s for shutdown", node->details->uname);
-
-            down_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN, node->details->uname),
-                                    CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
-
-            shutdown_constraints(node, down_op, data_set);
-            add_hash_param(down_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            action_t *down_op = sched_shutdown_op(node, data_set);
 
             if (node->details->is_dc) {
                 dc_down = down_op;
