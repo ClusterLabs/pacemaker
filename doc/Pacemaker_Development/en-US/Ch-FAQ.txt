@@ -92,9 +92,12 @@ What is Pacemaker's license?::
  Creative Commons Attribution-ShareAlike International Public License
  (https://creativecommons.org/licenses/by-sa/4.0/legalcode[CC-BY-SA-4.0]),
  and its init scripts under the
- https://opensource.org/licenses/BSD-3-Clause[Revised BSD] license. If you find
- any deviations from this policy, or wish to inquire about alternate licensing
- arrangements, please e-mail the
+ https://opensource.org/licenses/BSD-3-Clause[Revised BSD] license.
+ Some small, ancillary files (kept away from authoritative Pacemaker
+ redistributables at this time) use the Free Software Foundation All Permissive
+ (https://www.gnu.org/prep/maintain/html_node/License-Notices-for-Other-Files.html[FSFAP]) .
+ If you find any deviations from this policy, or wish to inquire about
+ alternate licensing arrangements, please e-mail the
  mailto:developers@clusterlabs.org[developers@ClusterLabs.org] mailing list.
  Licensing issues are also discussed on the
  https://wiki.clusterlabs.org/wiki/License[ClusterLabs wiki].
