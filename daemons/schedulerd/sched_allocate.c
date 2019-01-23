@@ -1531,6 +1531,7 @@ stage6(pe_working_set_t * data_set)
     gboolean need_stonith = TRUE;
     GListPtr gIter;
     GListPtr stonith_ops = NULL;
+    GList *shutdown_ops = NULL;
 
     /* Remote ordering constraints need to happen prior to calculate
      * fencing because it is one more place we will mark the node as
@@ -1603,7 +1604,11 @@ stage6(pe_working_set_t * data_set)
             action_t *down_op = sched_shutdown_op(node, data_set);
 
             if (node->details->is_dc) {
+                // Remember if the DC is being shut down
                 dc_down = down_op;
+            } else {
+                // Remember non-DC shutdowns for later ordering
+                shutdown_ops = g_list_prepend(shutdown_ops, down_op);
             }
         }
 
@@ -1625,20 +1630,23 @@ stage6(pe_working_set_t * data_set)
     }
 
     if (dc_down != NULL) {
-        for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-            action_t *node_stop = (action_t *) gIter->data;
+        /* Order any non-DC shutdowns before any DC shutdown, to avoid repeated
+         * DC elections. However, we don't want to order non-DC shutdowns before
+         * a DC *fencing*, because even though we don't want a node that's
+         * shutting down to become DC, the DC fencing could be ordered before a
+         * clone stop that's also ordered before the shutdowns, thus leading to
+         * a graph loop.
+         */
+        if (safe_str_eq(dc_down->task, CRM_OP_SHUTDOWN)) {
+            for (gIter = shutdown_ops; gIter != NULL; gIter = gIter->next) {
+                action_t *node_stop = (action_t *) gIter->data;
 
-            if (safe_str_neq(CRM_OP_SHUTDOWN, node_stop->task)) {
-                continue;
-            } else if (node_stop->node->details->is_dc) {
-                continue;
+                crm_debug("Ordering shutdown on %s before %s on DC %s",
+                          node_stop->node->details->uname,
+                          dc_down->task, dc_down->node->details->uname);
+
+                order_actions(node_stop, dc_down, pe_order_optional);
             }
-
-            crm_debug("Ordering shutdown on %s before %s on DC %s",
-                      node_stop->node->details->uname,
-                      dc_down->task, dc_down->node->details->uname);
-
-            order_actions(node_stop, dc_down, pe_order_optional);
         }
 
         // Order any non-DC fencing before any DC fencing or shutdown
@@ -1662,6 +1670,7 @@ stage6(pe_working_set_t * data_set)
         }
     }
     g_list_free(stonith_ops);
+    g_list_free(shutdown_ops);
     return TRUE;
 }
 
