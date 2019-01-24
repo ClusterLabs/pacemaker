@@ -8,6 +8,7 @@ searching for equivalents is left as an exercise to the keen users.
 Contributed refinements to this document are welcome, however.
 
 ## Build Dependencies
+* GNU make
 * automake 1.11 or later
 * autoconf 2.64 or later
 * bash
@@ -56,7 +57,10 @@ Contributed refinements to this document are welcome, however.
 
 ## Installing from source
 
+    $ : unify OS-specific GNU make command (Linux: OK to use "make" right away)
+    $ command -v gmake >/dev/null 2>&1 || alias gmake=make
+
     $ ./autogen.sh
     $ ./configure
-    $ make
-    $ sudo make install
+    $ gmake
+    $ sudo gmake install
