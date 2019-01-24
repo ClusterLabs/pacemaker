@@ -655,6 +655,19 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
         return e->state;
 
     } else if (we_lose == FALSE) {
+        /* We track the time of the last election loss to implement an election
+         * dampening period, reducing the likelihood of an election storm. If
+         * this node has lost within the dampening period, don't start a new
+         * election, even if we win against a peer's vote -- the peer we lost to
+         * should win again.
+         *
+         * @TODO This has a problem case: if an election winner immediately
+         * leaves the cluster, and a new election is immediately called, all
+         * nodes could lose, with no new winner elected. The ideal solution
+         * would be to tie the election structure with the peer caches, which
+         * would allow us to clear the dampening when the previous winner
+         * leaves (and would allow other improvements as well).
+         */
         if ((e->last_election_loss == 0)
             || ((tm_now - e->last_election_loss) > (time_t) LOSS_DAMPEN)) {
 
