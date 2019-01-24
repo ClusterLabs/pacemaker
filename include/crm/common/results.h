@@ -50,6 +50,7 @@ extern "C" {
 #  define pcmk_err_multiple             213
 #  define pcmk_err_node_unknown         214
 #  define pcmk_err_already              215
+#  define pcmk_err_bad_nvpair           216
 
 /*
  * Exit status codes

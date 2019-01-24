@@ -802,6 +802,23 @@ dnl ========================================================================
 AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
 
+AC_CACHE_CHECK(whether sscanf supports %m,
+               pf_cv_var_sscanf,
+               AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <stdio.h>
+const char *s = "some-command-line-arg";
+int main(int argc, char **argv) {
+char *name = NULL;
+int n = sscanf(s, "%ms", &name);
+return n == 1 ? 0 : 1;
+}
+]])],
+                                 pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
+
+if test "$pf_cv_var_sscanf" = "yes"; then
+    AC_DEFINE(SSCANF_HAS_M, 1, [ ])
+fi
+
 dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================

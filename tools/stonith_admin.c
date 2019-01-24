@@ -573,9 +573,10 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_info("Scanning: -o %s", optarg);
-                rc = sscanf(optarg, "%m[^=]=%m[^=]", &name, &value);
+                rc = pcmk_scan_nvpair(optarg, &name, &value);
+
                 if (rc != 2) {
-                    crm_err("Invalid option: -o %s", optarg);
+                    crm_err("Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
                     ++argerr;
                 } else {
                     crm_info("Got: '%s'='%s'", name, value);
