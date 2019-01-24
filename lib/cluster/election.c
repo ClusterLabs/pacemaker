@@ -28,6 +28,10 @@ struct election_s {
     GSourceFunc cb;     // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
+    int election_wins;         // Track wins, for storm detection
+    bool wrote_blackbox;       // Write a storm blackbox at most once
+    time_t expires;            // When storm detection period ends
+    time_t last_election_loss; // When dampening period ends
 };
 
 static void election_complete(election_t *e)
@@ -531,11 +535,6 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
     time_t tm_now = time(NULL);
     struct vote vote;
 
-    // @TODO these should be in election_t
-    static int election_wins = 0;
-    static time_t expires = 0;
-    static time_t last_election_loss = 0;
-
     CRM_CHECK(message != NULL, return election_error);
     if (parse_election_message(e, message, &vote) == FALSE) {
         return election_error;
@@ -615,24 +614,23 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
         }
     }
 
-    if (expires < tm_now) {
-        election_wins = 0;
-        expires = tm_now + STORM_INTERVAL;
+    if (e->expires < tm_now) {
+        e->election_wins = 0;
+        e->expires = tm_now + STORM_INTERVAL;
 
     } else if (done == FALSE && we_lose == FALSE) {
         int peers = 1 + g_hash_table_size(crm_peer_cache);
-        static bool wrote_blackbox = FALSE; // @TODO move to election_t
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leeway before _really_ complaining
          */
-        election_wins++;
-        if (election_wins > (peers * peers)) {
+        e->election_wins++;
+        if (e->election_wins > (peers * peers)) {
             crm_warn("%s election storm detected: %d wins in %d seconds",
-                     e->name, election_wins, STORM_INTERVAL);
-            election_wins = 0;
-            expires = tm_now + STORM_INTERVAL;
-            if (wrote_blackbox == FALSE) {
+                     e->name, e->election_wins, STORM_INTERVAL);
+            e->election_wins = 0;
+            e->expires = tm_now + STORM_INTERVAL;
+            if (e->wrote_blackbox == FALSE) {
                 /* It's questionable whether a black box (from every node in the
                  * cluster) would be truly helpful in diagnosing an election
                  * storm. It's also highly doubtful a production environment
@@ -644,7 +642,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
                  * write a blackbox on every Nth occurrence.
                  */
                 crm_write_blackbox(0, NULL);
-                wrote_blackbox = TRUE;
+                e->wrote_blackbox = TRUE;
             }
         }
     }
@@ -657,21 +655,21 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
         return e->state;
 
     } else if (we_lose == FALSE) {
-        if (last_election_loss == 0
-            || tm_now - last_election_loss > (time_t) LOSS_DAMPEN) {
+        if ((e->last_election_loss == 0)
+            || ((tm_now - e->last_election_loss) > (time_t) LOSS_DAMPEN)) {
 
             do_crm_log(log_level, "%s round %d (owner node ID %s) pass: %s from %s (%s)",
                        e->name, vote.election_id, vote.election_owner, vote.op,
                        vote.from, reason);
 
-            last_election_loss = 0;
+            e->last_election_loss = 0;
             election_timeout_stop(e);
 
             /* Start a new election by voting down this, and other, peers */
             e->state = election_start;
             return e->state;
         } else {
-            char *loss_time = ctime(&last_election_loss);
+            char *loss_time = ctime(&e->last_election_loss);
 
             if (loss_time) {
                 // Show only HH:MM:SS
@@ -684,7 +682,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
         }
     }
 
-    last_election_loss = tm_now;
+    e->last_election_loss = tm_now;
 
     do_crm_log(log_level, "%s round %d (owner node ID %s) lost: %s from %s (%s)",
                e->name, vote.election_id, vote.election_owner, vote.op,
