@@ -54,10 +54,10 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     rc = election_count_vote(writer, xml, TRUE);
     switch(rc) {
         case election_start:
-            free(peer_writer);
-            peer_writer = NULL;
             crm_debug("Unsetting writer (was %s) and starting new election",
                       peer_writer? peer_writer : "unset");
+            free(peer_writer);
+            peer_writer = NULL;
             election_vote(writer);
             break;
 
