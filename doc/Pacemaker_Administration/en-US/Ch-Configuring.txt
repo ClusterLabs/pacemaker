@@ -434,3 +434,9 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 
 |=========================================================
 
+[IMPORTANT]
+====
+The Pacemaker version on the administration host must be the same or greater
+than the version(s) on the cluster nodes. Otherwise, it may not have the schema
+files necessary to validate the CIB.
+====

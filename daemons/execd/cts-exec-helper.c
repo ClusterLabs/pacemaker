@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 David Vossel <davidvossel@gmail.com>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -469,7 +469,8 @@ main(int argc, char **argv)
                 crm_help(flag, CRM_EX_OK);
                 break;
             case 'V':
-                options.verbose = 1;
+                ++options.verbose;
+                crm_bump_log_level(argc, argv);
                 break;
             case 'Q':
                 options.quiet = 1;

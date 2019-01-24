@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -20,10 +20,9 @@ extern "C" {
 
 #  include <dlfcn.h>
 #  include <errno.h>
-#  include <stdbool.h>
-
-/* TO-DO: Work out how to drop this requirement */
-#  include <libxml/tree.h>
+#  include <stdbool.h>  // bool
+#  include <stdint.h>   // uint32_t
+#  include <time.h>     // time_t
 
 #  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 #  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
