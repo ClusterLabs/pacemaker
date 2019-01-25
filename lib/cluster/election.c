@@ -706,3 +706,14 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
     e->state = election_lost;
     return e->state;
 }
+
+/*!
+ * \brief Reset any election dampening currently in effect
+ *
+ * \param[in] e        Election object to clear
+ */
+void
+election_clear_dampening(election_t *e)
+{
+    e->last_election_loss = 0;
+}
