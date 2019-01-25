@@ -137,6 +137,11 @@ attrd_remove_voter(const crm_node_t *peer)
         peer_writer = NULL;
         crm_notice("Lost attribute writer %s", peer->uname);
 
+        /* Clear any election dampening in effect. Otherwise, if the lost writer
+         * had just won, the election could fizzle out with no new writer.
+         */
+        election_clear_dampening(writer);
+
         /* If the writer received attribute updates during its shutdown, it will
          * not have written them to the CIB. Ensure we get a new writer so they
          * are written out. This means that every node that sees the writer
