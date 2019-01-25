@@ -753,15 +753,15 @@ to be an unordered set using "AND" logic by default, and adding
 Another common situation is for an administrator to create a set of
 colocated resources.
 
-One way to do this would be to define a resource group (see
+The simplest way to do this is to define a resource group (see
 <<group-resources>>), but that cannot always accurately express the desired
-state.
+relationships. For example, maybe the resources do not need to be ordered.
 
 Another way would be to define each relationship as an individual constraint,
-but that causes a constraint explosion as the number of resources and
-combinations grow. An example of this approach:
+but that causes a difficult-to-follow constraint explosion as the number of
+resources and combinations grow.
 
-.Chain of colocated resources
+.Colocation chain as individual constraints, where A is placed first, then B, then C, then D
 ======
 [source,XML]
 -------
@@ -773,12 +773,9 @@ combinations grow. An example of this approach:
 -------
 ======
 
-To make things easier, resource sets (see <<s-resource-sets>>) can be used
-within colocation constraints. As with the chained version, a
-resource that can't be active prevents any resource that must be
-colocated with it from being active.  For example, if +B+ is not
-able to run, then both +C+ and by inference +D+ must also remain
-stopped. Here is an example +resource_set+:
+To express complicated relationships with a simplified syntax
+footnote:[which is not the same as saying easy to follow],
+<<s-resource-sets,resource sets>> can be used within colocation constraints.
 
 .Equivalent colocation chain expressed using +resource_set+
 ======
@@ -797,6 +794,19 @@ stopped. Here is an example +resource_set+:
 -------
 ======
 
+[NOTE]
+====
+Within a +resource_set+, the resources are listed in the order they are
+_placed_, which is the reverse of the order in which they are _colocated_.
+In the above example, resource +A+ is placed before resource +B+, which is
+the same as saying resource +B+ is colocated with resource +A+.
+====
+
+As with individual constraints, a resource that can't be active prevents any
+resource that must be colocated with it from being active. In both of the two
+previous examples, if +B+ is unable to run, then both +C+ and by inference +D+
+must remain stopped.
+
 [IMPORTANT]
 =========
 If you use a higher-level tool, pay attention to how it exposes this
@@ -804,38 +814,47 @@ functionality. Depending on the tool, creating a set +A B+ may be equivalent to
 +A with B+, or +B with A+.
 =========
 
-This notation can also be used to tell the cluster that sets of resources must
-be colocated relative to each other, where the individual members of each set
-may or may not depend on each other being active (controlled by the
-+sequential+ property).
+Resource sets can also be used to tell the cluster that entire _sets_ of
+resources must be colocated relative to each other, while the individual
+members within any one set may or may not be colocated relative to each other
+(determined by the set's +sequential+ property).
 
-In this example, +A+, +B+, and +C+ will each be colocated with +D+.
-+D+ must be active, but any of +A+, +B+, or +C+ may be inactive without
-affecting any other resources.
+In the following example, resources +B+, +C+, and +D+ will each be colocated
+with +A+ (which will be placed first). +A+ must be able to run in order for any
+of the resources to run, but any of +B+, +C+, or +D+ may be stopped without
+affecting any of the others.
 
-.Using colocated sets to specify a common peer
+.Using colocated sets to specify a shared dependency
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="colocated-set-1" sequential="false">
-        <resource_ref id="A"/>
+      <resource_set id="colocated-set-2" sequential="false">
         <resource_ref id="B"/>
         <resource_ref id="C"/>
-      </resource_set>
-      <resource_set id="colocated-set-2" sequential="true">
         <resource_ref id="D"/>
+      </resource_set>
+      <resource_set id="colocated-set-1" sequential="true">
+        <resource_ref id="A"/>
       </resource_set>
     </rsc_colocation>
 </constraints>
 -------
 ======
 
+[NOTE]
+====
+Pay close attention to the order in which resources and sets are listed.
+While the members of any one sequential set are placed first to last (i.e., the
+colocation dependency is last with first), multiple sets are placed last to
+first (i.e. the colocation dependency is first with last).
+====
+
 [IMPORTANT]
 ====
-A colocated set with +sequential=false+ makes sense only if there is another
-set in the constraint. Otherwise, the constraint has no effect.
+A colocated set with +sequential="false"+ makes sense only if there is
+another set in the constraint. Otherwise, the constraint has no effect.
 ====
 
 There is no inherent limit to the number and size of the sets used.
@@ -848,15 +867,15 @@ before it must also be active.
 If desired, you can restrict the dependency to instances of promotable clone
 resources that are in a specific role, using the set's +role+ property.
 
-.Colocation chain in which the members of the middle set have no interdependencies, and the last listed set (which the cluster places first) is restricted to instances in master status.
+.Colocation in which the members of the middle set have no interdependencies, and the last set listed applies only to instances in the master role
 ======
 [source,XML]
 -------
 <constraints>
     <rsc_colocation id="coloc-1" score="INFINITY" >
       <resource_set id="colocated-set-1" sequential="true">
-        <resource_ref id="B"/>
-        <resource_ref id="A"/>
+        <resource_ref id="F"/>
+        <resource_ref id="G"/>
       </resource_set>
       <resource_set id="colocated-set-2" sequential="false">
         <resource_ref id="C"/>
@@ -864,24 +883,18 @@ resources that are in a specific role, using the set's +role+ property.
         <resource_ref id="E"/>
       </resource_set>
       <resource_set id="colocated-set-3" sequential="true" role="Master">
-        <resource_ref id="G"/>
-        <resource_ref id="F"/>
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
       </resource_set>
     </rsc_colocation>
 </constraints>
 -------
 ======
 
-.Visual representation the above example (resources to the left are placed first)
-image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
+.Visual representation of the above example (resources are placed from left to right)
+image::images/pcmk-colocated-sets.png["Colocation chain",width="960px",height="431px",align="center"]
 
 [NOTE]
 ====
-Pay close attention to the order in which resources and sets are listed.
-While the colocation dependency for members of any one set is last-to-first,
-the colocation dependency for multiple sets is first-to-last. In the above
-example, +B+ is colocated with +A+, but +colocated-set-1+ is
-colocated with +colocated-set-2+.
-
 Unlike ordered sets, colocated sets do not use the +require-all+ option.
 ====

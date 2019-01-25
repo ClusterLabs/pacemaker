@@ -1,21 +1,8 @@
 #
-# doc: Pacemaker code
+# Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
 #
-# Copyright (C) 2008 Andrew Beekhof
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/Makefile.common
 
@@ -73,7 +60,6 @@ PNGS_ORIGINAL =	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png	\
 		shared/en-US/images/Partitioning.png			\
 		shared/en-US/images/Welcome.png				\
 		shared/en-US/images/resource-set.png			\
-		shared/en-US/images/three-sets-complex.png		\
 		shared/en-US/images/three-sets.png			\
 		shared/en-US/images/two-sets.png
 PNGS_GENERATED =	$(SVGS:%.svg=%-small.png)	\
