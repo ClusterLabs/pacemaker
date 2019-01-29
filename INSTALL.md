@@ -39,6 +39,7 @@
 * libvirt-daemon-driver-lxc (if running CTS container tests)
 * libvirt-daemon-lxc (if running CTS container tests)
 * libvirt-login-shell (if running CTS container tests)
+* parallel, or GNU parallel[1] (optional scheduler tests parallelizing)
 
 ## Source Control (GIT)
 
@@ -52,3 +53,7 @@
     $ ./configure
     $ make
     $ sudo make install
+
+* * *
+
+[1] O. Tange (2018): GNU Parallel 2018, March 2018, https://doi.org/10.5281/zenodo.1146014
