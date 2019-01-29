@@ -83,8 +83,9 @@ class Environment:
         self.target = "localhost"
 
         self.parse_args(args)
-        self.discover()
-        self.validate()
+        if self["ListTests"] == 0:
+            self.validate()
+            self.discover()
 
     def SeedRandom(self, seed=None):
         if not seed:
@@ -264,7 +265,7 @@ class Environment:
                               or self.service_is_enabled(self.target, "pacemaker")
 
     def detect_ip_offset(self):
-        # Try to determin an offset for IPaddr resources
+        # Try to determine an offset for IPaddr resources
         if self["CIBResource"] and not "IPBase" in self.data:
             network=self.rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
             self["IPBase"] = self.rsh(self.target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, stdout=1).strip()
@@ -311,8 +312,6 @@ class Environment:
         self.detect_syslog()
         self.detect_at_boot()
         self.detect_ip_offset()
-
-        self.validate()
 
     def parse_args(self, args):
         skipthis=None

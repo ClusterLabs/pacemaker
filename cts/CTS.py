@@ -121,7 +121,7 @@ class CtsLab:
 
     This class is derived from a UserDict because we hold many
     different parameters of different kinds, and this provides
-    provide a uniform and extensible interface useful for any kind of
+    a uniform and extensible interface useful for any kind of
     communication between the user/administrator/tester and CTS.
 
     At this point in time, it is the intent of this class to model static
