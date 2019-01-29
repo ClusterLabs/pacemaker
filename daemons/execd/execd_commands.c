@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 David Vossel <davidvossel@gmail.com>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -1016,11 +1016,121 @@ stonith_connection_failed(void)
     g_list_free(cmd_list);
 }
 
+/*!
+ * \internal
+ * \brief Execute a stonith resource "start" action
+ *
+ * Start a stonith resource by registering it with the fencer.
+ * (Stonith agents don't have a start command.)
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to start
+ * \param[in] cmd          Start command to execute
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
 static int
+execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+{
+    char *key = NULL;
+    char *value = NULL;
+    stonith_key_value_t *device_params = NULL;
+    int rc = pcmk_ok;
+
+    // Convert command parameters to stonith API key/values
+    if (cmd->params) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, cmd->params);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+            device_params = stonith_key_value_add(device_params, key, value);
+        }
+    }
+
+    /* The fencer will automatically register devices via CIB notifications
+     * when the CIB changes, but to avoid a possible race condition between
+     * the fencer receiving the notification and the executor requesting that
+     * resource, the executor registers the device as well. The fencer knows how
+     * to handle duplicate registrations.
+     */
+    rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call,
+                                            cmd->rsc_id, rsc->provider,
+                                            rsc->type, device_params);
+
+    stonith_key_value_freeall(device_params, 1, 1);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Execute a stonith resource "stop" action
+ *
+ * Stop a stonith resource by unregistering it with the fencer.
+ * (Stonith agents don't have a stop command.)
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to stop
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
+static inline int
+execd_stonith_stop(stonith_t *stonith_api, lrmd_rsc_t *rsc)
+{
+    int rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
+                                              rsc->rsc_id);
+    rsc->stonith_started = 0;
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Execute a one-time stonith resource "monitor" action
+ *
+ * Probe a stonith resource by checking whether we started it
+ *
+ * \param[in] rsc  Stonith resource to probe
+ *
+ * \return pcmk_ok if started, -errno otherwise
+ */
+static inline int
+execd_stonith_probe(lrmd_rsc_t *rsc)
+{
+    return rsc->stonith_started? 0 : -ENODEV;
+}
+
+/*!
+ * \internal
+ * \brief Initiate a stonith resource agent "monitor" action
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to monitor
+ * \param[in] cmd          Monitor command being executed
+ *
+ * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
+ */
+static inline int
+execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+{
+    int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
+                                        cmd->timeout / 1000);
+
+    rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
+                                              "lrmd_stonith_callback",
+                                              lrmd_stonith_callback);
+    if (rc == TRUE) {
+        rsc->active = cmd;
+        rc = pcmk_ok;
+    } else {
+        rc = -pcmk_err_generic;
+    }
+    return rc;
+}
+
+static void
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
     int rc = 0;
-    int do_monitor = 0;
+    bool do_monitor = FALSE;
 
     stonith_t *stonith_api = get_stonith_connection();
 
@@ -1029,72 +1139,35 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                       -ENOTCONN);
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd_finalize(cmd, rsc);
-        return -EUNATCH;
+        return;
     }
 
     if (safe_str_eq(cmd->action, "start")) {
-        char *key = NULL;
-        char *value = NULL;
-        stonith_key_value_t *device_params = NULL;
-
-        if (cmd->params) {
-            GHashTableIter iter;
-
-            g_hash_table_iter_init(&iter, cmd->params);
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-                device_params = stonith_key_value_add(device_params, key, value);
-            }
-        }
-
-        /* Stonith automatically registers devices from the IPC when changes
-         * occur, but to avoid a possible race condition between stonith
-         * receiving the IPC update and the executor requesting that resource,
-         * the executor still registers the device as well. Stonith knows how to
-         * handle duplicate device registrations correctly.
-         */
-        rc = stonith_api->cmds->register_device(stonith_api,
-                                                st_opt_sync_call,
-                                                cmd->rsc_id,
-                                                rsc->provider, rsc->type, device_params);
-
-        stonith_key_value_freeall(device_params, 1, 1);
+        rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == 0) {
-            do_monitor = 1;
+            do_monitor = TRUE;
         }
+
     } else if (safe_str_eq(cmd->action, "stop")) {
-        rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
-        rsc->stonith_started = 0;
+        rc = execd_stonith_stop(stonith_api, rsc);
+
     } else if (safe_str_eq(cmd->action, "monitor")) {
         if (cmd->interval_ms > 0) {
-            do_monitor = 1;
+            do_monitor = TRUE;
         } else {
-            rc = rsc->stonith_started ? 0 : -ENODEV;
+            rc = execd_stonith_probe(rsc);
         }
     }
 
-    if (!do_monitor) {
-        goto cleanup_stonith_exec;
+    if (do_monitor) {
+        rc = execd_stonith_monitor(stonith_api, rsc, cmd);
+        if (rc == pcmk_ok) {
+            // Don't clean up yet, we will find out result of the monitor later
+            return;
+        }
     }
 
-    rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id, cmd->timeout / 1000);
-
-    rc = stonith_api->cmds->register_callback(stonith_api,
-                                              rc,
-                                              0,
-                                              0,
-                                              cmd, "lrmd_stonith_callback", lrmd_stonith_callback);
-
-    /* don't cleanup yet, we will find out the result of the monitor later */
-    if (rc > 0) {
-        rsc->active = cmd;
-        return rc;
-    } else if (rc == 0) {
-        rc = -1;
-    }
-
-  cleanup_stonith_exec:
     stonith_action_complete(cmd, rc);
-    return rc;
 }
 
 static int
