@@ -924,22 +924,21 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
-    sed -E \
-        -e 's/cib-last-written.*>/>/'\
+    sed -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
-        -e 's/.*(pcmk__.*)@.*.c:[0-9][0-9]*\)/\1/g' \
-        -e 's/.*(unpack_.*)@.*.c:[0-9][0-9]*\)/\1/g' \
-        -e 's/.*(update_validation)@.*\.c:[0-9][0-9]*\)/\1/g' \
-        -e 's/.*(apply_upgrade)@.*\.c:[0-9][0-9]*\)/\1/g' \
+        -e 's/.*\(pcmk__.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/(validation \([0-9][0-9]* of )[0-9][0-9]*(\).*)/\1X\2/' \
+        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
-        -e 's/ end=\"[-: 0123456789]+Z?\"/ end=\"\"/' \
+        -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 

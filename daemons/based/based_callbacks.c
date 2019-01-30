@@ -594,8 +594,8 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         return TRUE;
     }
 
-    crm_trace("Processing %s request sent by %s", op, originator);
     op = crm_element_value(request, F_CIB_OPERATION);
+    crm_trace("Processing %s request sent by %s", op, originator);
     if (safe_str_eq(op, "cib_shutdown_req")) {
         /* Always process these */
         *local_notify = FALSE;
@@ -650,11 +650,11 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     } else if (safe_str_eq(op, "cib_shutdown_req")) {
         if (reply_to != NULL) {
-            crm_debug("Processing %s from %s", op, host);
+            crm_debug("Processing %s from %s", op, originator);
             *needs_reply = FALSE;
 
         } else {
-            crm_debug("Processing %s reply from %s", op, host);
+            crm_debug("Processing %s reply from %s", op, originator);
         }
         return TRUE;
 

@@ -441,7 +441,8 @@ class ConfigFactory(object):
         self.register("pacemaker20", CIB20, CM, self)
         self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
-        self.target = self.CM.Env["nodes"][0]
+        if self.CM.Env["ListTests"] == 0:
+            self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
 
     def log(self, args):

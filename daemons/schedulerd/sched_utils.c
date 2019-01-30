@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -441,4 +441,31 @@ pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
     free(interval_ms_s);
 
     return cancel_op;
+}
+
+/*!
+ * \internal
+ * \brief Create a shutdown op for a scheduler transition
+ *
+ * \param[in] rsc          Resource of action to cancel
+ * \param[in] task         Name of action to cancel
+ * \param[in] interval_ms  Interval of action to cancel
+ * \param[in] node         Node of action to cancel
+ * \param[in] data_set     Working set of cluster
+ *
+ * \return Created op
+ */
+pe_action_t *
+sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
+{
+    char *shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+                                          node->details->uname);
+
+    pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
+                                             node, FALSE, TRUE, data_set);
+
+    crm_notice("Scheduling shutdown of node %s", node->details->uname);
+    shutdown_constraints(node, shutdown_op, data_set);
+    add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+    return shutdown_op;
 }

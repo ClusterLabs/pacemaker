@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2008-2019 Andrew Beekhof <andrew@beekhof.net>
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -74,7 +74,7 @@ RSYNC_OPTS      = -rlptvzxS --progress
 #
 #    --with[out] FOO  ->  --define "_with[out]_FOO --with[out]-FOO"
 #
-# $(1) ... WITH string (e.g., --with pre_release --without cman)
+# $(1) ... WITH string (e.g., --with pre_release --without doc)
 # $(2) ... options following the initial "rpmbuild" in the command
 # $(3) ... final arguments determined with $2 (e.g., pacemaker.spec)
 #
@@ -214,7 +214,7 @@ mock-sh-%:
 	mock --root=$* $(MOCK_OPTIONS) --shell
 	echo "Done"
 
-# eg. WITH="--with cman" make rpm
+# eg. make WITH="--with pre_release" rpm
 mock-%:
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock

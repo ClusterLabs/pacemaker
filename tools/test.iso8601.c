@@ -8,6 +8,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/util.h>  /* CRM_ASSERT */
 #include <unistd.h>
 
 char command = 0;
@@ -46,13 +47,9 @@ static struct crm_option long_options[] = {
 static void
 log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
-    char *end = NULL;
-    char *start = NULL;
-
-    if(dtp) {
-        start = crm_time_as_string(dtp->start, flags);
-        end = crm_time_as_string(dtp->end, flags);
-    }
+    char *start = crm_time_as_string(dtp->start, flags);
+    char *end = crm_time_as_string(dtp->end, flags);
+    CRM_ASSERT(start != NULL && end != NULL);
 
     if (log_level < LOG_CRIT) {
         printf("Period: %s to %s\n", start, end);
