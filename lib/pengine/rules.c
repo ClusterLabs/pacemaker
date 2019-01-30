@@ -572,6 +572,28 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 gboolean
 pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
 {
+    pe_eval_date_result_t result = pe_eval_date_expression(time_expr, now);
+    const char *op = crm_element_value(time_expr, "operation");
+
+    if (result == pe_date_within_range) {
+        return TRUE;
+
+    } else if ((safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range") || op == NULL) &&
+               result == pe_date_op_satisfied) {
+        return TRUE;
+
+    } else if ((safe_str_eq(op, "eq") || safe_str_eq(op, "neq")) &&
+               result == pe_date_op_satisfied) {
+        return TRUE;
+
+    } else {
+        return FALSE;
+    }
+}
+
+pe_eval_date_result_t
+pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
+{
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
     const char *value = NULL;
@@ -580,7 +602,7 @@ pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
     xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
 
-    gboolean passed = FALSE;
+    pe_eval_date_result_t rc = pe_date_result_undetermined;
 
     crm_trace("Testing expression: %s", ID(time_expr));
 
@@ -605,31 +627,34 @@ pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
 
     if (safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
         if (start != NULL && crm_time_compare(start, now) > 0) {
-            passed = FALSE;
+            rc = pe_date_before_range;
         } else if (end != NULL && crm_time_compare(end, now) < 0) {
-            passed = FALSE;
+            rc = pe_date_after_range;
         } else if (safe_str_eq(op, "in_range")) {
-            passed = TRUE;
+            rc = pe_date_within_range;
         } else {
-            passed = pe_cron_range_satisfied(now, date_spec);
+            rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
+                                                         : pe_date_op_unsatisfied;
         }
 
-    } else if (safe_str_eq(op, "gt") && crm_time_compare(start, now) < 0) {
-        passed = TRUE;
+    } else if (safe_str_eq(op, "gt")) {
+        rc = crm_time_compare(start, now) < 0 ? pe_date_within_range : pe_date_before_range;
 
-    } else if (safe_str_eq(op, "lt") && crm_time_compare(end, now) > 0) {
-        passed = TRUE;
+    } else if (safe_str_eq(op, "lt")) {
+        rc = crm_time_compare(end, now) > 0 ? pe_date_within_range : pe_date_after_range;
 
-    } else if (safe_str_eq(op, "eq") && crm_time_compare(start, now) == 0) {
-        passed = TRUE;
+    } else if (safe_str_eq(op, "eq")) {
+        rc = crm_time_compare(start, now) == 0 ? pe_date_op_satisfied
+                                               : pe_date_op_unsatisfied;
 
-    } else if (safe_str_eq(op, "neq") && crm_time_compare(start, now) != 0) {
-        passed = TRUE;
+    } else if (safe_str_eq(op, "neq")) {
+        rc = crm_time_compare(start, now) != 0 ? pe_date_op_satisfied
+                                               : pe_date_op_unsatisfied;
     }
 
     crm_time_free(start);
     crm_time_free(end);
-    return passed;
+    return rc;
 }
 
 typedef struct sorted_set_s {
