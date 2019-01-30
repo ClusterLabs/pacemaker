@@ -1,3 +1,16 @@
+* Tue Jan 29 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc4
+- Changesets: 42
+ 15 files changed, 216 insertions(+), 137 deletions(-)
+
+- Changes since Pacemaker-2.0.1-rc3
+  + attrd: clear election dampening when the writer leaves
+  + controller: clear election dampening when DC is lost
+  + scheduler: don't order non-DC shutdowns before DC fencing
+  + libcrmservice: cancel DBus call when cancelling systemd/upstart actions
+  + tools: remove duplicate fence history state in crm_mon XML output
+  + build: offer configure option to disable tests broken with glib 2.59.0
+  + build: minor logging fixes to allow compatibility with GCC 9 -Werror
+
 * Thu Jan 10 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc3
 - Changesets: 27
 - Diff:       20 files changed, 375 insertions(+), 195 deletions(-)
