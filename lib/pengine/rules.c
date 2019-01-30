@@ -24,6 +24,7 @@
 #include <glib.h>
 
 #include <crm/pengine/rules.h>
+#include <crm/pengine/rules_internal.h>
 #include <crm/pengine/internal.h>
 
 #include <sys/types.h>
@@ -31,14 +32,6 @@
 #include <ctype.h>
 
 CRM_TRACE_INIT_DATA(pe_rules);
-
-crm_time_t *parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
-
-gboolean test_date_expression(xmlNode * time_expr, crm_time_t * now);
-gboolean cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec);
-gboolean test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now);
-gboolean pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_match_data_t * match_data);
-gboolean test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now);
 
 gboolean
 test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
@@ -153,11 +146,11 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             break;
 
         case time_expr:
-            accept = test_date_expression(expr, now);
+            accept = pe_test_date_expression(expr, now);
             break;
 
         case role_expr:
-            accept = test_role_expression(expr, role, now);
+            accept = pe_test_role_expression(expr, role, now);
             break;
 
 #ifdef ENABLE_VERSIONED_ATTRS
@@ -165,7 +158,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             if (node_hash && g_hash_table_lookup_extended(node_hash,
                                                           CRM_ATTR_RA_VERSION,
                                                           NULL, NULL)) {
-                accept = test_attr_expression(expr, node_hash, now);
+                accept = pe_test_attr_expression(expr, node_hash, now);
             } else {
                 // we are going to test it when we have ra-version
                 accept = TRUE;
@@ -222,7 +215,7 @@ find_expression_type(xmlNode * expr)
 }
 
 gboolean
-test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
+pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 {
     gboolean accept = FALSE;
     const char *op = NULL;
@@ -263,7 +256,7 @@ test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 }
 
 gboolean
-test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
+pe_test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
 {
     return pe_test_attr_expression_full(expr, hash, now, NULL);
 }
@@ -509,7 +502,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     }
 
 gboolean
-cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
+pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
     const char *value = NULL;
     char *value_low = NULL;
@@ -557,7 +550,7 @@ cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
     }
 
 crm_time_t *
-parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
+pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 {
     crm_time_t *end = NULL;
     const char *value = NULL;
@@ -577,7 +570,7 @@ parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 }
 
 gboolean
-test_date_expression(xmlNode * time_expr, crm_time_t * now)
+pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
 {
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
@@ -604,7 +597,7 @@ test_date_expression(xmlNode * time_expr, crm_time_t * now)
     }
 
     if (start != NULL && end == NULL && duration_spec != NULL) {
-        end = parse_xml_duration(start, duration_spec);
+        end = pe_parse_xml_duration(start, duration_spec);
     }
     if (op == NULL) {
         op = "in_range";
@@ -618,7 +611,7 @@ test_date_expression(xmlNode * time_expr, crm_time_t * now)
         } else if (safe_str_eq(op, "in_range")) {
             passed = TRUE;
         } else {
-            passed = cron_range_satisfied(now, date_spec);
+            passed = pe_cron_range_satisfied(now, date_spec);
         }
 
     } else if (safe_str_eq(op, "gt") && crm_time_compare(start, now) < 0) {
