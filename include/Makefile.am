@@ -18,9 +18,9 @@
 
 MAINTAINERCLEANFILES    = Makefile.in config.h.in
 
-noinst_HEADERS	        = portability.h config.h crm_internal.h
+noinst_HEADERS	        = portability.h config.h crm_internal.h pacemaker-internal.h
 pkginclude_HEADERS	= crm_config.h
 
-SUBDIRS                 =  crm
+SUBDIRS                 =  crm pcmki
 
 .PHONY: $(ARCHIVE_VERSION)
