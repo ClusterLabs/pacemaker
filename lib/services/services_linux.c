@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -66,8 +66,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     do {
         rc = read(fd, buf, buf_read_len);
         if (rc > 0) {
-            crm_trace("Got %d chars: %.80s", rc, buf);
             buf[rc] = 0;
+            crm_trace("Got %d chars: %.80s", rc, buf);
             data = realloc_safe(data, len + rc + 1);
             len += sprintf(data + len, "%s", buf);
 

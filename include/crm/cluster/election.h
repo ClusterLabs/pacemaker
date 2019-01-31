@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -72,5 +72,6 @@ bool election_check(election_t *e);
 void election_remove(election_t *e, const char *uname);
 enum election_result election_state(election_t *e);
 enum election_result election_count_vote(election_t *e, xmlNode *vote, bool can_win);
+void election_clear_dampening(election_t *e);
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -51,6 +51,13 @@ void
 controld_remove_voter(const char *uname)
 {
     election_remove(fsa_election, uname);
+
+    if (safe_str_eq(uname, fsa_our_dc)) {
+        /* Clear any election dampening in effect. Otherwise, if the lost DC had
+         * just won, an immediate new election could fizzle out with no new DC.
+         */
+        election_clear_dampening(fsa_election);
+    }
 }
 
 void

@@ -95,8 +95,6 @@ fencing/regression.py
 *.8.xml
 *.8.html
 attrd/attrd
-doc/shared/en-US/images/pcmk-*.png
-doc/shared/en-US/images/Policy-Engine-*.png
 doc/*/tmp/**
 doc/*/publish
 cib/cib
@@ -104,6 +102,8 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
+/cts/pacemaker-cts-dummyd
+/cts/pacemaker-cts-dummyd.service
 doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
@@ -165,7 +165,6 @@ lib/gnu/stdalign.h
 /cts/cts-scheduler
 /cts/cts-support
 /cts/fence_dummy
-/cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
 /cts/scheduler/
 /daemons

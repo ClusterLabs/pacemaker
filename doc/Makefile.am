@@ -67,16 +67,16 @@ SVGS =	$(wildcard shared/en-US/images/pcmk-*.svg)	\
 # Final images
 PNGS_ORIGINAL =	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png	\
 		Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png	\
-		shared/en-US/images/Console.png				\
-		shared/en-US/images/Editing-eth0.png			\
-		shared/en-US/images/Installer.png			\
-		shared/en-US/images/Network.png				\
-		shared/en-US/images/Partitioning.png			\
-		shared/en-US/images/Welcome.png				\
-		shared/en-US/images/resource-set.png			\
-		shared/en-US/images/three-sets-complex.png		\
-		shared/en-US/images/three-sets.png			\
-		shared/en-US/images/two-sets.png
+		Clusters_from_Scratch/en-US/images/Console.png		\
+		Clusters_from_Scratch/en-US/images/Editing-eth0.png	\
+		Clusters_from_Scratch/en-US/images/Installer.png	\
+		Clusters_from_Scratch/en-US/images/Network.png		\
+		Clusters_from_Scratch/en-US/images/Partitioning.png	\
+		Clusters_from_Scratch/en-US/images/Welcome.png		\
+		Pacemaker_Explained/en-US/images/resource-set.png	\
+		Pacemaker_Explained/en-US/images/three-sets-complex.png	\
+		Pacemaker_Explained/en-US/images/three-sets.png		\
+		Pacemaker_Explained/en-US/images/two-sets.png
 PNGS_GENERATED =	$(SVGS:%.svg=%-small.png)	\
 			$(SVGS:%.svg=%.png)		\
 			$(SVGS:%.svg=%-large.png)

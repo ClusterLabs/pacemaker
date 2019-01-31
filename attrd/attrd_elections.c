@@ -54,10 +54,10 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     rc = election_count_vote(writer, xml, TRUE);
     switch(rc) {
         case election_start:
-            free(peer_writer);
-            peer_writer = NULL;
             crm_debug("Unsetting writer (was %s) and starting new election",
                       peer_writer? peer_writer : "unset");
+            free(peer_writer);
+            peer_writer = NULL;
             election_vote(writer);
             break;
 
@@ -131,6 +131,11 @@ attrd_remove_voter(const crm_node_t *peer)
         free(peer_writer);
         peer_writer = NULL;
         crm_notice("Lost attribute writer %s", peer->uname);
+
+        /* Clear any election dampening in effect. Otherwise, if the lost writer
+         * had just won, the election could fizzle out with no new writer.
+         */
+        election_clear_dampening(writer);
 
         /* If the writer received attribute updates during its shutdown, it will
          * not have written them to the CIB. Ensure we get a new writer so they
