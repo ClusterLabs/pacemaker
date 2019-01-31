@@ -171,3 +171,9 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
              interval_desc, op_desc, rsc, node_type, host);
     update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, 0);
 }
+
+void
+refresh_attrd(void)
+{
+    update_attrd_helper(NULL, NULL, NULL, NULL, NULL, FALSE, 'R');
+}

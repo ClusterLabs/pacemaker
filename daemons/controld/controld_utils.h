@@ -77,6 +77,7 @@ void update_attrd_remote_node_removed(const char *host, const char *user_name);
 void update_attrd_clear_failures(const char *host, const char *rsc,
                                  const char *op, const char *interval_spec,
                                  gboolean is_remote_node);
+void refresh_attrd(void);
 
 int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
