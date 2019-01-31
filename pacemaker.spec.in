@@ -768,7 +768,7 @@ exit 0
 %{_libdir}/libcrmcommon.so.*
 %{_libdir}/libpe_status.so.*
 %{_libdir}/libpe_rules.so.*
-%{_libdir}/libpengine.so.*
+%{_libdir}/libpacemaker-internal.so.*
 %{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
 %license licenses/LGPLv2.1

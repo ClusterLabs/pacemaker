@@ -13,10 +13,10 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la	\
-		libpengine.la
+		libpacemaker-internal.la
 
 ## libraries
-lib_LTLIBRARIES	= libpengine.la
+lib_LTLIBRARIES	= libpacemaker-internal.la
 
 ## binary progs
 
@@ -34,15 +34,15 @@ noinst_HEADERS	= pacemaker-schedulerd.h \
 		  sched_utils.h
 		  
 
-libpengine_la_LDFLAGS	= -version-info 27:1:0
+libpacemaker_internal_la_LDFLAGS	= -version-info 1:0:0
 
-libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
-libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
+libpacemaker_internal_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
+libpacemaker_internal_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libpengine_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
+libpacemaker_internal_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-libpengine_la_SOURCES	= sched_allocate.c \
+libpacemaker_internal_la_SOURCES	= sched_allocate.c \
 			  sched_bundle.c \
 			  sched_clone.c \
 			  sched_constraints.c \

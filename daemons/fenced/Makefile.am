@@ -32,7 +32,7 @@ pacemaker_fenced_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la		\
 				  $(top_builddir)/lib/cluster/libcrmcluster.la		\
 				  $(top_builddir)/lib/fencing/libstonithd.la		\
 				  $(top_builddir)/lib/pengine/libpe_status.la		\
-				  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+				  $(top_builddir)/daemons/schedulerd/libpacemaker-internal.la	\
 				  $(CLUSTERLIBS)
 pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
 				  fenced_commands.c \
