@@ -1,3 +1,15 @@
+* Thu Jan 31 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.20-rc2
+- Changesets: 34
+- Diff:       13 files changed, 212 insertions(+), 134 deletions(-)
+
+- Changes since Pacemaker-1.1.20-rc1
+  + attrd: clear election dampening when the writer leaves
+  + crmd: clear election dampening when DC is lost
+  + pengine: don't order non-DC shutdowns before DC fencing
+  + libcrmservice: cancel DBus call when cancelling systemd/upstart actions
+  + tools: remove duplicate fence history state in crm_mon XML output
+  + build: minor logging fixes to allow compatibility with GCC 9 -Werror
+
 * Mon Jan 14 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.20-rc1
 - Changesets: 254
 - Diff:       132 files changed, 7602 insertions(+), 4215 deletions(-)
