@@ -89,6 +89,8 @@ dnl ========================================================================
 
 AC_PROG_CC dnl Can force other with environment variable "CC".
 AC_PROG_CC_STDC
+AC_PROG_CXX dnl C++ is not needed for build, just maintainer utilities
+
 gl_EARLY
 gl_INIT
 
@@ -1778,6 +1780,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
+                maint/Makefile                                      \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \
