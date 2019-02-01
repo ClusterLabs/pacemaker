@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -37,8 +37,9 @@
  *     1       1.1.13   ATTRD_OP_UPDATE (with F_ATTR_REGEX), ATTRD_OP_QUERY
  *     1       1.1.15   ATTRD_OP_UPDATE_BOTH, ATTRD_OP_UPDATE_DELAY
  *     2       1.1.17   ATTRD_OP_CLEAR_FAILURE
+ *     3       2.0.2    ATTRD_OP_PEER_CLEAR
  */
-#define ATTRD_PROTOCOL_VERSION "2"
+#define ATTRD_PROTOCOL_VERSION "3"
 
 int last_cib_op_done = 0;
 GHashTable *attributes = NULL;
@@ -49,6 +50,7 @@ void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
+void attrd_peer_clear(const char *host, const char *source);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -57,6 +59,23 @@ send_attrd_message(crm_node_t * node, xmlNode * data)
     crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
     attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
+}
+
+/*!
+ * \internal
+ * \brief Trigger a (potentially delayed) write-out of an attribute
+ *
+ * \param[in] a  Attribute to write out
+ */
+static void
+trigger_write(attribute_t *a)
+{
+    if (a->timeout_ms && a->timer) {
+        crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
+        mainloop_timer_start(a->timer);
+    } else {
+        write_or_elect_attribute(a);
+    }
 }
 
 static gboolean
@@ -174,7 +193,7 @@ create_attribute(xmlNode *xml)
 
 /*!
  * \internal
- * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
+ * \brief Propagate a client peer-remove or peer-clear request to all peers
  *
  * \param[in] client_name Name of client that made request (for log messages)
  * \param[in] xml         Root of request XML
@@ -182,7 +201,7 @@ create_attribute(xmlNode *xml)
  * \return void
  */
 void
-attrd_client_peer_remove(const char *client_name, xmlNode *xml)
+attrd_client_peer_command(const char *client_name, xmlNode *xml)
 {
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -582,6 +601,9 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         attrd_peer_remove(host, TRUE, peer->uname);
 
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_CLEAR)) {
+        attrd_peer_clear(host, peer->uname);
+
     } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
@@ -665,6 +687,37 @@ attrd_peer_remove(const char *host, gboolean uncache, const char *source)
     if (uncache) {
         crm_remote_peer_cache_remove(host);
         reap_crm_member(0, host);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remove all attributes from both memory and CIB for a node
+ *
+ * \param[in] host     Name of node to purge
+ * \param[in] source   Who requested removal (for logging)
+ */
+void
+attrd_peer_clear(const char *host, const char *source)
+{
+    attribute_t *a = NULL;
+    GHashTableIter attr_iter;
+
+    CRM_CHECK(host && source, return);
+    crm_notice("Clearing all %s attributes for %s", host, source);
+
+    g_hash_table_iter_init(&attr_iter, attributes);
+    while (g_hash_table_iter_next(&attr_iter, NULL, (gpointer *) &a)) {
+        attribute_value_t *v = g_hash_table_lookup(a->values, host);
+
+        if (v && v->current) {
+            crm_debug("Clearing %s[%s]=%s for %s",
+                      a->id, host, v->current, source);
+            free(v->current);
+            v->current = NULL;
+            a->changed = TRUE;
+            trigger_write(a);
+        }
     }
 }
 
@@ -866,12 +919,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         a->changed = TRUE;
 
         // Write out new value or start dampening timer
-        if (a->timeout_ms && a->timer) {
-            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
-            mainloop_timer_start(a->timer);
-        } else {
-            write_or_elect_attribute(a);
-        }
+        trigger_write(a);
 
     } else {
         if (is_force_write && a->timeout_ms && a->timer) {

@@ -183,6 +183,10 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
             task = ATTRD_OP_QUERY;
             name_as = F_ATTRD_ATTRIBUTE;
             break;
+        case 'c':
+            task = ATTRD_OP_PEER_CLEAR;
+            display_command = "clear";
+            break;
         case 'C':
             task = ATTRD_OP_PEER_REMOVE;
             display_command = "purge";
