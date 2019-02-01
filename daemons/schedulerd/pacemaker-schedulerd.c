@@ -21,7 +21,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
-#include <sched_allocate.h>
+#include <pacemaker-internal.h>
 #include <crm/msg_xml.h>
 
 #define OPTARGS	"hVc"

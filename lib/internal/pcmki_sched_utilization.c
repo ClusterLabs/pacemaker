@@ -7,8 +7,7 @@
 
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
-#include <sched_allocate.h>
-#include <sched_utils.h>
+#include <pacemaker-internal.h>
 
 static GListPtr find_colocated_rscs(GListPtr colocated_rscs, resource_t * rsc,
                                     resource_t * orig_rsc);

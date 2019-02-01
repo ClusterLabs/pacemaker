@@ -7,8 +7,7 @@
 
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
-#include <sched_allocate.h>
-#include <sched_utils.h>
+#include <pacemaker-internal.h>
 
 pe__location_t *
 rsc2node_new(const char *id, pe_resource_t *rsc,

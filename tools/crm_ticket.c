@@ -28,7 +28,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
-#include <pacemaker-schedulerd.h>
+#include <pacemaker-internal.h>
 
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;

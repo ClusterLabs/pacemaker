@@ -35,7 +35,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
-#include <pacemaker-schedulerd.h>
+#include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
 
 static void clean_up_connections(void);

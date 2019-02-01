@@ -33,7 +33,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
-#include <sched_allocate.h>
+#include <pacemaker-internal.h>
 
 #include <pacemaker-fenced.h>
 
