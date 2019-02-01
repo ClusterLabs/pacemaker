@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -205,14 +205,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  * transient attributes intact until it rejoins.
                  */
                 if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                    update_attrd_clear_node(node->uname, is_remote);
                 }
 
             } else if(AM_I_DC) {
                 if (appeared) {
                     te_trigger_stonith_history_sync();
                 } else {
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                    update_attrd_clear_node(node->uname, is_remote);
                 }
             }
             break;

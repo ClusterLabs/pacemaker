@@ -998,6 +998,10 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                     attrd_peer_sync(peer, NULL);
                 }
             } else {
+                /* TODO The controller should ask us to clear attributes from
+                 * lost nodes, so we shouldn't do that here. But we need to
+                 * consider corner cases such as the controller not being up.
+                 */
                 // Remove all attribute values associated with lost nodes
                 attrd_peer_remove(peer->uname, FALSE, "loss");
                 remove_voter = TRUE;
