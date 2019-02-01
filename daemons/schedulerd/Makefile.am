@@ -12,7 +12,8 @@ AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 halibdir	= $(CRM_DAEMON_DIR)
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/pengine/libpe_status.la
+		$(top_builddir)/lib/pengine/libpe_status.la \
+		$(top_builddir)/lib/internal/libpacemaker-internal.la
 
 ## binary progs
 

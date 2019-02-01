@@ -43,7 +43,7 @@ cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/services/libcrmservice.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
-			  $(top_builddir)/daemons/schedulerd/libpacemaker-internal.la
+			  $(top_builddir)/lib/internal/libpacemaker-internal.la
 cts_exec_helper_SOURCES	= cts-exec-helper.c
 
 noinst_HEADERS  = pacemaker-execd.h
