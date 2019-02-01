@@ -384,8 +384,8 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "setenv %s=%s",
-                  (char*)key, (value? (char*)value : ""));
+        crm_log_perror(LOG_ERR, "setenv %s=%s",
+                       (char*)key, (value? (char*)value : ""));
     } else {
         crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
     }
@@ -395,7 +395,7 @@ static void
 unset_alert_env(gpointer key, gpointer value, gpointer user_data)
 {
     if (unsetenv(key) < 0) {
-        crm_perror(LOG_ERR, "unset %s", (char*)key);
+        crm_log_perror(LOG_ERR, "unset %s", (char*)key);
     } else {
         crm_trace("unset %s", (char*)key);
     }

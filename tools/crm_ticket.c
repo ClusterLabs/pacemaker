@@ -681,7 +681,7 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_CRIT, "Could not allocate working set");
+        crm_log_perror(LOG_CRIT, "Could not allocate working set");
         exit_code = CRM_EX_OSERR;
         goto bail;
     }

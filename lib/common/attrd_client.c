@@ -78,7 +78,8 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
         if (connected) {
             rc = crm_ipc_send(ipc, attrd_op, flags, 0, NULL);
         } else {
-            crm_perror(LOG_INFO, "Connection to cluster attribute manager failed");
+            crm_log_perror(LOG_INFO,
+                           "Connection to cluster attribute manager failed");
         }
 
         if (ipc != local_ipc) {

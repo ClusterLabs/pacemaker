@@ -817,7 +817,8 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
+        crm_log_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d",
+                       op, timeout, rc);
         rc = -ECOMM;
         goto done;
 
@@ -904,7 +905,9 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
-        crm_perror(LOG_DEBUG, "Couldn't complete registration with the executor API: %d", rc);
+        crm_log_perror(LOG_DEBUG,
+                       "Couldn't complete registration with the executor API: %d",
+                       rc);
         rc = -ECOMM;
     } else if (reply == NULL) {
         crm_err("Did not receive registration reply");
@@ -965,7 +968,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to executor failed");
+            crm_log_perror(LOG_ERR, "Connection to executor failed");
             rc = -ENOTCONN;
         }
     } else {

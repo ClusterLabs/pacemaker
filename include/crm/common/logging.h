@@ -223,6 +223,29 @@ unsigned int get_crm_log_level(void);
  * \note Because crm_perror() adds the system error message and error number
  *       onto the end of fmt, that information will become extended information
  *       if CRM_XS is used inside fmt and will not show up in syslog.
+ * \note Unlike with \c crm_perror, you only want to use this function with
+ *       logging already set up, since there's no dual sink to stderr, which
+ *       is what makes this very variant more appealing for that use case:
+ *       no redundancy/wasted effort in formatting string that may be get
+ *       dropped anyway, e.g., when stderr is redirected to /dev/null.
+ */
+#  define crm_log_perror(level, fmt, args...) do {			\
+        const char *err = strerror(errno);                              \
+        do_crm_log(level, fmt ": %s (%d)" , ##args, err, errno);        \
+    } while(0)
+
+/*!
+ * \brief Log + emit to stderr a system error message
+ *
+ * \param[in] level  Severity at which to log the message
+ * \param[in] fmt    printf-style format string for message
+ * \param[in] args   Any arguments needed by format string
+ *
+ * \note Because crm_perror() adds the system error message and error number
+ *       onto the end of fmt, that information will become extended information
+ *       if CRM_XS is used inside fmt and will not show up in syslog.
+ * \note Unlike with \c crm_log_perror, this function shall not be used
+ *       once you have logging already set up.
  */
 #  define crm_perror(level, fmt, args...) do {				\
         const char *err = strerror(errno);                              \

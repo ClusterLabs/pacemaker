@@ -275,7 +275,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for writing", dot_file);
+        crm_log_perror(LOG_ERR, "Could not open %s for writing", dot_file);
         return;
     }
 
@@ -776,7 +776,7 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_ERR, "Could not allocate working set");
+        crm_log_perror(LOG_ERR, "Could not allocate working set");
         rc = -ENOMEM;
         goto done;
     }

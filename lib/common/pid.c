@@ -53,10 +53,10 @@ crm_pid_active(long pid, const char *daemon)
 
         rc = readlink(proc_path, exe_path, PATH_MAX - 1);
         if ((rc < 0) && (errno == EACCES)) {
-            crm_perror(LOG_INFO, "Could not read from %s", proc_path);
+            crm_log_perror(LOG_INFO, "Could not read from %s", proc_path);
             return 1;
         } else if (rc < 0) {
-            crm_perror(LOG_ERR, "Could not read from %s", proc_path);
+            crm_log_perror(LOG_ERR, "Could not read from %s", proc_path);
             return 0;
         }
 
@@ -175,7 +175,7 @@ crm_lock_pidfile(const char *filename, const char *name)
     close(fd);
 
     if (rc != LOCKSTRLEN) {
-        crm_perror(LOG_ERR, "Incomplete write to %s", filename);
+        crm_log_perror(LOG_ERR, "Incomplete write to %s", filename);
         return -errno;
     }
 

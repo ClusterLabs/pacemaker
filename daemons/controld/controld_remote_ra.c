@@ -225,7 +225,7 @@ remote_node_up(const char *node_name)
      */
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
-        crm_perror(LOG_WARNING, "%s CIB node state setup", node_name);
+        crm_log_perror(LOG_WARNING, "%s CIB node state setup", node_name);
     }
     free_xml(update);
 }
@@ -277,7 +277,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     create_node_state_update(node, node_update_cluster, update, __FUNCTION__);
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
-        crm_perror(LOG_ERR, "%s CIB node state update", node_name);
+        crm_log_perror(LOG_ERR, "%s CIB node state update", node_name);
     }
     free_xml(update);
 }
@@ -1227,7 +1227,8 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
-        crm_perror(LOG_WARNING, "%s CIB node state update failed", lrm_state->node_name);
+        crm_log_perror(LOG_WARNING, "%s CIB node state update failed",
+                       lrm_state->node_name);
     } else {
         /* TODO: still not 100% sure that async update will succeed ... */
         ra_data->is_maintenance = maintenance;

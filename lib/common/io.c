@@ -46,14 +46,15 @@ crm_build_path(const char *path_c, mode_t mode)
         if (path[offset] == '/') {
             path[offset] = 0;
             if (mkdir(path, mode) < 0 && errno != EEXIST) {
-                crm_perror(LOG_ERR, "Could not create directory '%s'", path);
+                crm_log_perror(LOG_ERR, "Could not create directory '%s'",
+                               path);
                 break;
             }
             path[offset] = '/';
         }
     }
     if (mkdir(path, mode) < 0 && errno != EEXIST) {
-        crm_perror(LOG_ERR, "Could not create directory '%s'", path);
+        crm_log_perror(LOG_ERR, "Could not create directory '%s'", path);
     }
 
     free(path);
@@ -186,7 +187,8 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     if (file_strm != NULL) {
         rc = fprintf(file_strm, "%d", sequence);
         if (rc < 0) {
-            crm_perror(LOG_ERR, "Cannot write to series file %s", series_file);
+            crm_log_perror(LOG_ERR, "Cannot write to series file %s",
+                           series_file);
         }
 
     } else {
@@ -377,21 +379,22 @@ crm_sync_directory(const char *name)
 
     directory = opendir(name);
     if (directory == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
+        crm_log_perror(LOG_ERR, "Could not open %s for syncing", name);
         return;
     }
 
     fd = dirfd(directory);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
+        crm_log_perror(LOG_ERR, "Could not obtain file descriptor for %s",
+                       name);
         return;
     }
 
     if (fsync(fd) < 0) {
-        crm_perror(LOG_ERR, "Could not sync %s", name);
+        crm_log_perror(LOG_ERR, "Could not sync %s", name);
     }
     if (closedir(directory) < 0) {
-        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
+        crm_log_perror(LOG_ERR, "Could not close %s after fsync", name);
     }
 }
 

@@ -79,7 +79,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
             rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
         }                                                               \
         if(buffer && rc < 0) {                                          \
-            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
+            crm_log_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
             break;                                                      \
         } else if(rc >= ((max) - (offset))) {                           \
@@ -2286,7 +2286,7 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if (input == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        crm_log_perror(LOG_ERR, "Could not open %s for reading", filename);
         return NULL;
     }
 
@@ -2553,7 +2553,7 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
         res = fprintf(stream, "%s", buffer);
         if (res < 0) {
             res = -errno;
-            crm_perror(LOG_ERR, "writing %s", filename);
+            crm_log_perror(LOG_ERR, "writing %s", filename);
             goto bail;
         }
     }
@@ -2562,13 +2562,13 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 
     if (fflush(stream) != 0) {
         res = -errno;
-        crm_perror(LOG_ERR, "flushing %s", filename);
+        crm_log_perror(LOG_ERR, "flushing %s", filename);
     }
 
     /* Don't report error if the file does not support synchronization */
     if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
         res = -errno;
-        crm_perror(LOG_ERR, "synchronizing %s", filename);
+        crm_log_perror(LOG_ERR, "synchronizing %s", filename);
     }
 
     fclose(stream);

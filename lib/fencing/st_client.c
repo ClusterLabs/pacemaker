@@ -395,7 +395,7 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
         list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
         if (list == NULL) {
-            crm_perror(LOG_CRIT, "Could not create device list");
+            crm_log_perror(LOG_CRIT, "Could not create device list");
             free_xml(data);
             return NULL;
         }
@@ -557,7 +557,7 @@ st_child_term(gpointer data)
     track->last_timeout_signo = SIGTERM;
     rc = kill(-track->pid, SIGTERM);
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't send SIGTERM to %d", track->pid);
+        crm_log_perror(LOG_ERR, "Couldn't send SIGTERM to %d", track->pid);
     }
     return FALSE;
 }
@@ -573,7 +573,7 @@ st_child_kill(gpointer data)
     track->last_timeout_signo = SIGKILL;
     rc = kill(-track->pid, SIGKILL);
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't send SIGKILL to %d", track->pid);
+        crm_log_perror(LOG_ERR, "Couldn't send SIGKILL to %d", track->pid);
     }
     return FALSE;
 }
@@ -934,7 +934,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     } while (errno == EINTR && total < len);
 
     if (total != len) {
-        crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
+        crm_log_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
         if (ret >= 0) {
             rc = -ECOMM;
         }
@@ -996,7 +996,7 @@ internal_stonith_action_execute(stonith_action_t * action)
         }
 
         if (p <= 0) {
-            crm_perror(LOG_ERR, "waitpid(%d)", pid);
+            crm_log_perror(LOG_ERR, "waitpid(%d)", pid);
 
         } else if (p != pid) {
             crm_err("Waited for %d, got %d", pid, p);
@@ -1147,9 +1147,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
         default:
             errno = EINVAL;
-            crm_perror(LOG_ERR,
-                       "Agent %s not found or does not support meta-data",
-                       agent);
+            crm_log_perror(LOG_ERR,
+                          "Agent %s not found or does not support meta-data",
+                           agent);
             break;
     }
     return -EINVAL;
@@ -1661,7 +1661,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to fencer failed");
+            crm_log_perror(LOG_ERR, "Connection to fencer failed");
             rc = -ENOTCONN;
         }
 
@@ -1687,7 +1687,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if (rc < 0) {
-            crm_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
+            crm_log_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
             rc = -ECOMM;
 
         } else if (reply == NULL) {
@@ -1750,7 +1750,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
-            crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
+            crm_log_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
             rc = -ECOMM;
         } else {
             rc = pcmk_ok;
@@ -2047,7 +2047,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     free_xml(op_msg);
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op, timeout, rc);
+        crm_log_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op, timeout, rc);
         rc = -ECOMM;
         goto done;
     }
@@ -2237,9 +2237,9 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         default:
             rc = -EINVAL;
             errno = EINVAL;
-            crm_perror(LOG_ERR,
-                       "Agent %s not found or does not support validation",
-                       agent);
+            crm_log_perror(LOG_ERR,
+                           "Agent %s not found or does not support validation",
+                           agent);
             break;
     }
     g_hash_table_destroy(params_table);

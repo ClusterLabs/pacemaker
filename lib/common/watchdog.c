@@ -42,7 +42,7 @@ sysrq_trigger(char t)
     // Root can always write here, regardless of kernel.sysrq value
     procf = fopen("/proc/sysrq-trigger", "a");
     if (!procf) {
-        crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");
+        crm_log_perror(LOG_WARNING, "Opening sysrq-trigger failed");
         return;
     }
     crm_info("sysrq-trigger: %c", t);
@@ -84,7 +84,8 @@ pcmk_panic_local(void)
         do_crm_log_always(LOG_EMERG, "Signaling pacemakerd(%d) to panic", ppid);
 
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-            crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
+            crm_log_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic",
+                           ppid);
         }
 #endif // SUPPORT_PROCFS
 
@@ -126,7 +127,8 @@ pcmk_panic_sbd(void)
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_perror(LOG_EMERG, "Cannot signal SBD(%d) to terminate", sbd_pid);
+        crm_log_perror(LOG_EMERG, "Cannot signal SBD(%d) to terminate",
+                       sbd_pid);
         pcmk_panic_local();
     }
 

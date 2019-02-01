@@ -147,7 +147,8 @@ static void
 set_ocf_env(const char *key, const char *value, gpointer user_data)
 {
     if (setenv(key, value, 1) != 0) {
-        crm_perror(LOG_ERR, "setenv failed for key:%s and value:%s", key, value);
+        crm_log_perror(LOG_ERR, "setenv failed for key:%s and value:%s",
+                       key, value);
     }
 }
 
@@ -397,12 +398,15 @@ action_launch_child(svc_action_t *op)
         sp.sched_priority = 0;
 
         if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-            crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
+            crm_log_perror(LOG_ERR,
+                           "Could not reset scheduling policy to SCHED_OTHER for %s",
+                           op->id);
         }
     }
 #endif
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-        crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
+        crm_log_perror(LOG_ERR, "Could not reset process priority to 0 for %s",
+                       op->id);
     }
 
     /* Man: The call setpgrp() is equivalent to setpgid(0,0)
@@ -438,20 +442,21 @@ action_launch_child(svc_action_t *op)
 
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_perror(LOG_ERR, "Could not set child group to %d", op->opaque->gid);
+            crm_log_perror(LOG_ERR, "Could not set child group to %d",
+                           op->opaque->gid);
             _exit(PCMK_OCF_NOT_CONFIGURED);
         }
 
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
-            crm_perror(LOG_ERR, "Could not set child groups");
+            crm_log_perror(LOG_ERR, "Could not set child groups");
             _exit(PCMK_OCF_NOT_CONFIGURED);
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
-            crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
+            crm_log_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
             _exit(PCMK_OCF_NOT_CONFIGURED);
         }
     }
@@ -472,7 +477,7 @@ static void
 sigchld_handler()
 {
     if ((sigchld_pipe[1] >= 0) && (write(sigchld_pipe[1], "", 1) == -1)) {
-        crm_perror(LOG_TRACE, "Could not poke SIGCHLD self-pipe");
+        crm_log_perror(LOG_TRACE, "Could not poke SIGCHLD self-pipe");
     }
 }
 #endif
@@ -490,7 +495,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 #ifdef HAVE_SYS_SIGNALFD_H
     sfd = signalfd(-1, mask, SFD_NONBLOCK);
     if (sfd < 0) {
-        crm_perror(LOG_ERR, "signalfd() failed");
+        crm_log_perror(LOG_ERR, "signalfd() failed");
     }
 #else
     sfd = sigchld_pipe[0];
@@ -529,7 +534,8 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
                 s = read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
                 if (s != sizeof(struct signalfd_siginfo)) {
-                    crm_perror(LOG_ERR, "Read from signal fd %d failed", sfd);
+                    crm_log_perror(LOG_ERR, "Read from signal fd %d failed",
+                                   sfd);
 
                 } else if (fdsi.ssi_signo == SIGCHLD) {
 #else
@@ -552,7 +558,8 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                                 /* ...otherwise pretend process still runs. */
                                 wait_rc = 0;
                         }
-                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
+                        crm_log_perror(LOG_ERR, "waitpid() for %d failed",
+                                       op->pid);
                     }
                 }
             }
@@ -563,7 +570,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
         } else if (poll_rc < 0) {
             if (errno != EINTR) {
-                crm_perror(LOG_ERR, "poll() failed");
+                crm_log_perror(LOG_ERR, "poll() failed");
                 break;
             }
         }
@@ -639,7 +646,7 @@ services_os_action_execute(svc_action_t * op)
 #define sigchld_cleanup() do {                                                \
     if (sigismember(&old_mask, SIGCHLD) == 0) {                               \
         if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {                      \
-            crm_perror(LOG_ERR, "sigprocmask() failed to unblock sigchld");   \
+            crm_log_perror(LOG_ERR, "sigprocmask() failed to unblock sigchld");\
         }                                                                     \
     }                                                                         \
 } while (0)
@@ -648,7 +655,7 @@ services_os_action_execute(svc_action_t * op)
     struct sigaction old_sa;
 #define sigchld_cleanup() do {                                                \
     if (sigaction(SIGCHLD, &old_sa, NULL) < 0) {                              \
-        crm_perror(LOG_ERR, "sigaction() failed to remove sigchld handler");  \
+        crm_log_perror(LOG_ERR, "sigaction() failed to remove sigchld handler");\
     }                                                                         \
     close(sigchld_pipe[0]);                                                   \
     close(sigchld_pipe[1]);                                                   \
@@ -701,13 +708,13 @@ services_os_action_execute(svc_action_t * op)
         sigemptyset(&old_mask);
 
         if (sigprocmask(SIG_BLOCK, &mask, &old_mask) < 0) {
-            crm_perror(LOG_ERR, "sigprocmask() failed to block sigchld");
+            crm_log_perror(LOG_ERR, "sigprocmask() failed to block sigchld");
         }
 
         pmask = &mask;
 #else
         if(pipe(sigchld_pipe) == -1) {
-            crm_perror(LOG_ERR, "pipe() failed");
+            crm_log_perror(LOG_ERR, "pipe() failed");
         }
 
         rc = crm_set_nonblocking(sigchld_pipe[0]);
@@ -725,7 +732,7 @@ services_os_action_execute(svc_action_t * op)
         sa.sa_flags = 0;
         sigemptyset(&sa.sa_mask);
         if (sigaction(SIGCHLD, &sa, &old_sa) < 0) {
-            crm_perror(LOG_ERR, "sigaction() failed to set sigchld handler");
+            crm_log_perror(LOG_ERR, "sigaction() failed to set sigchld handler");
         }
 
         pmask = NULL;

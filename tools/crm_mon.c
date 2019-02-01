@@ -3755,7 +3755,7 @@ print_html_status(pe_working_set_t * data_set,
         filename_tmp = crm_concat(filename, "tmp", '.');
         stream = fopen(filename_tmp, "w");
         if (stream == NULL) {
-            crm_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
+            crm_log_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
             free(filename_tmp);
             return -1;
         }
@@ -3872,7 +3872,8 @@ print_html_status(pe_working_set_t * data_set,
 
     if (output_format != mon_output_cgi) {
         if (rename(filename_tmp, filename) != 0) {
-            crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
+            crm_log_perror(LOG_ERR, "Unable to rename %s->%s",
+                           filename_tmp, filename);
         }
         free(filename_tmp);
     }
@@ -3907,7 +3908,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
 
     pid = fork();
     if (pid == -1) {
-        crm_perror(LOG_ERR, "notification fork() failed.");
+        crm_log_perror(LOG_ERR, "notification fork() failed.");
     }
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */

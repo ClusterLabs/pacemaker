@@ -1278,7 +1278,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_ERR, "Could not allocate working set");
+        crm_log_perror(LOG_ERR, "Could not allocate working set");
         rc = -ENOMEM;
         goto done;
     }

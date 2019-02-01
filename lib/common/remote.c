@@ -435,9 +435,9 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
                 crm_trace("Retry");
                 goto retry;
             default:
-                crm_perror(LOG_INFO,
-                           "Could only write %d of the remaining %llu bytes",
-                           rc, (unsigned long long) len);
+                crm_log_perror(LOG_INFO,
+                               "Could only write %d of the remaining %llu bytes",
+                               rc, (unsigned long long) len);
                 break;
         }
 
@@ -929,7 +929,7 @@ internal_tcp_connect_async(int sock,
 
     rc = connect(sock, addr, addrlen);
     if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
-        crm_perror(LOG_WARNING, "connect");
+        crm_log_perror(LOG_WARNING, "connect");
         return -1;
     }
 
@@ -1046,8 +1046,8 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,
 
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {
-            crm_perror(LOG_WARNING, "creating socket for connection to %s",
-                       server);
+            crm_log_perror(LOG_WARNING, "creating socket for connection to %s",
+                           server);
             sock = -ENOTCONN;
             continue;
         }

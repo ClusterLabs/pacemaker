@@ -45,7 +45,7 @@ cib_rename(const char *old)
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     new_fd = mkstemp(new);
     if ((new_fd < 0) || (rename(old, new) < 0)) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
+        crm_log_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
         crm_err("Disabling disk writes and continuing");
         cib_writes_enabled = FALSE;
     }
@@ -208,7 +208,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
-            crm_perror(LOG_NOTICE, "scandir(%s) failed", cib_root);
+            crm_log_perror(LOG_NOTICE, "scandir(%s) failed", cib_root);
         }
     }
 
@@ -406,7 +406,7 @@ write_cib_contents(gpointer p)
 
         pid = fork();
         if (pid < 0) {
-            crm_perror(LOG_ERR, "Disabling disk writes after fork failure");
+            crm_log_perror(LOG_ERR, "Disabling disk writes after fork failure");
             cib_writes_enabled = FALSE;
             return FALSE;
         }

@@ -227,7 +227,7 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         rc = -errno;
-        crm_perror(LOG_CRIT, "Unable to allocate working set");
+        crm_log_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
 

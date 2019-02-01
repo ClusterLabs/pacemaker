@@ -117,24 +117,28 @@ main(int argc, char **argv)
 
                 pwentry = getpwnam(CRM_DAEMON_USER);
                 CRM_CHECK(pwentry != NULL,
-                          crm_perror(LOG_ERR, "Invalid uid (%s) specified", CRM_DAEMON_USER);
+                          crm_log_perror(LOG_ERR, "Invalid uid (%s) specified",
+                                         CRM_DAEMON_USER);
                           return CRM_EX_FATAL);
 
                 rc = setgid(pwentry->pw_gid);
                 if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not set group to %d", pwentry->pw_gid);
+                    crm_log_perror(LOG_ERR, "Could not set group to %d",
+                                   pwentry->pw_gid);
                     return CRM_EX_FATAL;
                 }
 
                 rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
                 if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not setup groups for user %d", pwentry->pw_uid);
+                    crm_log_perror(LOG_ERR, "Could not setup groups for user %d",
+                                   pwentry->pw_uid);
                     return CRM_EX_FATAL;
                 }
 
                 rc = setuid(pwentry->pw_uid);
                 if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not set user to %d", pwentry->pw_uid);
+                    crm_log_perror(LOG_ERR, "Could not set user to %d",
+                                   pwentry->pw_uid);
                     return CRM_EX_FATAL;
                 }
                 break;

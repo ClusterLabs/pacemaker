@@ -632,8 +632,8 @@ systemd_create_override(const char *agent, int timeout)
 
         free(override);
         if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot write to systemd override file %s",
-                       override_file);
+            crm_log_perror(LOG_WARNING, "Cannot write to systemd override file %s",
+                           override_file);
         }
         fflush(file_strm);
         fclose(file_strm);
@@ -651,8 +651,8 @@ systemd_remove_override(const char *agent, int timeout)
 
     if (rc < 0) {
         // Stop may be called when already stopped, which is fine
-        crm_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
-                   override_file);
+        crm_log_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
+                       override_file);
     } else {
         systemd_daemon_reload(timeout);
     }

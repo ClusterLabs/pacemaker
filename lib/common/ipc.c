@@ -294,7 +294,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
     crm_client_t *client = calloc(1, sizeof(crm_client_t));
 
     if (client == NULL) {
-        crm_perror(LOG_ERR, "Allocating client");
+        crm_log_perror(LOG_ERR, "Allocating client");
         return NULL;
     }
 
@@ -1012,8 +1012,8 @@ crm_ipc_get_fd(crm_ipc_t * client)
         return fd;
     }
     errno = EINVAL;
-    crm_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s",
-               (client? client->name : "unspecified client"));
+    crm_log_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s",
+                   (client? client->name : "unspecified client"));
     return -errno;
 }
 

@@ -678,7 +678,7 @@ crm_abort(const char *file, const char *function, int line,
         crm_trace("Cannot wait on forked child %d - SIGCHLD is probably set to SIG_IGN", pid);
         return;
     }
-    crm_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
+    crm_log_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
 }
 
 void
@@ -704,7 +704,7 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     pid = fork();
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
-        crm_perror(LOG_ERR, "fork");
+        crm_log_perror(LOG_ERR, "fork");
         crm_exit(CRM_EX_OSERR);
 
     } else if (pid > 0) {

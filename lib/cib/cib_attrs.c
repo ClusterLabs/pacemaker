@@ -95,7 +95,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
 
     xpath_string = calloc(1, XPATH_MAX);
     if (xpath_string == NULL) {
-        crm_perror(LOG_CRIT, "Could not create xpath");
+        crm_log_perror(LOG_CRIT, "Could not create xpath");
         return -ENOMEM;
     }
 

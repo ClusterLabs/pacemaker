@@ -261,7 +261,7 @@ bind_and_listen(struct addrinfo *addr)
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Listener socket creation failed");
+        crm_log_perror(LOG_ERR, "Listener socket creation failed");
         return -1;
     }
 
@@ -269,7 +269,8 @@ bind_and_listen(struct addrinfo *addr)
     optval = 1;
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Local address reuse not allowed on %s", buffer);
+        crm_log_perror(LOG_ERR, "Local address reuse not allowed on %s",
+                       buffer);
         close(fd);
         return -1;
     }
@@ -278,20 +279,21 @@ bind_and_listen(struct addrinfo *addr)
         optval = 0;
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
-            crm_perror(LOG_INFO, "Couldn't disable IPV6-only on %s", buffer);
+            crm_log_perror(LOG_INFO, "Couldn't disable IPV6-only on %s",
+                           buffer);
             close(fd);
             return -1;
         }
     }
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
-        crm_perror(LOG_ERR, "Cannot bind to %s", buffer);
+        crm_log_perror(LOG_ERR, "Cannot bind to %s", buffer);
         close(fd);
         return -1;
     }
 
     if (listen(fd, 10) == -1) {
-        crm_perror(LOG_ERR, "Cannot listen on %s", buffer);
+        crm_log_perror(LOG_ERR, "Cannot listen on %s", buffer);
         close(fd);
         return -1;
     }

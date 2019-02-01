@@ -646,7 +646,7 @@ uid2username(uid_t uid)
     struct passwd *pwent = getpwuid(uid);
 
     if (pwent == NULL) {
-        crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
+        crm_log_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
         return NULL;
     }
     return strdup(pwent->pw_name);

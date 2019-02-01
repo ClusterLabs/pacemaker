@@ -294,7 +294,7 @@ crm_signal(int sig, void (*dispatch) (int sig))
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
-        crm_perror(LOG_ERR, "Call to sigemptyset failed");
+        crm_log_perror(LOG_ERR, "Call to sigemptyset failed");
         return FALSE;
     }
 
@@ -304,7 +304,9 @@ crm_signal(int sig, void (*dispatch) (int sig))
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
-        crm_perror(LOG_ERR, "Could not install signal handler for signal %d", sig);
+        crm_log_perror(LOG_ERR,
+                       "Could not install signal handler for signal %d",
+                       sig);
         return FALSE;
     }
 
@@ -369,7 +371,9 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
      * For now, just enforce a low timeout
      */
     if (siginterrupt(sig, 1) < 0) {
-        crm_perror(LOG_INFO, "Could not enable system call interruptions for signal %d", sig);
+        crm_log_perror(LOG_INFO,
+                       "Could not enable system call interruptions for signal %d",
+                       sig);
     }
 #endif
 
@@ -384,7 +388,9 @@ mainloop_destroy_signal(int sig)
         return FALSE;
 
     } else if (crm_signal(sig, NULL) == FALSE) {
-        crm_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
+        crm_log_perror(LOG_ERR,
+                       "Could not uninstall signal handler for signal %d",
+                       sig);
         return FALSE;
 
     } else if (crm_signals[sig] == NULL) {
@@ -771,7 +777,7 @@ mainloop_add_ipc_client(const char *name, int priority, size_t max_size, void *u
     }
 
     if (client == NULL) {
-        crm_perror(LOG_TRACE, "Connection to %s failed", name);
+        crm_log_perror(LOG_TRACE, "Connection to %s failed", name);
         if (conn) {
             crm_ipc_close(conn);
             crm_ipc_destroy(conn);
@@ -918,7 +924,7 @@ child_kill_helper(mainloop_child_t *child)
 
     if (rc < 0) {
         if (errno != ESRCH) {
-            crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+            crm_log_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
         }
         return -errno;
     }
@@ -961,14 +967,14 @@ child_waitpid(mainloop_child_t *child, int flags)
 
     rc = waitpid(child->pid, &status, flags);
     if(rc == 0) {
-        crm_perror(LOG_DEBUG, "wait(%d) = %d", child->pid, rc);
+        crm_log_perror(LOG_DEBUG, "wait(%d) = %d", child->pid, rc);
         return FALSE;
 
     } else if(rc != child->pid) {
         signo = SIGCHLD;
         exitcode = 1;
         status = 1;
-        crm_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
+        crm_log_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
 
     } else {
         crm_trace("Managed process %d exited: %p", child->pid, child);

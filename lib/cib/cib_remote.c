@@ -211,8 +211,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
 #endif
     sock = crm_remote_tcp_connect(private->server, private->port);
     if (sock < 0) {
-        crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server,
-                   private->port);
+        crm_log_perror(LOG_ERR, "remote tcp connection to %s:%d failed",
+                       private->server, private->port);
         return -ENOTCONN;
     }
 

@@ -231,7 +231,8 @@ crm_digest_verify(xmlNode *input, const char *expected)
     if (input != NULL) {
         calculated = calculate_on_disk_digest(input);
         if (calculated == NULL) {
-            crm_perror(LOG_ERR, "Could not calculate digest for comparison");
+            crm_log_perror(LOG_ERR,
+                           "Could not calculate digest for comparison");
             return FALSE;
         }
     }

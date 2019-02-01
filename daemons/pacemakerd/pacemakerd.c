@@ -232,8 +232,8 @@ stop_child(pcmk_child_t * child, int signal)
                    child->name, signal, child->pid);
 
     } else {
-        crm_perror(LOG_ERR, "Could not stop %s (process %d) with signal %d",
-                   child->name, child->pid, signal);
+        crm_log_perror(LOG_ERR, "Could not stop %s (process %d) with signal %d",
+                       child->name, child->pid, signal);
     }
 
     return TRUE;
@@ -336,7 +336,7 @@ start_child(pcmk_child_t * child)
 
             // Drop root group access if not needed
             if (!need_root_group && (setgid(gid) < 0)) {
-                crm_perror(LOG_ERR, "Could not set group to %d", gid);
+                crm_log_perror(LOG_ERR, "Could not set group to %d", gid);
             }
 
             /* Initialize supplementary groups to only those always granted to
@@ -348,7 +348,8 @@ start_child(pcmk_child_t * child)
         }
 
         if (uid && setuid(uid) < 0) {
-            crm_perror(LOG_ERR, "Could not set user to %d (%s)", uid, child->uid);
+            crm_log_perror(LOG_ERR, "Could not set user to %d (%s)",
+                           uid, child->uid);
         }
 
         /* Close all open file descriptors */
@@ -366,7 +367,7 @@ start_child(pcmk_child_t * child)
         } else {
             (void)execvp(child->command, opts_default);
         }
-        crm_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
+        crm_log_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
         crm_exit(CRM_EX_FATAL);
     }
     return TRUE;                /* never reached */
@@ -1023,7 +1024,7 @@ main(int argc, char **argv)
 
     rc = getrlimit(RLIMIT_CORE, &cores);
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot determine current maximum core size.");
+        crm_log_perror(LOG_ERR, "Cannot determine current maximum core size.");
     } else {
         if (cores.rlim_max == 0 && geteuid() == 0) {
             cores.rlim_max = RLIM_INFINITY;
@@ -1034,10 +1035,10 @@ main(int argc, char **argv)
 
         rc = setrlimit(RLIMIT_CORE, &cores);
         if (rc < 0) {
-            crm_perror(LOG_ERR,
-                       "Core file generation will remain disabled."
-                       " Core files are an important diagnostic tool, so"
-                       " please consider enabling them by default.");
+            crm_log_perror(LOG_ERR,
+                           "Core file generation will remain disabled."
+                           " Core files are an important diagnostic tool, so"
+                           " please consider enabling them by default.");
         }
     }
 

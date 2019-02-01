@@ -642,7 +642,7 @@ dump_file(const char *filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        crm_log_perror(LOG_ERR, "Could not open %s for reading", filename);
         return;
     }
 

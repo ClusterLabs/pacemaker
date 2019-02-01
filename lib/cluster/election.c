@@ -90,13 +90,13 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
 
     e = calloc(1, sizeof(election_t));
     if (e == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
+        crm_log_perror(LOG_CRIT, "Cannot create election");
         return NULL;
     }
 
     e->uname = strdup(uname);
     if (e->uname == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
+        crm_log_perror(LOG_CRIT, "Cannot create election");
         free(e);
         return NULL;
     }
@@ -224,7 +224,7 @@ crm_uptime(struct timeval *output)
         output->tv_usec = 0;
 
         if (rc < 0) {
-            crm_perror(LOG_ERR, "Could not calculate the current uptime");
+            crm_log_perror(LOG_ERR, "Could not calculate the current uptime");
             expires = 0;
             return -1;
         }

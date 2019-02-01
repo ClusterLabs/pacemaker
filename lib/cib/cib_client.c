@@ -221,9 +221,9 @@ get_shadow_file(const char *suffix)
             user = pwent->pw_name;
         } else {
             user = getenv("USER");
-            crm_perror(LOG_ERR,
-                       "Assuming %s because cannot get user details for user ID %d",
-                       (user? user : "unprivileged user"), uid);
+            crm_log_perror(LOG_ERR,
+                           "Assuming %s because cannot get user details for user ID %d",
+                           (user? user : "unprivileged user"), uid);
         }
 
         if (safe_str_eq(user, "root") || safe_str_eq(user, CRM_DAEMON_USER)) {
@@ -246,8 +246,9 @@ get_shadow_file(const char *suffix)
 
                 rc = mkdir(cib_home, 0700);
                 if (rc < 0 && errno != EEXIST) {
-                    crm_perror(LOG_ERR, "Couldn't create user-specific shadow directory: %s",
-                               cib_home);
+                    crm_log_perror(LOG_ERR,
+                                   "Couldn't create user-specific shadow directory: %s",
+                                   cib_home);
                     errno = 0;
 
                 } else {

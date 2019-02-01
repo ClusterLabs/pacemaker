@@ -86,7 +86,9 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
                 crm_warn("No on-disk digest present at %s", sigfile);
                 return TRUE;
             default:
-                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
+                crm_log_perror(LOG_ERR,
+                               "Could not read on-disk digest from %s",
+                               sigfile);
                 return FALSE;
         }
     }
@@ -126,7 +128,9 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     /* Verify that file exists and its size is nonzero */
     s_res = stat(filename, &buf);
     if (s_res < 0) {
-        crm_perror(LOG_WARNING, "Could not verify cluster configuration file %s", filename);
+        crm_log_perror(LOG_WARNING,
+                       "Could not verify cluster configuration file %s",
+                       filename);
         return -errno;
     } else if (buf.st_size == 0) {
         crm_warn("Cluster configuration file %s is corrupt (size is zero)", filename);
@@ -239,14 +243,14 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 
     /* Back up the CIB, by hard-linking it to the backup name */
     if ((link(cib_path, backup_path) < 0) && (errno != ENOENT)) {
-        crm_perror(LOG_ERR, "Could not archive %s by linking to %s",
-                   cib_path, backup_path);
+        crm_log_perror(LOG_ERR, "Could not archive %s by linking to %s",
+                       cib_path, backup_path);
         rc = -1;
 
     /* Back up the CIB signature similarly */
     } else if ((link(cib_digest, backup_digest) < 0) && (errno != ENOENT)) {
-        crm_perror(LOG_ERR, "Could not archive %s by linking to %s",
-                   cib_digest, backup_digest);
+        crm_log_perror(LOG_ERR, "Could not archive %s by linking to %s",
+                       cib_digest, backup_digest);
         rc = -1;
 
     /* Update the last counter and ensure everything is sync'd to media */
@@ -255,19 +259,19 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
         if (cib_do_chown) {
             if ((chown(backup_path, cib_file_owner, cib_file_group) < 0)
                     && (errno != ENOENT)) {
-                crm_perror(LOG_ERR, "Could not set owner of %s", backup_path);
+                crm_log_perror(LOG_ERR, "Could not set owner of %s", backup_path);
                 rc = -1;
             }
             if ((chown(backup_digest, cib_file_owner, cib_file_group) < 0)
                     && (errno != ENOENT)) {
-                crm_perror(LOG_ERR, "Could not set owner of %s", backup_digest);
+                crm_log_perror(LOG_ERR, "Could not set owner of %s", backup_digest);
                 rc = -1;
             }
             if (crm_chown_last_sequence(cib_dirname, CIB_SERIES, cib_file_owner,
                                         cib_file_group) < 0) {
-                crm_perror(LOG_ERR,
-                           "Could not set owner of %s last sequence file",
-                           cib_dirname);
+                crm_log_perror(LOG_ERR,
+                               "Could not set owner of %s last sequence file",
+                               cib_dirname);
                 rc = -1;
             }
         }
@@ -371,22 +375,22 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     /* Write the CIB to a temporary file, so we can deploy (near) atomically */
     fd = mkstemp(tmp_cib);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB",
-                   tmp_cib);
+        crm_log_perror(LOG_ERR, "Couldn't open temporary file %s for writing CIB",
+                       tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
 
     /* Protect the temporary file */
     if (fchmod(fd, S_IRUSR | S_IWUSR) < 0) {
-        crm_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
-                   tmp_cib);
+        crm_log_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
+                       tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     if (cib_do_chown && (fchown(fd, cib_file_owner, cib_file_group) < 0)) {
-        crm_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
-                   tmp_cib);
+        crm_log_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
+                       tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
@@ -407,19 +411,19 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     /* Write the CIB digest to a temporary file */
     fd = mkstemp(tmp_digest);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not create temporary file for CIB digest");
+        crm_log_perror(LOG_ERR, "Could not create temporary file for CIB digest");
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     if (cib_do_chown && (fchown(fd, cib_file_owner, cib_file_group) < 0)) {
-        crm_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
+        crm_log_perror(LOG_ERR, "Couldn't protect temporary file %s for writing CIB",
                    tmp_cib);
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
     }
     if (crm_write_sync(fd, digest) < 0) {
-        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
+        crm_log_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
@@ -436,12 +440,12 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     /* Rename temporary files to live, and sync directory changes to media */
     crm_debug("Activating %s", tmp_cib);
     if (rename(tmp_cib, cib_path) < 0) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, cib_path);
+        crm_log_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, cib_path);
         exit_rc = pcmk_err_cib_save;
     }
     if (rename(tmp_digest, digest_path) < 0) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_digest,
-                   digest_path);
+        crm_log_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_digest,
+                       digest_path);
         exit_rc = pcmk_err_cib_save;
     }
     crm_sync_directory(cib_dirname);
@@ -588,7 +592,7 @@ cib_file_write_live(char *path)
     errno = 0;
     daemon_pwent = getpwnam(CRM_DAEMON_USER);
     if (daemon_pwent == NULL) {
-        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
+        crm_log_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
         return -1;
     }
 
@@ -597,7 +601,7 @@ cib_file_write_live(char *path)
      * otherwise, block access so we don't create wrong owner
      */
     if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
-        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
+        crm_log_perror(LOG_ERR, "Must be root or %s to modify live CIB",
                    CRM_DAEMON_USER);
         return 0;
     }

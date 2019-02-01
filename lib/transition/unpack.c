@@ -42,7 +42,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
 
     action = calloc(1, sizeof(crm_action_t));
     if (action == NULL) {
-        crm_perror(LOG_CRIT, "Cannot unpack action");
+        crm_log_perror(LOG_CRIT, "Cannot unpack action");
         crm_log_xml_trace(xml_action, "Lost action");
         return NULL;
     }
