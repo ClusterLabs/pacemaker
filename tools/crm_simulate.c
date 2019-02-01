@@ -23,7 +23,6 @@
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
-#include "fake_transition.h"
 
 cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;

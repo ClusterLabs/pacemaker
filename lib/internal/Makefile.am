@@ -20,7 +20,9 @@ libpacemaker_internal_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_internal_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpacemaker_internal_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/lib/cib/libcib.la
+			$(top_builddir)/lib/cib/libcib.la \
+			$(top_builddir)/lib/transition/libtransitioner.la \
+			$(top_builddir)/lib/lrmd/liblrmd.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 libpacemaker_internal_la_SOURCES	= pcmki_sched_allocate.c \
 			  pcmki_sched_bundle.c \
@@ -32,5 +34,6 @@ libpacemaker_internal_la_SOURCES	= pcmki_sched_allocate.c \
 			  pcmki_sched_native.c \
 			  pcmki_sched_notif.c \
 			  pcmki_sched_promotable.c \
+			  pcmki_sched_transition.c \
 			  pcmki_sched_utilization.c \
 			  pcmki_sched_utils.c

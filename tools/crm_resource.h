@@ -19,7 +19,6 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
-#include "fake_transition.h"
 
 extern bool print_pending;
 
