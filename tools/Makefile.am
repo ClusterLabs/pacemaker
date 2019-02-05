@@ -70,7 +70,6 @@ crm_node_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_simulate_SOURCES	= crm_simulate.c
-crm_simulate_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
 
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/internal/libpacemaker-internal.la	\
@@ -83,7 +82,6 @@ crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_CFLAGS		= -I$(top_srcdir)/daemons/schedulerd
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/internal/libpacemaker-internal.la	\
@@ -104,7 +102,6 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_resource_SOURCES	= crm_resource.c crm_resource_ban.c crm_resource_runtime.c crm_resource_print.c
-crm_resource_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la 		\
@@ -122,7 +119,6 @@ attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_ticket_SOURCES	= crm_ticket.c
-crm_ticket_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
 crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/internal/libpacemaker-internal.la	\

@@ -24,7 +24,6 @@ cts_fence_helper_SOURCES	= cts-fence-helper.c
 cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 				  $(top_builddir)/lib/fencing/libstonithd.la
 
-pacemaker_fenced_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 pacemaker_fenced_YFLAGS		= -d
 pacemaker_fenced_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_fenced_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
