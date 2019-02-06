@@ -23,6 +23,17 @@ extern "C" {
 #  include <libxml/tree.h>  // xmlNode
 #  include <crm/crm.h>
 
+typedef struct pcmk_nvpair_s {
+    char *name;
+    char *value;
+} pcmk_nvpair_t;
+
+GList *pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value);
+void pcmk_free_nvpairs(GList *nvpairs);
+GList *pcmk_sort_nvpairs(GList *list);
+GList *pcmk_xml_attrs2nvpairs(xmlNode *xml);
+void pcmk_nvpairs2xml_attrs(GList *list, xmlNode *xml);
+
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
                                const char *name, const char *value);
 void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
