@@ -4088,52 +4088,13 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     return can_delete;
 }
 
-typedef struct name_value_s {
-    const char *name;
-    const void *value;
-} name_value_t;
-
-static gint
-sort_pairs(gconstpointer a, gconstpointer b)
-{
-    int rc = 0;
-    const name_value_t *pair_a = a;
-    const name_value_t *pair_b = b;
-
-    CRM_ASSERT(a != NULL);
-    CRM_ASSERT(pair_a->name != NULL);
-
-    CRM_ASSERT(b != NULL);
-    CRM_ASSERT(pair_b->name != NULL);
-
-    rc = strcmp(pair_a->name, pair_b->name);
-    if (rc < 0) {
-        return -1;
-    } else if (rc > 0) {
-        return 1;
-    }
-    return 0;
-}
-
-static void
-dump_pair(gpointer data, gpointer user_data)
-{
-    name_value_t *pair = data;
-    xmlNode *parent = user_data;
-
-    crm_xml_add(parent, pair->name, pair->value);
-}
-
 xmlNode *
 sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
     xmlNode *child = NULL;
-    GListPtr sorted = NULL;
-    GListPtr unsorted = NULL;
-    name_value_t *pair = NULL;
+    GList *nvpairs = NULL;
     xmlNode *result = NULL;
     const char *name = NULL;
-    xmlAttrPtr pIter = NULL;
 
     CRM_CHECK(input != NULL, return NULL);
 
@@ -4141,23 +4102,10 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     CRM_CHECK(name != NULL, return NULL);
 
     result = create_xml_node(parent, name);
-
-    for (pIter = pcmk__first_xml_attr(input); pIter != NULL;
-         pIter = pIter->next) {
-
-        const char *p_name = (const char *)pIter->name;
-        const char *p_value = pcmk__xml_attr_value(pIter);
-
-        pair = calloc(1, sizeof(name_value_t));
-        pair->name = p_name;
-        pair->value = p_value;
-        unsorted = g_list_prepend(unsorted, pair);
-        pair = NULL;
-    }
-
-    sorted = g_list_sort(unsorted, sort_pairs);
-    g_list_foreach(sorted, dump_pair, result);
-    g_list_free_full(sorted, free);
+    nvpairs = pcmk_xml_attrs2nvpairs(input);
+    nvpairs = pcmk_sort_nvpairs(nvpairs);
+    pcmk_nvpairs2xml_attrs(nvpairs, result);
+    pcmk_free_nvpairs(nvpairs);
 
     for (child = __xml_first_child(input); child != NULL;
          child = __xml_next(child)) {

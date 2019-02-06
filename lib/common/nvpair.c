@@ -20,11 +20,181 @@
 #include "crmcommon_private.h"
 
 /*
- * This file isolates handling of two types of name/value pairs:
+ * This file isolates handling of three types of name/value pairs:
  *
+ * - pcmk_nvpair_t data type
  * - XML attributes (<TAG ... NAME=VALUE ...>)
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
  */
+
+// pcmk_nvpair_t handling
+
+/*!
+ * \internal
+ * \brief Allocate a new name/value pair
+ *
+ * \param[in] name   New name
+ * \param[in] value  New value
+ *
+ * \return Newly allocated name/value pair
+ * \note The caller is responsible for freeing the result with
+ *       \c pcmk__free_nvpair().
+ */
+static pcmk_nvpair_t *
+pcmk__new_nvpair(const char *name, const char *value)
+{
+    pcmk_nvpair_t *nvpair = calloc(1, sizeof(pcmk_nvpair_t));
+
+    CRM_ASSERT(nvpair);
+    nvpair->name = strdup(name);
+    nvpair->value = strdup(value);
+    return nvpair;
+}
+
+/*!
+ * \internal
+ * \brief Free a name/value pair
+ *
+ * \param[in] nvpair  Name/value pair to free
+ */
+static void
+pcmk__free_nvpair(gpointer data)
+{
+    if (data) {
+        pcmk_nvpair_t *nvpair = data;
+
+        free(nvpair->name);
+        free(nvpair->value);
+        free(nvpair);
+    }
+}
+
+/*!
+ * \brief Prepend a name/value pair to a list
+ *
+ * \param[in,out] nvpairs  List to modify
+ * \param[in]     name     New entry's name
+ * \param[in]     value    New entry's value
+ *
+ * \return New head of list
+ * \note The caller is responsible for freeing the list with
+ *       \c pcmk_free_nvpairs().
+ */
+GList *
+pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value)
+{
+    return g_list_prepend(nvpairs, pcmk__new_nvpair(name, value));
+}
+
+/*!
+ * \brief Free a list of name/value pairs
+ *
+ * \param[in] list  List to free
+ */
+void
+pcmk_free_nvpairs(GList *nvpairs)
+{
+    g_list_free_full(nvpairs, pcmk__free_nvpair);
+}
+
+/*!
+ * \internal
+ * \brief Compare two name/value pairs
+ *
+ * \param[in] a  First name/value pair to compare
+ * \param[in] b  Second name/value pair to compare
+ *
+ * \return 0 if a == b, 1 if a > b, -1 if a < b
+ */
+static gint
+pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
+{
+    int rc = 0;
+    const pcmk_nvpair_t *pair_a = a;
+    const pcmk_nvpair_t *pair_b = b;
+
+    CRM_ASSERT(a != NULL);
+    CRM_ASSERT(pair_a->name != NULL);
+
+    CRM_ASSERT(b != NULL);
+    CRM_ASSERT(pair_b->name != NULL);
+
+    rc = strcmp(pair_a->name, pair_b->name);
+    if (rc < 0) {
+        return -1;
+    } else if (rc > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+/*!
+ * \brief Sort a list of name/value pairs
+ *
+ * \param[in,out] list  List to sort
+ *
+ * \return New head of list
+ */
+GList *
+pcmk_sort_nvpairs(GList *list)
+{
+    return g_list_sort(list, pcmk__compare_nvpair);
+}
+
+/*!
+ * \brief Create a list of name/value pairs from an XML node's attributes
+ *
+ * \param[in]  XML to parse
+ *
+ * \return New list of name/value pairs
+ * \note It is the caller's responsibility to free the list with
+ *       \c pcmk_free_nvpairs().
+ */
+GList *
+pcmk_xml_attrs2nvpairs(xmlNode *xml)
+{
+    GList *result = NULL;
+
+    for (xmlAttrPtr iter = pcmk__first_xml_attr(xml); iter != NULL;
+         iter = iter->next) {
+
+        result = pcmk_prepend_nvpair(result,
+                                     (const char *) iter->name,
+                                     (const char *) pcmk__xml_attr_value(iter));
+    }
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Add an XML attribute corresponding to a name/value pair
+ *
+ * Suitable for \c g_list_foreach(), this function adds a NAME=VALUE
+ * XML attribute based on a given name/value pair.
+ *
+ * \param[in]  data       Name/value pair
+ * \param[out] user_data  XML node to add attributes to
+ */
+static void
+pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
+{
+    pcmk_nvpair_t *pair = data;
+    xmlNode *parent = user_data;
+
+    crm_xml_add(parent, pair->name, pair->value);
+}
+
+/*!
+ * \brief Add XML attributes based on a list of name/value pairs
+ *
+ * \param[in]     list  List of name/value pairs
+ * \param[in,out] xml   XML node to add attributes to
+ */
+void
+pcmk_nvpairs2xml_attrs(GList *list, xmlNode *xml)
+{
+    g_list_foreach(list, pcmk__nvpair_add_xml_attr, xml);
+}
 
 // XML attribute handling
 
