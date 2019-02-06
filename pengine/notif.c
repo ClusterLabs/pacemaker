@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -222,6 +222,16 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     add_hash_param(user_data, key, value);
 }
 
+static void
+add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
+{
+    for (GList *item = n_data->keys; item; item = item->next) {
+        pcmk_nvpair_t *nvpair = item->data;
+
+        add_hash_param(action->meta, nvpair->name, nvpair->value);
+    }
+}
+
 static action_t *
 pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
           notify_data_t * n_data, pe_working_set_t * data_set)
@@ -256,7 +266,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     trigger = custom_action(rsc, key, op->task, node,
                             is_set(op->flags, pe_action_optional), TRUE, data_set);
     g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
-    g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
+    add_notify_data_to_action_meta(n_data, trigger);
 
     /* pseudo_notify before notify */
     pe_rsc_trace(rsc, "Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id,
@@ -326,7 +336,6 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     n_data = calloc(1, sizeof(notify_data_t));
     n_data->action = action;
-    n_data->keys = crm_str_table_new();
 
     if (start) {
         /* create pre-event notification wrappers */
@@ -514,6 +523,15 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
     }
 }
 
+#define add_notify_env(n_data, key, value) do {                         \
+         n_data->keys = pcmk_prepend_nvpair(n_data->keys, key, value);  \
+    } while (0)
+
+#define add_notify_env_free(n_data, key, value) do {                    \
+         n_data->keys = pcmk_prepend_nvpair(n_data->keys, key, value);  \
+         free(value); value = NULL;                                     \
+    } while (0)
+
 gboolean
 expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
@@ -536,8 +554,8 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
             required = TRUE;
         }
     }
-    g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"), node_list);
+    add_notify_env_free(n_data, "notify_stop_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_stop_uname", node_list);
 
     if (n_data->start) {
         n_data->start = g_list_sort(n_data->start, sort_notify_entries);
@@ -546,8 +564,8 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
         }
     }
     expand_list(n_data->start, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_start_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_start_uname"), node_list);
+    add_notify_env_free(n_data, "notify_start_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_start_uname", node_list);
 
     if (n_data->demote) {
         n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
@@ -557,8 +575,8 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
     }
 
     expand_list(n_data->demote, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_demote_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_demote_uname"), node_list);
+    add_notify_env_free(n_data, "notify_demote_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_demote_uname", node_list);
 
     if (n_data->promote) {
         n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
@@ -567,50 +585,56 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
         }
     }
     expand_list(n_data->promote, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_promote_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_promote_uname"), node_list);
+    add_notify_env_free(n_data, "notify_promote_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_promote_uname", node_list);
 
     if (n_data->active) {
         n_data->active = g_list_sort(n_data->active, sort_notify_entries);
     }
     expand_list(n_data->active, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_active_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_active_uname"), node_list);
+    add_notify_env_free(n_data, "notify_active_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_active_uname", node_list);
 
     if (n_data->slave) {
         n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
     }
     expand_list(n_data->slave, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_slave_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_slave_uname"), node_list);
+    add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
     if (n_data->master) {
         n_data->master = g_list_sort(n_data->master, sort_notify_entries);
     }
     expand_list(n_data->master, &rsc_list, &node_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_master_resource"), rsc_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_master_uname"), node_list);
+    add_notify_env_free(n_data, "notify_master_resource", rsc_list);
+    add_notify_env_free(n_data, "notify_master_uname", node_list);
 
     if (n_data->inactive) {
         n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
     }
     expand_list(n_data->inactive, &rsc_list, NULL);
-    g_hash_table_insert(n_data->keys, strdup("notify_inactive_resource"), rsc_list);
+    add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
+    if (is_set(data_set->flags, pe_flag_stdout)) {
+        /* If printing to stdout, sort the node list, for consistent
+         * regression test output (while avoiding the performance hit
+         * for the live cluster).
+         */
+        nodes = g_list_sort(nodes, sort_node_uname);
+    }
     expand_node_list(nodes, &node_list, NULL);
-    g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
+    add_notify_env_free(n_data, "notify_available_uname", node_list);
     g_list_free(nodes);
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
     if (safe_str_eq("host", source)) {
         expand_node_list(data_set->nodes, &node_list, &metal_list);
-        g_hash_table_insert(n_data->keys, strdup("notify_all_hosts"),
-                            metal_list);
+        add_notify_env_free(n_data, "notify_all_hosts", metal_list);
     } else {
         expand_node_list(data_set->nodes, &node_list, NULL);
     }
-    g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
+    add_notify_env_free(n_data, "notify_all_uname", node_list);
 
     if (required && n_data->pre) {
         update_action_flags(n_data->pre, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
@@ -677,7 +701,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
                 case stop_rsc:
                 case action_promote:
                 case action_demote:
-                    g_hash_table_foreach(n_data->keys, dup_attr, op->meta);
+                    add_notify_data_to_action_meta(n_data, op);
                     break;
                 default:
                     break;
@@ -790,7 +814,7 @@ free_notification_data(notify_data_t * n_data)
     g_list_free_full(n_data->slave, free);
     g_list_free_full(n_data->active, free);
     g_list_free_full(n_data->inactive, free);
-    g_hash_table_destroy(n_data->keys);
+    pcmk_free_nvpairs(n_data->keys);
     free(n_data);
 }
 
@@ -805,10 +829,8 @@ create_secondary_notification(pe_action_t *action, resource_t *rsc,
     n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, stonith_op,
                                             data_set);
     collect_notification_data(rsc, TRUE, FALSE, n_data);
-    g_hash_table_insert(n_data->keys, strdup("notify_stop_resource"),
-                        strdup(rsc->id));
-    g_hash_table_insert(n_data->keys, strdup("notify_stop_uname"),
-                        strdup(action->node->details->uname));
+    add_notify_env(n_data, "notify_stop_resource", rsc->id);
+    add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
     create_notifications(uber_parent(rsc), n_data, data_set);
     free_notification_data(n_data);
 }
