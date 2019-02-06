@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -178,8 +178,8 @@ crm_node_created(xmlNode *xml)
     }
 }
 
-static void
-crm_attr_dirty(xmlAttr *a) 
+void
+pcmk__mark_xml_attr_dirty(xmlAttr *a) 
 {
     xmlNode *parent = a->parent;
     xml_private_t *p = NULL;
@@ -199,24 +199,6 @@ int get_attr_value(const char *input, size_t offset, size_t max);
 gboolean can_prune_leaf(xmlNode * xml_node);
 
 static int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
-
-static inline const char *
-crm_attr_value(const xmlAttr *attr)
-{
-    if (attr == NULL || attr->children == NULL) {
-        return NULL;
-    }
-    return (const char *) attr->children->content;
-}
-
-static inline xmlAttr *
-crm_first_attr(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    }
-    return xml->properties;
-}
 
 #define XML_PRIVATE_MAGIC (long) 0x81726354
 
@@ -456,7 +438,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         return;
     }
 
-    for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(xml); pIter != NULL; pIter = pIter->next) {
         xmlNode *attr = NULL;
 
         p = pIter->_private;
@@ -499,7 +481,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         change = create_xml_node(change->parent, XML_DIFF_RESULT);
         result = create_xml_node(change, (const char *)xml->name);
 
-        for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(xml); pIter != NULL; pIter = pIter->next) {
             const char *value = crm_element_value(xml, (const char *)pIter->name);
 
             p = pIter->_private;
@@ -538,7 +520,7 @@ __xml_accept_changes(xmlNode * xml)
     xml_private_t *p = xml->_private;
 
     p->flags = xpf_none;
-    pIter = crm_first_attr(xml);
+    pIter = pcmk__first_xml_attr(xml);
 
     while (pIter != NULL) {
         const xmlChar *name = pIter->name;
@@ -1084,7 +1066,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         return;
     }
 
-    for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
+    for (xIter = pcmk__first_xml_attr(patch); xIter != NULL; xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
 
         /* Removing and then restoring the id field would change the ordering of properties */
@@ -1149,7 +1131,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
     CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
 
-    for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
+    for (xIter = pcmk__first_xml_attr(patch); xIter != NULL; xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
         const char *p_value = crm_element_value(patch, p_name);
 
@@ -1586,7 +1568,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             free_xml(match);
 
         } else if(strcmp(op, "modify") == 0) {
-            xmlAttr *pIter = crm_first_attr(match);
+            xmlAttr *pIter = pcmk__first_xml_attr(match);
             xmlNode *attrs = __xml_first_child(first_named_child(change, XML_DIFF_RESULT));
 
             if(attrs == NULL) {
@@ -1600,7 +1582,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
                 xml_remove_prop(match, name);
             }
 
-            for (pIter = crm_first_attr(attrs); pIter != NULL; pIter = pIter->next) {
+            for (pIter = pcmk__first_xml_attr(attrs); pIter != NULL; pIter = pIter->next) {
                 const char *name = (const char *)pIter->name;
                 const char *value = crm_element_value(attrs, name);
 
@@ -1775,9 +1757,9 @@ copy_in_properties(xmlNode * target, xmlNode * src)
     } else {
         xmlAttrPtr pIter = NULL;
 
-        for (pIter = crm_first_attr(src); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(src); pIter != NULL; pIter = pIter->next) {
             const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
+            const char *p_value = pcmk__xml_attr_value(pIter);
 
             expand_plus_plus(target, p_name, p_value);
         }
@@ -1793,9 +1775,9 @@ fix_plus_plus_recursive(xmlNode * target)
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
 
-    for (pIter = crm_first_attr(target); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(target); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
-        const char *p_value = crm_attr_value(pIter);
+        const char *p_value = pcmk__xml_attr_value(pIter);
 
         expand_plus_plus(target, p_name, p_value);
     }
@@ -1942,7 +1924,7 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
 
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
     if(dirty) {
-        crm_attr_dirty(attr);
+        pcmk__mark_xml_attr_dirty(attr);
     }
 
     CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
@@ -1985,7 +1967,7 @@ crm_xml_replace(xmlNode * node, const char *name, const char *value)
 
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
     if(dirty) {
-        crm_attr_dirty(attr);
+        pcmk__mark_xml_attr_dirty(attr);
     }
     CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
     return (char *)attr->children->content;
@@ -2797,10 +2779,10 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
             buffer_print(buffer, max, offset, "<%s", name);
 
             hidden = crm_element_value(data, "hidden");
-            for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+            for (pIter = pcmk__first_xml_attr(data); pIter != NULL; pIter = pIter->next) {
                 xml_private_t *p = pIter->_private;
                 const char *p_name = (const char *)pIter->name;
-                const char *p_value = crm_attr_value(pIter);
+                const char *p_value = pcmk__xml_attr_value(pIter);
                 char *p_copy = NULL;
 
                 if(is_set(p->flags, xpf_deleted)) {
@@ -2908,7 +2890,7 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
         __xml_log_element(log_level, file, function, line,
                           flags, data, depth, options|xml_log_option_open);
 
-        for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(data); pIter != NULL; pIter = pIter->next) {
             const char *aname = (const char*)pIter->name;
 
             p = pIter->_private;
@@ -3023,7 +3005,7 @@ dump_filtered_xml(xmlNode * data, int options, char **buffer, int *offset, int *
         filter[lpc].found = FALSE;
     }
 
-    for (xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
+    for (xIter = pcmk__first_xml_attr(data); xIter != NULL; xIter = xIter->next) {
         bool skip = FALSE;
         const char *p_name = (const char *)xIter->name;
 
@@ -3072,7 +3054,7 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
     } else {
         xmlAttrPtr xIter = NULL;
 
-        for (xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
+        for (xIter = pcmk__first_xml_attr(data); xIter != NULL; xIter = xIter->next) {
             dump_xml_attr(xIter, options, buffer, offset, max);
         }
     }
@@ -3550,14 +3532,14 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
         p->flags |= xpf_processed;
     }
 
-    for (pIter = crm_first_attr(new_xml); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(new_xml); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
 
         /* Assume everything was just created and take it from there */
         p->flags |= xpf_created;
     }
 
-    for (pIter = crm_first_attr(old_xml); pIter != NULL; ) {
+    for (pIter = pcmk__first_xml_attr(old_xml); pIter != NULL; ) {
         xmlAttr *prop = pIter;
         xml_private_t *p = NULL;
         const char *name = (const char *)pIter->name;
@@ -3619,7 +3601,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
         }
     }
 
-    for (pIter = crm_first_attr(new_xml); pIter != NULL; ) {
+    for (pIter = pcmk__first_xml_attr(new_xml); pIter != NULL; ) {
         xmlAttr *prop = pIter;
         xml_private_t *p = pIter->_private;
 
@@ -3631,7 +3613,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
             crm_trace("Created %s@%s=%s", new_xml->name, name, value);
             /* Remove plus create won't work as it will modify the relative attribute ordering */
             if (pcmk__check_acl(new_xml, name, xpf_acl_write)) {
-                crm_attr_dirty(prop);
+                pcmk__mark_xml_attr_dirty(prop);
             } else {
                 xmlUnsetProp(new_xml, prop->name); /* Remove - change not allowed */
             }
@@ -3766,7 +3748,7 @@ can_prune_leaf(xmlNode * xml_node)
         return FALSE;
     }
 
-    for (pIter = crm_first_attr(xml_node); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(xml_node); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
 
         if (strcmp(p_name, XML_ATTR_ID) == 0) {
@@ -3927,9 +3909,9 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     } else if (full) {
         xmlAttrPtr pIter = NULL;
 
-        for (pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(left); pIter != NULL; pIter = pIter->next) {
             const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
+            const char *p_value = pcmk__xml_attr_value(pIter);
 
             xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
         }
@@ -3942,7 +3924,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     }
 
     /* changes to name/value pairs */
-    for (xIter = crm_first_attr(left); xIter != NULL; xIter = xIter->next) {
+    for (xIter = pcmk__first_xml_attr(left); xIter != NULL; xIter = xIter->next) {
         const char *prop_name = (const char *)xIter->name;
         xmlAttrPtr right_attr = NULL;
         xml_private_t *p = NULL;
@@ -3976,9 +3958,9 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             if (full) {
                 xmlAttrPtr pIter = NULL;
 
-                for (pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
+                for (pIter = pcmk__first_xml_attr(left); pIter != NULL; pIter = pIter->next) {
                     const char *p_name = (const char *)pIter->name;
-                    const char *p_value = crm_attr_value(pIter);
+                    const char *p_value = pcmk__xml_attr_value(pIter);
 
                     xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
                 }
@@ -4005,9 +3987,9 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
                     crm_trace("Changes detected to %s in <%s id=%s>", prop_name,
                               crm_element_name(left), id);
-                    for (pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
+                    for (pIter = pcmk__first_xml_attr(left); pIter != NULL; pIter = pIter->next) {
                         const char *p_name = (const char *)pIter->name;
-                        const char *p_value = crm_attr_value(pIter);
+                        const char *p_value = pcmk__xml_attr_value(pIter);
 
                         xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
                     }
@@ -4120,9 +4102,9 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
         /* No need for expand_plus_plus(), just raw speed */
         xmlAttrPtr pIter = NULL;
 
-        for (pIter = crm_first_attr(update); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(update); pIter != NULL; pIter = pIter->next) {
             const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
+            const char *p_value = pcmk__xml_attr_value(pIter);
 
             /* Remove it first so the ordering of the update is preserved */
             xmlUnsetProp(target, (const xmlChar *)p_name);
@@ -4242,9 +4224,9 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     if (can_delete && delete_only) {
         xmlAttrPtr pIter = NULL;
 
-        for (pIter = crm_first_attr(update); pIter != NULL; pIter = pIter->next) {
+        for (pIter = pcmk__first_xml_attr(update); pIter != NULL; pIter = pIter->next) {
             const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
+            const char *p_value = pcmk__xml_attr_value(pIter);
 
             right_val = crm_element_value(child, p_name);
             if (safe_str_neq(p_value, right_val)) {
@@ -4428,9 +4410,9 @@ xml2list(xmlNode * parent)
 
     crm_log_xml_trace(nvpair_list, "Unpacking");
 
-    for (pIter = crm_first_attr(nvpair_list); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(nvpair_list); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
-        const char *p_value = crm_attr_value(pIter);
+        const char *p_value = pcmk__xml_attr_value(pIter);
 
         crm_trace("Added %s=%s", p_name, p_value);
 
@@ -4506,9 +4488,9 @@ sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive)
 
     result = create_xml_node(parent, name);
 
-    for (pIter = crm_first_attr(input); pIter != NULL; pIter = pIter->next) {
+    for (pIter = pcmk__first_xml_attr(input); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
-        const char *p_value = crm_attr_value(pIter);
+        const char *p_value = pcmk__xml_attr_value(pIter);
 
         pair = calloc(1, sizeof(name_value_t));
         pair->name = p_name;

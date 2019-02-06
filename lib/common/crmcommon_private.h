@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2018-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -67,5 +67,21 @@ void pcmk__apply_acl(xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__post_process_acl(xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__mark_xml_attr_dirty(xmlAttr *a);
+
+static inline xmlAttr *
+pcmk__first_xml_attr(const xmlNode *xml)
+{
+    return xml? xml->properties : NULL;
+}
+
+static inline const char *
+pcmk__xml_attr_value(const xmlAttr *attr)
+{
+    return ((attr == NULL) || (attr->children == NULL))? NULL
+           : (const char *) attr->children->content;
+}
 
 #endif  // CRMCOMMON_PRIVATE__H
