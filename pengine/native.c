@@ -1397,23 +1397,36 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
     /* This function is on the critical path and worth optimizing as much as possible */
 
-    resource_t *top = uber_parent(rsc);
-    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
+    pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
+    bool check_unfencing = FALSE;
+    bool check_utilization = FALSE;
+
+    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc,
+                     "Skipping native constraints for unmanaged resource: %s",
+                     rsc->id);
+        return;
+    }
+
+    top = uber_parent(rsc);
 
     // Whether resource requires unfencing
-    bool check_unfencing = is_not_set(rsc->flags, pe_rsc_fence_device)
-                           && is_set(data_set->flags, pe_flag_enable_unfencing)
-                           && is_set(rsc->flags, pe_rsc_needs_unfencing);
+    check_unfencing = is_not_set(rsc->flags, pe_rsc_fence_device)
+                      && is_set(data_set->flags, pe_flag_enable_unfencing)
+                      && is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
-    bool check_utilization = is_set(rsc->flags, pe_rsc_managed)
-                             && (g_hash_table_size(rsc->utilization) > 0)
-                             && safe_str_neq(data_set->placement_strategy, "default");
+    check_utilization = (g_hash_table_size(rsc->utilization) > 0)
+                        && safe_str_neq(data_set->placement_strategy, "default");
 
+    // Order stops before starts (i.e. restart)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                        rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
+                        rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                        pe_order_optional | pe_order_implies_then | pe_order_restart,
+                        data_set);
 
+    // Master/slave ordering: demote before stop, start before promote
     if (top->variant == pe_master || rsc->role > RSC_ROLE_SLAVE) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1424,6 +1437,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                             pe_order_runnable_left, data_set);
     }
 
+    // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
         allowed_nodes = allowed_nodes_as_list(rsc, data_set);
     }
@@ -1462,12 +1476,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 pe_order_implies_then_on_node|pe_order_same_node,
                                 data_set);
         }
-    }
-
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-        g_list_free(allowed_nodes);
-        return;
     }
 
     if (check_utilization) {
