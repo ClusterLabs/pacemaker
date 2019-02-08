@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -38,14 +38,6 @@ const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =
     [CRM_alert_timestamp_usec]     = {"CRM_notify_timestamp_usec",     "CRM_alert_timestamp_usec",     NULL},
     [CRM_alert_exec_time]     = {"CRM_notify_exec_time",     "CRM_alert_exec_time",     NULL}
 };
-
-void
-crm_free_alert_envvar(crm_alert_envvar_t *entry)
-{		
-    free(entry->name);		
-    free(entry->value);		
-    free(entry);		
-}		
 
 /*!
  * \brief Create a new alert entry structure
@@ -86,17 +78,6 @@ crm_free_alert_entry(crm_alert_entry_t *entry)
         }
         free(entry);
     }
-}		
-
-crm_alert_envvar_t *
-crm_dup_alert_envvar(crm_alert_envvar_t *src)
-{		
-    crm_alert_envvar_t *dst = calloc(1, sizeof(crm_alert_envvar_t));		
-
-    CRM_ASSERT(dst);		
-    dst->name = strdup(src->name);		
-    dst->value = src->value?strdup(src->value):NULL;		
-    return dst;		
 }		
 
 /*!

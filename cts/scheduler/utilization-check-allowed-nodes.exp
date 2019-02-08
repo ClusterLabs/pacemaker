@@ -53,7 +53,7 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="2" operation="load_stopped_node1" operation_key="load_stopped_node1">
+      <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -61,7 +61,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <pseudo_event id="1" operation="load_stopped_node2" operation_key="load_stopped_node2">
+      <pseudo_event id="1" operation="load_stopped_node1" operation_key="load_stopped_node1">
         <attributes />
       </pseudo_event>
     </action_set>

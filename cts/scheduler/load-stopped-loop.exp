@@ -244,7 +244,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="106" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a"/>
+        <pseudo_event id="107" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a"/>
       </trigger>
       <trigger>
         <rsc_op id="399" operation="stop" operation_key="license.anbriz.vds-ok.com-vm_stop_0" on_node="v03-b" on_node_uuid="v03-b"/>
@@ -289,7 +289,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="107" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b"/>
+        <pseudo_event id="108" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b"/>
       </trigger>
     </inputs>
   </synapse>
@@ -314,7 +314,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="107" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b"/>
+        <pseudo_event id="108" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b"/>
       </trigger>
       <trigger>
         <rsc_op id="418" operation="stop" operation_key="terminal0.anbriz.vds-ok.com-vm_stop_0" on_node="v03-a" on_node_uuid="v03-a"/>
@@ -359,21 +359,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="106" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a"/>
+        <pseudo_event id="107" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="30">
     <action_set>
-      <pseudo_event id="108" operation="load_stopped_mgmt01" operation_key="load_stopped_mgmt01">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="31">
-    <action_set>
-      <pseudo_event id="107" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b">
+      <pseudo_event id="108" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -383,9 +375,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="32">
+  <synapse id="31">
     <action_set>
-      <pseudo_event id="106" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a">
+      <pseudo_event id="107" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -395,5 +387,12 @@
       </trigger>
     </inputs>
   </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="106" operation="load_stopped_mgmt01" operation_key="load_stopped_mgmt01">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
 </transition_graph>
-
