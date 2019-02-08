@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="load_stopped_node1" operation_key="load_stopped_node1"/>
+        <pseudo_event id="1" operation="load_stopped_node1" operation_key="load_stopped_node1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -34,7 +34,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
+        <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -46,7 +46,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
+        <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
       </trigger>
       <trigger>
         <rsc_op id="4" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
@@ -71,7 +71,15 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="2" operation="load_stopped_node1" operation_key="load_stopped_node1">
+      <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="1" operation="load_stopped_node1" operation_key="load_stopped_node1">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -80,13 +88,5 @@
         <rsc_op id="4" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
-  </synapse>
-  <synapse id="6">
-    <action_set>
-      <pseudo_event id="1" operation="load_stopped_node2" operation_key="load_stopped_node2">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
   </synapse>
 </transition_graph>
