@@ -1710,6 +1710,7 @@ AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
+AC_CONFIG_FILES([abi-check], [chmod +x abi-check])
 AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
 AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
 AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])

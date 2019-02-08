@@ -57,6 +57,7 @@ ylwrap
 
 # Configure targets
 Doxyfile
+/abi-check
 /cts/CTS.py
 /cts/CTSlab.py
 /cts/CTSvars.py

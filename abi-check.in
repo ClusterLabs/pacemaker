@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 # abi-check [-u] <package-name> <version> [...]
 #
