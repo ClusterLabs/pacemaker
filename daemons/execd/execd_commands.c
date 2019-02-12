@@ -914,11 +914,9 @@ static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
     bool recurring = (cmd->interval_ms > 0);
-    lrmd_rsc_t *rsc = NULL;
+    lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
-
-    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
+    cmd->exec_rc = stonith2uniform_rc(cmd->action, rc);
 
     if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
         recurring = FALSE;
@@ -938,11 +936,16 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         } else {
             cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
         }
-        cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
-    } else if (rc) {
+    } else {
         /* Attempt to map return codes to op status if possible */
         switch (rc) {
+            case pcmk_ok:
+                cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
+                if (rsc && safe_str_eq(cmd->action, "start")) {
+                    rsc->stonith_started = 1;
+                }
+                break;
             case -EPROTONOSUPPORT:
                 cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
@@ -952,12 +955,6 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
             default:
                 /* TODO: This looks wrong.  Status should be _DONE and exec_rc set to an error */
                 cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        }
-    } else {
-        /* command successful */
-        cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        if (safe_str_eq(cmd->action, "start") && rsc) {
-            rsc->stonith_started = 1;
         }
     }
 
@@ -1135,8 +1132,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action,
-                                      -ENOTCONN);
+        cmd->exec_rc = stonith2uniform_rc(cmd->action, -ENOTCONN);
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd_finalize(cmd, rsc);
         return;
