@@ -4092,7 +4092,7 @@ xmlNode *
 sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
     xmlNode *child = NULL;
-    GList *nvpairs = NULL;
+    pcmk_nvpairs_t *nvpairs = NULL;
     xmlNode *result = NULL;
     const char *name = NULL;
 

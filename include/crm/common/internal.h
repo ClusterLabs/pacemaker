@@ -148,4 +148,11 @@ crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
     return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
 }
 
+/* name/value pair(s) functions/types (from nvpair.c) */
+
+typedef struct pcmk_nvpair_s {
+    char *name;
+    char *value;
+} pcmk_nvpair_t;
+
 #endif /* CRM_COMMON_INTERNAL__H */

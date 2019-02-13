@@ -225,7 +225,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 static void
 add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
 {
-    for (GList *item = n_data->keys; item; item = item->next) {
+    for (pcmk_nvpairs_t *item = n_data->keys; item; item = item->next) {
         pcmk_nvpair_t *nvpair = item->data;
 
         add_hash_param(action->meta, nvpair->name, nvpair->value);

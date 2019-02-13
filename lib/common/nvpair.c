@@ -69,32 +69,19 @@ pcmk__free_nvpair(gpointer data)
     }
 }
 
-/*!
- * \brief Prepend a name/value pair to a list
- *
- * \param[in,out] nvpairs  List to modify
- * \param[in]     name     New entry's name
- * \param[in]     value    New entry's value
- *
- * \return New head of list
- * \note The caller is responsible for freeing the list with
- *       \c pcmk_free_nvpairs().
- */
-GList *
-pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value)
+/* nvpairs (singly-linked list of nvpair objects) encapsulating datatype
+   + basic operations */
+
+pcmk_nvpairs_t *
+pcmk_prepend_nvpair(pcmk_nvpairs_t *nvpairs, const char *name, const char *value)
 {
-    return g_list_prepend(nvpairs, pcmk__new_nvpair(name, value));
+    return g_slist_prepend(nvpairs, pcmk__new_nvpair(name, value));
 }
 
-/*!
- * \brief Free a list of name/value pairs
- *
- * \param[in] list  List to free
- */
 void
-pcmk_free_nvpairs(GList *nvpairs)
+pcmk_free_nvpairs(pcmk_nvpairs_t *nvpairs)
 {
-    g_list_free_full(nvpairs, pcmk__free_nvpair);
+    g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
 /*!
@@ -128,32 +115,16 @@ pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-/*!
- * \brief Sort a list of name/value pairs
- *
- * \param[in,out] list  List to sort
- *
- * \return New head of list
- */
-GList *
-pcmk_sort_nvpairs(GList *list)
+pcmk_nvpairs_t *
+pcmk_sort_nvpairs(pcmk_nvpairs_t *nvpairs)
 {
-    return g_list_sort(list, pcmk__compare_nvpair);
+    return g_slist_sort(nvpairs, pcmk__compare_nvpair);
 }
 
-/*!
- * \brief Create a list of name/value pairs from an XML node's attributes
- *
- * \param[in]  XML to parse
- *
- * \return New list of name/value pairs
- * \note It is the caller's responsibility to free the list with
- *       \c pcmk_free_nvpairs().
- */
-GList *
+pcmk_nvpairs_t *
 pcmk_xml_attrs2nvpairs(xmlNode *xml)
 {
-    GList *result = NULL;
+    pcmk_nvpairs_t *result = NULL;
 
     for (xmlAttrPtr iter = pcmk__first_xml_attr(xml); iter != NULL;
          iter = iter->next) {
@@ -169,7 +140,7 @@ pcmk_xml_attrs2nvpairs(xmlNode *xml)
  * \internal
  * \brief Add an XML attribute corresponding to a name/value pair
  *
- * Suitable for \c g_list_foreach(), this function adds a NAME=VALUE
+ * Suitable for \c g_slist_foreach(), this function adds a NAME=VALUE
  * XML attribute based on a given name/value pair.
  *
  * \param[in]  data       Name/value pair
@@ -184,16 +155,10 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
     crm_xml_add(parent, pair->name, pair->value);
 }
 
-/*!
- * \brief Add XML attributes based on a list of name/value pairs
- *
- * \param[in]     list  List of name/value pairs
- * \param[in,out] xml   XML node to add attributes to
- */
 void
-pcmk_nvpairs2xml_attrs(GList *list, xmlNode *xml)
+pcmk_nvpairs2xml_attrs(pcmk_nvpairs_t *nvpairs, xmlNode *xml)
 {
-    g_list_foreach(list, pcmk__nvpair_add_xml_attr, xml);
+    g_slist_foreach(nvpairs, pcmk__nvpair_add_xml_attr, xml);
 }
 
 // XML attribute handling
