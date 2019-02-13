@@ -10,6 +10,8 @@
 default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
 
 -include Makefile
+# order important
+-include maint/make/speed-up.mk
 
 PACKAGE		?= pacemaker
 
