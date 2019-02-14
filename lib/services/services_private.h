@@ -42,6 +42,8 @@ struct svc_action_private_s {
 
     int stdout_fd;
     mainloop_io_t *stdout_gsource;
+
+    int stdin_fd;
 #if SUPPORT_DBUS
     DBusPendingCall* pending;
     unsigned timerid;
