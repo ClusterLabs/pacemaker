@@ -1789,6 +1789,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-pengine.pc                            \
                 lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-cluster.pc                            \
+                lib/pacemaker-internal.pc                           \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
