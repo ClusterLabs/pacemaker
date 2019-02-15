@@ -10,6 +10,7 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
+#include <crm/stonith-ng.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -219,7 +220,10 @@ static struct crm_option long_options[] = {
     { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
     {
         "validate", no_argument, NULL, 0,
-        "\t\tCall the validate-all action of the local given resource"
+        "\t\tCall the validate-all action.  There are two different things that can be validated.  One\n"
+        "\t\t\t\tmethod is to validate the resource given by the -r option.  The other method is to validate\n"
+        "\t\t\t\ta not-yet-existing resource.  This method requires the --class, --agent, and --provider\n"
+        "\t\t\t\targuments, plus at least one --option argument."
     },
     {
         "cleanup", no_argument, NULL, 'C',
@@ -339,6 +343,29 @@ static struct crm_option long_options[] = {
         "\t(Advanced) Bypass the cluster and check the state of a resource on the local node."
     },
 
+    { "-spacer-", no_argument, NULL, '-', "\nValidate Options:" },
+    {
+        "class", required_argument, NULL, 0,
+        "\tThe standard the resource agent confirms to (for example, ocf).\n"
+        "\t\t\t\tUse with --agent, --provider, --option, and --validate."
+    },
+    {
+        "agent", required_argument, NULL, 0,
+        "\tThe agent to use (for example, IPaddr).\n"
+        "\t\t\t\tUse with --class, --provider, --option, and --validate."
+    },
+    {
+        "provider", required_argument, NULL, 0,
+        "\tThe vendor that supplies the resource agent (for example, heartbeat).\n"
+        "\t\t\t\tuse with --class, --agent, --option, and --validate."
+    },
+    {
+        "option", required_argument, NULL, 0,
+        "\tSpecify a device configuration parameter as NAME=VALUE\n"
+        "\t\t\t\t(may be specified multiple times).  Use with --validate\n"
+        "\t\t\t\tand without the -r option."
+    },
+
     { "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
     {
         "node", required_argument, NULL, 'N',
@@ -427,6 +454,13 @@ main(int argc, char **argv)
 {
     char rsc_cmd = 'L';
 
+    const char *v_class = NULL;
+    const char *v_agent = NULL;
+    const char *v_provider = NULL;
+    char *name = NULL;
+    char *value = NULL;
+    GHashTable *validate_options = NULL;
+
     const char *rsc_id = NULL;
     const char *host_uname = NULL;
     const char *prop_name = NULL;
@@ -450,6 +484,7 @@ main(int argc, char **argv)
     bool recursive = FALSE;
     char *our_pid = NULL;
 
+    bool validate_cmdline = FALSE; /* whether we are just validating based on command line options */
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    // whether command requires controller connection
@@ -467,6 +502,8 @@ main(int argc, char **argv)
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
                     "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
+
+    validate_options = crm_str_table_new();
 
     while (1) {
         flag = crm_get_option_long(argc, argv, &option_index, &longname);
@@ -588,6 +625,43 @@ main(int argc, char **argv)
                     }
                     lrmd_api_delete(lrmd_conn);
                     crm_exit(exit_code);
+
+                } else if (safe_str_eq("class", longname)) {
+                    if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
+                        if (BE_QUIET == FALSE) {
+                            fprintf(stdout, "Standard %s does not support parameters\n",
+                                    optarg);
+                        }
+
+                        crm_exit(exit_code);
+                    } else {
+                        v_class = optarg;
+                    }
+
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+
+                } else if (safe_str_eq("agent", longname)) {
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+                    v_agent = optarg;
+
+                } else if (safe_str_eq("provider", longname)) {
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+                    v_provider = optarg;
+
+                } else if (safe_str_eq("option", longname)) {
+                    crm_info("Scanning: --option %s", optarg);
+                    rc = pcmk_scan_nvpair(optarg, &name, &value);
+                    if (rc != 2) {
+                        fprintf(stderr, "Invalid option: --option %s: %s", optarg, pcmk_strerror(rc));
+                        argerr++;
+                    } else {
+                        crm_info("Got: '%s'='%s'", name, value);
+                    }
+
+                    g_hash_table_replace(validate_options, name, value);
 
                 } else {
                     crm_err("Unhandled long option: %s", longname);
@@ -792,6 +866,49 @@ main(int argc, char **argv)
 
     if (optind > argc) {
         ++argerr;
+    }
+
+    // Sanity check validating from command line parameters.  If everything checks out,
+    // go ahead and run the validation.  This way we don't need a CIB connection.
+    if (validate_cmdline == TRUE) {
+        // -r cannot be used with any of --class, --agent, or --provider
+        if (rsc_id != NULL) {
+            CMD_ERR("--resource cannot be used with --class, --agent, and --provider");
+            argerr++;
+
+        // If --class, --agent, or --provider are given, --validate must also be given.
+        } else if (!safe_str_eq(rsc_long_cmd, "validate")) {
+            CMD_ERR("--class, --agent, and --provider require --validate");
+            argerr++;
+
+        // Not all of --class, --agent, and --provider need to be given.  Not all
+        // classes support the concept of a provider.  Check that what we were given
+        // is valid.
+        } else if (crm_str_eq(v_class, "stonith", TRUE)) {
+            if (v_provider != NULL) {
+                CMD_ERR("stonith does not support providers");
+                argerr++;
+
+            } else if (stonith_agent_exists(v_agent, 0) == FALSE) {
+                CMD_ERR("%s is not a known stonith agent", v_agent ? v_agent : "");
+                argerr++;
+            }
+
+        } else if (resources_agent_exists(v_class, v_provider, v_agent) == FALSE) {
+            CMD_ERR("%s:%s:%s is not a known resource",
+                    v_class ? v_class : "",
+                    v_provider ? v_provider : "",
+                    v_agent ? v_agent : "");
+            argerr++;
+        }
+
+        if (argerr == 0) {
+            rc = cli_resource_execute_from_params("test", v_class, v_provider, v_agent,
+                                                  "validate-all", validate_options,
+                                                  override_params, timeout_ms);
+            exit_code = crm_errno2exit(rc);
+            return crm_exit(exit_code);
+        }
     }
 
     if (argerr) {

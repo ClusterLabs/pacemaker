@@ -2467,3 +2467,30 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     free(name);
     return when;
 }
+
+gboolean
+stonith_agent_exists(const char *agent, int timeout)
+{
+    stonith_t *st = NULL;
+    stonith_key_value_t *devices = NULL;
+    stonith_key_value_t *dIter = NULL;
+    gboolean rc = FALSE;
+
+    if (agent == NULL) {
+        return rc;
+    }
+
+    st = stonith_api_new();
+    st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
+
+    for (dIter = devices; dIter != NULL; dIter = dIter->next) {
+        if (crm_str_eq(dIter->value, agent, TRUE)) {
+            rc = TRUE;
+            break;
+        }
+    }
+
+    stonith_key_value_freeall(devices, 1, 1);
+    stonith_api_delete(st);
+    return rc;
+}

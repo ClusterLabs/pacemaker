@@ -106,6 +106,7 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 crm_resource_SOURCES	= crm_resource.c crm_resource_ban.c crm_resource_runtime.c crm_resource_print.c fake_transition.c
 crm_resource_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
+			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la 		\
 			  $(top_builddir)/lib/services/libcrmservice.la \
 			  $(top_builddir)/lib/pengine/libpe_status.la 	\

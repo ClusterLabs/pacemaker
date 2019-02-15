@@ -911,6 +911,26 @@ resources_os_list_ocf_agents(const char *provider)
     return result;
 }
 
+gboolean
+services__ocf_agent_exists(const char *provider, const char *agent)
+{
+    char *buf = NULL;
+    gboolean rc = FALSE;
+    struct stat st;
+
+    if (provider == NULL || agent == NULL) {
+        return rc;
+    }
+
+    buf = crm_strdup_printf(OCF_ROOT_DIR "/resource.d/%s/%s", provider, agent);
+    if (stat(buf, &st) == 0) {
+        rc = TRUE;
+    }
+
+    free(buf);
+    return rc;
+}
+
 #if SUPPORT_NAGIOS
 GList *
 resources_os_list_nagios_agents(void)
@@ -935,5 +955,25 @@ resources_os_list_nagios_agents(void)
     }
     g_list_free_full(plugin_list, free);
     return result;
+}
+
+gboolean
+services__nagios_agent_exists(const char *name)
+{
+    char *buf = NULL;
+    gboolean rc = FALSE;
+    struct stat st;
+
+    if (name == NULL) {
+        return rc;
+    }
+
+    buf = crm_strdup_printf(NAGIOS_PLUGIN_DIR "/%s", name);
+    if (stat(buf, &st) == 0) {
+        rc = TRUE;
+    }
+
+    free(buf);
+    return rc;
 }
 #endif

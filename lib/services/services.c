@@ -21,6 +21,7 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/services.h>
+#include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
 #include "services_lsb.h"
@@ -1085,4 +1086,91 @@ resources_list_agents(const char *standard, const char *provider)
     }
 
     return NULL;
+}
+
+gboolean
+resources_agent_exists(const char *standard, const char *provider, const char *agent)
+{
+    GList *standards = NULL;
+    GList *providers = NULL;
+    GListPtr iter = NULL;
+    gboolean rc = FALSE;
+    gboolean has_providers = FALSE;
+
+    standards = resources_list_standards();
+    for (iter = standards; iter != NULL; iter = iter->next) {
+        if (crm_str_eq(iter->data, standard, TRUE)) {
+            rc = TRUE;
+            break;
+        }
+    }
+
+    if (rc == FALSE) {
+        goto done;
+    }
+
+    rc = FALSE;
+
+    has_providers = is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    if (has_providers == TRUE && provider != NULL) {
+        providers = resources_list_providers(standard);
+        for (iter = providers; iter != NULL; iter = iter->next) {
+            if (crm_str_eq(iter->data, provider, TRUE)) {
+                rc = TRUE;
+                break;
+            }
+        }
+    } else if (has_providers == FALSE && provider == NULL) {
+        rc = TRUE;
+    }
+
+    if (rc == FALSE) {
+        goto done;
+    }
+
+    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE)) {
+        if (services__lsb_agent_exists(agent)) {
+            rc = TRUE;
+#if SUPPORT_SYSTEMD
+        } else if (systemd_unit_exists(agent)) {
+            rc = TRUE;
+#endif
+
+#if SUPPORT_UPSTART
+        } else if (upstart_job_exists(agent)) {
+            rc = TRUE;
+#endif
+        } else {
+            rc = FALSE;
+        }
+
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
+        rc = services__ocf_agent_exists(provider, agent);
+
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_LSB)) {
+        rc = services__lsb_agent_exists(agent);
+
+#if SUPPORT_SYSTEMD
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
+        rc = systemd_unit_exists(agent);
+#endif
+
+#if SUPPORT_UPSTART
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+        rc = upstart_job_exists(agent);
+#endif
+
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+        rc = services__nagios_agent_exists(agent);
+#endif
+
+    } else {
+        rc = FALSE;
+    }
+
+done:
+    g_list_free(standards);
+    g_list_free(providers);
+    return rc;
 }
