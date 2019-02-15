@@ -7,7 +7,8 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_HEADERS	        = pcmki_sched_allocate.h \
+noinst_HEADERS	        = pcmki_error.h \
+						  pcmki_sched_allocate.h \
 						  pcmki_sched_notif.h \
 						  pcmki_sched_transition.h \
 						  pcmki_sched_utils.h \

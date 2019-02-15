@@ -8,6 +8,7 @@
 #ifndef PACEMAKER_INTERNAL__H
 #  define PACEMAKER_INTERNAL__H
 
+#  include <pcmki/pcmki_error.h>
 #  include <pcmki/pcmki_sched_allocate.h>
 #  include <pcmki/pcmki_sched_notif.h>
 #  include <pcmki/pcmki_sched_transition.h>

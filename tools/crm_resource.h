@@ -101,9 +101,3 @@ void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
                       node_t *node);
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
-#define CMD_ERR(fmt, args...) do {		\
-	crm_warn(fmt, ##args);			\
-	fprintf(stderr, fmt"\n", ##args);		\
-    } while(0)
-

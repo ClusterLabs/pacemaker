@@ -6,6 +6,7 @@
  */
 
 #include <crm_resource.h>
+#include <pacemaker-internal.h>
 
 #include <sys/param.h>
 
