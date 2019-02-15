@@ -46,7 +46,7 @@ typedef struct pe__order_constraint_s {
 } pe__ordering_t;
 
 typedef struct notify_data_s {
-    GList *keys;                // Environment variable name/value pairs
+    GSList *keys;               // Environment variable name/value pairs
 
     const char *action;
 

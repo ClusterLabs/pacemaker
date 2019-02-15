@@ -28,11 +28,11 @@ typedef struct pcmk_nvpair_s {
     char *value;
 } pcmk_nvpair_t;
 
-GList *pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value);
-void pcmk_free_nvpairs(GList *nvpairs);
-GList *pcmk_sort_nvpairs(GList *list);
-GList *pcmk_xml_attrs2nvpairs(xmlNode *xml);
-void pcmk_nvpairs2xml_attrs(GList *list, xmlNode *xml);
+GSList *pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value);
+void pcmk_free_nvpairs(GSList *nvpairs);
+GSList *pcmk_sort_nvpairs(GSList *list);
+GSList *pcmk_xml_attrs2nvpairs(xmlNode *xml);
+void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
                                const char *name, const char *value);
