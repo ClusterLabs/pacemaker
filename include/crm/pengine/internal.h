@@ -355,4 +355,6 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
                                         enum pe_check_parameters,
                                         pe_working_set_t*));
 void pe__free_param_checks(pe_working_set_t *data_set);
+int count_resources(pe_working_set_t * data_set, pe_resource_t * rsc);
+char *get_node_display_name(pe_node_t *node);
 #endif

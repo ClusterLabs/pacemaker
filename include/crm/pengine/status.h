@@ -26,6 +26,13 @@ extern "C" {
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 #  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.
+#  include <crm/cib/internal.h>
+
+typedef struct pe_node_s pe_node_t;
+typedef struct pe_action_s pe_action_t;
+typedef struct pe_resource_s pe_resource_t;
+typedef struct pe_working_set_s pe_working_set_t;
+
 #  include <crm/pengine/complex.h>
 
 const char *rsc_printable_id(pe_resource_t *rsc);

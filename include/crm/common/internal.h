@@ -17,6 +17,9 @@
 
 #include <crm/common/logging.h>
 
+/* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
 /* internal I/O utilities (from io.c) */
 
 char *generate_series_filename(const char *directory, const char *series, int sequence,
