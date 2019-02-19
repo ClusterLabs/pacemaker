@@ -87,7 +87,7 @@ extract_one() {
     # Get a clean checkout at the desired commit
     BUILD_ROOT=".ABI-build"
     rm -rf "$BUILD_ROOT"
-    git archive --prefix "$BUILD_ROOT/" "$TAG" | tar xv
+    ( cd .. ; git archive --prefix "doc/$BUILD_ROOT/" "$TAG" | tar xv )
     if [ $? -ne 0 ]; then
         exit
     fi

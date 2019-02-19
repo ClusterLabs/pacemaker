@@ -56,8 +56,6 @@ test-driver
 ylwrap
 
 # Configure targets
-Doxyfile
-/abi-check
 /cts/CTS.py
 /cts/CTSlab.py
 /cts/CTSvars.py
@@ -85,6 +83,7 @@ Doxyfile
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
+/doc/Doxyfile
 /extra/logrotate/pacemaker
 /extra/resources/ClusterMon
 /extra/resources/HealthSMART
@@ -114,10 +113,6 @@ publican.cfg
 *.8
 *.8.xml
 *.8.html
-doc/shared/en-US/images/pcmk-*.png
-doc/shared/en-US/images/Policy-Engine-*.png
-doc/*/tmp/**
-doc/*/publish
 /daemons/attrd/pacemaker-attrd
 /daemons/based/pacemaker-based
 /daemons/based/cibmon
@@ -131,12 +126,23 @@ doc/*/publish
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
-doc/api/*
-doc/Clusters_from_Scratch.txt
-doc/Pacemaker_Explained.txt
-doc/acls.html
-doc/crm_fencing.html
-doc/publican-catalog*
+/doc/*/tmp/**
+/doc/*/publish
+/doc/*.build
+/doc/*/en-US/Ap-*.xml
+/doc/*/en-US/Ch-*.xml
+/doc/.ABI-build
+/doc/HTML
+/doc/abi_dumps
+/doc/abi-check
+/doc/acls.html
+/doc/api/*
+/doc/compat_reports
+/doc/crm_fencing.html
+/doc/publican-catalog*
+/doc/shared/en-US/*.xml
+/doc/shared/en-US/images/pcmk-*.png
+/doc/shared/en-US/images/Policy-Engine-*.png
 /maint/testcc
 scratch
 /tools/attrd_updater
@@ -156,19 +162,6 @@ scratch
 xml/crm.dtd
 xml/pacemaker*.rng
 xml/versions.rng
-doc/shared/en-US/*.xml
-doc/Clusters_from_Scratch.build
-doc/Clusters_from_Scratch/en-US/Ap-*.xml
-doc/Clusters_from_Scratch/en-US/Ch-*.xml
-doc/Pacemaker_Administration.build
-doc/Pacemaker_Administration/en-US/Ch-*.xml
-doc/Pacemaker_Development.build
-doc/Pacemaker_Development/en-US/Ch-*.xml
-doc/Pacemaker_Explained.build
-doc/Pacemaker_Explained/en-US/Ch-*.xml
-doc/Pacemaker_Explained/en-US/Ap-*.xml
-doc/Pacemaker_Remote.build
-doc/Pacemaker_Remote/en-US/Ch-*.xml
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
@@ -187,11 +180,19 @@ lib/gnu/stdalign.h
 /xml/assets/diffview.js
 
 # Formerly built files (helps when jumping back and forth in checkout)
+/.ABI-build
+/Doxyfile
+/HTML
+/abi_dumps
+/abi-check
+/compat_reports
 /attrd
 /cib
 /coverage.sh
 /crmd
 /cts/HBDummy
+/doc/Clusters_from_Scratch.txt
+/doc/Pacemaker_Explained.txt
 /fencing
 /lrmd
 /mcp
@@ -199,15 +200,9 @@ lib/gnu/stdalign.h
 
 #Other 
 mock
-HTML
 pacemaker*.spec
 coverity-*
-
-compat_reports
-.ABI-build
-abi_dumps
 logs
-
 *.patch
 *.diff
 *.sed
