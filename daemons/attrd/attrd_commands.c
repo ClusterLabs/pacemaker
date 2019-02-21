@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -37,8 +37,9 @@
  *     1       1.1.13   ATTRD_OP_UPDATE (with F_ATTR_REGEX), ATTRD_OP_QUERY
  *     1       1.1.15   ATTRD_OP_UPDATE_BOTH, ATTRD_OP_UPDATE_DELAY
  *     2       1.1.17   ATTRD_OP_CLEAR_FAILURE
+ *     3       2.0.2    ATTRD_OP_PEER_CLEAR,ATTRD_OP_ATTR_REMOVE
  */
-#define ATTRD_PROTOCOL_VERSION "2"
+#define ATTRD_PROTOCOL_VERSION "3"
 
 int last_cib_op_done = 0;
 GHashTable *attributes = NULL;
@@ -49,6 +50,8 @@ void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
+void attrd_attr_remove(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_clear(const char *host, const char *source, bool filter);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -57,6 +60,23 @@ send_attrd_message(crm_node_t * node, xmlNode * data)
     crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
     attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
+}
+
+/*!
+ * \internal
+ * \brief Trigger a (potentially delayed) write-out of an attribute
+ *
+ * \param[in] a  Attribute to write out
+ */
+static void
+trigger_write(attribute_t *a)
+{
+    if (a->timeout_ms && a->timer && a->force_write == FALSE) {
+        crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
+        mainloop_timer_start(a->timer);
+    } else {
+        write_or_elect_attribute(a);
+    }
 }
 
 static gboolean
@@ -174,7 +194,7 @@ create_attribute(xmlNode *xml)
 
 /*!
  * \internal
- * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
+ * \brief Propagate a client peer-remove or peer-clear request to all peers
  *
  * \param[in] client_name Name of client that made request (for log messages)
  * \param[in] xml         Root of request XML
@@ -182,7 +202,7 @@ create_attribute(xmlNode *xml)
  * \return void
  */
 void
-attrd_client_peer_remove(const char *client_name, xmlNode *xml)
+attrd_client_peer_command(const char *client_name, xmlNode *xml)
 {
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -588,6 +608,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
         attrd_peer_remove(host, TRUE, peer->uname);
 
+    } else if (safe_str_eq(op, ATTRD_OP_ATTR_REMOVE) 
+               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
+        attrd_attr_remove(peer, xml);
+
+    } else if (safe_str_eq(op, ATTRD_OP_PEER_CLEAR)) {
+        attrd_peer_clear(host, peer->uname, FALSE);
+
     } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
@@ -676,6 +703,105 @@ attrd_peer_remove(const char *host, gboolean uncache, const char *source)
 
 /*!
  * \internal
+ * \brief Remove all attributes from both memory and CIB for a node
+ *
+ * \param[in] peer  Peer that sent clear request
+ * \param[in] xml   Request XML
+ */
+void
+attrd_attr_remove(crm_node_t *peer, xmlNode *xml)
+{
+    xmlNode *child = NULL;
+
+    //Todo : Now we only receive deletion of a single attribute, but it also supports multiple attributes.
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        GHashTableIter iter;
+        attribute_t *a = NULL;
+        attribute_value_t *v = NULL;
+        const char *host = NULL, *attr = NULL;
+
+        host = crm_element_value(child, F_ATTRD_HOST);
+        attr = crm_element_value(child, F_ATTRD_ATTRIBUTE);
+        
+        if (host == NULL || attr == NULL) {
+            continue;
+        }
+
+        a = g_hash_table_lookup(attributes, attr); 
+        if(a == NULL) {
+            crm_info("Attribute %s no exists", attr);
+            continue;
+        }
+
+        crm_notice("Removing %s attributes id = %s for peer %s", host, attr, peer->uname);
+
+        g_hash_table_iter_init(&iter, a->values);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
+            if (safe_str_eq(v->nodename, host)) {
+                if(g_hash_table_remove(a->values, v->nodename)) {
+                    crm_debug("Removing clear attribute %s[%s] for peer %s : completed", a->id, host, peer->uname);
+                }
+                break;
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remove all attributes from both memory and CIB for a node
+ *
+ * \param[in] host     Name of node to purge
+ * \param[in] source   Who requested removal (for logging)
+ */
+void
+attrd_peer_clear(const char *host, const char *source, bool filter)
+{
+    attribute_t *a = NULL;
+    GHashTableIter attr_iter;
+
+    CRM_CHECK(host && source, return);
+    crm_notice("Clearing all %s attributes for %s", host, source);
+
+    g_hash_table_iter_init(&attr_iter, attributes);
+    while (g_hash_table_iter_next(&attr_iter, NULL, (gpointer *) &a)) {
+        attribute_value_t *v = g_hash_table_lookup(a->values, host);
+        gboolean need_clear = FALSE;
+
+        if (v) {
+            /* Even if the attribute is set to NULL on stop, we do not evaluate v->current to delete it. */
+            if (filter) {
+                crm_debug("Marking attributes of lost node : %s[%s]", a->id, host);
+                v->node_left = TRUE;
+                if (v->need_clear) {
+                    need_clear = TRUE;
+                }
+            } else {
+                crm_debug("Marking the requested node for attribute clearing : %s[%s] = %s", a->id, host, v->current);
+                v->need_clear = TRUE;
+                if (v->is_remote || v->node_left) {
+                    /* In the case of a remote node, we immediately perform attribute clearing. */
+                    /* Because there is no attrd process on the remote node. */
+                    /* Even if attrd detects detachment first, it also deletes the attribute. */
+                    need_clear = TRUE;
+                } 
+            }
+
+            if (need_clear) {
+                crm_info("Clearing %s[%s]=%s for %s",
+                      a->id, host, v->current, source);
+                free(v->current);
+                v->current = NULL;
+                a->changed = TRUE;
+                a->force_write = TRUE;
+                trigger_write(a);
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Return host's hash table entry (creating one if needed)
  *
  * \param[in] values Hash table of values
@@ -713,6 +839,9 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         CRM_ASSERT(v->nodename != NULL);
 
         v->is_remote = is_remote;
+
+        v->need_clear = FALSE; 
+        v->node_left  = FALSE;
         g_hash_table_replace(values, v->nodename, v);
     }
     return(v);
@@ -754,6 +883,25 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     free_xml(sync);
 }
 
+static void
+reset_remove_attr_flag(const char *host)
+{    attribute_t *a = NULL;
+    GHashTableIter attr_iter;
+    g_hash_table_iter_init(&attr_iter, attributes);
+    
+    while (g_hash_table_iter_next(&attr_iter, NULL, (gpointer *) &a)) {
+        attribute_value_t *v = g_hash_table_lookup(a->values, host);
+        if (v) {
+            if (safe_str_neq(v->nodename, host)) {
+                crm_debug("Reset clear attribute %s[%s]=%s for %s",
+                                      a->id, host, v->current, host);
+                v->need_clear = FALSE;
+                v->node_left = FALSE;
+            }
+        }
+    }
+}
+
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
@@ -770,6 +918,12 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
         return;
+    }
+
+    /* When only attrd is restarted, if the attribute remains, clear the flag. */
+    /* Todo : However, in the current situation, if attrd restarts, the attribute will be deleted. */
+    if (safe_str_eq(attr, CRM_ATTR_PROTOCOL) &&  safe_str_neq(host, attrd_cluster->uname) && (host != NULL)) {
+        reset_remove_attr_flag(host);
     }
 
     update_both = ((op == NULL) // ATTRD_OP_SYNC_RESPONSE has no F_ATTRD_TASK
@@ -872,12 +1026,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         a->changed = TRUE;
 
         // Write out new value or start dampening timer
-        if (a->timeout_ms && a->timer) {
-            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
-            mainloop_timer_start(a->timer);
-        } else {
-            write_or_elect_attribute(a);
-        }
+        trigger_write(a);
 
     } else {
         if (is_force_write && a->timeout_ms && a->timer) {
@@ -956,8 +1105,20 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                     attrd_peer_sync(peer, NULL);
                 }
             } else {
+#if 0
+                /* TODO The controller should ask us to clear attributes from
+                 * lost nodes, so we shouldn't do that here. But we need to
+                 * consider corner cases such as the controller not being up.
+                 */
                 // Remove all attribute values associated with lost nodes
                 attrd_peer_remove(peer->uname, FALSE, "loss");
+#else
+                /* If the attrd of the node receiving the ATTRD_OP_PEER_CLEAR message leaves, 
+                 * delete the attribute.
+                 */
+                attrd_peer_clear(peer->uname, attrd_cluster->uname, TRUE);
+#endif
+
                 remove_voter = TRUE;
             }
             break;
@@ -1056,6 +1217,40 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             mainloop_timer_start(a->timer);
         }
     }
+
+    if (a->changed == FALSE && rc == pcmk_ok) {
+
+retry_clear:
+
+        /* Deletes the attribute that was updated successfully from the memory table. */
+        /* It also sends a delete message to attrd of another node. */
+        /* TODO : In the ATTRD_OP_ATTR_REMOVE message, only notification of a single attribute is performed, but multiple should be done simultaneously.*/
+        g_hash_table_iter_init(&iter, a->values);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
+            if (v->need_clear && v->node_left && safe_str_neq(v->nodename, attrd_cluster->uname)) {
+
+                char *host = strdup(v->nodename);
+                xmlNode *attr_remove = create_xml_node(NULL, __FUNCTION__);
+                crm_xml_add(attr_remove, F_ATTRD_TASK, ATTRD_OP_ATTR_REMOVE);
+
+                /* Notify attrd of cluster member to delete attribute. */
+                build_attribute_xml(attr_remove, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
+                                v->nodename, v->nodeid, v->current, FALSE);
+
+                send_attrd_message(NULL, attr_remove);
+                free_xml(attr_remove);
+
+                /* Delete attribute of own node(Writer). */
+                if(g_hash_table_remove(a->values, v->nodename)) {
+                    crm_debug("Removing clear attribute %s[%s] for peer %s : completed.(Writer)", a->id, host, attrd_cluster->uname);
+                    free(host);
+                    /* Deleted the attribute from the table, so I will search from the beginning. */
+                    goto retry_clear;   
+                }
+                free(host);
+            }
+        }
+    }
 }
 
 void
@@ -1077,7 +1272,7 @@ write_attributes(bool all, bool ignore_delay)
 
         if(all || a->changed) {
             /* When forced write flag is set, ignore delay. */
-            write_attribute(a, (a->force_write ? TRUE : ignore_delay));
+            write_attribute(a, ignore_delay);
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }
@@ -1185,7 +1380,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
             return;
 
         } else if (mainloop_timer_running(a->timer)) {
-            if (ignore_delay) {
+            if (ignore_delay || a->force_write) {
                 /* 'refresh' forces a write of the current value of all attributes
                  * Cancel any existing timers, we're writing it NOW
                  */

@@ -261,9 +261,10 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)
+        || safe_str_eq(op, ATTRD_OP_PEER_CLEAR)) {
         attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client->name, xml);
+        attrd_client_peer_command(client->name, xml);
 
     } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
         attrd_send_ack(client, id, flags);
