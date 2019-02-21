@@ -1457,6 +1457,9 @@ stonith_level_remove(xmlNode *msg, char **desc)
  * \param[out] output  Unused
  *
  * \return -EINPROGRESS on success, -errno otherwise
+ * \note If the action is monitor, the device must be registered via the API
+ *       (CIB registration is not sufficient), because monitor should not be
+ *       possible unless the device is "started" (API registered).
  */
 static int
 stonith_device_action(xmlNode * msg, char **output)
@@ -1476,7 +1479,10 @@ stonith_device_action(xmlNode * msg, char **output)
     }
 
     device = g_hash_table_lookup(device_list, id);
-    if ((device == NULL) || !device->api_registered) {
+    if ((device == NULL)
+        || (!device->api_registered && !strcmp(action, "monitor"))) {
+
+        // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API %s action request because device %s not found",
                  action, id);
         return -ENODEV;
