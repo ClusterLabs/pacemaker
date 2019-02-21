@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -73,6 +73,7 @@ void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void erase_status_tag(const char *uname, const char *tag, int options);
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
+void update_attrd_clear_node(const char *host, gboolean is_remote);
 void update_attrd_remote_node_removed(const char *host, const char *user_name);
 void update_attrd_clear_failures(const char *host, const char *rsc,
                                  const char *op, const char *interval_spec,

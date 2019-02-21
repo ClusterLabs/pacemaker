@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -81,6 +81,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 {
     int rc = pcmk_ok;
     crm_node_t *peer = NULL;
+    bool is_remote = FALSE;
 
     /* We (usually) rely on the membership layer to do node_update_cluster,
      * and the peer status callback to do node_update_peer, because the node
@@ -99,6 +100,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     CRM_CHECK(peer != NULL, return);
 
+    is_remote = (peer->flags & crm_remote_node);
     if (peer->state == NULL) {
         /* Usually, we rely on the membership layer to update the cluster state
          * in the CIB. However, if the node has never been seen, do it here, so
@@ -118,7 +120,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     node_state = create_node_state_update(peer, flags, NULL, __FUNCTION__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
-    if (peer->flags & crm_remote_node) {
+    if (is_remote) {
         time_t now = time(NULL);
         char *now_s = crm_itoa(now);
         crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
@@ -139,7 +141,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
 
     erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+    update_attrd_clear_node(peer->uname, is_remote);
 
     free_xml(node_state);
     return;

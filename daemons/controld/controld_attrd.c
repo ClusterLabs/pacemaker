@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2006-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -30,6 +30,12 @@ log_attrd_error(const char *host, const char *name, const char *value,
             crm_err("Could not clear failure attributes for %s on %s node %s%s: %s "
                     CRM_XS " rc=%d", (name? name : "all resources"), node_type,
                     host, when, pcmk_strerror(rc), rc);
+            break;
+
+        case 'c':
+            crm_err("Could not clear transient attributes for %s node %s%s: %s "
+                    CRM_XS " rc=%d",
+                    node_type, host, when, pcmk_strerror(rc), rc);
             break;
 
         case 'C':
@@ -149,7 +155,22 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
     crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
               host);
+
+    /* Purge the node from attrd's caches, then purge the node's transient
+     * attributes from the CIB. Attrd can't write out the changes to the CIB
+     * after the node has been purged, and there would be a race condition if we
+     * asked attrd to clear the CIB (which might get delayed) then immediately
+     * purge the node from cache.
+     */
     update_attrd_helper(host, NULL, NULL, NULL, user_name, TRUE, 'C');
+    erase_status_tag(host, XML_TAG_TRANSIENT_NODEATTRS, crmd_cib_smart_opt());
+}
+
+void
+update_attrd_clear_node(const char *host, gboolean is_remote)
+{
+    crm_trace("Asking attribute manager to clear all attributes for %s", host);
+    update_attrd_helper(host, NULL, NULL, NULL, NULL, is_remote, 'c');
 }
 
 void
