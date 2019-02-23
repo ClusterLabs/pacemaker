@@ -180,11 +180,20 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
 }
 
 static void
+stop_recurring_timer(lrmd_cmd_t *cmd)
+{
+    if (cmd) {
+        if (cmd->stonith_recurring_id) {
+            g_source_remove(cmd->stonith_recurring_id);
+        }
+        cmd->stonith_recurring_id = 0;
+    }
+}
+
+static void
 free_lrmd_cmd(lrmd_cmd_t * cmd)
 {
-    if (cmd->stonith_recurring_id) {
-        g_source_remove(cmd->stonith_recurring_id);
-    }
+    stop_recurring_timer(cmd);
     if (cmd->delay_id) {
         g_source_remove(cmd->delay_id);
     }
@@ -230,6 +239,16 @@ stonith_recurring_op_helper(gpointer data)
     mainloop_set_trigger(rsc->work);
 
     return FALSE;
+}
+
+static inline void
+start_recurring_timer(lrmd_cmd_t *cmd)
+{
+    if (cmd && (cmd->interval_ms > 0)) {
+        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
+                                                  stonith_recurring_op_helper,
+                                                  cmd);
+    }
 }
 
 static gboolean
@@ -300,8 +319,7 @@ merge_dup:
     if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* if we are waiting for the next interval, kick it off now */
         if (dup_pending == TRUE) {
-            g_source_remove(cmd->stonith_recurring_id);
-            cmd->stonith_recurring_id = 0;
+            stop_recurring_timer(cmd);
             stonith_recurring_op_helper(cmd);
         }
 
@@ -959,12 +977,8 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     }
 
     if (recurring && rsc) {
-        if (cmd->stonith_recurring_id) {
-            g_source_remove(cmd->stonith_recurring_id);
-        }
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
-                                                  stonith_recurring_op_helper,
-                                                  cmd);
+        stop_recurring_timer(cmd);
+        start_recurring_timer(cmd);
     }
 
     cmd_finalize(cmd, rsc);
