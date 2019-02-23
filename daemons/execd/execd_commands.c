@@ -931,26 +931,24 @@ action_complete(svc_action_t * action)
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
-    bool recurring = (cmd->interval_ms > 0);
+    // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
     cmd->exec_rc = stonith2uniform_rc(cmd->action, rc);
 
     if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
-        recurring = FALSE;
-        /* do nothing */
+        // No need to remap status if cancelled
 
     } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
         // The device is not registered with the fencer
 
-        if (recurring) {
+        if (cmd->interval_ms > 0) {
             /* If we get here, the fencer somehow lost the registration of a
              * previously active device (possibly due to crash and respawn). In
              * that case, we need to indicate that the recurring monitor needs
              * to be cancelled.
              */
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            recurring = FALSE;
         } else {
             cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
         }
@@ -976,8 +974,17 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         }
     }
 
-    if (recurring && rsc) {
-        stop_recurring_timer(cmd);
+    /* The recurring timer should not be running at this point in any case, but
+     * as a failsafe, stop it if it is.
+     */
+    stop_recurring_timer(cmd);
+
+    /* Reschedule this command if appropriate. If a recurring command is *not*
+     * rescheduled, its status must be PCMK_LRM_OP_CANCELLED, otherwise it will
+     * not be removed from recurring_ops by cmd_finalize().
+     */
+    if (rsc && (cmd->interval_ms > 0)
+        && (cmd->lrmd_op_status != PCMK_LRM_OP_CANCELLED)) {
         start_recurring_timer(cmd);
     }
 
