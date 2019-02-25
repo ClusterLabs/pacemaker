@@ -80,10 +80,10 @@ pcmk__free_nvpair(gpointer data)
  * \note The caller is responsible for freeing the list with
  *       \c pcmk_free_nvpairs().
  */
-GList *
-pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value)
+GSList *
+pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value)
 {
-    return g_list_prepend(nvpairs, pcmk__new_nvpair(name, value));
+    return g_slist_prepend(nvpairs, pcmk__new_nvpair(name, value));
 }
 
 /*!
@@ -92,9 +92,9 @@ pcmk_prepend_nvpair(GList *nvpairs, const char *name, const char *value)
  * \param[in] list  List to free
  */
 void
-pcmk_free_nvpairs(GList *nvpairs)
+pcmk_free_nvpairs(GSList *nvpairs)
 {
-    g_list_free_full(nvpairs, pcmk__free_nvpair);
+    g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
 /*!
@@ -135,10 +135,10 @@ pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
  *
  * \return New head of list
  */
-GList *
-pcmk_sort_nvpairs(GList *list)
+GSList *
+pcmk_sort_nvpairs(GSList *list)
 {
-    return g_list_sort(list, pcmk__compare_nvpair);
+    return g_slist_sort(list, pcmk__compare_nvpair);
 }
 
 /*!
@@ -150,10 +150,10 @@ pcmk_sort_nvpairs(GList *list)
  * \note It is the caller's responsibility to free the list with
  *       \c pcmk_free_nvpairs().
  */
-GList *
+GSList *
 pcmk_xml_attrs2nvpairs(xmlNode *xml)
 {
-    GList *result = NULL;
+    GSList *result = NULL;
 
     for (xmlAttrPtr iter = pcmk__first_xml_attr(xml); iter != NULL;
          iter = iter->next) {
@@ -169,7 +169,7 @@ pcmk_xml_attrs2nvpairs(xmlNode *xml)
  * \internal
  * \brief Add an XML attribute corresponding to a name/value pair
  *
- * Suitable for \c g_list_foreach(), this function adds a NAME=VALUE
+ * Suitable for glib list iterators, this function adds a NAME=VALUE
  * XML attribute based on a given name/value pair.
  *
  * \param[in]  data       Name/value pair
@@ -191,9 +191,9 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
  * \param[in,out] xml   XML node to add attributes to
  */
 void
-pcmk_nvpairs2xml_attrs(GList *list, xmlNode *xml)
+pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 {
-    g_list_foreach(list, pcmk__nvpair_add_xml_attr, xml);
+    g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
 }
 
 // XML attribute handling
