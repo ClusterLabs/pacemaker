@@ -303,18 +303,21 @@ typedef struct stonith_api_operations_s
     int (*remove_notification)(stonith_t *st, const char *event);
 
     /*!
-     * \brief Register a callback to receive the result of an async call id
+     * \brief Register a callback to receive the result of an asynchronous call
      *
-     * \param call_id, The call id to register the callback for.
-     * \param timeout, The default timeout period to wait until this callback expires
-     * \param options, Option flags, st_opt_timeout_updates and st_opt_report_only_success are the
-     *                 only valid options for this function.
-     * \param userdate, A pointer that will be handed back in the callback.
-     * \param callback_name, Unique name given to callback
-     * \param callback, The callback function
+     * \param[in] call_id        The call ID to register callback for
+     * \param[in] timeout        Default time to wait until callback expires
+     * \param[in] options        Bitmask of \c stonith_call_options (respects
+     *                           \c st_opt_timeout_updates and
+     *                           \c st_opt_report_only_success)
+     * \param[in] userdata       Pointer that will be given to callback
+     * \param[in] callback_name  Unique name to identify callback
+     * \param[in] callback       The callback function to register
      *
-     * \retval 0 success
-     * \retval negative error code on failure.
+     * \return \c TRUE on success, \c FALSE if call_id is negative, -errno otherwise
+     *
+     * \todo This function should return \c pcmk_ok on success, and \c call_id
+     *       when negative, but that would break backward compatibility.
      */
     int (*register_callback)(stonith_t *st,
         int call_id,

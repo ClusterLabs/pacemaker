@@ -108,7 +108,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
+        <pseudo_event id="20" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
       </trigger>
       <trigger>
         <rsc_op id="59" operation="stop" operation_key="xu-test2_stop_0" on_node="xfc3" on_node_uuid="16843011"/>
@@ -174,7 +174,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="20" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
+        <pseudo_event id="19" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
       </trigger>
       <trigger>
         <rsc_op id="64" operation="stop" operation_key="xu-test3_stop_0" on_node="xfc1" on_node_uuid="16843009"/>
@@ -240,7 +240,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
+        <pseudo_event id="21" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
       </trigger>
       <trigger>
         <rsc_op id="69" operation="stop" operation_key="xu-test4_stop_0" on_node="xfc0" on_node_uuid="16843008"/>
@@ -351,7 +351,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
+        <pseudo_event id="20" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -376,7 +376,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
+        <pseudo_event id="20" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1"/>
       </trigger>
       <trigger>
         <rsc_op id="79" operation="stop" operation_key="xu-test6_stop_0" on_node="xfc3" on_node_uuid="16843011"/>
@@ -421,7 +421,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="20" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
+        <pseudo_event id="19" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -446,7 +446,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="20" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
+        <pseudo_event id="19" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0"/>
       </trigger>
       <trigger>
         <rsc_op id="84" operation="stop" operation_key="xu-test7_stop_0" on_node="xfc1" on_node_uuid="16843009"/>
@@ -491,7 +491,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
+        <pseudo_event id="21" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -516,7 +516,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
+        <pseudo_event id="21" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2"/>
       </trigger>
       <trigger>
         <rsc_op id="89" operation="stop" operation_key="xu-test9_stop_0" on_node="xfc0" on_node_uuid="16843008"/>
@@ -567,7 +567,22 @@
   </synapse>
   <synapse id="42">
     <action_set>
-      <pseudo_event id="21" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1">
+      <pseudo_event id="21" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="xu-test12_stop_0" on_node="xfc2" on_node_uuid="16843010"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="74" operation="stop" operation_key="xu-test5_stop_0" on_node="xfc2" on_node_uuid="16843010"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <pseudo_event id="20" operation="load_stopped_xfc1" operation_key="load_stopped_xfc1">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -580,9 +595,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="43">
+  <synapse id="44">
     <action_set>
-      <pseudo_event id="20" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0">
+      <pseudo_event id="19" operation="load_stopped_xfc0" operation_key="load_stopped_xfc0">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -592,21 +607,6 @@
       </trigger>
       <trigger>
         <rsc_op id="89" operation="stop" operation_key="xu-test9_stop_0" on_node="xfc0" on_node_uuid="16843008"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="44">
-    <action_set>
-      <pseudo_event id="19" operation="load_stopped_xfc2" operation_key="load_stopped_xfc2">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="54" operation="stop" operation_key="xu-test12_stop_0" on_node="xfc2" on_node_uuid="16843010"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="74" operation="stop" operation_key="xu-test5_stop_0" on_node="xfc2" on_node_uuid="16843010"/>
       </trigger>
     </inputs>
   </synapse>

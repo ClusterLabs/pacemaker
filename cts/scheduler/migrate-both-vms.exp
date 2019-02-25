@@ -333,7 +333,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01"/>
+        <pseudo_event id="28" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -358,7 +358,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01"/>
+        <pseudo_event id="28" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01"/>
       </trigger>
       <trigger>
         <rsc_op id="89" operation="stop" operation_key="vm-compute-test_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
@@ -406,7 +406,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="28" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02"/>
+        <pseudo_event id="29" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02"/>
       </trigger>
       <trigger>
         <rsc_op id="93" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
@@ -434,7 +434,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="28" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02"/>
+        <pseudo_event id="29" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02"/>
       </trigger>
       <trigger>
         <pseudo_event id="90" operation="start" operation_key="vm-compute-test_start_0"/>
@@ -462,15 +462,7 @@
   </synapse>
   <synapse id="30">
     <action_set>
-      <pseudo_event id="30" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="31">
-    <action_set>
-      <pseudo_event id="29" operation="load_stopped_cvmh04" operation_key="load_stopped_cvmh04">
+      <pseudo_event id="30" operation="load_stopped_cvmh04" operation_key="load_stopped_cvmh04">
         <attributes />
       </pseudo_event>
     </action_set>
@@ -480,9 +472,17 @@
       </trigger>
     </inputs>
   </synapse>
+  <synapse id="31">
+    <action_set>
+      <pseudo_event id="29" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
   <synapse id="32">
     <action_set>
-      <pseudo_event id="28" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02">
+      <pseudo_event id="28" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01">
         <attributes />
       </pseudo_event>
     </action_set>

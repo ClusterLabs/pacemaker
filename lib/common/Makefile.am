@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -32,7 +32,7 @@ libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS)
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c	\
 			  iso8601.c remote.c mainloop.c logging.c watchdog.c	\
 			  schemas.c strings.c xpath.c attrd_client.c alerts.c	\
-			  operations.c pid.c results.c acl.c agents.c
+			  operations.c pid.c results.c acl.c agents.c nvpair.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1297,7 +1297,7 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
 
 // Check whether a resource or any of its children is known on node
 static bool
-rsc_known_on(pe_resource_t *rsc, pe_node_t *node)
+rsc_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 {
     if (rsc->children) {
         for (GList *child_iter = rsc->children; child_iter != NULL;
@@ -1326,7 +1326,7 @@ rsc_known_on(pe_resource_t *rsc, pe_node_t *node)
 
 // Look for an instance of clone that is known on node
 static pe_resource_t *
-find_instance_on(pe_resource_t *clone, pe_node_t *node)
+find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 {
     for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;

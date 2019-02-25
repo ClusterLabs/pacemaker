@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -26,10 +26,11 @@ extern "C" {
 #  include <errno.h>
 #  include <fcntl.h>
 
-#  include <crm/crm.h>
-
 #  include <libxml/tree.h>
 #  include <libxml/xpath.h>
+
+#  include <crm/crm.h>
+#  include <crm/common/nvpair.h>
 
 /* Define compression parameters for IPC messages
  *
@@ -47,15 +48,6 @@ extern "C" {
 
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);
-GHashTable *xml2list(xmlNode * parent);
-
-xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
-                               const char *name, const char *value);
-
-void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
-void hash2field(gpointer key, gpointer value, gpointer user_data);
-void hash2metafield(gpointer key, gpointer value, gpointer user_data);
-void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
 
 xmlDoc *getDocPtr(xmlNode * node);
 
@@ -80,43 +72,6 @@ void fix_plus_plus_recursive(xmlNode * target);
  *
  */
 xmlNode *create_xml_node(xmlNode * parent, const char *name);
-
-/*
- * Make a copy of name and value and use the copied memory to create
- * an attribute for node.
- *
- * If node, name or value are NULL, nothing is done.
- *
- * If name or value are an empty string, nothing is done.
- *
- * Returns FALSE on failure and TRUE on success.
- *
- */
-const char *crm_xml_add(xmlNode * node, const char *name, const char *value);
-
-const char *crm_xml_replace(xmlNode * node, const char *name, const char *value);
-
-const char *crm_xml_add_int(xmlNode * node, const char *name, int value);
-const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
-
-
-/*!
- * \brief Add a boolean attribute to an XML object
- *
- * Add an attribute with the value XML_BOOLEAN_TRUE or XML_BOOLEAN_FALSE
- * as appropriate to an XML object.
- *
- * \param[in,out] node   XML object to add attribute to
- * \param[in]     name   Name of attribute to add
- * \param[in]     value  Boolean whose value will be tested
- *
- * \return Pointer to newly created XML attribute's content, or NULL on error
- */
-static inline const char *
-crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
-{
-    return crm_xml_add(node, name, (value? "true" : "false"));
-}
 
 /*
  *
@@ -186,11 +141,6 @@ int find_xml_children(xmlNode ** children, xmlNode * root,
                       const char *tag, const char *field, const char *value,
                       gboolean search_matches);
 
-int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
-int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
-int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
-                              const char *name_usec, struct timeval *dest);
-char *crm_element_value_copy(const xmlNode *data, const char *name);
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
@@ -198,26 +148,6 @@ static inline const char *
 crm_element_name(const xmlNode *xml)
 {
     return xml? (const char *)(xml->name) : NULL;
-}
-
-const char *crm_element_value(const xmlNode *data, const char *name);
-
-/*!
- * \brief Copy an element from one XML object to another
- *
- * \param[in]     obj1     Source XML
- * \param[in,out] obj2     Destination XML
- * \param[in]     element  Name of element to copy
- *
- * \return Pointer to copied value (from source)
- */
-static inline const char *
-crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
-{
-    const char *value = crm_element_value(obj1, element);
-
-    crm_xml_add(obj2, element, value);
-    return value;
 }
 
 gboolean xml_has_children(const xmlNode * root);
