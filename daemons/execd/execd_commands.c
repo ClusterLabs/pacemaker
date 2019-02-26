@@ -633,16 +633,36 @@ ocf2uniform_rc(int rc)
 static int
 stonith2uniform_rc(const char *action, int rc)
 {
-    if (rc == -ENODEV) {
-        if (safe_str_eq(action, "stop")) {
+    switch (rc) {
+        case pcmk_ok:
             rc = PCMK_OCF_OK;
-        } else if (safe_str_eq(action, "start")) {
-            rc = PCMK_OCF_NOT_INSTALLED;
-        } else {
-            rc = PCMK_OCF_NOT_RUNNING;
-        }
-    } else if (rc != 0) {
-        rc = PCMK_OCF_UNKNOWN_ERROR;
+            break;
+
+        case -ENODEV:
+            /* This should be possible only for probes in practice, but
+             * interpret for all actions to be safe.
+             */
+            if (safe_str_eq(action, "monitor")) {
+                rc = PCMK_OCF_NOT_RUNNING;
+            } else if (safe_str_eq(action, "stop")) {
+                rc = PCMK_OCF_OK;
+            } else {
+                rc = PCMK_OCF_NOT_INSTALLED;
+            }
+            break;
+
+        case -EOPNOTSUPP:
+            rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
+            break;
+
+        case -ETIME:
+        case -ETIMEDOUT:
+            rc = PCMK_OCF_TIMEOUT;
+            break;
+
+        default:
+            rc = PCMK_OCF_UNKNOWN_ERROR;
+            break;
     }
     return rc;
 }
@@ -928,6 +948,67 @@ action_complete(svc_action_t * action)
     cmd_finalize(cmd, rsc);
 }
 
+/*!
+ * \internal
+ * \brief Determine operation status of a stonith operation
+ *
+ * Non-stonith resource operations get their operation status directly from the
+ * service library, but the fencer does not have an equivalent, so we must infer
+ * an operation status from the fencer API's return code.
+ *
+ * \param[in] action       Name of action performed on stonith resource
+ * \param[in] interval_ms  Action interval
+ * \param[in] rc           Action result from fencer
+ *
+ * \return Operation status corresponding to fencer API return code
+ */
+static int
+stonith_rc2status(const char *action, guint interval_ms, int rc)
+{
+    int status = PCMK_LRM_OP_DONE;
+
+    switch (rc) {
+        case pcmk_ok:
+            break;
+
+        case -EOPNOTSUPP:
+        case -EPROTONOSUPPORT:
+            status = PCMK_LRM_OP_NOTSUPPORTED;
+            break;
+
+        case -ETIME:
+        case -ETIMEDOUT:
+            status = PCMK_LRM_OP_TIMEOUT;
+            break;
+
+        case -ENOTCONN:
+        case -ECOMM:
+            // Couldn't talk to fencer
+            status = PCMK_LRM_OP_ERROR;
+            break;
+
+        case -ENODEV:
+            // The device is not registered with the fencer
+
+            if (safe_str_neq(action, "monitor")) {
+                status = PCMK_LRM_OP_ERROR;
+
+            } else if (interval_ms > 0) {
+                /* If we get here, the fencer somehow lost the registration of a
+                 * previously active device (possibly due to crash and respawn). In
+                 * that case, we need to indicate that the recurring monitor needs
+                 * to be cancelled.
+                 */
+                status = PCMK_LRM_OP_CANCELLED;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return status;
+}
+
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
@@ -936,41 +1017,19 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 
     cmd->exec_rc = stonith2uniform_rc(cmd->action, rc);
 
-    if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
-        // No need to remap status if cancelled
+    /* This function may be called with status already set to cancelled, if a
+     * pending action was aborted. Otherwise, we need to determine status from
+     * the fencer return code.
+     */
+    if (cmd->lrmd_op_status != PCMK_LRM_OP_CANCELLED) {
+        cmd->lrmd_op_status = stonith_rc2status(cmd->action, cmd->interval_ms,
+                                                rc);
 
-    } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
-        // The device is not registered with the fencer
-
-        if (cmd->interval_ms > 0) {
-            /* If we get here, the fencer somehow lost the registration of a
-             * previously active device (possibly due to crash and respawn). In
-             * that case, we need to indicate that the recurring monitor needs
-             * to be cancelled.
-             */
-            cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-        } else {
-            cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        }
-
-    } else {
-        /* Attempt to map return codes to op status if possible */
-        switch (rc) {
-            case pcmk_ok:
-                cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-                if (rsc && safe_str_eq(cmd->action, "start")) {
-                    rsc->stonith_started = 1;
-                }
-                break;
-            case -EPROTONOSUPPORT:
-                cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-            case -ETIME:
-                cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
-                break;
-            default:
-                /* TODO: This looks wrong.  Status should be _DONE and exec_rc set to an error */
-                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+        // Certain successful actions change the known state of the resource
+        if (rsc && (rc == pcmk_ok)) {
+            if (safe_str_eq(cmd->action, "start")) {
+                rsc->stonith_started = 1;
+            }
         }
     }
 
