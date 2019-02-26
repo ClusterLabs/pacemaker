@@ -134,7 +134,7 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
                              rsc_id, notify_type, op_type);
 }
 
-char *
+static char *
 generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 {
     CRM_CHECK(transition_key != NULL, return NULL);

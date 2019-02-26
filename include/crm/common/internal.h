@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 the Pacemaker project contributors
+ * Copyright 2015-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,8 +61,6 @@ char *generate_op_key(const char *rsc_id, const char *op_type,
                       guint interval_ms);
 char *generate_notify_key(const char *rsc_id, const char *notify_type,
                           const char *op_type);
-char *generate_transition_magic(const char *transition_key, int op_status,
-                                int op_rc);
 char *generate_transition_key(int action, int transition_id, int target_rc,
                               const char *node);
 void filter_action_parameters(xmlNode *param_set, const char *version);
