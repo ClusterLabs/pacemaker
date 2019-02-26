@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2015 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef ALERT_INTERNAL_H
@@ -27,11 +16,6 @@
 
 /* Default-Format-String used to pass timestamps to the alerts scripts */
 #  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
-
-typedef struct {
-    char *name;
-    char *value;
-}  crm_alert_envvar_t;
 
 enum crm_alert_flags {
     crm_alert_none         = 0x0000,
@@ -80,10 +64,8 @@ enum crm_alert_keys_e {
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];
 
 crm_alert_entry_t *crm_dup_alert_entry(crm_alert_entry_t *entry);
-crm_alert_envvar_t *crm_dup_alert_envvar(crm_alert_envvar_t *src);
 crm_alert_entry_t *crm_alert_entry_new(const char *id, const char *path);
 void crm_free_alert_entry(crm_alert_entry_t *entry);
-void crm_free_alert_envvar(crm_alert_envvar_t *entry);
 void crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
                           const char *value);
 void crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,

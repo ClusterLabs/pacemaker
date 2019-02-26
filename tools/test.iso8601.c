@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2005-2019 Andrew Beekhof <andrew@beekhof.net>
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -102,7 +102,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, 0);
+                return crm_help(flag, 0);
                 break;
             case 'n':
                 date_time_s = "now";
@@ -143,7 +143,7 @@ main(int argc, char **argv)
 
         if (date_time == NULL) {
             fprintf(stderr, "Internal error: couldn't determine 'now'!\n");
-            crm_help('?', 1);
+            return crm_help('?', 1);
         }
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
@@ -155,7 +155,7 @@ main(int argc, char **argv)
 
         if (date_time == NULL) {
             fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
-            crm_help('?', 1);
+            return crm_help('?', 1);
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
@@ -168,7 +168,7 @@ main(int argc, char **argv)
 
         if (duration == NULL) {
             fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
-            crm_help('?', 1);
+            return crm_help('?', 1);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
         crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 
         if (interval == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
-            crm_help('?', 1);
+            return crm_help('?', 1);
         }
         log_time_period(LOG_TRACE, interval,
                         print_options | crm_time_log_date | crm_time_log_timeofday);

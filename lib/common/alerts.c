@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -47,14 +47,6 @@ const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =
     [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL}
 };
 
-void
-crm_free_alert_envvar(crm_alert_envvar_t *entry)
-{		
-    free(entry->name);		
-    free(entry->value);		
-    free(entry);		
-}		
-
 /*!
  * \brief Create a new alert entry structure
  *
@@ -94,17 +86,6 @@ crm_free_alert_entry(crm_alert_entry_t *entry)
         }
         free(entry);
     }
-}		
-
-crm_alert_envvar_t *
-crm_dup_alert_envvar(crm_alert_envvar_t *src)
-{		
-    crm_alert_envvar_t *dst = calloc(1, sizeof(crm_alert_envvar_t));		
-
-    CRM_ASSERT(dst);		
-    dst->name = strdup(src->name);		
-    dst->value = src->value?strdup(src->value):NULL;		
-    return dst;		
 }		
 
 /*!

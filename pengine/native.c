@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -1363,18 +1363,70 @@ rsc_avoids_remote_nodes(resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Return allowed nodes as (possibly sorted) list
+ *
+ * Convert a resource's hash table of allowed nodes to a list. If printing to
+ * stdout, sort the list, to keep action ID numbers consistent for regression
+ * test output (while avoiding the performance hit on a live cluster).
+ *
+ * \param[in] rsc       Resource to check for allowed nodes
+ * \param[in] data_set  Cluster working set
+ *
+ * \return List of resource's allowed nodes
+ * \note Callers should take care not to rely on the list being sorted.
+ */
+static GList *
+allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    GList *allowed_nodes = NULL;
+
+    if (rsc->allowed_nodes) {
+        allowed_nodes = g_hash_table_get_values(rsc->allowed_nodes);
+    }
+
+    if (is_set(data_set->flags, pe_flag_stdout)) {
+        allowed_nodes = g_list_sort(allowed_nodes, sort_node_uname);
+    }
+    return allowed_nodes;
+}
+
 void
 native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
     /* This function is on the critical path and worth optimizing as much as possible */
 
-    resource_t *top = uber_parent(rsc);
-    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-    gboolean is_stonith = is_set(rsc->flags, pe_rsc_fence_device);
+    pe_resource_t *top = NULL;
+    GList *allowed_nodes = NULL;
+    bool check_unfencing = FALSE;
+    bool check_utilization = FALSE;
 
+    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc,
+                     "Skipping native constraints for unmanaged resource: %s",
+                     rsc->id);
+        return;
+    }
+
+    top = uber_parent(rsc);
+
+    // Whether resource requires unfencing
+    check_unfencing = is_not_set(rsc->flags, pe_rsc_fence_device)
+                      && is_set(data_set->flags, pe_flag_enable_unfencing)
+                      && is_set(rsc->flags, pe_rsc_needs_unfencing);
+
+    // Whether a non-default placement strategy is used
+    check_utilization = (g_hash_table_size(rsc->utilization) > 0)
+                        && safe_str_neq(data_set->placement_strategy, "default");
+
+    // Order stops before starts (i.e. restart)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                        rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
+                        rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                        pe_order_optional | pe_order_implies_then | pe_order_restart,
+                        data_set);
 
+    // Master/slave ordering: demote before stop, start before promote
     if (top->variant == pe_master || rsc->role > RSC_ROLE_SLAVE) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1385,16 +1437,17 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                             pe_order_runnable_left, data_set);
     }
 
-    if (is_stonith == FALSE
-        && is_set(data_set->flags, pe_flag_enable_unfencing)
-        && is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        /* Check if the node needs to be unfenced first */
-        node_t *node = NULL;
-        GHashTableIter iter;
+    // Certain checks need allowed nodes
+    if (check_unfencing || check_utilization || rsc->container) {
+        allowed_nodes = allowed_nodes_as_list(rsc, data_set);
+    }
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+    if (check_unfencing) {
+        /* Check if the node needs to be unfenced first */
+
+        for (GList *item = allowed_nodes; item; item = item->next) {
+            pe_node_t *node = item->data;
+            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -1425,15 +1478,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-        return;
-    }
-
-    if (g_hash_table_size(rsc->utilization) > 0
-        && safe_str_neq(data_set->placement_strategy, "default")) {
-        GHashTableIter iter;
-        node_t *next = NULL;
+    if (check_utilization) {
         GListPtr gIter = NULL;
 
         pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
@@ -1454,8 +1499,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 NULL, load_stopped_task, load_stopped, pe_order_load, data_set);
         }
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&next)) {
+        for (GList *item = allowed_nodes; item; item = item->next) {
+            pe_node_t *next = item->data;
             char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
             action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
@@ -1515,10 +1560,9 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             /* Force the resource on the Pacemaker Remote node instead of
              * colocating the resource with the container resource.
              */
-            GHashTableIter iter;
-            node_t *node = NULL;
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            for (GList *item = allowed_nodes; item; item = item->next) {
+                pe_node_t *node = item->data;
+
                 if (node->details->remote_rsc != remote_rsc) {
                     node->weight = -INFINITY;
                 }
@@ -1552,11 +1596,12 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (rsc->is_remote_node || is_stonith) {
+    if (rsc->is_remote_node || is_set(rsc->flags, pe_rsc_fence_device)) {
         /* don't allow remote nodes to run stonith devices
          * or remote connection resources.*/
         rsc_avoids_remote_nodes(rsc);
     }
+    g_list_free(allowed_nodes);
 }
 
 void
