@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -151,16 +153,24 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     CRM_CHECK(op_rc != NULL, return FALSE);
     CRM_CHECK(op_status != NULL, return FALSE);
 
-    key = calloc(1, strlen(magic) + 1);
+#ifdef SSCANF_HAS_M
+    res = sscanf(magic, "%d:%d;%ms", op_status, op_rc, &key);
+#else
+    key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
-    if (res != 3) {
-        crm_warn("Only found %d items in: '%s'", res, magic);
-        free(key);
-        return FALSE;
+#endif
+    if (res == EOF) {
+        crm_err("Could not decode transition information '%s': %s",
+                magic, pcmk_strerror(errno));
+        result = FALSE;
+    } else if (res < 3) {
+        crm_warn("Transition information '%s' incomplete (%d of 3 expected items)",
+                 magic, res);
+        result = FALSE;
+    } else {
+        CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id,
+                                        target_rc), result = FALSE);
     }
-
-    CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc), result = FALSE);
-
     free(key);
     return result;
 }
