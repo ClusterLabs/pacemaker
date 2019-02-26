@@ -1153,13 +1153,9 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = stonith2uniform_rc(cmd->action, -ENOTCONN);
-        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        cmd_finalize(cmd, rsc);
-        return;
-    }
+        rc = -ENOTCONN;
 
-    if (safe_str_eq(cmd->action, "start")) {
+    } else if (safe_str_eq(cmd->action, "start")) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == 0) {
             do_monitor = TRUE;
