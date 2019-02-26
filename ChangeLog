@@ -1,3 +1,10 @@
+* Mon Feb 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc5
+- Changesets: 17
+- Diff:       15 files changed, 1037 insertions(+), 677 deletions(-)
+
+- Changes since Pacemaker-2.0.1-rc4
+  + scheduler: regression test compatibility with glib 2.59.0
+
 * Tue Jan 29 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc4
 - Changesets: 42
  15 files changed, 216 insertions(+), 137 deletions(-)
