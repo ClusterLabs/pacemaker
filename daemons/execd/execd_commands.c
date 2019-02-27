@@ -1026,9 +1026,11 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
                                                 rc);
 
         // Certain successful actions change the known state of the resource
-        if (rsc && (rc == pcmk_ok)) {
+        if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
             if (safe_str_eq(cmd->action, "start")) {
                 rsc->stonith_started = 1;
+            } else if (safe_str_eq(cmd->action, "stop")) {
+                rsc->stonith_started = 0;
             }
         }
     }
@@ -1151,12 +1153,13 @@ execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
  * \return pcmk_ok on success, -errno otherwise
  */
 static inline int
-execd_stonith_stop(stonith_t *stonith_api, lrmd_rsc_t *rsc)
+execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
 {
-    int rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
-                                              rsc->rsc_id);
-    rsc->stonith_started = 0;
-    return rc;
+    /* @TODO Failure would indicate a problem communicating with fencer;
+     * perhaps we should try reconnecting and retrying a few times?
+     */
+    return stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
+                                            rsc->rsc_id);
 }
 
 /*!
