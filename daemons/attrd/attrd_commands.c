@@ -1218,6 +1218,8 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         }
     }
 
+    /* TODO : Even if it has already been deleted and failed to update cib, it is necessary to delete it from memory. */
+
     if (a->changed == FALSE && rc == pcmk_ok) {
 
 retry_clear:
