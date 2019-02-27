@@ -258,34 +258,16 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
     const char *this_event = NULL;
     const char *ignore_s = "";
 
-    /* Remap operation status based on return code */
+    // Remap operation status to DONE or ERROR based on return code
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
 
-    /* Process OP status */
-    switch (op_status) {
-        case PCMK_LRM_OP_DONE:
-            break;
-        case PCMK_LRM_OP_ERROR:
-        case PCMK_LRM_OP_TIMEOUT:
-        case PCMK_LRM_OP_NOTSUPPORTED:
-            if (ignore_failures) {
-                ignore_s = ", ignoring failure";
-            } else {
-                action->failed = TRUE;
-            }
-            break;
-        case PCMK_LRM_OP_CANCELLED:
-            /* do nothing?? */
-            crm_err("Don't know what to do for cancelled ops yet");
-            break;
-        default:
-            /*
-             PCMK_LRM_OP_ERROR_HARD,
-             PCMK_LRM_OP_ERROR_FATAL,
-             PCMK_LRM_OP_NOT_INSTALLED
-             */
+    // Mark action as failed if not ignoring failures
+    if (op_status == PCMK_LRM_OP_ERROR) {
+        if (ignore_failures) {
+            ignore_s = ", ignoring failure";
+        } else {
             action->failed = TRUE;
-            crm_err("Unsupported action result: %d", op_status);
+        }
     }
 
     /* stop this event's timer if it had one */
