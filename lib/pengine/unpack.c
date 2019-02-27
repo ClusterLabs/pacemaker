@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -2721,6 +2723,25 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     pe_free_action(action);
 }
 
+/*!
+ * \internal
+ * \brief Remap operation status based on action result
+ *
+ * Given an action result, determine an appropriate operation status for the
+ * purposes of responding to the action (the status provided by the executor is
+ * not directly usable since the executor does not know what was expected).
+ *
+ * \param[in,out] rsc        Resource that operation history entry is for
+ * \param[in]     rc         Actual return code of operation
+ * \param[in]     target_rc  Expected return code of operation
+ * \param[in]     node       Node where operation was executed
+ * \param[in]     xml_op     Operation history entry XML from CIB status
+ * \param[in,out] on_fail    What should be done about the result
+ * \param[in]     data_set   Current cluster working set
+ *
+ * \return Operation status based on return code and action info
+ * \note This may update the resource's current and next role.
+ */
 static int
 determine_op_status(
     resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
@@ -2734,12 +2755,26 @@ determine_op_status(
     bool is_probe = FALSE;
 
     CRM_ASSERT(rsc);
+
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
     }
 
-    if (target_rc >= 0 && target_rc != rc) {
+    if (target_rc < 0) {
+        /* Pre-1.0 Pacemaker versions, and Pacemaker 1.1.6 or earlier with
+         * Heartbeat 2.0.7 or earlier as the cluster layer, did not include the
+         * target_rc in the transition key, which (along with the similar case
+         * of a corrupted transition key in the CIB) will be reported to this
+         * function as -1. Pacemaker 2.0+ does not support rolling upgrades from
+         * those versions or processing of saved CIB files from those versions,
+         * so we do not need to care much about this case.
+         */
+        result = PCMK_LRM_OP_ERROR;
+        crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
+                 key, node->details->uname);
+
+    } else if (target_rc != rc) {
         result = PCMK_LRM_OP_ERROR;
         pe_rsc_debug(rsc, "%s on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
                      key, node->details->uname,
@@ -2747,12 +2782,10 @@ determine_op_status(
                      services_ocf_exitcode_str(target_rc), target_rc);
     }
 
-    /* we could clean this up significantly except for old LRMs and CRMs that
-     * didn't include target_rc and liked to remap status
-     */
     switch (rc) {
         case PCMK_OCF_OK:
-            if (is_probe && target_rc == 7) {
+            // @TODO Should this be (rc != target_rc)?
+            if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
@@ -2767,23 +2800,14 @@ determine_op_status(
                 /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
                 rsc->next_role = RSC_ROLE_UNKNOWN;
-
-            } else if (safe_str_neq(task, CRMD_ACTION_STOP)) {
-                result = PCMK_LRM_OP_ERROR;
             }
             break;
 
         case PCMK_OCF_RUNNING_MASTER:
-            if (is_probe) {
+            if (is_probe && (rc != target_rc)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active in master mode on %s",
                             task, rsc->id, node->details->uname);
-
-            } else if (target_rc == rc) {
-                /* nothing to do */
-
-            } else if (target_rc >= 0) {
-                result = PCMK_LRM_OP_ERROR;
             }
             rsc->role = RSC_ROLE_MASTER;
             break;
@@ -2798,16 +2822,17 @@ determine_op_status(
             result = PCMK_LRM_OP_ERROR_FATAL;
             break;
 
+        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+            if (interval_ms > 0) {
+                result = PCMK_LRM_OP_NOTSUPPORTED;
+                break;
+            }
+            // fall through
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-        case PCMK_OCF_UNIMPLEMENT_FEATURE:
-            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && (interval_ms > 0)) {
-                result = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-
-            } else if (pe_can_fence(data_set, node) == FALSE
-               && safe_str_eq(task, CRMD_ACTION_STOP)) {
+            if (!pe_can_fence(data_set, node)
+                && safe_str_eq(task, CRMD_ACTION_STOP)) {
                 /* If a stop fails and we can't fence, there's nothing else we can do */
                 pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
                             rsc->id, task, services_ocf_exitcode_str(rc), rc);
@@ -2819,12 +2844,12 @@ determine_op_status(
 
         default:
             if (result == PCMK_LRM_OP_DONE) {
-                crm_info("Treating %s (rc=%d) on %s as an ERROR",
-                         key, rc, node->details->uname);
+                crm_info("Treating unknown return code %d for %s on %s as failure",
+                         rc, key, node->details->uname);
                 result = PCMK_LRM_OP_ERROR;
             }
+            break;
     }
-
     return result;
 }
 
@@ -3197,6 +3222,11 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         }
     }
 
+    /* If the executor reported an operation status of anything but done or
+     * error, consider that final. But for done or error, we know better whether
+     * it should be treated as a failure or not, because we know the expected
+     * result.
+     */
     if(status == PCMK_LRM_OP_DONE || status == PCMK_LRM_OP_ERROR) {
         status = determine_op_status(rsc, rc, target_rc, node, xml_op, on_fail, data_set);
     }
