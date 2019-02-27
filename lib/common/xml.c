@@ -3002,6 +3002,34 @@ dump_xml_text(xmlNode * data, int options, char **buffer, int *offset, int *max,
     }
 }
 
+static void
+dump_xml_cdata(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
+{
+    CRM_ASSERT(max != NULL);
+    CRM_ASSERT(offset != NULL);
+    CRM_ASSERT(buffer != NULL);
+
+    if (data == NULL) {
+        crm_trace("Nothing to dump");
+        return;
+    }
+
+    if (*buffer == NULL) {
+        *offset = 0;
+        *max = 0;
+    }
+
+    insert_prefix(options, buffer, offset, max, depth);
+
+    buffer_print(*buffer, *max, *offset, "<![CDATA[");
+    buffer_print(*buffer, *max, *offset, "%s", data->content);
+    buffer_print(*buffer, *max, *offset, "]]>");
+
+    if (options & xml_log_option_formatted) {
+        buffer_print(*buffer, *max, *offset, "\n");
+    }
+}
+
 
 static void
 dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
@@ -3106,13 +3134,15 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         case XML_COMMENT_NODE:
             dump_xml_comment(data, options, buffer, offset, max, depth);
             break;
+        case XML_CDATA_SECTION_NODE:
+            dump_xml_cdata(data, options, buffer, offset, max, depth);
+            break;
         default:
             crm_warn("Unhandled type: %d", data->type);
             return;
 
             /*
             XML_ATTRIBUTE_NODE = 2
-            XML_CDATA_SECTION_NODE = 4
             XML_ENTITY_REF_NODE = 5
             XML_ENTITY_NODE = 6
             XML_PI_NODE = 7
