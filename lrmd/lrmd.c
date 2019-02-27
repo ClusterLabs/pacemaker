@@ -1057,8 +1057,12 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     } else {
         /* command successful */
         cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        if (safe_str_eq(cmd->action, "start") && rsc) {
-            rsc->stonith_started = 1;
+        if (rsc) {
+            if (safe_str_eq(cmd->action, "start")) {
+                rsc->stonith_started = 1;
+            } else if (safe_str_eq(cmd->action, "stop")) {
+                rsc->stonith_started = 0;
+            }
         }
     }
 
@@ -1160,7 +1164,6 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
-        rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
         if (cmd->interval) {
             do_monitor = 1;
