@@ -30,30 +30,35 @@ RNGdir			= $(dtddir)
 
 # Sorted list of available numeric RNG versions,
 # extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
-RNG_numeric_versions    = $(shell ls -1 $(top_srcdir)/xml/*.rng \
+numeric_versions = $(shell ls -1 $(1) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
+
+version_pairs = $(join \
+			    $(1),$(addprefix \
+			      -,$(wordlist \
+			        2,$(words $(1)),$(1) \
+			      ) next \
+			    ) \
+			  )
+
+version_pairs_last = $(wordlist \
+			    $(words \
+			      $(wordlist \
+			        2,$(1),$(2) \
+			      ) \
+			    ),$(1),$(2) \
+			  )
+
+RNG_numeric_versions = $(call numeric_versions,${RNG_files})
 
 # The highest numeric version
 RNG_max			?= $(lastword $(RNG_numeric_versions))
 
-# A sorted list of all RNG versions (numeric and "next")
 RNG_versions		= next $(RNG_numeric_versions)
-RNG_version_pairs	= $(join \
-			    ${RNG_numeric_versions},$(addprefix \
-			      -,$(wordlist \
-			        2,$(words ${RNG_numeric_versions}),${RNG_numeric_versions} \
-			      ) next \
-			    ) \
-			  )
+RNG_version_pairs	= $(call version_pairs,${RNG_numeric_versions})
 RNG_version_pairs_cnt	= $(words ${RNG_version_pairs})
-RNG_version_pairs_last  = $(wordlist \
-			    $(words \
-			      $(wordlist \
-			        2,${RNG_version_pairs_cnt},${RNG_version_pairs} \
-			      ) \
-			    ),${RNG_version_pairs_cnt},${RNG_version_pairs} \
-			  )
+RNG_version_pairs_last  = $(call version_pairs_last,${RNG_version_pairs_cnt},${RNG_version_pairs})
 
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
