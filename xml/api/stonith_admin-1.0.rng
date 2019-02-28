@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-stonith-admin"/>
+    </start>
+
+    <define name="element-stonith-admin">
+        <choice>
+            <ref name="stonith-admin-list" />
+            <ref name="element-last-fenced" />
+            <ref name="element-validation" />
+            <element name="metadata"> <text /> </element>
+        </choice>
+    </define>
+
+    <define name="stonith-admin-list">
+        <element name="list">
+            <attribute name="name"> <text /> </attribute>
+            <attribute name="count"> <data type="nonNegativeInteger" /> </attribute>
+            <choice>
+                <zeroOrMore>
+                    <ref name="fencing-history-event" />
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="fencing-target" />
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="device" />
+                </zeroOrMore>
+            </choice>
+        </element>
+    </define>
+
+    <define name="device">
+        <element name="item">
+            <attribute name="name"> <value>device</value> </attribute>
+            <data type="NCName" />
+        </element>
+    </define>
+
+    <define name="fencing-target">
+        <element name="target">
+            <attribute name="hostname"> <text /> </attribute>
+            <attribute name="uuid"> <text /> </attribute>
+            <attribute name="status"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-last-fenced">
+        <element name="last-fenced">
+            <attribute name="target"> <text /> </attribute>
+            <attribute name="when"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-validation">
+        <element name="validate">
+            <attribute name="agent"> <text /> </attribute>
+            <attribute name="valid"> <data type="boolean" /> </attribute>
+            <optional>
+                <externalRef href="command-output-1.0.rng" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="fencing-history-event">
+        <element name="stonith-event">
+            <attribute name="status"> <text /> </attribute>
+            <optional>
+                <attribute name="delegate"> <text /> </attribute>
+            </optional>
+            <attribute name="action"> <text /> </attribute>
+            <attribute name="target"> <text /> </attribute>
+            <attribute name="client"> <text /> </attribute>
+            <attribute name="origin"> <text /> </attribute>
+            <attribute name="when"> <text /> </attribute>
+        </element>
+    </define>
+</grammar>

@@ -162,6 +162,7 @@ scratch
 xml/crm.dtd
 xml/pacemaker*.rng
 xml/versions.rng
+xml/api/api-result*.rng
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity

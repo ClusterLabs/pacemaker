@@ -833,6 +833,7 @@ exit 0
 %license licenses/GPLv2
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
+%{_datadir}/pacemaker/api/*.rng
 
 %changelog
 
