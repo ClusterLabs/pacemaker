@@ -661,7 +661,6 @@ exit 0
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/fence_legacy
-%{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
@@ -673,7 +672,6 @@ exit 0
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
-%doc %{_mandir}/man8/stonith_admin.*
 
 %doc %{_datadir}/pacemaker/alerts
 
@@ -721,6 +719,7 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%{_sbindir}/stonith_admin
 %exclude %{_datadir}/pacemaker/alerts
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
@@ -749,7 +748,6 @@ exit 0
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker-remoted.*
-%exclude %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
 %doc COPYING
