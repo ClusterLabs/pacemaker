@@ -83,6 +83,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="dlm_monitor_0" internal_operation_key="dlm:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="dlm_monitor_0" internal_operation_key="dlm:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="23" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0"/>
       </trigger>
       <trigger>
@@ -149,6 +155,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="clvmd_monitor_0" internal_operation_key="clvmd:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="clvmd_monitor_0" internal_operation_key="clvmd:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="30" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0"/>
       </trigger>
       <trigger>
@@ -211,6 +223,12 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="shared0_monitor_0" internal_operation_key="shared0:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="shared0_monitor_0" internal_operation_key="shared0:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
+      </trigger>
       <trigger>
         <pseudo_event id="37" operation="stop" operation_key="shared0_stop_0" internal_operation_key="shared0:0_stop_0"/>
       </trigger>

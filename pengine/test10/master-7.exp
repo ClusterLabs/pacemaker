@@ -393,6 +393,18 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="18" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="59" operation="stop" operation_key="child_DoFencing:0_stop_0"/>
       </trigger>
       <trigger>
@@ -571,6 +583,33 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="monitor" operation_key="ocf_msdummy:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="monitor" operation_key="ocf_msdummy:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="ocf_msdummy:6_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="monitor" operation_key="ocf_msdummy:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="monitor" operation_key="ocf_msdummy:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="monitor" operation_key="ocf_msdummy:6_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+      </trigger>
       <trigger>
         <pseudo_event id="71" operation="stop" operation_key="ocf_msdummy:0_stop_0"/>
       </trigger>

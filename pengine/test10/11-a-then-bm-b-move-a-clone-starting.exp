@@ -45,6 +45,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="1" operation="monitor" operation_key="myclone_monitor_0" internal_operation_key="myclone:0_monitor_0" on_node="f20node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="2" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:0_stop_0" on_node="f20node1" on_node_uuid="1"/>
       </trigger>
       <trigger>

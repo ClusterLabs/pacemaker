@@ -239,6 +239,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="2" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="18" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
       <trigger>

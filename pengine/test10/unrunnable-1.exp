@@ -106,6 +106,15 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="39" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>

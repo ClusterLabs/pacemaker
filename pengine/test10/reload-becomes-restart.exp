@@ -240,6 +240,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="rsc2:1_monitor_0" on_node="node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="18" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0" on_node="node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
