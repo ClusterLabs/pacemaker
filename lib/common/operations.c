@@ -396,8 +396,8 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     task = op->op_type;
 
-    /* Remap the task name under various scenarios, to make life easier for the
-     * PE when determining the current state.
+    /* Record a successful reload as a start, and a failed reload as a monitor,
+     * to make life easier for the scheduler when determining the current state.
      */
     if (crm_str_eq(task, "reload", TRUE)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
@@ -405,18 +405,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
         } else {
             task = CRMD_ACTION_STATUS;
         }
-
-    } else if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
-        /* if the migrate_from fails it will have enough info to do the right thing */
-        if (op->op_status == PCMK_LRM_OP_DONE) {
-            task = CRMD_ACTION_STOP;
-        } else {
-            task = CRMD_ACTION_STATUS;
-        }
-
-    } else if ((op->op_status == PCMK_LRM_OP_DONE)
-               && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-        task = CRMD_ACTION_START;
     }
 
     key = generate_op_key(op->rsc_id, task, op->interval_ms);
