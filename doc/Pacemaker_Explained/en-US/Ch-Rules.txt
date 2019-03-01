@@ -127,7 +127,8 @@ a|The comparison to perform (required). Allowed values:
 
 |value
 |
-|User-supplied value for comparison (required)
+|User-supplied value for comparison (required for operations other than
+ +defined+ and +not_defined+)
  indexterm:[value,Constraint Expression]
  indexterm:[Constraint,Attribute Expression,value]
 
