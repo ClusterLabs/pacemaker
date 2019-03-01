@@ -188,6 +188,12 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="1" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="8" operation="stop" operation_key="child_rsc1:1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
@@ -414,6 +420,15 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="2" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="child_rsc2:0_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="22" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
       <trigger>

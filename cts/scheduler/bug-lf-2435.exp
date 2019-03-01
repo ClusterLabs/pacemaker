@@ -8,6 +8,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="dummy4_monitor_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan"/>
+      </trigger>
+      <trigger>
         <rsc_op id="6" operation="stop" operation_key="dummy2_stop_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan"/>
       </trigger>
       <trigger>
