@@ -17,9 +17,9 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST		= pacemaker.pc.in $(target_LIBS:%=%.in)
+EXTRA_DIST		= pacemaker.pc.in pacemaker-pe_rules.pc.in pacemaker-pe_status.pc.in $(target_LIBS:%=%.in)
 
-LIBS			= cib lrmd service pengine fencing cluster internal
+LIBS			= cib lrmd service fencing cluster internal
 
 target_LIBS		= $(LIBS:%=pacemaker-%.pc)
 
@@ -30,6 +30,7 @@ all-local: $(target_LIBS) $(target_PACKAGE)
 install-exec-local: $(target_LIBS) $(target_PACKAGE)
 	$(INSTALL) -d $(DESTDIR)/$(libdir)/pkgconfig
 	$(INSTALL) -m 644 $(target_LIBS) $(target_PACKAGE) $(DESTDIR)/$(libdir)/pkgconfig
+	$(INSTALL) -m 644 pacemaker-pe_rules.pc pacemaker-pe_status.pc $(DESTDIR)/$(libdir)/pkgconfig
 
 uninstall-local:
 	cd $(DESTDIR)/$(libdir)/pkgconfig && rm -f $(target_LIBS) $(target_PACKAGE)
