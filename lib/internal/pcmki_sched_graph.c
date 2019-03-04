@@ -15,8 +15,7 @@
 
 #include <glib.h>
 
-#include <sched_allocate.h>
-#include <sched_utils.h>
+#include <pacemaker-internal.h>
 
 void update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);

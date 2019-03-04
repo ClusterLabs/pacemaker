@@ -13,7 +13,7 @@
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/complex.h>
 #  include <crm/pengine/internal.h>
-#  include <pacemaker-schedulerd.h>
+#  include <pcmki/pcmki_scheduler.h>
 
 struct resource_alloc_functions_s {
     GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, float,

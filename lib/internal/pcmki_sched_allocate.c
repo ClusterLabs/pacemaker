@@ -17,9 +17,7 @@
 #include <glib.h>
 
 #include <crm/pengine/status.h>
-#include <pacemaker-schedulerd.h>
-#include <sched_allocate.h>
-#include <sched_utils.h>
+#include <pacemaker-internal.h>
 
 CRM_TRACE_INIT_DATA(pe_allocate);
 

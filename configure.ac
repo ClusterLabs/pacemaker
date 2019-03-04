@@ -1779,6 +1779,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 include/crm/cluster/Makefile                        \
                 include/crm/fencing/Makefile                        \
                 include/crm/pengine/Makefile                        \
+                include/pcmki/Makefile                              \
                 replace/Makefile                                    \
                 lib/Makefile                                        \
                 lib/pacemaker.pc                                    \
@@ -1788,10 +1789,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-pengine.pc                            \
                 lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-cluster.pc                            \
+                lib/pacemaker-internal.pc                           \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
                 lib/gnu/Makefile                                    \
+                lib/internal/Makefile                               \
                 lib/pengine/Makefile                                \
                 lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \

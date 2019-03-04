@@ -24,7 +24,6 @@ cts_fence_helper_SOURCES	= cts-fence-helper.c
 cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 				  $(top_builddir)/lib/fencing/libstonithd.la
 
-pacemaker_fenced_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 pacemaker_fenced_YFLAGS		= -d
 pacemaker_fenced_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_fenced_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -32,7 +31,7 @@ pacemaker_fenced_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la		\
 				  $(top_builddir)/lib/cluster/libcrmcluster.la		\
 				  $(top_builddir)/lib/fencing/libstonithd.la		\
 				  $(top_builddir)/lib/pengine/libpe_status.la		\
-				  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+				  $(top_builddir)/lib/internal/libpacemaker-internal.la	\
 				  $(CLUSTERLIBS)
 pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
 				  fenced_commands.c \

@@ -7,12 +7,9 @@
 
 #include <crm_internal.h>
 
-#include <pacemaker-schedulerd.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
-#include <sched_allocate.h>
-#include <sched_notif.h>
-#include <sched_utils.h>
+#include <pacemaker-internal.h>
 #include <crm/services.h>
 
 // The controller removes the resource from the CIB, making this redundant
