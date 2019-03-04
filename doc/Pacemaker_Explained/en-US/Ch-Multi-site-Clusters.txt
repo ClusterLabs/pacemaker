@@ -208,7 +208,7 @@ Use the `crm_ticket` command line tool to grant and revoke tickets.
 
 ////
 These commands will actually just print a message telling the user that they
-requre '--force'. That is probably a good exercise rather than letting novice
+require '--force'. That is probably a good exercise rather than letting novice
 users cut and paste '--force' here.
 ////
 
