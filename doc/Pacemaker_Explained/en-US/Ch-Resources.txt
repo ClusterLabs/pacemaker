@@ -685,7 +685,7 @@ indexterm:[Action,Property,on-fail]
  indexterm:[Action,Property,enabled]
 
 |record-pending
-|FALSE
+|TRUE
 |If +true+, the intention to perform the operation is recorded so that
  GUIs and CLI tools can indicate that an operation is in progress.
  This is best set as an _operation default_ (see <<s-operation-defaults>>).

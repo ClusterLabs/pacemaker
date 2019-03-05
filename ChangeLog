@@ -1,103 +1,75 @@
-* Mon Feb 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc5
-- Changesets: 17
-- Diff:       15 files changed, 1037 insertions(+), 677 deletions(-)
-
-- Changes since Pacemaker-2.0.1-rc4
-  + scheduler: regression test compatibility with glib 2.59.0
-
-* Tue Jan 29 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc4
-- Changesets: 42
- 15 files changed, 216 insertions(+), 137 deletions(-)
-
-- Changes since Pacemaker-2.0.1-rc3
-  + attrd: clear election dampening when the writer leaves
-  + controller: clear election dampening when DC is lost
-  + scheduler: don't order non-DC shutdowns before DC fencing
-  + libcrmservice: cancel DBus call when cancelling systemd/upstart actions
-  + tools: remove duplicate fence history state in crm_mon XML output
-  + build: offer configure option to disable tests broken with glib 2.59.0
-  + build: minor logging fixes to allow compatibility with GCC 9 -Werror
-
-* Thu Jan 10 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc3
-- Changesets: 27
-- Diff:       20 files changed, 375 insertions(+), 195 deletions(-)
-
-- Changes since Pacemaker-2.0.1-rc2
-  + attrd: start new election immediately if writer is lost
-  + attrd: detect alert configuration changes when CIB is entirely replaced
-  + controller: avoid transition timeout if resource cleaned while operation
-    is in-flight (regression in 2.0.1-rc1)
-  + libstonithd: restore C++ compatibility (regression in 2.0.1-rc1)
-  + tools: fix crm_resource --clear when lifetime was used with ban/move
-  + tools: fix crm_resource --move when lifetime was used with previous move
-
-* Wed Dec 19 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc2
-- Changesets: 12
-- Diff:       2 files changed, 6 insertions(+), 2 deletions(-)
-
-- Changes since Pacemaker-2.0.1-rc1
-  + libpe_status: avoid double free of stop_needed list (regression in 2.0.1-rc1)
-  + tools: stonith_admin -I doesn't require an agent (regression in 2.0.1-rc1)
-
-* Wed Dec 12 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-rc1
-- Changesets: 481
- 164 files changed, 7717 insertions(+), 4398 deletions(-)
+* Mon Mar 4 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-1
+- Changesets: 592
+ 173 files changed, 9268 insertions(+), 5344 deletions(-)
 
 - Features added since Pacemaker-2.0.0
-  + Pacemaker bundles now support podman container management
-  + fencing: SBD may now be used in a cluster that has guest nodes or bundles
-  + fencing: synchronize fencing history among all nodes
-  + fencing: stonith_admin now has option to clear fence history
-  + tools: crm_mon now supports showing fencing action failures and history
+  + Pacemaker bundles support podman for container management
+  + fencing: SBD may be used in a cluster that has guest nodes or bundles
+  + fencing: fencing history is synchronized among all nodes
+  + fencing: stonith_admin has option to clear fence history
+  + tools: crm_mon can show fencing action failures and history
   + tools: crm_resource --clear supports new --expired option
-  + Pacemaker Remote: option to restrict TLS Diffie-Hellman prime length
+  + Pacemaker Remote: new options to restrict TLS Diffie-Hellman prime length
 
 - Changes since Pacemaker-2.0.0
-  + tools: restore stonith_admin ability to confirm unseen nodes are down
-    (regression since 1.1.12)
-  + Pacemaker Remote: avoid unnecessary downtime when moving resource to
-    Pacemaker Remote node that fails to come up (regression since 1.1.18)
   + scheduler: clone notifications could be scheduled for a stopped
     Pacemaker Remote node and block all further cluster actions
     (regression since 2.0.0)
+  + libcrmcommon: correct behavior for completing interrupted live migrations
+    (regression since 2.0.0)
   + tools: crm_resource -C could fail to clean up all failures in one run
     (regression since 2.0.0)
+  + Pacemaker Remote: avoid unnecessary downtime when moving resource to
+    Pacemaker Remote node that fails to come up (regression since 1.1.18)
+  + tools: restore stonith_admin ability to confirm unseen nodes are down
+    (regression since 1.1.12)
+  + build: minor logging fixes to allow compatibility with GCC 9 -Werror
   + build: spec file now puts XML schemas in new pacemaker-schemas package
   + build: spec file now provides virtual pcmk-cluster-manager package
   + pacemaker-attrd: wait a short time before re-attempting failed writes
   + pacemaker-attrd: ignore attribute delays when writing after node (re-)join
+  + pacemaker-attrd: start new election immediately if writer is lost
+  + pacemaker-attrd: clear election dampening when the writer leaves
+  + pacemaker-attrd: detect alert configuration changes when CIB is replaced
   + CIB: inform originator of CIB upgrade failure
   + controller: support resource agents that require node name even for meta-data
   + controller: don't record pending clone notifications in CIB
   + controller: DC detects completion of another node's shutdown more accurately
   + controller: shut down DC if unable to update node attributes
   + controller: handle corosync peer/join notifications for new node in any order
+  + controller: clear election dampening when DC is lost
   + executor: cancel recurring monitors if fence device registration is lost
   + fencing: check for fence device update when resource defaults change
-  + fencing: fix possible pacemaker-fenced crash with stonith_admin misuse
+  + fencing: avoid pacemaker-fenced crash possible with stonith_admin misuse
   + fencing: limit fencing history to 500 entries
   + fencing: stonith_admin now complains if no action option is specified
-  + pacemakerd: Linux kernel.sysrq is no longer modified
+  + pacemakerd: do not modify kernel.sysrq on Linux
+  + scheduler: regression test compatibility with glib 2.59.0
   + scheduler: avoid unnecessary recovery of cleaned guest nodes and bundles
-  + scheduler: ensure failures that cause fencing are not expired until fencing completes
+  + scheduler: ensure failures causing fencing not expired until fencing done
   + scheduler: start unique clone instances in numerical order
-  + scheduler: convert unique clones to anonymous clones if not supported by standard
+  + scheduler: convert unique clones to anonymous clones when not supported
   + scheduler: associate pending tasks with correct clone instance
   + scheduler: ensure bundle clone notifications are directed to correct host
-  + scheduler: avoid improper monitor rescheduling or fail count clearing for bundles
+  + scheduler: avoid improper bundle monitor rescheduling or fail count clearing
   + scheduler: honor asymmetric orderings even when restarting
+  + scheduler: don't order non-DC shutdowns before DC fencing
   + ACLs: assume unprivileged ACL user if can't get user info
   + Pacemaker Remote: get Diffie-Hellman prime bit length from GnuTLS API
+  + libcrmservice: cancel DBus call when cancelling systemd/upstart actions
   + libcrmservice: order systemd resources relative to pacemaker_remote
   + libpe_status: add public API constructor/destructor for pe_working_set_t
+  + tools: fix crm_resource --clear when lifetime was used with ban/move
+  + tools: fix crm_resource --move when lifetime was used with previous move
   + tools: make crm_mon CIB connection errors non-fatal if previously successful
   + tools: improve crm_mon messages when generating HTML output
   + tools: crm_mon cluster connection failure is now "critical" in nagios mode
-  + tools: crm_mon listing of standby nodes now shows if they still have active resources
+  + tools: crm_mon listing of standby nodes shows if they have active resources
   + tools: crm_diff now ignores attribute ordering when comparing in CIB mode
-  + tools: improve crm_report detection of logs, CIB directory, running processes
+  + tools: improve crm_report detection of logs, CIB directory, and processes
   + tools: crm_verify returns reliable exit codes
-  + tools: crm_simulate simulated resource history uses same name as live cluster would
+  + tools: crm_simulate resource history uses same name as live cluster would
+
 
 * Fri Jul 6 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-1
 - Changesets: 885
