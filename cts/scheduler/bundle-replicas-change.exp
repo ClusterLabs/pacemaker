@@ -524,6 +524,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="httpd-bundle-docker-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="httpd-bundle-docker-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
         <rsc_op id="16" operation="stop" operation_key="httpd-bundle-docker-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
     </inputs>

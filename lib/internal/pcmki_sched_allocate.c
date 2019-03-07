@@ -2242,8 +2242,164 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
     }
 }
 
+static gboolean
+order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
+{
+    /* No need to probe the resource on the node that is being
+     * unfenced. Otherwise it might introduce transition loop
+     * since probe will be performed after the node is
+     * unfenced.
+     */
+    if (safe_str_eq(rh_action->task, CRM_OP_FENCE)
+         && probe->node && rh_action->node
+         && probe->node->details == rh_action->node->details) {
+        const char *op = g_hash_table_lookup(rh_action->meta, "stonith_action");
+
+        if (safe_str_eq(op, "on")) {
+            return TRUE;
+        }
+    }
+
+    // Shutdown waits for probe to complete only if it's on the same node
+    if ((safe_str_eq(rh_action->task, CRM_OP_SHUTDOWN))
+        && probe->node && rh_action->node
+        && probe->node->details != rh_action->node->details) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+
 static void
-order_probes(pe_working_set_t * data_set) 
+order_first_probes(pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
+        pe__ordering_t *order = gIter->data;
+        enum pe_ordering order_type = pe_order_optional;
+
+        pe_resource_t *lh_rsc = order->lh_rsc;
+        pe_resource_t *rh_rsc = order->rh_rsc;
+        pe_action_t *lh_action = order->lh_action;
+        pe_action_t *rh_action = order->rh_action;
+        const char *lh_action_task = order->lh_action_task;
+        const char *rh_action_task = order->rh_action_task;
+
+        char *key = NULL;
+        GListPtr probes = NULL;
+        GListPtr rh_actions = NULL;
+
+        GListPtr pIter = NULL;
+
+        if (lh_rsc == NULL) {
+            continue;
+
+        } else if (rh_rsc && lh_rsc == rh_rsc) {
+            continue;
+        }
+
+        if (lh_action == NULL && lh_action_task == NULL) {
+            continue;
+        }
+
+        if (rh_action == NULL && rh_action_task == NULL) {
+            continue;
+        }
+
+        /* Technically probe is expected to return "not running", which could be
+         * the alternative of stop action if the status of the resource is
+         * unknown yet.
+         */
+        if (lh_action && safe_str_neq(lh_action->task, RSC_STOP)) {
+            continue;
+
+        } else if (lh_action == NULL
+                   && lh_action_task
+                   && crm_ends_with(lh_action_task, "_" RSC_STOP "_0") == FALSE) {
+            continue;
+        }
+
+        /* Do not probe the resource inside of a stopping container. Otherwise
+         * it might introduce transition loop since probe will be performed
+         * after the container starts again.
+         */
+        if (rh_rsc && lh_rsc->container == rh_rsc) {
+            if (rh_action && safe_str_eq(rh_action->task, RSC_STOP)) {
+                continue;
+
+            } else if (rh_action == NULL && rh_action_task
+                       && crm_ends_with(rh_action_task,"_" RSC_STOP "_0")) {
+                continue;
+            }
+        }
+
+        if (order->type == pe_order_none) {
+            continue;
+        }
+
+        // Preserve the order options for future filtering
+        if (is_set(order->type, pe_order_apply_first_non_migratable)) {
+            set_bit(order_type, pe_order_apply_first_non_migratable);
+        }
+
+        if (is_set(order->type, pe_order_same_node)) {
+            set_bit(order_type, pe_order_same_node);
+        }
+
+        // Keep the order types for future filtering
+        if (order->type == pe_order_anti_colocation
+                   || order->type == pe_order_load) {
+            order_type = order->type;
+        }
+
+        key = generate_op_key(lh_rsc->id, RSC_STATUS, 0);
+        probes = find_actions(lh_rsc->actions, key, NULL);
+        free(key);
+
+        if (probes == NULL) {
+            continue;
+        }
+
+        if (rh_action) {
+            rh_actions = g_list_prepend(rh_actions, rh_action);
+
+        } else if (rh_rsc && rh_action_task) {
+            rh_actions = find_actions(rh_rsc->actions, rh_action_task, NULL);
+        }
+
+        if (rh_actions == NULL) {
+            g_list_free(probes);
+            continue;
+        }
+
+        crm_trace("Processing for LH probe based on ordering constraint %s -> %s"
+                  " (id=%d, type=%.6x)",
+                  lh_action ? lh_action->uuid : lh_action_task,
+                  rh_action ? rh_action->uuid : rh_action_task,
+                  order->id, order->type);
+
+        for (pIter = probes; pIter != NULL; pIter = pIter->next) {
+            pe_action_t *probe = (pe_action_t *) pIter->data;
+            GListPtr rIter = NULL;
+
+            for (rIter = rh_actions; rIter != NULL; rIter = rIter->next) {
+                pe_action_t *rh_action_iter = (pe_action_t *) rIter->data;
+
+                if (order_first_probe_unneeded(probe, rh_action_iter)) {
+                    continue;
+                }
+                order_actions(probe, rh_action_iter, order_type);
+            }
+        }
+
+        g_list_free(rh_actions);
+        g_list_free(probes);
+    }
+}
+
+static void
+order_then_probes(pe_working_set_t * data_set)
 {
 #if 0
     GListPtr gIter = NULL;
@@ -2362,6 +2518,13 @@ order_probes(pe_working_set_t * data_set)
         }
     }
 #endif
+}
+
+static void
+order_probes(pe_working_set_t * data_set)
+{
+    order_first_probes(data_set);
+    order_then_probes(data_set);
 }
 
 gboolean
