@@ -532,7 +532,7 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
  *
  * \return A boolean
  */
-gboolean stonith_agent_exists(const char *agent, int timeout);
+bool stonith_agent_exists(const char *agent, int timeout);
 
 #ifdef __cplusplus
 }
