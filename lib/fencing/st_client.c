@@ -2468,13 +2468,13 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     return when;
 }
 
-gboolean
+bool
 stonith_agent_exists(const char *agent, int timeout)
 {
     stonith_t *st = NULL;
     stonith_key_value_t *devices = NULL;
     stonith_key_value_t *dIter = NULL;
-    gboolean rc = FALSE;
+    bool rc = FALSE;
 
     if (agent == NULL) {
         return rc;
