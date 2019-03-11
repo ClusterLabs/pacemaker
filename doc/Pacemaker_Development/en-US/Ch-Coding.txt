@@ -5,7 +5,7 @@
 We prefer [[ch-NAME]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
-anchor:ch-c-coding[Chapter 2, C Coding Guidelines]
+anchor:ch-c-coding[Chapter 3, C Coding Guidelines]
 
 == Style Guidelines ==
 
@@ -23,30 +23,20 @@ writing, and reviewing code easier.
 indexterm:[C,boilerplate]
 indexterm:[licensing,C boilerplate]
 
-Every C file should start with a short copyright notice listing the original
-author, like:
+Every C file should start with a short copyright notice:
 
 ====
 [source,C]
 ----
 /*
- * Copyright <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>
+ * Copyright <YYYY[-YYYY]> the Pacemaker project contributors
  * 
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under <LICENSE> WITHOUT ANY WARRANTY.
  */
 ----
 ====
-
-The first +<YYYY>+ is the year the code was 'originally' created.
-footnote:[
-See the U.S. Copyright Office's https://www.copyright.gov/comp3/["Compendium
-of U.S. Copyright Office Practices"], particularly "Chapter 2200: Notice of
-Copyright", sections 2205.1(A) and 2205.1(F), or
-https://techwhirl.com/updating-copyright-notices/["Updating Copyright
-Notices"] for a more readable summary.
-]
-If the code is modified in later years, add +-YYYY+ with the most recent year
-of modification.
 
 +<LICENSE>+ should follow the policy set forth in the
 https://github.com/ClusterLabs/pacemaker/blob/master/COPYING[+COPYING+] file,

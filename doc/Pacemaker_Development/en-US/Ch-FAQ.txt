@@ -106,7 +106,9 @@ How can I contribute my changes to the project?::
  via GitHub (the preferred method, due to its excellent
  https://github.com/features/[features]), or e-mailed to the
  http://clusterlabs.org/mailman/listinfo/developers[developers@clusterlabs.org]
- mailing list as an attachment in a format Git can import.
+ mailing list as an attachment in a format Git can import. Authors may only
+ submit changes that they have the right to submit under the open source
+ license indicated in the affected files.
 
 What if I still have questions?::
  indexterm:[mailing lists]
