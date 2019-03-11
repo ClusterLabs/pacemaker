@@ -37,6 +37,10 @@ stages:
 #
 # Fedora Rawhide
 #
+# In case of failure imposed with branching/changed GPG keys, downgrade, e.g.:
+# sed -i.orig 's|fedora-rawhide|fedora|g;s|rawhide|fedora|g;s|:rawhide|:29|' \
+#   .gitlab-ci.yml
+# and run it through your side branch (omit such changes for upstream request).
 #
 .fedora-rawhide: &fedora-rawhide-anchor
   tags:
