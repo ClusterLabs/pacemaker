@@ -118,6 +118,9 @@ typedef enum crm_exit_e {
     CRM_EX_UNSAFE               = 107, // requires --force or new conditions
     CRM_EX_EXISTS               = 108, // requested item already exists
     CRM_EX_MULTIPLE             = 109, // requested item has multiple matches
+    CRM_EX_EXPIRED              = 110, // requested item has expired
+    CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
+    CRM_EX_INDETERMINATE        = 112, // could not determine status
 
     // Other
     CRM_EX_TIMEOUT              = 124, // convention from timeout(1)

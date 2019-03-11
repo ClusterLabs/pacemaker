@@ -101,6 +101,7 @@ publican.cfg
 /tools/crm_mon.service
 /tools/crm_mon.upstart
 /tools/crm_report
+/tools/crm_rule
 /tools/crm_standby
 /tools/report.collector
 /tools/report.common

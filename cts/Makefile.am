@@ -55,7 +55,7 @@ cts_SCRIPTS	=	cts			\
 clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
 		  cli/regression.acls.exp cli/regression.validity.exp \
-		  cli/regression.upgrade.exp
+		  cli/regression.upgrade.exp cli/regression.rules.exp
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler
