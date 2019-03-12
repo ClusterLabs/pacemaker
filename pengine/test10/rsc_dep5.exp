@@ -11,6 +11,12 @@
         <rsc_op id="1" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
       <trigger>
+        <rsc_op id="2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="4" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
@@ -45,7 +51,13 @@
         <rsc_op id="2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
       <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="5" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
    </synapse>

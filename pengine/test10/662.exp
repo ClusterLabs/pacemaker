@@ -271,6 +271,33 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="44" operation="stop" operation_key="child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>
