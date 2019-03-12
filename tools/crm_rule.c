@@ -12,13 +12,9 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/pengine/status.h>
+#include <pacemaker-internal.h>
 
 #include <sys/stat.h>
-
-#define CMD_ERR(fmt, args...) do {          \
-        crm_warn(fmt, ##args);              \
-        fprintf(stderr, fmt "\n", ##args);  \
-    } while(0)
 
 enum crm_rule_mode {
     crm_rule_mode_none,
