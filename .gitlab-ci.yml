@@ -45,7 +45,7 @@ stages:
 .fedora-rawhide: &fedora-rawhide-anchor
   tags:
     - docker
-  image: fedora:rawhide
+  image: registry.fedoraproject.org/fedora:rawhide  # down? mere fedora:rawhide
 
 .fedora-rawhide-variables-rpm: &fedora-rawhide-variables-rpm-anchor
   # below are captured major sets of packages that need to be installed on top
