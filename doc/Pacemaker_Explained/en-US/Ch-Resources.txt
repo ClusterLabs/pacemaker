@@ -47,11 +47,8 @@ indexterm:[OCF,Resources]
 indexterm:[Open Cluster Framework,Resources]
 
 The OCF standard
-footnote:[See
-http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD
- -- at least as it relates to resource agents.  The Pacemaker implementation has
-been somewhat extended from the OCF specs, but none of those changes are
-incompatible with the original OCF specification.]
+footnote:[See https://github.com/ClusterLabs/OCF-spec/tree/master/ra . The
+Pacemaker implementation has been somewhat extended from the OCF specs.]
 is basically an extension of the Linux Standard Base conventions for
 init scripts to:
 
