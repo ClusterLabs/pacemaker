@@ -2,8 +2,9 @@
 #
 #	SystemHealth OCF RA.
 #
-# Copyright 2009-2018 International Business Machines (IBM), Mark Hamzy
-#                    All Rights Reserved.
+# Copyright 2009-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License as

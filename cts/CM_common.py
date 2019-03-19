@@ -9,12 +9,11 @@ easier.
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = """
-Author: Huang Zhen <zhenhltc@cn.ibm.com>
+__copyright__ = """Original Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright 2004 International Business Machines
 
-Additional Audits, Revised Start action, Default Configuration:
-     Copyright 2004 Andrew Beekhof <andrew@beekhof.net>
+with later changes copyright 2004-2018 the Pacemaker project contributors.
+The version control history for this file may have further details.
 """
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 

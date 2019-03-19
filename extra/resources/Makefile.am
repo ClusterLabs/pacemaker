@@ -1,7 +1,9 @@
 # Makefile.am for OCF RAs
 #
 # Author: Andrew Beekhof
-# Copyright (C) 2008 Andrew Beekhof
+# Copyright 2008-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
