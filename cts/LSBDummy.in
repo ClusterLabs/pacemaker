@@ -3,8 +3,9 @@
 #
 #	Dummy LSB RA. Does nothing but touch and remove a state file
 #
-# Copyright (c) 2010 Andrew Beekhof
-#                    All Rights Reserved.
+# Copyright 2006-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License as
