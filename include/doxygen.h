@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2018 the Pacemaker project contributors
+ * Copyright 2006-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@
  * \mainpage
  * Welcome to the developer documentation for The Pacemaker Project!  For more
  * information about Pacemaker, please visit the
- * <a href="http://clusterlabs.org/">project web site</a>.
+ * <a href="https://clusterlabs.org/">project web site</a>.
  *
  * Here are some pointers on where to go from here.
  *

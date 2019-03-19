@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -553,11 +555,6 @@ cib_remote_msg(gpointer data)
 }
 
 #ifdef HAVE_PAM
-/*
- * Useful Examples:
- *    http://www.kernel.org/pub/linux/libs/pam/Linux-PAM-html
- *    http://developer.apple.com/samplecode/CryptNoMore/index.html
- */
 static int
 construct_pam_passwd(int num_msg, const struct pam_message **msg,
                      struct pam_response **response, void *data)

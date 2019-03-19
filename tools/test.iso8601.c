@@ -1,5 +1,7 @@
 /*
- * Copyright 2005-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2005-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -38,7 +40,7 @@ static struct crm_option long_options[] = {
     {"local",   0, 0, 'L', "\tShow result as a 'local' date/time"},
     {"ordinal", 0, 0, 'O', "\tShow result as an 'ordinal' date/time"},
     {"week",    0, 0, 'W', "\tShow result as an 'calendar week' date/time"},
-    {"-spacer-",0, 0, '-', "\nFor more information on the ISO8601 standard, see: http://en.wikipedia.org/wiki/ISO_8601"},
+    {"-spacer-",0, 0, '-', "\nFor more information on the ISO8601 standard, see https://en.wikipedia.org/wiki/ISO_8601"},
     
     {0, 0, 0, 0}
 };

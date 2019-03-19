@@ -21,8 +21,7 @@ extern "C" {
  */
 
 /*
- * http://en.wikipedia.org/wiki/ISO_8601
- *
+ * See https://en.wikipedia.org/wiki/ISO_8601
  */
 
 #  include <time.h>
@@ -38,10 +37,7 @@ typedef struct crm_time_period_s {
     crm_time_t *diff;
 } crm_time_period_t;
 
-/* Creates a new date/time object conforming to iso8601:
- *     http://en.wikipedia.org/wiki/ISO_8601
- *
- * Eg.
+/* Creates a new date/time object conforming to ISO 8601, for example:
  *   Ordinal:   2010-01 12:00:00 +10:00
  *   Gregorian: 2010-01-01 12:00:00 +10:00
  *   ISO Week:  2010-W53-6 12:00:00 +10:00
