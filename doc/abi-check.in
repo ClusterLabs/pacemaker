@@ -1,0 +1,140 @@
+#!@BASH_PATH@
+#
+# abi-check [-u] <package-name> <version> [...]
+#
+# Build ABI dumps for all listed versions. If exactly two are given,
+# build an ABI compatibility report for them, and if -u is given,
+# upload it to the website.
+#
+
+# Top-level rsync destination for www targets (without trailing slash)
+: ${RSYNC_DEST:=root@www.clusterlabs.org:/var/www/html}
+
+# If the argument is of form x.y.z, print Pacemaker-x.y.z,
+# otherwise print the argument (presumably a commit ID) directly
+tag() {
+    if [[ "$1" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
+        echo "Pacemaker-$1"
+    else
+        echo "$1"
+    fi
+}
+
+# Strip anything up to and including a dash from the argument
+version() {
+    echo "$1" | sed s:.*-::
+}
+
+# Create configuration file for ABI dumper
+abi_config() {
+    PACKAGE="$1"
+    VERSION="$2"
+    BUILD_ROOT="$3"
+    DESC="$4"
+
+    # Create header
+    DESC="$BUILD_ROOT/$VERSION.xml"
+    cat <<EOF > "$DESC"
+<?xml version="1.0" encoding="utf-8"?>
+<descriptor>
+<version>
+    $VERSION
+</version>
+<headers>
+        $BUILD_ROOT/root/usr/include/$PACKAGE/crm
+</headers>
+<libs>
+EOF
+
+    # Build checkout, installing into subdirectory
+    ( cd "$BUILD_ROOT" && ./autogen.sh && ./configure --disable-fatal-warnings )
+    make -C "$BUILD_ROOT" V=0 DESTDIR="${BUILD_ROOT}/root" install
+    if [ $? -ne 0 ]; then
+        echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
+        echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
+        echo ""
+        echo "To find libraries after building:"
+        echo "  find $BUILD_ROOT/root -name "*.so" -print"
+        exit 1
+    fi
+
+    # Add library names to configuration file
+    find $BUILD_ROOT/root -name "*.so" -print >> $DESC
+
+    # Add footer
+    cat <<EOF >> "$DESC"
+</libs>
+</descriptor>
+EOF
+}
+
+# Dump the ABI for a particular version
+extract_one() {
+    TAG="$1"
+    VERSION="$2"
+
+    # If dump already exists, remove it if dumping HEAD (which changes),
+    # otherwise use it (a dump for a particular commit stays the same).
+    TARBALL="abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz"
+    if [ "$VERSION" = HEAD ]; then
+        rm -rf "$TARBALL"
+    elif [ -f "$TARBALL" ]; then
+        return
+    fi
+
+    echo "Building ABI dump for $*"
+
+    # Get a clean checkout at the desired commit
+    BUILD_ROOT=".ABI-build"
+    rm -rf "$BUILD_ROOT"
+    ( cd .. ; git archive --prefix "doc/$BUILD_ROOT/" "$TAG" | tar xv )
+    if [ $? -ne 0 ]; then
+        exit
+    fi
+
+    # Remove "doc" from SUBDIRS in Makefile (but why?)
+    BUILD_ROOT="$(pwd)/$BUILD_ROOT"
+    sed -i.sed 's: doc::' "$BUILD_ROOT/Makefile.am"
+
+    # Run ABI dump
+    abi_config "$PACKAGE" "$VERSION" "$BUILD_ROOT" "$DESC"
+    abi-compliance-checker -l "$PACKAGE" -dump_abi "$DESC" \
+        -dump-path "abi_dumps/${PACKAGE}/${PACKAGE}_${VERSION}.abi.tar.gz"
+
+    # Clean up
+    rm -rf "$BUILD_ROOT"
+}
+
+extract_all() {
+    for arg in $*; do
+        T=$(tag "$arg")
+        V=$(version "$T")
+        extract_one "$T" "$V"
+    done
+}
+
+UPLOAD=0
+if [ "$1" = "-u" ]; then
+    UPLOAD=1; shift
+fi
+
+PACKAGE="$1"; shift
+
+extract_all "$@"
+
+if [ $# -eq 2 ]; then
+    V1=$(version "$1")
+    V2=$(version "$2")
+
+    abi-compliance-checker -l ${PACKAGE} \
+        -d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
+        -d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    COMPAT_REPORT="compat_reports/${PACKAGE}/${V1}_to_${V2}"
+    if [ $UPLOAD -eq 1 ] && [ -d "$COMPAT_REPORT" ]; then
+        rsync -azxlSD --progress "$COMPAT_REPORT" "${RSYNC_DEST}/${PACKAGE}/abi/"
+    fi
+fi

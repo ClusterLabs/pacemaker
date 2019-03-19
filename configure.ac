@@ -1728,6 +1728,7 @@ AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
 AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
 AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
+AC_CONFIG_FILES([doc/abi-check], [chmod +x doc/abi-check])
 AC_CONFIG_FILES([extra/resources/ClusterMon],  [chmod +x extra/resources/ClusterMon])
 AC_CONFIG_FILES([extra/resources/HealthSMART], [chmod +x extra/resources/HealthSMART])
 AC_CONFIG_FILES([extra/resources/SysInfo],     [chmod +x extra/resources/SysInfo])
@@ -1741,7 +1742,6 @@ AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
-                Doxyfile                                            \
                 cts/Makefile                                        \
                 cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
@@ -1761,6 +1761,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
+                doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \

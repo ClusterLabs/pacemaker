@@ -59,13 +59,6 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 SPECVERSION	?= $(COUNT)
 
-# toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
-
-# recursive, preserve symlinks/permissions/times, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlptvzxS --progress
-
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
 # Unfortunately, at least recent versions of rpm do not support mentioned
@@ -259,19 +252,23 @@ COVFILE          = $(PACKAGE)-coverity-$(TAG).tgz
 COVHOST		?= scan5.coverity.com
 COVPASS		?= password
 
-# Public coverity
-coverity:
+# Static analysis via coverity
+
+coverity-common:
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
 	make core-clean
 	rm -rf $(COVERITY_DIR)
 	cov-build --dir $(COVERITY_DIR) make core
+
+coverity: coverity-common
 	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
 	@echo "Uploading to public Coverity instance..."
 	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
 	rm -rf $(COVFILE) $(COVERITY_DIR)
+	make core-clean
 
-coverity-corp:
+coverity-corp: coverity-common
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
 	make core-clean
@@ -281,44 +278,10 @@ coverity-corp:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/$(PACKAGE)/coverity/$(TAG)/"
+#	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/$(PACKAGE)/coverity/$(TAG)/"
 	make core-clean
 #	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
-	rm -rf $(COVERITY_DIR)
-
-global: clean-generic
-	gtags -q
-
-global-upload: global
-	htags -sanhIT
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
-
-%.8.html: %.8
-	echo groff -mandoc `man -w ./$<` -T html > $@
-	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
-
-%.7.html: %.7
-	echo groff -mandoc `man -w ./$<` -T html > $@
-	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
-
-manhtml-upload: all
-	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
-
-doxygen: Doxyfile
-	doxygen Doxyfile
-
-doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
-
-abi:
-	./abi-check pacemaker $(LAST_RELEASE) $(TAG)
-abi-www:
-	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
-
-www:	manhtml-upload global-upload doxygen-upload
-	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
+#	rm -rf $(COVERITY_DIR)
 
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"

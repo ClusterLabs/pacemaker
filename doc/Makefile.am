@@ -37,6 +37,8 @@ DOCBOOK_LANGS   := en-US
 # (currently only en-US because translations aren't up-to-date)
 UPLOAD_LANGS    = en-US
 
+noinst_SCRIPTS	= abi-check
+
 # @TODO We could simplify this (and .gitignore) by establishing a convention
 # that original image source begins with an uppercase letter and generated
 # files with lowercase.
@@ -302,13 +304,64 @@ brand-rpm-install: brand-rpm-build
 	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 pdf:
-	make DOCBOOK_FORMATS="pdf" all-local
+	$(MAKE) DOCBOOK_FORMATS="pdf" all-local
 
-www: clean-local $(generated_docs) $(ascii)
+
+# Annotated source code as HTML
+
+global:
+	$(MAKE) -C .. clean-generic
+	cd .. && gtags -q && htags -sanhIT doc
+
+global-upload: global
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
+
+
+# Man pages as HTML
+
+%.8.html: %.8
+	groff -mandoc `man -w ./$<` -T html > $@
+
+%.7.html: %.7
+	groff -mandoc `man -w ./$<` -T html > $@
+
+manhtml:
+	$(MAKE) -C .. all
+	find .. -name "[a-z]*.[78]" -exec $(MAKE) \{\}.html \;
+
+manhtml-upload: manhtml
+	find .. -name "[a-z]*.[78].html" -exec \
+		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/$(PACKAGE)/man/" \;
+
+
+# API documentation as HTML
+
+doxygen: Doxyfile
+	doxygen Doxyfile
+
+doxygen-upload: doxygen
+	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
+
+
+# ABI compatibility report as HTML
+
+LAST_RELEASE	?= Pacemaker-$(VERSION)
+TAG		?= $(git log --pretty=format:%H -n 1 HEAD)
+
+abi: abi-check
+	./abi-check $(PACKAGE) $(LAST_RELEASE) $(TAG)
+
+abi-www:
+	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
+
+
+# All HTML documentation (except ABI compatibility, which is run separately)
+
+www: clean-local $(generated_docs) $(ascii) manhtml-upload global-upload doxygen-upload
 	for book in $(docbook); do 							\
 		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
-	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" all-local
+	$(MAKE) DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" all-local
 	echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
@@ -318,6 +371,7 @@ if BUILD_DOCBOOK
 	done
 endif
 	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
+
 
 clean-local:
 	-rm -f $(PNGS_GENERATED)
