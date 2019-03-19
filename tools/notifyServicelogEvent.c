@@ -1,5 +1,8 @@
 /*
- * Copyright 2009-2018 International Business Machines, IBM, Mark Hamzy
+ * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
+ * Later changes copyright 2009-2018 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
