@@ -40,7 +40,6 @@ extern void log_action(unsigned int log_level, const char *pre_text,
                        action_t * action, gboolean details);
 
 gboolean can_run_any(GHashTable * nodes);
-bool can_interleave_actions(pe_action_t *first, pe_action_t *then);
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
                                      pe_resource_t *rsc, enum rsc_role_e filter,
                                      gboolean current,

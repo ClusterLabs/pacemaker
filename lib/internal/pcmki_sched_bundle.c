@@ -716,7 +716,8 @@ container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     return changed;
 }
 
-bool can_interleave_actions(pe_action_t *first, pe_action_t *then) 
+static bool
+can_interleave_actions(pe_action_t *first, pe_action_t *then)
 {
     bool interleave = FALSE;
     resource_t *rsc = NULL;
