@@ -1,5 +1,7 @@
 /*
- * Copyright 2017 Jan Pokorny <jpokorny@redhat.com>
+ * Copyright 2017-2018 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
