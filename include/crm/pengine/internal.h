@@ -249,8 +249,11 @@ extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
 extern GListPtr find_actions(GListPtr input, const char *key, const node_t *on_node);
-extern GListPtr find_actions_exact(GListPtr input, const char *key, node_t * on_node);
+GList *find_actions_exact(GList *input, const char *key,
+                          const pe_node_t *on_node);
 extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
+GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+                            const char *task, bool require_node);
 
 extern void pe_free_action(action_t * action);
 

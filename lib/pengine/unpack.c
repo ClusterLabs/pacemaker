@@ -2026,8 +2026,8 @@ process_rsc_state(resource_t * rsc, node_t * node,
         rsc->clone_name = NULL;
 
     } else {
-        char *key = stop_key(rsc);
-        GListPtr possible_matches = find_actions(rsc->actions, key, node);
+        GList *possible_matches = pe__resource_actions(rsc, node, RSC_STOP,
+                                                       FALSE);
         GListPtr gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -2037,7 +2037,6 @@ process_rsc_state(resource_t * rsc, node_t * node,
         }
 
         g_list_free(possible_matches);
-        free(key);
     }
 }
 

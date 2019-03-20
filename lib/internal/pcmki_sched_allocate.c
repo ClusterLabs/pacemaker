@@ -638,15 +638,12 @@ static gboolean
 failcount_clear_action_exists(node_t * node, resource_t * rsc)
 {
     gboolean rc = FALSE;
-    char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-    GListPtr list = find_actions_exact(rsc->actions, key, node);
+    GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
 
     if (list) {
         rc = TRUE;
     }
     g_list_free(list);
-    free(key);
-
     return rc;
 }
 
@@ -2286,7 +2283,6 @@ order_first_probes(pe_working_set_t * data_set)
         const char *lh_action_task = order->lh_action_task;
         const char *rh_action_task = order->rh_action_task;
 
-        char *key = NULL;
         GListPtr probes = NULL;
         GListPtr rh_actions = NULL;
 
@@ -2353,10 +2349,7 @@ order_first_probes(pe_working_set_t * data_set)
             order_type = order->type;
         }
 
-        key = generate_op_key(lh_rsc->id, RSC_STATUS, 0);
-        probes = find_actions(lh_rsc->actions, key, NULL);
-        free(key);
-
+        probes = pe__resource_actions(lh_rsc, NULL, RSC_STATUS, FALSE);
         if (probes == NULL) {
             continue;
         }
@@ -2452,11 +2445,8 @@ order_then_probes(pe_working_set_t * data_set)
         action_t *start = NULL;
         GListPtr actions = NULL;
         GListPtr probes = NULL;
-        char *key = NULL;
 
-        key = start_key(rsc);
-        actions = find_actions(rsc->actions, key, NULL);
-        free(key);
+        actions = pe__resource_actions(rsc, NULL, RSC_START, FALSE);
 
         if (actions) {
             start = actions->data;
@@ -2468,9 +2458,7 @@ order_then_probes(pe_working_set_t * data_set)
             continue;
         }
 
-        key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
-        probes = find_actions(rsc->actions, key, NULL);
-        free(key);
+        probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
         for (actions = start->actions_before; actions != NULL; actions = actions->next) {
             action_wrapper_t *before = (action_wrapper_t *) actions->data;

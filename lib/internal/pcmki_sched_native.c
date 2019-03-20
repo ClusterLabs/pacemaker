@@ -917,7 +917,6 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         GListPtr probe_complete_ops = NULL;
         GListPtr stop_ops = NULL;
         GListPtr local_gIter = NULL;
-        char *stop_op_key = NULL;
 
         if (node && safe_str_eq(stop_node_uname, node_uname)) {
             continue;
@@ -946,8 +945,8 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         free(rc_inactive);
 
         if (is_set(rsc->flags, pe_rsc_managed)) {
-            char *probe_key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
-            GListPtr probes = find_actions(rsc->actions, probe_key, stop_node);
+            GList *probes = pe__resource_actions(rsc, stop_node, RSC_STATUS,
+                                                 FALSE);
             GListPtr pIter = NULL;
 
             for (pIter = probes; pIter != NULL; pIter = pIter->next) {
@@ -958,15 +957,13 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             }
 
             g_list_free(probes);
-            free(probe_key);
         }
 
         if (probe_complete_ops) {
             g_list_free(probe_complete_ops);
         }
 
-        stop_op_key = stop_key(rsc);
-        stop_ops = find_actions_exact(rsc->actions, stop_op_key, stop_node);
+        stop_ops = pe__resource_actions(rsc, stop_node, RSC_STOP, TRUE);
 
         for (local_gIter = stop_ops; local_gIter != NULL; local_gIter = local_gIter->next) {
             action_t *stop = (action_t *) local_gIter->data;
@@ -982,7 +979,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             }
 
             if (is_set(rsc->flags, pe_rsc_managed)) {
-                custom_action_order(rsc, strdup(stop_op_key), stop,
+                custom_action_order(rsc, stop_key(rsc), stop,
                                     NULL, strdup(key), stopped_mon,
                                     pe_order_implies_then | pe_order_runnable_left, data_set);
             }
@@ -992,7 +989,6 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         if (stop_ops) {
             g_list_free(stop_ops);
         }
-        free(stop_op_key);
 
         if (is_optional == FALSE && probe_is_optional && stop_is_optional
             && is_set(rsc->flags, pe_rsc_managed) == FALSE) {
@@ -2324,6 +2320,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 {
     node_t *next = NULL;
     node_t *current = NULL;
+    pe_node_t *start_node = NULL;
 
     action_t *stop = NULL;
     action_t *start = NULL;
@@ -2379,37 +2376,30 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         moving = TRUE;
     }
 
-    key = start_key(rsc);
-    possible_matches = find_actions(rsc->actions, key, next);
-    free(key);
+    possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
     if (possible_matches) {
         start = possible_matches->data;
         g_list_free(possible_matches);
     }
 
-    key = stop_key(rsc);
-    if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
-        possible_matches = find_actions(rsc->actions, key, NULL);
+    if ((start == NULL) || is_not_set(start->flags, pe_action_runnable)) {
+        start_node = NULL;
     } else {
-        possible_matches = find_actions(rsc->actions, key, current);
+        start_node = current;
     }
+    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, FALSE);
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
     }
-    free(key);
 
-    key = promote_key(rsc);
-    possible_matches = find_actions(rsc->actions, key, next);
-    free(key);
+    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);
     if (possible_matches) {
         promote = possible_matches->data;
         g_list_free(possible_matches);
     }
 
-    key = demote_key(rsc);
-    possible_matches = find_actions(rsc->actions, key, next);
-    free(key);
+    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, FALSE);
     if (possible_matches) {
         demote = possible_matches->data;
         g_list_free(possible_matches);
@@ -2418,10 +2408,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if (rsc->role == rsc->next_role) {
         action_t *migrate_op = NULL;
 
-        key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
-        possible_matches = find_actions(rsc->actions, key, next);
-        free(key);
-
+        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }
@@ -2622,7 +2609,6 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 gboolean
 PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
-    char *key = NULL;
     GListPtr gIter = NULL;
     gboolean runnable = TRUE;
     GListPtr action_list = NULL;
@@ -2631,9 +2617,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
     CRM_CHECK(next != NULL, return FALSE);
     pe_rsc_trace(rsc, "%s on %s", rsc->id, next->details->uname);
 
-    key = start_key(rsc);
-    action_list = find_actions_exact(rsc->actions, key, next);
-    free(key);
+    action_list = pe__resource_actions(rsc, next, RSC_START, TRUE);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *start = (action_t *) gIter->data;
@@ -2651,9 +2635,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
 
     pe_rsc_debug(rsc, "%s\tPromote %s (canceled)", next->details->uname, rsc->id);
 
-    key = promote_key(rsc);
-    action_list = find_actions_exact(rsc->actions, key, next);
-    free(key);
+    action_list = pe__resource_actions(rsc, next, RSC_PROMOTE, TRUE);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *promote = (action_t *) gIter->data;
@@ -3038,7 +3020,6 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
 static void
 native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
-    char *key = NULL;
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
     bool order_implicit = FALSE;
@@ -3050,9 +3031,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     target = stonith_op->node;
 
     /* Get a list of stop actions potentially implied by the fencing */
-    key = stop_key(rsc);
-    action_list = find_actions(rsc->actions, key, target);
-    free(key);
+    action_list = pe__resource_actions(rsc, target, RSC_STOP, FALSE);
 
     // If resource requires fencing, implicit actions must occur after fencing
     if (is_set(rsc->flags, pe_rsc_needs_fencing)) {
@@ -3169,9 +3148,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     g_list_free(action_list);
 
     /* Get a list of demote actions potentially implied by the fencing */
-    key = demote_key(rsc);
-    action_list = find_actions(rsc->actions, key, target);
-    free(key);
+    action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
 
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
