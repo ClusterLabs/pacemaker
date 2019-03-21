@@ -219,7 +219,7 @@ pcmk_scan_nvpair(const char *input, char **name, char **value)
 #ifdef SSCANF_HAS_M
     *name = NULL;
     *value = NULL;
-    if (sscanf(input, "%m[^=]=%ms", name, value) <= 0) {
+    if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
         return -pcmk_err_bad_nvpair;
     }
 #else
