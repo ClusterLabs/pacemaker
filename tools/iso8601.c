@@ -221,5 +221,5 @@ main(int argc, char **argv)
         free(period);
     }
 
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

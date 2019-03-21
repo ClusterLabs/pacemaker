@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -335,7 +337,7 @@ cib_init(void)
     crm_cluster_disconnect(&crm_cluster);
     cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
 
-    return crm_exit(CRM_EX_OK);
+    crm_exit(CRM_EX_OK);
 }
 
 static bool

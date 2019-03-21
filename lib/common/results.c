@@ -492,8 +492,4 @@ crm_exit(crm_exit_t rc)
     }
 
     exit(rc);
-    return rc;     /* Can never happen, but allows return crm_exit(rc)
-                    * where "return rc" was used previously - which
-                    * keeps compilers happy.
-                    */
 }

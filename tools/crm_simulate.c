@@ -927,5 +927,5 @@ main(int argc, char **argv)
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    return crm_exit(crm_errno2exit(rc));
+    crm_exit(crm_errno2exit(rc));
 }

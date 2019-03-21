@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -37,7 +39,7 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "Aborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
-    return crm_exit(CRM_EX_TIMEOUT);
+    crm_exit(CRM_EX_TIMEOUT);
 }
 
 static void
@@ -78,7 +80,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
 
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        return crm_exit(CRM_EX_OK);
+        crm_exit(CRM_EX_OK);
     }
 
     free_xml(msg);
@@ -908,7 +910,7 @@ main(int argc, char **argv)
                                                   "validate-all", validate_options,
                                                   override_params, timeout_ms);
             exit_code = crm_errno2exit(rc);
-            return crm_exit(exit_code);
+            crm_exit(exit_code);
         }
     }
 
@@ -1408,5 +1410,5 @@ main(int argc, char **argv)
         }
     }
 
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

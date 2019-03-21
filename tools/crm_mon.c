@@ -4449,5 +4449,5 @@ clean_up(crm_exit_t exit_code)
             crm_help('?', CRM_EX_USAGE);
         }
     }
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

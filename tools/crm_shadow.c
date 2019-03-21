@@ -445,5 +445,5 @@ main(int argc, char **argv)
   done:
     free(shadow_file);
     free(shadow);
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

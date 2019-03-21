@@ -182,7 +182,7 @@ main(int argc, char **argv)
     }
 
     cleanup_memory();
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }
 
 /*!

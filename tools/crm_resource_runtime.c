@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1689,7 +1691,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
 
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
-        return crm_exit(CRM_EX_DATAERR);
+        crm_exit(CRM_EX_DATAERR);
     }
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);

@@ -1,5 +1,7 @@
 /*
- * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1132,5 +1134,5 @@ main(int argc, char **argv)
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
 
-    return crm_exit(crm_errno2exit(rc));
+    crm_exit(crm_errno2exit(rc));
 }

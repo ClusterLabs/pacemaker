@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -174,7 +176,7 @@ main(int argc, char **argv)
 
     libpengine_fini();
     crm_info("Exiting %s", crm_system_name);
-    return crm_exit(CRM_EX_OK);
+    crm_exit(CRM_EX_OK);
 }
 
 void
