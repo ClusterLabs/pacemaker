@@ -711,13 +711,14 @@ clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * sta
 }
 
 static action_t *
-find_rsc_action(resource_t * rsc, const char *key, gboolean active_only, GListPtr * list)
+find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
+                GList **list)
 {
     action_t *match = NULL;
     GListPtr possible = NULL;
     GListPtr active = NULL;
 
-    possible = find_actions(rsc->actions, key, NULL);
+    possible = pe__resource_actions(rsc, NULL, task, FALSE);
 
     if (active_only) {
         GListPtr gIter = possible;
@@ -761,7 +762,6 @@ find_rsc_action(resource_t * rsc, const char *key, gboolean active_only, GListPt
 static void
 child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
-    char *key = NULL;
     action_t *stop = NULL;
     action_t *start = NULL;
     action_t *last_stop = NULL;
@@ -781,14 +781,7 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
-        key = stop_key(child);
-        stop = find_rsc_action(child, key, active_only, NULL);
-        free(key);
-
-        key = start_key(child);
-        start = find_rsc_action(child, key, active_only, NULL);
-        free(key);
-
+        stop = find_rsc_action(child, RSC_STOP, active_only, NULL);
         if (stop) {
             if (last_stop) {
                 /* child/child relative stop */
@@ -797,6 +790,7 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
             last_stop = stop;
         }
 
+        start = find_rsc_action(child, RSC_START, active_only, NULL);
         if (start) {
             if (last_start) {
                 /* child/child relative start */

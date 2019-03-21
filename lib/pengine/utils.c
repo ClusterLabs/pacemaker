@@ -1462,8 +1462,8 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     return result;
 }
 
-GListPtr
-find_actions_exact(GListPtr input, const char *key, node_t * on_node)
+GList *
+find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
 {
     GList *result = NULL;
 
@@ -1496,6 +1496,34 @@ find_actions_exact(GListPtr input, const char *key, node_t * on_node)
         }
     }
 
+    return result;
+}
+
+/*!
+ * \brief Find all actions of given type for a resource
+ *
+ * \param[in] rsc           Resource to search
+ * \param[in] node          Find only actions scheduled on this node
+ * \param[in] task          Action name to search for
+ * \param[in] require_node  If TRUE, NULL node or action node will not match
+ *
+ * \return List of actions found (or NULL if none)
+ * \note If node is not NULL and require_node is FALSE, matching actions
+ *       without a node will be assigned to node.
+ */
+GList *
+pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+                     const char *task, bool require_node)
+{
+    GList *result = NULL;
+    char *key = generate_op_key(rsc->id, task, 0);
+
+    if (require_node) {
+        result = find_actions_exact(rsc->actions, key, node);
+    } else {
+        result = find_actions(rsc->actions, key, node);
+    }
+    free(key);
     return result;
 }
 

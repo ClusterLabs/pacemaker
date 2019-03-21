@@ -116,7 +116,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     clone_variant_data_t *clone_data = NULL;
 
     const char *ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
-    const char *interleave = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
     const char *max_clones = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
     const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
@@ -164,7 +163,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         clone_data->clone_max = 1;      /* Handy during crm_verify */
     }
 
-    clone_data->interleave = crm_is_true(interleave);
     clone_data->ordered = crm_is_true(ordered);
 
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {

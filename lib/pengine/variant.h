@@ -20,7 +20,6 @@ typedef struct clone_variant_data_s {
     int total_clones;
 
     // @TODO make these a bitmask
-    gboolean interleave;
     gboolean ordered;
     gboolean applied_master_prefs;
     gboolean merged_master_weights;

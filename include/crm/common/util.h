@@ -36,6 +36,9 @@ extern "C" {
 #  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client
 
+// public name/value pair functions (from nvpair.c)
+int pcmk_scan_nvpair(const char *input, char **name, char **value);
+
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
 
@@ -52,7 +55,6 @@ gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int pcmk_scan_nvpair(const char *input, char **name, char **value);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
