@@ -33,7 +33,7 @@
  * \internal
  * \brief Allocate a new name/value pair
  *
- * \param[in] name   New name
+ * \param[in] name   New name (required)
  * \param[in] value  New value
  *
  * \return Newly allocated name/value pair
@@ -43,11 +43,15 @@
 static pcmk_nvpair_t *
 pcmk__new_nvpair(const char *name, const char *value)
 {
-    pcmk_nvpair_t *nvpair = calloc(1, sizeof(pcmk_nvpair_t));
+    pcmk_nvpair_t *nvpair = NULL;
 
+    CRM_ASSERT(name);
+
+    nvpair = calloc(1, sizeof(pcmk_nvpair_t));
     CRM_ASSERT(nvpair);
+
     nvpair->name = strdup(name);
-    nvpair->value = strdup(value);
+    nvpair->value = value? strdup(value) : NULL;
     return nvpair;
 }
 
