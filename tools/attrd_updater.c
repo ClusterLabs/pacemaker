@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -91,7 +93,7 @@ main(int argc, char **argv)
                     "Tool for updating cluster node attributes");
 
     if (argc < 2) {
-        return crm_help('?', CRM_EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -106,7 +108,7 @@ main(int argc, char **argv)
             case '?':
             case '$':
                 cleanup_memory();
-                return crm_help(flag, CRM_EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 attr_name = strdup(optarg);
@@ -162,7 +164,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         cleanup_memory();
-        return crm_help('?', CRM_EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'Q') {

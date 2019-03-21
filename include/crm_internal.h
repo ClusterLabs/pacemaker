@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2018 the Pacemaker project contributors
+ * Copyright 2006-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,7 +81,7 @@ void crm_set_options(const char *short_options, const char *usage, struct crm_op
                      const char *app_desc);
 int crm_get_option(int argc, char **argv, int *index);
 int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-crm_exit_t crm_help(char cmd, crm_exit_t exit_code);
+_Noreturn void crm_help(char cmd, crm_exit_t exit_code);
 
 /* Cluster Option Processing */
 typedef struct pe_cluster_option_s {
