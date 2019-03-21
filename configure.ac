@@ -251,6 +251,12 @@ AC_ARG_WITH(brand,
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
+BUG_URL=""
+AC_ARG_WITH(bug-url,
+    [  --with-bug-url=DIR  Address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@],
+    [ BUG_URL="$withval" ]
+)
+
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
     [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
@@ -405,6 +411,10 @@ if test x"${PCMK_GNUTLS_PRIORITIES}" = x""; then
 fi
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
+
+if test x"${BUG_URL}" = x""; then
+    BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
+fi
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
