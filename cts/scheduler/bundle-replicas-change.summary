@@ -1,9 +1,9 @@
 
 Current cluster status:
 Online: [ rh74-test ]
-Containers: [ httpd-bundle-0:httpd-bundle-docker-0 ]
+GuestOnline: [ httpd-bundle-0:httpd-bundle-docker-0 ]
 
- Docker container set: httpd-bundle [pcmktest:http] (unique)
+ Container bundle set: httpd-bundle [pcmktest:http] (unique)
    httpd-bundle-0 (192.168.20.188)	(ocf::heartbeat:apache):	Stopped rh74-test
    httpd-bundle-1 (192.168.20.189)	(ocf::heartbeat:apache):	Stopped
    httpd-bundle-2 (192.168.20.190)	(ocf::heartbeat:apache):	Stopped
@@ -66,9 +66,9 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ rh74-test ]
-Containers: [ httpd-bundle-0:httpd-bundle-docker-0 httpd-bundle-1:httpd-bundle-docker-1 httpd-bundle-2:httpd-bundle-docker-2 ]
+GuestOnline: [ httpd-bundle-0:httpd-bundle-docker-0 httpd-bundle-1:httpd-bundle-docker-1 httpd-bundle-2:httpd-bundle-docker-2 ]
 
- Docker container set: httpd-bundle [pcmktest:http] (unique)
+ Container bundle set: httpd-bundle [pcmktest:http] (unique)
    httpd-bundle-0 (192.168.20.188)	(ocf::heartbeat:apache):	Started rh74-test
    httpd-bundle-1 (192.168.20.189)	(ocf::heartbeat:apache):	Started rh74-test
    httpd-bundle-2 (192.168.20.190)	(ocf::heartbeat:apache):	Started rh74-test

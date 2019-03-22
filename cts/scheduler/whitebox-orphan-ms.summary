@@ -1,7 +1,7 @@
 
 Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
-Containers: [ lxc1:container1 lxc2:container2 ]
+GuestOnline: [ lxc1:container1 lxc2:container2 ]
 
  Fencing	(stonith:fence_xvm):	Started 18node2 
  FencingPass	(stonith:fence_dummy):	Started 18node3 

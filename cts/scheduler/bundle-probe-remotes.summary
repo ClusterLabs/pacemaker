@@ -6,7 +6,7 @@ RemoteOFFLINE: [ c09-h08-r630 c09-h09-r630 c09-h10-r630 ]
  c09-h08-r630	(ocf::pacemaker:remote):	Stopped
  c09-h09-r630	(ocf::pacemaker:remote):	Stopped
  c09-h10-r630	(ocf::pacemaker:remote):	Stopped
- Docker container set: scale1-bundle [beekhof:remote]
+ Container bundle set: scale1-bundle [beekhof:remote]
    scale1-bundle-0	(ocf::pacemaker:Dummy):	Stopped
    scale1-bundle-1	(ocf::pacemaker:Dummy):	Stopped
    scale1-bundle-2	(ocf::pacemaker:Dummy):	Stopped
@@ -151,12 +151,12 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ c09-h05-r630 c09-h06-r630 c09-h07-r630 ]
 RemoteOnline: [ c09-h08-r630 c09-h09-r630 c09-h10-r630 ]
-Containers: [ scale1-bundle-0:scale1-bundle-docker-0 scale1-bundle-1:scale1-bundle-docker-1 scale1-bundle-2:scale1-bundle-docker-2 scale1-bundle-3:scale1-bundle-docker-3 scale1-bundle-4:scale1-bundle-docker-4 scale1-bundle-5:scale1-bundle-docker-5 ]
+GuestOnline: [ scale1-bundle-0:scale1-bundle-docker-0 scale1-bundle-1:scale1-bundle-docker-1 scale1-bundle-2:scale1-bundle-docker-2 scale1-bundle-3:scale1-bundle-docker-3 scale1-bundle-4:scale1-bundle-docker-4 scale1-bundle-5:scale1-bundle-docker-5 ]
 
  c09-h08-r630	(ocf::pacemaker:remote):	Started c09-h05-r630
  c09-h09-r630	(ocf::pacemaker:remote):	Started c09-h06-r630
  c09-h10-r630	(ocf::pacemaker:remote):	Started c09-h07-r630
- Docker container set: scale1-bundle [beekhof:remote]
+ Container bundle set: scale1-bundle [beekhof:remote]
    scale1-bundle-0	(ocf::pacemaker:Dummy):	Started c09-h05-r630
    scale1-bundle-1	(ocf::pacemaker:Dummy):	Started c09-h06-r630
    scale1-bundle-2	(ocf::pacemaker:Dummy):	Started c09-h07-r630

@@ -2,7 +2,7 @@
 Current cluster status:
 Node kiff-01 (1): UNCLEAN (offline)
 Online: [ kiff-02 ]
-Containers: [ lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
+GuestOnline: [ lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
 
  fence-kiff-01	(stonith:fence_ipmilan):	Started kiff-02 
  fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-01 (UNCLEAN)
@@ -81,7 +81,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ kiff-02 ]
 OFFLINE: [ kiff-01 ]
-Containers: [ lxc-01_kiff-01:R-lxc-01_kiff-01 lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-01:R-lxc-02_kiff-01 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
+GuestOnline: [ lxc-01_kiff-01:R-lxc-01_kiff-01 lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-01:R-lxc-02_kiff-01 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
 
  fence-kiff-01	(stonith:fence_ipmilan):	Started kiff-02 
  fence-kiff-02	(stonith:fence_ipmilan):	Started kiff-02 

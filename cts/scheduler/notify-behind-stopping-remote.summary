@@ -2,9 +2,9 @@ Using the original execution date of: 2018-11-22 20:36:07Z
 
 Current cluster status:
 Online: [ ra1 ra2 ra3 ]
-Containers: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
+GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
 
- Docker container set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
+ Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
    redis-bundle-0	(ocf::heartbeat:redis):	Slave ra1
    redis-bundle-1	(ocf::heartbeat:redis):	Stopped ra2
    redis-bundle-2	(ocf::heartbeat:redis):	Slave ra3
@@ -53,9 +53,9 @@ Using the original execution date of: 2018-11-22 20:36:07Z
 
 Revised cluster status:
 Online: [ ra1 ra2 ra3 ]
-Containers: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-2:redis-bundle-docker-2 ]
+GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-2:redis-bundle-docker-2 ]
 
- Docker container set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
+ Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
    redis-bundle-0	(ocf::heartbeat:redis):	Master ra1
    redis-bundle-1	(ocf::heartbeat:redis):	Stopped
    redis-bundle-2	(ocf::heartbeat:redis):	Slave ra3
