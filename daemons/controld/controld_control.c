@@ -140,7 +140,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern crm_ipc_t *attrd_ipc;
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
@@ -197,13 +196,7 @@ crmd_exit(crm_exit_t exit_code)
         ipcs = NULL;
     }
 
-    if (attrd_ipc) {
-        crm_trace("Closing connection to pacemaker-attrd");
-        crm_ipc_close(attrd_ipc);
-        crm_ipc_destroy(attrd_ipc);
-        attrd_ipc = NULL;
-    }
-
+    controld_close_attrd_ipc();
     pe_subsystem_free();
 
     if(stonith_api) {
