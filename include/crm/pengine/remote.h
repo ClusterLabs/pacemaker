@@ -19,11 +19,12 @@ extern "C" {
 #include <crm/pengine/status.h>
 
 gboolean xml_contains_remote_node(xmlNode *xml);
-gboolean is_baremetal_remote_node(node_t *node);
-gboolean is_container_remote_node(node_t *node);
-gboolean is_remote_node(node_t *node);
-gboolean is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set);
-resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
+gboolean pe__is_remote_node(pe_node_t *node);
+gboolean pe__is_guest_node(pe_node_t *node);
+gboolean pe__is_guest_or_remote_node(pe_node_t *node);
+gboolean pe__resource_is_remote_conn(pe_resource_t *rsc, pe_working_set_t *data_set);
+pe_resource_t *pe__resource_contains_guest_node(const pe_working_set_t *data_set,
+                                                const pe_resource_t *rsc);
 void pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
                            void (*helper)(const node_t*, void*), void *user_data);
 xmlNode *pe_create_remote_xml(xmlNode *parent, const char *uname,

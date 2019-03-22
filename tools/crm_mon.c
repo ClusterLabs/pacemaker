@@ -2059,7 +2059,7 @@ get_node_display_name(node_t *node)
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
     /* Host is displayed only if this is a guest node */
-    if (is_container_remote_node(node)) {
+    if (pe__is_guest_node(node)) {
         node_t *host_node = pe__current_node(node->details->remote_rsc);
 
         if (host_node && host_node->details) {
@@ -3467,9 +3467,9 @@ print_status(pe_working_set_t * data_set,
         } else if (node->details->online) {
             node_mode = "online";
             if (group_by_node == FALSE) {
-                if (is_container_remote_node(node)) {
+                if (pe__is_guest_node(node)) {
                     online_guest_nodes = add_list_element(online_guest_nodes, node_name);
-                } else if (is_baremetal_remote_node(node)) {
+                } else if (pe__is_remote_node(node)) {
                     online_remote_nodes = add_list_element(online_remote_nodes, node_name);
                 } else {
                     online_nodes = add_list_element(online_nodes, node_name);
@@ -3480,9 +3480,9 @@ print_status(pe_working_set_t * data_set,
         } else {
             node_mode = "OFFLINE";
             if (group_by_node == FALSE) {
-                if (is_baremetal_remote_node(node)) {
+                if (pe__is_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
-                } else if (is_container_remote_node(node)) {
+                } else if (pe__is_guest_node(node)) {
                     /* ignore offline guest nodes */
                 } else {
                     offline_nodes = add_list_element(offline_nodes, node_name);
@@ -3495,9 +3495,9 @@ print_status(pe_working_set_t * data_set,
         /* If we get here, node is in bad state, or we're grouping by node */
 
         /* Print the node name and status */
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             print_as("Guest");
-        } else if (is_baremetal_remote_node(node)) {
+        } else if (pe__is_remote_node(node)) {
             print_as("Remote");
         }
         print_as("Node %s: %s\n", node_name, node_mode);
@@ -3644,7 +3644,7 @@ print_xml_status(pe_working_set_t * data_set,
         fprintf(stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 

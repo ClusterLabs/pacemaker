@@ -777,7 +777,8 @@ get_router_node(action_t *action)
     bool partial_migration = FALSE;
     const char *task = action->task;
 
-    if (safe_str_eq(task, CRM_OP_FENCE) || is_remote_node(action->node) == FALSE) {
+    if (safe_str_eq(task, CRM_OP_FENCE)
+        || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
 
@@ -893,7 +894,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
         node_t *node = (node_t *) gIter->data;
         struct pe_node_shared_s *details = node->details;
 
-        if (!(is_remote_node(node))) {
+        if (!pe__is_guest_or_remote_node(node)) {
             continue; /* just remote nodes need to know atm */
         }
 
@@ -1218,7 +1219,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
         }
 
-        if(is_container_remote_node(action->node)) {
+        if (pe__is_guest_node(action->node)) {
             pe_node_t *host = NULL;
             enum action_tasks task = text2task(action->task);
 
@@ -1362,7 +1363,8 @@ should_dump_action(action_t * action)
         log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
         return FALSE;
 
-    } else if(is_container_remote_node(action->node) && action->node->details->remote_requires_reset == FALSE) {
+    } else if (pe__is_guest_node(action->node)
+               && !action->node->details->remote_requires_reset) {
         crm_trace("Assuming action %s for %s will be runnable", action->uuid, action->node->details->uname);
 
     } else if (action->node->details->online == FALSE) {

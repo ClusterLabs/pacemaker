@@ -133,7 +133,7 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
         }
 
         container_host = replica->container->allocated_to;
-        if (replica->remote && is_remote_node(container_host)) {
+        if (replica->remote && pe__is_guest_or_remote_node(container_host)) {
             /* We need 'nested' connection resources to be on the same
              * host because pacemaker-remoted only supports a single
              * active connection

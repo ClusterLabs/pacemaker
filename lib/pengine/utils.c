@@ -84,7 +84,7 @@ pe_free_rsc_action_details(pe_action_t *action)
  *
  * \return TRUE if node can be fenced, FALSE otherwise
  *
- * \note This function should only be called for cluster nodes and baremetal
+ * \note This function should only be called for cluster nodes and
  *       remote nodes; guest nodes are fenced by stopping their container
  *       resource, so fence execution requirements do not apply to them.
  */
@@ -570,7 +570,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
 /*   			action->runnable = FALSE; */
 
         } else if (action->node->details->online == FALSE
-                   && (!is_container_remote_node(action->node) || action->node->details->remote_requires_reset)) {
+                   && (!pe__is_guest_node(action->node)
+                       || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
@@ -1087,9 +1088,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         action->on_fail = action_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
-    /* for baremetal remote nodes, ensure that any failure that results in
-     * dropping an active connection to a remote node results in fencing of
-     * the remote node.
+    /* For remote nodes, ensure that any failure that results in dropping an
+     * active connection to the node results in fencing of the node.
      *
      * There are only two action failures that don't result in fencing.
      * 1. probes - probe failures are expected.
@@ -1097,20 +1097,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
     } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
-                (is_rsc_baremetal_remote_node(action->rsc, data_set) &&
+                (pe__resource_is_remote_conn(action->rsc, data_set) &&
                !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && (interval_ms == 0)) &&
                 (safe_str_neq(action->task, CRMD_ACTION_START)))) {
 
         if (!is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
-            value = "stop unmanaged baremetal remote node (enforcing default)";
+            value = "stop unmanaged remote node (enforcing default)";
 
         } else {
             if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-                value = "fence baremetal remote node (default)";
+                value = "fence remote node (default)";
             } else {
-                value = "recover baremetal remote node connection (default)";
+                value = "recover remote node connection (default)";
             }
 
             if (action->rsc->remote_reconnect_ms) {
@@ -2211,7 +2211,8 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if(is_remote_node(node) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        if (pe__is_guest_or_remote_node(node)
+            && is_set(data_set->flags, pe_flag_enable_unfencing)) {
             /* Extra work to detect device changes on remotes
              *
              * We may do this for all nodes in the future, but for now

@@ -1516,7 +1516,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
         } else  {
-            remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
+            remote_rsc = pe__resource_contains_guest_node(data_set,
+                                                          rsc->container);
         }
 
         if (remote_rsc) {
@@ -2782,7 +2783,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if (is_remote_node(node)) {
+    if (pe__is_guest_or_remote_node(node)) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
@@ -2790,7 +2791,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                          "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
                          rsc->id, node->details->id);
             return FALSE;
-        } else if (is_container_remote_node(node) && rsc_contains_remote_node(data_set, rsc)) {
+        } else if (pe__is_guest_node(node)
+                   && pe__resource_contains_guest_node(data_set, rsc)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
                          rsc->id, node->details->id);
@@ -2863,7 +2865,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if(is_container_remote_node(node)) {
+    if (pe__is_guest_node(node)) {
         resource_t *remote = node->details->remote_rsc->container;
 
         if(remote->role == RSC_ROLE_STOPPED) {
@@ -3087,7 +3089,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
      * ordered after fencing, even if the resource does not require fencing,
      * because guest node "fencing" is actually just a resource stop.
      */
-    if (is_container_remote_node(target)) {
+    if (pe__is_guest_node(target)) {
         order_implicit = TRUE;
     }
 

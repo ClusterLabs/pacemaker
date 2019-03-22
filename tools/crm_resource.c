@@ -1328,7 +1328,7 @@ main(int argc, char **argv)
         if (host_uname) {
             node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-            if (node && is_remote_node(node)) {
+            if (pe__is_guest_or_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);
                 if (node == NULL) {
                     CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",

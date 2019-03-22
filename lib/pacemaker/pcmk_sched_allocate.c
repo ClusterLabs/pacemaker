@@ -925,7 +925,7 @@ probe_resources(pe_working_set_t * data_set)
 
         if (node->details->online == FALSE) {
 
-            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+            if (pe__is_remote_node(node) && node->details->remote_rsc
                 && (get_remote_node_state(node) == remote_state_failed)) {
 
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
@@ -1554,7 +1554,7 @@ stage6(pe_working_set_t * data_set)
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             if (node->details->remote_requires_reset && need_stonith) {
                 fence_guest(node, data_set);
             }
@@ -1596,7 +1596,7 @@ stage6(pe_working_set_t * data_set)
                 /* TODO define what a shutdown op means for a remote node.
                  * For now we do not send shutdown operations for remote nodes, but
                  * if we can come up with a good use for this in the future, we will. */
-                    is_remote_node(node) == FALSE) {
+                    pe__is_guest_or_remote_node(node) == FALSE) {
 
             action_t *down_op = sched_shutdown_op(node, data_set);
 
@@ -1855,7 +1855,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
 
     CRM_ASSERT(action->rsc);
     CRM_ASSERT(action->node);
-    CRM_ASSERT(is_remote_node(action->node));
+    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -2026,7 +2026,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
     }
 
     CRM_ASSERT(action->node);
-    CRM_ASSERT(is_remote_node(action->node));
+    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -2182,7 +2182,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             continue;
         }
 
-        if (is_remote_node(action->node) == FALSE) {
+        if (!pe__is_guest_or_remote_node(action->node)) {
             continue;
         }
 
@@ -2696,7 +2696,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             continue;
         }
 
-        if (is_container_remote_node(action->node)) {
+        if (pe__is_guest_node(action->node)) {
             node_name = crm_strdup_printf("%s (resource: %s)", action->node->details->uname, action->node->details->remote_rsc->container->id);
         } else if(action->node) {
             node_name = crm_strdup_printf("%s", action->node->details->uname);

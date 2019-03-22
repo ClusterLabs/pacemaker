@@ -809,7 +809,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
-            if(is_remote_node(node)) {
+            if (pe__is_guest_or_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
                 node->weight = -INFINITY;
             }
@@ -817,7 +817,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node->details->remote_rsc = replica->remote;
 
-        // Ensure is_container_remote_node() functions correctly immediately
+        // Ensure pe__is_guest_node() functions correctly immediately
         replica->remote->container = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the
@@ -828,7 +828,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         /* One effect of this is that setup_container() will add
          * replica->remote to replica->container's fillers, which will make
-         * rsc_contains_remote_node() true for replica->container.
+         * pe__resource_contains_guest_node() true for replica->container.
          *
          * replica->child does NOT get added to replica->container's fillers.
          * The only noticeable effect if it did would be for its fail count to

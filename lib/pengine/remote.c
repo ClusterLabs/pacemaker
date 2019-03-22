@@ -14,7 +14,7 @@
 #include <glib.h>
 
 gboolean
-is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set)
+pe__resource_is_remote_conn(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *node;
 
@@ -29,47 +29,56 @@ is_rsc_baremetal_remote_node(resource_t *rsc, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    return is_baremetal_remote_node(node);
+    return pe__is_remote_node(node);
 }
 
 gboolean
-is_baremetal_remote_node(node_t *node)
+pe__is_remote_node(pe_node_t *node)
 {
-    if (is_remote_node(node) && (node->details->remote_rsc == NULL || node->details->remote_rsc->container == FALSE)) {
+    if (pe__is_guest_or_remote_node(node)
+        && ((node->details->remote_rsc == NULL)
+            || (node->details->remote_rsc->container == NULL))) {
         return TRUE;
     }
     return FALSE;
 }
 
 gboolean
-is_container_remote_node(node_t *node)
+pe__is_guest_node(pe_node_t *node)
 {
-    if (is_remote_node(node) && (node->details->remote_rsc && node->details->remote_rsc->container)) {
+    if (pe__is_guest_or_remote_node(node)
+        && node->details->remote_rsc
+        && node->details->remote_rsc->container) {
         return TRUE;
     }
     return FALSE;
 }
 
 gboolean
-is_remote_node(node_t *node)
+pe__is_guest_or_remote_node(pe_node_t *node)
 {
-    if (node && node->details->type == node_remote) {
-        return TRUE;
-    }
-    return FALSE;
+    return (node != NULL) && (node->details->type == node_remote);
 }
 
-resource_t *
-rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc)
+/*!
+ * \internal
+ * \brief Check whether a resource creates a guest node
+ *
+ * If a given resource contains a filler resource that is a remote connection,
+ * return that filler resource (or NULL if none is found).
+ *
+ * \param[in] data_set  Working set of cluster
+ * \param[in] rsc       Resource to check
+ *
+ * \return Filler resource with remote connection, or NULL if none found
+ */
+pe_resource_t *
+pe__resource_contains_guest_node(const pe_working_set_t *data_set,
+                                 const pe_resource_t *rsc)
 {
-    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
-        return NULL;
-    }
-
-    if (rsc->fillers) {
-        GListPtr gIter = NULL;
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
+    if (rsc && data_set && is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+        for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *filler = gIter->data;
 
             if (filler->is_remote_node) {
                 return filler;

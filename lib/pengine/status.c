@@ -184,8 +184,8 @@ pe_free_nodes(GListPtr nodes)
         /* This is called after pe_free_resources(), which means that we can't
          * use node->details->uname for Pacemaker Remote nodes.
          */
-        crm_trace("Freeing node %s", (is_remote_node(node)?
-                  "(Pacemaker Remote)" : node->details->uname));
+        crm_trace("Freeing node %s", (pe__is_guest_or_remote_node(node)?
+                  "(guest or remote)" : node->details->uname));
 
         if (node->details->attrs != NULL) {
             g_hash_table_destroy(node->details->attrs);
