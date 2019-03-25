@@ -195,6 +195,39 @@ add_action_env_vars(const svc_action_t *op)
     }
 }
 
+static void
+pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
+{
+    svc_action_t *op = user_data;
+    char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
+    int ret, total = 0, len = strlen(buffer);
+
+    do {
+        errno = 0;
+        ret = write(op->opaque->stdin_fd, buffer + total, len - total);
+        if (ret > 0) {
+            total += ret;
+        }
+
+    } while ((errno == EINTR) && (total < len));
+    free(buffer);
+}
+
+/*!
+ * \internal
+ * \brief Pipe parameters in via stdin for action
+ *
+ * \param[in] op  Action to use
+ */
+static void
+pipe_in_action_stdin_parameters(const svc_action_t *op)
+{
+    crm_debug("sending args");
+    if (op->params) {
+        g_hash_table_foreach(op->params, pipe_in_single_parameter, (gpointer) op);
+    }
+}
+
 gboolean
 recurring_action_timer(gpointer data)
 {
@@ -282,6 +315,10 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
         crm_trace("%s: %p", op->id, op->stdout_data);
         mainloop_del_fd(op->opaque->stdout_gsource);
         op->opaque->stdout_gsource = NULL;
+    }
+
+    if (op->opaque->stdin_fd >= 0) {
+        close(op->opaque->stdin_fd);
     }
 
     if (signo) {
@@ -605,6 +642,9 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
 
     close(op->opaque->stdout_fd);
     close(op->opaque->stderr_fd);
+    if (op->opaque->stdin_fd >= 0) {
+        close(op->opaque->stdin_fd);
+    }
 
 #ifdef HAVE_SYS_SIGNALFD_H
     close(sfd);
@@ -618,6 +658,7 @@ services_os_action_execute(svc_action_t * op)
 {
     int stdout_fd[2];
     int stderr_fd[2];
+    int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
     sigset_t *pmask;
@@ -683,6 +724,25 @@ services_os_action_execute(svc_action_t * op)
         return FALSE;
     }
 
+    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (pipe(stdin_fd) < 0) {
+            rc = errno;
+
+            close(stdout_fd[0]);
+            close(stdout_fd[1]);
+            close(stderr_fd[0]);
+            close(stderr_fd[1]);
+
+            crm_err("pipe(stdin_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+
+            services_handle_exec_error(op, rc);
+            if (!op->synchronous) {
+                return operation_finalize(op);
+            }
+            return FALSE;
+        }
+    }
+
     if (op->synchronous) {
 #ifdef HAVE_SYS_SIGNALFD_H
         sigemptyset(&mask);
@@ -730,6 +790,10 @@ services_os_action_execute(svc_action_t * op)
             close(stdout_fd[1]);
             close(stderr_fd[0]);
             close(stderr_fd[1]);
+            if (stdin_fd[0] >= 0) {
+                close(stdin_fd[0]);
+                close(stdin_fd[1]);
+            }
 
             crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
             services_handle_exec_error(op, rc);
@@ -743,6 +807,9 @@ services_os_action_execute(svc_action_t * op)
         case 0:                /* Child */
             close(stdout_fd[0]);
             close(stderr_fd[0]);
+            if (stdin_fd[1] >= 0) {
+                close(stdin_fd[1]);
+            }
             if (STDOUT_FILENO != stdout_fd[1]) {
                 if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
                     crm_err("dup2() failed (stdout)");
@@ -754,6 +821,13 @@ services_os_action_execute(svc_action_t * op)
                     crm_err("dup2() failed (stderr)");
                 }
                 close(stderr_fd[1]);
+            }
+            if ((stdin_fd[0] >= 0) &&
+                (STDIN_FILENO != stdin_fd[0])) {
+                if (dup2(stdin_fd[0], STDIN_FILENO) != STDIN_FILENO) {
+                    crm_err("dup2() failed (stdin)");
+                }
+                close(stdin_fd[0]);
             }
 
             if (op->synchronous) {
@@ -767,6 +841,9 @@ services_os_action_execute(svc_action_t * op)
     /* Only the parent reaches here */
     close(stdout_fd[1]);
     close(stderr_fd[1]);
+    if (stdin_fd[0] >= 0) {
+        close(stdin_fd[0]);
+    }
 
     op->opaque->stdout_fd = stdout_fd[0];
     rc = crm_set_nonblocking(op->opaque->stdout_fd);
@@ -782,6 +859,22 @@ services_os_action_execute(svc_action_t * op)
         crm_warn("Could not set child error output non-blocking: %s "
                  CRM_XS " rc=%d",
                  pcmk_strerror(rc), rc);
+    }
+
+    op->opaque->stdin_fd = stdin_fd[1];
+    if (op->opaque->stdin_fd >= 0) {
+        // using buffer behind non-blocking-fd here - that could be improved
+        // as long as no other standard uses stdin_fd assume stonith
+        rc = crm_set_nonblocking(op->opaque->stdin_fd);
+        if (rc < 0) {
+            crm_warn("Could not set child input non-blocking: %s "
+                    CRM_XS " fd=%d,rc=%d",
+                    pcmk_strerror(rc), op->opaque->stdin_fd, rc);
+        }
+        pipe_in_action_stdin_parameters(op);
+        // as long as we are handling parameters directly in here just close
+        close(op->opaque->stdin_fd);
+        op->opaque->stdin_fd = -1;
     }
 
     if (op->synchronous) {

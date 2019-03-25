@@ -170,7 +170,10 @@ typedef struct svc_action_s {
     char *agent;
 
     int timeout;
-    GHashTable *params; /* used by OCF agents and alert agents */
+    GHashTable *params; /* used for setting up environment for ocf-ra &
+                           alert agents
+                           and to be sent via stdin for fence-agents
+                         */
 
     int rc;
     int pid;
