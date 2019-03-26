@@ -73,12 +73,11 @@ SendSIGKILL=no
 #
 # ExecStopPost=/bin/sh -c 'pidof pacemaker-controld || killall -TERM corosync'
 
-# Uncomment this for older versions of systemd that didn't support
-# TimeoutStopSec
-# TimeoutSec=30min
-
-# Pacemaker can only exit after all managed services have shut down
-# A HA database could conceivably take even longer than this 
+# When the service functions properly, it will wait to exit until all resources
+# have been stopped on the local node, and potentially across all nodes that
+# are shutting down.  The default of 30min should cover most typical cluster
+# configurations, but it may need an increase to adapt to local conditions
+# (e.g. a large, clustered database could conceivably take longer to stop).
 TimeoutStopSec=30min
 TimeoutStartSec=60s
 
