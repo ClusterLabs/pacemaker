@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -905,7 +907,7 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
     return -1;
 }
 
-crm_exit_t
+void
 crm_help(char cmd, crm_exit_t exit_code)
 {
     int i = 0;
@@ -978,7 +980,8 @@ crm_help(char cmd, crm_exit_t exit_code)
     fprintf(stream, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 
   out:
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
+    while(1); // above does not return
 }
 
 void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,

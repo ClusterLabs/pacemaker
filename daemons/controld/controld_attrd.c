@@ -1,5 +1,7 @@
 /*
- * Copyright 2006-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2006-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -15,7 +17,18 @@
 #include <controld_utils.h>
 #include <controld_messages.h>
 
-crm_ipc_t *attrd_ipc = NULL;
+static crm_ipc_t *attrd_ipc = NULL;
+
+void
+controld_close_attrd_ipc()
+{
+    if (attrd_ipc) {
+        crm_trace("Closing connection to pacemaker-attrd");
+        crm_ipc_close(attrd_ipc);
+        crm_ipc_destroy(attrd_ipc);
+        attrd_ipc = NULL;
+    }
+}
 
 static void
 log_attrd_error(const char *host, const char *name, const char *value,

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -902,30 +904,44 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     }
 }
 
+/*!
+ * \brief Handle a timeout in node-to-node communication
+ *
+ * \param[in] data  Pointer to action timer
+ *
+ * \return FALSE (indicating that source should be not be re-added)
+ */
 gboolean
 action_timer_callback(gpointer data)
 {
     crm_action_timer_t *timer = NULL;
+    const char *task = NULL;
+    const char *on_node = NULL;
+    const char *via_node = NULL;
 
     CRM_CHECK(data != NULL, return FALSE);
 
     timer = (crm_action_timer_t *) data;
     stop_te_timer(timer);
 
-    crm_warn("Timer popped (timeout=%d, abort_level=%d, complete=%s)",
-             timer->timeout,
-             transition_graph->abort_priority, transition_graph->complete ? "true" : "false");
-
     CRM_CHECK(timer->action != NULL, return FALSE);
 
-    if (transition_graph->complete) {
-        crm_warn("Ignoring timeout while not in transition");
+    task = crm_element_value(timer->action->xml, XML_LRM_ATTR_TASK);
+    on_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_TARGET);
+    via_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
+    if (transition_graph->complete) {
+        crm_notice("Node %s did not send %s result (via %s) within %dms "
+                   "(ignoring because transition not in progress)",
+                   (on_node? on_node : ""), (task? task : "unknown action"),
+                   (via_node? via_node : "controller"), timer->timeout);
     } else {
         /* fail the action */
-        gboolean send_update = TRUE;
-        const char *task = crm_element_value(timer->action->xml, XML_LRM_ATTR_TASK);
 
+        crm_err("Node %s did not send %s result (via %s) within %dms "
+                "(action timeout plus cluster-delay)",
+                (on_node? on_node : ""), (task? task : "unknown action"),
+                (via_node? via_node : "controller"), timer->timeout);
         print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
 
         timer->action->failed = TRUE;
@@ -935,14 +951,9 @@ action_timer_callback(gpointer data)
         update_graph(transition_graph, timer->action);
         trigger_graph();
 
-        if (timer->action->type != action_type_rsc) {
-            send_update = FALSE;
-        } else if (!controld_action_is_recordable(task)) {
-            /* we don't need to update the CIB with these */
-            send_update = FALSE;
-        }
-
-        if (send_update) {
+        // Record timeout in the CIB if appropriate
+        if ((timer->action->type == action_type_rsc)
+            && controld_action_is_recordable(task)) {
             controld_record_action_timeout(timer->action);
         }
     }

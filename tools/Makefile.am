@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -61,7 +61,7 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_shadow_SOURCES	= cib_shadow.c
+crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
@@ -118,7 +118,7 @@ crm_rule_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/pengine/libpe_status.la   \
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
-iso8601_SOURCES		= test.iso8601.c
+iso8601_SOURCES		= iso8601.c
 iso8601_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 attrd_updater_SOURCES	= attrd_updater.c

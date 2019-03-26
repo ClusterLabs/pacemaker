@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -668,20 +670,20 @@ main(int argc, char **argv)
             case 'p':
                 free(pid_file);
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 setenv("CIB_file", optarg, 1);
                 one_shot = TRUE;
                 break;
             case 'h':
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
@@ -720,7 +722,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                return crm_help(flag, CRM_EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -4444,8 +4446,8 @@ clean_up(crm_exit_t exit_code)
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
         } else {
-            return crm_help('?', CRM_EX_USAGE);
+            crm_help('?', CRM_EX_USAGE);
         }
     }
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

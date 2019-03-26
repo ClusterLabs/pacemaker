@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -138,7 +140,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern crm_ipc_t *attrd_ipc;
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
@@ -158,7 +159,7 @@ crmd_fast_exit(crm_exit_t exit_code)
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }
 
 crm_exit_t
@@ -195,13 +196,7 @@ crmd_exit(crm_exit_t exit_code)
         ipcs = NULL;
     }
 
-    if (attrd_ipc) {
-        crm_trace("Closing connection to pacemaker-attrd");
-        crm_ipc_close(attrd_ipc);
-        crm_ipc_destroy(attrd_ipc);
-        attrd_ipc = NULL;
-    }
-
+    controld_close_attrd_ipc();
     pe_subsystem_free();
 
     if(stonith_api) {

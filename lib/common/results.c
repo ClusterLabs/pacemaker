@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -436,7 +438,7 @@ crm_errno2exit(int rc)
 const char *
 bz2_strerror(int rc)
 {
-    /* http://www.bzip.org/1.0.3/html/err-handling.html */
+    // See ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC17
     switch (rc) {
         case BZ_OK:
         case BZ_RUN_OK:
@@ -490,8 +492,4 @@ crm_exit(crm_exit_t rc)
     }
 
     exit(rc);
-    return rc;     /* Can never happen, but allows return crm_exit(rc)
-                    * where "return rc" was used previously - which
-                    * keeps compilers happy.
-                    */
 }

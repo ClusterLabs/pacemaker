@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 Gao,Yan <ygao@suse.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -898,5 +900,5 @@ main(int argc, char **argv)
         CMD_ERR("Use --force to ignore quorum");
     }
 
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

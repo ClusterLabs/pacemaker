@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -327,7 +329,7 @@ crm_ends_with_ext(const char *s, const char *match)
 /*
  * This re-implements g_str_hash as it was prior to glib2-2.28:
  *
- *   http://git.gnome.org/browse/glib/commit/?id=354d655ba8a54b754cb5a3efb42767327775696c
+ * https://gitlab.gnome.org/GNOME/glib/commit/354d655ba8a54b754cb5a3efb42767327775696c
  *
  * Note that the new g_str_hash is presumably a *better* hash (it's actually
  * a correct implementation of DJB's hash), but we need to preserve existing

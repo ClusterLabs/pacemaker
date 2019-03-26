@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -420,5 +422,5 @@ main(int argc, char **argv)
     attrd_cib_disconnect();
     g_hash_table_destroy(attributes);
 
-    return crm_exit(attrd_exit_status);
+    crm_exit(attrd_exit_status);
 }
