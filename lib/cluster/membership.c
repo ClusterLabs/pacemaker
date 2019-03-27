@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -55,6 +57,7 @@ GHashTable *crm_known_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
+static void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) = NULL;
 
 int
 crm_remote_peer_cache_size(void)
@@ -424,8 +427,6 @@ crm_peer_destroy(void)
     }
 
 }
-
-void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) = NULL;
 
 /*!
  * \brief Set a client function that will be called after peer status changes
