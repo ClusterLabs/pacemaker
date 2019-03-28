@@ -555,7 +555,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
                     xmlNode *new_rsc_ref = NULL;
 
                     new_rsc_ref = xmlNewDocRawNode(getDocPtr(set), NULL,
-                                                   (const xmlChar *)XML_TAG_RESOURCE_REF, NULL);
+                                                   (pcmkXmlStr) XML_TAG_RESOURCE_REF, NULL);
                     crm_xml_add(new_rsc_ref, XML_ATTR_ID, obj_ref);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
 

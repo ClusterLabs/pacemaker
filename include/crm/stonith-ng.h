@@ -536,6 +536,13 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
  */
 bool stonith_agent_exists(const char *agent, int timeout);
 
+/*!
+ * \brief Turn stonith action into a more readable string
+ *
+ * \param[in] action Stonith action
+ */
+const char *stonith_action_str(const char *action);
+
 #ifdef __cplusplus
 }
 #endif

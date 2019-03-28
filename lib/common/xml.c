@@ -634,7 +634,7 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
             const char *p_name = (const char *)xIter->name;
             const char *p_value = crm_element_value(next, p_name);
 
-            xmlSetProp(cib, (const xmlChar *)p_name, (const xmlChar *)p_value);
+            xmlSetProp(cib, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
         }
     }
 
@@ -1855,7 +1855,7 @@ getDocPtr(xmlNode * node)
 
     doc = node->doc;
     if (doc == NULL) {
-        doc = xmlNewDoc((const xmlChar *)"1.0");
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
         xmlDocSetRootElement(doc, node);
         xmlSetTreeDoc(node, doc);
     }
@@ -1896,13 +1896,13 @@ create_xml_node(xmlNode * parent, const char *name)
     }
 
     if (parent == NULL) {
-        doc = xmlNewDoc((const xmlChar *)"1.0");
-        node = xmlNewDocRawNode(doc, NULL, (const xmlChar *)name, NULL);
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         xmlDocSetRootElement(doc, node);
 
     } else {
         doc = getDocPtr(parent);
-        node = xmlNewDocRawNode(doc, NULL, (const xmlChar *)name, NULL);
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         xmlAddChild(parent, node);
     }
     crm_node_created(node);
@@ -2017,7 +2017,7 @@ free_xml(xmlNode * child)
 xmlNode *
 copy_xml(xmlNode * src)
 {
-    xmlDoc *doc = xmlNewDoc((const xmlChar *)"1.0");
+    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
 
     xmlDocSetRootElement(doc, copy);
@@ -2075,7 +2075,7 @@ string2xml(const char *input)
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
     /* initGenericErrorDefaultFunc(crm_xml_err); */
     output =
-        xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL,
+        xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
                        XML_PARSE_NOBLANKS | XML_PARSE_RECOVER);
     if (output) {
         xml = xmlDocGetRootElement(output);
@@ -2265,7 +2265,7 @@ filename2xml(const char *filename)
     } else {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL,
+        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
                                 xml_options);
         free(input);
     }
@@ -3002,6 +3002,34 @@ dump_xml_text(xmlNode * data, int options, char **buffer, int *offset, int *max,
     }
 }
 
+static void
+dump_xml_cdata(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
+{
+    CRM_ASSERT(max != NULL);
+    CRM_ASSERT(offset != NULL);
+    CRM_ASSERT(buffer != NULL);
+
+    if (data == NULL) {
+        crm_trace("Nothing to dump");
+        return;
+    }
+
+    if (*buffer == NULL) {
+        *offset = 0;
+        *max = 0;
+    }
+
+    insert_prefix(options, buffer, offset, max, depth);
+
+    buffer_print(*buffer, *max, *offset, "<![CDATA[");
+    buffer_print(*buffer, *max, *offset, "%s", data->content);
+    buffer_print(*buffer, *max, *offset, "]]>");
+
+    if (options & xml_log_option_formatted) {
+        buffer_print(*buffer, *max, *offset, "\n");
+    }
+}
+
 
 static void
 dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
@@ -3106,13 +3134,15 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         case XML_COMMENT_NODE:
             dump_xml_comment(data, options, buffer, offset, max, depth);
             break;
+        case XML_CDATA_SECTION_NODE:
+            dump_xml_cdata(data, options, buffer, offset, max, depth);
+            break;
         default:
             crm_warn("Unhandled type: %d", data->type);
             return;
 
             /*
             XML_ATTRIBUTE_NODE = 2
-            XML_CDATA_SECTION_NODE = 4
             XML_ENTITY_REF_NODE = 5
             XML_ENTITY_NODE = 6
             XML_PI_NODE = 7
@@ -3188,7 +3218,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
     } else if (pcmk__tracking_xml_changes(obj, FALSE)) {
         /* Leave in place (marked for removal) until after the diff is calculated */
         xml_private_t *p = NULL;
-        xmlAttr *attr = xmlHasProp(obj, (const xmlChar *)name);
+        xmlAttr *attr = xmlHasProp(obj, (pcmkXmlStr) name);
 
         p = attr->_private;
         set_parent_flag(obj, xpf_dirty);
@@ -3196,7 +3226,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
         /* crm_trace("Setting flag %x due to %s[@id=%s].%s", xpf_dirty, obj->name, ID(obj), name); */
 
     } else {
-        xmlUnsetProp(obj, (const xmlChar *)name);
+        xmlUnsetProp(obj, (pcmkXmlStr) name);
     }
 }
 
@@ -3358,8 +3388,8 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
 
             /* Prevent the dirty flag being set recursively upwards */
             clear_bit(p->flags, xpf_tracking);
-            exists = xmlSetProp(new_xml, (const xmlChar *) name,
-                                (const xmlChar *) old_value);
+            exists = xmlSetProp(new_xml, (pcmkXmlStr) name,
+                                (pcmkXmlStr) old_value);
             set_bit(p->flags, xpf_tracking);
 
             p = exists->_private;
@@ -3384,7 +3414,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
 
                 crm_trace("Modified %s@%s %s->%s",
                           old_xml->name, name, old_value, vcopy);
-                xmlSetProp(new_xml, prop->name, (const xmlChar *) old_value);
+                xmlSetProp(new_xml, prop->name, (pcmkXmlStr) old_value);
                 crm_xml_add(new_xml, name, vcopy);
                 free(vcopy);
 
@@ -3719,14 +3749,14 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             const char *p_name = (const char *)pIter->name;
             const char *p_value = pcmk__xml_attr_value(pIter);
 
-            xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
+            xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
         }
 
         /* We already have everything we need... */
         goto done;
 
     } else if (id) {
-        xmlSetProp(diff, (const xmlChar *)XML_ATTR_ID, (const xmlChar *)id);
+        xmlSetProp(diff, (pcmkXmlStr) XML_ATTR_ID, (pcmkXmlStr) id);
     }
 
     /* changes to name/value pairs */
@@ -3752,7 +3782,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             continue;
         }
 
-        right_attr = xmlHasProp(right, (const xmlChar *)prop_name);
+        right_attr = xmlHasProp(right, (pcmkXmlStr) prop_name);
         if (right_attr) {
             p = right_attr->_private;
         }
@@ -3768,14 +3798,14 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                     const char *p_name = (const char *)pIter->name;
                     const char *p_value = pcmk__xml_attr_value(pIter);
 
-                    xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
+                    xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
                 }
                 break;
 
             } else {
                 const char *left_value = crm_element_value(left, prop_name);
 
-                xmlSetProp(diff, (const xmlChar *)prop_name, (const xmlChar *)value);
+                xmlSetProp(diff, (pcmkXmlStr) prop_name, (pcmkXmlStr) value);
                 crm_xml_add(diff, prop_name, left_value);
             }
 
@@ -3797,7 +3827,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                         const char *p_name = (const char *)pIter->name;
                         const char *p_value = pcmk__xml_attr_value(pIter);
 
-                        xmlSetProp(diff, (const xmlChar *)p_name, (const xmlChar *)p_value);
+                        xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
                     }
                     break;
 
@@ -3913,8 +3943,8 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
             const char *p_value = pcmk__xml_attr_value(pIter);
 
             /* Remove it first so the ordering of the update is preserved */
-            xmlUnsetProp(target, (const xmlChar *)p_name);
-            xmlSetProp(target, (const xmlChar *)p_name, (const xmlChar *)p_value);
+            xmlUnsetProp(target, (pcmkXmlStr) p_name);
+            xmlSetProp(target, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
         }
     }
 

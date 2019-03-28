@@ -588,7 +588,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
          */
 
         if (name) {
-            xmlAttr *attr = xmlHasProp(xml, (const xmlChar *)name);
+            xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) name);
 
             if (attr && mode == xpf_acl_create) {
                 mode = xpf_acl_write;

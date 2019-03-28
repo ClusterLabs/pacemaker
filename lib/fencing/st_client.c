@@ -2239,3 +2239,17 @@ stonith_agent_exists(const char *agent, int timeout)
     stonith_api_delete(st);
     return rc;
 }
+
+const char *
+stonith_action_str(const char *action)
+{
+    if (action == NULL) {
+        return "fencing";
+    } else if (!strcmp(action, "on")) {
+        return "unfencing";
+    } else if (!strcmp(action, "off")) {
+        return "turning off";
+    } else {
+        return action;
+    }
+}
