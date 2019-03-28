@@ -3114,29 +3114,6 @@ sort_stonith_history(stonith_history_t *history)
 
 /*!
  * \internal
- * \brief Turn stonith action into a better readable string
- *
- * \param[in] action     Stonith action
- */
-static char *
-fence_action_str(const char *action)
-{
-    char *str = NULL;
-
-    if (action == NULL) {
-        str = strdup("fencing");
-    } else if (!strcmp(action, "on")) {
-        str = strdup("unfencing");
-    } else if (!strcmp(action, "off")) {
-        str = strdup("turning off");
-    } else {
-        str = strdup(action);
-    }
-    return str;
-}
-
-/*!
- * \internal
  * \brief Print a stonith action
  *
  * \param[in] stream     File stream to display output to
@@ -3145,7 +3122,7 @@ fence_action_str(const char *action)
 static void
 print_stonith_action(FILE *stream, stonith_history_t *event)
 {
-    char *action_s = fence_action_str(event->action);
+    const char *action_s = stonith_action_str(event->action);
     char *run_at_s = ctime(&event->completed);
 
     if ((run_at_s) && (run_at_s[0] != 0)) {
@@ -3243,8 +3220,6 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
             /* no support for fence history for other formats so far */
             break;
     }
-
-    free(action_s);
 }
 
 /*!
