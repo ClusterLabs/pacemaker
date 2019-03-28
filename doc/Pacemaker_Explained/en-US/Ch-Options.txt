@@ -146,6 +146,17 @@ their default values, by running the `man pacemaker-schedulerd` and
 |=========================================================
 |Option |Default |Description
 
+| cluster-name | |
+indexterm:[cluster-name,Cluster Property]
+indexterm:[Cluster,Property,cluster-name]
+An (optional) name for the cluster as a whole. This is mostly for users'
+convenience for use as desired in administration, but this can be used
+in the Pacemaker configuration in <<ch-rules,rules>> (as the
++#cluster-name+ <<node-attribute-expressions-special,node attribute>>). It may
+also be used by higher-level tools when displaying cluster information, and by
+certain resource agents (for example, the +ocf:heartbeat:GFS2+ agent stores the
+cluster name in filesystem meta-data).
+
 | dc-version | |
 indexterm:[dc-version,Cluster Property]
 indexterm:[Cluster,Property,dc-version]
