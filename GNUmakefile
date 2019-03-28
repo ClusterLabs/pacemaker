@@ -336,6 +336,20 @@ clang:
 	test -e $(CLANG_analyzer)
 	scan-build $(CLANG_checkers:%=-enable-checker %) make clean all
 
+cocci:
+	for f in maint/coccinelle/*.cocci; do \
+	  for d in daemons include lib tools; do \
+	    test $$d = "include" \
+	      && spatch $(_SPATCH_FLAGS) --include-headers --local-includes \
+	         --preprocess --sp-file $$f --dir $$d \
+	      || spatch $(_SPATCH_FLAGS) --local-includes \
+	         --preprocess --sp-file $$f --dir $$d; \
+	  done; \
+	done
+
+cocci-inplace:
+	$(MAKE) _SPATCH_FLAGS=--in-place cocci
+
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
 # http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
