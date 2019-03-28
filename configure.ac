@@ -94,6 +94,8 @@ AC_PROG_CC_STDC
 AC_PROG_CXX dnl C++ is not needed for build, just maintainer utilities
 
 gl_EARLY
+# We expressly don't want to introduce OpenSSL dependency by default.
+gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
 LT_INIT([dlopen])
