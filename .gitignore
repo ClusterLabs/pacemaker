@@ -179,6 +179,9 @@ lib/gnu/stdalign.h
 /xml/test-*/*.up.err
 /xml/assets/diffview.js
 
+# Release maintenance detritus
+/maint/gnulib
+
 # Formerly built files (helps when jumping back and forth in checkout)
 /.ABI-build
 /Doxyfile
