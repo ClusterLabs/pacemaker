@@ -920,7 +920,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
         xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
-    xslt = xsltParseStylesheetFile((const xmlChar *)xform);
+    xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     res = xsltApplyStylesheet(xslt, doc, NULL);

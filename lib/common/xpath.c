@@ -147,7 +147,7 @@ xpath_search(xmlNode * xml_top, const char *path)
     xmlDocPtr doc = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     xmlXPathContextPtr xpathCtx = NULL;
-    const xmlChar *xpathExpr = (const xmlChar *)path;
+    const xmlChar *xpathExpr = (pcmkXmlStr) path;
 
     CRM_CHECK(path != NULL, return NULL);
     CRM_CHECK(xml_top != NULL, return NULL);

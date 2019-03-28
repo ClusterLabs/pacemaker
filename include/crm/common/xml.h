@@ -48,6 +48,8 @@ extern "C" {
 
 #  define XML_PARANOIA_CHECKS 0
 
+typedef const xmlChar *pcmkXmlStr;
+
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);
 
