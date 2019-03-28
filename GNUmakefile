@@ -338,9 +338,17 @@ clang:
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
-# http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
-GNU_MODS	= crypto/md5
+# https://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
+# previously, this was crypto/md5, but got spoiled with streams/kernel crypto
+GNU_MODS	= crypto/md5-buffer
+# stdint appears to be surrogate only for C99-lacking environments
+GNU_MODS_AVOID	= stdint
+# only for plain crypto/md5: we make do without kernel-assisted crypto
+# GNU_MODS_AVOID	+= crypto/af_alg
 gnulib-update:
-	-test ! -e gnulib && git clone git://git.savannah.gnu.org/gnulib.git
-	cd gnulib && git pull
-	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)
+	-test -e maint/gnulib \
+	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
+	cd maint/gnulib && git pull
+	maint/gnulib/gnulib-tool \
+	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
+	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
