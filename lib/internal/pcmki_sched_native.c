@@ -1933,13 +1933,14 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     CRM_ASSERT(is_primitive_action(first));
     CRM_ASSERT(is_primitive_action(then));
 
-    if ((filter & pe_action_runnable)
-        && (then->flags & pe_action_runnable) == 0
-        && (then->rsc->flags & pe_rsc_managed)) {
+    if (is_set(filter, pe_action_runnable)
+        && is_not_set(then->flags, pe_action_runnable)
+        && is_set(then->rsc->flags, pe_rsc_managed)) {
         reason = "shutdown";
     }
 
-    if ((filter & pe_action_optional) && (then->flags & pe_action_optional) == 0) {
+    if (is_set(filter, pe_action_optional)
+        && is_not_set(then->flags, pe_action_optional)) {
         reason = "recover";
     }
 
