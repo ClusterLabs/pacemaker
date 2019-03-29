@@ -1933,33 +1933,41 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     CRM_ASSERT(is_primitive_action(first));
     CRM_ASSERT(is_primitive_action(then));
 
+    // We need to update the action in two cases:
+
+    // ... if 'then' is required
+    if (is_set(filter, pe_action_optional)
+        && is_not_set(then->flags, pe_action_optional)) {
+        reason = "restart";
+    }
+
+    // ... if 'then' is managed but unrunnable
     if (is_set(filter, pe_action_runnable)
         && is_not_set(then->flags, pe_action_runnable)
         && is_set(then->rsc->flags, pe_rsc_managed)) {
-        reason = "shutdown";
+        reason = "stop";
     }
 
-    if (is_set(filter, pe_action_optional)
-        && is_not_set(then->flags, pe_action_optional)) {
-        reason = "recover";
+    if (reason == NULL) {
+        return;
     }
 
-    if (reason && is_set(first->flags, pe_action_optional)) {
+    pe_rsc_trace(first->rsc, "Handling %s -> %s for %s",
+                 first->uuid, then->uuid, reason);
+
+    if (is_set(first->flags, pe_action_optional)) {
         if (is_set(first->flags, pe_action_runnable)
             || is_not_set(then->flags, pe_action_optional)) {
-            pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
             pe_action_implies(first, then, pe_action_optional);
         }
     }
 
-    if (reason && is_not_set(first->flags, pe_action_optional)
+    if (is_not_set(first->flags, pe_action_optional)
         && is_not_set(first->flags, pe_action_runnable)) {
-        pe_rsc_trace(then->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
         pe_action_implies(then, first, pe_action_runnable);
     }
 
-    if (reason &&
-        is_not_set(first->flags, pe_action_optional) &&
+    if (is_not_set(first->flags, pe_action_optional) &&
         is_set(first->flags, pe_action_migrate_runnable)  &&
         is_not_set(then->flags, pe_action_migrate_runnable)) {
 
