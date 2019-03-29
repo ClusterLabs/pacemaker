@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2006-2019 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -198,7 +198,9 @@ pid_t pcmk_locate_sbd(void);
 #  define F_ATTRD_IS_FORCE_WRITE "attrd_is_force_write"
 
 /* attrd operations */
+#  define ATTRD_OP_ATTR_REMOVE   "attr-remove"
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
+#  define ATTRD_OP_PEER_CLEAR    "peer-clear"
 #  define ATTRD_OP_UPDATE        "update"
 #  define ATTRD_OP_UPDATE_BOTH   "update-both"
 #  define ATTRD_OP_UPDATE_DELAY  "update-delay"
