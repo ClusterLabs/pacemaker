@@ -1945,6 +1945,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     if (is_set(filter, pe_action_runnable)
         && is_not_set(then->flags, pe_action_runnable)
         && is_set(then->rsc->flags, pe_rsc_managed)) {
+        // If a resource should restart but can't start, we still want to stop
         reason = "stop";
     }
 
@@ -1955,23 +1956,25 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     pe_rsc_trace(first->rsc, "Handling %s -> %s for %s",
                  first->uuid, then->uuid, reason);
 
-    if (is_set(first->flags, pe_action_optional)) {
-        if (is_set(first->flags, pe_action_runnable)
-            || is_not_set(then->flags, pe_action_optional)) {
-            pe_action_implies(first, then, pe_action_optional);
-        }
+    // Make 'first' required if it is runnable
+    if (is_set(first->flags, pe_action_runnable)) {
+        pe_action_implies(first, then, pe_action_optional);
     }
 
+    // Make 'first' required if 'then' is required
+    if (is_not_set(then->flags, pe_action_optional)) {
+        pe_action_implies(first, then, pe_action_optional);
+    }
+
+    // Make 'first' unmigratable if 'then' is unmigratable
+    if (is_not_set(then->flags, pe_action_migrate_runnable)) {
+        pe_action_implies(first, then, pe_action_migrate_runnable);
+    }
+
+    // Make 'then' unrunnable if 'first' is required but unrunnable
     if (is_not_set(first->flags, pe_action_optional)
         && is_not_set(first->flags, pe_action_runnable)) {
         pe_action_implies(then, first, pe_action_runnable);
-    }
-
-    if (is_not_set(first->flags, pe_action_optional) &&
-        is_set(first->flags, pe_action_migrate_runnable)  &&
-        is_not_set(then->flags, pe_action_migrate_runnable)) {
-
-        pe_action_implies(first, then, pe_action_migrate_runnable);
     }
 }
 
