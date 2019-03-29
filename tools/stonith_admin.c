@@ -323,15 +323,31 @@ handle_level(stonith_t *st, char *target, int fence_level,
                                        name, value, fence_level);
 }
 
+static char *
+fence_action_str(const char *action)
+{
+    char *str = NULL;
+
+    if (action == NULL) {
+        str = strdup("unknown");
+    } else if (action[0] == 'o') { // on, off
+        str = crm_concat("turn", action, ' ');
+    } else {
+        str = strdup(action);
+    }
+    return str;
+}
+
 static void
 print_fence_event(stonith_history_t *event)
 {
-    const char *action_s = stonith_action_str(event->action);
+    char *action_s = fence_action_str(event->action);
     time_t complete = event->completed;
 
     printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
            (event->delegate? event->delegate : "This node"), action_s,
            event->target, event->client, event->origin, ctime(&complete));
+    free(action_s);
 }
 
 static int
@@ -355,6 +371,7 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
                            (safe_str_eq(target, "*")? NULL : target),
                            &history, timeout);
     for (hp = history; hp; hp = hp->next) {
+        char *action_s = NULL;
         time_t complete = hp->completed;
 
         if (hp->state == st_done) {
@@ -366,8 +383,8 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
         }
 
         if (hp->state == st_failed) {
-            const char *action_s = stonith_action_str(hp->action);
-            printf("%s failed %s node %s on behalf of %s from %s at %s\n",
+            action_s = fence_action_str(hp->action);
+            printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
                    hp->delegate ? hp->delegate : "We", action_s, hp->target,
                    hp->client, hp->origin, ctime(&complete));
 
@@ -379,11 +396,13 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
              * in this output, when used with older versions of DLM
              * that don't report stateful_merge_wait
              */
-            const char *action_s = stonith_action_str(hp->action);
+            action_s = fence_action_str(hp->action);
             printf("%s at %s wishes to %s node %s - %d %lld\n",
                    hp->client, hp->origin, action_s, hp->target, hp->state,
                    (long long) complete);
         }
+
+        free(action_s);
     }
 
     if (latest) {
