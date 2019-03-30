@@ -442,6 +442,7 @@ do_test group-fail "Ensure stop order is preserved for partially active groups"
 do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
 do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
 do_test group-dependents "Account for the location preferences of things colocated with a group"
+do_test group-stop-ordering "Ensure blocked group member stop does not force other member stops"
 
 echo ""
 do_test rsc_dep1 "Must not     "

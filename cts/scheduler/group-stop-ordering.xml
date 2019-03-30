@@ -1,0 +1,132 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="32" num_updates="15" admin_epoch="0" cib-last-written="Sat Jul 28 03:06:46 2018" update-origin="fastvm-rhel-7-5-73" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.18-11.el7_5.3-2b07d5c5a9"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1532740006"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="fastvm-rhel-7-5-73"/>
+      <node id="2" uname="fastvm-rhel-7-5-74"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fence-fastvm-rhel-7-5-73" type="fence_xvm">
+        <instance_attributes id="fence-fastvm-rhel-7-5-73-instance_attributes">
+          <nvpair id="fence-fastvm-rhel-7-5-73-instance_attributes-pcmk_host_map" name="pcmk_host_map" value="fastvm-rhel-7-5-73:fastvm-rhel-7.5-73;"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-fastvm-rhel-7-5-73-monitor-interval-30s" interval="30s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="fence-fastvm-rhel-7-5-74" type="fence_xvm">
+        <instance_attributes id="fence-fastvm-rhel-7-5-74-instance_attributes">
+          <nvpair id="fence-fastvm-rhel-7-5-74-instance_attributes-pcmk_host_map" name="pcmk_host_map" value="fastvm-rhel-7-5-74:fastvm-rhel-7.5-74;"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-fastvm-rhel-7-5-74-monitor-interval-30s" interval="30s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="outside_resource" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="outside_resource-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20"/>
+          <op id="outside_resource-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20"/>
+          <op id="outside_resource-monitor-interval-10" interval="10" name="monitor" on-fail="block"/>
+          <op id="outside_resource-reload-interval-0s" interval="0s" name="reload" timeout="20"/>
+          <op id="outside_resource-start-interval-0s" interval="0s" name="start" timeout="20"/>
+          <op id="outside_resource-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+        </operations>
+        <meta_attributes id="outside_resource-meta_attributes"/>
+      </primitive>
+      <group id="grp">
+        <primitive class="ocf" id="inside_resource_2" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="inside_resource_2-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20"/>
+            <op id="inside_resource_2-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20"/>
+            <op id="inside_resource_2-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+            <op id="inside_resource_2-reload-interval-0s" interval="0s" name="reload" timeout="20"/>
+            <op id="inside_resource_2-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="inside_resource_2-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="inside_resource_3" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="inside_resource_3-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20"/>
+            <op id="inside_resource_3-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20"/>
+            <op id="inside_resource_3-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+            <op id="inside_resource_3-reload-interval-0s" interval="0s" name="reload" timeout="20"/>
+            <op id="inside_resource_3-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="inside_resource_3-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="location-fence-fastvm-rhel-7-5-73-fastvm-rhel-7-5-73--INFINITY" node="fastvm-rhel-7-5-73" rsc="fence-fastvm-rhel-7-5-73" score="-INFINITY"/>
+      <rsc_location id="location-fence-fastvm-rhel-7-5-74-fastvm-rhel-7-5-74--INFINITY" node="fastvm-rhel-7-5-74" rsc="fence-fastvm-rhel-7-5-74" score="-INFINITY"/>
+      <rsc_order first="inside_resource_2" first-action="start" id="order-inside_resource_2-outside_resource-mandatory" then="outside_resource" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="fastvm-rhel-7-5-73" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="fence-fastvm-rhel-7-5-73" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-73_last_0" operation_key="fence-fastvm-rhel-7-5-73_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="2:0:7:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:7;2:0:7:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1532677735" last-rc-change="1532677735" exec-time="2" queue-time="0" op-digest="19df1a0b16e49519b6ad60ced7864b32"/>
+          </lrm_resource>
+          <lrm_resource id="fence-fastvm-rhel-7-5-74" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-74_last_0" operation_key="fence-fastvm-rhel-7-5-74_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="10:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;10:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1532677735" last-rc-change="1532677735" exec-time="34" queue-time="0" op-digest="0b321829ad4a026df6dcad0efa304d0d"/>
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-74_monitor_30000" operation_key="fence-fastvm-rhel-7-5-74_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;11:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="19" rc-code="0" op-status="0" interval="30000" last-rc-change="1532677735" exec-time="27" queue-time="0" op-digest="37581a67508cb0e5baab51caa4d57481"/>
+          </lrm_resource>
+          <lrm_resource id="inside_resource_2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="inside_resource_2_last_0" operation_key="inside_resource_2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;12:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="119" rc-code="0" op-status="0" interval="0" last-run="1532679131" last-rc-change="1532679131" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="inside_resource_2_monitor_10000" operation_key="inside_resource_2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:34:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;12:34:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="98" rc-code="0" op-status="0" interval="10000" last-rc-change="1532679034" exec-time="16" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inside_resource_3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="inside_resource_3_last_0" operation_key="inside_resource_3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="15:38:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;15:38:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="111" rc-code="0" op-status="0" interval="0" last-run="1532679120" last-rc-change="1532679120" exec-time="14" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="inside_resource_3_monitor_10000" operation_key="inside_resource_3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:37:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;3:37:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="109" rc-code="0" op-status="0" interval="10000" last-rc-change="1532679109" exec-time="11" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="outside_resource" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="outside_resource_last_0" operation_key="outside_resource_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;11:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="128" rc-code="0" op-status="0" interval="0" last-run="1532740007" last-rc-change="1532740007" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="outside_resource_monitor_10000" operation_key="outside_resource_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;12:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="129" rc-code="0" op-status="0" interval="10000" last-rc-change="1532740007" exec-time="11" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="outside_resource_last_failure_0" operation_key="outside_resource_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:7;12:111:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-73" call-id="129" rc-code="7" op-status="0" interval="10000" last-rc-change="1532740638" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-fail-count-outside_resource.monitor_10000" name="fail-count-outside_resource#monitor_10000" value="1"/>
+          <nvpair id="status-1-last-failure-outside_resource.monitor_10000" name="last-failure-outside_resource#monitor_10000" value="1532740638"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="fastvm-rhel-7-5-74" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="fence-fastvm-rhel-7-5-73" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-73_last_0" operation_key="fence-fastvm-rhel-7-5-73_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;8:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1532677735" last-rc-change="1532677735" exec-time="28" queue-time="0" op-digest="19df1a0b16e49519b6ad60ced7864b32"/>
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-73_monitor_30000" operation_key="fence-fastvm-rhel-7-5-73_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;9:1:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="15" rc-code="0" op-status="0" interval="30000" last-rc-change="1532677735" exec-time="32" queue-time="0" op-digest="70d4caa7832da5fcdf131e29ea3936b7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-fastvm-rhel-7-5-74" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="fence-fastvm-rhel-7-5-74_last_0" operation_key="fence-fastvm-rhel-7-5-74_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="6:0:7:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:7;6:0:7:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1532677735" last-rc-change="1532677735" exec-time="0" queue-time="0" op-digest="0b321829ad4a026df6dcad0efa304d0d"/>
+          </lrm_resource>
+          <lrm_resource id="outside_resource" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="outside_resource_last_0" operation_key="outside_resource_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:15:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;12:15:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1532678303" last-rc-change="1532678303" exec-time="18" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="outside_resource_monitor_10000" operation_key="outside_resource_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="14:12:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;14:12:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="35" rc-code="0" op-status="0" interval="10000" last-rc-change="1532678229" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inside_resource_2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="inside_resource_2_last_0" operation_key="inside_resource_2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="13:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;13:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1532679131" last-rc-change="1532679131" exec-time="14" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="inside_resource_2_monitor_10000" operation_key="inside_resource_2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="14:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;14:40:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="46" rc-code="0" op-status="0" interval="10000" last-rc-change="1532679131" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inside_resource_3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="inside_resource_3_last_0" operation_key="inside_resource_3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="15:113:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;15:113:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="323" rc-code="0" op-status="0" interval="0" last-run="1532740638" last-rc-change="1532740638" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="inside_resource_3_monitor_10000" operation_key="inside_resource_3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:113:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" transition-magic="0:0;5:113:0:6895fb61-9ed3-458d-8207-59cfaf0c8079" exit-reason="" on_node="fastvm-rhel-7-5-74" call-id="324" rc-code="0" op-status="0" interval="10000" last-rc-change="1532740638" exec-time="11" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
