@@ -1976,11 +1976,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
         reason = "restart";
     }
 
-    // ... if 'then' is managed but unrunnable
+    /* ... if 'then' is unrunnable start of managed resource (if a resource
+     * should restart but can't start, we still want to stop)
+     */
     if (is_set(filter, pe_action_runnable)
         && is_not_set(then->flags, pe_action_runnable)
-        && is_set(then->rsc->flags, pe_rsc_managed)) {
-        // If a resource should restart but can't start, we still want to stop
+        && is_set(then->rsc->flags, pe_rsc_managed)
+        && safe_str_eq(then->task, RSC_START)) {
         reason = "stop";
     }
 
