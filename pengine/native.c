@@ -1942,6 +1942,79 @@ native_action_flags(action_t * action, node_t * node)
     return action->flags;
 }
 
+static inline bool
+is_primitive_action(pe_action_t *action)
+{
+    return action && action->rsc && (action->rsc->variant == pe_native);
+}
+
+/*!
+ * \internal
+ * \brief Set action bits appropriately when pe_restart_order is used
+ *
+ * \param[in] first   'First' action in an ordering with pe_restart_order
+ * \param[in] then    'Then' action in an ordering with pe_restart_order
+ * \param[in] filter  What ordering flags to care about
+ *
+ * \note pe_restart_order is set for "stop resource before starting it" and
+ *       "stop later group member before stopping earlier group member"
+ */
+static void
+handle_restart_ordering(pe_action_t *first, pe_action_t *then,
+                        enum pe_action_flags filter)
+{
+    const char *reason = NULL;
+
+    CRM_ASSERT(is_primitive_action(first));
+    CRM_ASSERT(is_primitive_action(then));
+
+    // We need to update the action in two cases:
+
+    // ... if 'then' is required
+    if (is_set(filter, pe_action_optional)
+        && is_not_set(then->flags, pe_action_optional)) {
+        reason = "restart";
+    }
+
+    /* ... if 'then' is unrunnable start of managed resource (if a resource
+     * should restart but can't start, we still want to stop)
+     */
+    if (is_set(filter, pe_action_runnable)
+        && is_not_set(then->flags, pe_action_runnable)
+        && is_set(then->rsc->flags, pe_rsc_managed)
+        && safe_str_eq(then->task, RSC_START)) {
+        reason = "stop";
+    }
+
+    if (reason == NULL) {
+        return;
+    }
+
+    pe_rsc_trace(first->rsc, "Handling %s -> %s for %s",
+                 first->uuid, then->uuid, reason);
+
+    // Make 'first' required if it is runnable
+    if (is_set(first->flags, pe_action_runnable)) {
+        pe_action_implies(first, then, pe_action_optional);
+    }
+
+    // Make 'first' required if 'then' is required
+    if (is_not_set(then->flags, pe_action_optional)) {
+        pe_action_implies(first, then, pe_action_optional);
+    }
+
+    // Make 'first' unmigratable if 'then' is unmigratable
+    if (is_not_set(then->flags, pe_action_migrate_runnable)) {
+        pe_action_implies(first, then, pe_action_migrate_runnable);
+    }
+
+    // Make 'then' unrunnable if 'first' is required but unrunnable
+    if (is_not_set(first->flags, pe_action_optional)
+        && is_not_set(first->flags, pe_action_runnable)) {
+        pe_action_implies(then, first, pe_action_runnable);
+    }
+}
+
 enum pe_graph_flags
 native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
                       enum pe_action_flags filter, enum pe_ordering type)
@@ -2069,43 +2142,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     }
 
     if (is_set(type, pe_order_restart)) {
-        const char *reason = NULL;
-
-        CRM_ASSERT(first->rsc && first->rsc->variant == pe_native);
-        CRM_ASSERT(then->rsc && then->rsc->variant == pe_native);
-
-        if ((filter & pe_action_runnable)
-            && (then->flags & pe_action_runnable) == 0
-            && (then->rsc->flags & pe_rsc_managed)) {
-            reason = "shutdown";
-        }
-
-        if ((filter & pe_action_optional) && (then->flags & pe_action_optional) == 0) {
-            reason = "recover";
-        }
-
-        if (reason && is_set(first->flags, pe_action_optional)) {
-            if (is_set(first->flags, pe_action_runnable)
-                || is_not_set(then->flags, pe_action_optional)) {
-                pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-                pe_action_implies(first, then, pe_action_optional);
-            }
-        }
-
-        if (reason && is_not_set(first->flags, pe_action_optional)
-            && is_not_set(first->flags, pe_action_runnable)) {
-            pe_rsc_trace(then->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            pe_action_implies(then, first, pe_action_runnable);
-        }
-
-        if (reason &&
-            is_not_set(first->flags, pe_action_optional) &&
-            is_set(first->flags, pe_action_migrate_runnable)  &&
-            is_not_set(then->flags, pe_action_migrate_runnable)) {
-
-            pe_action_implies(first, then, pe_action_migrate_runnable);
-        }
-
+        handle_restart_ordering(first, then, filter);
     }
 
     if (then_flags != then->flags) {
