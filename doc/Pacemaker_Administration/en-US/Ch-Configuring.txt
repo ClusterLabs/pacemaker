@@ -224,7 +224,7 @@ its `--help` option.
  * Actions with a red border are ones the cluster would like to execute but cannot run
  * Actions with a blue border are ones the cluster does not feel need to be executed
  * Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph
- * Actions with black text are sent to the LRM
+ * Actions with black text are sent to the executor
  * Resource actions have text of the form pass:[<replaceable>rsc</replaceable>]_pass:[<replaceable>action</replaceable>]_pass:[<replaceable>interval</replaceable>] pass:[<replaceable>node</replaceable>]
  * Any action depending on an action with a red border will not be able to execute. 
  * Loops are _really_ bad. Please report them to the development team. 
