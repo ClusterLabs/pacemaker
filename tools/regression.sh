@@ -8,6 +8,8 @@ GREP_OPTIONS=
 verbose=0
 tests="dates tools acls validity"
 
+CRM_EX_OK=0
+
 function test_assert() {
     target=$1; shift
     cib=$1; shift
