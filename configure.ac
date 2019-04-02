@@ -1813,7 +1813,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/gnu/Makefile                                    \
                 lib/pacemaker/Makefile                              \
                 lib/pengine/Makefile                                \
-                lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \

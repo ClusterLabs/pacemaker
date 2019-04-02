@@ -21,7 +21,6 @@ libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la \
-			$(top_builddir)/lib/transition/libtransitioner.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 libpacemaker_la_SOURCES	= pcmk_sched_allocate.c \
@@ -36,4 +35,7 @@ libpacemaker_la_SOURCES	= pcmk_sched_allocate.c \
 			  pcmk_sched_promotable.c \
 			  pcmk_sched_transition.c \
 			  pcmk_sched_utilization.c \
-			  pcmk_sched_utils.c
+			  pcmk_sched_utils.c \
+			  pcmk_trans_graph.c \
+			  pcmk_trans_unpack.c \
+			  pcmk_trans_utils.c
