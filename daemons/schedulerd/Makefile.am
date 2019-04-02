@@ -13,7 +13,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la \
-		$(top_builddir)/lib/internal/libpacemaker-internal.la
+		$(top_builddir)/lib/pacemaker/libpacemaker.la
 
 ## binary progs
 

@@ -17,11 +17,11 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST		= pacemaker.pc.in pacemaker-pe_rules.pc.in pacemaker-pe_status.pc.in $(target_LIBS:%=%.in)
+EXTRA_DIST		= pacemaker.pc.in pacemaker-pe_rules.pc.in pacemaker-pe_status.pc.in libpacemaker.pc.in $(target_LIBS:%=%.in)
 
-LIBS			= cib lrmd service fencing cluster internal
+LIBS			= cib lrmd service fencing cluster
 
-target_LIBS		= $(LIBS:%=pacemaker-%.pc)
+target_LIBS		= $(LIBS:%=pacemaker-%.pc) libpacemaker.pc
 
 target_PACKAGE		= pacemaker.pc
 
@@ -40,5 +40,5 @@ clean-local:
 	rm -f *.pc
 
 ## Subdirectories...
-SUBDIRS	= gnu common pengine transition cib services fencing lrmd cluster internal
+SUBDIRS	= gnu common pengine transition cib services fencing lrmd cluster pacemaker
 DIST_SUBDIRS =  $(SUBDIRS)
