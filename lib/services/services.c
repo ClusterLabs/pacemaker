@@ -450,35 +450,6 @@ services_action_user(svc_action_t *op, const char *user)
     return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
 }
 
-static void
-set_alert_env(gpointer key, gpointer value, gpointer user_data)
-{
-    int rc;
-
-    if (value) {
-        rc = setenv(key, value, 1);
-    } else {
-        rc = unsetenv(key);
-    }
-
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "setenv %s=%s",
-                  (char*)key, (value? (char*)value : ""));
-    } else {
-        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
-    }
-}
-
-static void
-unset_alert_env(gpointer key, gpointer value, gpointer user_data)
-{
-    if (unsetenv(key) < 0) {
-        crm_perror(LOG_ERR, "unset %s", (char*)key);
-    } else {
-        crm_trace("unset %s", (char*)key);
-    }
-}
-
 /*!
  * \brief Execute an alert agent action
  *
@@ -493,18 +464,9 @@ unset_alert_env(gpointer key, gpointer value, gpointer user_data)
 gboolean
 services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
 {
-    gboolean responsible;
-
     action->synchronous = false;
     action->opaque->callback = cb;
-    if (action->params) {
-        g_hash_table_foreach(action->params, set_alert_env, NULL);
-    }
-    responsible = services_os_action_execute(action);
-    if (action->params) {
-        g_hash_table_foreach(action->params, unset_alert_env, NULL);
-    }
-    return responsible;
+    return services_os_action_execute(action);
 }
 
 #if SUPPORT_DBUS
