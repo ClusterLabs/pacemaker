@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -44,10 +46,10 @@ fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *shutdown_escalation_timer = NULL; /* How long to wait for the DC to stop all resources and give us the all-clear to shut down */
 
-volatile gboolean do_fsa_stall = FALSE;
-volatile long long fsa_input_register = 0;
-volatile long long fsa_actions = A_NOTHING;
-volatile enum crmd_fsa_state fsa_state = S_STARTING;
+gboolean do_fsa_stall = FALSE;
+long long fsa_input_register = 0;
+long long fsa_actions = A_NOTHING;
+enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
 extern uint num_join_invites;

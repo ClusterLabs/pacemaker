@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -39,10 +41,10 @@ int lrmd_call_id = 0;
 
 #ifdef ENABLE_PCMK_REMOTE
 /* whether shutdown request has been sent */
-static volatile sig_atomic_t shutting_down = FALSE;
+static sig_atomic_t shutting_down = FALSE;
 
 /* timer for waiting for acknowledgment of shutdown request */
-static volatile guint shutdown_ack_timer = 0;
+static guint shutdown_ack_timer = 0;
 
 static gboolean lrmd_exit(gpointer data);
 #endif

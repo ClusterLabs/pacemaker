@@ -41,8 +41,7 @@ const char *cib_root = NULL;
 char *cib_our_uname = NULL;
 static gboolean preserve_status = FALSE;
 
-/* volatile because it may be changed in a signal handler */
-volatile gboolean cib_writes_enabled = TRUE;
+gboolean cib_writes_enabled = TRUE;
 
 int remote_fd = 0;
 int remote_tls_fd = 0;
