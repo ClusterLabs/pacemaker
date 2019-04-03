@@ -341,8 +341,8 @@ node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
-pe_resource_t *pe__find_bundle_child(const pe_resource_t *bundle,
-                                     const pe_node_t *node);
+pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
+                                       const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
 const char *pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml,
                                        const char *field);

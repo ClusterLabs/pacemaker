@@ -18,9 +18,10 @@
 static bool
 is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
 {
-    for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
-        if(node->details == tuple->node->details) {
+    for (GList *gIter = data->replicas; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
+
+        if (node->details == replica->node->details) {
             return TRUE;
         }
     }
@@ -40,9 +41,11 @@ get_container_list(pe_resource_t *rsc)
         pe__bundle_variant_data_t *data = NULL;
 
         get_bundle_variant_data(data, rsc);
-        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-            pe__bundle_grouping_t *tuple = gIter->data;
-            containers = g_list_append(containers, tuple->docker);
+        for (GList *gIter = data->replicas; gIter != NULL;
+             gIter = gIter->next) {
+            pe__bundle_replica_t *replica = gIter->data;
+
+            containers = g_list_append(containers, replica->docker);
         }
     }
     return containers;
@@ -119,46 +122,52 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
     g_list_free(nodes);
     g_list_free(containers);
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+        pe__bundle_replica_t *replica = gIter->data;
         pe_node_t *docker_host = NULL;
 
-        CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            tuple->ip->cmds->allocate(tuple->ip, prefer, data_set);
+        CRM_ASSERT(replica);
+        if (replica->ip) {
+            replica->ip->cmds->allocate(replica->ip, prefer, data_set);
         }
 
-        docker_host = tuple->docker->allocated_to;
-        if(tuple->remote && is_remote_node(docker_host)) {
+        docker_host = replica->docker->allocated_to;
+        if (replica->remote && is_remote_node(docker_host)) {
             /* We need 'nested' connection resources to be on the same
              * host because pacemaker-remoted only supports a single
              * active connection
              */
             rsc_colocation_new("child-remote-with-docker-remote", NULL,
-                               INFINITY, tuple->remote, docker_host->details->remote_rsc, NULL, NULL, data_set);
+                               INFINITY, replica->remote,
+                               docker_host->details->remote_rsc, NULL, NULL,
+                               data_set);
         }
 
-        if(tuple->remote) {
-            tuple->remote->cmds->allocate(tuple->remote, prefer, data_set);
+        if (replica->remote) {
+            replica->remote->cmds->allocate(replica->remote, prefer,
+                                            data_set);
         }
 
-        // Explicitly allocate tuple->child before the container->child
-        if(tuple->child) {
+        // Explicitly allocate replicas' children before bundle child
+        if (replica->child) {
             pe_node_t *node = NULL;
             GHashTableIter iter;
-            g_hash_table_iter_init(&iter, tuple->child->allowed_nodes);
+
+            g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-                if(node->details != tuple->node->details) {
+                if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
-                } else if(migration_threshold_reached(tuple->child, node, data_set) == FALSE) {
+                } else if (!migration_threshold_reached(replica->child, node,
+                                                        data_set)) {
                     node->weight = INFINITY;
                 }
             }
 
-            set_bit(tuple->child->parent->flags, pe_rsc_allocating);
-            tuple->child->cmds->allocate(tuple->child, tuple->node, data_set);
-            clear_bit(tuple->child->parent->flags, pe_rsc_allocating);
+            set_bit(replica->child->parent->flags, pe_rsc_allocating);
+            replica->child->cmds->allocate(replica->child, replica->node,
+                                           data_set);
+            clear_bit(replica->child->parent->flags, pe_rsc_allocating);
         }
     }
 
@@ -193,19 +202,19 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     containers = get_container_list(rsc);
     get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+        pe__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            tuple->ip->cmds->create_actions(tuple->ip, data_set);
+        CRM_ASSERT(replica);
+        if (replica->ip) {
+            replica->ip->cmds->create_actions(replica->ip, data_set);
         }
-        if(tuple->docker) {
-            tuple->docker->cmds->create_actions(tuple->docker, data_set);
+        if (replica->docker) {
+            replica->docker->cmds->create_actions(replica->docker, data_set);
         }
-        if(tuple->remote) {
-            tuple->remote->cmds->create_actions(tuple->remote, data_set);
+        if (replica->remote) {
+            replica->remote->cmds->create_actions(replica->remote, data_set);
         }
     }
 
@@ -259,46 +268,54 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         }
     }
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(tuple);
-        CRM_ASSERT(tuple->docker);
+        CRM_ASSERT(replica);
+        CRM_ASSERT(replica->docker);
 
-        tuple->docker->cmds->internal_constraints(tuple->docker, data_set);
+        replica->docker->cmds->internal_constraints(replica->docker,
+                                                    data_set);
 
-        order_start_start(rsc, tuple->docker, pe_order_runnable_left | pe_order_implies_first_printed);
+        order_start_start(rsc, replica->docker,
+                          pe_order_runnable_left|pe_order_implies_first_printed);
 
-        if(tuple->child) {
-            order_stop_stop(rsc, tuple->child, pe_order_implies_first_printed);
+        if (replica->child) {
+            order_stop_stop(rsc, replica->child,
+                            pe_order_implies_first_printed);
         }
-        order_stop_stop(rsc, tuple->docker, pe_order_implies_first_printed);
-        new_rsc_order(tuple->docker, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
-        new_rsc_order(tuple->docker, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+        order_stop_stop(rsc, replica->docker, pe_order_implies_first_printed);
+        new_rsc_order(replica->docker, RSC_START, rsc, RSC_STARTED,
+                      pe_order_implies_then_printed, data_set);
+        new_rsc_order(replica->docker, RSC_STOP, rsc, RSC_STOPPED,
+                      pe_order_implies_then_printed, data_set);
 
-        if(tuple->ip) {
-            tuple->ip->cmds->internal_constraints(tuple->ip, data_set);
+        if (replica->ip) {
+            replica->ip->cmds->internal_constraints(replica->ip, data_set);
 
             // Start ip then docker
-            new_rsc_order(tuple->ip, RSC_START, tuple->docker, RSC_START,
+            new_rsc_order(replica->ip, RSC_START, replica->docker, RSC_START,
                           pe_order_runnable_left|pe_order_preserve, data_set);
-            new_rsc_order(tuple->docker, RSC_STOP, tuple->ip, RSC_STOP,
+            new_rsc_order(replica->docker, RSC_STOP, replica->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
-            rsc_colocation_new("ip-with-docker", NULL, INFINITY, tuple->ip, tuple->docker, NULL, NULL, data_set);
+            rsc_colocation_new("ip-with-docker", NULL, INFINITY, replica->ip,
+                               replica->docker, NULL, NULL, data_set);
         }
 
-        if(tuple->remote) {
+        if (replica->remote) {
             /* This handles ordering and colocating remote relative to docker
              * (via "resource-with-container"). Since IP is also ordered and
              * colocated relative to docker, we don't need to do anything
              * explicit here with IP.
              */
-            tuple->remote->cmds->internal_constraints(tuple->remote, data_set);
+            replica->remote->cmds->internal_constraints(replica->remote,
+                                                        data_set);
         }
 
-        if(tuple->child) {
-            CRM_ASSERT(tuple->remote);
+        if (replica->child) {
+            CRM_ASSERT(replica->remote);
 
             // "Start remote then child" is implicit in scheduler's remote logic
         }
@@ -334,11 +351,10 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     }
 }
 
-
-
-static resource_t *
-find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_t * rsc,
-                              enum rsc_role_e filter, gboolean current)
+static pe_resource_t *
+compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
+                            pe_resource_t *rsc, enum rsc_role_e filter,
+                            gboolean current)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -348,13 +364,14 @@ find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_
     crm_trace("Looking for compatible child from %s for %s on %s",
               rsc_lh->id, rsc->id, candidate->details->uname);
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
-        if(is_child_compatible(tuple->docker, candidate, filter, current)) {
+        if (is_child_compatible(replica->docker, candidate, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
-                      rsc_lh->id, tuple->docker->id, candidate->details->uname);
-            return tuple->docker;
+                      rsc_lh->id, replica->docker->id, candidate->details->uname);
+            return replica->docker;
         }
     }
 
@@ -362,9 +379,10 @@ find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_
     return NULL;
 }
 
-static resource_t *
-find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filter,
-                      gboolean current, pe_working_set_t *data_set)
+static pe_resource_t *
+compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+                   enum rsc_role_e filter, gboolean current,
+                   pe_working_set_t *data_set)
 {
     GListPtr scratch = NULL;
     resource_t *pair = NULL;
@@ -372,7 +390,8 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
 
     active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, current);
     if (active_node_lh) {
-        return find_compatible_tuple_by_node(rsc_lh, active_node_lh, rsc, filter, current);
+        return compatible_replica_for_node(rsc_lh, active_node_lh, rsc, filter,
+                                           current);
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
@@ -381,7 +400,7 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
     for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        pair = find_compatible_tuple_by_node(rsc_lh, node, rsc, filter, current);
+        pair = compatible_replica_for_node(rsc_lh, node, rsc, filter, current);
         if (pair) {
             goto done;
         }
@@ -455,9 +474,9 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
         return;
 
     } else if(constraint->rsc_lh->variant > pe_group) {
-        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc,
-                                                     RSC_ROLE_UNKNOWN, FALSE,
-                                                     data_set);
+        resource_t *rh_child = compatible_replica(rsc_lh, rsc,
+                                                  RSC_ROLE_UNKNOWN, FALSE,
+                                                  data_set);
 
         if (rh_child) {
             pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
@@ -479,23 +498,28 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     pe_rsc_trace(rsc, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc->id, constraint->score);
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
         if (constraint->score < INFINITY) {
-            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker,
-                                                   constraint, data_set);
+            replica->docker->cmds->rsc_colocation_rh(rsc_lh, replica->docker,
+                                                     constraint, data_set);
 
         } else {
-            node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
+            node_t *chosen = replica->docker->fns->location(replica->docker,
+                                                            NULL, FALSE);
 
-            if (chosen == NULL || is_set_recursive(tuple->docker, pe_rsc_block, TRUE)) {
+            if ((chosen == NULL)
+                || is_set_recursive(replica->docker, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if(constraint->role_rh >= RSC_ROLE_MASTER && tuple->child == NULL) {
+            if ((constraint->role_rh >= RSC_ROLE_MASTER)
+                && (replica->child == NULL)) {
                 continue;
             }
-            if(constraint->role_rh >= RSC_ROLE_MASTER && tuple->child->next_role < RSC_ROLE_MASTER) {
+            if ((constraint->role_rh >= RSC_ROLE_MASTER)
+                && (replica->child->next_role < RSC_ROLE_MASTER)) {
                 continue;
             }
 
@@ -573,19 +597,22 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
     return NULL;
 }
 
-static pe__bundle_grouping_t *
-tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
+static pe__bundle_replica_t *
+replica_for_container(pe_resource_t *rsc, pe_resource_t *docker,
+                      pe_node_t *node)
 {
     if (rsc->variant == pe_container) {
         pe__bundle_variant_data_t *data = NULL;
 
         get_bundle_variant_data(data, rsc);
-        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-            pe__bundle_grouping_t *tuple = gIter->data;
-            if(tuple->child
-               && docker == tuple->docker
-               && node->details == tuple->node->details) {
-                return tuple;
+        for (GList *gIter = data->replicas; gIter != NULL;
+             gIter = gIter->next) {
+            pe__bundle_replica_t *replica = gIter->data;
+
+            if (replica->child
+                && (docker == replica->docker)
+                && (node->details == replica->node->details)) {
+                return replica;
             }
         }
     }
@@ -643,23 +670,26 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             enum action_tasks task = clone_child_action(first);
             const char *first_task = task2text(task);
 
-            pe__bundle_grouping_t *first_tuple = NULL;
-            pe__bundle_grouping_t *then_tuple = NULL;
+            pe__bundle_replica_t *first_replica = NULL;
+            pe__bundle_replica_t *then_replica = NULL;
 
-            first_tuple = tuple_for_docker(first->rsc, first_child,
-                                                    node);
-            if(strstr(first->task, "stop") && first_tuple && first_tuple->child) {
+            first_replica = replica_for_container(first->rsc, first_child,
+                                                  node);
+            if (strstr(first->task, "stop") && first_replica && first_replica->child) {
                 /* Except for 'stopped' we should be looking at the
                  * in-container resource, actions for the child will
                  * happen later and are therefor more likely to align
                  * with the user's intent.
                  */
-                first_action = find_first_action(first_tuple->child->actions, NULL, task2text(task), node);
+                first_action = find_first_action(first_replica->child->actions,
+                                                 NULL, task2text(task), node);
             } else {
                 first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
             }
 
-            if(strstr(then->task, "mote") && then_tuple && then_tuple->child) {
+            then_replica = replica_for_container(then->rsc, then_child, node);
+            if (strstr(then->task, "mote")
+                && then_replica && then_replica->child) {
                 /* Promote/demote actions will never be found for the
                  * docker resource, look in the child instead
                  *
@@ -667,7 +697,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                  *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
                  *  'demote XXXX then stop YYYY' as 'stop container for XXXX then stop YYYY'
                  */
-                then_action = find_first_action(then_tuple->child->actions, NULL, then->task, node);
+                then_action = find_first_action(then_replica->child->actions,
+                                                NULL, then->task, node);
             } else {
                 then_action = find_first_action(then_child->actions, NULL, then->task, node);
             }
@@ -823,14 +854,15 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     native_rsc_location(rsc, constraint);
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
-        if (tuple->docker) {
-            tuple->docker->cmds->rsc_location(tuple->docker, constraint);
+        if (replica->docker) {
+            replica->docker->cmds->rsc_location(replica->docker, constraint);
         }
-        if(tuple->ip) {
-            tuple->ip->cmds->rsc_location(tuple->ip, constraint);
+        if (replica->ip) {
+            replica->ip->cmds->rsc_location(replica->ip, constraint);
         }
     }
 
@@ -856,12 +888,13 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
         bundle_data->child->cmds->expand(bundle_data->child, data_set);
     }
 
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(tuple);
-        if (tuple->remote && tuple->docker
-            && pe__bundle_needs_remote_name(tuple->remote)) {
+        CRM_ASSERT(replica);
+        if (replica->remote && replica->docker
+            && pe__bundle_needs_remote_name(replica->remote)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -870,15 +903,17 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
              * replacing it with the underlying host when needed.
              */
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']",
-                                               tuple->remote->xml, LOG_ERR);
+                                               replica->remote->xml, LOG_ERR);
             const char *calculated_addr = NULL;
 
-            calculated_addr = pe__add_bundle_remote_name(tuple->remote,
+            calculated_addr = pe__add_bundle_remote_name(replica->remote,
                                                          nvpair, "value");
             if (calculated_addr) {
                 crm_trace("Set address for bundle connection %s to bundle host %s",
-                          tuple->remote->id, calculated_addr);
-                g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
+                          replica->remote->id, calculated_addr);
+                g_hash_table_replace(replica->remote->parameters,
+                                     strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+                                     strdup(calculated_addr));
             } else {
                 /* The only way to get here is if the remote connection is
                  * neither currently running nor scheduled to run. That means we
@@ -891,14 +926,14 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                          rsc->id);
             }
         }
-        if(tuple->ip) {
-            tuple->ip->cmds->expand(tuple->ip, data_set);
+        if (replica->ip) {
+            replica->ip->cmds->expand(replica->ip, data_set);
         }
-        if(tuple->docker) {
-            tuple->docker->cmds->expand(tuple->docker, data_set);
+        if (replica->docker) {
+            replica->docker->cmds->expand(replica->docker, data_set);
         }
-        if(tuple->remote) {
-            tuple->remote->cmds->expand(tuple->remote, data_set);
+        if (replica->remote) {
+            replica->remote->cmds->expand(replica->remote, data_set);
         }
     }
 }
@@ -914,18 +949,25 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
     CRM_CHECK(rsc != NULL, return FALSE);
 
     get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            any_created |= tuple->ip->cmds->create_probe(tuple->ip, node, complete, force, data_set);
+        CRM_ASSERT(replica);
+        if (replica->ip) {
+            any_created |= replica->ip->cmds->create_probe(replica->ip, node,
+                                                           complete, force,
+                                                           data_set);
         }
-        if(tuple->child && node->details == tuple->node->details) {
-            any_created |= tuple->child->cmds->create_probe(tuple->child, node, complete, force, data_set);
+        if (replica->child && (node->details == replica->node->details)) {
+            any_created |= replica->child->cmds->create_probe(replica->child,
+                                                              node, complete,
+                                                              force, data_set);
         }
-        if(tuple->docker) {
-            bool created = tuple->docker->cmds->create_probe(tuple->docker, node, complete, force, data_set);
+        if (replica->docker) {
+            bool created = replica->docker->cmds->create_probe(replica->docker,
+                                                               node, complete,
+                                                               force, data_set);
 
             if(created) {
                 any_created = TRUE;
@@ -942,39 +984,47 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                  * are already taken
                  */
 
-                for (GList *tIter = bundle_data->tuples;
+                for (GList *tIter = bundle_data->replicas;
                      tIter && (bundle_data->nreplicas_per_host == 1);
                      tIter = tIter->next) {
-                    pe__bundle_grouping_t *other = tIter->data;
+                    pe__bundle_replica_t *other = tIter->data;
 
-                    if ((other != tuple) && (other != NULL)
+                    if ((other != replica) && (other != NULL)
                         && (other->docker != NULL)) {
 
-                        custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_STATUS, 0), NULL,
-                                            other->docker, generate_op_key(other->docker->id, RSC_START, 0), NULL,
-                                            pe_order_optional|pe_order_same_node, data_set);
+                        custom_action_order(replica->docker,
+                                            generate_op_key(replica->docker->id, RSC_STATUS, 0),
+                                            NULL, other->docker,
+                                            generate_op_key(other->docker->id, RSC_START, 0),
+                                            NULL,
+                                            pe_order_optional|pe_order_same_node,
+                                            data_set);
                     }
                 }
             }
         }
-        if (tuple->docker && tuple->remote
-            && tuple->remote->cmds->create_probe(tuple->remote, node, complete,
-                                                 force, data_set)) {
+        if (replica->docker && replica->remote
+            && replica->remote->cmds->create_probe(replica->remote, node,
+                                                   complete, force,
+                                                   data_set)) {
 
-            /* Do not probe the remote resource until we know where docker is running
-             * Required for REMOTE_CONTAINER_HACK to correctly probe remote resources
+            /* Do not probe the remote resource until we know where the
+             * container is running. This is required for REMOTE_CONTAINER_HACK
+             * to correctly probe remote resources.
              */
-            char *probe_uuid = generate_op_key(tuple->remote->id, RSC_STATUS, 0);
-            action_t *probe = find_first_action(tuple->remote->actions, probe_uuid, NULL, node);
+            char *probe_uuid = generate_op_key(replica->remote->id, RSC_STATUS,
+                                               0);
+            action_t *probe = find_first_action(replica->remote->actions,
+                                                probe_uuid, NULL, node);
 
             free(probe_uuid);
             if (probe) {
                 any_created = TRUE;
                 crm_trace("Ordering %s probe on %s",
-                          tuple->remote->id, node->details->uname);
-                custom_action_order(tuple->docker,
-                                    generate_op_key(tuple->docker->id, RSC_START, 0),
-                                    NULL, tuple->remote, NULL, probe,
+                          replica->remote->id, node->details->uname);
+                custom_action_order(replica->docker,
+                                    generate_op_key(replica->docker->id, RSC_START, 0),
+                                    NULL, replica->remote, NULL, probe,
                                     pe_order_probe, data_set);
             }
         }
@@ -1004,22 +1054,22 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
     CRM_CHECK(rsc != NULL, return);
 
     get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_grouping_t *tuple = gIter->data;
+        pe__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(tuple);
-        if(tuple->ip) {
-            LogActions(tuple->ip, data_set, terminal);
+        CRM_ASSERT(replica);
+        if (replica->ip) {
+            LogActions(replica->ip, data_set, terminal);
         }
-        if(tuple->docker) {
-            LogActions(tuple->docker, data_set, terminal);
+        if (replica->docker) {
+            LogActions(replica->docker, data_set, terminal);
         }
-        if(tuple->remote) {
-            LogActions(tuple->remote, data_set, terminal);
+        if (replica->remote) {
+            LogActions(replica->remote, data_set, terminal);
         }
-        if(tuple->child) {
-            LogActions(tuple->child, data_set, terminal);
+        if (replica->child) {
+            LogActions(replica->child, data_set, terminal);
         }
     }
 }

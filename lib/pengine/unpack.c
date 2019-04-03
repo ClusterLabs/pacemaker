@@ -1770,7 +1770,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     if (pe_rsc_is_anon_clone(parent)) {
 
         if (pe_rsc_is_bundled(parent)) {
-            rsc = pe__find_bundle_child(parent->parent, node);
+            rsc = pe__find_bundle_replica(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 

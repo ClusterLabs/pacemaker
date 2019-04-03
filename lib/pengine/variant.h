@@ -49,7 +49,7 @@ typedef struct {
     pe_resource_t *child;
     pe_resource_t *docker;
     pe_resource_t *remote;
-} pe__bundle_grouping_t;
+} pe__bundle_replica_t;
 
 typedef struct {
     char *source;
@@ -95,7 +95,7 @@ typedef struct pe__bundle_variant_data_s {
 
         resource_t *child;
 
-        GList *tuples;      // pe__bundle_grouping_t *
+        GList *replicas;    // pe__bundle_replica_t *
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
