@@ -318,6 +318,12 @@ AC_ARG_WITH(brand,
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
+BUG_URL=""
+AC_ARG_WITH(bug-url,
+    [  --with-bug-url=DIR  Address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@],
+    [ BUG_URL="$withval" ]
+)
+
 ASCIIDOC_CLI_TYPE="pcs"
 AC_ARG_WITH(doc-cli,
     [  --with-doc-cli=cli_type  CLI type to use for generated documentation. [$ASCIIDOC_CLI_TYPE]],
@@ -441,6 +447,11 @@ if test x"${CONFIGDIR}" = x""; then
     CONFIGDIR="${sysconfdir}/sysconfig"
 fi
 AC_SUBST(CONFIGDIR)
+
+if test x"${BUG_URL}" = x""; then
+    BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
+fi
+AC_SUBST(BUG_URL)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \

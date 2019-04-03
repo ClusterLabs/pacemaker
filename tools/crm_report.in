@@ -230,7 +230,7 @@ EOF
 	log "Collected results are available in $fname"
 	log " "
 	log "Please create a bug entry at"
-	log "    http://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
+	log "    @BUG_URL@"
 	log "Include a description of your problem and attach this tarball"
 	log " "
 	log "Thank you for taking time to create this report."
