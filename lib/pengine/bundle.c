@@ -17,10 +17,8 @@
 #include <unpack.h>
 #include <crm/msg_xml.h>
 
-#define VARIANT_CONTAINER 1
+#define PE__VARIANT_BUNDLE 1
 #include "./variant.h"
-
-void tuple_free(container_grouping_t *tuple);
 
 static char *
 next_ip(const char *last_ip)
@@ -50,7 +48,8 @@ next_ip(const char *last_ip)
 }
 
 static int
-allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *buffer, int max) 
+allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_grouping_t *tuple,
+            char *buffer, int max)
 {
     if(data->ip_range_start == NULL) {
         return 0;
@@ -63,24 +62,21 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
     }
 
     data->ip_last = tuple->ipaddr;
-#if 0
-    return snprintf(buffer, max, " --add-host=%s-%d:%s --link %s-docker-%d:%s-link-%d",
-                    data->prefix, tuple->offset, tuple->ipaddr,
-                    data->prefix, tuple->offset, data->prefix, tuple->offset);
-#else
-    if (data->type == PE_CONTAINER_TYPE_DOCKER || data->type == PE_CONTAINER_TYPE_PODMAN) {
-        if (data->add_host == FALSE) {
-            return 0;
-        }
-        return snprintf(buffer, max, " --add-host=%s-%d:%s",
-                        data->prefix, tuple->offset, tuple->ipaddr);
-    } else if (data->type == PE_CONTAINER_TYPE_RKT) {
-        return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
-                        tuple->ipaddr, data->prefix, tuple->offset);
-    } else {
-        return 0;
+    switch (data->type) {
+        case PE_CONTAINER_TYPE_DOCKER:
+        case PE_CONTAINER_TYPE_PODMAN:
+            if (data->add_host) {
+                return snprintf(buffer, max, " --add-host=%s-%d:%s",
+                                data->prefix, tuple->offset,
+                                tuple->ipaddr);
+            }
+        case PE_CONTAINER_TYPE_RKT:
+            return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
+                            tuple->ipaddr, data->prefix, tuple->offset);
+        default: // PE_CONTAINER_TYPE_UNKNOWN
+            break;
     }
-#endif
+    return 0;
 }
 
 static xmlNode *
@@ -109,7 +105,7 @@ create_resource(const char *name, const char *provider, const char *kind)
  *       host must be 1.
  */
 static bool
-valid_network(container_variant_data_t *data)
+valid_network(pe__bundle_variant_data_t *data)
 {
     if(data->ip_range_start) {
         return TRUE;
@@ -126,9 +122,8 @@ valid_network(container_variant_data_t *data)
 }
 
 static bool
-create_ip_resource(
-    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-    pe_working_set_t * data_set) 
+create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                   pe__bundle_grouping_t *tuple, pe_working_set_t *data_set)
 {
     if(data->ip_range_start) {
         char *id = NULL;
@@ -171,9 +166,9 @@ create_ip_resource(
 }
 
 static bool
-create_docker_resource(
-    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-    pe_working_set_t * data_set) 
+create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                       pe__bundle_grouping_t *tuple,
+                       pe_working_set_t *data_set)
 {
         int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
@@ -224,7 +219,7 @@ create_docker_resource(
         }
 
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            container_mount_t *mount = pIter->data;
+            pe__bundle_mount_t *mount = pIter->data;
 
             if(mount->flags) {
                 char *source = crm_strdup_printf(
@@ -246,7 +241,7 @@ create_docker_resource(
         }
 
         for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            container_port_t *port = pIter->data;
+            pe__bundle_port_t *port = pIter->data;
 
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
@@ -326,9 +321,11 @@ create_docker_resource(
         parent->children = g_list_append(parent->children, tuple->docker);
         return TRUE;
 }
+
 static bool
-create_podman_resource(resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-                       pe_working_set_t * data_set)
+create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                       pe__bundle_grouping_t *tuple,
+                       pe_working_set_t *data_set)
 {
         int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
@@ -381,7 +378,7 @@ create_podman_resource(resource_t *parent, container_variant_data_t *data, conta
         }
 
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            container_mount_t *mount = pIter->data;
+            pe__bundle_mount_t *mount = pIter->data;
 
             if(mount->flags) {
                 char *source = crm_strdup_printf(
@@ -403,7 +400,7 @@ create_podman_resource(resource_t *parent, container_variant_data_t *data, conta
         }
 
         for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            container_port_t *port = pIter->data;
+            pe__bundle_port_t *port = pIter->data;
 
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
@@ -485,9 +482,8 @@ create_podman_resource(resource_t *parent, container_variant_data_t *data, conta
 }
 
 static bool
-create_rkt_resource(
-    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-    pe_working_set_t * data_set)
+create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                    pe__bundle_grouping_t *tuple, pe_working_set_t *data_set)
 {
         int offset = 0, max = 4096;
         char *buffer = calloc(1, max+1);
@@ -538,7 +534,7 @@ create_rkt_resource(
         }
 
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            container_mount_t *mount = pIter->data;
+            pe__bundle_mount_t *mount = pIter->data;
 
             if(mount->flags) {
                 char *source = crm_strdup_printf(
@@ -566,7 +562,7 @@ create_rkt_resource(
         }
 
         for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            container_port_t *port = pIter->data;
+            pe__bundle_port_t *port = pIter->data;
 
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " --port=%s:%s:%s",
@@ -671,9 +667,9 @@ disallow_node(resource_t *rsc, const char *uname)
 }
 
 static bool
-create_remote_resource(
-    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-    pe_working_set_t * data_set) 
+create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                       pe__bundle_grouping_t *tuple,
+                       pe_working_set_t *data_set)
 {
     if (tuple->child && valid_network(data)) {
         GHashTableIter gIter;
@@ -809,9 +805,8 @@ create_remote_resource(
 }
 
 static bool
-create_container(
-    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
-    pe_working_set_t * data_set)
+create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                 pe__bundle_grouping_t *tuple, pe_working_set_t *data_set)
 {
 
     if (data->type == PE_CONTAINER_TYPE_DOCKER &&
@@ -854,10 +849,10 @@ create_container(
 }
 
 static void
-mount_add(container_variant_data_t *container_data, const char *source,
+mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
           const char *target, const char *options, int flags)
 {
-    container_mount_t *mount = calloc(1, sizeof(container_mount_t));
+    pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
 
     mount->source = strdup(source);
     mount->target = strdup(target);
@@ -865,10 +860,11 @@ mount_add(container_variant_data_t *container_data, const char *source,
         mount->options = strdup(options);
     }
     mount->flags = flags;
-    container_data->mounts = g_list_append(container_data->mounts, mount);
+    bundle_data->mounts = g_list_append(bundle_data->mounts, mount);
 }
 
-static void mount_free(container_mount_t *mount)
+static void
+mount_free(pe__bundle_mount_t *mount)
 {
     free(mount->source);
     free(mount->target);
@@ -876,18 +872,19 @@ static void mount_free(container_mount_t *mount)
     free(mount);
 }
 
-static void port_free(container_port_t *port)
+static void
+port_free(pe__bundle_port_t *port)
 {
     free(port->source);
     free(port->target);
     free(port);
 }
 
-static container_grouping_t *
+static pe__bundle_grouping_t *
 tuple_for_remote(resource_t *remote) 
 {
     resource_t *top = remote;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     if (top == NULL) {
         return NULL;
@@ -897,9 +894,10 @@ tuple_for_remote(resource_t *remote)
         top = top->parent;
     }
 
-    get_container_variant_data(container_data, top);
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    get_bundle_variant_data(bundle_data, top);
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
+
         if(tuple->remote == remote) {
             return tuple;
         }
@@ -909,49 +907,44 @@ tuple_for_remote(resource_t *remote)
 }
 
 bool
-container_fix_remote_addr(resource_t *rsc) 
+pe__bundle_needs_remote_name(pe_resource_t *rsc)
 {
-    const char *name;
     const char *value;
-    const char *attr_list[] = {
-        XML_ATTR_TYPE,
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER
-    };
-    const char *value_list[] = {
-        "remote",
-        PCMK_RESOURCE_CLASS_OCF,
-        "pacemaker"
-    };
 
-    if(rsc == NULL) {
+    if (rsc == NULL) {
         return FALSE;
     }
 
-    name = "addr";
-    value = g_hash_table_lookup(rsc->parameters, name);
+    value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_REMOTE_RA_ADDR);
     if (safe_str_eq(value, "#uname") == FALSE) {
         return FALSE;
-    }
 
-    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
-        value = crm_element_value(rsc->xml, attr_list[lpc]);
-        if (safe_str_eq(value, value_list[lpc]) == FALSE) {
-            return FALSE;
+    } else {
+        const char *match[3][2] = {
+            { XML_ATTR_TYPE,           "remote"                },
+            { XML_AGENT_ATTR_CLASS,    PCMK_RESOURCE_CLASS_OCF },
+            { XML_AGENT_ATTR_PROVIDER, "pacemaker"             },
+        };
+
+        for (int m = 0; m < 3; m++) {
+            value = crm_element_value(rsc->xml, match[m][0]);
+            if (safe_str_neq(value, match[m][1])) {
+                return FALSE;
+            }
         }
     }
     return TRUE;
 }
 
 const char *
-container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field) 
+pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
     pe_node_t *node = NULL;
-    container_grouping_t *tuple = NULL;
+    pe__bundle_grouping_t *tuple = NULL;
 
-    if(container_fix_remote_addr(rsc) == FALSE) {
+    if (!pe__bundle_needs_remote_name(rsc)) {
         return NULL;
     }
 
@@ -983,31 +976,31 @@ container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field)
 }
 
 gboolean
-container_unpack(resource_t * rsc, pe_working_set_t * data_set)
+pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
     xmlNode *xml_resource = NULL;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_ASSERT(rsc != NULL);
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    container_data = calloc(1, sizeof(container_variant_data_t));
-    rsc->variant_opaque = container_data;
-    container_data->prefix = strdup(rsc->id);
+    bundle_data = calloc(1, sizeof(pe__bundle_variant_data_t));
+    rsc->variant_opaque = bundle_data;
+    bundle_data->prefix = strdup(rsc->id);
 
     xml_obj = first_named_child(rsc->xml, "docker");
     if (xml_obj != NULL) {
-        container_data->type = PE_CONTAINER_TYPE_DOCKER;
+        bundle_data->type = PE_CONTAINER_TYPE_DOCKER;
     } else {
         xml_obj = first_named_child(rsc->xml, "rkt");
         if (xml_obj != NULL) {
-            container_data->type = PE_CONTAINER_TYPE_RKT;
+            bundle_data->type = PE_CONTAINER_TYPE_RKT;
         } else {
             xml_obj = first_named_child(rsc->xml, "podman");
             if (xml_obj != NULL) {
-                container_data->type = PE_CONTAINER_TYPE_PODMAN;
+                bundle_data->type = PE_CONTAINER_TYPE_PODMAN;
             } else {
                 return FALSE;
             }
@@ -1019,22 +1012,22 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         // @COMPAT deprecated since 2.0.0
         value = crm_element_value(xml_obj, "masters");
     }
-    container_data->promoted_max = crm_parse_int(value, "0");
-    if (container_data->promoted_max < 0) {
+    bundle_data->promoted_max = crm_parse_int(value, "0");
+    if (bundle_data->promoted_max < 0) {
         pe_err("%s for %s must be nonnegative integer, using 0",
                XML_RSC_ATTR_PROMOTED_MAX, rsc->id);
-        container_data->promoted_max = 0;
+        bundle_data->promoted_max = 0;
     }
 
     value = crm_element_value(xml_obj, "replicas");
-    if ((value == NULL) && container_data->promoted_max) {
-        container_data->nreplicas = container_data->promoted_max;
+    if ((value == NULL) && bundle_data->promoted_max) {
+        bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
-        container_data->nreplicas = crm_parse_int(value, "1");
+        bundle_data->nreplicas = crm_parse_int(value, "1");
     }
-    if (container_data->nreplicas < 1) {
+    if (bundle_data->nreplicas < 1) {
         pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
-        container_data->nreplicas = 1;
+        bundle_data->nreplicas = 1;
     }
 
     /*
@@ -1043,39 +1036,39 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
      *   --userland-proxy=false --ip-masq=false
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
-    container_data->nreplicas_per_host = crm_parse_int(value, "1");
-    if (container_data->nreplicas_per_host < 1) {
+    bundle_data->nreplicas_per_host = crm_parse_int(value, "1");
+    if (bundle_data->nreplicas_per_host < 1) {
         pe_err("'replicas-per-host' for %s must be positive integer, using 1",
                rsc->id);
-        container_data->nreplicas_per_host = 1;
+        bundle_data->nreplicas_per_host = 1;
     }
-    if (container_data->nreplicas_per_host == 1) {
+    if (bundle_data->nreplicas_per_host == 1) {
         clear_bit(rsc->flags, pe_rsc_unique);
     }
 
-    container_data->docker_run_command = crm_element_value_copy(xml_obj, "run-command");
-    container_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
-    container_data->image = crm_element_value_copy(xml_obj, "image");
-    container_data->docker_network = crm_element_value_copy(xml_obj, "network");
+    bundle_data->docker_run_command = crm_element_value_copy(xml_obj, "run-command");
+    bundle_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
+    bundle_data->image = crm_element_value_copy(xml_obj, "image");
+    bundle_data->docker_network = crm_element_value_copy(xml_obj, "network");
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
 
-        container_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
-        container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
-        container_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
-        container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
+        bundle_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
+        bundle_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
+        bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
+        bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
         value = crm_element_value(xml_obj, "add-host");
         if (check_boolean(value) == FALSE) {
-            container_data->add_host = TRUE;
+            bundle_data->add_host = TRUE;
         } else {
-            crm_str_to_boolean(value, &container_data->add_host);
+            crm_str_to_boolean(value, &bundle_data->add_host);
         }
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
 
-            container_port_t *port = calloc(1, sizeof(container_port_t));
+            pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
             port->source = crm_element_value_copy(xml_child, "port");
 
             if(port->source == NULL) {
@@ -1088,7 +1081,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 if(port->target == NULL) {
                     port->target = strdup(port->source);
                 }
-                container_data->ports = g_list_append(container_data->ports, port);
+                bundle_data->ports = g_list_append(bundle_data->ports, port);
 
             } else {
                 pe_err("Invalid port directive %s", ID(xml_child));
@@ -1112,14 +1105,14 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
 
         if (source && target) {
-            mount_add(container_data, source, target, options, flags);
+            mount_add(bundle_data, source, target, options, flags);
         } else {
             pe_err("Invalid mount directive %s", ID(xml_child));
         }
     }
 
     xml_obj = first_named_child(rsc->xml, "primitive");
-    if (xml_obj && valid_network(container_data)) {
+    if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
@@ -1129,41 +1122,41 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
          * part of the resource name, so that bundles don't restart in a rolling
          * upgrade. (It also avoids needing to change regression tests.)
          */
-        crm_xml_set_id(xml_resource, "%s-%s", container_data->prefix,
-                      (container_data->promoted_max? "master"
+        crm_xml_set_id(xml_resource, "%s-%s", bundle_data->prefix,
+                      (bundle_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
         xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
-        crm_xml_set_id(xml_set, "%s-%s-meta", container_data->prefix, xml_resource->name);
+        crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
-        value = crm_itoa(container_data->nreplicas);
+        value = crm_itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
-        value = crm_itoa(container_data->nreplicas_per_host);
+        value = crm_itoa(bundle_data->nreplicas_per_host);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
 
         crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
-                (container_data->nreplicas_per_host > 1)?
+                (bundle_data->nreplicas_per_host > 1)?
                 XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
-        if (container_data->promoted_max) {
+        if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
 
-            value = crm_itoa(container_data->promoted_max);
+            value = crm_itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
         }
 
-        //crm_xml_add(xml_obj, XML_ATTR_ID, container_data->prefix);
+        //crm_xml_add(xml_obj, XML_ATTR_ID, bundle_data->prefix);
         add_node_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
@@ -1176,7 +1169,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         int lpc = 0;
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
-        container_port_t *port = NULL;
+        pe__bundle_port_t *port = NULL;
 
         int offset = 0, max = 1024;
         char *buffer = NULL;
@@ -1189,7 +1182,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
             return FALSE;
         }
 
-        container_data->child = new_rsc;
+        bundle_data->child = new_rsc;
 
         /* Currently, we always map the default authentication key location
          * into the same location inside the container.
@@ -1212,14 +1205,14 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
          * of the location being the same on all cluster nodes, but that's
          * reasonable.
          */
-        mount_add(container_data, DEFAULT_REMOTE_KEY_LOCATION,
+        mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
 
-        mount_add(container_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
+        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
 
-        port = calloc(1, sizeof(container_port_t));
-        if(container_data->control_port) {
-            port->source = strdup(container_data->control_port);
+        port = calloc(1, sizeof(pe__bundle_port_t));
+        if(bundle_data->control_port) {
+            port->source = strdup(bundle_data->control_port);
         } else {
             /* If we wanted to respect PCMK_remote_port, we could use
              * crm_default_remote_port() here and elsewhere in this file instead
@@ -1232,28 +1225,36 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
             port->source = crm_itoa(DEFAULT_REMOTE_PORT);
         }
         port->target = strdup(port->source);
-        container_data->ports = g_list_append(container_data->ports, port);
+        bundle_data->ports = g_list_append(bundle_data->ports, port);
 
         buffer = calloc(1, max+1);
-        for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
-            container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
+        for (childIter = bundle_data->child->children; childIter != NULL;
+             childIter = childIter->next) {
+
+            pe__bundle_grouping_t *tuple = calloc(1, sizeof(pe__bundle_grouping_t));
+
             tuple->child = childIter->data;
             tuple->child->exclusive_discover = TRUE;
             tuple->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
             if(is_set(tuple->child->flags, pe_rsc_notify)) {
-                set_bit(container_data->child->flags, pe_rsc_notify);
+                set_bit(bundle_data->child->flags, pe_rsc_notify);
             }
 
-            offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
-            container_data->tuples = g_list_append(container_data->tuples, tuple);
-            container_data->attribute_target = g_hash_table_lookup(tuple->child->meta, XML_RSC_ATTR_TARGET);
+            offset += allocate_ip(bundle_data, tuple, buffer+offset,
+                                  max-offset);
+            bundle_data->tuples = g_list_append(bundle_data->tuples, tuple);
+            bundle_data->attribute_target = g_hash_table_lookup(tuple->child->meta,
+                                                                XML_RSC_ATTR_TARGET);
         }
-        container_data->docker_host_options = buffer;
-        if(container_data->attribute_target) {
-            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET), strdup(container_data->attribute_target));
-            g_hash_table_replace(container_data->child->meta, strdup(XML_RSC_ATTR_TARGET), strdup(container_data->attribute_target));
+        bundle_data->docker_host_options = buffer;
+        if (bundle_data->attribute_target) {
+            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
+                                 strdup(bundle_data->attribute_target));
+            g_hash_table_replace(bundle_data->child->meta,
+                                 strdup(XML_RSC_ATTR_TARGET),
+                                 strdup(bundle_data->attribute_target));
         }
 
     } else {
@@ -1261,27 +1262,31 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         int offset = 0, max = 1024;
         char *buffer = calloc(1, max+1);
 
-        for(int lpc = 0; lpc < container_data->nreplicas; lpc++) {
-            container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
-            tuple->offset = lpc;
-            offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
-            container_data->tuples = g_list_append(container_data->tuples, tuple);
-        }
+        for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
+            pe__bundle_grouping_t *tuple = calloc(1, sizeof(pe__bundle_grouping_t));
 
-        container_data->docker_host_options = buffer;
+            tuple->offset = lpc;
+            offset += allocate_ip(bundle_data, tuple, buffer+offset,
+                                  max-offset);
+            bundle_data->tuples = g_list_append(bundle_data->tuples,
+                                                tuple);
+        }
+        bundle_data->docker_host_options = buffer;
     }
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-        if (create_container(rsc, container_data, tuple, data_set) == FALSE) {
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
+
+        if (!create_container(rsc, bundle_data, tuple, data_set)) {
             pe_err("Failed unpacking resource %s", rsc->id);
             rsc->fns->free(rsc);
             return FALSE;
         }
     }
 
-    if(container_data->child) {
-        rsc->children = g_list_append(rsc->children, container_data->child);
+    if (bundle_data->child) {
+        rsc->children = g_list_append(rsc->children, bundle_data->child);
     }
     return TRUE;
 }
@@ -1302,14 +1307,14 @@ tuple_rsc_active(resource_t *rsc, gboolean all)
 }
 
 gboolean
-container_active(resource_t * rsc, gboolean all)
+pe__bundle_active(pe_resource_t *rsc, gboolean all)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
     GListPtr iter = NULL;
 
-    get_container_variant_data(container_data, rsc);
-    for (iter = container_data->tuples; iter != NULL; iter = iter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)(iter->data);
+    get_bundle_variant_data(bundle_data, rsc);
+    for (iter = bundle_data->tuples; iter != NULL; iter = iter->next) {
+        pe__bundle_grouping_t *tuple = iter->data;
         int rsc_active;
 
         rsc_active = tuple_rsc_active(tuple->ip, all);
@@ -1342,23 +1347,23 @@ container_active(resource_t * rsc, gboolean all)
 
 /*!
  * \internal
- * \brief Find the container child corresponding to a given node
+ * \brief Find the bundle child corresponding to a given node
  *
  * \param[in] bundle  Top-level bundle resource
  * \param[in] node    Node to search for
  *
- * \return Container child if found, NULL otherwise
+ * \return Bundle child if found, NULL otherwise
  */
-resource_t *
-find_container_child(const resource_t *bundle, const node_t *node)
+pe_resource_t *
+pe__find_bundle_child(const pe_resource_t *bundle, const pe_node_t *node)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
     CRM_ASSERT(bundle && node);
 
-    get_container_variant_data(container_data, bundle);
-    for (GListPtr gIter = container_data->tuples; gIter != NULL;
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
          gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple && tuple->node);
         if (tuple->node->details == node->details) {
@@ -1398,9 +1403,10 @@ container_type_as_string(enum container_type t)
 }
 
 static void
-container_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
+bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
     char *child_text = NULL;
     CRM_CHECK(rsc != NULL, return);
 
@@ -1409,27 +1415,28 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
     }
     child_text = crm_concat(pre_text, "       ", ' ');
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
     status_print("%s<bundle ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
 
     // Always lowercase the container technology type for use as XML value
     status_print("type=\"");
-    for (const char *c = container_type_as_string(container_data->type);
+    for (const char *c = container_type_as_string(bundle_data->type);
          *c; ++c) {
         status_print("%c", tolower(*c));
     }
     status_print("\" ");
 
-    status_print("image=\"%s\" ", container_data->image);
+    status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
     status_print(">\n");
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         status_print("%s    <replica id=\"%d\">\n", pre_text, tuple->offset);
@@ -1444,7 +1451,7 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
 }
 
 static void
-tuple_print(container_grouping_t * tuple, const char *pre_text, long options, void *print_data)
+tuple_print(pe__bundle_grouping_t *tuple, const char *pre_text, long options, void *print_data)
 {
     node_t *node = NULL;
     resource_t *rsc = tuple->child;
@@ -1470,27 +1477,28 @@ tuple_print(container_grouping_t * tuple, const char *pre_text, long options, vo
 }
 
 void
-container_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
     char *child_text = NULL;
     CRM_CHECK(rsc != NULL, return);
 
     if (options & pe_print_xml) {
-        container_print_xml(rsc, pre_text, options, print_data);
+        bundle_print_xml(rsc, pre_text, options, print_data);
         return;
     }
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
     if (pre_text == NULL) {
         pre_text = " ";
     }
 
     status_print("%s%s container%s: %s [%s]%s%s\n",
-                 pre_text, container_type_as_string(container_data->type),
-                 (container_data->nreplicas > 1)? " set" : "",
-                 rsc->id, container_data->image,
+                 pre_text, container_type_as_string(bundle_data->type),
+                 (bundle_data->nreplicas > 1)? " set" : "",
+                 rsc->id, bundle_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
     if (options & pe_print_html) {
@@ -1498,8 +1506,9 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
     }
 
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         if (options & pe_print_html) {
@@ -1508,7 +1517,7 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
 
         if (is_set(options, pe_print_implicit)) {
             child_text = crm_strdup_printf("     %s", pre_text);
-            if(g_list_length(container_data->tuples) > 1) {
+            if (g_list_length(bundle_data->tuples) > 1) {
                 status_print("  %sReplica[%d]\n", pre_text, tuple->offset);
             }
             if (options & pe_print_html) {
@@ -1536,31 +1545,31 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
     }
 }
 
-void
-tuple_free(container_grouping_t *tuple) 
+static void
+tuple_free(pe__bundle_grouping_t *tuple)
 {
-    if(tuple == NULL) {
+    if (tuple == NULL) {
         return;
     }
 
-    if(tuple->node) {
+    if (tuple->node) {
         free(tuple->node);
         tuple->node = NULL;
     }
 
-    if(tuple->ip) {
+    if (tuple->ip) {
         free_xml(tuple->ip->xml);
         tuple->ip->xml = NULL;
         tuple->ip->fns->free(tuple->ip);
         tuple->ip = NULL;
     }
-    if(tuple->docker) {
+    if (tuple->docker) {
         free_xml(tuple->docker->xml);
         tuple->docker->xml = NULL;
         tuple->docker->fns->free(tuple->docker);
         tuple->docker = NULL;
     }
-    if(tuple->remote) {
+    if (tuple->remote) {
         free_xml(tuple->remote->xml);
         tuple->remote->xml = NULL;
         tuple->remote->fns->free(tuple->remote);
@@ -1571,40 +1580,41 @@ tuple_free(container_grouping_t *tuple)
 }
 
 void
-container_free(resource_t * rsc)
+pe__free_bundle(pe_resource_t *rsc)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
     CRM_CHECK(rsc != NULL, return);
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    free(container_data->prefix);
-    free(container_data->image);
-    free(container_data->control_port);
-    free(container_data->host_network);
-    free(container_data->host_netmask);
-    free(container_data->ip_range_start);
-    free(container_data->docker_network);
-    free(container_data->docker_run_options);
-    free(container_data->docker_run_command);
-    free(container_data->docker_host_options);
+    free(bundle_data->prefix);
+    free(bundle_data->image);
+    free(bundle_data->control_port);
+    free(bundle_data->host_network);
+    free(bundle_data->host_netmask);
+    free(bundle_data->ip_range_start);
+    free(bundle_data->docker_network);
+    free(bundle_data->docker_run_options);
+    free(bundle_data->docker_run_command);
+    free(bundle_data->docker_host_options);
 
-    g_list_free_full(container_data->tuples, (GDestroyNotify)tuple_free);
-    g_list_free_full(container_data->mounts, (GDestroyNotify)mount_free);
-    g_list_free_full(container_data->ports, (GDestroyNotify)port_free);
+    g_list_free_full(bundle_data->tuples,
+                     (GDestroyNotify) tuple_free);
+    g_list_free_full(bundle_data->mounts, (GDestroyNotify)mount_free);
+    g_list_free_full(bundle_data->ports, (GDestroyNotify)port_free);
     g_list_free(rsc->children);
 
-    if(container_data->child) {
-        free_xml(container_data->child->xml);
-        container_data->child->xml = NULL;
-        container_data->child->fns->free(container_data->child);
+    if(bundle_data->child) {
+        free_xml(bundle_data->child->xml);
+        bundle_data->child->xml = NULL;
+        bundle_data->child->fns->free(bundle_data->child);
     }
     common_free(rsc);
 }
 
 enum rsc_role_e
-container_resource_state(const resource_t * rsc, gboolean current)
+pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
 {
     enum rsc_role_e container_role = RSC_ROLE_UNKNOWN;
     return container_role;
@@ -1623,9 +1633,9 @@ pe_bundle_replicas(const resource_t *rsc)
     if ((rsc == NULL) || (rsc->variant != pe_container)) {
         return 0;
     } else {
-        container_variant_data_t *container_data = NULL;
+        pe__bundle_variant_data_t *bundle_data = NULL;
 
-        get_container_variant_data(container_data, rsc);
-        return container_data->nreplicas;
+        get_bundle_variant_data(bundle_data, rsc);
+        return bundle_data->nreplicas;
     }
 }

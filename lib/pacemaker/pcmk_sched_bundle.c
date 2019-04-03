@@ -12,14 +12,14 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
-#define VARIANT_CONTAINER 1
+#define PE__VARIANT_BUNDLE 1
 #include <lib/pengine/variant.h>
 
 static bool
-is_child_container_node(container_variant_data_t *data, pe_node_t *node)
+is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
 {
     for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        pe__bundle_grouping_t *tuple = gIter->data;
         if(node->details == tuple->node->details) {
             return TRUE;
         }
@@ -31,36 +31,28 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 void distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
-static GListPtr get_container_list(resource_t *rsc) 
+static GList *
+get_container_list(pe_resource_t *rsc)
 {
-    GListPtr containers = NULL;
-    container_variant_data_t *data = NULL;
+    GList *containers = NULL;
 
-    if(rsc->variant == pe_container) {
-        get_container_variant_data(data, rsc);
+    if (rsc->variant == pe_container) {
+        pe__bundle_variant_data_t *data = NULL;
+
+        get_bundle_variant_data(data, rsc);
         for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+            pe__bundle_grouping_t *tuple = gIter->data;
             containers = g_list_append(containers, tuple->docker);
         }
     }
     return containers;
 }
 
-static GListPtr get_containers_or_children(resource_t *rsc) 
+static inline GList *
+get_containers_or_children(pe_resource_t *rsc)
 {
-    GListPtr containers = NULL;
-    container_variant_data_t *data = NULL;
-
-    if(rsc->variant == pe_container) {
-        get_container_variant_data(data, rsc);
-        for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-            containers = g_list_append(containers, tuple->docker);
-        }
-        return containers;
-    } else {
-        return rsc->children;
-    }
+    return (rsc->variant == pe_container)?
+           get_container_list(rsc) : rsc->children;
 }
 
 static bool
@@ -102,16 +94,17 @@ migration_threshold_reached(resource_t *rsc, node_t *node,
     return FALSE;
 }
 
-node_t *
-container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
+                   pe_working_set_t *data_set)
 {
     GListPtr containers = NULL;
     GListPtr nodes = NULL;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
     set_bit(rsc->flags, pe_rsc_allocating);
     containers = get_container_list(rsc);
@@ -121,20 +114,22 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
     containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
-    distribute_children(rsc, containers, nodes, container_data->nreplicas,
-                        container_data->nreplicas_per_host, data_set);
+    distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
+                        bundle_data->nreplicas_per_host, data_set);
     g_list_free(nodes);
     g_list_free(containers);
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-        pe_node_t *docker_host = tuple->docker->allocated_to;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
+        pe_node_t *docker_host = NULL;
 
         CRM_ASSERT(tuple);
         if(tuple->ip) {
             tuple->ip->cmds->allocate(tuple->ip, prefer, data_set);
         }
 
+        docker_host = tuple->docker->allocated_to;
         if(tuple->remote && is_remote_node(docker_host)) {
             /* We need 'nested' connection resources to be on the same
              * host because pacemaker-remoted only supports a single
@@ -167,18 +162,18 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    if(container_data->child) {
+    if (bundle_data->child) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
-        g_hash_table_iter_init(&iter, container_data->child->allowed_nodes);
+        g_hash_table_iter_init(&iter, bundle_data->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-            if(is_child_container_node(container_data, node)) {
+            if (is_bundle_node(bundle_data, node)) {
                 node->weight = 0;
             } else {
                 node->weight = -INFINITY;
             }
         }
-        container_data->child->cmds->allocate(container_data->child, prefer, data_set);
+        bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
@@ -188,18 +183,19 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
 
 void
-container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
+pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
     GListPtr containers = NULL;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
     containers = get_container_list(rsc);
-    get_container_variant_data(container_data, rsc);
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    get_bundle_variant_data(bundle_data, rsc);
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         if(tuple->ip) {
@@ -215,10 +211,10 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     clone_create_pseudo_actions(rsc, containers, NULL, NULL,  data_set);
 
-    if(container_data->child) {
-        container_data->child->cmds->create_actions(container_data->child, data_set);
+    if (bundle_data->child) {
+        bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
 
-        if (is_set(container_data->child->flags, pe_rsc_promotable)) {
+        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
             action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
@@ -235,29 +231,36 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+pcmk__bundle_internal_constraints(pe_resource_t *rsc,
+                                  pe_working_set_t *data_set)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
-    if(container_data->child) {
-        new_rsc_order(rsc, RSC_START, container_data->child, RSC_START, pe_order_implies_first_printed, data_set);
-        new_rsc_order(rsc, RSC_STOP, container_data->child, RSC_STOP, pe_order_implies_first_printed, data_set);
+    if (bundle_data->child) {
+        new_rsc_order(rsc, RSC_START, bundle_data->child, RSC_START,
+                      pe_order_implies_first_printed, data_set);
+        new_rsc_order(rsc, RSC_STOP, bundle_data->child, RSC_STOP,
+                      pe_order_implies_first_printed, data_set);
 
-        if(container_data->child->children) {
-            new_rsc_order(container_data->child, RSC_STARTED, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
-            new_rsc_order(container_data->child, RSC_STOPPED, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+        if (bundle_data->child->children) {
+            new_rsc_order(bundle_data->child, RSC_STARTED, rsc, RSC_STARTED,
+                          pe_order_implies_then_printed, data_set);
+            new_rsc_order(bundle_data->child, RSC_STOPPED, rsc, RSC_STOPPED,
+                          pe_order_implies_then_printed, data_set);
         } else {
-            new_rsc_order(container_data->child, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
-            new_rsc_order(container_data->child, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(bundle_data->child, RSC_START, rsc, RSC_STARTED,
+                          pe_order_implies_then_printed, data_set);
+            new_rsc_order(bundle_data->child, RSC_STOP, rsc, RSC_STOPPED,
+                          pe_order_implies_then_printed, data_set);
         }
     }
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         CRM_ASSERT(tuple->docker);
@@ -302,22 +305,26 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     }
 
-    if(container_data->child) {
-        container_data->child->cmds->internal_constraints(container_data->child, data_set);
-        if (is_set(container_data->child->flags, pe_rsc_promotable)) {
+    if (bundle_data->child) {
+        bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
+        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
-            new_rsc_order(container_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(bundle_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED,
+                          pe_order_implies_then_printed, data_set);
 
             /* global demote before child demote */
-            new_rsc_order(rsc, RSC_DEMOTE, container_data->child, RSC_DEMOTE, pe_order_implies_first_printed, data_set);
+            new_rsc_order(rsc, RSC_DEMOTE, bundle_data->child, RSC_DEMOTE,
+                          pe_order_implies_first_printed, data_set);
 
             /* child promoted before global promoted */
-            new_rsc_order(container_data->child, RSC_PROMOTED, rsc, RSC_PROMOTED, pe_order_implies_then_printed, data_set);
+            new_rsc_order(bundle_data->child, RSC_PROMOTED, rsc, RSC_PROMOTED,
+                          pe_order_implies_then_printed, data_set);
 
             /* global promote before child promote */
-            new_rsc_order(rsc, RSC_PROMOTE, container_data->child, RSC_PROMOTE, pe_order_implies_first_printed, data_set);
+            new_rsc_order(rsc, RSC_PROMOTE, bundle_data->child, RSC_PROMOTE,
+                          pe_order_implies_first_printed, data_set);
         }
 
     } else {
@@ -333,16 +340,16 @@ static resource_t *
 find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_t * rsc,
                               enum rsc_role_e filter, gboolean current)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(candidate != NULL, return NULL);
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
     crm_trace("Looking for compatible child from %s for %s on %s",
               rsc_lh->id, rsc->id, candidate->details->uname);
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         if(is_child_compatible(tuple->docker, candidate, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
@@ -387,9 +394,9 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
 }
 
 void
-container_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
-                            rsc_colocation_t *constraint,
-                            pe_working_set_t *data_set)
+pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
+                               rsc_colocation_t *constraint,
+                               pe_working_set_t *data_set)
 {
     /* -- Never called --
      *
@@ -422,8 +429,8 @@ int copies_per_node(resource_t * rsc)
             }
         case pe_container:
             {
-                container_variant_data_t *data = NULL;
-                get_container_variant_data(data, rsc);
+                pe__bundle_variant_data_t *data = NULL;
+                get_bundle_variant_data(data, rsc);
                 return data->nreplicas_per_host;
             }
     }
@@ -431,12 +438,12 @@ int copies_per_node(resource_t * rsc)
 }
 
 void
-container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                            rsc_colocation_t *constraint,
-                            pe_working_set_t *data_set)
+pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+                               rsc_colocation_t *constraint,
+                               pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
@@ -468,12 +475,12 @@ container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
         return;
     }
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
     pe_rsc_trace(rsc, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc->id, constraint->score);
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         if (constraint->score < INFINITY) {
             tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker,
@@ -504,13 +511,13 @@ container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 }
 
 enum pe_action_flags
-container_action_flags(action_t * action, node_t * node)
+pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
 {
     GListPtr containers = NULL;
     enum pe_action_flags flags = 0;
-    container_variant_data_t *data = NULL;
+    pe__bundle_variant_data_t *data = NULL;
 
-    get_container_variant_data(data, action->rsc);
+    get_bundle_variant_data(data, action->rsc);
     if(data->child) {
         enum action_tasks task = get_complex_task(data->child, action->task, TRUE);
         switch(task) {
@@ -566,14 +573,15 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
     return NULL;
 }
 
-static container_grouping_t *
+static pe__bundle_grouping_t *
 tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
 {
-    if(rsc->variant == pe_container) {
-        container_variant_data_t *data = NULL;
-        get_container_variant_data(data, rsc);
+    if (rsc->variant == pe_container) {
+        pe__bundle_variant_data_t *data = NULL;
+
+        get_bundle_variant_data(data, rsc);
         for (GListPtr gIter = data->tuples; gIter != NULL; gIter = gIter->next) {
-            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+            pe__bundle_grouping_t *tuple = gIter->data;
             if(tuple->child
                && docker == tuple->docker
                && node->details == tuple->node->details) {
@@ -585,11 +593,11 @@ tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
 }
 
 static enum pe_graph_flags
-container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                    pe_node_t *node, enum pe_action_flags flags,
-                                    enum pe_action_flags filter,
-                                    enum pe_ordering type,
-                                    pe_working_set_t *data_set)
+multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
+                                pe_node_t *node, enum pe_action_flags flags,
+                                enum pe_action_flags filter,
+                                enum pe_ordering type,
+                                pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr children = NULL;
@@ -635,9 +643,11 @@ container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             enum action_tasks task = clone_child_action(first);
             const char *first_task = task2text(task);
 
-            container_grouping_t *first_tuple = tuple_for_docker(first->rsc, first_child, node);
-            container_grouping_t *then_tuple = tuple_for_docker(then->rsc, then_child, node);
+            pe__bundle_grouping_t *first_tuple = NULL;
+            pe__bundle_grouping_t *then_tuple = NULL;
 
+            first_tuple = tuple_for_docker(first->rsc, first_child,
+                                                    node);
             if(strstr(first->task, "stop") && first_tuple && first_tuple->child) {
                 /* Except for 'stopped' we should be looking at the
                  * in-container resource, actions for the child will
@@ -751,18 +761,18 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
 }
 
 enum pe_graph_flags
-container_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
-                         enum pe_action_flags flags,
-                         enum pe_action_flags filter, enum pe_ordering type,
-                         pe_working_set_t *data_set)
+pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
+                           pe_node_t *node, enum pe_action_flags flags,
+                           enum pe_action_flags filter, enum pe_ordering type,
+                           pe_working_set_t *data_set)
 {
     enum pe_graph_flags changed = pe_graph_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = container_update_interleave_actions(first, then, node, flags,
-                                                      filter, type, data_set);
+        changed = multi_update_interleave_actions(first, then, node, flags,
+                                                  filter, type, data_set);
 
     } else if(then->rsc) {
         GListPtr gIter = NULL;
@@ -804,17 +814,17 @@ container_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 }
 
 void
-container_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    container_variant_data_t *container_data = NULL;
-    get_container_variant_data(container_data, rsc);
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    get_bundle_variant_data(bundle_data, rsc);
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         if (tuple->docker) {
             tuple->docker->cmds->rsc_location(tuple->docker, constraint);
@@ -824,34 +834,47 @@ container_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         }
     }
 
-    if(container_data->child && (constraint->role_filter == RSC_ROLE_SLAVE || constraint->role_filter == RSC_ROLE_MASTER)) {
-        container_data->child->cmds->rsc_location(container_data->child, constraint);
-        container_data->child->rsc_location = g_list_prepend(container_data->child->rsc_location, constraint);
+    if (bundle_data->child
+        && ((constraint->role_filter == RSC_ROLE_SLAVE)
+            || (constraint->role_filter == RSC_ROLE_MASTER))) {
+        bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
+        bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
+                                                          constraint);
     }
 }
 
 void
-container_expand(resource_t * rsc, pe_working_set_t * data_set)
+pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
-    get_container_variant_data(container_data, rsc);
+    get_bundle_variant_data(bundle_data, rsc);
 
-    if(container_data->child) {
-        container_data->child->cmds->expand(container_data->child, data_set);
+    if (bundle_data->child) {
+        bundle_data->child->cmds->expand(bundle_data->child, data_set);
     }
 
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
-        if (tuple->remote && tuple->docker && container_fix_remote_addr(tuple->remote)) {
-            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
-            const char *calculated_addr = container_fix_remote_addr_in(tuple->remote, nvpair, "value");
+        if (tuple->remote && tuple->docker
+            && pe__bundle_needs_remote_name(tuple->remote)) {
 
+            /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
+             * run pacemaker-remoted inside, without needing a separate IP for
+             * the container. This is done by configuring the inner remote's
+             * connection host as the magic string "#uname", then
+             * replacing it with the underlying host when needed.
+             */
+            xmlNode *nvpair = get_xpath_object("//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']",
+                                               tuple->remote->xml, LOG_ERR);
+            const char *calculated_addr = NULL;
+
+            calculated_addr = pe__add_bundle_remote_name(tuple->remote,
+                                                         nvpair, "value");
             if (calculated_addr) {
                 crm_trace("Set address for bundle connection %s to bundle host %s",
                           tuple->remote->id, calculated_addr);
@@ -881,17 +904,18 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 gboolean
-container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
-                   gboolean force, pe_working_set_t * data_set)
+pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
+                          pe_action_t *complete, gboolean force,
+                          pe_working_set_t * data_set)
 {
     bool any_created = FALSE;
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return FALSE);
 
-    get_container_variant_data(container_data, rsc);
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    get_bundle_variant_data(bundle_data, rsc);
+    for (GList *gIter = bundle_data->tuples; gIter != NULL; gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         if(tuple->ip) {
@@ -918,10 +942,10 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                  * are already taken
                  */
 
-                for (GList *tIter = container_data->tuples;
-                     tIter && (container_data->nreplicas_per_host == 1);
+                for (GList *tIter = bundle_data->tuples;
+                     tIter && (bundle_data->nreplicas_per_host == 1);
                      tIter = tIter->next) {
-                    container_grouping_t *other = (container_grouping_t *)tIter->data;
+                    pe__bundle_grouping_t *other = tIter->data;
 
                     if ((other != tuple) && (other != NULL)
                         && (other->docker != NULL)) {
@@ -959,27 +983,30 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 }
 
 void
-container_append_meta(resource_t * rsc, xmlNode * xml)
+pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 {
 }
 
 GHashTable *
-container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    float factor, enum pe_weights flags)
+pcmk__bundle_merge_weights(pe_resource_t *rsc, const char *rhs,
+                           GHashTable *nodes, const char *attr,
+                           float factor, enum pe_weights flags)
 {
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
-void container_LogActions(
-    resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
+void
+pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
+                         gboolean terminal)
 {
-    container_variant_data_t *container_data = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
-    get_container_variant_data(container_data, rsc);
-    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+    get_bundle_variant_data(bundle_data, rsc);
+    for (GList *gIter = bundle_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_grouping_t *tuple = gIter->data;
 
         CRM_ASSERT(tuple);
         if(tuple->ip) {

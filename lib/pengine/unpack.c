@@ -1770,7 +1770,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     if (pe_rsc_is_anon_clone(parent)) {
 
         if (pe_rsc_is_bundled(parent)) {
-            rsc = find_container_child(parent->parent, node);
+            rsc = pe__find_bundle_child(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 
@@ -2929,7 +2929,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
-        if (container_fix_remote_addr(rsc)) {
+        if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.

@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -175,7 +177,8 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
         xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
         if (server) {
-            crm_create_nvpair_xml(xml_sub, NULL, "addr", server);
+            crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_REMOTE_RA_ADDR,
+                                  server);
         }
         if (port) {
             crm_create_nvpair_xml(xml_sub, NULL, "port", port);

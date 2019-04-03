@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -47,14 +49,14 @@ resource_object_functions_t resource_class_functions[] = {
      clone_free
     },
     {
-     container_unpack,
+     pe__unpack_bundle,
      native_find_rsc,
      native_parameter,
-     container_print,
-     container_active,
-     container_resource_state,
+     pe__print_bundle,
+     pe__bundle_active,
+     pe__bundle_resource_state,
      native_location,
-     container_free
+     pe__free_bundle
     }
 };
 

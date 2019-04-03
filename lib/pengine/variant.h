@@ -39,35 +39,29 @@ typedef struct clone_variant_data_s {
 	CRM_ASSERT(rsc->variant == pe_clone); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
-#  elif VARIANT_CONTAINER
+#  elif PE__VARIANT_BUNDLE
 
-typedef struct
-{
-        int offset;
-        node_t *node;
-        char *ipaddr;
-        resource_t *ip;
-        resource_t *child;
-        resource_t *docker;
-        resource_t *remote;
+typedef struct {
+    int offset;
+    char *ipaddr;
+    pe_node_t *node;
+    pe_resource_t *ip;
+    pe_resource_t *child;
+    pe_resource_t *docker;
+    pe_resource_t *remote;
+} pe__bundle_grouping_t;
 
-} container_grouping_t;
+typedef struct {
+    char *source;
+    char *target;
+    char *options;
+    int flags;
+} pe__bundle_mount_t;
 
-typedef struct
-{
-        char *source;
-        char *target;
-        char *options;
-        int flags;
-
-} container_mount_t;
-
-typedef struct
-{
-        char *source;
-        char *target;
-
-} container_port_t;
+typedef struct {
+    char *source;
+    char *target;
+} pe__bundle_port_t;
 
 enum container_type {
         PE_CONTAINER_TYPE_UNKNOWN,
@@ -81,7 +75,7 @@ enum container_type {
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
 #define PE_CONTAINER_TYPE_PODMAN_S  "podman"
 
-typedef struct container_variant_data_s {
+typedef struct pe__bundle_variant_data_s {
         int promoted_max;
         int nreplicas;
         int nreplicas_per_host;
@@ -101,18 +95,18 @@ typedef struct container_variant_data_s {
 
         resource_t *child;
 
-        GListPtr tuples;     /* container_grouping_t *       */
-        GListPtr ports;      /*        */
-        GListPtr mounts;     /*        */
+        GList *tuples;      // pe__bundle_grouping_t *
+        GList *ports;       // pe__bundle_port_t *
+        GList *mounts;      // pe__bundle_mount_t *
 
         enum container_type type;
-} container_variant_data_t;
+} pe__bundle_variant_data_t;
 
-#    define get_container_variant_data(data, rsc)                       \
+#    define get_bundle_variant_data(data, rsc)                       \
 	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_container);                       \
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (container_variant_data_t *)rsc->variant_opaque;		\
+	data = (pe__bundle_variant_data_t *)rsc->variant_opaque;		\
 
 #  elif VARIANT_GROUP
 

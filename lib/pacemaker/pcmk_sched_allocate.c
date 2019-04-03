@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -93,23 +95,23 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_rsc_colocation_rh,
      clone_rsc_location,
      clone_action_flags,
-     container_update_actions,
+     pcmk__multi_update_actions,
      clone_expand,
      clone_append_meta,
      },
     {
-     container_merge_weights,
-     container_color,
-     container_create_actions,
-     container_create_probe,
-     container_internal_constraints,
-     container_rsc_colocation_lh,
-     container_rsc_colocation_rh,
-     container_rsc_location,
-     container_action_flags,
-     container_update_actions,
-     container_expand,
-     container_append_meta,
+     pcmk__bundle_merge_weights,
+     pcmk__bundle_color,
+     pcmk__bundle_create_actions,
+     pcmk__bundle_create_probe,
+     pcmk__bundle_internal_constraints,
+     pcmk__bundle_rsc_colocation_lh,
+     pcmk__bundle_rsc_colocation_rh,
+     pcmk__bundle_rsc_location,
+     pcmk__bundle_action_flags,
+     pcmk__multi_update_actions,
+     pcmk__bundle_expand,
+     pcmk__bundle_append_meta,
      }
 };
 
@@ -476,7 +478,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
              * has changed, clear any fail count so they can be retried fresh.
              */
 
-            if (container_fix_remote_addr(rsc)) {
+            if (pe__bundle_needs_remote_name(rsc)) {
                 /* We haven't allocated resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly

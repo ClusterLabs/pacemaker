@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -1963,7 +1965,8 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
         data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
         // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-        if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
+        if (pe__add_bundle_remote_name(rsc, data->params_all,
+                                       XML_RSC_ATTR_REMOTE_RA_ADDR)) {
             crm_trace("Set address for bundle connection %s (on %s)",
                       rsc->id, node->details->uname);
         }
