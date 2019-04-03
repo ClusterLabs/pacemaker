@@ -63,17 +63,17 @@ typedef struct {
     char *target;
 } pe__bundle_port_t;
 
-enum container_type {
-        PE_CONTAINER_TYPE_UNKNOWN,
-        PE_CONTAINER_TYPE_DOCKER,
-        PE_CONTAINER_TYPE_RKT,
-        PE_CONTAINER_TYPE_PODMAN
+enum pe__container_agent {
+    PE__CONTAINER_AGENT_UNKNOWN,
+    PE__CONTAINER_AGENT_DOCKER,
+    PE__CONTAINER_AGENT_RKT,
+    PE__CONTAINER_AGENT_PODMAN,
 };
 
-#define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
-#define PE_CONTAINER_TYPE_DOCKER_S  "Docker"
-#define PE_CONTAINER_TYPE_RKT_S     "rkt"
-#define PE_CONTAINER_TYPE_PODMAN_S  "podman"
+#define PE__CONTAINER_AGENT_UNKNOWN_S "unknown"
+#define PE__CONTAINER_AGENT_DOCKER_S  "docker"
+#define PE__CONTAINER_AGENT_RKT_S     "rkt"
+#define PE__CONTAINER_AGENT_PODMAN_S  "podman"
 
 typedef struct pe__bundle_variant_data_s {
         int promoted_max;
@@ -99,7 +99,7 @@ typedef struct pe__bundle_variant_data_s {
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
-        enum container_type type;
+        enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
 #    define get_bundle_variant_data(data, rsc)                       \

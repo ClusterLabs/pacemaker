@@ -62,18 +62,18 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
     }
 
     data->ip_last = replica->ipaddr;
-    switch (data->type) {
-        case PE_CONTAINER_TYPE_DOCKER:
-        case PE_CONTAINER_TYPE_PODMAN:
+    switch (data->agent_type) {
+        case PE__CONTAINER_AGENT_DOCKER:
+        case PE__CONTAINER_AGENT_PODMAN:
             if (data->add_host) {
                 return snprintf(buffer, max, " --add-host=%s-%d:%s",
                                 data->prefix, replica->offset,
                                 replica->ipaddr);
             }
-        case PE_CONTAINER_TYPE_RKT:
+        case PE__CONTAINER_AGENT_RKT:
             return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
                             replica->ipaddr, data->prefix, replica->offset);
-        default: // PE_CONTAINER_TYPE_UNKNOWN
+        default: // PE__CONTAINER_AGENT_UNKNOWN
             break;
     }
     return 0;
@@ -183,7 +183,8 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         id = crm_strdup_printf("%s-docker-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_docker = create_resource(id, "heartbeat", "docker");
+        xml_docker = create_resource(id, "heartbeat",
+                                     PE__CONTAINER_AGENT_DOCKER_S);
         free(id);
 
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
@@ -345,7 +346,8 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         id = crm_strdup_printf("%s-podman-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_podman = create_resource(id, "heartbeat", "podman");
+        xml_podman = create_resource(id, "heartbeat",
+                                     PE__CONTAINER_AGENT_PODMAN_S);
         free(id);
 
         xml_obj = create_xml_node(xml_podman, XML_TAG_ATTR_SETS);
@@ -510,7 +512,8 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         id = crm_strdup_printf("%s-rkt-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_docker = create_resource(id, "heartbeat", "rkt");
+        xml_docker = create_resource(id, "heartbeat",
+                                     PE__CONTAINER_AGENT_RKT_S);
         free(id);
 
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
@@ -831,25 +834,25 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                  pe__bundle_replica_t *replica, pe_working_set_t *data_set)
 {
 
-    switch (data->type) {
-        case PE_CONTAINER_TYPE_DOCKER:
+    switch (data->agent_type) {
+        case PE__CONTAINER_AGENT_DOCKER:
             if (!create_docker_resource(parent, data, replica, data_set)) {
                 return FALSE;
             }
             break;
 
-        case PE_CONTAINER_TYPE_PODMAN:
+        case PE__CONTAINER_AGENT_PODMAN:
             if (!create_podman_resource(parent, data, replica, data_set)) {
                 return FALSE;
             }
             break;
 
-        case PE_CONTAINER_TYPE_RKT:
+        case PE__CONTAINER_AGENT_RKT:
             if (!create_rkt_resource(parent, data, replica, data_set)) {
                 return FALSE;
             }
             break;
-        default: // PE_CONTAINER_TYPE_UNKNOWN
+        default: // PE__CONTAINER_AGENT_UNKNOWN
             return FALSE;
     }
 
@@ -1022,17 +1025,17 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = first_named_child(rsc->xml, "docker");
+    xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_DOCKER_S);
     if (xml_obj != NULL) {
-        bundle_data->type = PE_CONTAINER_TYPE_DOCKER;
+        bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = first_named_child(rsc->xml, "rkt");
+        xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_RKT_S);
         if (xml_obj != NULL) {
-            bundle_data->type = PE_CONTAINER_TYPE_RKT;
+            bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = first_named_child(rsc->xml, "podman");
+            xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_PODMAN_S);
             if (xml_obj != NULL) {
-                bundle_data->type = PE_CONTAINER_TYPE_PODMAN;
+                bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {
                 return FALSE;
             }
@@ -1422,17 +1425,16 @@ print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
 }
 
 static const char*
-container_type_as_string(enum container_type t)
+container_agent_str(enum pe__container_agent t)
 {
-    if (t == PE_CONTAINER_TYPE_DOCKER) {
-        return PE_CONTAINER_TYPE_DOCKER_S;
-    } else if (t == PE_CONTAINER_TYPE_RKT) {
-        return PE_CONTAINER_TYPE_RKT_S;
-    } else if (t == PE_CONTAINER_TYPE_PODMAN) {
-        return PE_CONTAINER_TYPE_PODMAN_S;
-    } else {
-        return PE_CONTAINER_TYPE_UNKNOWN_S;
+    switch (t) {
+        case PE__CONTAINER_AGENT_DOCKER: return PE__CONTAINER_AGENT_DOCKER_S;
+        case PE__CONTAINER_AGENT_RKT:    return PE__CONTAINER_AGENT_RKT_S;
+        case PE__CONTAINER_AGENT_PODMAN: return PE__CONTAINER_AGENT_PODMAN_S;
+        default: // PE__CONTAINER_AGENT_UNKNOWN
+            break;
     }
+    return PE__CONTAINER_AGENT_UNKNOWN_S;
 }
 
 static void
@@ -1452,15 +1454,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
 
     status_print("%s<bundle ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-
-    // Always lowercase the container technology type for use as XML value
-    status_print("type=\"");
-    for (const char *c = container_type_as_string(bundle_data->type);
-         *c; ++c) {
-        status_print("%c", tolower(*c));
-    }
-    status_print("\" ");
-
+    status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
@@ -1532,9 +1526,8 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
         pre_text = " ";
     }
 
-    status_print("%s%s container%s: %s [%s]%s%s\n",
-                 pre_text, container_type_as_string(bundle_data->type),
-                 (bundle_data->nreplicas > 1)? " set" : "",
+    status_print("%sContainer bundle%s: %s [%s]%s%s\n",
+                 pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
                  rsc->id, bundle_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
