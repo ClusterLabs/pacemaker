@@ -25,6 +25,7 @@ struct svc_action_private_s {
 
     guint repeat_timer;
     void (*callback) (svc_action_t * op);
+    void (*fork_callback) (svc_action_t * op);
 
     int stderr_fd;
     mainloop_io_t *stderr_gsource;

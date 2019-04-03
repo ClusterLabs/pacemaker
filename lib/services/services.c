@@ -766,11 +766,16 @@ services_untrack_op(svc_action_t *op)
 }
 
 gboolean
-services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
+services_action_async_fork_notify(svc_action_t * op,
+                                  void (*action_callback) (svc_action_t *),
+                                  void (*action_fork_callback) (svc_action_t *))
 {
     op->synchronous = false;
     if (action_callback) {
         op->opaque->callback = action_callback;
+    }
+    if (action_fork_callback) {
+        op->opaque->fork_callback = action_fork_callback;
     }
 
     if (op->interval_ms > 0) {
@@ -791,6 +796,12 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     return action_exec_helper(op);
 }
 
+gboolean
+services_action_async(svc_action_t * op,
+                      void (*action_callback) (svc_action_t *))
+{
+    return services_action_async_fork_notify(op, action_callback, NULL);
+}
 
 static gboolean processing_blocked_ops = FALSE;
 
