@@ -307,11 +307,17 @@ typedef struct svc_action_s {
  *
  * \param[in] op services action data
  * \param[in] action_callback callback for when the action completes
+ * \param[in] action_fork_callback callback for when action forked successfully
  *
  * \retval TRUE succesfully started execution
  * \retval FALSE failed to start execution, no callback will be received
  */
-    gboolean services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *));
+    gboolean services_action_async_fork_notify(svc_action_t * op,
+        void (*action_callback) (svc_action_t *),
+        void (*action_fork_callback) (svc_action_t *));
+
+    gboolean services_action_async(svc_action_t * op,
+                                   void (*action_callback) (svc_action_t *));
 
     gboolean services_action_cancel(const char *name, const char *action, int interval);
 

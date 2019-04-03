@@ -827,6 +827,18 @@ stonith_action_async_done(svc_action_t *svc_action)
     stonith__destroy_action(action);
 }
 
+static void
+stonith_action_async_forked(svc_action_t *svc_action)
+{
+    stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
+
+    action->pid = svc_action->pid;
+    action->svc_action = svc_action;
+
+    crm_trace("Child process %d performing action '%s' successfully forked",
+              action->pid, action->action);
+}
+
 static int
 internal_stonith_action_execute(stonith_action_t * action)
 {
@@ -873,12 +885,12 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     if (action->async) {
         /* async */
-        if(services_action_async(svc_action, &stonith_action_async_done) == FALSE) {
+        if(services_action_async_fork_notify(svc_action,
+            &stonith_action_async_done,
+            &stonith_action_async_forked) == FALSE) {
             services_action_free(svc_action);
             svc_action = NULL;
         } else {
-            action->pid = svc_action->pid;
-            action->svc_action = svc_action;
             rc = 0;
         }
 
