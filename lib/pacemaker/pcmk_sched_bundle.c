@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -119,8 +121,8 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
     containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
-    distribute_children(rsc, containers, nodes,
-                        container_data->replicas, container_data->replicas_per_host, data_set);
+    distribute_children(rsc, containers, nodes, container_data->nreplicas,
+                        container_data->nreplicas_per_host, data_set);
     g_list_free(nodes);
     g_list_free(containers);
 
@@ -422,7 +424,7 @@ int copies_per_node(resource_t * rsc)
             {
                 container_variant_data_t *data = NULL;
                 get_container_variant_data(data, rsc);
-                return data->replicas_per_host;
+                return data->nreplicas_per_host;
             }
     }
     return 0;
@@ -909,14 +911,16 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                  * we've established that no other copies are already
                  * running.
                  *
-                 * Partly this is to ensure that replicas_per_host is
+                 * Partly this is to ensure that nreplicas_per_host is
                  * observed, but also to ensure that the containers
                  * don't fail to start because the necessary port
                  * mappings (which won't include an IP for uniqueness)
                  * are already taken
                  */
 
-                for (GListPtr tIter = container_data->tuples; tIter != NULL && container_data->replicas_per_host == 1; tIter = tIter->next) {
+                for (GList *tIter = container_data->tuples;
+                     tIter && (container_data->nreplicas_per_host == 1);
+                     tIter = tIter->next) {
                     container_grouping_t *other = (container_grouping_t *)tIter->data;
 
                     if ((other != tuple) && (other != NULL)

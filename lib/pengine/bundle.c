@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -113,9 +115,9 @@ valid_network(container_variant_data_t *data)
         return TRUE;
     }
     if(data->control_port) {
-        if(data->replicas_per_host > 1) {
+        if(data->nreplicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
-            data->replicas_per_host = 1;
+            data->nreplicas_per_host = 1;
             /* @TODO to be sure: clear_bit(rsc->flags, pe_rsc_unique); */
         }
         return TRUE;
@@ -1026,13 +1028,13 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     value = crm_element_value(xml_obj, "replicas");
     if ((value == NULL) && container_data->promoted_max) {
-        container_data->replicas = container_data->promoted_max;
+        container_data->nreplicas = container_data->promoted_max;
     } else {
-        container_data->replicas = crm_parse_int(value, "1");
+        container_data->nreplicas = crm_parse_int(value, "1");
     }
-    if (container_data->replicas < 1) {
+    if (container_data->nreplicas < 1) {
         pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
-        container_data->replicas = 1;
+        container_data->nreplicas = 1;
     }
 
     /*
@@ -1041,13 +1043,13 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
      *   --userland-proxy=false --ip-masq=false
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
-    container_data->replicas_per_host = crm_parse_int(value, "1");
-    if (container_data->replicas_per_host < 1) {
+    container_data->nreplicas_per_host = crm_parse_int(value, "1");
+    if (container_data->nreplicas_per_host < 1) {
         pe_err("'replicas-per-host' for %s must be positive integer, using 1",
                rsc->id);
-        container_data->replicas_per_host = 1;
+        container_data->nreplicas_per_host = 1;
     }
-    if (container_data->replicas_per_host == 1) {
+    if (container_data->nreplicas_per_host == 1) {
         clear_bit(rsc->flags, pe_rsc_unique);
     }
 
@@ -1137,18 +1139,18 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
-        value = crm_itoa(container_data->replicas);
+        value = crm_itoa(container_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
-        value = crm_itoa(container_data->replicas_per_host);
+        value = crm_itoa(container_data->nreplicas_per_host);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
 
         crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
-                (container_data->replicas_per_host > 1)?
+                (container_data->nreplicas_per_host > 1)?
                 XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
         if (container_data->promoted_max) {
@@ -1259,7 +1261,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         int offset = 0, max = 1024;
         char *buffer = calloc(1, max+1);
 
-        for(int lpc = 0; lpc < container_data->replicas; lpc++) {
+        for(int lpc = 0; lpc < container_data->nreplicas; lpc++) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->offset = lpc;
             offset += allocate_ip(container_data, tuple, buffer+offset, max-offset);
@@ -1487,7 +1489,8 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
 
     status_print("%s%s container%s: %s [%s]%s%s\n",
                  pre_text, container_type_as_string(container_data->type),
-                 container_data->replicas>1?" set":"", rsc->id, container_data->image,
+                 (container_data->nreplicas > 1)? " set" : "",
+                 rsc->id, container_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
     if (options & pe_print_html) {
@@ -1623,6 +1626,6 @@ pe_bundle_replicas(const resource_t *rsc)
         container_variant_data_t *container_data = NULL;
 
         get_container_variant_data(container_data, rsc);
-        return container_data->replicas;
+        return container_data->nreplicas;
     }
 }
