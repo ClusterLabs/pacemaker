@@ -47,7 +47,7 @@ typedef struct {
     pe_node_t *node;
     pe_resource_t *ip;
     pe_resource_t *child;
-    pe_resource_t *docker;
+    pe_resource_t *container;
     pe_resource_t *remote;
 } pe__bundle_replica_t;
 
@@ -85,12 +85,12 @@ typedef struct pe__bundle_variant_data_s {
         char *host_network;
         char *host_netmask;
         char *control_port;
-        char *docker_network;
+        char *container_network;
         char *ip_range_start;
         gboolean add_host;
-        char *docker_host_options;
-        char *docker_run_options;
-        char *docker_run_command;
+        char *container_host_options;
+        char *container_command;
+        char *launcher_options;
         const char *attribute_target;
 
         resource_t *child;

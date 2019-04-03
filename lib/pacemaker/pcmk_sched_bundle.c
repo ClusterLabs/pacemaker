@@ -45,7 +45,7 @@ get_container_list(pe_resource_t *rsc)
              gIter = gIter->next) {
             pe__bundle_replica_t *replica = gIter->data;
 
-            containers = g_list_append(containers, replica->docker);
+            containers = g_list_append(containers, replica->container);
         }
     }
     return containers;
@@ -125,22 +125,22 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
-        pe_node_t *docker_host = NULL;
+        pe_node_t *container_host = NULL;
 
         CRM_ASSERT(replica);
         if (replica->ip) {
             replica->ip->cmds->allocate(replica->ip, prefer, data_set);
         }
 
-        docker_host = replica->docker->allocated_to;
-        if (replica->remote && is_remote_node(docker_host)) {
+        container_host = replica->container->allocated_to;
+        if (replica->remote && is_remote_node(container_host)) {
             /* We need 'nested' connection resources to be on the same
              * host because pacemaker-remoted only supports a single
              * active connection
              */
             rsc_colocation_new("child-remote-with-docker-remote", NULL,
                                INFINITY, replica->remote,
-                               docker_host->details->remote_rsc, NULL, NULL,
+                               container_host->details->remote_rsc, NULL, NULL,
                                data_set);
         }
 
@@ -210,8 +210,9 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
         if (replica->ip) {
             replica->ip->cmds->create_actions(replica->ip, data_set);
         }
-        if (replica->docker) {
-            replica->docker->cmds->create_actions(replica->docker, data_set);
+        if (replica->container) {
+            replica->container->cmds->create_actions(replica->container,
+                                                     data_set);
         }
         if (replica->remote) {
             replica->remote->cmds->create_actions(replica->remote, data_set);
@@ -273,41 +274,42 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        CRM_ASSERT(replica->docker);
+        CRM_ASSERT(replica->container);
 
-        replica->docker->cmds->internal_constraints(replica->docker,
-                                                    data_set);
+        replica->container->cmds->internal_constraints(replica->container,
+                                                       data_set);
 
-        order_start_start(rsc, replica->docker,
+        order_start_start(rsc, replica->container,
                           pe_order_runnable_left|pe_order_implies_first_printed);
 
         if (replica->child) {
             order_stop_stop(rsc, replica->child,
                             pe_order_implies_first_printed);
         }
-        order_stop_stop(rsc, replica->docker, pe_order_implies_first_printed);
-        new_rsc_order(replica->docker, RSC_START, rsc, RSC_STARTED,
+        order_stop_stop(rsc, replica->container,
+                        pe_order_implies_first_printed);
+        new_rsc_order(replica->container, RSC_START, rsc, RSC_STARTED,
                       pe_order_implies_then_printed, data_set);
-        new_rsc_order(replica->docker, RSC_STOP, rsc, RSC_STOPPED,
+        new_rsc_order(replica->container, RSC_STOP, rsc, RSC_STOPPED,
                       pe_order_implies_then_printed, data_set);
 
         if (replica->ip) {
             replica->ip->cmds->internal_constraints(replica->ip, data_set);
 
-            // Start ip then docker
-            new_rsc_order(replica->ip, RSC_START, replica->docker, RSC_START,
+            // Start ip then container
+            new_rsc_order(replica->ip, RSC_START, replica->container, RSC_START,
                           pe_order_runnable_left|pe_order_preserve, data_set);
-            new_rsc_order(replica->docker, RSC_STOP, replica->ip, RSC_STOP,
+            new_rsc_order(replica->container, RSC_STOP, replica->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
             rsc_colocation_new("ip-with-docker", NULL, INFINITY, replica->ip,
-                               replica->docker, NULL, NULL, data_set);
+                               replica->container, NULL, NULL, data_set);
         }
 
         if (replica->remote) {
-            /* This handles ordering and colocating remote relative to docker
+            /* This handles ordering and colocating remote relative to container
              * (via "resource-with-container"). Since IP is also ordered and
-             * colocated relative to docker, we don't need to do anything
+             * colocated relative to the container, we don't need to do anything
              * explicit here with IP.
              */
             replica->remote->cmds->internal_constraints(replica->remote,
@@ -368,10 +370,11 @@ compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (is_child_compatible(replica->docker, candidate, filter, current)) {
+        if (is_child_compatible(replica->container, candidate, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
-                      rsc_lh->id, replica->docker->id, candidate->details->uname);
-            return replica->docker;
+                      rsc_lh->id, replica->container->id,
+                      candidate->details->uname);
+            return replica->container;
         }
     }
 
@@ -503,15 +506,16 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
         pe__bundle_replica_t *replica = gIter->data;
 
         if (constraint->score < INFINITY) {
-            replica->docker->cmds->rsc_colocation_rh(rsc_lh, replica->docker,
-                                                     constraint, data_set);
+            replica->container->cmds->rsc_colocation_rh(rsc_lh,
+                                                        replica->container,
+                                                        constraint, data_set);
 
         } else {
-            node_t *chosen = replica->docker->fns->location(replica->docker,
-                                                            NULL, FALSE);
+            node_t *chosen = replica->container->fns->location(replica->container,
+                                                               NULL, FALSE);
 
             if ((chosen == NULL)
-                || is_set_recursive(replica->docker, pe_rsc_block, TRUE)) {
+                || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
             if ((constraint->role_rh >= RSC_ROLE_MASTER)
@@ -598,7 +602,7 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
 }
 
 static pe__bundle_replica_t *
-replica_for_container(pe_resource_t *rsc, pe_resource_t *docker,
+replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
                       pe_node_t *node)
 {
     if (rsc->variant == pe_container) {
@@ -610,7 +614,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *docker,
             pe__bundle_replica_t *replica = gIter->data;
 
             if (replica->child
-                && (docker == replica->docker)
+                && (container == replica->container)
                 && (node->details == replica->node->details)) {
                 return replica;
             }
@@ -691,7 +695,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             if (strstr(then->task, "mote")
                 && then_replica && then_replica->child) {
                 /* Promote/demote actions will never be found for the
-                 * docker resource, look in the child instead
+                 * container resource, look in the child instead
                  *
                  * Alternatively treat:
                  *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
@@ -858,8 +862,9 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (replica->docker) {
-            replica->docker->cmds->rsc_location(replica->docker, constraint);
+        if (replica->container) {
+            replica->container->cmds->rsc_location(replica->container,
+                                                   constraint);
         }
         if (replica->ip) {
             replica->ip->cmds->rsc_location(replica->ip, constraint);
@@ -893,7 +898,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->remote && replica->docker
+        if (replica->remote && replica->container
             && pe__bundle_needs_remote_name(replica->remote)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
@@ -929,8 +934,8 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
         if (replica->ip) {
             replica->ip->cmds->expand(replica->ip, data_set);
         }
-        if (replica->docker) {
-            replica->docker->cmds->expand(replica->docker, data_set);
+        if (replica->container) {
+            replica->container->cmds->expand(replica->container, data_set);
         }
         if (replica->remote) {
             replica->remote->cmds->expand(replica->remote, data_set);
@@ -964,10 +969,10 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                                               node, complete,
                                                               force, data_set);
         }
-        if (replica->docker) {
-            bool created = replica->docker->cmds->create_probe(replica->docker,
-                                                               node, complete,
-                                                               force, data_set);
+        if (replica->container) {
+            bool created = replica->container->cmds->create_probe(replica->container,
+                                                                  node, complete,
+                                                                  force, data_set);
 
             if(created) {
                 any_created = TRUE;
@@ -990,12 +995,12 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                     pe__bundle_replica_t *other = tIter->data;
 
                     if ((other != replica) && (other != NULL)
-                        && (other->docker != NULL)) {
+                        && (other->container != NULL)) {
 
-                        custom_action_order(replica->docker,
-                                            generate_op_key(replica->docker->id, RSC_STATUS, 0),
-                                            NULL, other->docker,
-                                            generate_op_key(other->docker->id, RSC_START, 0),
+                        custom_action_order(replica->container,
+                                            generate_op_key(replica->container->id, RSC_STATUS, 0),
+                                            NULL, other->container,
+                                            generate_op_key(other->container->id, RSC_START, 0),
                                             NULL,
                                             pe_order_optional|pe_order_same_node,
                                             data_set);
@@ -1003,7 +1008,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 }
             }
         }
-        if (replica->docker && replica->remote
+        if (replica->container && replica->remote
             && replica->remote->cmds->create_probe(replica->remote, node,
                                                    complete, force,
                                                    data_set)) {
@@ -1022,8 +1027,8 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 any_created = TRUE;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
-                custom_action_order(replica->docker,
-                                    generate_op_key(replica->docker->id, RSC_START, 0),
+                custom_action_order(replica->container,
+                                    generate_op_key(replica->container->id, RSC_START, 0),
                                     NULL, replica->remote, NULL, probe,
                                     pe_order_probe, data_set);
             }
@@ -1062,8 +1067,8 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
         if (replica->ip) {
             LogActions(replica->ip, data_set, terminal);
         }
-        if (replica->docker) {
-            LogActions(replica->docker, data_set, terminal);
+        if (replica->container) {
+            LogActions(replica->container, data_set, terminal);
         }
         if (replica->remote) {
             LogActions(replica->remote, data_set, terminal);

@@ -178,16 +178,16 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         char *dbuffer = calloc(1, dmax+1);
 
         char *id = NULL;
-        xmlNode *xml_docker = NULL;
+        xmlNode *xml_container = NULL;
         xmlNode *xml_obj = NULL;
 
         id = crm_strdup_printf("%s-docker-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_docker = create_resource(id, "heartbeat",
-                                     PE__CONTAINER_AGENT_DOCKER_S);
+        xml_container = create_resource(id, "heartbeat",
+                                        PE__CONTAINER_AGENT_DOCKER_S);
         free(id);
 
-        xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
+        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -210,12 +210,13 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
 
-        if(data->docker_network) {
+        if (data->container_network) {
 #if 0
             offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
                                replica->ipaddr);
 #endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s",
+                               data->container_network);
         }
 
         if(data->control_port) {
@@ -253,18 +254,20 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    replica->ipaddr, port->source,
                                    port->target);
-            } else if(safe_str_neq(data->docker_network, "host")) {
+            } else if(safe_str_neq(data->container_network, "host")) {
                 // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
         }
 
-        if(data->docker_run_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
+        if (data->launcher_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s",
+                               data->launcher_options);
         }
 
-        if(data->docker_host_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        if (data->container_host_options) {
+            offset += snprintf(buffer + offset, max - offset, " %s",
+                               data->container_host_options);
         }
 
         crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
@@ -274,9 +277,9 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         free(dbuffer);
 
         if (replica->child) {
-            if(data->docker_run_command) {
+            if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->docker_run_command);
+                                      "run_cmd", data->container_command);
             } else {
                 crm_create_nvpair_xml(xml_obj, NULL,
                                       "run_cmd", SBIN_DIR "/pacemaker-remoted");
@@ -304,9 +307,9 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
-            if(data->docker_run_command) {
+            if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->docker_run_command);
+                                      "run_cmd", data->container_command);
             }
 
             /* TODO: Allow users to specify their own?
@@ -318,14 +321,14 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
 
-        xml_obj = create_xml_node(xml_docker, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
+        xml_obj = create_xml_node(xml_container, "operations");
+        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (!common_unpack(xml_docker, &replica->docker, parent, data_set)) {
+        if (!common_unpack(xml_container, &replica->container, parent, data_set)) {
             return FALSE;
         }
-        parent->children = g_list_append(parent->children, replica->docker);
+        parent->children = g_list_append(parent->children, replica->container);
         return TRUE;
 }
 
@@ -341,16 +344,16 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         char *dbuffer = calloc(1, dmax+1);
 
         char *id = NULL;
-        xmlNode *xml_podman = NULL;
+        xmlNode *xml_container = NULL;
         xmlNode *xml_obj = NULL;
 
         id = crm_strdup_printf("%s-podman-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_podman = create_resource(id, "heartbeat",
-                                     PE__CONTAINER_AGENT_PODMAN_S);
+        xml_container = create_resource(id, "heartbeat",
+                                        PE__CONTAINER_AGENT_PODMAN_S);
         free(id);
 
-        xml_obj = create_xml_node(xml_podman, XML_TAG_ATTR_SETS);
+        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -374,13 +377,14 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
 
-        if(data->docker_network) {
+        if (data->container_network) {
 #if 0
             // podman has no support for --link-local-ip
             offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
                                replica->ipaddr);
 #endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s",
+                               data->container_network);
         }
 
         if(data->control_port) {
@@ -418,18 +422,20 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    replica->ipaddr, port->source,
                                    port->target);
-            } else if(safe_str_neq(data->docker_network, "host")) {
+            } else if(safe_str_neq(data->container_network, "host")) {
                 // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
         }
 
-        if(data->docker_run_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
+        if (data->launcher_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s",
+                               data->launcher_options);
         }
 
-        if(data->docker_host_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        if (data->container_host_options) {
+            offset += snprintf(buffer + offset, max - offset, " %s",
+                               data->container_host_options);
         }
 
         crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
@@ -439,9 +445,9 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         free(dbuffer);
 
         if (replica->child) {
-            if(data->docker_run_command) {
+            if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->docker_run_command);
+                                      "run_cmd", data->container_command);
             } else {
                 crm_create_nvpair_xml(xml_obj, NULL,
                                       "run_cmd", SBIN_DIR "/pacemaker-remoted");
@@ -469,9 +475,9 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
-            if(data->docker_run_command) {
+            if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->docker_run_command);
+                                      "run_cmd", data->container_command);
             }
 
             /* TODO: Allow users to specify their own?
@@ -483,14 +489,15 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
 
-        xml_obj = create_xml_node(xml_podman, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_podman), "monitor", "60s", NULL);
+        xml_obj = create_xml_node(xml_container, "operations");
+        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (!common_unpack(xml_podman, &replica->docker, parent, data_set)) {
+        if (!common_unpack(xml_container, &replica->container, parent,
+                           data_set)) {
             return FALSE;
         }
-        parent->children = g_list_append(parent->children, replica->docker);
+        parent->children = g_list_append(parent->children, replica->container);
         return TRUE;
 }
 
@@ -505,18 +512,18 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         char *dbuffer = calloc(1, dmax+1);
 
         char *id = NULL;
-        xmlNode *xml_docker = NULL;
+        xmlNode *xml_container = NULL;
         xmlNode *xml_obj = NULL;
 
         int volid = 0;
 
         id = crm_strdup_printf("%s-rkt-%d", data->prefix, replica->offset);
         crm_xml_sanitize_id(id);
-        xml_docker = create_resource(id, "heartbeat",
-                                     PE__CONTAINER_AGENT_RKT_S);
+        xml_container = create_resource(id, "heartbeat",
+                                        PE__CONTAINER_AGENT_RKT_S);
         free(id);
 
-        xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
+        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -537,12 +544,13 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_stderr=1");
 
-        if(data->docker_network) {
+        if (data->container_network) {
 #if 0
             offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
                                replica->ipaddr);
 #endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s",
+                               data->container_network);
         }
 
         if(data->control_port) {
@@ -591,12 +599,14 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        if(data->docker_run_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
+        if (data->launcher_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s",
+                               data->launcher_options);
         }
 
-        if(data->docker_host_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        if (data->container_host_options) {
+            offset += snprintf(buffer + offset, max - offset, " %s",
+                               data->container_host_options);
         }
 
         crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
@@ -606,8 +616,9 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         free(dbuffer);
 
         if (replica->child) {
-            if(data->docker_run_command) {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", data->docker_run_command);
+            if (data->container_command) {
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                      data->container_command);
             } else {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
                                       SBIN_DIR "/pacemaker-remoted");
@@ -635,9 +646,9 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
-            if(data->docker_run_command) {
+            if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                      data->docker_run_command);
+                                      data->container_command);
             }
 
             /* TODO: Allow users to specify their own?
@@ -649,15 +660,15 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
 
-        xml_obj = create_xml_node(xml_docker, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
+        xml_obj = create_xml_node(xml_container, "operations");
+        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (!common_unpack(xml_docker, &replica->docker, parent, data_set)) {
+        if (!common_unpack(xml_container, &replica->container, parent, data_set)) {
             return FALSE;
         }
-        parent->children = g_list_append(parent->children, replica->docker);
+        parent->children = g_list_append(parent->children, replica->container);
         return TRUE;
 }
 
@@ -718,12 +729,12 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             port_s = crm_itoa(DEFAULT_REMOTE_PORT);
         }
 
-        /* This sets replica->docker as replica->remote's container, which is
+        /* This sets replica->container as replica->remote's container, which is
          * similar to what happens with guest nodes. This is how the PE knows
-         * that the bundle node is fenced by recovering docker, and that
-         * remote should be ordered relative to docker.
+         * that the bundle node is fenced by recovering the container, and that
+         * remote should be ordered relative to the container.
          */
-        xml_remote = pe_create_remote_xml(NULL, id, replica->docker->id,
+        xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
                                           NULL, NULL, NULL,
                                           connect_name, (data->control_port?
                                           data->control_port : port_s));
@@ -807,7 +818,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->details->remote_rsc = replica->remote;
 
         // Ensure is_container_remote_node() functions correctly immediately
-        replica->remote->container = replica->docker;
+        replica->remote->container = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
@@ -816,12 +827,12 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                             strdup(CRM_ATTR_KIND), strdup("container"));
 
         /* One effect of this is that setup_container() will add
-         * replica->remote to replica->docker's fillers, which will make
-         * rsc_contains_remote_node() true for replica->docker.
+         * replica->remote to replica->container's fillers, which will make
+         * rsc_contains_remote_node() true for replica->container.
          *
-         * replica->child does NOT get added to replica->docker's fillers.
+         * replica->child does NOT get added to replica->container's fillers.
          * The only noticeable effect if it did would be for its fail count to
-         * be taken into account when checking replica->docker's migration
+         * be taken into account when checking replica->container's migration
          * threshold.
          */
         parent->children = g_list_append(parent->children, replica->remote);
@@ -869,8 +880,7 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
     if (replica->remote) {
         /*
          * Allow the remote connection resource to be allocated to a
-         * different node than the one on which the docker container
-         * is active.
+         * different node than the one on which the container is active.
          *
          * This makes it possible to have Pacemaker Remote nodes running
          * containers with pacemaker-remoted inside in order to start
@@ -988,12 +998,12 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
         return NULL;
     }
 
-    node = replica->docker->allocated_to;
+    node = replica->container->allocated_to;
     if (node == NULL) {
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
-        node = pe__current_node(replica->docker);
+        node = pe__current_node(replica->container);
     }
 
     if(node == NULL) {
@@ -1067,7 +1077,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /*
      * Communication between containers on the same host via the
-     * floating IPs only works if docker is started with:
+     * floating IPs only works if the container is started with:
      *   --userland-proxy=false --ip-masq=false
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
@@ -1081,10 +1091,10 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         clear_bit(rsc->flags, pe_rsc_unique);
     }
 
-    bundle_data->docker_run_command = crm_element_value_copy(xml_obj, "run-command");
-    bundle_data->docker_run_options = crm_element_value_copy(xml_obj, "options");
+    bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
+    bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
     bundle_data->image = crm_element_value_copy(xml_obj, "image");
-    bundle_data->docker_network = crm_element_value_copy(xml_obj, "network");
+    bundle_data->container_network = crm_element_value_copy(xml_obj, "network");
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
@@ -1284,7 +1294,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             bundle_data->attribute_target = g_hash_table_lookup(replica->child->meta,
                                                                 XML_RSC_ATTR_TARGET);
         }
-        bundle_data->docker_host_options = buffer;
+        bundle_data->container_host_options = buffer;
         if (bundle_data->attribute_target) {
             g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
@@ -1307,7 +1317,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
         }
-        bundle_data->docker_host_options = buffer;
+        bundle_data->container_host_options = buffer;
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1363,7 +1373,7 @@ pe__bundle_active(pe_resource_t *rsc, gboolean all)
             return (gboolean) rsc_active;
         }
 
-        rsc_active = replica_resource_active(replica->docker, all);
+        rsc_active = replica_resource_active(replica->container, all);
         if (rsc_active >= 0) {
             return (gboolean) rsc_active;
         }
@@ -1469,7 +1479,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
         status_print("%s    <replica id=\"%d\">\n", pre_text, replica->offset);
         print_rsc_in_list(replica->ip, child_text, options, print_data);
         print_rsc_in_list(replica->child, child_text, options, print_data);
-        print_rsc_in_list(replica->docker, child_text, options, print_data);
+        print_rsc_in_list(replica->container, child_text, options, print_data);
         print_rsc_in_list(replica->remote, child_text, options, print_data);
         status_print("%s    </replica>\n", pre_text);
     }
@@ -1488,7 +1498,7 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
     char buffer[LINE_MAX];
 
     if(rsc == NULL) {
-        rsc = replica->docker;
+        rsc = replica->container;
     }
 
     if (replica->remote) {
@@ -1496,14 +1506,14 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                            rsc_printable_id(replica->remote));
     } else {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->docker));
+                           rsc_printable_id(replica->container));
     }
     if (replica->ipaddr) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->docker);
+    node = pe__current_node(replica->container);
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 
@@ -1554,7 +1564,7 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                 status_print("<br />\n<ul>\n");
             }
             print_rsc_in_list(replica->ip, child_text, options, print_data);
-            print_rsc_in_list(replica->docker, child_text, options, print_data);
+            print_rsc_in_list(replica->container, child_text, options, print_data);
             print_rsc_in_list(replica->remote, child_text, options, print_data);
             print_rsc_in_list(replica->child, child_text, options, print_data);
             if (options & pe_print_html) {
@@ -1593,11 +1603,11 @@ free_bundle_replica(pe__bundle_replica_t *replica)
         replica->ip->fns->free(replica->ip);
         replica->ip = NULL;
     }
-    if (replica->docker) {
-        free_xml(replica->docker->xml);
-        replica->docker->xml = NULL;
-        replica->docker->fns->free(replica->docker);
-        replica->docker = NULL;
+    if (replica->container) {
+        free_xml(replica->container->xml);
+        replica->container->xml = NULL;
+        replica->container->fns->free(replica->container);
+        replica->container = NULL;
     }
     if (replica->remote) {
         free_xml(replica->remote->xml);
@@ -1624,10 +1634,10 @@ pe__free_bundle(pe_resource_t *rsc)
     free(bundle_data->host_network);
     free(bundle_data->host_netmask);
     free(bundle_data->ip_range_start);
-    free(bundle_data->docker_network);
-    free(bundle_data->docker_run_options);
-    free(bundle_data->docker_run_command);
-    free(bundle_data->docker_host_options);
+    free(bundle_data->container_network);
+    free(bundle_data->launcher_options);
+    free(bundle_data->container_command);
+    free(bundle_data->container_host_options);
 
     g_list_free_full(bundle_data->replicas,
                      (GDestroyNotify) free_bundle_replica);
