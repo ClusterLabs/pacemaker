@@ -74,7 +74,6 @@ crm_simulate_SOURCES	= crm_simulate.c
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/lrmd/liblrmd.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_diff_SOURCES	= crm_diff.c

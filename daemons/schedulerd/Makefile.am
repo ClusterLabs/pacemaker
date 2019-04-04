@@ -11,10 +11,6 @@ AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/pengine/libpe_status.la \
-		$(top_builddir)/lib/pacemaker/libpacemaker.la
-
 ## binary progs
 
 halib_PROGRAMS	= pacemaker-schedulerd
@@ -27,7 +23,9 @@ endif
 
 pacemaker_schedulerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_schedulerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
-pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
+pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la \
+							  $(top_builddir)/lib/pengine/libpe_status.la \
+							  $(top_builddir)/lib/pacemaker/libpacemaker.la
 # libcib for get_object_root()
 pacemaker_schedulerd_SOURCES	= pacemaker-schedulerd.c
 

@@ -38,12 +38,11 @@ pacemaker_remoted_LDADD		= $(pacemaker_execd_LDADD) \
 pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) \
 				  remoted_tls.c remoted_proxy.c
 
-cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la    \
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
 			  $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/services/libcrmservice.la	\
-			  $(top_builddir)/lib/pengine/libpe_status.la	\
-			  $(top_builddir)/lib/pacemaker/libpacemaker.la
+			  $(top_builddir)/lib/services/libcrmservice.la \
+			  $(top_builddir)/lib/pengine/libpe_status.la
 cts_exec_helper_SOURCES	= cts-exec-helper.c
 
 noinst_HEADERS  = pacemaker-execd.h
