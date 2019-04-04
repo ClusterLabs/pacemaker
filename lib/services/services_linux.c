@@ -877,6 +877,11 @@ services_os_action_execute(svc_action_t * op)
         op->opaque->stdin_fd = -1;
     }
 
+    // after fds are setup properly and before we plug anything into mainloop
+    if (op->opaque->fork_callback) {
+        op->opaque->fork_callback(op);
+    }
+
     if (op->synchronous) {
         action_synced_wait(op, pmask);
         sigchld_cleanup();
