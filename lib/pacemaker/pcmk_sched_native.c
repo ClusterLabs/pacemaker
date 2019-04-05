@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1608,29 +1610,35 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
     }
 
     if (preview == FALSE && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
-        /* error check */
-        struct pe_node_shared_s *details_lh;
-        struct pe_node_shared_s *details_rh;
+        // Log an error if we violated a mandatory colocation constraint
+        const pe_node_t *rh_node = rsc_rh->allocated_to;
 
-        if ((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
+        if (rsc_lh->allocated_to == NULL) {
+            // Dependent resource isn't allocated, so constraint doesn't matter
             return influence_nothing;
         }
 
-        details_rh = rsc_rh->allocated_to ? rsc_rh->allocated_to->details : NULL;
-        details_lh = rsc_lh->allocated_to ? rsc_lh->allocated_to->details : NULL;
+        if (constraint->score >= INFINITY) {
+            // Dependent resource must colocate with rh_node
 
-        if (constraint->score == INFINITY && details_lh != details_rh) {
-            crm_err("%s and %s are both allocated"
-                    " but to different nodes: %s vs. %s",
-                    rsc_lh->id, rsc_rh->id,
-                    details_lh ? details_lh->uname : "n/a", details_rh ? details_rh->uname : "n/a");
+            if ((rh_node == NULL)
+                || (rh_node->details != rsc_lh->allocated_to->details)) {
+                crm_err("%s must be colocated with %s but is not (%s vs. %s)",
+                        rsc_lh->id, rsc_rh->id,
+                        rsc_lh->allocated_to->details->uname,
+                        (rh_node? rh_node->details->uname : "unallocated"));
+            }
 
-        } else if (constraint->score == -INFINITY && details_lh == details_rh) {
-            crm_err("%s and %s are both allocated"
-                    " but to the SAME node: %s",
-                    rsc_lh->id, rsc_rh->id, details_rh ? details_rh->uname : "n/a");
+        } else if (constraint->score <= -INFINITY) {
+            // Dependent resource must anti-colocate with rh_node
+
+            if ((rh_node != NULL)
+                && (rsc_lh->allocated_to->details == rh_node->details)) {
+                crm_err("%s and %s must be anti-colocated but are allocated "
+                        "to the same node (%s)",
+                        rsc_lh->id, rsc_rh->id, rh_node->details->uname);
+            }
         }
-
         return influence_nothing;
     }
 
