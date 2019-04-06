@@ -1,7 +1,8 @@
 #!/bin/sh
-# Copyright 2018 Red Hat, Inc.
-# Author: Jan Pokorny <jpokorny@redhat.com>
-# Part of pacemaker project
+# Copyright 2018-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
@@ -624,16 +625,23 @@ test_suite() {
 
 	for _ts_test in ${tests}; do
 
+		_ts_test_specs=
 		while true; do
 			case "${_ts_select}" in
 			*@${_ts_test}@*)
-			_ts_select="${_ts_select%@${_ts_test}@*}"\
+			_ts_test_specs="${_ts_select%%@${_ts_test}@*}"\
 "@${_ts_select#*@${_ts_test}@}"
-			break
+			if test "${_ts_test_specs}" = @; then
+				_ts_select=  # nothing left
+			else
+				_ts_select="${_ts_test_specs}"
+			fi
+			continue
 			;;
-			@) case "${_ts_test}" in test*) break;; esac
+			@) case "${_ts_test}" in test*) break;; esac  # filter
 			;;
 			esac
+			test -z "${_ts_test_specs}" || break
 			continue 2  # move on to matching with next local test
 		done
 
@@ -643,7 +651,7 @@ test_suite() {
 			*@${_ts_test}/*)
 				_ts_test_full="${_ts_test}/${_ts_select_full#*@${_ts_test}/}"
 				_ts_test_full="${_ts_test_full%%@*}"
-				_ts_select_full="${_ts_select_full%@${_ts_test_full}@*}"\
+				_ts_select_full="${_ts_select_full%%@${_ts_test_full}@*}"\
 "@${_ts_select_full#*@${_ts_test_full}@}"
 				_ts_test_specs="${_ts_test_specs} ${_ts_test_full#*/}"
 			;;
@@ -663,7 +671,7 @@ test_suite() {
 		log2_or_0_add ${_ts_global_ret} ${_ts_ret}
 		_ts_global_ret=$?
 	done
-	if test "${_ts_select}" != @; then
+	if test -n "${_ts_select#@}"; then
 		emit_error "Non-existing test(s):$(echo "${_ts_select}" \
 		                                   | tr '@' ' ')"
 		log2_or_0_add ${_ts_global_ret} 1 || _ts_global_ret=$?
