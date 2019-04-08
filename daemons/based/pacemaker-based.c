@@ -49,7 +49,7 @@ int remote_tls_fd = 0;
 GHashTable *config_hash = NULL;
 GHashTable *local_notify_queue = NULL;
 
-int cib_init(void);
+static int cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
@@ -282,7 +282,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
-int
+static int
 cib_init(void)
 {
     if (is_corosync_cluster()) {
