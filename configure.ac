@@ -1798,6 +1798,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 include/pcmki/Makefile                              \
                 replace/Makefile                                    \
                 lib/Makefile                                        \
+                lib/libpacemaker.pc                                 \
                 lib/pacemaker.pc                                    \
                 lib/pacemaker-cib.pc                                \
                 lib/pacemaker-lrmd.pc                               \
@@ -1806,14 +1807,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-pe_status.pc                          \
                 lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-cluster.pc                            \
-                lib/pacemaker-internal.pc                           \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
                 lib/gnu/Makefile                                    \
-                lib/internal/Makefile                               \
+                lib/pacemaker/Makefile                              \
                 lib/pengine/Makefile                                \
-                lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
