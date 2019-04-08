@@ -2268,9 +2268,8 @@ order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
     return FALSE;
 }
 
-
 static void
-order_first_probes(pe_working_set_t * data_set)
+order_first_probes_imply_stops(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
@@ -2391,6 +2390,198 @@ order_first_probes(pe_working_set_t * data_set)
         g_list_free(rh_actions);
         g_list_free(probes);
     }
+}
+
+static void
+order_first_probe_then_restart_repromote(pe_action_t * probe,
+                                         pe_action_t * after,
+                                         pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+    bool interleave = FALSE;
+    pe_resource_t *compatible_rsc = NULL;
+
+    if (probe == NULL
+        || probe->rsc == NULL
+        || probe->rsc->variant != pe_native) {
+        return;
+    }
+
+    if (after == NULL
+        // Avoid running into any possible loop
+        || is_set(after->flags, pe_action_tracking)) {
+        return;
+    }
+
+    if (safe_str_neq(probe->task, RSC_STATUS)) {
+        return;
+    }
+
+    pe_set_action_bit(after, pe_action_tracking);
+
+    crm_trace("Processing based on %s %s -> %s %s",
+              probe->uuid,
+              probe->node ? probe->node->details->uname: "",
+              after->uuid,
+              after->node ? after->node->details->uname : "");
+
+    if (after->rsc
+        /* Better not build a dependency directly with a clone/group.
+         * We are going to proceed through the ordering chain and build
+         * dependencies with its children.
+         */
+        && after->rsc->variant == pe_native
+        && probe->rsc != after->rsc) {
+
+            GListPtr then_actions = NULL;
+            enum pe_ordering probe_order_type = pe_order_optional;
+
+            if (safe_str_eq(after->task, RSC_START)) {
+                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP, FALSE);
+
+            } else if (safe_str_eq(after->task, RSC_PROMOTE)) {
+                then_actions = pe__resource_actions(after->rsc, NULL, RSC_DEMOTE, FALSE);
+            }
+
+            for (gIter = then_actions; gIter != NULL; gIter = gIter->next) {
+                pe_action_t *then = (pe_action_t *) gIter->data;
+
+                // Skip any pseudo action which for example is implied by fencing
+                if (is_set(then->flags, pe_action_pseudo)) {
+                    continue;
+                }
+
+                order_actions(probe, then, probe_order_type);
+            }
+            g_list_free(then_actions);
+    }
+
+    if (after->rsc
+        && after->rsc->variant > pe_group) {
+        const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
+                                                       XML_RSC_ATTR_INTERLEAVE);
+
+        interleave = crm_is_true(interleave_s);
+
+        if (interleave) {
+            /* For an interleaved clone, we should build a dependency only
+             * with the relevant clone child.
+             */
+            compatible_rsc = find_compatible_child(probe->rsc,
+                                                   after->rsc,
+                                                   RSC_ROLE_UNKNOWN,
+                                                   FALSE, data_set);
+        }
+    }
+
+    for (gIter = after->actions_after; gIter != NULL; gIter = gIter->next) {
+        pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) gIter->data;
+        /* pe_order_implies_then is the reason why a required A.start
+         * implies/enforces B.start to be required too, which is the cause of
+         * B.restart/re-promote.
+         *
+         * Not sure about pe_order_implies_then_on_node though. It's now only
+         * used for unfencing case, which tends to introduce transition
+         * loops...
+         */
+
+        if (is_not_set(after_wrapper->type, pe_order_implies_then)) {
+            /* The order type between a group/clone and its child such as
+             * B.start-> B_child.start is:
+             * pe_order_implies_first_printed | pe_order_runnable_left
+             *
+             * Proceed through the ordering chain and build dependencies with
+             * its children.
+             */
+            if (after->rsc == NULL
+                || after->rsc->variant < pe_group
+                || probe->rsc->parent == after->rsc
+                || after_wrapper->action->rsc == NULL
+                || after_wrapper->action->rsc->variant > pe_group
+                || after->rsc != after_wrapper->action->rsc->parent) {
+                continue;
+            }
+
+            /* Proceed to the children of a group or a non-interleaved clone.
+             * For an interleaved clone, proceed only to the relevant child.
+             */
+            if (after->rsc->variant > pe_group
+                && interleave == TRUE
+                && (compatible_rsc == NULL
+                    || compatible_rsc != after_wrapper->action->rsc)) {
+                continue;
+            }
+        }
+
+        crm_trace("Proceeding through %s %s -> %s %s (type=0x%.6x)",
+                  after->uuid,
+                  after->node ? after->node->details->uname: "",
+                  after_wrapper->action->uuid,
+                  after_wrapper->action->node ? after_wrapper->action->node->details->uname : "",
+                  after_wrapper->type);
+
+        order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+    }
+}
+
+static void clear_actions_tracking_flag(pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
+
+        if (is_set(action->flags, pe_action_tracking)) {
+            pe_clear_action_bit(action, pe_action_tracking);
+        }
+    }
+}
+
+static void
+order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+    GListPtr probes = NULL;
+
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t * child = (pe_resource_t *) gIter->data;
+
+        order_first_rsc_probes(child, data_set);
+    }
+
+    if (rsc->variant != pe_native) {
+        return;
+    }
+
+    probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+
+    for (gIter = probes; gIter != NULL; gIter= gIter->next) {
+        pe_action_t *probe = (pe_action_t *) gIter->data;
+        GListPtr aIter = NULL;
+
+        for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
+            pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
+
+            order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+            clear_actions_tracking_flag(data_set);
+        }
+    }
+
+    g_list_free(probes);
+}
+
+static void
+order_first_probes(pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+
+        order_first_rsc_probes(rsc, data_set);
+    }
+
+    order_first_probes_imply_stops(data_set);
 }
 
 static void
