@@ -114,6 +114,13 @@ test_browser() {
 	_tb_cleanref=0
 	_tb_serverpid=
 
+	while test $# -gt 0; do
+		case "$1" in
+		-r) _tb_cleanref=1;;
+		esac
+		shift
+	done
+
 	if ! read _tb_first; then
 		return 1
 	fi
@@ -138,6 +145,8 @@ test_browser() {
 	printf "When finished, just press Ctrl+C or kill %d, please\n" \
 	       "${_tb_serverpid}"
 	wait
+
+	test "${_tb_cleanref}" -eq 0 || rm -f assets/diffview.js
 }
 
 # -r ... whether to remove referential files as well
@@ -164,6 +173,7 @@ test_cleaner() {
 # -a= ... action modifier to derive template name from (if any; enter/leave)
 # -o= ... which conventional version to deem as the transform origin
 test_selfcheck() {
+	_tsc_cleanref=0
 	_tsc_ret=0
 	_tsc_action=
 	_tsc_template=
@@ -171,6 +181,7 @@ test_selfcheck() {
 
 	while test $# -gt 0; do
 		case "$1" in
+		-r) _tsc_cleanref=1;;
 		-a=*) _tsc_action="${1#-a=}";;
 		-o=*) _tsc_template="${1#-o=}";;
 		esac
@@ -223,6 +234,9 @@ ${RNGVALIDATOR}"
 	if ! ${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
+
+	test "${_tsc_cleanref}" -eq 0 \
+	  || rm -f assets/relaxng.rng assets/xslt.rng assets/xmlcatalog
 
 	log2_or_0_return ${_tsc_ret}
 }
@@ -434,6 +448,7 @@ test_runner() {
 #
 
 test2to3() {
+	_t23_cleanopt=
 	_t23_pattern=
 
 	while read _t23_spec; do
@@ -442,20 +457,22 @@ test2to3() {
 		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
 	done
 	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23_cleanopt=-r; esac
 
 	find test-2 -name test-2 -o -type d -prune \
 	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -o=2.10;;
+	      *\ -S\ *) test_selfcheck -o=2.10 ${_t23_cleanopt};;
 	      *\ -X\ *) test_explanation -o=2.10;;
-	      *\ -W\ *) test_browser;;
+	      *\ -W\ *) test_browser ${_t23_cleanopt};;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
 tests="${tests} test2to3"
 
 test2to3enter() {
+	_t23e_cleanopt=
 	_t23e_pattern=
 
 	while read _t23e_spec; do
@@ -464,12 +481,13 @@ test2to3enter() {
 		_t23e_pattern="${_t23e_pattern} -name ${_t23e_spec}*.xml -o"
 	done
 	test -z "${_t23e_pattern}" || _t23e_pattern="( ${_t23e_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23e_cleanopt=-r; esac
 
 	find test-2-enter -name test-2-enter -o -type d -prune \
 	  -o -name '*.xml' ${_t23e_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=enter -o=2.10;;
+	      *\ -S\ *) test_selfcheck -a=enter -o=2.10 ${_t23e_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
@@ -478,6 +496,7 @@ test2to3enter() {
 tests="${tests} test2to3enter"
 
 test2to3leave() {
+	_t23l_cleanopt=
 	_t23l_pattern=
 
 	while read _t23l_spec; do
@@ -486,12 +505,13 @@ test2to3leave() {
 		_t23l_pattern="${_t23l_pattern} -name ${_t23l_spec}*.xml -o"
 	done
 	test -z "${_t23l_pattern}" || _t23l_pattern="( ${_t23l_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23l_cleanopt=-r; esac
 
 	find test-2-leave -name test-2-leave -o -type d -prune \
 	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=leave -o=2.10;;
+	      *\ -S\ *) test_selfcheck -a=leave -o=2.10 ${_t23l_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
@@ -500,6 +520,7 @@ test2to3leave() {
 tests="${tests} test2to3leave"
 
 test2to3roundtrip() {
+	_t23rt_cleanopt=
 	_t23rt_pattern=
 
 	while read _t23tr_spec; do
@@ -508,13 +529,14 @@ test2to3roundtrip() {
 		_t23rt_pattern="${_t23rt_pattern} -name ${_t23rt_spec}*.xml -o"
 	done
 	test -z "${_t23rt_pattern}" || _t23rt_pattern="( ${_t23rt_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23rt_cleanopt=-r; esac
 
 	find test-2-roundtrip -name test-2-roundtrip -o -type d -prune \
 	  -o -name '*.xml' ${_t23rt_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10;;
-	      *\ -W\ *) test_browser;;
+	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10 ${_t23rt_cleanopt};;
+	      *\ -W\ *) test_browser ${_t23rt_cleanopt};;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
@@ -712,7 +734,7 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-	  '%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+'%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  "usage: $0 [-{B,C,D,G,S,X}]* \\" \
           "       [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
@@ -724,6 +746,7 @@ usage() {
 	  "- use '-S' for template self-check (requires net access)" \
 	  "- use '-W' to run browser-based, on-the-fly diff'ing test drive" \
 	  "- use '-X' to show explanatory details about the upgrade" \
+	  "- some modes (e.g. -{S,W}) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
 	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
