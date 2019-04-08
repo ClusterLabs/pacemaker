@@ -177,7 +177,9 @@ lib/gnu/stdalign.h
 /cts/test-suite.log
 /xml/test-*/*.up
 /xml/test-*/*.up.err
+/xml/assets/*.rng
 /xml/assets/diffview.js
+/xml/assets/xmlcatalog
 
 # Release maintenance detritus
 /maint/gnulib

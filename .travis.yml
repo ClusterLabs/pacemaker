@@ -1,3 +1,7 @@
+# Copyright 2012-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+
 # Control file for the Travis autobuilder
 # https://docs.travis-ci.com/user/customizing-the-build/
 
@@ -99,13 +103,13 @@ script:
         | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
     } && (
       cd xml;
-      ./regression.sh && ./regression.sh -B && {
+      ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
         schemas=; for schema in *.rng; do
           case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
         done;
         test -s .relaxng.org/relaxng.rng 2>/dev/null
-          || curl --create-dirs -Lo .relaxng.org/relaxng.rng
-             'http://relaxng.org/relaxng.rng';
+          || curl --create-dirs -SsLo .relaxng.org/relaxng.rng
+             'https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng';
         xmllint --noout --relaxng .relaxng.org/relaxng.rng ${schemas};
       }
     );

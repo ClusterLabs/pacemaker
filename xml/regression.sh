@@ -120,7 +120,7 @@ test_browser() {
 	cat >/dev/null 2>/dev/null  # read out the rest
 
 	test -f assets/diffview.js \
-	  || curl -Lo assets/diffview.js \
+	  || curl -SsLo assets/diffview.js \
 	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
 
 	{ which python3 >/dev/null 2>/dev/null \
@@ -181,18 +181,46 @@ test_selfcheck() {
 	_tsc_action=${_tsc_action:+-${_tsc_action}}
 	_tsc_template="upgrade-${_tsc_template}${_tsc_action}.xsl"
 
-	# check schema (sub-grammar) for custom transformation mapping alone
-        if test -z "${_tsc_action}" \
-	  && ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+	# alt. https://relaxng.org/relaxng.rng
+        _tsc_rng_relaxng=https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng
+	# alt. https://github.com/ndw/xslt-relax-ng/blob/master/1.0/xslt10.rnc
+	_tsc_rng_xslt=https://raw.githubusercontent.com/relaxng/jing-trang/master/eg/xslt.rng
+
+	case "${RNGVALIDATOR}" in
+	*xmllint*)
+		test -f "assets/$(basename "${_tsc_rng_relaxng}")" \
+		  || curl -SsLo "assets/$(basename "${_tsc_rng_relaxng}")" \
+		    "${_tsc_rng_relaxng}"
+		test -f "assets/$(basename "${_tsc_rng_xslt}")" \
+		  || curl -SsLo "assets/$(basename "${_tsc_rng_xslt}")" \
+		    "${_tsc_rng_xslt}"
+		test -f assets/xmlcatalog || >assets/xmlcatalog cat <<-EOF
+	<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+	<rewriteURI uriStartString="$(dirname "${_tsc_rng_relaxng}")"
+	            rewritePrefix="file://$(pwd)/assets"/>
+	<rewriteURI uriStartString="$(dirname "${_tsc_rng_xslt}")"
+	            rewritePrefix="file://$(pwd)/assets"/>
+	</catalog>
+EOF
+		RNGVALIDATOR=\
+"eval env \"XML_CATALOG_FILES=/etc/xml/catalog $(pwd)/assets/xmlcatalog\"
+${RNGVALIDATOR}"
+		# not needed
+		#_tsc_rng_relaxng="assets/$(basename "${_tsc_rng_relaxng}")"
+		#_tsc_rng_xslt="assets/$(basename "${_tsc_rng_xslt}")"
+	;;
+	esac
+
+	# check schema (sub-grammar) for custom transformation mapping alone;
+	if test -z "${_tsc_action}" \
+	  && ! ${RNGVALIDATOR} "${_tsc_rng_relaxng}" "${_tsc_validator}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
-	# check the overall XSLT per the main grammar + said sub-grammar
-        if ! ${RNGVALIDATOR} \
-          "$(test -f "${_tsc_validator}" \
-             && echo "xslt_${_tsc_validator}" \
-             || echo 'http://www.thaiopensource.com/relaxng/xslt.rng')" \
-          "${_tsc_template}"; then
+	# check the overall XSLT per the main grammar + said sub-grammar;
+	test -f "${_tsc_validator}" && _tsc_validator="xslt_${_tsc_validator}" \
+	  || _tsc_validator="${_tsc_rng_xslt}"
+	if ! ${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 

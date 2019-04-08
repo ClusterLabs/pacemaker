@@ -1,6 +1,7 @@
-# Copyright 2018 Red Hat, Inc.
-# Author: Jan Pokorny <jpokorny@redhat.com>
-# Part of pacemaker project
+# Copyright 2018-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
 # SPDX-License-Identifier: FSFAP
 
 # Conventions:
@@ -114,9 +115,9 @@ buildenv:fedora-rawhide:rpms:
     key: "fedora-rawhide-dnf"
     paths:
       - ".cache/fedora-rawhide/dnf/rawhide-*"
-      - "xml/.relaxng.org/relaxng.rng"
+      - "xml/assets/*.rng"
   script:
-    - mkdir -p .cache/fedora-rawhide/dnf xml/.relaxng.org
+    - mkdir -p .cache/fedora-rawhide/dnf
     - pushd .cache/fedora-rawhide
     - mv dnf/rawhide-* /var/cache/dnf 2>/dev/null || true
     - dnf-custom() { timeout 192 dnf -y --noplugins --nodocs
@@ -138,9 +139,12 @@ buildenv:fedora-rawhide:rpms:
     - mv /var/cache/dnf/rawhide-* dnf
     - popd
     # we don't have any other warm-up-cache job around, so piggyback it here
-    - test -s xml/.relaxng.org/relaxng.rng 2>/dev/null
-         || curl -SsLo xml/.relaxng.org/relaxng.rng
-            'http://relaxng.org/relaxng.rng'
+    - test -s xml/assets/relaxng.rng 2>/dev/null
+         || curl -SsLo xml/assets/relaxng.rng
+            'https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng'
+    - test -s xml/assets/xslt.rng 2>/dev/null
+         || curl -SsLo xml/assets/xslt.rng
+            'https://raw.githubusercontent.com/relaxng/jing-trang/master/eg/xslt.rng'
 
 # build
 
@@ -153,7 +157,7 @@ maint:fedora-rawhide:
     policy: pull
     paths:
       - ".cache/fedora-rawhide/dnf/rawhide-*"
-      - "xml/.relaxng.org/relaxng.rng"
+      - "xml/assets/*.rng"
   before_script:
     - mkdir -p .cache/fedora-rawhide/dnf
     - pushd .cache/fedora-rawhide
@@ -177,16 +181,12 @@ maint:fedora-rawhide:
         | xargs grep -Ensv "^([^[:cntrl:]]*|$(printf '\t'))*$"||:; } 2>/dev/null
         | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
 
-   # ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
    - cd xml;
-     ./regression.sh && ./regression.sh -B  && {
+     ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
        schemas=; for schema in *.rng; do
          case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
        done;
-       test -s .relaxng.org/relaxng.rng 2>/dev/null
-         || curl --create-dirs -Lo .relaxng.org/relaxng.rng
-            'http://relaxng.org/relaxng.rng';
-       xmllint --noout --relaxng .relaxng.org/relaxng.rng ${schemas};
+       xmllint --noout --relaxng assets/relaxng.rng ${schemas};
      }
 
 build:fedora-rawhide:gcc: &build-fedora-rawhide-gcc-anchor
