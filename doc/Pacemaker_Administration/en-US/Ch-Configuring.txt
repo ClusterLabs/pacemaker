@@ -3,29 +3,78 @@
 
 == How Should the Configuration be Updated? ==
 
-There are three basic rules for updating the cluster configuration:
+=== General Guidelines ===
 
- * Rule 1 - Never edit the +cib.xml+ file manually. Ever. I'm not making this up.
- * Rule 2 - Read Rule 1 again.
- * Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration.
+Pacemaker's configuration (the CIB) is stored in XML format. Cluster
+administrators have multiple options for modifying the configuration either via
+the XML, or at a more abstract (and easier for humans to understand) level.
 
-Now that it is clear how 'not' to update the configuration, we can begin
-to explain how you 'should'.
+Pacemaker reacts to configuration changes as soon as they are saved. Most tools
+provide the ability to batch changes together and commit them at once, rather
+than make a series of small changes, which could cause avoid unnecessary
+actions as Pacemaker responds to each change individually.
+
+Pacemaker keeps track of revisions to the configuration and will reject any
+update that is older than the current revision. Thus, it is a good idea to
+serialize all changes to the configuration. Avoid attempting simultaneous
+changes, whether on the same node or different nodes, and whether manually or
+using some automated configuration tool.
+
+[NOTE]
+====
+It is not necessary to update the configuration on all cluster nodes. All
+changes are immediately synchronized to all active members of the cluster. To
+reduce bandwidth, the cluster only broadcasts the incremental updates that
+result from your changes and uses MD5 checksums to ensure that each copy is
+completely consistent.
+====
+
+=== Higher-level Tools ===
+
+Most users will benefit from using higher-level tools that are provided by
+projects separate from Pacemaker. Some of the most commonly used include the
+crm shell, hawk, and pcs. footnote:[For a list, see "Configuration Tools" at
+https://clusterlabs.org/components.html]
+
+See those projects' documentation for details on how to configure Pacemaker
+using them.
+
+=== Pacemaker's Command-Line Tools ===
+
+Most configuration tasks can be performed without needing any XML knowledge,
+using one of the lower-level command-line tools provided with Pacemaker.
+
+To enable STONITH for example, one could run:
+
+----
+# crm_attribute --name stonith-enabled --update 1
+----
+
+Or, to check whether *node1* is allowed to run resources, there is:
+
+----
+# crm_standby --query --node node1
+----
+
+Or, to change the failure threshold of *my-test-rsc*, one can use:
+
+----
+# crm_resource -r my-test-rsc --set-parameter migration-threshold --parameter-value 3 --meta
+----
+
+Examples of using these tools for specific cases will be given throughout this
+document where appropriate. See the man pages for further details.
 
 === Editing the CIB Using XML ===
 
-The most powerful tool for modifying the configuration is the
+The most flexible tool for modifying the configuration is Pacemaker's
 +cibadmin+ command.  With +cibadmin+, you can query, add, remove, update
 or replace any part of the configuration. All changes take effect immediately,
 so there is no need to perform a reload-like operation.
 
 The simplest way of using `cibadmin` is to use it to save the current
 configuration to a temporary file, edit that file with your favorite
-text or XML editor, and then upload the revised configuration. footnote:[This
-process might appear to risk overwriting changes that happen after the initial
-cibadmin call, but pacemaker will reject any update that is "too old". If the
-CIB is updated in some other fashion after the initial cibadmin, the second
-cibadmin will be rejected because the version number will be too low.]
+text or XML editor, and then upload the revised configuration.
       
 .Safely using an editor to modify the cluster configuration
 ======
@@ -39,9 +88,8 @@ cibadmin will be rejected because the version number will be too low.]
 Some of the better XML editors can make use of a Relax NG schema to
 help make sure any changes you make are valid.  The schema describing
 the configuration can be found in +pacemaker.rng+, which may be
-deployed in a location such as +/usr/share/pacemaker+ or
-+/usr/lib/heartbeat+ depending on your operating system and how you
-installed the software.
+deployed in a location such as +/usr/share/pacemaker+ depending on your
+operating system distribution and how you installed the software.
 
 If you want to modify just one section of the configuration, you can
 query and replace just that section to avoid modifying any others.
@@ -55,15 +103,14 @@ query and replace just that section to avoid modifying any others.
 --------
 ======
 
-=== Quickly Deleting Part of the Configuration ===
-
-Identify the object you wish to delete by XML tag and id. For example,
-you might search the CIB for all STONITH-related configuration:
+To quickly delete a part of the configuration, identify the object you wish to
+delete by XML tag and id. For example, you might search the CIB for all
+STONITH-related configuration:
       
 .Searching for STONITH-related configuration items
 ======
 ----
-# cibadmin -Q | grep stonith
+# cibadmin --query | grep stonith
  <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
  <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
  <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -84,31 +131,13 @@ you would run:
 # cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
 ----
 
-=== Updating the Configuration Without Using XML ===
+See the cibadmin man page for more options.
 
-Most tasks can be performed with one of the other command-line
-tools provided with pacemaker, avoiding the need to read or edit XML.
-
-To enable STONITH for example, one could run:
-
-----
-# crm_attribute --name stonith-enabled --update 1
-----
-
-Or, to check whether *somenode* is allowed to run resources, there is:
-
-----
-# crm_standby --query --node somenode
-----
-
-Or, to find the current location of *my-test-rsc*, one can use:
-
-----
-# crm_resource --locate --resource my-test-rsc
-----
-
-Examples of using these tools for specific cases will be given throughout this
-document where appropriate.
+[IMPORTANT]
+====
+Never edit the live +cib.xml+ file directly. Pacemaker will detect such changes
+and refuse to use the configuration.
+====
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
@@ -129,7 +158,6 @@ and follow the simple on-screen instructions.
 Read this section and the on-screen instructions carefully; failure to do so could
 result in destroying the cluster's active configuration!
 ====
-      
       
 .Creating and displaying the active sandbox
 ======
@@ -246,15 +274,6 @@ For some reason the cluster does not want to start *rsc3* anywhere.
 === Complex Cluster Transition ===
 
 image::images/Policy-Engine-big.png["Another, slightly more complex, transition graph that you're not expected to be able to read",width="16cm",height="20cm",align="center"]
-
-== Do I Need to Update the Configuration on All Cluster Nodes? ==
-
-No. Any changes are immediately synchronized to the other active
-members of the cluster.
-
-To reduce bandwidth, the cluster only broadcasts the incremental
-updates that result from your changes and uses MD5 checksums to ensure
-that each copy is completely consistent.
 
 == Working with CIB Properties ==
 
