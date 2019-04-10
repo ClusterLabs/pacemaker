@@ -1029,17 +1029,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
         // The device is not registered with the fencer
 
-        if (recurring) {
-            /* If we get here, the fencer somehow lost the registration of a
-             * previously active device (possibly due to crash and respawn). In
-             * that case, we need to indicate that the recurring monitor needs
-             * to be cancelled.
-             */
-            cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            recurring = FALSE;
-        } else {
-            cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        }
+        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
     } else if (rc) {
