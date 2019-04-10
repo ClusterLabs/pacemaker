@@ -1016,18 +1016,7 @@ stonith_rc2status(const char *action, guint interval_ms, int rc)
 
         case -ENODEV:
             // The device is not registered with the fencer
-
-            if (safe_str_neq(action, "monitor")) {
-                status = PCMK_LRM_OP_ERROR;
-
-            } else if (interval_ms > 0) {
-                /* If we get here, the fencer somehow lost the registration of a
-                 * previously active device (possibly due to crash and respawn). In
-                 * that case, we need to indicate that the recurring monitor needs
-                 * to be cancelled.
-                 */
-                status = PCMK_LRM_OP_CANCELLED;
-            }
+            status = PCMK_LRM_OP_ERROR;
             break;
 
         default:
