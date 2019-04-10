@@ -54,7 +54,7 @@ typedef struct lrmd_rsc_s {
      * that have been handed off from the pending ops list. */
     GList *recurring_ops;
 
-    int stonith_started;
+    int st_probe_rc; // What value should be returned for a probe if stonith
 
     crm_trigger_t *work;
 } lrmd_rsc_t;
