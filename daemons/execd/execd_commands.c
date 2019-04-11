@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 David Vossel <davidvossel@gmail.com>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -180,11 +180,20 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
 }
 
 static void
+stop_recurring_timer(lrmd_cmd_t *cmd)
+{
+    if (cmd) {
+        if (cmd->stonith_recurring_id) {
+            g_source_remove(cmd->stonith_recurring_id);
+        }
+        cmd->stonith_recurring_id = 0;
+    }
+}
+
+static void
 free_lrmd_cmd(lrmd_cmd_t * cmd)
 {
-    if (cmd->stonith_recurring_id) {
-        g_source_remove(cmd->stonith_recurring_id);
-    }
+    stop_recurring_timer(cmd);
     if (cmd->delay_id) {
         g_source_remove(cmd->delay_id);
     }
@@ -230,6 +239,16 @@ stonith_recurring_op_helper(gpointer data)
     mainloop_set_trigger(rsc->work);
 
     return FALSE;
+}
+
+static inline void
+start_recurring_timer(lrmd_cmd_t *cmd)
+{
+    if (cmd && (cmd->interval_ms > 0)) {
+        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
+                                                  stonith_recurring_op_helper,
+                                                  cmd);
+    }
 }
 
 static gboolean
@@ -300,8 +319,7 @@ merge_dup:
     if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
         /* if we are waiting for the next interval, kick it off now */
         if (dup_pending == TRUE) {
-            g_source_remove(cmd->stonith_recurring_id);
-            cmd->stonith_recurring_id = 0;
+            stop_recurring_timer(cmd);
             stonith_recurring_op_helper(cmd);
         }
 
@@ -615,16 +633,36 @@ ocf2uniform_rc(int rc)
 static int
 stonith2uniform_rc(const char *action, int rc)
 {
-    if (rc == -ENODEV) {
-        if (safe_str_eq(action, "stop")) {
+    switch (rc) {
+        case pcmk_ok:
             rc = PCMK_OCF_OK;
-        } else if (safe_str_eq(action, "start")) {
-            rc = PCMK_OCF_NOT_INSTALLED;
-        } else {
-            rc = PCMK_OCF_NOT_RUNNING;
-        }
-    } else if (rc != 0) {
-        rc = PCMK_OCF_UNKNOWN_ERROR;
+            break;
+
+        case -ENODEV:
+            /* This should be possible only for probes in practice, but
+             * interpret for all actions to be safe.
+             */
+            if (safe_str_eq(action, "monitor")) {
+                rc = PCMK_OCF_NOT_RUNNING;
+            } else if (safe_str_eq(action, "stop")) {
+                rc = PCMK_OCF_OK;
+            } else {
+                rc = PCMK_OCF_NOT_INSTALLED;
+            }
+            break;
+
+        case -EOPNOTSUPP:
+            rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
+            break;
+
+        case -ETIME:
+        case -ETIMEDOUT:
+            rc = PCMK_OCF_TIMEOUT;
+            break;
+
+        default:
+            rc = PCMK_OCF_UNKNOWN_ERROR;
+            break;
     }
     return rc;
 }
@@ -910,64 +948,105 @@ action_complete(svc_action_t * action)
     cmd_finalize(cmd, rsc);
 }
 
+/*!
+ * \internal
+ * \brief Determine operation status of a stonith operation
+ *
+ * Non-stonith resource operations get their operation status directly from the
+ * service library, but the fencer does not have an equivalent, so we must infer
+ * an operation status from the fencer API's return code.
+ *
+ * \param[in] action       Name of action performed on stonith resource
+ * \param[in] interval_ms  Action interval
+ * \param[in] rc           Action result from fencer
+ *
+ * \return Operation status corresponding to fencer API return code
+ */
+static int
+stonith_rc2status(const char *action, guint interval_ms, int rc)
+{
+    int status = PCMK_LRM_OP_DONE;
+
+    switch (rc) {
+        case pcmk_ok:
+            break;
+
+        case -EOPNOTSUPP:
+        case -EPROTONOSUPPORT:
+            status = PCMK_LRM_OP_NOTSUPPORTED;
+            break;
+
+        case -ETIME:
+        case -ETIMEDOUT:
+            status = PCMK_LRM_OP_TIMEOUT;
+            break;
+
+        case -ENOTCONN:
+        case -ECOMM:
+            // Couldn't talk to fencer
+            status = PCMK_LRM_OP_ERROR;
+            break;
+
+        case -ENODEV:
+            // The device is not registered with the fencer
+
+            if (safe_str_neq(action, "monitor")) {
+                status = PCMK_LRM_OP_ERROR;
+
+            } else if (interval_ms > 0) {
+                /* If we get here, the fencer somehow lost the registration of a
+                 * previously active device (possibly due to crash and respawn). In
+                 * that case, we need to indicate that the recurring monitor needs
+                 * to be cancelled.
+                 */
+                status = PCMK_LRM_OP_CANCELLED;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return status;
+}
+
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
-    bool recurring = (cmd->interval_ms > 0);
-    lrmd_rsc_t *rsc = NULL;
+    // This can be NULL if resource was removed before command completed
+    lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
+    cmd->exec_rc = stonith2uniform_rc(cmd->action, rc);
 
-    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
+    /* This function may be called with status already set to cancelled, if a
+     * pending action was aborted. Otherwise, we need to determine status from
+     * the fencer return code.
+     */
+    if (cmd->lrmd_op_status != PCMK_LRM_OP_CANCELLED) {
+        cmd->lrmd_op_status = stonith_rc2status(cmd->action, cmd->interval_ms,
+                                                rc);
 
-    if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
-        recurring = FALSE;
-        /* do nothing */
-
-    } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
-        // The device is not registered with the fencer
-
-        if (recurring) {
-            /* If we get here, the fencer somehow lost the registration of a
-             * previously active device (possibly due to crash and respawn). In
-             * that case, we need to indicate that the recurring monitor needs
-             * to be cancelled.
-             */
-            cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            recurring = FALSE;
-        } else {
-            cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        }
-        cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
-
-    } else if (rc) {
-        /* Attempt to map return codes to op status if possible */
-        switch (rc) {
-            case -EPROTONOSUPPORT:
-                cmd->lrmd_op_status = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-            case -ETIME:
-                cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
-                break;
-            default:
-                /* TODO: This looks wrong.  Status should be _DONE and exec_rc set to an error */
-                cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        }
-    } else {
-        /* command successful */
-        cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        if (safe_str_eq(cmd->action, "start") && rsc) {
-            rsc->stonith_started = 1;
+        // Certain successful actions change the known state of the resource
+        if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
+            if (safe_str_eq(cmd->action, "start")) {
+                rsc->stonith_started = 1;
+            } else if (safe_str_eq(cmd->action, "stop")) {
+                rsc->stonith_started = 0;
+            }
         }
     }
 
-    if (recurring && rsc) {
-        if (cmd->stonith_recurring_id) {
-            g_source_remove(cmd->stonith_recurring_id);
-        }
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
-                                                  stonith_recurring_op_helper,
-                                                  cmd);
+    /* The recurring timer should not be running at this point in any case, but
+     * as a failsafe, stop it if it is.
+     */
+    stop_recurring_timer(cmd);
+
+    /* Reschedule this command if appropriate. If a recurring command is *not*
+     * rescheduled, its status must be PCMK_LRM_OP_CANCELLED, otherwise it will
+     * not be removed from recurring_ops by cmd_finalize().
+     */
+    if (rsc && (cmd->interval_ms > 0)
+        && (cmd->lrmd_op_status != PCMK_LRM_OP_CANCELLED)) {
+        start_recurring_timer(cmd);
     }
 
     cmd_finalize(cmd, rsc);
@@ -1016,85 +1095,154 @@ stonith_connection_failed(void)
     g_list_free(cmd_list);
 }
 
+/*!
+ * \internal
+ * \brief Execute a stonith resource "start" action
+ *
+ * Start a stonith resource by registering it with the fencer.
+ * (Stonith agents don't have a start command.)
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to start
+ * \param[in] cmd          Start command to execute
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
 static int
+execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+{
+    char *key = NULL;
+    char *value = NULL;
+    stonith_key_value_t *device_params = NULL;
+    int rc = pcmk_ok;
+
+    // Convert command parameters to stonith API key/values
+    if (cmd->params) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, cmd->params);
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+            device_params = stonith_key_value_add(device_params, key, value);
+        }
+    }
+
+    /* The fencer will automatically register devices via CIB notifications
+     * when the CIB changes, but to avoid a possible race condition between
+     * the fencer receiving the notification and the executor requesting that
+     * resource, the executor registers the device as well. The fencer knows how
+     * to handle duplicate registrations.
+     */
+    rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call,
+                                            cmd->rsc_id, rsc->provider,
+                                            rsc->type, device_params);
+
+    stonith_key_value_freeall(device_params, 1, 1);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Execute a stonith resource "stop" action
+ *
+ * Stop a stonith resource by unregistering it with the fencer.
+ * (Stonith agents don't have a stop command.)
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to stop
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
+static inline int
+execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
+{
+    /* @TODO Failure would indicate a problem communicating with fencer;
+     * perhaps we should try reconnecting and retrying a few times?
+     */
+    return stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
+                                            rsc->rsc_id);
+}
+
+/*!
+ * \internal
+ * \brief Execute a one-time stonith resource "monitor" action
+ *
+ * Probe a stonith resource by checking whether we started it
+ *
+ * \param[in] rsc  Stonith resource to probe
+ *
+ * \return pcmk_ok if started, -errno otherwise
+ */
+static inline int
+execd_stonith_probe(lrmd_rsc_t *rsc)
+{
+    return rsc->stonith_started? 0 : -ENODEV;
+}
+
+/*!
+ * \internal
+ * \brief Initiate a stonith resource agent "monitor" action
+ *
+ * \param[in] stonith_api  Connection to fencer
+ * \param[in] rsc          Stonith resource to monitor
+ * \param[in] cmd          Monitor command being executed
+ *
+ * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
+ */
+static inline int
+execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+{
+    int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
+                                        cmd->timeout / 1000);
+
+    rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
+                                              "lrmd_stonith_callback",
+                                              lrmd_stonith_callback);
+    if (rc == TRUE) {
+        rsc->active = cmd;
+        rc = pcmk_ok;
+    } else {
+        rc = -pcmk_err_generic;
+    }
+    return rc;
+}
+
+static void
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
     int rc = 0;
-    int do_monitor = 0;
+    bool do_monitor = FALSE;
 
     stonith_t *stonith_api = get_stonith_connection();
 
     if (!stonith_api) {
-        cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action,
-                                      -ENOTCONN);
-        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
-        cmd_finalize(cmd, rsc);
-        return -EUNATCH;
-    }
+        rc = -ENOTCONN;
 
-    if (safe_str_eq(cmd->action, "start")) {
-        char *key = NULL;
-        char *value = NULL;
-        stonith_key_value_t *device_params = NULL;
-
-        if (cmd->params) {
-            GHashTableIter iter;
-
-            g_hash_table_iter_init(&iter, cmd->params);
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-                device_params = stonith_key_value_add(device_params, key, value);
-            }
-        }
-
-        /* Stonith automatically registers devices from the IPC when changes
-         * occur, but to avoid a possible race condition between stonith
-         * receiving the IPC update and the executor requesting that resource,
-         * the executor still registers the device as well. Stonith knows how to
-         * handle duplicate device registrations correctly.
-         */
-        rc = stonith_api->cmds->register_device(stonith_api,
-                                                st_opt_sync_call,
-                                                cmd->rsc_id,
-                                                rsc->provider, rsc->type, device_params);
-
-        stonith_key_value_freeall(device_params, 1, 1);
+    } else if (safe_str_eq(cmd->action, "start")) {
+        rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == 0) {
-            do_monitor = 1;
+            do_monitor = TRUE;
         }
+
     } else if (safe_str_eq(cmd->action, "stop")) {
-        rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
-        rsc->stonith_started = 0;
+        rc = execd_stonith_stop(stonith_api, rsc);
+
     } else if (safe_str_eq(cmd->action, "monitor")) {
         if (cmd->interval_ms > 0) {
-            do_monitor = 1;
+            do_monitor = TRUE;
         } else {
-            rc = rsc->stonith_started ? 0 : -ENODEV;
+            rc = execd_stonith_probe(rsc);
         }
     }
 
-    if (!do_monitor) {
-        goto cleanup_stonith_exec;
+    if (do_monitor) {
+        rc = execd_stonith_monitor(stonith_api, rsc, cmd);
+        if (rc == pcmk_ok) {
+            // Don't clean up yet, we will find out result of the monitor later
+            return;
+        }
     }
 
-    rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id, cmd->timeout / 1000);
-
-    rc = stonith_api->cmds->register_callback(stonith_api,
-                                              rc,
-                                              0,
-                                              0,
-                                              cmd, "lrmd_stonith_callback", lrmd_stonith_callback);
-
-    /* don't cleanup yet, we will find out the result of the monitor later */
-    if (rc > 0) {
-        rsc->active = cmd;
-        return rc;
-    } else if (rc == 0) {
-        rc = -1;
-    }
-
-  cleanup_stonith_exec:
     stonith_action_complete(cmd, rc);
-    return rc;
 }
 
 static int
