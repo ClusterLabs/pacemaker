@@ -50,7 +50,6 @@ series_t series[] = {
 };
 
 void pengine_shutdown(int nsig);
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 static gboolean
 process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
@@ -120,7 +119,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         if (process) {
-            do_calculations(sched_data_set, converted, NULL);
+            pcmk__schedule_actions(sched_data_set, converted, NULL);
         }
 
         series_id = get_series();

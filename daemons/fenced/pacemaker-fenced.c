@@ -679,8 +679,6 @@ update_done:
     }
 }
 
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
 /*!
  * \internal
  * \brief Update all STONITH device definitions based on current CIB
@@ -702,7 +700,7 @@ cib_devices_update(void)
     fenced_data_set->localhost = stonith_our_uname;
 
     cluster_status(fenced_data_set);
-    do_calculations(fenced_data_set, NULL, NULL);
+    pcmk__schedule_actions(fenced_data_set, NULL, NULL);
 
     for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
         cib_device_update(gIter->data, fenced_data_set);

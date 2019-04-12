@@ -102,6 +102,8 @@ extern int new_rsc_order(resource_t * lh_rsc, const char *lh_task,
 
 extern void graph_element_from_action(action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
+xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
+                                crm_time_t *now);
 
 extern gboolean show_scores;
 extern int scores_log_level;

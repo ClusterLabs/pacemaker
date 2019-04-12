@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -20,15 +22,22 @@
 #include <pacemaker-internal.h>
 #include <crm/common/ipcs.h>
 
-xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
 gboolean show_scores = FALSE;
 int scores_log_level = LOG_TRACE;
 gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_TRACE;
 
+/*!
+ * \internal
+ * \brief Run the scheduler for a given CIB
+ *
+ * \param[in,out] data_set  Cluster working set
+ * \param[in]     xml_input CIB XML to use as scheduler input
+ * \param[in]     now       Time to use for rule evaluation (or NULL for now)
+ */
 xmlNode *
-do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now)
+pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
+                       crm_time_t *now)
 {
     GListPtr gIter = NULL;
     int rsc_log_level = LOG_INFO;
