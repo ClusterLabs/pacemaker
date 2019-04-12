@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <signal.h>
 #include <sys/utsname.h>
 
 #include <crm/msg_xml.h>
@@ -256,15 +257,9 @@ mon_shutdown(int nsig)
     clean_up(CRM_EX_OK);
 }
 
-#if ON_DARWIN
-#  define sighandler_t sig_t
-#endif
-
 #if CURSES_ENABLED
-#  ifndef HAVE_SIGHANDLER_T
-typedef void (*sighandler_t) (int);
-#  endif
 static sighandler_t ncurses_winch_handler;
+
 static void
 mon_winresize(int nsig)
 {
@@ -925,7 +920,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
-        ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
+        ncurses_winch_handler = crm_signal(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;

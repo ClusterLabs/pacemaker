@@ -321,18 +321,20 @@ static GSourceFuncs crm_signal_funcs = {
  * \param[in] sig       Signal number to register handler for
  * \param[in] dispatch  Signal handler
  *
+ * \return The previous value of the signal handler, or SIG_ERR on error
  * \note The dispatch function must be async-safe.
  */
-gboolean
-crm_signal(int sig, void (*dispatch) (int sig))
+sighandler_t
+crm_signal(int sig, sighandler_t dispatch)
 {
     sigset_t mask;
     struct sigaction sa;
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
-        crm_perror(LOG_ERR, "Call to sigemptyset failed");
-        return FALSE;
+        crm_err("Could not set handler for signal %d: %s",
+                sig, pcmk_strerror(errno));
+        return SIG_ERR;
     }
 
     memset(&sa, 0, sizeof(struct sigaction));
@@ -341,11 +343,11 @@ crm_signal(int sig, void (*dispatch) (int sig))
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
-        crm_perror(LOG_ERR, "Could not install signal handler for signal %d", sig);
-        return FALSE;
+        crm_err("Could not set handler for signal %d: %s",
+                sig, pcmk_strerror(errno));
+        return SIG_ERR;
     }
-
-    return TRUE;
+    return old.sa_handler;
 }
 
 static void
@@ -406,7 +408,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
     crm_signals[sig]->handler = dispatch;
     crm_signals[sig]->signal = sig;
 
-    if (crm_signal(sig, mainloop_signal_handler) == FALSE) {
+    if (crm_signal(sig, mainloop_signal_handler) == SIG_ERR) {
         mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
@@ -431,7 +433,7 @@ mainloop_destroy_signal(int sig)
         crm_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if (crm_signal(sig, NULL) == FALSE) {
+    } else if (crm_signal(sig, NULL) == SIG_ERR) {
         crm_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
         return FALSE;
 
