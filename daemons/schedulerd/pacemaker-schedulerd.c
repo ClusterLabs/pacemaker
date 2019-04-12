@@ -214,14 +214,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
     return TRUE;
 }
 
-// only needed if process_pe_message() is called
-static void
-libpengine_fini()
-{
-    pe_free_working_set(sched_data_set);
-    sched_data_set = NULL;
-}
-
 static int32_t
 pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -363,7 +355,7 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 
-    libpengine_fini();
+    pe_free_working_set(sched_data_set);
     crm_info("Exiting %s", crm_system_name);
     crm_exit(CRM_EX_OK);
 }
@@ -372,6 +364,6 @@ void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    libpengine_fini();
+    pe_free_working_set(sched_data_set);
     crm_exit(CRM_EX_OK);
 }
