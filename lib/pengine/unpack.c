@@ -3015,17 +3015,13 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
 int get_target_rc(xmlNode *xml_op)
 {
-    int dummy = 0;
     int target_rc = 0;
-    char *dummy_string = NULL;
     const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
+
     if (key == NULL) {
         return -1;
     }
-
-    decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
-    free(dummy_string);
-
+    decode_transition_key(key, NULL, NULL, NULL, &target_rc);
     return target_rc;
 }
 

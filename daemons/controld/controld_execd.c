@@ -2301,15 +2301,10 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         if ((op->interval_ms > 0)
             && (op->start_delay > START_DELAY_THRESHOLD)) {
-
-            char *uuid = NULL;
-            int dummy = 0, target_rc = 0;
+            int target_rc = 0;
 
             crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
-
-            decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
-            free(uuid);
-
+            decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
             op->rc = target_rc;
             op->op_status = PCMK_LRM_OP_DONE;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);

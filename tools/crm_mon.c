@@ -3904,9 +3904,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 {
     int rc = -1;
     int status = -1;
-    int action = -1;
     int target_rc = -1;
-    int transition_num = -1;
     gboolean notify = TRUE;
 
     char *rsc = NULL;
@@ -3914,7 +3912,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     const char *desc = NULL;
     const char *magic = NULL;
     const char *id = NULL;
-    char *update_te_uuid = NULL;
     const char *node = NULL;
 
     xmlNode *n = xml;
@@ -3942,8 +3939,8 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (FALSE == decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
-                                         &status, &rc, &target_rc)) {
+    if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
+                                 &target_rc)) {
         crm_err("Invalid event %s detected for %s", magic, id);
         return;
     }
@@ -3997,7 +3994,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
   bail:
-    free(update_te_uuid);
     free(rsc);
     free(task);
 }

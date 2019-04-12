@@ -141,6 +141,21 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
     return crm_strdup_printf("%d:%d;%s", op_status, op_rc, transition_key);
 }
 
+/*!
+ * \brief Parse a transition magic string into its constituent parts
+ *
+ * \param[in]  magic          Magic string to parse (must be non-NULL)
+ * \param[out] uuid           If non-NULL, where to store copy of parsed UUID
+ * \param[out] transition_id  If non-NULL, where to store parsed transition ID
+ * \param[out] action_id      If non-NULL, where to store parsed action ID
+ * \param[out] op_status      If non-NULL, where to store parsed result status
+ * \param[out] op_rc          If non-NULL, where to store parsed actual rc
+ * \param[out] target_rc      If non-NULL, where to stored parsed target rc
+ *
+ * \return TRUE if key was valid, FALSE otherwise
+ * \note If uuid is supplied and this returns TRUE, the caller is responsible
+ *       for freeing the memory for *uuid using free().
+ */
 gboolean
 decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
                         int *op_status, int *op_rc, int *target_rc)
@@ -148,16 +163,17 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     int res = 0;
     char *key = NULL;
     gboolean result = TRUE;
+    int local_op_status = -1;
+    int local_op_rc = -1;
 
     CRM_CHECK(magic != NULL, return FALSE);
-    CRM_CHECK(op_rc != NULL, return FALSE);
-    CRM_CHECK(op_status != NULL, return FALSE);
 
 #ifdef SSCANF_HAS_M
-    res = sscanf(magic, "%d:%d;%ms", op_status, op_rc, &key);
+    res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
     key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters
-    res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
+    CRM_ASSERT(key);
+    res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
 #endif
     if (res == EOF) {
         crm_err("Could not decode transition information '%s': %s",
@@ -168,8 +184,14 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
                  magic, res);
         result = FALSE;
     } else {
-        CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id,
-                                        target_rc), result = FALSE);
+        if (op_status) {
+            *op_status = local_op_status;
+        }
+        if (op_rc) {
+            *op_rc = local_op_rc;
+        }
+        result = decode_transition_key(key, uuid, transition_id, action_id,
+                                       target_rc);
     }
     free(key);
     return result;
@@ -183,28 +205,63 @@ generate_transition_key(int transition_id, int action_id, int target_rc, const c
                              action_id, transition_id, target_rc, 36, node);
 }
 
+/*!
+ * \brief Parse a transition key into its constituent parts
+ *
+ * \param[in]  key            Transition key to parse (must be non-NULL)
+ * \param[out] uuid           If non-NULL, where to store copy of parsed UUID
+ * \param[out] transition_id  If non-NULL, where to store parsed transition ID
+ * \param[out] action_id      If non-NULL, where to store parsed action ID
+ * \param[out] target_rc      If non-NULL, where to stored parsed target rc
+ *
+ * \return TRUE if key was valid, FALSE otherwise
+ * \note If uuid is supplied and this returns TRUE, the caller is responsible
+ *       for freeing the memory for *uuid using free().
+ */
 gboolean
 decode_transition_key(const char *key, char **uuid, int *transition_id, int *action_id,
                       int *target_rc)
 {
-    CRM_CHECK(uuid != NULL, return FALSE);
-    CRM_CHECK(target_rc != NULL, return FALSE);
-    CRM_CHECK(action_id != NULL, return FALSE);
-    CRM_CHECK(transition_id != NULL, return FALSE);
+    int local_transition_id = -1;
+    int local_action_id = -1;
+    int local_target_rc = -1;
+    char local_uuid[37] = { '\0' };
 
-    *uuid = calloc(37, sizeof(char));
-    if (sscanf(key, "%d:%d:%d:%36s",
-               action_id, transition_id, target_rc, *uuid) != 4) {
-        crm_err("Invalid transition key '%s'", key);
-        free(*uuid);
+    // Initialize any supplied output arguments
+    if (uuid) {
         *uuid = NULL;
-        *target_rc = -1;
-        *action_id = -1;
+    }
+    if (transition_id) {
         *transition_id = -1;
+    }
+    if (action_id) {
+        *action_id = -1;
+    }
+    if (target_rc) {
+        *target_rc = -1;
+    }
+
+    CRM_CHECK(key != NULL, return FALSE);
+    if (sscanf(key, "%d:%d:%d:%36s", &local_action_id, &local_transition_id,
+               &local_target_rc, local_uuid) != 4) {
+        crm_err("Invalid transition key '%s'", key);
         return FALSE;
     }
-    if (strlen(*uuid) != 36) {
-        crm_warn("Invalid UUID '%s' in transition key '%s'", *uuid, key);
+    if (strlen(local_uuid) != 36) {
+        crm_warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
+    }
+    if (uuid) {
+        *uuid = strdup(local_uuid);
+        CRM_ASSERT(*uuid);
+    }
+    if (transition_id) {
+        *transition_id = local_transition_id;
+    }
+    if (action_id) {
+        *action_id = local_action_id;
+    }
+    if (target_rc) {
+        *target_rc = local_target_rc;
     }
     return TRUE;
 }
@@ -321,11 +378,7 @@ rsc_op_expected_rc(lrmd_event_data_t * op)
     int rc = 0;
 
     if (op && op->user_data) {
-        int dummy = 0;
-        char *uuid = NULL;
-
-        decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &rc);
-        free(uuid);
+        decode_transition_key(op->user_data, NULL, NULL, NULL, &rc);
     }
     return rc;
 }
