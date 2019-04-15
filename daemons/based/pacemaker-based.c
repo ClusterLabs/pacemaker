@@ -90,12 +90,11 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
     struct passwd *pwentry = NULL;
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
-
-    crm_peer_init();
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
@@ -171,6 +170,19 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
+    old_instance = crm_ipc_new(CIB_CHANNEL_RO, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("pacemaker-based is already active, aborting startup");
+        crm_exit(CRM_EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     if (cib_root == NULL) {
         cib_root = CRM_CONFIG_DIR;
     } else {
@@ -184,6 +196,8 @@ main(int argc, char **argv)
         fflush(stderr);
         return CRM_EX_FATAL;
     }
+
+    crm_peer_init();
 
     /* read local config file */
     cib_init();

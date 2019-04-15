@@ -1262,6 +1262,7 @@ main(int argc, char **argv)
     int option_index = 0;
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -1432,6 +1433,20 @@ main(int argc, char **argv)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    old_instance = crm_ipc_new("stonith-ng", 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("pacemaker-fenced is already active, aborting startup");
+        crm_exit(CRM_EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
