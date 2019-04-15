@@ -88,9 +88,9 @@ done
 if [ "$best" != "0.0" ]; then
     found=$(filename_from_version "$best" "$base")
     if [ -z "$destination" ]; then
-        echo "$found"
+        echo "$(basename $found)"
     else
-        echo "${prefix}<externalRef href=\"${found}\"/>" >> "$destination"
+        echo "${prefix}<externalRef href=\"$(basename $found)\"/>" >> "$destination"
     fi
     exit 0
 fi
