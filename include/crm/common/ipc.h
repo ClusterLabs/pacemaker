@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef CRM_COMMON_IPC__H
 #  define CRM_COMMON_IPC__H
@@ -76,6 +67,44 @@ const char *crm_ipc_buffer(crm_ipc_t * client);
 uint32_t crm_ipc_buffer_flags(crm_ipc_t * client);
 const char *crm_ipc_name(crm_ipc_t * client);
 unsigned int crm_ipc_default_buffer_size(void);
+
+/*!
+ * \brief Check the authenticity of the IPC socket peer process
+ *
+ * If everything goes well, peer's authenticity is verified by the means
+ * of comparing against provided referential UID and GID (either satisfies),
+ * and the result of this check can be deduced from the return value.
+ * As an exception, detected UID of 0 ("root") satisfies arbitrary
+ * provided referential daemon's credentials.
+ *
+ * \param[in]  sock    IPC related, connected Unix socket to check peer of
+ * \param[in]  refuid  referential UID to check against
+ * \param[in]  refgid  referential GID to check against
+ * \param[out] gotpid  to optionally store obtained PID of the peer
+ *                     (not available on FreeBSD, special value of 1
+ *                     used instead, and the caller is required to
+ *                     special case this value respectively)
+ * \param[out] gotuid  to optionally store obtained UID of the peer
+ * \param[out] gotgid  to optionally store obtained GID of the peer
+ *
+ * \return 0 if IPC related socket's peer is not authentic given the
+ *         referential credentials (see above), 1 if it is,
+ *         negative value on error (generally expressing -errno unless
+ *         it was zero even on nonhappy path, -pcmk_err_generic is
+ *         returned then; no message is directly emitted)
+ *
+ * \note While this function is tolerant on what constitutes authorized
+ *       IPC daemon process (its effective user matches UID=0 or \p refuid,
+ *       or at least its group matches \p refroup), either or both (in case
+ *       of UID=0) mismatches on the expected credentials of such peer
+ *       process \e shall be investigated at the caller when value of 1
+ *       gets returned there, since higher-than-expected privileges in
+ *       respect to the expected/intended credentials possibly violate
+ *       the least privilege principle and may pose an additional risk
+ *       (i.e. such accidental inconsistency shall be eventually fixed).
+ */
+int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
+                                 pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
 /* Utils */
 xmlNode *create_hello_message(const char *uuid, const char *client_name,

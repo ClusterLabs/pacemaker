@@ -465,6 +465,48 @@ do
   fi
 done
 
+us_auth=
+AC_CHECK_HEADER([sys/socket.h], [
+    AC_CHECK_DECL([SO_PEERCRED], [
+        # Linux
+        AC_CHECK_TYPE([struct ucred], [
+            us_auth=peercred_ucred;
+            AC_DEFINE([US_AUTH_PEERCRED_UCRED], [1],
+                      [Define if Unix socket auth method is
+                       getsockopt(s, SO_PEERCRED, &ucred, ...)])
+        ], [
+            # OpenBSD
+            AC_CHECK_TYPE([struct sockpeercred], [
+                us_auth=localpeercred_sockepeercred;
+                AC_DEFINE([US_AUTH_PEERCRED_SOCKPEERCRED], [1],
+                          [Define if Unix socket auth method is
+                           getsockopt(s, SO_PEERCRED, &sockpeercred, ...)])
+            ], [], [[#include <sys/socket.h>]])
+        ], [[#define _GNU_SOURCE
+             #include <sys/socket.h>]])
+    ], [], [[#include <sys/socket.h>]])
+])
+
+if test -z "${us_auth}"; then
+    # FreeBSD
+    AC_CHECK_DECL([getpeereid], [
+        us_auth=getpeereid;
+        AC_DEFINE([US_AUTH_GETPEEREID], [1],
+                  [Define if Unix socket auth method is
+                   getpeereid(s, &uid, &gid)])
+    ], [
+        # Solaris/OpenIndiana
+        AC_CHECK_DECL([getpeerucred], [
+            us_auth=getpeerucred;
+            AC_DEFINE([US_AUTH_GETPEERUCRED], [1],
+                      [Define if Unix socket auth method is
+                       getpeercred(s, &ucred)])
+        ], [
+            AC_MSG_ERROR([No way to authenticate a Unix socket peer])
+        ], [[#include <ucred.h>]])
+    ])
+fi
+
 dnl This OS-based decision-making is poor autotools practice;
 dnl feature-based mechanisms are strongly preferred.
 dnl
@@ -2179,3 +2221,4 @@ AC_MSG_RESULT([  LDFLAGS_HARDENED_EXE     = ${LDFLAGS_HARDENED_EXE}])
 AC_MSG_RESULT([  LDFLAGS_HARDENED_LIB     = ${LDFLAGS_HARDENED_LIB}])
 AC_MSG_RESULT([  Libraries                = ${LIBS}])
 AC_MSG_RESULT([  Stack Libraries          = ${CLUSTERLIBS}])
+AC_MSG_RESULT([  Unix socket auth method  = ${us_auth}])
