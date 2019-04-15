@@ -27,7 +27,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ 18builder ]
-Containers: [ 18node2:container2 ]
+GuestOnline: [ 18node2:container2 ]
 
  fence_false	(stonith:fence_false):	Stopped 
  container2	(ocf::pacemaker:Dummy):	Started 18builder 

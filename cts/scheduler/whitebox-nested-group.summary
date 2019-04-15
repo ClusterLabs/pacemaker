@@ -84,7 +84,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ c7auto1 c7auto2 c7auto3 ]
-Containers: [ c7auto4:container ]
+GuestOnline: [ c7auto4:container ]
 
  shooter	(stonith:fence_phd_kvm):	Started c7auto2
  fake1	(ocf::heartbeat:Dummy):	Started c7auto3

@@ -436,7 +436,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-        if (node && is_remote_node(node)) {
+        if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
@@ -643,7 +643,7 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
     int attr_options = attrd_opt_none;
     char *rsc_name = rsc_fail_name(rsc);
 
-    if (is_remote_node(node)) {
+    if (pe__is_guest_or_remote_node(node)) {
         attr_options |= attrd_opt_remote;
     }
     rc = attrd_clear_delegate(NULL, node->details->uname, rsc_name, operation,
@@ -783,7 +783,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
             CMD_ERR("Unknown node: %s", node_name);
             return -ENXIO;
         }
-        if (is_remote_node(node)) {
+        if (pe__is_guest_or_remote_node(node)) {
             attr_options |= attrd_opt_remote;
         }
     }

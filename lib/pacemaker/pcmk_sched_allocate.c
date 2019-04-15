@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -93,23 +95,23 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_rsc_colocation_rh,
      clone_rsc_location,
      clone_action_flags,
-     container_update_actions,
+     pcmk__multi_update_actions,
      clone_expand,
      clone_append_meta,
      },
     {
-     container_merge_weights,
-     container_color,
-     container_create_actions,
-     container_create_probe,
-     container_internal_constraints,
-     container_rsc_colocation_lh,
-     container_rsc_colocation_rh,
-     container_rsc_location,
-     container_action_flags,
-     container_update_actions,
-     container_expand,
-     container_append_meta,
+     pcmk__bundle_merge_weights,
+     pcmk__bundle_color,
+     pcmk__bundle_create_actions,
+     pcmk__bundle_create_probe,
+     pcmk__bundle_internal_constraints,
+     pcmk__bundle_rsc_colocation_lh,
+     pcmk__bundle_rsc_colocation_rh,
+     pcmk__bundle_rsc_location,
+     pcmk__bundle_action_flags,
+     pcmk__multi_update_actions,
+     pcmk__bundle_expand,
+     pcmk__bundle_append_meta,
      }
 };
 
@@ -476,7 +478,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
              * has changed, clear any fail count so they can be retried fresh.
              */
 
-            if (container_fix_remote_addr(rsc)) {
+            if (pe__bundle_needs_remote_name(rsc)) {
                 /* We haven't allocated resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
@@ -923,7 +925,7 @@ probe_resources(pe_working_set_t * data_set)
 
         if (node->details->online == FALSE) {
 
-            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+            if (pe__is_remote_node(node) && node->details->remote_rsc
                 && (get_remote_node_state(node) == remote_state_failed)) {
 
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
@@ -1552,7 +1554,7 @@ stage6(pe_working_set_t * data_set)
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             if (node->details->remote_requires_reset && need_stonith) {
                 fence_guest(node, data_set);
             }
@@ -1594,7 +1596,7 @@ stage6(pe_working_set_t * data_set)
                 /* TODO define what a shutdown op means for a remote node.
                  * For now we do not send shutdown operations for remote nodes, but
                  * if we can come up with a good use for this in the future, we will. */
-                    is_remote_node(node) == FALSE) {
+                    pe__is_guest_or_remote_node(node) == FALSE) {
 
             action_t *down_op = sched_shutdown_op(node, data_set);
 
@@ -1853,7 +1855,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
 
     CRM_ASSERT(action->rsc);
     CRM_ASSERT(action->node);
-    CRM_ASSERT(is_remote_node(action->node));
+    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -2024,7 +2026,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
     }
 
     CRM_ASSERT(action->node);
-    CRM_ASSERT(is_remote_node(action->node));
+    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -2180,7 +2182,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             continue;
         }
 
-        if (is_remote_node(action->node) == FALSE) {
+        if (!pe__is_guest_or_remote_node(action->node)) {
             continue;
         }
 
@@ -2694,7 +2696,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             continue;
         }
 
-        if (is_container_remote_node(action->node)) {
+        if (pe__is_guest_node(action->node)) {
             node_name = crm_strdup_printf("%s (resource: %s)", action->node->details->uname, action->node->details->remote_rsc->container->id);
         } else if(action->node) {
             node_name = crm_strdup_printf("%s", action->node->details->uname);

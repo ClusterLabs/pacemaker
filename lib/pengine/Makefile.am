@@ -26,7 +26,7 @@ libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpe_status_la_LIBADD	= @CURSESLIBS@ $(top_builddir)/lib/common/libcrmcommon.la
-libpe_status_la_SOURCES	= status.c unpack.c utils.c complex.c native.c container.c \
+libpe_status_la_SOURCES	= status.c unpack.c utils.c complex.c native.c bundle.c \
 			group.c clone.c rules.c common.c failcounts.c remote.c
 
 clean-generic:

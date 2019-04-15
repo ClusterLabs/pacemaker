@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -37,80 +39,74 @@ typedef struct clone_variant_data_s {
 	CRM_ASSERT(rsc->variant == pe_clone); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
-#  elif VARIANT_CONTAINER
+#  elif PE__VARIANT_BUNDLE
 
-typedef struct
-{
-        int offset;
-        node_t *node;
-        char *ipaddr;
-        resource_t *ip;
-        resource_t *child;
-        resource_t *docker;
-        resource_t *remote;
+typedef struct {
+    int offset;
+    char *ipaddr;
+    pe_node_t *node;
+    pe_resource_t *ip;
+    pe_resource_t *child;
+    pe_resource_t *container;
+    pe_resource_t *remote;
+} pe__bundle_replica_t;
 
-} container_grouping_t;
+typedef struct {
+    char *source;
+    char *target;
+    char *options;
+    int flags;
+} pe__bundle_mount_t;
 
-typedef struct
-{
-        char *source;
-        char *target;
-        char *options;
-        int flags;
+typedef struct {
+    char *source;
+    char *target;
+} pe__bundle_port_t;
 
-} container_mount_t;
-
-typedef struct
-{
-        char *source;
-        char *target;
-
-} container_port_t;
-
-enum container_type {
-        PE_CONTAINER_TYPE_UNKNOWN,
-        PE_CONTAINER_TYPE_DOCKER,
-        PE_CONTAINER_TYPE_RKT,
-        PE_CONTAINER_TYPE_PODMAN
+enum pe__container_agent {
+    PE__CONTAINER_AGENT_UNKNOWN,
+    PE__CONTAINER_AGENT_DOCKER,
+    PE__CONTAINER_AGENT_RKT,
+    PE__CONTAINER_AGENT_PODMAN,
 };
 
-#define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
-#define PE_CONTAINER_TYPE_DOCKER_S  "Docker"
-#define PE_CONTAINER_TYPE_RKT_S     "rkt"
-#define PE_CONTAINER_TYPE_PODMAN_S  "podman"
+#define PE__CONTAINER_AGENT_UNKNOWN_S "unknown"
+#define PE__CONTAINER_AGENT_DOCKER_S  "docker"
+#define PE__CONTAINER_AGENT_RKT_S     "rkt"
+#define PE__CONTAINER_AGENT_PODMAN_S  "podman"
 
-typedef struct container_variant_data_s {
+typedef struct pe__bundle_variant_data_s {
         int promoted_max;
-        int replicas;
-        int replicas_per_host;
+        int nreplicas;
+        int nreplicas_per_host;
         char *prefix;
         char *image;
         const char *ip_last;
         char *host_network;
         char *host_netmask;
         char *control_port;
-        char *docker_network;
+        char *container_network;
         char *ip_range_start;
         gboolean add_host;
-        char *docker_host_options;
-        char *docker_run_options;
-        char *docker_run_command;
+        char *container_host_options;
+        char *container_command;
+        char *launcher_options;
         const char *attribute_target;
 
         resource_t *child;
 
-        GListPtr tuples;     /* container_grouping_t *       */
-        GListPtr ports;      /*        */
-        GListPtr mounts;     /*        */
+        GList *replicas;    // pe__bundle_replica_t *
+        GList *ports;       // pe__bundle_port_t *
+        GList *mounts;      // pe__bundle_mount_t *
 
-        enum container_type type;
-} container_variant_data_t;
+        enum pe__container_agent agent_type;
+} pe__bundle_variant_data_t;
 
-#    define get_container_variant_data(data, rsc)                       \
+#    define get_bundle_variant_data(data, rsc)                       \
 	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_container);                       \
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (container_variant_data_t *)rsc->variant_opaque;		\
+	data = (pe__bundle_variant_data_t *)rsc->variant_opaque;		\
 
 #  elif VARIANT_GROUP
 

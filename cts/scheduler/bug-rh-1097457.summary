@@ -2,7 +2,7 @@
 
 Current cluster status:
 Online: [ lama2 lama3 ]
-Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
+GuestOnline: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
 
  restofencelama2	(stonith:fence_ipmilan):	Started lama3 
  restofencelama3	(stonith:fence_ipmilan):	Started lama2 
@@ -92,7 +92,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ lama2 lama3 ]
-Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
+GuestOnline: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
 
  restofencelama2	(stonith:fence_ipmilan):	Started lama3 
  restofencelama3	(stonith:fence_ipmilan):	Started lama2 

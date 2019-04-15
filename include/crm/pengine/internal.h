@@ -87,7 +87,7 @@ void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data
 gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
-gboolean container_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set);
 
 resource_t *native_find_rsc(resource_t *rsc, const char *id, const node_t *node,
                             int flags);
@@ -95,22 +95,24 @@ resource_t *native_find_rsc(resource_t *rsc, const char *id, const node_t *node,
 gboolean native_active(resource_t * rsc, gboolean all);
 gboolean group_active(resource_t * rsc, gboolean all);
 gboolean clone_active(resource_t * rsc, gboolean all);
-gboolean container_active(resource_t * rsc, gboolean all);
+gboolean pe__bundle_active(pe_resource_t *rsc, gboolean all);
 
 void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-void container_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
+                      void *print_data);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
-void container_free(resource_t * rsc);
+void pe__free_bundle(pe_resource_t *rsc);
 
 enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
-enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e pe__bundle_resource_state(const pe_resource_t *rsc,
+                                          gboolean current);
 
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
@@ -339,9 +341,11 @@ node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
-resource_t *find_container_child(const resource_t *bundle, const node_t *node);
-bool container_fix_remote_addr(resource_t *rsc);
-const char *container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field);
+pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
+                                       const pe_node_t *node);
+bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
+const char *pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml,
+                                       const char *field);
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const resource_t *rsc);

@@ -219,7 +219,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
             unset = TRUE;
 
             // Allow the graph to assume that the remote resource will come up
-        } else if(can_run_resources(chosen) == FALSE && !is_container_remote_node(chosen)) {
+        } else if (!can_run_resources(chosen) && !pe__is_guest_node(chosen)) {
             unset = TRUE;
         }
 
