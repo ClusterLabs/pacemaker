@@ -1,5 +1,7 @@
 /*
- * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -21,7 +23,10 @@
 #include <corosync/cmap.h>
 
 #include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>     /* for crm_ipc_is_authentic_process */
 #include <crm/common/mainloop.h>
+
+#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 enum cluster_type_e stack = pcmk_cluster_unknown;
 static corosync_cfg_handle_t cfg_handle;
@@ -91,7 +96,10 @@ gboolean
 cluster_connect_cfg(uint32_t * nodeid)
 {
     cs_error_t rc;
-    int fd = 0, retries = 0;
+    int fd = -1, retries = 0, rv;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
 
     static struct mainloop_fd_callbacks cfg_fd_callbacks = {
         .dispatch = pcmk_cfg_dispatch,
@@ -101,13 +109,27 @@ cluster_connect_cfg(uint32_t * nodeid)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_err("corosync cfg init error %d", rc);
+        crm_err("corosync cfg init: %s (%d)", cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("corosync cfg fd_get error %d", rc);
+        crm_err("corosync cfg fd_get: %s (%d)", cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    /* CFG provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CFG provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CFG provider: %s (%d)",
+                strerror(-rv), -rv);
         goto bail;
     }
 
@@ -152,10 +174,15 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 gboolean
 mcp_read_config(void)
 {
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
     int retries = 0;
     cmap_handle_t local_handle;
     uint64_t config = 0;
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     // There can be only one possibility
     do {
@@ -175,6 +202,30 @@ mcp_read_config(void)
     if (rc != CS_OK) {
         printf("Could not connect to Cluster Configuration Database API, error %d\n", rc);
         crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
+        return FALSE;
+    }
+
+    rc = cmap_fd_get(local_handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the CMAP API connection: %s (%d)",
+                cs_strerror(rc), rc);
+        cmap_finalize(local_handle);
+        return FALSE;
+    }
+
+    /* CMAP provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CMAP provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        cmap_finalize(local_handle);
+        return FALSE;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
+                strerror(-rv), -rv);
+        cmap_finalize(local_handle);
         return FALSE;
     }
 
