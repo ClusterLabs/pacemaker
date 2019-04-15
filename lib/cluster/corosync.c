@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -40,6 +31,8 @@
 
 #include <crm/msg_xml.h>
 
+#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
+
 quorum_handle_t pcmk_quorum_handle = 0;
 
 gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
@@ -52,10 +45,15 @@ char *
 corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 {
     int lpc = 0;
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
     int retries = 0;
     char *name = NULL;
     cmap_handle_t local_handle = 0;
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     /* nodeid == 0 == CMAN_NODEID_US */
     if (nodeid == 0) {
@@ -85,6 +83,27 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 
     if (cmap_handle == 0) {
         cmap_handle = local_handle;
+
+        rc = cmap_fd_get(cmap_handle, &fd);
+        if (rc != CS_OK) {
+            crm_err("Could not obtain the CMAP API connection: %s (%d)",
+                    cs_strerror(rc), rc);
+            goto bail;
+        }
+
+        /* CMAP provider run as root (in given user namespace, anyway)? */
+        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                                &found_uid, &found_gid))) {
+            crm_err("CMAP provider is not authentic:"
+                    " process %lld (uid: %lld, gid: %lld)",
+                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                    (long long) found_uid, (long long) found_gid);
+            goto bail;
+        } else if (rv < 0) {
+            crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
+                    strerror(-rv), -rv);
+            goto bail;
+        }
     }
 
     while (name == NULL && cmap_handle != 0) {
@@ -126,6 +145,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         lpc++;
     }
 
+bail:
     if(local_handle) {
         cmap_finalize(local_handle);
     }
@@ -249,11 +269,15 @@ gboolean
 cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
                        void (*destroy) (gpointer))
 {
-    int rc = -1;
+    cs_error_t rc;
     int fd = 0;
     int quorate = 0;
     uint32_t quorum_type = 0;
     struct mainloop_fd_callbacks quorum_fd_callbacks;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     quorum_fd_callbacks.dispatch = pcmk_quorum_dispatch;
     quorum_fd_callbacks.destroy = destroy;
@@ -262,11 +286,35 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 
     rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
     if (rc != CS_OK) {
-        crm_err("Could not connect to the Quorum API: %d", rc);
+        crm_err("Could not connect to the Quorum API: %s (%d)",
+                cs_strerror(rc), rc);
         goto bail;
 
     } else if (quorum_type != QUORUM_SET) {
         crm_err("Corosync quorum is not configured");
+        goto bail;
+    }
+
+    rc = quorum_fd_get(pcmk_quorum_handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the Quorum API connection: %s (%d)",
+                strerror(rc), rc);
+        goto bail;
+    }
+
+    /* Quorum provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("Quorum provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        rc = CS_ERR_ACCESS;
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of Quorum provider: %s (%d)",
+                strerror(-rv), -rv);
+        rc = CS_ERR_ACCESS;
         goto bail;
     }
 
@@ -287,12 +335,6 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
     rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES | CS_TRACK_CURRENT);
     if (rc != CS_OK) {
         crm_err("Could not setup Quorum API notifications: %d", rc);
-        goto bail;
-    }
-
-    rc = quorum_fd_get(pcmk_quorum_handle, &fd);
-    if (rc != CS_OK) {
-        crm_err("Could not obtain the Quorum API connection: %d", rc);
         goto bail;
     }
 
@@ -486,10 +528,15 @@ gboolean
 corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent)
 {
     int lpc = 0;
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
     int retries = 0;
     gboolean any = FALSE;
     cmap_handle_t cmap_handle;
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     do {
         rc = cmap_initialize(&cmap_handle);
@@ -505,6 +552,27 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
     if (rc != CS_OK) {
         crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
         return FALSE;
+    }
+
+    rc = cmap_fd_get(cmap_handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the CMAP API connection: %s (%d)",
+                cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    /* CMAP provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CMAP provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
+                strerror(-rv), -rv);
+        goto bail;
     }
 
     crm_peer_init();
@@ -560,6 +628,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
 
         free(name);
     }
+bail:
     cmap_finalize(cmap_handle);
     return any;
 }
@@ -569,36 +638,68 @@ corosync_cluster_name(void)
 {
     cmap_handle_t handle;
     char *cluster_name = NULL;
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     rc = cmap_initialize(&handle);
     if (rc != CS_OK) {
-        crm_info("Failed to initialize the cmap API: %s (%d)", ais_error2text(rc), rc);
+        crm_info("Failed to initialize the cmap API: %s (%d)",
+                 cs_strerror(rc), rc);
         return NULL;
+    }
+
+    rc = cmap_fd_get(handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the CMAP API connection: %s (%d)",
+                cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    /* CMAP provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CMAP provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
+                strerror(-rv), -rv);
+        goto bail;
     }
 
     rc = cmap_get_string(handle, "totem.cluster_name", &cluster_name);
     if (rc != CS_OK) {
-        crm_info("Cannot get totem.cluster_name: %s (%d)", ais_error2text(rc), rc);
+        crm_info("Cannot get totem.cluster_name: %s (%d)", cs_strerror(rc), rc);
 
     } else {
         crm_debug("cmap totem.cluster_name = '%s'", cluster_name);
     }
 
+bail:
     cmap_finalize(handle);
-
     return cluster_name;
 }
 
 int
 corosync_cmap_has_config(const char *prefix)
 {
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
     int retries = 0;
     static int found = -1;
     cmap_handle_t cmap_handle;
     cmap_iter_handle_t iter_handle;
     char key_name[CMAP_KEYNAME_MAXLEN + 1];
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     if(found != -1) {
         return found;
@@ -619,6 +720,27 @@ corosync_cmap_has_config(const char *prefix)
         crm_warn("Could not connect to Cluster Configuration Database API: %s (rc=%d)",
                  cs_strerror(rc), rc);
         return -1;
+    }
+
+    rc = cmap_fd_get(cmap_handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the CMAP API connection: %s (%d)",
+                cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    /* CMAP provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CMAP provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
+                strerror(-rv), -rv);
+        goto bail;
     }
 
     rc = cmap_iter_init(cmap_handle, prefix, &iter_handle);

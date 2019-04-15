@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -37,6 +28,8 @@
 #include <corosync/cpg.h>
 
 #include <crm/msg_xml.h>
+
+#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 cpg_handle_t pcmk_cpg_handle = 0; /* TODO: Remove, use cluster.cpg_handle */
 
@@ -71,11 +64,16 @@ cluster_disconnect_cpg(crm_cluster_t *cluster)
 
 uint32_t get_local_nodeid(cpg_handle_t handle)
 {
-    int rc = CS_OK;
+    cs_error_t rc = CS_OK;
     int retries = 0;
     static uint32_t local_nodeid = 0;
     cpg_handle_t local_handle = handle;
     cpg_callbacks_t cb = { };
+    int fd = -1;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     if(local_nodeid != 0) {
         return local_nodeid;
@@ -92,6 +90,32 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
     if(handle == 0) {
         crm_trace("Creating connection");
         cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
+        if (rc != CS_OK) {
+            crm_err("Could not connect to the CPG API: %s (%d)",
+                    cs_strerror(rc), rc);
+            return 0;
+        }
+
+        rc = cpg_fd_get(local_handle, &fd);
+        if (rc != CS_OK) {
+            crm_err("Could not obtain the CPG API connection: %s (%d)",
+                    cs_strerror(rc), rc);
+            goto bail;
+        }
+
+        /* CPG provider run as root (in given user namespace, anyway)? */
+        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                                &found_uid, &found_gid))) {
+            crm_err("CPG provider is not authentic:"
+                    " process %lld (uid: %lld, gid: %lld)",
+                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                    (long long) found_uid, (long long) found_gid);
+            goto bail;
+        } else if (rv < 0) {
+            crm_err("Could not verify authenticity of CPG provider: %s (%d)",
+                    strerror(-rv), -rv);
+            goto bail;
+        }
     }
 
     if (rc == CS_OK) {
@@ -103,6 +127,8 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
     if (rc != CS_OK) {
         crm_err("Could not get local node id from the CPG API: %s (%d)", ais_error2text(rc), rc);
     }
+
+bail:
     if(handle == 0) {
         crm_trace("Closing connection");
         cpg_finalize(local_handle);
@@ -435,12 +461,16 @@ pcmk_cpg_membership(cpg_handle_t handle,
 gboolean
 cluster_connect_cpg(crm_cluster_t *cluster)
 {
-    int rc = -1;
-    int fd = 0;
+    cs_error_t rc;
+    int fd = -1;
     int retries = 0;
     uint32_t id = 0;
     crm_node_t *peer = NULL;
     cpg_handle_t handle = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    pid_t found_pid = 0;
+    int rv;
 
     struct mainloop_fd_callbacks cpg_fd_callbacks = {
         .dispatch = pcmk_cpg_dispatch,
@@ -465,7 +495,31 @@ cluster_connect_cpg(crm_cluster_t *cluster)
 
     cs_repeat(retries, 30, rc = cpg_initialize(&handle, &cpg_callbacks));
     if (rc != CS_OK) {
-        crm_err("Could not connect to the Cluster Process Group API: %d", rc);
+        crm_err("Could not connect to the CPG API: %s (%d)",
+                cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    rc = cpg_fd_get(handle, &fd);
+    if (rc != CS_OK) {
+        crm_err("Could not obtain the CPG API connection: %s (%d)",
+                cs_strerror(rc), rc);
+        goto bail;
+    }
+
+    /* CPG provider run as root (in given user namespace, anyway)? */
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                            &found_uid, &found_gid))) {
+        crm_err("CPG provider is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        rc = CS_ERR_ACCESS;
+        goto bail;
+    } else if (rv < 0) {
+        crm_err("Could not verify authenticity of CPG provider: %s (%d)",
+                strerror(-rv), -rv);
+        rc = CS_ERR_ACCESS;
         goto bail;
     }
 
@@ -481,12 +535,6 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cs_repeat(retries, 30, rc = cpg_join(handle, &cluster->group));
     if (rc != CS_OK) {
         crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
-        goto bail;
-    }
-
-    rc = cpg_fd_get(handle, &fd);
-    if (rc != CS_OK) {
-        crm_err("Could not obtain the CPG API connection: %d", rc);
         goto bail;
     }
 

@@ -916,11 +916,18 @@ crm_ipc_new(const char *name, size_t max_size)
  *
  * \param[in] client  Connection instance obtained from crm_ipc_new()
  *
- * \return TRUE on success, FALSE otherwise (in which case errno will be set)
+ * \return TRUE on success, FALSE otherwise (in which case errno will be set;
+ *         specifically, in case of discovering the remote side is not
+ *         authentic, its value is set to ECONNABORTED).
  */
 bool
 crm_ipc_connect(crm_ipc_t * client)
 {
+    static uid_t cl_uid = 0;
+    static gid_t cl_gid = 0;
+    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
+    int rv;
+
     client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
 
@@ -931,7 +938,39 @@ crm_ipc_connect(crm_ipc_t * client)
 
     client->pfd.fd = crm_ipc_get_fd(client);
     if (client->pfd.fd < 0) {
-        crm_debug("Could not obtain file descriptor for %s connection: %s (%d)", client->name, pcmk_strerror(errno), errno);
+        rv = errno;
+        /* message already omitted */
+        crm_ipc_close(client);
+        errno = rv;
+        return FALSE;
+    }
+
+    if (!cl_uid && !cl_gid
+            && (rv = crm_user_lookup(CRM_DAEMON_USER, &cl_uid, &cl_gid)) < 0) {
+        errno = -rv;
+        /* message already omitted */
+        crm_ipc_close(client);
+        errno = -rv;
+        return FALSE;
+    }
+
+    if (!(rv = crm_ipc_is_authentic_process(client->pfd.fd, cl_uid, cl_gid,
+                                            &found_pid, &found_uid,
+                                            &found_gid))) {
+        crm_err("Daemon (IPC %s) is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                client->name,  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        crm_ipc_close(client);
+        errno = ECONNABORTED;
+        return FALSE;
+
+    } else if (rv < 0) {
+        errno = -rv;
+        crm_perror(LOG_ERR, "Could not verify authenticity of daemon (IPC %s)",
+                   client->name);
+        crm_ipc_close(client);
+        errno = -rv;
         return FALSE;
     }
 
