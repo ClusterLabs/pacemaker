@@ -179,6 +179,7 @@ pcmk_errorname(int rc)
         case pcmk_err_node_unknown: return "pcmk_err_node_unknown";
         case pcmk_err_already: return "pcmk_err_already";
         case pcmk_err_bad_nvpair: return "pcmk_err_bad_nvpair";
+        case pcmk_err_unknown_format: return "pcmk_err_unknown_format";
     }
     return "Unknown";
 }
@@ -227,6 +228,8 @@ pcmk_strerror(int rc)
             return "Bad name/value pair given";
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";
+        case pcmk_err_unknown_format:
+            return "Unknown output format";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */
@@ -424,6 +427,7 @@ crm_errno2exit(int rc)
 
         case ENXIO:
         case pcmk_err_node_unknown:
+        case pcmk_err_unknown_format:
             return CRM_EX_NOSUCH;
 
         case ETIME:
