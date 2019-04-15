@@ -569,6 +569,24 @@ refresh:
 }
 #endif
 
+// Basically crm_signal(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
+static void
+avoid_zombies()
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(struct sigaction));
+    if (sigemptyset(&sa.sa_mask) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        return;
+    }
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
+    if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -583,10 +601,8 @@ main(int argc, char **argv)
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-#if !defined (ON_DARWIN) && !defined (ON_BSD)
-    /* prevent zombies */
-    signal(SIGCLD, SIG_IGN);
-#endif
+    // Avoid needing to wait for subprocesses forked for -E/--external-agent
+    avoid_zombies();
 
     if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
