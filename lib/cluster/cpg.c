@@ -385,6 +385,20 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     return NULL;
 }
 
+static int cmp_member_list_nodeid(const void *first,
+                                  const void *second)
+{
+    const struct cpg_address *const a = *((const struct cpg_address **) first),
+                             *const b = *((const struct cpg_address **) second);
+    if (a->nodeid < b->nodeid) {
+        return -1;
+    } else if (a->nodeid > b->nodeid) {
+        return 1;
+    }
+    /* don't bother with "reason" nor "pid" */
+    return 0;
+}
+
 void
 pcmk_cpg_membership(cpg_handle_t handle,
                     const struct cpg_name *groupName,
@@ -396,29 +410,91 @@ pcmk_cpg_membership(cpg_handle_t handle,
     gboolean found = FALSE;
     static int counter = 0;
     uint32_t local_nodeid = get_local_nodeid(handle);
+    const struct cpg_address *key, **rival, **sorted;
+
+    sorted = malloc(member_list_entries * sizeof(const struct cpg_address *));
+    CRM_ASSERT(sorted != NULL);
+
+    for (size_t iter = 0; iter < member_list_entries; iter++) {
+        sorted[iter] = member_list + iter;
+    }
+    /* so that the cross-matching multiply-subscribed nodes is then cheap */
+    qsort(sorted, member_list_entries, sizeof(const struct cpg_address *),
+          cmp_member_list_nodeid);
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_find_peer(left_list[i].nodeid, NULL);
 
-        crm_info("Node %u left group %s (peer=%s, counter=%d.%d)",
+        crm_info("Node %u left group %s (peer=%s:%llu, counter=%d.%d)",
                  left_list[i].nodeid, groupName->value,
-                 (peer? peer->uname : "<none>"), counter, i);
+                 (peer? peer->uname : "<none>"),
+                 (unsigned long long) left_list[i].pid, counter, i);
+
+        /* in CPG world, NODE:PROCESS-IN-MEMBERSHIP-OF-G is an 1:N relation
+           and not playing by this rule may go wild in case of multiple
+           residual instances of the same pacemaker daemon at the same node
+           -- we must ensure that the possible local rival(s) won't make us
+           cry out and bail (e.g. when they quit themselves), since all the
+           surrounding logic denies this simple fact that the full membership
+           is discriminated also per the PID of the process beside mere node
+           ID (and implicitly, group ID); practically, this will be sound in
+           terms of not preventing progress, since all the CPG joiners are
+           also API end-point carriers, and that's what matters locally
+           (who's the winner);
+           remotely, we will just compare leave_list and member_list and if
+           the left process has it's node retained in member_list (under some
+           other PID, anyway) we will just ignore it as well
+           XXX: long-term fix is to establish in-out PID-aware tracking? */
         if (peer) {
-            crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
+            key = &left_list[i];
+            rival = bsearch(&key, sorted, member_list_entries,
+                            sizeof(const struct cpg_address *),
+                            cmp_member_list_nodeid);
+            if (rival == NULL) {
+                crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg,
+                                     OFFLINESTATUS);
+            } else if (left_list[i].nodeid == local_nodeid) {
+                crm_info("Ignoring the above event %s.%d, comes from a local"
+                         " rival process (presumably not us): %llu",
+                         groupName->value, counter,
+                         (unsigned long long) left_list[i].pid);
+            } else {
+                crm_info("Ignoring the above event %s.%d, comes from"
+                         " a rival-rich node: %llu (e.g. %llu process"
+                         " carries on)",
+                         groupName->value, counter,
+                         (unsigned long long) left_list[i].pid,
+                         (unsigned long long) (*rival)->pid);
+            }
         }
     }
+    free(sorted);
+    sorted = NULL;
 
     for (i = 0; i < joined_list_entries; i++) {
-        crm_info("Node %u joined group %s (counter=%d.%d)",
-                 joined_list[i].nodeid, groupName->value, counter, i);
+        crm_info("Node %u joined group %s (counter=%d.%d, pid=%llu,"
+                 " unchecked for rivals)",
+                 joined_list[i].nodeid, groupName->value, counter, i,
+                 (unsigned long long) left_list[i].pid);
     }
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
 
-        crm_info("Node %u still member of group %s (peer=%s, counter=%d.%d)",
+        crm_info("Node %u still member of group %s (peer=%s:%llu,"
+                 " counter=%d.%d, at least once)",
                  member_list[i].nodeid, groupName->value,
-                 (peer? peer->uname : "<none>"), counter, i);
+                 (peer? peer->uname : "<none>"), member_list[i].pid,
+                 counter, i);
+
+        if (member_list[i].nodeid == local_nodeid
+                && member_list[i].pid != getpid()) {
+            /* see the note above */
+            crm_info("Ignoring the above event %s.%d, comes from a local rival"
+                     " process: %llu", groupName->value, counter,
+                     (unsigned long long) member_list[i].pid);
+            continue;
+        }
 
         /* Anyone that is sending us CPG messages must also be a _CPG_ member.
          * But it's _not_ safe to assume it's in the quorum membership.
@@ -438,7 +514,9 @@ pcmk_cpg_membership(cpg_handle_t handle,
                  *
                  * Set the threshold to 1 minute
                  */
-                crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
+                crm_err("Node %s[%u] appears to be online even though we think"
+                        " it is dead (unchecked for rivals)",
+                        peer->uname, peer->id);
                 if (crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0)) {
                     peer->votes = 0;
                 }

@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -336,6 +338,7 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
     qb_ipcs_service_t *ipcs = NULL;
+    crm_ipc_t *old_instance = NULL;
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
@@ -372,6 +375,20 @@ main(int argc, char **argv)
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_info("Starting up");
+
+    old_instance = crm_ipc_new(T_ATTRD, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("attrd is already active, aborting startup");
+        crm_exit(EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
     attrd_exit_status = attrd_cluster_connect();
