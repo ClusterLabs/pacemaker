@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <signal.h>
 #include <sys/utsname.h>
 
 #include <crm/msg_xml.h>
@@ -256,15 +257,9 @@ mon_shutdown(int nsig)
     clean_up(CRM_EX_OK);
 }
 
-#if ON_DARWIN
-#  define sighandler_t sig_t
-#endif
-
 #if CURSES_ENABLED
-#  ifndef HAVE_SIGHANDLER_T
-typedef void (*sighandler_t) (int);
-#  endif
 static sighandler_t ncurses_winch_handler;
+
 static void
 mon_winresize(int nsig)
 {
@@ -574,6 +569,24 @@ refresh:
 }
 #endif
 
+// Basically crm_signal(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
+static void
+avoid_zombies()
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(struct sigaction));
+    if (sigemptyset(&sa.sa_mask) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        return;
+    }
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
+    if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -588,10 +601,8 @@ main(int argc, char **argv)
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-#if !defined (ON_DARWIN) && !defined (ON_BSD)
-    /* prevent zombies */
-    signal(SIGCLD, SIG_IGN);
-#endif
+    // Avoid needing to wait for subprocesses forked for -E/--external-agent
+    avoid_zombies();
 
     if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
@@ -925,7 +936,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
-        ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
+        ncurses_winch_handler = crm_signal(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;
@@ -3904,9 +3915,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 {
     int rc = -1;
     int status = -1;
-    int action = -1;
     int target_rc = -1;
-    int transition_num = -1;
     gboolean notify = TRUE;
 
     char *rsc = NULL;
@@ -3914,7 +3923,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     const char *desc = NULL;
     const char *magic = NULL;
     const char *id = NULL;
-    char *update_te_uuid = NULL;
     const char *node = NULL;
 
     xmlNode *n = xml;
@@ -3942,8 +3950,8 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (FALSE == decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
-                                         &status, &rc, &target_rc)) {
+    if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
+                                 &target_rc)) {
         crm_err("Invalid event %s detected for %s", magic, id);
         return;
     }
@@ -3997,7 +4005,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
   bail:
-    free(update_te_uuid);
     free(rsc);
     free(task);
 }

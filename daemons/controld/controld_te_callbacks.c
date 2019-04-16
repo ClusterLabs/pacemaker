@@ -782,7 +782,6 @@ void
 tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
     char *uuid = NULL;
-    int target_rc = -1;
     int stonith_id = -1;
     int transition_id = -1;
     crm_action_t *action = NULL;
@@ -803,10 +802,8 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     /*       (char *)op->node_list, op->private_data); */
 
     /* filter out old STONITH actions */
-    CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, &target_rc),
-              crm_err("Invalid event detected");
-              goto bail;
-        );
+    CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, NULL),
+              goto bail);
 
     if (transition_graph->complete || stonith_id < 0 || safe_str_neq(uuid, te_uuid)
         || transition_graph->id != transition_id) {

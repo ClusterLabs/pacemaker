@@ -25,11 +25,11 @@
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
+#include <pacemaker-internal.h>
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 extern gboolean stage0(pe_working_set_t * data_set);
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -236,7 +236,7 @@ main(int argc, char **argv)
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {
         /* live queries will always have a status section and can do a full simulation */
-        do_calculations(data_set, cib_object, NULL);
+        pcmk__schedule_actions(data_set, cib_object, NULL);
 
     } else {
         data_set->now = crm_time_new(NULL);

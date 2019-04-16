@@ -2580,7 +2580,34 @@ stage7(pe_working_set_t * data_set)
     return TRUE;
 }
 
-int transition_id = -1;
+static int transition_id = -1;
+
+/*!
+ * \internal
+ * \brief Log a message after calculating a transition
+ *
+ * \param[in] filename  Where transition input is stored
+ */
+void
+pcmk__log_transition_summary(const char *filename)
+{
+    if (was_processing_error) {
+        crm_err("Calculated transition %d (with errors), saving inputs in %s",
+                transition_id, filename);
+
+    } else if (was_processing_warning) {
+        crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
+                 transition_id, filename);
+
+    } else {
+        crm_notice("Calculated transition %d, saving inputs in %s",
+                   transition_id, filename);
+    }
+    if (crm_config_error) {
+        crm_notice("Configuration errors found during scheduler processing,"
+                   "  please run \"crm_verify -L\" to identify issues");
+    }
+}
 
 /*
  * Create a dependency graph to send to the transitioner (via the controller)

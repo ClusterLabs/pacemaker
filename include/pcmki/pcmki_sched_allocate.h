@@ -183,7 +183,7 @@ enum pe_graph_flags pcmk__multi_update_actions(pe_action_t *first,
 gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(resource_t * rsc);
-
+void pcmk__log_transition_summary(const char *filename);
 void clone_create_pseudo_actions(
     resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 #endif

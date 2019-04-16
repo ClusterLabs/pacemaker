@@ -1127,7 +1127,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        do_calculations(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set, data_set->input, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
@@ -1612,7 +1612,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
             pe_free_working_set(data_set);
             return rc;
         }
-        do_calculations(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set, data_set->input, NULL);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

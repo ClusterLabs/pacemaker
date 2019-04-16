@@ -1672,16 +1672,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
         int a_id = -1;
         int b_id = -1;
-        int dummy = -1;
 
         const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
         const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
-        if(!decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy)) {
+        if (!decode_transition_magic(a_magic, &a_uuid, &a_id, NULL, NULL, NULL,
+                                     NULL)) {
             sort_return(0, "bad magic a");
         }
-        if(!decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy)) {
+        if (!decode_transition_magic(b_magic, &b_uuid, &b_id, NULL, NULL, NULL,
+                                     NULL)) {
             sort_return(0, "bad magic b");
         }
         /* try to determine the relative age of the operation...

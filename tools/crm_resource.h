@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -99,5 +101,3 @@ int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);
 void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
                       node_t *node);
-
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);

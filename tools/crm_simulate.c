@@ -40,8 +40,6 @@ extern gboolean bringing_nodes_online;
 	}					\
     } while(0)
 
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
 char *use_date = NULL;
 
 static void
@@ -532,7 +530,7 @@ profile_one(const char *xml_file, pe_working_set_t *data_set)
 
     data_set->input = cib_object;
     get_date(data_set);
-    do_calculations(data_set, cib_object, NULL);
+    pcmk__schedule_actions(data_set, cib_object, NULL);
     pe_reset_working_set(data_set);
 }
 
@@ -873,7 +871,7 @@ main(int argc, char **argv)
             printf("Utilization information:\n");
         }
 
-        do_calculations(data_set, input, local_date);
+        pcmk__schedule_actions(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {

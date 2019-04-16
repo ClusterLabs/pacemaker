@@ -32,7 +32,6 @@
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static pe_working_set_t *sched_data_set = NULL;
-extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
 
@@ -50,7 +49,6 @@ series_t series[] = {
 };
 
 void pengine_shutdown(int nsig);
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 static gboolean
 process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
@@ -120,7 +118,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         if (process) {
-            do_calculations(sched_data_set, converted, NULL);
+            pcmk__schedule_actions(sched_data_set, converted, NULL);
         }
 
         series_id = get_series();
@@ -180,24 +178,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         free_xml(reply);
         pe_reset_working_set(sched_data_set);
-
-        if (was_processing_error) {
-            crm_err("Calculated transition %d (with errors), saving inputs in %s",
-                    transition_id, filename);
-
-        } else if (was_processing_warning) {
-            crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
-                     transition_id, filename);
-
-        } else {
-            crm_notice("Calculated transition %d, saving inputs in %s",
-                       transition_id, filename);
-        }
-
-        if (crm_config_error) {
-            crm_notice("Configuration errors found during scheduler processing,"
-                       "  please run \"crm_verify -L\" to identify issues");
-        }
+        pcmk__log_transition_summary(filename);
 
         if (is_repoke == FALSE && series_wrap != 0) {
             unlink(filename);
@@ -212,14 +193,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
     }
 
     return TRUE;
-}
-
-// only needed if process_pe_message() is called
-static void
-libpengine_fini()
-{
-    pe_free_working_set(sched_data_set);
-    sched_data_set = NULL;
 }
 
 static int32_t
@@ -363,7 +336,7 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 
-    libpengine_fini();
+    pe_free_working_set(sched_data_set);
     crm_info("Exiting %s", crm_system_name);
     crm_exit(CRM_EX_OK);
 }
@@ -372,6 +345,6 @@ void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    libpengine_fini();
+    pe_free_working_set(sched_data_set);
     crm_exit(CRM_EX_OK);
 }
