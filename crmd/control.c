@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -127,12 +118,15 @@ do_ha_control(long long action,
             }
 #endif
         }
-        controld_election_init(cluster->uname);
-        fsa_our_uname = cluster->uname;
-        fsa_our_uuid = cluster->uuid;
-        if(cluster->uuid == NULL) {
-            crm_err("Could not obtain local uuid");
-            registered = FALSE;
+
+        if (registered == TRUE) {
+            controld_election_init(cluster->uname);
+            fsa_our_uname = cluster->uname;
+            fsa_our_uuid = cluster->uuid;
+            if(cluster->uuid == NULL) {
+                crm_err("Could not obtain local uuid");
+                registered = FALSE;
+            }
         }
 
         if (registered == FALSE) {

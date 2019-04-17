@@ -41,6 +41,10 @@ before_script:
 # Save and restore CC so that ./configure can pass
  - export CC_SAVED=$CC
  - export CC=`echo ${CC} | sed s/cov-build/gcc/`
+ # some tests (e.g. cts-exec-helper) require actual system-wide credentials
+ - sed -e 's|^\(CRM_DAEMON_USER=\).*$|\1nobody|'
+       -e 's|^\(CRM_DAEMON_GROUP=\).*$|\1nobody|'
+       -i -- configure.ac
  - ./autogen.sh
  - ./configure
  - export CC=$CC_SAVED

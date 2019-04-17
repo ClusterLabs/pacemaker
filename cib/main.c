@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -135,12 +126,11 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
     struct passwd *pwentry = NULL;
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
-
-    crm_peer_init();
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
@@ -216,6 +206,19 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
+    old_instance = crm_ipc_new(cib_channel_ro, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("cib is already active, aborting startup");
+        crm_exit(EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     if (cib_root == NULL) {
         if ((g_file_test(CRM_CONFIG_DIR "/cib.xml", G_FILE_TEST_EXISTS) == FALSE)
             && (g_file_test(CRM_LEGACY_CONFIG_DIR "/cib.xml", G_FILE_TEST_EXISTS) == TRUE)) {
@@ -237,6 +240,8 @@ main(int argc, char **argv)
         fflush(stderr);
         return 100;
     }
+
+    crm_peer_init();
 
     /* read local config file */
     rc = cib_init();

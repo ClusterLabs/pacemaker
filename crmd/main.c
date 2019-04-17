@@ -1,19 +1,10 @@
 /* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -61,6 +52,7 @@ main(int argc, char **argv)
     int flag;
     int index = 0;
     int argerr = 0;
+    crm_ipc_t *old_instance = NULL;
 
     crmd_mainloop = g_main_new(FALSE);
     crm_log_preinit(NULL, argc, argv);
@@ -102,6 +94,19 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_help('?', EX_USAGE);
+    }
+
+    old_instance = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("crmd is already active, aborting startup");
+        crm_exit(EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
     }
 
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {

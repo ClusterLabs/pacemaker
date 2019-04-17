@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -1289,6 +1280,7 @@ main(int argc, char **argv)
     int option_index = 0;
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit("stonith-ng", argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -1459,6 +1451,20 @@ main(int argc, char **argv)
     }
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    old_instance = crm_ipc_new("stonith-ng", 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("stonithd is already active, aborting startup");
+        crm_exit(EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();

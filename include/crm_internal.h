@@ -140,6 +140,27 @@ extern int node_score_yellow;
 extern int node_score_infinity;
 
 /* Assorted convenience functions */
+
+/*!
+ * \internal
+ * \brief Detect if process per PID and optionally exe path (component) exists
+ *
+ * \param[in] pid     PID of process assumed alive, disproving of which to try
+ * \param[in] daemon  exe path (component) to possibly match with procfs entry
+ *
+ * \return -1 on invalid PID specification, -2 when the calling process has no
+ *         (is refused an) ability to (dis)prove the predicate,
+ *         0 if the negation of the predicate is confirmed (check-through-kill
+ *         indicates so, or the subsequent check-through-procfs-match on
+ *         \p daemon when provided and procfs available at the standard path),
+ *         1 if it cannot be disproved (reliably [modulo race conditions]
+ *         when \p daemon provided, procfs available at the standard path
+ *         and the calling process has permissions to access the respective
+ *         procfs location, less so otherwise, since mere check-through-kill
+ *         is exercised without powers to exclude PID recycled in the interim).
+ *
+ * \note This function cannot be used to verify \e authenticity of the process.
+ */
 int crm_pid_active(long pid, const char *daemon);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 

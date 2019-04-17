@@ -159,6 +159,25 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
     set_ocf_env(buffer, value, user_data);
 }
 
+static void
+set_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    int rc;
+
+    if (value != NULL) {
+        rc = setenv(key, value, 1);
+    } else {
+        rc = unsetenv(key);
+    }
+
+    if (rc < 0) {
+        crm_perror(LOG_ERR, "setenv %s=%s",
+                  (char*)key, (value? (char*)value : ""));
+    } else {
+        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+    }
+}
+
 /*!
  * \internal
  * \brief Add environment variables suitable for an action
@@ -168,12 +187,20 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_action_env_vars(const svc_action_t *op)
 {
-    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
-        return;
+    void (*env_setter)(gpointer, gpointer, gpointer) = NULL;
+    if (op->agent == NULL) {
+        env_setter = set_alert_env;  /* we deal with alert handler */
+
+    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF)) {
+        env_setter = set_ocf_env_with_prefix;
     }
 
-    if (op->params) {
-        g_hash_table_foreach(op->params, set_ocf_env_with_prefix, NULL);
+    if (env_setter != NULL && op->params != NULL) {
+        g_hash_table_foreach(op->params, env_setter, NULL);
+    }
+
+    if (env_setter == NULL || env_setter == set_alert_env) {
+        return;
     }
 
     set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
