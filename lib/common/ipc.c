@@ -1,11 +1,24 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
+
+#if defined(US_AUTH_PEERCRED_UCRED) || defined(US_AUTH_PEERCRED_SOCKPEERCRED)
+#  ifdef US_AUTH_PEERCRED_UCRED
+#    ifndef _GNU_SOURCE
+#      define _GNU_SOURCE
+#    endif
+#  endif
+#  include <sys/socket.h>
+#elif defined(US_AUTH_GETPEERUCRED)
+#  include <ucred.h>
+#endif
 
 #include <sys/param.h>
 
@@ -19,10 +32,12 @@
 #include <fcntl.h>
 #include <bzlib.h>
 
-#include <crm/crm.h>
+#include <crm/crm.h>   /* indirectly: pcmk_err_generic */
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
+
+#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 #define PCMK_IPC_VERSION 1
 
@@ -932,11 +947,18 @@ crm_ipc_new(const char *name, size_t max_size)
  *
  * \param[in] client  Connection instance obtained from crm_ipc_new()
  *
- * \return TRUE on success, FALSE otherwise (in which case errno will be set)
+ * \return TRUE on success, FALSE otherwise (in which case errno will be set;
+ *         specifically, in case of discovering the remote side is not
+ *         authentic, its value is set to ECONNABORTED).
  */
 bool
 crm_ipc_connect(crm_ipc_t * client)
 {
+    static uid_t cl_uid = 0;
+    static gid_t cl_gid = 0;
+    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
+    int rv;
+
     client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
 
@@ -947,7 +969,39 @@ crm_ipc_connect(crm_ipc_t * client)
 
     client->pfd.fd = crm_ipc_get_fd(client);
     if (client->pfd.fd < 0) {
-        crm_debug("Could not obtain file descriptor for %s connection: %s (%d)", client->name, pcmk_strerror(errno), errno);
+        rv = errno;
+        /* message already omitted */
+        crm_ipc_close(client);
+        errno = rv;
+        return FALSE;
+    }
+
+    if (!cl_uid && !cl_gid
+            && (rv = crm_user_lookup(CRM_DAEMON_USER, &cl_uid, &cl_gid)) < 0) {
+        errno = -rv;
+        /* message already omitted */
+        crm_ipc_close(client);
+        errno = -rv;
+        return FALSE;
+    }
+
+    if (!(rv = crm_ipc_is_authentic_process(client->pfd.fd, cl_uid, cl_gid,
+                                            &found_pid, &found_uid,
+                                            &found_gid))) {
+        crm_err("Daemon (IPC %s) is not authentic:"
+                " process %lld (uid: %lld, gid: %lld)",
+                client->name,  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        crm_ipc_close(client);
+        errno = ECONNABORTED;
+        return FALSE;
+
+    } else if (rv < 0) {
+        errno = -rv;
+        crm_perror(LOG_ERR, "Could not verify authenticity of daemon (IPC %s)",
+                   client->name);
+        crm_ipc_close(client);
+        errno = -rv;
         return FALSE;
     }
 
@@ -1393,6 +1447,132 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     pcmk_free_ipc_event(iov);
     return rc;
 }
+
+int
+crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
+                             pid_t *gotpid, uid_t *gotuid, gid_t *gotgid) {
+    int ret = 0;
+    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
+#if defined(US_AUTH_PEERCRED_UCRED)
+    struct ucred ucred;
+    socklen_t ucred_len = sizeof(ucred);
+
+    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                    &ucred, &ucred_len)
+                && ucred_len == sizeof(ucred)) {
+        found_pid = ucred.pid; found_uid = ucred.uid; found_gid = ucred.gid;
+
+#elif defined(US_AUTH_PEERCRED_SOCKPEERCRED)
+    struct sockpeercred sockpeercred;
+    socklen_t sockpeercred_len = sizeof(sockpeercred);
+
+    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                    &sockpeercred, &sockpeercred_len)
+                && sockpeercred_len == sizeof(sockpeercred_len)) {
+        found_pid = sockpeercred.pid;
+        found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
+
+#elif defined(US_AUTH_GETPEEREID)
+    if (!getpeereid(sock, &found_uid, &found_gid)) {
+        found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
+
+#elif defined(US_AUTH_GETPEERUCRED)
+    ucred_t *ucred;
+    if (!getpeerucred(sock, &ucred)) {
+        errno = 0;
+        found_pid = ucred_getpid(ucred);
+        found_uid = ucred_geteuid(ucred); found_gid = ucred_getegid(ucred);
+        ret = -errno;
+        ucred_free(ucred);
+        if (ret) {
+            return (ret < 0) ? ret : -pcmk_err_generic;
+        }
+
+#else
+#  error "No way to authenticate a Unix socket peer"
+    errno = 0;
+    if (0) {
+#endif
+        if (gotpid != NULL) {
+            *gotpid = found_pid;
+        }
+        if (gotuid != NULL) {
+            *gotuid = found_uid;
+        }
+        if (gotgid != NULL) {
+            *gotgid = found_gid;
+        }
+        ret = (found_uid == 0 || found_uid == refuid || found_gid == refgid);
+    } else {
+        ret = (errno > 0) ? -errno : -pcmk_err_generic;
+    }
+
+    return ret;
+}
+
+int
+pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
+                                      gid_t refgid, pid_t *gotpid) {
+    static char last_asked_name[PATH_MAX / 2] = "";  /* log spam prevention */
+    int fd, ret = 0;
+    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
+    qb_ipcc_connection_t *c;
+
+    if ((c = qb_ipcc_connect(name, 0)) == NULL) {
+        crm_info("Could not connect to %s IPC: %s", name, strerror(errno));
+
+    } else if ((ret = qb_ipcc_fd_get(c, &fd))) {
+        crm_err("Could not get fd from %s IPC: %s (%d)", name,
+                strerror(-ret), -ret);
+        ret = -1;
+
+    } else if ((ret = crm_ipc_is_authentic_process(fd, refuid, refgid,
+                                                   &found_pid, &found_uid,
+                                                   &found_gid)) < 0) {
+        if (ret == -pcmk_err_generic) {
+            crm_err("Could not get peer credentials from %s IPC", name);
+        } else {
+            crm_err("Could not get peer credentials from %s IPC: %s (%d)",
+                    name, strerror(-ret), -ret);
+        }
+        ret = -1;
+
+    } else {
+        if (gotpid != NULL) {
+            *gotpid = found_pid;
+        }
+
+        if (!ret) {
+            crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
+                    " process %lld (uid: %lld, gid: %lld)",
+                    name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                    (long long) found_uid, (long long) found_gid);
+            ret = -2;
+        } else if ((found_uid != refuid || found_gid != refgid)
+                && strncmp(last_asked_name, name, sizeof(last_asked_name))) {
+            if (!found_uid && refuid) {
+                crm_warn("Daemon (IPC %s) runs as root, whereas the expected"
+                         " credentials are %lld:%lld, hazard of violating"
+                         " the least privilege principle",
+                         name, (long long) refuid, (long long) refgid);
+            } else {
+                crm_notice("Daemon (IPC %s) runs as %lld:%lld, whereas the"
+                           " expected credentials are %lld:%lld, which may"
+                           " mean a different set of privileges than expected",
+                           name, (long long) found_uid, (long long) found_gid,
+                           (long long) refuid, (long long) refgid);
+            }
+            memccpy(last_asked_name, name, '\0', sizeof(last_asked_name));
+        }
+    }
+
+    if (ret) {  /* here, !ret only when we could not initially connect */
+        qb_ipcc_disconnect(c);
+    }
+
+    return ret;
+}
+
 
 /* Utils */
 

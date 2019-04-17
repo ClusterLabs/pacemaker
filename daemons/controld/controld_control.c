@@ -77,12 +77,15 @@ do_ha_control(long long action,
             registered = crm_connect_corosync(cluster);
 #endif
         }
-        controld_election_init(cluster->uname);
-        fsa_our_uname = cluster->uname;
-        fsa_our_uuid = cluster->uuid;
-        if(cluster->uuid == NULL) {
-            crm_err("Could not obtain local uuid");
-            registered = FALSE;
+
+        if (registered == TRUE) {
+            controld_election_init(cluster->uname);
+            fsa_our_uname = cluster->uname;
+            fsa_our_uuid = cluster->uuid;
+            if(cluster->uuid == NULL) {
+                crm_err("Could not obtain local uuid");
+                registered = FALSE;
+            }
         }
 
         if (registered == FALSE) {
