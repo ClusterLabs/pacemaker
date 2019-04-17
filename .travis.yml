@@ -74,10 +74,14 @@ install:
       make libxml2-utils xsltproc
 
 before_script:
-# Save and restore CC so that ./configure can pass
+# Save and restore CC so that ./configure can pass;
+# some tests (e.g. cts-exec-helper) require actual system-wide credentials
  - test $MAINT_EXTRA -ne 0 || {
      export CC_SAVED=$CC;
      export CC=$(echo ${CC} | sed s/cov-build/gcc/);
+     sed -e 's|^\(CRM_DAEMON_USER=\).*$|\1nobody|'
+         -e 's|^\(CRM_DAEMON_GROUP=\).*$|\1nobody|'
+         -i -- configure.ac;
      ./autogen.sh;
      ./configure;
      export CC=$CC_SAVED;
