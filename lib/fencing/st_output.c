@@ -138,7 +138,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(node, (pcmkXmlStr) "delegate", (pcmkXmlStr) event->delegate);
     }
 
-    xmlSetProp(node, (pcmkXmlStr) "action", (pcmkXmlStr) stonith_action_str(event->action));
+    xmlSetProp(node, (pcmkXmlStr) "action", (pcmkXmlStr) event->action);
     xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) event->target);
     xmlSetProp(node, (pcmkXmlStr) "client", (pcmkXmlStr) event->client);
     xmlSetProp(node, (pcmkXmlStr) "origin", (pcmkXmlStr) event->origin);
