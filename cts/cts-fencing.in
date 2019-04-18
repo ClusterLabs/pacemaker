@@ -982,7 +982,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
 
-            test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
+            test.add_cmd_check_stdout("stonith_admin", "-H node3", "succeeded turning off node node3", "")
 
         # simple test of dynamic list query
         for test_type in test_types:
@@ -993,7 +993,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
             test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
-            test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
+            test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 fence devices found")
 
 
         # fence using dynamic list query
@@ -1016,7 +1016,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
             test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
 
-            test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
+            test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 fence devices found")
 
         # test what happens when no reboot action is advertised
         for test_type in test_types:

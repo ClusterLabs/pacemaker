@@ -9,7 +9,10 @@
  * Author: Intel Corporation
  *         Jeff Zheng <Jeff.Zheng@Intel.com>
  *
- * Copyright 2009-2018 International Business Machines, IBM
+ * Original copyright 2009 International Business Machines, IBM
+ * Later changes copyright 2009-2018 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.

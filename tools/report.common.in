@@ -1,8 +1,9 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+# Later changes copyright 2010-2018 the Pacemaker project contributors
 #
-# Later changes copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
