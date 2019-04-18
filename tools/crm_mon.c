@@ -30,6 +30,7 @@
 #include <crm/lrmd.h>
 #include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
+#include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -2343,27 +2344,6 @@ get_resource_display_options(void)
     return print_opts;
 }
 
-/*!
- * \internal
- * \brief Return human-friendly string representing current time
- *
- * \return Current time as string (as by ctime() but without newline) on success
- *         or "Could not determine current time" on error
- * \note The return value points to a statically allocated string which might be
- *       overwritten by subsequent calls to any of the C library date and time functions.
- */
-static const char *
-crm_now_string(void)
-{
-    time_t a_time = time(NULL);
-    char *since_epoch = ctime(&a_time);
-
-    if ((a_time == (time_t) -1) || (since_epoch == NULL)) {
-        return "Could not determine current time";
-    }
-    since_epoch[strlen(since_epoch) - 1] = EOS; /* trim newline */
-    return (since_epoch);
-}
 
 /*!
  * \internal

@@ -29,6 +29,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 
@@ -442,12 +443,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      */
 
     if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
-        char *now_str = NULL;
-        time_t now = time(NULL);
+        const char *now_str = crm_now_string();
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        now_str = ctime(&now);
-        now_str[24] = EOS;      /* replace the newline */
         crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN, now_str);
 
         if (schema) {
