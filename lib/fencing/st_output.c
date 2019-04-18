@@ -47,7 +47,7 @@ last_fenced_text(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        pcmk__indented_printf(out, "Node %s last fenced at: %s\n", target, ctime(&when));
+        pcmk__indented_printf(out, "Node %s last fenced at: %s", target, ctime(&when));
     } else {
         pcmk__indented_printf(out, "Node %s has never been fenced\n", target);
     }
@@ -86,14 +86,14 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s\n",
+            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s",
                                   event->delegate ? event->delegate : "We",
                                   stonith_action_str(event->action), event->target,
                                   event->client, event->origin, ctime(&event->completed));
             break;
 
         case st_done:
-            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s\n",
+            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s",
                                   event->delegate ? event->delegate : "This node",
                                   stonith_action_str(event->action), event->target,
                                   event->client, event->origin, ctime(&event->completed));
