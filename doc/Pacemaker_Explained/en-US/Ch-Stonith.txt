@@ -73,7 +73,7 @@ See the table below or run `man pacemaker-fenced` to see special instance attrib
 that may be set for any fencing resource, regardless of fence agent.
 
 .Additional Properties of Fencing Resources
-[width="95%",cols="5m,2,3,<10",options="header",align="center"]
+[width="95%",cols="8m,3,6,<12",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -112,26 +112,30 @@ a|Older versions used this to override the default period to wait for a STONITH 
 |
 |A mapping of host names to ports numbers for devices that do not support host names.
  Example: +node1:1;node2:2,3+ tells the cluster to use port 1 for
- *node1* and ports 2 and 3 for *node2*.
+ *node1* and ports 2 and 3 for *node2*. If +pcmk_host_check+ is explicitly set
+ to +static-list+, either this or +pcmk_host_list+ must be set.
  indexterm:[pcmk_host_map,Fencing]
  indexterm:[Fencing,Property,pcmk_host_map]
 
 |pcmk_host_list
 |string
 |
-|A list of machines controlled by this device (optional unless
-+pcmk_host_check+ is +static-list+).
+|A list of machines controlled by this device. If +pcmk_host_check+ is
+ explicitly set to +static-list+, either this or +pcmk_host_map+ must be set.
  indexterm:[pcmk_host_list,Fencing]
  indexterm:[Fencing,Property,pcmk_host_list]
 
 |pcmk_host_check
 |string
-|dynamic-list
+|static-list if either +pcmk_host_list+ or +pcmk_host_map+ is set,
+ otherwise dynamic-list if the fence device supports the list action,
+ otherwise status if the fence device supports the status action,
+ otherwise none
 a|How to determine which machines are controlled by the device.
  Allowed values:
 
 * +dynamic-list:+ query the device via the "list" command
-* +static-list:+ check the +pcmk_host_list+ attribute
+* +static-list:+ check the +pcmk_host_list+ or +pcmk_host_map+ attribute
 * +status:+ query the device via the "status" command
 * +none:+ assume every device can fence every machine
 
