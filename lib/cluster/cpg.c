@@ -91,15 +91,13 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
         crm_trace("Creating connection");
         cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
         if (rc != CS_OK) {
-            crm_err("Could not connect to the CPG API: %s (%d)",
-                    cs_strerror(rc), rc);
+            crm_err("Could not connect to the CPG API (rc=%d)", rc);
             return 0;
         }
 
         rc = cpg_fd_get(local_handle, &fd);
         if (rc != CS_OK) {
-            crm_err("Could not obtain the CPG API connection: %s (%d)",
-                    cs_strerror(rc), rc);
+            crm_err("Could not obtain the CPG API connection (rc=%d)", rc);
             goto bail;
         }
 
@@ -594,15 +592,13 @@ cluster_connect_cpg(crm_cluster_t *cluster)
 
     cs_repeat(retries, 30, rc = cpg_initialize(&handle, &cpg_callbacks));
     if (rc != CS_OK) {
-        crm_err("Could not connect to the CPG API: %s (%d)",
-                cs_strerror(rc), rc);
+        crm_err("Could not connect to the CPG API (rc=%d)", rc);
         goto bail;
     }
 
     rc = cpg_fd_get(handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the CPG API connection: %s (%d)",
-                cs_strerror(rc), rc);
+        crm_err("Could not obtain the CPG API connection (rc=%d)", rc);
         goto bail;
     }
 
