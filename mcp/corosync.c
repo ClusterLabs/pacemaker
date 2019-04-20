@@ -118,13 +118,13 @@ cluster_connect_cfg(uint32_t * nodeid)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_err("corosync cfg init: %s (%d)", cs_strerror(rc), rc);
+        crm_err("corosync cfg init error %d", rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("corosync cfg fd_get: %s (%d)", cs_strerror(rc), rc);
+        crm_err("corosync cfg fd_get error %d", rc);
         goto bail;
     }
 
@@ -314,8 +314,8 @@ mcp_read_config(void)
         rc = cmap_initialize(&local_handle);
         if (rc != CS_OK) {
             retries++;
-            printf("cmap connection setup failed: %s.  Retrying in %ds\n", cs_strerror(rc), retries);
-            crm_info("cmap connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+            printf("cmap connection setup failed: error %d.  Retrying in %ds\n", rc, retries);
+            crm_info("cmap connection setup failed: error %d.  Retrying in %ds", rc, retries);
             sleep(retries);
 
         } else {
@@ -331,10 +331,10 @@ mcp_read_config(void)
         return FALSE;
     }
 
+#if HAVE_CMAP
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                cs_strerror(rc), rc);
+        crm_err("Could not obtain the CMAP API connection: error %d", rc);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -354,6 +354,7 @@ mcp_read_config(void)
         cmap_finalize(local_handle);
         return FALSE;
     }
+#endif
 
     stack = get_cluster_type();
     crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));

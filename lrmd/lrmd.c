@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -919,8 +921,15 @@ action_complete(svc_action_t * action)
                 cmd_original_times(cmd);
 #endif
 
-                if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
-                    cmd->exec_rc = PCMK_OCF_OK;
+                // Monitors may return "not running", but start/stop shouldn't
+                if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
+                    && (cmd->exec_rc == PCMK_OCF_NOT_RUNNING)) {
+
+                    if (safe_str_eq(cmd->real_action, "start")) {
+                        cmd->exec_rc = PCMK_OCF_UNKNOWN_ERROR;
+                    } else if (safe_str_eq(cmd->real_action, "stop")) {
+                        cmd->exec_rc = PCMK_OCF_OK;
+                    }
                 }
             }
         }

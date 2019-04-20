@@ -688,7 +688,7 @@ services_os_action_execute(svc_action_t * op)
     int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
-    sigset_t *pmask;
+    sigset_t *pmask = NULL;
 
 #ifdef HAVE_SYS_SIGNALFD_H
     sigset_t mask;
