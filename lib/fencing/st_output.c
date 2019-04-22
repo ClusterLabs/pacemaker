@@ -10,6 +10,7 @@
 #include <stdarg.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/common/iso8601.h>
 #include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -46,7 +47,7 @@ last_fenced_text(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        pcmk__indented_printf(out, "Node %s last fenced at: %s\n", target, ctime(&when));
+        pcmk__indented_printf(out, "Node %s last fenced at: %s", target, ctime(&when));
     } else {
         pcmk__indented_printf(out, "Node %s has never been fenced\n", target);
     }
@@ -60,17 +61,19 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
+        crm_time_t *crm_when = crm_time_new(NULL);
         xmlNodePtr node = xmlNewNode(NULL, (pcmkXmlStr) "last-fenced");
+        char *buf = NULL;
 
-        /* Remove the newline that ctime automatically adds. */
-        char *ts = ctime(&when);
-        char *buf = crm_strdup_printf("%.*s", (int) strcspn(ts, "\n"), ts);
+        crm_time_set_timet(crm_when, &when);
+        buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
         xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) target);
         xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
 
         pcmk__xml_add_node(out, node);
 
+        crm_time_free(crm_when);
         free(buf);
     }
 
@@ -83,14 +86,14 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s\n",
+            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s",
                                   event->delegate ? event->delegate : "We",
                                   stonith_action_str(event->action), event->target,
                                   event->client, event->origin, ctime(&event->completed));
             break;
 
         case st_done:
-            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s\n",
+            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s",
                                   event->delegate ? event->delegate : "This node",
                                   stonith_action_str(event->action), event->target,
                                   event->client, event->origin, ctime(&event->completed));
@@ -114,6 +117,8 @@ static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
     stonith_history_t *event = va_arg(args, stonith_history_t *);
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
 
     node = xmlNewNode(NULL, (pcmkXmlStr) "stonith-event");
 
@@ -138,14 +143,19 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(node, (pcmkXmlStr) "delegate", (pcmkXmlStr) event->delegate);
     }
 
-    xmlSetProp(node, (pcmkXmlStr) "action", (pcmkXmlStr) stonith_action_str(event->action));
+    xmlSetProp(node, (pcmkXmlStr) "action", (pcmkXmlStr) event->action);
     xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) event->target);
     xmlSetProp(node, (pcmkXmlStr) "client", (pcmkXmlStr) event->client);
     xmlSetProp(node, (pcmkXmlStr) "origin", (pcmkXmlStr) event->origin);
-    xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) ctime(&event->completed));
+
+    crm_time_set_timet(crm_when, &event->completed);
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
 
     pcmk__xml_add_node(out, node);
 
+    crm_time_free(crm_when);
+    free(buf);
     return 0;
 }
 
