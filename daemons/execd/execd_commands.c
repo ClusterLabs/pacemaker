@@ -389,21 +389,38 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
     xmlNode *update_msg = user_data;
     crm_client_t *client = value;
     int rc;
+    int log_level = LOG_WARNING;
+    const char *msg = NULL;
 
-    if (client == NULL) {
-        crm_err("Asked to send event to  NULL client");
-        return;
-    } else if (client->name == NULL) {
-        crm_trace("Asked to send event to client with no name");
+    CRM_CHECK(client != NULL, return);
+    if (client->name == NULL) {
+        crm_trace("Skipping notification to client without name");
         return;
     }
 
     rc = lrmd_server_send_notify(client, update_msg);
-    if ((rc <= 0) && (rc != -ENOTCONN)) {
-        crm_warn("Could not notify client %s/%s: %s " CRM_XS " rc=%d",
-                 client->name, client->id,
-                 (rc? pcmk_strerror(rc) : "no data sent"), rc);
+    if (rc > 0) {
+        return; // success
     }
+
+    switch (rc) {
+        case 0:
+            msg = "no data sent";
+            break;
+
+        case -ENOTCONN:
+        case -EPIPE: // Client exited without waiting for notification
+            log_level = LOG_INFO;
+            msg = "Disconnected";
+            break;
+
+        default:
+            msg = pcmk_strerror(rc);
+            break;
+    }
+    do_crm_log(log_level,
+               "Could not notify client %s/%s: %s " CRM_XS " rc=%d",
+               client->name, client->id, msg, rc);
 }
 
 #ifdef HAVE_SYS_TIMEB_H
