@@ -1434,6 +1434,8 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
+    crm_notice("Starting Pacemaker fencer");
+
     old_instance = crm_ipc_new("stonith-ng", 0);
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
@@ -1507,7 +1509,7 @@ main(int argc, char **argv)
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_info("Starting %s mainloop", crm_system_name);
+    crm_notice("Pacemaker fencer successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     stonith_cleanup();

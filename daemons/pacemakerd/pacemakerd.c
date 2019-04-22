@@ -1402,8 +1402,7 @@ main(int argc, char **argv)
 
         init_children_processes();
 
-        crm_info("Starting mainloop");
-
+        crm_notice("Pacemaker daemon successfully started and accepting connections");
         g_main_loop_run(mainloop);
     }
 
