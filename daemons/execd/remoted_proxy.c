@@ -70,8 +70,8 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     xmlNode *msg;
 
     if (ipc_proxy == NULL) {
-        crm_warn("Cannot proxy request from uid %d gid %d "
-                 "because not connected to cluster", uid, gid);
+        crm_warn("Cannot proxy IPC connection from uid %d gid %d to %s "
+                 "because not connected to cluster", uid, gid, ipc_channel);
         return -EREMOTEIO;
     }
 
