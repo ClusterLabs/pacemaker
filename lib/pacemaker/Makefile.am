@@ -23,19 +23,21 @@ libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-libpacemaker_la_SOURCES	= pcmk_sched_allocate.c \
-			  pcmk_sched_bundle.c \
-			  pcmk_sched_clone.c \
-			  pcmk_sched_constraints.c \
-			  pcmk_sched_graph.c \
-			  pcmk_sched_group.c \
-			  pcmk_sched_messages.c \
-			  pcmk_sched_native.c \
-			  pcmk_sched_notif.c \
-			  pcmk_sched_promotable.c \
-			  pcmk_sched_transition.c \
-			  pcmk_sched_utilization.c \
-			  pcmk_sched_utils.c \
-			  pcmk_trans_graph.c \
-			  pcmk_trans_unpack.c \
-			  pcmk_trans_utils.c
+# Use += rather than backlashed continuation lines for parsing by bumplibs.sh
+libpacemaker_la_SOURCES	=
+libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
+libpacemaker_la_SOURCES += pcmk_sched_bundle.c
+libpacemaker_la_SOURCES += pcmk_sched_clone.c
+libpacemaker_la_SOURCES += pcmk_sched_constraints.c
+libpacemaker_la_SOURCES += pcmk_sched_graph.c
+libpacemaker_la_SOURCES += pcmk_sched_group.c
+libpacemaker_la_SOURCES += pcmk_sched_messages.c
+libpacemaker_la_SOURCES += pcmk_sched_native.c
+libpacemaker_la_SOURCES += pcmk_sched_notif.c
+libpacemaker_la_SOURCES += pcmk_sched_promotable.c
+libpacemaker_la_SOURCES += pcmk_sched_transition.c
+libpacemaker_la_SOURCES += pcmk_sched_utilization.c
+libpacemaker_la_SOURCES += pcmk_sched_utils.c
+libpacemaker_la_SOURCES += pcmk_trans_graph.c
+libpacemaker_la_SOURCES += pcmk_trans_unpack.c
+libpacemaker_la_SOURCES += pcmk_trans_utils.c
