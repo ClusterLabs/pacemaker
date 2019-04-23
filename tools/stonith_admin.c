@@ -598,7 +598,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    stonith_register_messages(out);
+    stonith__register_messages(out);
 
     st = stonith_api_new();
 

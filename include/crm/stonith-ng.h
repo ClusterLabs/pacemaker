@@ -539,11 +539,12 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 bool stonith_agent_exists(const char *agent, int timeout);
 
 /*!
+ * \internal
  * \brief Register stonith-specific messages.
  *
  * \param out The output functions structure.
  */
-void stonith_register_messages(pcmk__output_t *out);
+void stonith__register_messages(pcmk__output_t *out);
 
 /*!
  * \brief Turn stonith action into a more readable string.
