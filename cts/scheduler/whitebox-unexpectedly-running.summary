@@ -26,7 +26,7 @@ Executing cluster transition:
 
 Revised cluster status:
 Online: [ 18builder ]
-Containers: [ remote1:FAKE remote2:FAKE-crashed ]
+GuestOnline: [ remote1:FAKE remote2:FAKE-crashed ]
 
  FAKE	(ocf::pacemaker:Dummy):	Started 18builder 
  FAKE-crashed	(ocf::pacemaker:Dummy):	Started 18builder

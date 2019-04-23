@@ -1,6 +1,8 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2008-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -16,7 +18,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade rules')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -34,7 +36,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools acls validity upgrade"
+tests="dates tools acls validity upgrade rules"
 do_save=0
 VALGRIND_CMD=
 VALGRIND_OPTS="
@@ -60,6 +62,9 @@ CRM_EX_NOSUCH=105
 CRM_EX_UNSAFE=107
 CRM_EX_EXISTS=108
 CRM_EX_MULTIPLE=109
+CRM_EX_EXPIRED=110
+CRM_EX_NOT_YET_IN_EFFECT=111
+CRM_EX_INDETERMINATE=112
 
 function test_assert() {
     target=$1; shift
@@ -853,6 +858,69 @@ EOF
     rm -f "$TMPXML"
 }
 
+test_rules() {
+    local TMPXML
+
+    export CIB_shadow_dir="${shadow_dir}"
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
+    export CIB_shadow=$shadow
+
+    cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
+    cibadmin -C -o constraints --xml-text '<rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01" />'
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    cat <<EOF > "$TMPXML"
+<rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+  <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+    <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end="2019-01-01 12:00:00 -05:00"/>
+  </rule>
+</rsc_location>
+EOF
+
+    cibadmin -C -o constraints -x "$TMPXML"
+    rm -f "$TMPXML"
+
+    if [ "$(uname)" == "FreeBSD" ]; then
+        tomorrow=$(date -v+1d +"%F %T %z")
+    else
+        tomorrow=$(date --date=tomorrow +"%F %T %z")
+    fi
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    cat <<EOF > "$TMPXML"
+<rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+  <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+    <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start="${tomorrow}"/>
+  </rule>
+</rsc_location>
+EOF
+
+    cibadmin -C -o constraints -x "$TMPXML"
+    rm -f "$TMPXML"
+
+    desc="Try to check a rule that doesn't exist"
+    cmd="crm_rule -c -r blahblah"
+    test_assert $CRM_EX_NOSUCH
+
+    desc="Try to check a rule that has no date_expression"
+    cmd="crm_rule -c -r no-date-expression"
+    test_assert $CRM_EX_NOSUCH
+
+    desc="Verify basic rule is expired"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
+    test_assert $CRM_EX_EXPIRED
+
+    desc="Verify basic rule worked in the past"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101"
+    test_assert $CRM_EX_OK
+
+    desc="Verify basic rule is not yet in effect"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
+    test_assert $CRM_EX_NOT_YET_IN_EFFECT
+
+    unset CIB_shadow_dir
+}
+
 # Process command-line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -897,6 +965,7 @@ for t in $tests; do
         acls) ;;
         validity) ;;
         upgrade) ;;
+        rules) ;;
         *)
             echo "error: unknown test $t"
             echo
@@ -939,6 +1008,8 @@ for t in $tests; do
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
+        -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
+        -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 

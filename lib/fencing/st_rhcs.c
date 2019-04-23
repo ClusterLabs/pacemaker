@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -30,37 +32,54 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
 {
     // Essentially: ls -1 @sbin_dir@/fence_*
 
-    int count = 0;
+    int count = 0, i;
     struct dirent **namelist;
-    int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
+    const int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
 
-    if (file_num > 0) {
+#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
+    char buffer[FILENAME_MAX + 1];
+#elif defined(O_SEARCH)
+    const int dirfd = open(RH_STONITH_DIR, O_SEARCH);
+#else
+    const int dirfd = open(RH_STONITH_DIR, O_PATH);
+#endif
+
+    for (i = 0; i < file_num; i++) {
         struct stat prop;
-        char buffer[FILENAME_MAX + 1];
 
-        while (file_num--) {
-            if ('.' == namelist[file_num]->d_name[0]) {
-                free(namelist[file_num]);
-                continue;
-
-            } else if (!crm_starts_with(namelist[file_num]->d_name,
-                                        RH_STONITH_PREFIX)) {
-                free(namelist[file_num]);
+        if (crm_starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
+#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
+            snprintf(buffer, sizeof(buffer), "%s/%s", RH_STONITH_DIR,
+                     namelist[i]->d_name);
+            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+#else
+            if (dirfd == -1) {
+                if (i == 0) {
+                    crm_notice("Problem with listing %s directory"
+                               CRM_XS "errno=%d", RH_STONITH_PREFIX, errno);
+                }
+                free(namelist[i]);
                 continue;
             }
-
-            snprintf(buffer, FILENAME_MAX, "%s/%s", RH_STONITH_DIR,
-                     namelist[file_num]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+            /* note: we can possibly prevent following symlinks here,
+                     which may be a good idea, but fall on the nose when
+                     these agents are moved elsewhere & linked back */
+            if (fstatat(dirfd, namelist[i]->d_name, &prop, 0) == 0
+                    && S_ISREG(prop.st_mode)) {
+#endif
                 *devices = stonith_key_value_add(*devices, NULL,
-                                                 namelist[file_num]->d_name);
+                                                 namelist[i]->d_name);
                 count++;
             }
-
-            free(namelist[file_num]);
         }
+        free(namelist[i]);
+    }
+    if (file_num > 0) {
         free(namelist);
     }
+#if _POSIX_C_SOURCE >= 200809L || defined(O_SEARCH) || defined(O_PATH)
+    close(dirfd);
+#endif
     return count;
 }
 

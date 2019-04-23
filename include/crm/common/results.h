@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -50,6 +52,8 @@ extern "C" {
 #  define pcmk_err_multiple             213
 #  define pcmk_err_node_unknown         214
 #  define pcmk_err_already              215
+#  define pcmk_err_bad_nvpair           216
+#  define pcmk_err_unknown_format       217
 
 /*
  * Exit status codes
@@ -117,6 +121,9 @@ typedef enum crm_exit_e {
     CRM_EX_UNSAFE               = 107, // requires --force or new conditions
     CRM_EX_EXISTS               = 108, // requested item already exists
     CRM_EX_MULTIPLE             = 109, // requested item has multiple matches
+    CRM_EX_EXPIRED              = 110, // requested item has expired
+    CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
+    CRM_EX_INDETERMINATE        = 112, // could not determine status
 
     // Other
     CRM_EX_TIMEOUT              = 124, // convention from timeout(1)
@@ -129,7 +136,7 @@ const char *bz2_strerror(int rc);
 crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
-crm_exit_t crm_exit(crm_exit_t rc);
+_Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
 #ifdef __cplusplus
 }

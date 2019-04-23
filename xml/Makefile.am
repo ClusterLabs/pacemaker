@@ -1,5 +1,7 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2004-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,6 +19,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+APIdir 			= $(CRM_SCHEMA_DIRECTORY)/api
 RNGdir			= $(CRM_SCHEMA_DIRECTORY)
 
 xsltdir			= $(RNGdir)
@@ -31,31 +34,44 @@ noinst_DATA		= context-of.xsl
 
 # Sorted list of available numeric RNG versions,
 # extracted from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
-RNG_numeric_versions    = $(shell ls -1 $(top_srcdir)/xml/*.rng \
+numeric_versions = $(shell ls -1 $(1) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
-# The highest numeric version
-RNG_max			?= $(lastword $(RNG_numeric_versions))
-
-# A sorted list of all RNG versions (numeric and "next")
-RNG_versions		= next $(RNG_numeric_versions)
-RNG_version_pairs	= $(join \
-			    ${RNG_numeric_versions},$(addprefix \
+version_pairs = $(join \
+			    $(1),$(addprefix \
 			      -,$(wordlist \
-			        2,$(words ${RNG_numeric_versions}),${RNG_numeric_versions} \
+			        2,$(words $(1)),$(1) \
 			      ) next \
 			    ) \
 			  )
-RNG_version_pairs_cnt	= $(words ${RNG_version_pairs})
-RNG_version_pairs_last  = $(wordlist \
+
+version_pairs_last = $(wordlist \
 			    $(words \
 			      $(wordlist \
-			        2,${RNG_version_pairs_cnt},${RNG_version_pairs} \
+			        2,$(1),$(2) \
 			      ) \
-			    ),${RNG_version_pairs_cnt},${RNG_version_pairs} \
+			    ),$(1),$(2) \
 			  )
 
+API_numeric_versions = $(call numeric_versions,${API_files})
+RNG_numeric_versions = $(call numeric_versions,${RNG_files})
+
+# The highest numeric version
+API_max 		?= $(lastword $(API_numeric_versions))
+RNG_max			?= $(lastword $(RNG_numeric_versions))
+
+# A sorted list of all API and RNG versions (numeric and "next")
+API_versions 		= next $(API_numeric_versions)
+API_base 			= command-output stonith_admin
+API_files 			= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
+
+RNG_versions		= next $(RNG_numeric_versions)
+RNG_version_pairs	= $(call version_pairs,${RNG_numeric_versions})
+RNG_version_pairs_cnt	= $(words ${RNG_version_pairs})
+RNG_version_pairs_last  = $(call version_pairs_last,${RNG_version_pairs_cnt},${RNG_version_pairs})
+
+API_generated 		= api/api-result.rng $(foreach base,$(API_versions),api/api-result-$(base).rng)
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
 RNG_cfg_base		= options nodes resources constraints fencing acls tags alerts
@@ -65,7 +81,9 @@ RNG_files		= $(foreach base,$(RNG_base),$(wildcard $(base).rng $(base)-*.rng))
 # List of non-Pacemaker RNGs
 RNG_extra		= crm_mon.rng
 
+dist_API_DATA 		= $(API_files)
 dist_RNG_DATA		= $(RNG_files) $(RNG_extra)
+nodist_API_DATA 	= $(API_generated)
 nodist_RNG_DATA		= $(RNG_generated)
 
 EXTRA_DIST		= best-match.sh
@@ -73,6 +91,10 @@ EXTRA_DIST		= best-match.sh
 versions:
 	echo "Max: $(RNG_max)"
 	echo "Available: $(RNG_versions)"
+
+api-versions:
+	echo "Max: $(API_max)"
+	echo "Available: $(API_versions)"
 
 versions.rng: Makefile.am
 	echo "  RNG      $@"
@@ -99,9 +121,34 @@ versions.rng: Makefile.am
 	echo '  </start>' >> $@
 	echo '</grammar>' >> $@
 
+api/api-result.rng: api/api-result-$(API_max).rng
+	echo "  RNG      $@"
+	cp $(top_builddir)/xml/$< $@
+
 pacemaker.rng: pacemaker-$(RNG_max).rng
 	echo "  RNG      $@"
 	cp $(top_builddir)/xml/$< $@
+
+api/api-result-%.rng: $(API_files) Makefile.am
+	echo "  RNG      $@"
+	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	echo '  <start>' >> $@
+	echo '    <element name="pacemaker-result">' >> $@
+	echo '      <attribute name="api-version"> <text /> </attribute>' >> $@
+	echo '      <attribute name="request"> <text /> </attribute>' >> $@
+	echo '      <optional>' >> $@
+	echo '        <choice>' >> $@
+	for rng in $(API_base); do $(top_srcdir)/xml/best-match.sh api/$$rng $(*) $(@) "          " || :; done
+	echo '        </choice>' >> $@
+	echo '      </optional>' >> $@
+	echo '      <element name="status">' >> $@
+	echo '        <attribute name="code"> <data type="integer" /> </attribute>' >> $@
+	echo '        <text />' >> $@
+	echo '      </element>' >> $@
+	echo '    </element>' >> $@
+	echo '  </start>' >> $@
+	echo '</grammar>' >> $@
 
 pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	echo "  RNG      $@"
@@ -173,4 +220,4 @@ sync:
 	git rm -f $(wildcard *-next.rng)
 	make pacemaker-next.rng
 
-CLEANFILES = $(RNG_generated)
+CLEANFILES = $(API_generated) $(RNG_generated)

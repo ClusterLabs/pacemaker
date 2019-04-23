@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -18,8 +20,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <pacemaker-schedulerd.h>
-#include "fake_transition.h"
+#include <pacemaker-internal.h>
 
 extern bool print_pending;
 
@@ -75,6 +76,10 @@ int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 int cli_resource_move(resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
                       pe_working_set_t *data_set);
+int cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
+                                     const char *rsc_prov, const char *rsc_type,
+                                     const char *rsc_action, GHashTable *params,
+                                     GHashTable *override_hash, int timeout_ms);
 int cli_resource_execute(resource_t *rsc, const char *requested_name,
                          const char *rsc_action, GHashTable *override_hash,
                          int timeout_ms, cib_t *cib,
@@ -90,15 +95,9 @@ int cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
                                   const char *attr_name, cib_t *cib,
                                   pe_working_set_t *data_set);
 
+GList* subtract_lists(GList *from, GList *items, GCompareFunc cmp);
+
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);
 void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
                       node_t *node);
-
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
-#define CMD_ERR(fmt, args...) do {		\
-	crm_warn(fmt, ##args);			\
-	fprintf(stderr, fmt"\n", ##args);		\
-    } while(0)
-

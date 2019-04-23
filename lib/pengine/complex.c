@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -47,14 +49,14 @@ resource_object_functions_t resource_class_functions[] = {
      clone_free
     },
     {
-     container_unpack,
+     pe__unpack_bundle,
      native_find_rsc,
      native_parameter,
-     container_print,
-     container_active,
-     container_resource_state,
+     pe__print_bundle,
+     pe__bundle_active,
+     pe__bundle_resource_state,
      native_location,
-     container_free
+     pe__free_bundle
     }
 };
 
@@ -364,8 +366,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     const char *value = NULL;
     const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    int container_remote_node = 0;
-    int baremetal_remote_node = 0;
+    bool guest_node = FALSE;
+    bool remote_node = FALSE;
     bool has_versioned_params = FALSE;
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
@@ -473,9 +475,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
         if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
-            container_remote_node = 1;
+            guest_node = TRUE;
         } else {
-            baremetal_remote_node = 1;
+            remote_node = TRUE;
         }
     }
 
@@ -487,8 +489,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
     } else if (crm_is_true(value)) {
         set_bit((*rsc)->flags, pe_rsc_allow_migrate);
-    } else if ((value == NULL) && baremetal_remote_node && !has_versioned_params) {
-        /* by default, we want baremetal remote-nodes to be able
+    } else if ((value == NULL) && remote_node && !has_versioned_params) {
+        /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
@@ -653,7 +655,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
     }
 
-    if (baremetal_remote_node) {
+    if (remote_node) {
         value = g_hash_table_lookup((*rsc)->parameters, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
@@ -676,7 +678,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
-    } else if (container_remote_node) {
+    } else if (guest_node) {
         /* remote resources tied to a container resource must always be allowed
          * to opt-in to the cluster. Whether the connection resource is actually
          * allowed to be placed on a node is dependent on the container resource */

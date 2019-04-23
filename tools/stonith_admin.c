@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -25,6 +27,7 @@
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/cib.h>
@@ -53,6 +56,7 @@ static struct crm_option long_options[] = {
     {   "broadcast", no_argument, NULL, 'b',
         "Broadcast wherever appropriate."
     },
+    PCMK__OUTPUT_OPTIONS("text, xml"),
     {   "-spacer-", no_argument, NULL, '-', "\nDevice definition commands:" },
 
     {   "register", required_argument, NULL, 'R',
@@ -323,57 +327,31 @@ handle_level(stonith_t *st, char *target, int fence_level,
                                        name, value, fence_level);
 }
 
-static char *
-fence_action_str(const char *action)
-{
-    char *str = NULL;
-
-    if (action == NULL) {
-        str = strdup("unknown");
-    } else if (action[0] == 'o') { // on, off
-        str = crm_concat("turn", action, ' ');
-    } else {
-        str = strdup(action);
-    }
-    return str;
-}
-
-static void
-print_fence_event(stonith_history_t *event)
-{
-    char *action_s = fence_action_str(event->action);
-    time_t complete = event->completed;
-
-    printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
-           (event->delegate? event->delegate : "This node"), action_s,
-           event->target, event->client, event->origin, ctime(&complete));
-    free(action_s);
-}
-
 static int
 handle_history(stonith_t *st, const char *target, int timeout, int quiet,
-             int verbose, int cleanup, int broadcast)
+             int verbose, int cleanup, int broadcast, pcmk__output_t *out)
 {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = 0;
 
     if (!quiet) {
         if (cleanup) {
-            printf("cleaning up fencing-history%s%s\n",
-                   target?" for node ":"", target?target:"");
+            out->info(out, "cleaning up fencing-history%s%s",
+                      target ? " for node " : "", target ? target : "");
         }
         if (broadcast) {
-            printf("gather fencing-history from all nodes\n");
+            out->info(out, "gather fencing-history from all nodes");
         }
     }
+
     rc = st->cmds->history(st, st_opts | (cleanup?st_opt_cleanup:0) |
                            (broadcast?st_opt_broadcast:0),
                            (safe_str_eq(target, "*")? NULL : target),
                            &history, timeout);
-    for (hp = history; hp; hp = hp->next) {
-        char *action_s = NULL;
-        time_t complete = hp->completed;
 
+    out->begin_list(out, "Fencing history", "event", "events");
+
+    for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_done) {
             latest = hp;
         }
@@ -382,36 +360,18 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             continue;
         }
 
-        if (hp->state == st_failed) {
-            action_s = fence_action_str(hp->action);
-            printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
-                   hp->delegate ? hp->delegate : "We", action_s, hp->target,
-                   hp->client, hp->origin, ctime(&complete));
-
-        } else if (hp->state == st_done) {
-            print_fence_event(latest);
-
-        } else {
-            /* ocf:pacemaker:controld depends on "wishes to" being
-             * in this output, when used with older versions of DLM
-             * that don't report stateful_merge_wait
-             */
-            action_s = fence_action_str(hp->action);
-            printf("%s at %s wishes to %s node %s - %d %lld\n",
-                   hp->client, hp->origin, action_s, hp->target, hp->state,
-                   (long long) complete);
-        }
-
-        free(action_s);
+        out->message(out, "stonith-event", hp);
     }
 
     if (latest) {
-        if (quiet) {
-            printf("%lld\n", (long long) latest->completed);
+        if (quiet && out->supports_quiet) {
+            out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            print_fence_event(latest);
+            out->message(out, "stonith-event", latest);
         }
     }
+
+    out->end_list(out);
 
     stonith_history_free(history);
     return rc;
@@ -419,7 +379,8 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
 
 static int
 validate(stonith_t *st, const char *agent, const char *id,
-         stonith_key_value_t *params, int timeout, int quiet)
+         stonith_key_value_t *params, int timeout, int quiet,
+         pcmk__output_t *out)
 {
     int rc = 1;
     char *output = NULL;
@@ -428,17 +389,11 @@ validate(stonith_t *st, const char *agent, const char *id,
     rc = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
                             timeout, &output, &error_output);
 
-    if (!quiet) {
-        printf("Validation of %s %s\n", agent, (rc? "failed" : "succeeded"));
-        if (output && *output) {
-            puts(output);
-            free(output);
-        }
-        if (error_output && *error_output) {
-            puts(error_output);
-            free(error_output);
-        }
+    if (quiet) {
+        return rc;
     }
+
+    out->message(out, "validate", agent, id, output, error_output, rc); 
     return rc;
 }
 
@@ -474,6 +429,10 @@ main(int argc, char **argv)
     stonith_key_value_t *params = NULL;
     stonith_key_value_t *devices = NULL;
     stonith_key_value_t *dIter = NULL;
+
+    char *output_ty = NULL;
+    char *output_dest = NULL;
+    pcmk__output_t *out = NULL;
 
     crm_log_cli_init("stonith_admin");
     crm_set_options(NULL, "<command> [<options>]", long_options,
@@ -573,9 +532,10 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_info("Scanning: -o %s", optarg);
-                rc = sscanf(optarg, "%m[^=]=%m[^=]", &name, &value);
+                rc = pcmk_scan_nvpair(optarg, &name, &value);
+
                 if (rc != 2) {
-                    crm_err("Invalid option: -o %s", optarg);
+                    crm_err("Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
                     ++argerr;
                 } else {
                     crm_info("Got: '%s'='%s'", name, value);
@@ -602,7 +562,12 @@ main(int argc, char **argv)
             case 0:
                 if (safe_str_eq("tolerance", longname)) {
                     tolerance = crm_get_msec(optarg) / 1000;    /* Send in seconds */
+                } else if (pcmk__parse_output_args(longname, optarg, &output_ty,
+                                                   &output_dest) == false) {
+                    fprintf(stderr, "Unknown long option used: %s\n", longname);
+                    ++argerr;
                 }
+
                 break;
             default:
                 ++argerr;
@@ -615,13 +580,25 @@ main(int argc, char **argv)
     }
 
     if (required_agent && agent == NULL) {
-        printf("Please specify an agent to query using -a,--agent [value]\n");
+        fprintf(stderr, "Please specify an agent to query using -a,--agent [value]\n");
         ++argerr;
     }
 
     if (argerr) {
         crm_help('?', CRM_EX_USAGE);
     }
+
+    CRM_ASSERT(pcmk__register_format("text", pcmk__mk_text_output) == 0);
+    CRM_ASSERT(pcmk__register_format("xml", pcmk__mk_xml_output) == 0);
+
+    rc = pcmk__output_new(&out, output_ty, output_dest, argv);
+    if (rc != 0) {
+        fprintf(stderr, "Error creating output format %s: %s\n", output_ty, pcmk_strerror(rc));
+        exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    stonith_register_messages(out);
 
     st = stonith_api_new();
 
@@ -638,30 +615,40 @@ main(int argc, char **argv)
     switch (action) {
         case 'I':
             rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout);
+            if (rc < 0) {
+                fprintf(stderr, "Failed to list installed devices: %s\n", pcmk_strerror(rc));
+                break;
+            }
+
+            out->begin_list(out, "Installed fence devices", "fence device", "fence devices");
             for (dIter = devices; dIter; dIter = dIter->next) {
-                fprintf(stdout, " %s\n", dIter->value);
+                out->list_item(out, "device", dIter->value);
             }
-            if (rc == 0) {
-                fprintf(stderr, "No devices found\n");
-            } else if (rc > 0) {
-                fprintf(stderr, "%d devices found\n", rc);
-                rc = 0;
-            }
+
+            out->end_list(out);
+            rc = 0;
+
             stonith_key_value_freeall(devices, 1, 1);
             break;
+
         case 'L':
             rc = st->cmds->query(st, st_opts, target, &devices, timeout);
+            if (rc < 0) {
+                fprintf(stderr, "Failed to list registered devices: %s\n", pcmk_strerror(rc));
+                break;
+            }
+
+            out->begin_list(out, "Registered fence devices", "fence device", "fence devices");
             for (dIter = devices; dIter; dIter = dIter->next) {
-                fprintf(stdout, " %s\n", dIter->value);
+                out->list_item(out, "device", dIter->value);
             }
-            if (rc == 0) {
-                fprintf(stderr, "No devices found\n");
-            } else if (rc > 0) {
-                fprintf(stderr, "%d devices found\n", rc);
-                rc = 0;
-            }
+
+            out->end_list(out);
+            rc = 0;
+
             stonith_key_value_freeall(devices, 1, 1);
             break;
+
         case 'Q':
             rc = st->cmds->monitor(st, st_opts, device, timeout);
             if (rc < 0) {
@@ -670,32 +657,54 @@ main(int argc, char **argv)
             break;
         case 's':
             rc = st->cmds->list(st, st_opts, device, &lists, timeout);
-            if (rc == 0) {
-                if (lists) {
-                    char *source = lists, *dest = lists; 
+            if (rc == 0 && lists) {
+                char *head = lists;
+                char *eol = NULL;
 
-                    while (*dest) {
-                        if ((*dest == '\\') && (*(dest+1) == 'n')) {
-                            *source = '\n';
-                            dest++;
-                            dest++;
-                            source++;
-                        } else if ((*dest == ',') || (*dest == ';')) {
-                            dest++;
-                        } else {
-                            *source = *dest;
-                            dest++;
-                            source++;
+                out->begin_list(out, "Fence targets", "fence target", "fence targets");
+
+                do {
+                    char *line = NULL;
+                    char *elem = NULL;
+
+                    char *hostname = NULL;
+                    char *uuid = NULL;
+                    char *status = NULL;
+
+                    eol = strstr(head, "\\n");
+                    line = strndup(head, eol-head);
+
+                    while ((elem = strsep(&line, " ")) != NULL) {
+                        if (strcmp(elem, "") == 0) {
+                            continue;
                         }
 
-                        if (!(*dest)) {
-                            *source = 0;
+                        if (hostname == NULL) {
+                            hostname = elem;
+                        } else if (uuid == NULL) {
+                            uuid = elem;
+                        } else if (status == NULL) {
+                            char *end = NULL;
+                            status = elem;
+
+                            end = strchr(status, '\n');
+                            if (end != NULL) {
+                                *end = '\0';
+                            }
                         }
                     }
-                    fprintf(stdout, "%s", lists);
-                    free(lists);
-                }
-            } else {
+
+                    if (hostname != NULL && uuid != NULL && status != NULL) {
+                        out->message(out, "fence-target", hostname, uuid, status);
+                    }
+
+                    free(line);
+
+                    head = eol+2;
+                } while (eol != NULL);
+
+                out->end_list(out);
+            } else if (rc != 0) {
                 fprintf(stderr, "List command returned error. rc : %d\n", rc);
             }
             break;
@@ -716,7 +725,7 @@ main(int argc, char **argv)
 
                 rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
                 if (rc == pcmk_ok) {
-                    printf("%s\n", buffer);
+                    out->output_xml(out, "metadata", buffer);
                 }
                 free(buffer);
             }
@@ -743,30 +752,34 @@ main(int argc, char **argv)
                 } else {
                     when = stonith_api_time(0, target, FALSE);
                 }
-                if(when) {
-                    printf("Node %s last kicked at: %s\n", target, ctime(&when));
-                } else {
-                    printf("Node %s has never been kicked\n", target);
-                }
+
+                out->message(out, "last-fenced", target, when);
             }
+
             break;
         case 'H':
             rc = handle_history(st, target, timeout, quiet,
-                                verbose, cleanup, broadcast);
+                                verbose, cleanup, broadcast, out);
             break;
         case 'K':
             device = (devices? devices->key : NULL);
-            rc = validate(st, agent, device, params, timeout, quiet);
+            rc = validate(st, agent, device, params, timeout, quiet, out);
             break;
     }
 
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
     exit_code = crm_errno2exit(rc);
 
+    pcmk__output_free(out, exit_code);
+
   done:
     free(async_fence_data.name);
     stonith_key_value_freeall(params, 1, 1);
-    st->cmds->disconnect(st);
-    stonith_api_delete(st);
+
+    if (st != NULL) {
+        st->cmds->disconnect(st);
+        stonith_api_delete(st);
+    }
+
     return exit_code;
 }

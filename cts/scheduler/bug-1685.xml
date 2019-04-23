@@ -65,15 +65,15 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22233">
           <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-            <lrm_rsc_op id="prim_shared_storage-0_start_0" operation="start" transition-key="4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;4:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-            <lrm_rsc_op id="prim_shared_storage-0_post_notify_start_0" operation="notify" transition-key="39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;39:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="3:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_start_0" operation="start" transition-key="4:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;4:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_post_notify_start_0" operation="notify" transition-key="39:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;39:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
           </lrm_resource>
           <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;4:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
+            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="4:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;4:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
           </lrm_resource>
           <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="3:1:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;3:1:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -90,15 +90,15 @@
       <lrm id="cd34ed93-fa5d-4092-a618-ac6349351d13">
         <lrm_resources id="lrm_resources.id22480">
           <lrm_resource id="prim_shared_storage:0" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;6:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-0_monitor_0" operation="monitor" transition-key="6:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;6:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="2" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
           </lrm_resource>
           <lrm_resource id="shared_filesystem" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;7:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
+            <lrm_rsc_op id="shared_filesystem_monitor_0" operation="monitor" transition-key="7:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;7:0:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="3" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="5858fd8b1fcc9107c71c24186f95f937"/>
           </lrm_resource>
           <lrm_resource id="prim_shared_storage:1" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;5:1:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-            <lrm_rsc_op id="prim_shared_storage-1_start_0" operation="start" transition-key="6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;6:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
-            <lrm_rsc_op id="prim_shared_storage-1_post_notify_start_0" operation="notify" transition-key="42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;42:2:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_monitor_0" operation="monitor" transition-key="5:1:7:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:7;5:1:7:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="4" crm_feature_set="1.0.9" rc-code="7" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_start_0" operation="start" transition-key="6:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;6:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="5" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
+            <lrm_rsc_op id="prim_shared_storage-1_post_notify_start_0" operation="notify" transition-key="42:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" transition-magic="0:0;42:2:0:65315fa6-aeaf-48f4-88b1-441ca298582a" call-id="6" crm_feature_set="1.0.9" rc-code="0" op-status="0" interval="0" op-digest="f05e197b6b37f94c2a3977cc41e66556"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

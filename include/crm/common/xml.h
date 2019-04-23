@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -45,6 +47,8 @@ extern "C" {
 #  define CRM_BZ2_THRESHOLD	128 * 1024
 
 #  define XML_PARANOIA_CHECKS 0
+
+typedef const xmlChar *pcmkXmlStr;
 
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);

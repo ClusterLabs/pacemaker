@@ -3,11 +3,9 @@
 # HealthCPU OCF RA
 # Measures CPUs idling and writes #health-cpu status into the CIB
 #
-# Originally based on ocf:pacemaker:Dummy RA
-# Copyright 2004-2009 SUSE LINUX AG, Lars Marowsky-Brée. All Rights Reserved.
+# Copyright 2004-2018 the Pacemaker project contributors
 #
-# Later changes copyright 2009-2018 Michael Schwartzkopff
-# in collaboration with the Bull company. Merci! All Rights Reserved.
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.

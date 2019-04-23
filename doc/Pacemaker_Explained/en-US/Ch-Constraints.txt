@@ -240,12 +240,12 @@ indexterm:[Resource,Constraints,Ordering]
 indexterm:[Resource,Start Order]
 indexterm:[Ordering Constraints]
 
-'Ordering constraints' tell the cluster the order in which resources should
-start.
+'Ordering constraints' tell the cluster the order in which certain
+resource actions should occur.
 
 [IMPORTANT]
 ====
-Ordering constraints affect 'only' the ordering of resources;
+Ordering constraints affect 'only' the ordering of resource actions;
 they do 'not' require that the resources be placed on the
 same node. If you want resources to be started on the same node
 'and' in a specific order, you need both an ordering constraint 'and'
@@ -301,16 +301,19 @@ indexterm:[Constraints,Ordering,then]
 |Mandatory
 a|How to enforce the constraint. Allowed values:
 
-* +Optional:+ Just a suggestion. Only applies if both resources are
-  executing the specified actions. Any change in state by the +first+ resource
-  will have no effect on the +then+ resource.
-* +Mandatory:+ Always. If +first+ does not perform +first-action+, +then+ will
-  not be allowed to performed +then-action+. If +first+ is restarted, +then+
-  (if running) will be stopped beforehand and started afterward.
-* +Serialize:+ Ensure that no two stop/start actions occur concurrently
-  for the resources. +First+ and +then+ can start in either order,
-  but one must complete starting before the other can be started. A typical use
-  case is when resource start-up puts a high load on the host.
+* +Mandatory:+ +then-action+ will never be initiated for the +then+ resource
+  unless and until +first-action+ successfully completes for the +first+
+  resource.
+* +Optional:+ The constraint applies only if both specified resource actions
+  are scheduled in the same transition (that is, in response to the same
+  cluster state). This means that +then-action+ is allowed on the +then+
+  resource regardless of the state of the +first+ resource, but if both actions
+  happen to be scheduled at the same time, they will be ordered.
+* +Serialize:+ Ensure that the specified actions are never performed
+  concurrently for the specified resources. +First-action+ and +then-action+
+  can be executed in either order, but one must complete before the other can
+  be initiated. An example use case is when resource start-up puts a high load
+  on the host.
 
 indexterm:[kind,Ordering Constraints]
 indexterm:[Constraints,Ordering,kind]

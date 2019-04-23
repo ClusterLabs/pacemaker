@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,7 +14,7 @@ extern "C" {
 #endif
 
 #include <crm/msg_xml.h>
-#include <crm/pengine/complex.h> // enum pe_obj_types
+#include <crm/pengine/pe_types.h> // enum pe_obj_types
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
  * entirely, so any code branches relying on these should be deleted.
@@ -43,7 +45,7 @@ extern "C" {
 #define crm_class_quorum 5
 #define pcmk_cluster_classic_ais 0x0010
 #define pcmk_cluster_cman 0x0040
-static int ais_fd_sync = -1;
+#define ais_fd_sync -1
 
 // These are always true now
 #define CS_USES_LIBQB 1
@@ -179,7 +181,7 @@ static int ais_fd_sync = -1;
 #define resource_s                        pe_resource_s
 #define ticket_s                          pe_ticket_s
 
-static int node_score_infinity = 1000000;
+#define node_score_infinity 1000000
 
 /* Clone terminology definitions */
 

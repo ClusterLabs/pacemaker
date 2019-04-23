@@ -8,7 +8,9 @@
 # functionality behind the remote connection lives within Pacemaker's
 # controller daemon.
 #
-# Copyright 2013-2018 David Vossel <davidvossel@gmail.com>
+# Copyright 2013-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.

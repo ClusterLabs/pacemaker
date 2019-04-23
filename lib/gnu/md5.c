@@ -1,6 +1,6 @@
 /* Functions to compute MD5 message digest of files or memory blocks.
    according to the definition of MD5 in RFC 1321 from April 1992.
-   Copyright (C) 1995-1997, 1999-2001, 2005-2006, 2008-2012 Free Software
+   Copyright (C) 1995-1997, 1999-2001, 2005-2006, 2008-2019 Free Software
    Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -15,12 +15,15 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   along with this program; if not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.  */
 
 #include <config.h>
 
+#if HAVE_OPENSSL_MD5
+# define GL_OPENSSL_INLINE _GL_EXTERN_INLINE
+#endif
 #include "md5.h"
 
 #include <stdalign.h>
@@ -49,9 +52,9 @@
 # define md5_buffer __md5_buffer
 #endif
 
+#include <byteswap.h>
 #ifdef WORDS_BIGENDIAN
-# define SWAP(n)                                                        \
-    (((n) << 24) | (((n) & 0xff00) << 8) | (((n) >> 8) & 0xff00) | ((n) >> 24))
+# define SWAP(n) bswap_32 (n)
 #else
 # define SWAP(n) (n)
 #endif
@@ -61,6 +64,7 @@
 # error "invalid BLOCKSIZE"
 #endif
 
+#if ! HAVE_OPENSSL_MD5
 /* This array contains the bytes used to pad the buffer to the next
    64-byte boundary.  (RFC 1321, 3.1: Step 1)  */
 static const unsigned char fillbuf[64] = { 0x80, 0 /* , 0, 0, ...  */ };
@@ -83,7 +87,7 @@ md5_init_ctx (struct md5_ctx *ctx)
 /* Copy the 4 byte value from v into the memory location pointed to by *cp,
    If your architecture allows unaligned access this is equivalent to
    * (uint32_t *) cp = v  */
-static inline void
+static void
 set_uint32 (char *cp, uint32_t v)
 {
   memcpy (cp, &v, sizeof v);
@@ -128,6 +132,11 @@ md5_finish_ctx (struct md5_ctx *ctx, void *resbuf)
 
   return md5_read_ctx (ctx, resbuf);
 }
+#endif
+
+#if defined _LIBC || defined GL_COMPILE_CRYPTO_STREAM
+
+#include "af_alg.h"
 
 /* Compute MD5 message digest for bytes read from STREAM.  The
    resulting message digest number will be written into the 16 bytes
@@ -135,15 +144,19 @@ md5_finish_ctx (struct md5_ctx *ctx, void *resbuf)
 int
 md5_stream (FILE *stream, void *resblock)
 {
-  struct md5_ctx ctx;
-  size_t sum;
+  switch (afalg_stream (stream, "md5", resblock, MD5_DIGEST_SIZE))
+    {
+    case 0: return 0;
+    case -EIO: return 1;
+    }
 
   char *buffer = malloc (BLOCKSIZE + 72);
   if (!buffer)
     return 1;
 
-  /* Initialize the computation context.  */
+  struct md5_ctx ctx;
   md5_init_ctx (&ctx);
+  size_t sum;
 
   /* Iterate over full file contents.  */
   while (1)
@@ -157,6 +170,14 @@ md5_stream (FILE *stream, void *resblock)
       /* Read block.  Take care for partial reads.  */
       while (1)
         {
+          /* Either process a partial fread() from this loop,
+             or the fread() in afalg_stream may have gotten EOF.
+             We need to avoid a subsequent fread() as EOF may
+             not be sticky.  For details of such systems, see:
+             https://sourceware.org/bugzilla/show_bug.cgi?id=1190  */
+          if (feof (stream))
+            goto process_partial_block;
+
           n = fread (buffer + sum, 1, BLOCKSIZE - sum, stream);
 
           sum += n;
@@ -176,12 +197,6 @@ md5_stream (FILE *stream, void *resblock)
                 }
               goto process_partial_block;
             }
-
-          /* We've read at least one byte, so ignore errors.  But always
-             check for EOF, since feof may be true even though N > 0.
-             Otherwise, we could end up calling fread after EOF.  */
-          if (feof (stream))
-            goto process_partial_block;
         }
 
       /* Process buffer with BLOCKSIZE bytes.  Note that
@@ -201,7 +216,9 @@ process_partial_block:
   free (buffer);
   return 0;
 }
+#endif
 
+#if ! HAVE_OPENSSL_MD5
 /* Compute MD5 message digest for LEN bytes beginning at BUFFER.  The
    result is always in little endian byte order, so that a byte-wise
    output yields to the wanted ASCII representation of the message
@@ -240,7 +257,8 @@ md5_process_bytes (const void *buffer, size_t len, struct md5_ctx *ctx)
           md5_process_block (ctx->buffer, ctx->buflen & ~63, ctx);
 
           ctx->buflen &= 63;
-          /* The regions in the following copy operation cannot overlap.  */
+          /* The regions in the following copy operation cannot overlap,
+             because ctx->buflen < 64 ≤ (left_over + add) & ~63.  */
           memcpy (ctx->buffer,
                   &((char *) ctx->buffer)[(left_over + add) & ~63],
                   ctx->buflen);
@@ -253,7 +271,7 @@ md5_process_bytes (const void *buffer, size_t len, struct md5_ctx *ctx)
   /* Process available complete blocks.  */
   if (len >= 64)
     {
-#if !_STRING_ARCH_unaligned
+#if !(_STRING_ARCH_unaligned || _STRING_INLINE_unaligned)
 # define UNALIGNED_P(p) ((uintptr_t) (p) % alignof (uint32_t) != 0)
       if (UNALIGNED_P (buffer))
         while (len > 64)
@@ -282,6 +300,8 @@ md5_process_bytes (const void *buffer, size_t len, struct md5_ctx *ctx)
         {
           md5_process_block (ctx->buffer, 64, ctx);
           left_over -= 64;
+          /* The regions in the following copy operation cannot overlap,
+             because left_over ≤ 64.  */
           memcpy (ctx->buffer, &ctx->buffer[16], left_over);
         }
       ctx->buflen = left_over;
@@ -312,13 +332,13 @@ md5_process_block (const void *buffer, size_t len, struct md5_ctx *ctx)
   uint32_t B = ctx->B;
   uint32_t C = ctx->C;
   uint32_t D = ctx->D;
+  uint32_t lolen = len;
 
   /* First increment the byte count.  RFC 1321 specifies the possible
      length of the file up to 2^64 bits.  Here we only compute the
      number of bytes.  Do a double word increment.  */
-  ctx->total[0] += len;
-  if (ctx->total[0] < len)
-    ++ctx->total[1];
+  ctx->total[0] += lolen;
+  ctx->total[1] += (len >> 31 >> 1) + (ctx->total[0] < lolen);
 
   /* Process all bytes in the buffer with 64 bytes in each round of
      the loop.  */
@@ -459,3 +479,11 @@ md5_process_block (const void *buffer, size_t len, struct md5_ctx *ctx)
   ctx->C = C;
   ctx->D = D;
 }
+#endif
+
+/*
+ * Hey Emacs!
+ * Local Variables:
+ * coding: utf-8
+ * End:
+ */

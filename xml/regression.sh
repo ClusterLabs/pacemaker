@@ -1,7 +1,8 @@
 #!/bin/sh
-# Copyright 2018 Red Hat, Inc.
-# Author: Jan Pokorny <jpokorny@redhat.com>
-# Part of pacemaker project
+# Copyright 2018-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
@@ -113,13 +114,20 @@ test_browser() {
 	_tb_cleanref=0
 	_tb_serverpid=
 
+	while test $# -gt 0; do
+		case "$1" in
+		-r) _tb_cleanref=1;;
+		esac
+		shift
+	done
+
 	if ! read _tb_first; then
 		return 1
 	fi
 	cat >/dev/null 2>/dev/null  # read out the rest
 
 	test -f assets/diffview.js \
-	  || curl -Lo assets/diffview.js \
+	  || curl -SsLo assets/diffview.js \
 	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
 
 	{ which python3 >/dev/null 2>/dev/null \
@@ -137,6 +145,8 @@ test_browser() {
 	printf "When finished, just press Ctrl+C or kill %d, please\n" \
 	       "${_tb_serverpid}"
 	wait
+
+	test "${_tb_cleanref}" -eq 0 || rm -f assets/diffview.js
 }
 
 # -r ... whether to remove referential files as well
@@ -163,6 +173,7 @@ test_cleaner() {
 # -a= ... action modifier to derive template name from (if any; enter/leave)
 # -o= ... which conventional version to deem as the transform origin
 test_selfcheck() {
+	_tsc_cleanref=0
 	_tsc_ret=0
 	_tsc_action=
 	_tsc_template=
@@ -170,6 +181,7 @@ test_selfcheck() {
 
 	while test $# -gt 0; do
 		case "$1" in
+		-r) _tsc_cleanref=1;;
 		-a=*) _tsc_action="${1#-a=}";;
 		-o=*) _tsc_template="${1#-o=}";;
 		esac
@@ -180,20 +192,51 @@ test_selfcheck() {
 	_tsc_action=${_tsc_action:+-${_tsc_action}}
 	_tsc_template="upgrade-${_tsc_template}${_tsc_action}.xsl"
 
-	# check schema (sub-grammar) for custom transformation mapping alone
-        if test -z "${_tsc_action}" \
-	  && ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+	# alt. https://relaxng.org/relaxng.rng
+        _tsc_rng_relaxng=https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng
+	# alt. https://github.com/ndw/xslt-relax-ng/blob/master/1.0/xslt10.rnc
+	_tsc_rng_xslt=https://raw.githubusercontent.com/relaxng/jing-trang/master/eg/xslt.rng
+
+	case "${RNGVALIDATOR}" in
+	*xmllint*)
+		test -f "assets/$(basename "${_tsc_rng_relaxng}")" \
+		  || curl -SsLo "assets/$(basename "${_tsc_rng_relaxng}")" \
+		    "${_tsc_rng_relaxng}"
+		test -f "assets/$(basename "${_tsc_rng_xslt}")" \
+		  || curl -SsLo "assets/$(basename "${_tsc_rng_xslt}")" \
+		    "${_tsc_rng_xslt}"
+		test -f assets/xmlcatalog || >assets/xmlcatalog cat <<-EOF
+	<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+	<rewriteURI uriStartString="$(dirname "${_tsc_rng_relaxng}")"
+	            rewritePrefix="file://$(pwd)/assets"/>
+	<rewriteURI uriStartString="$(dirname "${_tsc_rng_xslt}")"
+	            rewritePrefix="file://$(pwd)/assets"/>
+	</catalog>
+EOF
+		RNGVALIDATOR=\
+"eval env \"XML_CATALOG_FILES=/etc/xml/catalog $(pwd)/assets/xmlcatalog\"
+${RNGVALIDATOR}"
+		# not needed
+		#_tsc_rng_relaxng="assets/$(basename "${_tsc_rng_relaxng}")"
+		#_tsc_rng_xslt="assets/$(basename "${_tsc_rng_xslt}")"
+	;;
+	esac
+
+	# check schema (sub-grammar) for custom transformation mapping alone;
+	if test -z "${_tsc_action}" \
+	  && ! ${RNGVALIDATOR} "${_tsc_rng_relaxng}" "${_tsc_validator}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
-	# check the overall XSLT per the main grammar + said sub-grammar
-        if ! ${RNGVALIDATOR} \
-          "$(test -f "${_tsc_validator}" \
-             && echo "xslt_${_tsc_validator}" \
-             || echo 'http://www.thaiopensource.com/relaxng/xslt.rng')" \
-          "${_tsc_template}"; then
+	# check the overall XSLT per the main grammar + said sub-grammar;
+	test -f "${_tsc_validator}" && _tsc_validator="xslt_${_tsc_validator}" \
+	  || _tsc_validator="${_tsc_rng_xslt}"
+	if ! ${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
+
+	test "${_tsc_cleanref}" -eq 0 \
+	  || rm -f assets/relaxng.rng assets/xslt.rng assets/xmlcatalog
 
 	log2_or_0_return ${_tsc_ret}
 }
@@ -405,6 +448,7 @@ test_runner() {
 #
 
 test2to3() {
+	_t23_cleanopt=
 	_t23_pattern=
 
 	while read _t23_spec; do
@@ -413,20 +457,22 @@ test2to3() {
 		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
 	done
 	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23_cleanopt=-r; esac
 
 	find test-2 -name test-2 -o -type d -prune \
 	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -o=2.10;;
+	      *\ -S\ *) test_selfcheck -o=2.10 ${_t23_cleanopt};;
 	      *\ -X\ *) test_explanation -o=2.10;;
-	      *\ -W\ *) test_browser;;
+	      *\ -W\ *) test_browser ${_t23_cleanopt};;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
 tests="${tests} test2to3"
 
 test2to3enter() {
+	_t23e_cleanopt=
 	_t23e_pattern=
 
 	while read _t23e_spec; do
@@ -435,12 +481,13 @@ test2to3enter() {
 		_t23e_pattern="${_t23e_pattern} -name ${_t23e_spec}*.xml -o"
 	done
 	test -z "${_t23e_pattern}" || _t23e_pattern="( ${_t23e_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23e_cleanopt=-r; esac
 
 	find test-2-enter -name test-2-enter -o -type d -prune \
 	  -o -name '*.xml' ${_t23e_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=enter -o=2.10;;
+	      *\ -S\ *) test_selfcheck -a=enter -o=2.10 ${_t23e_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
@@ -449,6 +496,7 @@ test2to3enter() {
 tests="${tests} test2to3enter"
 
 test2to3leave() {
+	_t23l_cleanopt=
 	_t23l_pattern=
 
 	while read _t23l_spec; do
@@ -457,12 +505,13 @@ test2to3leave() {
 		_t23l_pattern="${_t23l_pattern} -name ${_t23l_spec}*.xml -o"
 	done
 	test -z "${_t23l_pattern}" || _t23l_pattern="( ${_t23l_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23l_cleanopt=-r; esac
 
 	find test-2-leave -name test-2-leave -o -type d -prune \
 	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=leave -o=2.10;;
+	      *\ -S\ *) test_selfcheck -a=leave -o=2.10 ${_t23l_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
@@ -471,6 +520,7 @@ test2to3leave() {
 tests="${tests} test2to3leave"
 
 test2to3roundtrip() {
+	_t23rt_cleanopt=
 	_t23rt_pattern=
 
 	while read _t23tr_spec; do
@@ -479,13 +529,14 @@ test2to3roundtrip() {
 		_t23rt_pattern="${_t23rt_pattern} -name ${_t23rt_spec}*.xml -o"
 	done
 	test -z "${_t23rt_pattern}" || _t23rt_pattern="( ${_t23rt_pattern%-o} )"
+	case " $* " in *\ -r\ *) _t23rt_cleanopt=-r; esac
 
 	find test-2-roundtrip -name test-2-roundtrip -o -type d -prune \
 	  -o -name '*.xml' ${_t23rt_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10;;
-	      *\ -W\ *) test_browser;;
+	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10 ${_t23rt_cleanopt};;
+	      *\ -W\ *) test_browser ${_t23rt_cleanopt};;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
@@ -624,16 +675,23 @@ test_suite() {
 
 	for _ts_test in ${tests}; do
 
+		_ts_test_specs=
 		while true; do
 			case "${_ts_select}" in
 			*@${_ts_test}@*)
-			_ts_select="${_ts_select%@${_ts_test}@*}"\
+			_ts_test_specs="${_ts_select%%@${_ts_test}@*}"\
 "@${_ts_select#*@${_ts_test}@}"
-			break
+			if test "${_ts_test_specs}" = @; then
+				_ts_select=  # nothing left
+			else
+				_ts_select="${_ts_test_specs}"
+			fi
+			continue
 			;;
-			@) case "${_ts_test}" in test*) break;; esac
+			@) case "${_ts_test}" in test*) break;; esac  # filter
 			;;
 			esac
+			test -z "${_ts_test_specs}" || break
 			continue 2  # move on to matching with next local test
 		done
 
@@ -643,7 +701,7 @@ test_suite() {
 			*@${_ts_test}/*)
 				_ts_test_full="${_ts_test}/${_ts_select_full#*@${_ts_test}/}"
 				_ts_test_full="${_ts_test_full%%@*}"
-				_ts_select_full="${_ts_select_full%@${_ts_test_full}@*}"\
+				_ts_select_full="${_ts_select_full%%@${_ts_test_full}@*}"\
 "@${_ts_select_full#*@${_ts_test_full}@}"
 				_ts_test_specs="${_ts_test_specs} ${_ts_test_full#*/}"
 			;;
@@ -663,7 +721,7 @@ test_suite() {
 		log2_or_0_add ${_ts_global_ret} ${_ts_ret}
 		_ts_global_ret=$?
 	done
-	if test "${_ts_select}" != @; then
+	if test -n "${_ts_select#@}"; then
 		emit_error "Non-existing test(s):$(echo "${_ts_select}" \
 		                                   | tr '@' ' ')"
 		log2_or_0_add ${_ts_global_ret} 1 || _ts_global_ret=$?
@@ -676,7 +734,7 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-	  '%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+'%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  "usage: $0 [-{B,C,D,G,S,X}]* \\" \
           "       [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
@@ -688,6 +746,7 @@ usage() {
 	  "- use '-S' for template self-check (requires net access)" \
 	  "- use '-W' to run browser-based, on-the-fly diff'ing test drive" \
 	  "- use '-X' to show explanatory details about the upgrade" \
+	  "- some modes (e.g. -{S,W}) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
 	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \

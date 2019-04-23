@@ -39,17 +39,18 @@ Pacemaker ensures that the longest-running node is the cluster's DC. This
 ensures new features are not enabled until all nodes are upgraded to support
 them.
 
-* *LRMD protocol version:* This version applies to communication between a
-  Pacemaker Remote node and the cluster. It increases when an older cluster
-  node would have problems hosting the connection to a newer Pacemaker Remote
-  node. To avoid these problems, Pacemaker Remote nodes will accept connections
-  only from cluster nodes with the same or newer LRMD protocol version.
+* *Pacemaker Remote protocol version:* This version applies to communication
+  between a Pacemaker Remote node and the cluster. It increases when an older
+  cluster node would have problems hosting the connection to a newer
+  Pacemaker Remote node. To avoid these problems, Pacemaker Remote nodes will
+  accept connections only from cluster nodes with the same or newer
+  Pacemaker Remote protocol version.
 +
 Unlike with CRM feature set differences between full cluster nodes,
-mixed LRMD protocol versions between Pacemaker Remote nodes and full cluster
-nodes are fine, as long as the Pacemaker Remote nodes have the older version.
-This can be useful, for example, to host a legacy application in an
-older operating system version used as a Pacemaker Remote node.
+mixed Pacemaker Remote protocol versions between Pacemaker Remote nodes and
+full cluster nodes are fine, as long as the Pacemaker Remote nodes have the
+older version. This can be useful, for example, to host a legacy application in
+an older operating system version used as a Pacemaker Remote node.
 
 * *XML schema version:* Pacemaker’s configuration syntax — what's allowed in
   the Configuration Information Base (CIB) — has its own version. This allows
@@ -154,13 +155,13 @@ Special considerations when planning a rolling upgrade:
   upgrade window. If one of the older nodes drops out of the cluster for any
   reason, it will not be able to rejoin until it is upgraded.
 
-* If the LRMD protocol version is changing, all cluster nodes should be
-  upgraded before upgrading any Pacemaker Remote nodes.
+* If the Pacemaker Remote protocol version is changing, all cluster nodes
+  should be upgraded before upgrading any Pacemaker Remote nodes.
 
 See the ClusterLabs wiki's
 http://clusterlabs.org/wiki/ReleaseCalendar[Release Calendar] to figure out
-whether the CRM feature set and/or LRMD protocol version changed between the
-the Pacemaker release versions in your rolling upgrade.
+whether the CRM feature set and/or Pacemaker Remote protocol version changed
+between the the Pacemaker release versions in your rolling upgrade.
 
 To perform a rolling upgrade, on each node in turn:
 

@@ -1,5 +1,7 @@
 #
-# Copyright (C) 2004-2009 Andrew Beekhof
+# Copyright 2003-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,9 +20,9 @@
 
 MAINTAINERCLEANFILES    = Makefile.in config.h.in
 
-noinst_HEADERS	        = portability.h config.h crm_internal.h
+noinst_HEADERS	        = portability.h config.h crm_internal.h pacemaker-internal.h
 pkginclude_HEADERS	= crm_config.h
 
-SUBDIRS                 =  crm
+SUBDIRS                 =  crm pcmki
 
 .PHONY: $(ARCHIVE_VERSION)

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -50,6 +52,7 @@ main(int argc, char **argv)
     int flag;
     int index = 0;
     int argerr = 0;
+    crm_ipc_t *old_instance = NULL;
 
     crmd_mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
@@ -83,7 +86,6 @@ main(int argc, char **argv)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_info("CRM Git Version: %s (%s)", PACEMAKER_VERSION, BUILD_VERSION);
 
     if (optind > argc) {
         ++argerr;
@@ -91,6 +93,21 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_help('?', CRM_EX_USAGE);
+    }
+
+    crm_notice("Starting Pacemaker controller");
+
+    old_instance = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("pacemaker-controld is already active, aborting startup");
+        crm_exit(CRM_EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
     }
 
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
@@ -129,7 +146,6 @@ crmd_init(void)
     fsa_input_register = 0;     /* zero out the regester */
 
     init_dotfile();
-    crm_debug("Starting %s", crm_system_name);
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
     crm_peer_init();

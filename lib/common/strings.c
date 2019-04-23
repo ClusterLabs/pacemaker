@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -101,17 +103,31 @@ crm_parse_ll(const char *text, const char *default_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, -1 (and set errno) on error
+ * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to ERANGE)
+ *         if parsed value is out of integer range, otherwise -1 (and set errno)
  */
 int
 crm_parse_int(const char *text, const char *default_text)
 {
     long long result = crm_parse_ll(text, default_text);
 
-    if ((result < INT_MIN) || (result > INT_MAX)) {
-        errno = ERANGE;
-        return -1;
+    if (result < INT_MIN) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MIN;
+
+    } else if (result > INT_MAX) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MAX;
     }
+
     return (int) result;
 }
 
@@ -327,7 +343,7 @@ crm_ends_with_ext(const char *s, const char *match)
 /*
  * This re-implements g_str_hash as it was prior to glib2-2.28:
  *
- *   http://git.gnome.org/browse/glib/commit/?id=354d655ba8a54b754cb5a3efb42767327775696c
+ * https://gitlab.gnome.org/GNOME/glib/commit/354d655ba8a54b754cb5a3efb42767327775696c
  *
  * Note that the new g_str_hash is presumably a *better* hash (it's actually
  * a correct implementation of DJB's hash), but we need to preserve existing

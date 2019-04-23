@@ -5,7 +5,9 @@
 # (However, alerts are the recommended means of doing this since
 # Pacemaker 1.1.15.)
 #
-# Copyright 2013 Rob Thomas <xrobau@gmail.com>
+# Copyright 2013-2017 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as

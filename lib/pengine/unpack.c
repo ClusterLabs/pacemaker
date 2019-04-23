@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -41,12 +43,12 @@ static gboolean determine_remote_online_status(pe_working_set_t * data_set, node
 uint32_t pe_wo = 0;
 
 static gboolean
-is_dangling_container_remote_node(node_t *node)
+is_dangling_guest_node(node_t *node)
 {
     /* we are looking for a remote-node that was supposed to be mapped to a
      * container resource, but all traces of that container have disappeared 
      * from both the config and the status section. */
-    if (is_remote_node(node) &&
+    if (pe__is_guest_or_remote_node(node) &&
         node->details->remote_rsc &&
         node->details->remote_rsc->container == NULL &&
         is_set(node->details->remote_rsc->flags, pe_rsc_orphan_container_filler)) {
@@ -70,7 +72,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     CRM_CHECK(node, return);
 
     /* A guest node is fenced by marking its container as failed */
-    if (is_container_remote_node(node)) {
+    if (pe__is_guest_node(node)) {
         resource_t *rsc = node->details->remote_rsc->container;
 
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
@@ -93,14 +95,14 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
             }
         }
 
-    } else if (is_dangling_container_remote_node(node)) {
+    } else if (is_dangling_guest_node(node)) {
         crm_info("Cleaning up dangling connection for guest node %s: "
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  node->details->uname, reason);
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
-    } else if (is_baremetal_remote_node(node)) {
+    } else if (pe__is_remote_node(node)) {
         resource_t *rsc = node->details->remote_rsc;
 
         if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
@@ -370,7 +372,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->attrs = crm_str_table_new();
 
-    if (is_remote_node(new_node)) {
+    if (pe__is_guest_or_remote_node(new_node)) {
         g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
                             strdup("remote"));
     } else {
@@ -429,7 +431,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
     const char *remote_allow_migrate=NULL;
-    const char *container_managed = NULL;
+    const char *is_managed = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
         if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
@@ -451,7 +453,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
             } else if (safe_str_eq(name, "remote-allow-migrate")) {
                 remote_allow_migrate=value;
             } else if (safe_str_eq(name, XML_RSC_ATTR_MANAGED)) {
-                container_managed = value;
+                is_managed = value;
             }
         }
     }
@@ -465,7 +467,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     }
 
     pe_create_remote_xml(parent, remote_name, container_id,
-                         remote_allow_migrate, container_managed,
+                         remote_allow_migrate, is_managed,
                          connect_timeout, remote_server, remote_port);
     return remote_name;
 }
@@ -586,52 +588,58 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
 
-    /* generate remote nodes from resource config before unpacking resources */
+    /* Create remote nodes and guest nodes from the resource configuration
+     * before unpacking resources.
+     */
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next_element(xml_obj)) {
         const char *new_node_id = NULL;
 
-        /* first check if this is a bare metal remote node. Bare metal remote nodes
-         * are defined as a resource primitive only. */
+        /* Check for remote nodes, which are defined by ocf:pacemaker:remote
+         * primitives.
+         */
         if (xml_contains_remote_node(xml_obj)) {
             new_node_id = ID(xml_obj);
             /* The "pe_find_node" check is here to make sure we don't iterate over
              * an expanded node that has already been added to the node list. */
             if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
-                crm_trace("Found baremetal remote node %s in container resource %s", new_node_id, ID(xml_obj));
+                crm_trace("Found remote node %s defined by resource %s",
+                          new_node_id, ID(xml_obj));
                 pe_create_node(new_node_id, new_node_id, "remote", NULL,
                                data_set);
             }
             continue;
         }
 
-        /* Now check for guest remote nodes.
-         * guest remote nodes are defined within a resource primitive.
-         * Example1: a vm resource might be configured as a remote node.
-         * Example2: a vm resource might be configured within a group to be a remote node.
-         * Note: right now we only support guest remote nodes in as a standalone primitive
-         * or a primitive within a group. No cloned primitives can be a guest remote node
-         * right now */
+        /* Check for guest nodes, which are defined by special meta-attributes
+         * of a primitive of any type (for example, VirtualDomain or Xen).
+         */
         if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
-            /* expands a metadata defined remote resource into the xml config
-             * as an actual rsc primitive to be unpacked later. */
+            /* This will add an ocf:pacemaker:remote primitive to the
+             * configuration for the guest node's connection, to be unpacked
+             * later.
+             */
             new_node_id = expand_remote_rsc_meta(xml_obj, xml_resources, data_set);
-
             if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
-                crm_trace("Found guest remote node %s in container resource %s", new_node_id, ID(xml_obj));
+                crm_trace("Found guest node %s in resource %s",
+                          new_node_id, ID(xml_obj));
                 pe_create_node(new_node_id, new_node_id, "remote", NULL,
                                data_set);
             }
             continue;
+        }
 
-        } else if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+        /* Check for guest nodes inside a group. Clones are currently not
+         * supported as guest nodes.
+         */
+        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
             xmlNode *xml_obj2 = NULL;
-            /* search through a group to see if any of the primitive contain a remote node. */
             for (xml_obj2 = __xml_first_child(xml_obj); xml_obj2 != NULL; xml_obj2 = __xml_next_element(xml_obj2)) {
 
                 new_node_id = expand_remote_rsc_meta(xml_obj2, xml_resources, data_set);
 
                 if (new_node_id && pe_find_node(data_set->nodes, new_node_id) == NULL) {
-                    crm_trace("Found guest remote node %s in container resource %s which is in group %s", new_node_id, ID(xml_obj2), ID(xml_obj));
+                    crm_trace("Found guest node %s in resource %s inside group %s",
+                              new_node_id, ID(xml_obj2), ID(xml_obj));
                     pe_create_node(new_node_id, new_node_id, "remote", NULL,
                                    data_set);
                 }
@@ -640,7 +648,6 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
     }
     return TRUE;
 }
-
 
 /* Call this after all the nodes and resources have been
  * unpacked, but before the status section is read.
@@ -670,14 +677,17 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
     CRM_CHECK(remote_node != NULL, return;);
 
     remote_node->details->remote_rsc = new_rsc;
-    /* If this is a baremetal remote-node (no container resource
-     * associated with it) then we need to handle startup fencing the same way
-     * as cluster nodes. */
+
     if (new_rsc->container == NULL) {
+        /* Handle start-up fencing for remote nodes (as opposed to guest nodes)
+         * the same as is done for cluster nodes.
+         */
         handle_startup_fencing(data_set, remote_node);
+
     } else {
-        /* At this point we know if the remote node is a container or baremetal
-         * remote node, update the #kind attribute if a container is involved */
+        /* pe_create_node() marks the new node as "remote" or "cluster"; now
+         * that we know the node is a guest node, update it correctly.
+         */
         g_hash_table_replace(remote_node->details->attrs, strdup(CRM_ATTR_KIND),
                              strdup("container"));
     }
@@ -905,7 +915,7 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
         return;
     }
 
-    if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
+    if ((this_node == NULL) || !pe__is_guest_or_remote_node(this_node)) {
         return;
     }
     crm_trace("Processing remote node id=%s, uname=%s", this_node->details->id, this_node->details->uname);
@@ -943,14 +953,16 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
 
     resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
-        if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
+        if (pe__is_remote_node(this_node)
+            && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_warn("Ignoring %s attribute on remote node %s because stonith is disabled",
                      XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
         } else {
-            /* if we're here, this is either a baremetal node and fencing is enabled,
-             * or this is a container node which we don't care if fencing is enabled 
-             * or not on. container nodes are 'fenced' by recovering the container resource
-             * regardless of whether fencing is enabled. */
+            /* This is either a remote node with fencing enabled, or a guest
+             * node. We don't care whether fencing is enabled when fencing guest
+             * nodes, because they are "fenced" by recovering their containing
+             * resource.
+             */
             crm_info("Node %s has resource discovery disabled", this_node->details->uname);
             this_node->details->rsc_discovery_enabled = FALSE;
         }
@@ -985,11 +997,12 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             crm_info("Node %s is already processed", id);
             continue;
 
-        } else if (is_remote_node(this_node) == FALSE && is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (!pe__is_guest_or_remote_node(this_node)
+                   && is_set(data_set->flags, pe_flag_stonith_enabled)) {
             // A redundant test, but preserves the order for regression tests
             process = TRUE;
 
-        } else if (is_remote_node(this_node)) {
+        } else if (pe__is_guest_or_remote_node(this_node)) {
             bool check = FALSE;
             resource_t *rsc = this_node->details->remote_rsc;
 
@@ -999,17 +1012,16 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             } else if(rsc == NULL) {
                 /* Not ready yet */
 
-            } else if (is_container_remote_node(this_node)
+            } else if (pe__is_guest_node(this_node)
                        && rsc->role == RSC_ROLE_STARTED
                        && rsc->container->role == RSC_ROLE_STARTED) {
-                /* Both the connection and the underlying container
-                 * need to be known 'up' before we volunterily process
-                 * resources inside it
+                /* Both the connection and its containing resource need to be
+                 * known to be up before we process resources running in it.
                  */
                 check = TRUE;
                 crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
 
-            } else if (is_container_remote_node(this_node) == FALSE
+            } else if (!pe__is_guest_node(this_node)
                        && rsc->role == RSC_ROLE_STARTED) {
                 check = TRUE;
                 crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
@@ -1030,7 +1042,8 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 
         if(process) {
             crm_trace("Processing lrm resource entries on %shealthy%s node: %s",
-                      fence?"un":"", is_remote_node(this_node)?" remote":"",
+                      fence?"un":"",
+                      (pe__is_guest_or_remote_node(this_node)? " remote" : ""),
                       this_node->details->uname);
             changed = TRUE;
             this_node->details->unpacked = TRUE;
@@ -1082,7 +1095,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 crm_config_warn("Node %s in status section no longer exists", uname);
                 continue;
 
-            } else if (is_remote_node(this_node)) {
+            } else if (pe__is_guest_or_remote_node(this_node)) {
                 /* online state for remote nodes is determined by the
                  * rsc state after all the unpacking is done. we do however
                  * need to mark whether or not the node has been fenced as this plays
@@ -1161,7 +1174,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
         if (this_node == NULL) {
             continue;
-        } else if(is_remote_node(this_node) == FALSE) {
+        } else if (!pe__is_guest_or_remote_node(this_node)) {
             continue;
         } else if(this_node->details->unpacked) {
             continue;
@@ -1715,7 +1728,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
      */
     if ((rsc != NULL) && is_not_set(rsc->flags, pe_rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
-        && !is_container_remote_node(node)
+        && !pe__is_guest_node(node)
         && !pe__is_universal_clone(parent, data_set)) {
 
         rsc = NULL;
@@ -1768,7 +1781,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     if (pe_rsc_is_anon_clone(parent)) {
 
         if (pe_rsc_is_bundled(parent)) {
-            rsc = find_container_child(parent->parent, node);
+            rsc = pe__find_bundle_replica(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 
@@ -1857,19 +1870,20 @@ process_rsc_state(resource_t * rsc, node_t * node,
          * operation history in the CIB will be cleared, freeing the affected
          * resource to run again once we are sure we know its state.
          */
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             set_bit(rsc->flags, pe_rsc_failed);
             should_fence = TRUE;
 
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+            if (pe__is_remote_node(node) && node->details->remote_rsc
                 && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
 
-                /* setting unseen = true means that fencing of the remote node will
-                 * only occur if the connection resource is not going to start somewhere.
-                 * This allows connection resources on a failed cluster-node to move to
-                 * another node without requiring the baremetal remote nodes to be fenced
-                 * as well. */
+                /* Setting unseen means that fencing of the remote node will
+                 * occur only if the connection resource is not going to start
+                 * somewhere. This allows connection resources on a failed
+                 * cluster node to move to another node without requiring the
+                 * remote nodes to be fenced as well.
+                 */
                 node->details->unseen = TRUE;
                 reason = crm_strdup_printf("%s is active there (fencing will be"
                                            " revoked if remote connection can "
@@ -1966,11 +1980,12 @@ process_rsc_state(resource_t * rsc, node_t * node,
                     tmpnode = pe_find_node(data_set->nodes, rsc->id);
                 }
                 if (tmpnode &&
-                    is_baremetal_remote_node(tmpnode) &&
+                    pe__is_remote_node(tmpnode) &&
                     tmpnode->details->remote_was_fenced == 0) {
 
-                    /* connection resource to baremetal resource failed in a way that
-                     * should result in fencing the remote-node. */
+                    /* The remote connection resource failed in a way that
+                     * should result in fencing the remote node.
+                     */
                     pe_fence_node(data_set, tmpnode,
                                   "remote connection is unrecoverable");
                 }
@@ -2026,8 +2041,8 @@ process_rsc_state(resource_t * rsc, node_t * node,
         rsc->clone_name = NULL;
 
     } else {
-        char *key = stop_key(rsc);
-        GListPtr possible_matches = find_actions(rsc->actions, key, node);
+        GList *possible_matches = pe__resource_actions(rsc, node, RSC_STOP,
+                                                       FALSE);
         GListPtr gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -2037,7 +2052,6 @@ process_rsc_state(resource_t * rsc, node_t * node,
         }
 
         g_list_free(possible_matches);
-        free(key);
     }
 }
 
@@ -2722,6 +2736,25 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     pe_free_action(action);
 }
 
+/*!
+ * \internal
+ * \brief Remap operation status based on action result
+ *
+ * Given an action result, determine an appropriate operation status for the
+ * purposes of responding to the action (the status provided by the executor is
+ * not directly usable since the executor does not know what was expected).
+ *
+ * \param[in,out] rsc        Resource that operation history entry is for
+ * \param[in]     rc         Actual return code of operation
+ * \param[in]     target_rc  Expected return code of operation
+ * \param[in]     node       Node where operation was executed
+ * \param[in]     xml_op     Operation history entry XML from CIB status
+ * \param[in,out] on_fail    What should be done about the result
+ * \param[in]     data_set   Current cluster working set
+ *
+ * \return Operation status based on return code and action info
+ * \note This may update the resource's current and next role.
+ */
 static int
 determine_op_status(
     resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
@@ -2735,12 +2768,26 @@ determine_op_status(
     bool is_probe = FALSE;
 
     CRM_ASSERT(rsc);
+
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
     }
 
-    if (target_rc >= 0 && target_rc != rc) {
+    if (target_rc < 0) {
+        /* Pre-1.0 Pacemaker versions, and Pacemaker 1.1.6 or earlier with
+         * Heartbeat 2.0.7 or earlier as the cluster layer, did not include the
+         * target_rc in the transition key, which (along with the similar case
+         * of a corrupted transition key in the CIB) will be reported to this
+         * function as -1. Pacemaker 2.0+ does not support rolling upgrades from
+         * those versions or processing of saved CIB files from those versions,
+         * so we do not need to care much about this case.
+         */
+        result = PCMK_LRM_OP_ERROR;
+        crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
+                 key, node->details->uname);
+
+    } else if (target_rc != rc) {
         result = PCMK_LRM_OP_ERROR;
         pe_rsc_debug(rsc, "%s on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
                      key, node->details->uname,
@@ -2748,12 +2795,10 @@ determine_op_status(
                      services_ocf_exitcode_str(target_rc), target_rc);
     }
 
-    /* we could clean this up significantly except for old LRMs and CRMs that
-     * didn't include target_rc and liked to remap status
-     */
     switch (rc) {
         case PCMK_OCF_OK:
-            if (is_probe && target_rc == 7) {
+            // @TODO Should this be (rc != target_rc)?
+            if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
@@ -2768,23 +2813,14 @@ determine_op_status(
                 /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
                 rsc->next_role = RSC_ROLE_UNKNOWN;
-
-            } else if (safe_str_neq(task, CRMD_ACTION_STOP)) {
-                result = PCMK_LRM_OP_ERROR;
             }
             break;
 
         case PCMK_OCF_RUNNING_MASTER:
-            if (is_probe) {
+            if (is_probe && (rc != target_rc)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active in master mode on %s",
                             task, rsc->id, node->details->uname);
-
-            } else if (target_rc == rc) {
-                /* nothing to do */
-
-            } else if (target_rc >= 0) {
-                result = PCMK_LRM_OP_ERROR;
             }
             rsc->role = RSC_ROLE_MASTER;
             break;
@@ -2799,16 +2835,17 @@ determine_op_status(
             result = PCMK_LRM_OP_ERROR_FATAL;
             break;
 
+        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+            if (interval_ms > 0) {
+                result = PCMK_LRM_OP_NOTSUPPORTED;
+                break;
+            }
+            // fall through
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-        case PCMK_OCF_UNIMPLEMENT_FEATURE:
-            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && (interval_ms > 0)) {
-                result = PCMK_LRM_OP_NOTSUPPORTED;
-                break;
-
-            } else if (pe_can_fence(data_set, node) == FALSE
-               && safe_str_eq(task, CRMD_ACTION_STOP)) {
+            if (!pe_can_fence(data_set, node)
+                && safe_str_eq(task, CRMD_ACTION_STOP)) {
                 /* If a stop fails and we can't fence, there's nothing else we can do */
                 pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
                             rsc->id, task, services_ocf_exitcode_str(rc), rc);
@@ -2820,12 +2857,12 @@ determine_op_status(
 
         default:
             if (result == PCMK_LRM_OP_DONE) {
-                crm_info("Treating %s (rc=%d) on %s as an ERROR",
-                         key, rc, node->details->uname);
+                crm_info("Treating unknown return code %d for %s on %s as failure",
+                         rc, key, node->details->uname);
                 result = PCMK_LRM_OP_ERROR;
             }
+            break;
     }
-
     return result;
 }
 
@@ -2905,7 +2942,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
-        if (container_fix_remote_addr(rsc)) {
+        if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
@@ -2978,17 +3015,13 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
 int get_target_rc(xmlNode *xml_op)
 {
-    int dummy = 0;
     int target_rc = 0;
-    char *dummy_string = NULL;
     const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
+
     if (key == NULL) {
         return -1;
     }
-
-    decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
-    free(dummy_string);
-
+    decode_transition_key(key, NULL, NULL, NULL, &target_rc);
     return target_rc;
 }
 
@@ -3198,6 +3231,11 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         }
     }
 
+    /* If the executor reported an operation status of anything but done or
+     * error, consider that final. But for done or error, we know better whether
+     * it should be treated as a failure or not, because we know the expected
+     * result.
+     */
     if(status == PCMK_LRM_OP_DONE || status == PCMK_LRM_OP_ERROR) {
         status = determine_op_status(rsc, rc, target_rc, node, xml_op, on_fail, data_set);
     }
@@ -3448,7 +3486,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 CRM_LOG_ASSERT(this_node != NULL);
                 continue;
 
-            } else if (is_remote_node(this_node)) {
+            } else if (pe__is_guest_or_remote_node(this_node)) {
                 determine_remote_online_status(data_set, this_node);
 
             } else {

@@ -160,6 +160,25 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
     set_ocf_env(buffer, value, user_data);
 }
 
+static void
+set_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    int rc;
+
+    if (value != NULL) {
+        rc = setenv(key, value, 1);
+    } else {
+        rc = unsetenv(key);
+    }
+
+    if (rc < 0) {
+        crm_perror(LOG_ERR, "setenv %s=%s",
+                  (char*)key, (value? (char*)value : ""));
+    } else {
+        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+    }
+}
+
 /*!
  * \internal
  * \brief Add environment variables suitable for an action
@@ -169,12 +188,20 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_action_env_vars(const svc_action_t *op)
 {
-    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
-        return;
+    void (*env_setter)(gpointer, gpointer, gpointer) = NULL;
+    if (op->agent == NULL) {
+        env_setter = set_alert_env;  /* we deal with alert handler */
+
+    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF)) {
+        env_setter = set_ocf_env_with_prefix;
     }
 
-    if (op->params) {
-        g_hash_table_foreach(op->params, set_ocf_env_with_prefix, NULL);
+    if (env_setter != NULL && op->params != NULL) {
+        g_hash_table_foreach(op->params, env_setter, NULL);
+    }
+
+    if (env_setter == NULL || env_setter == set_alert_env) {
+        return;
     }
 
     set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
@@ -672,7 +699,7 @@ services_os_action_execute(svc_action_t * op)
     int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
-    sigset_t *pmask;
+    sigset_t *pmask = NULL;
 
 #ifdef HAVE_SYS_SIGNALFD_H
     sigset_t mask;
@@ -888,6 +915,11 @@ services_os_action_execute(svc_action_t * op)
         op->opaque->stdin_fd = -1;
     }
 
+    // after fds are setup properly and before we plug anything into mainloop
+    if (op->opaque->fork_callback) {
+        op->opaque->fork_callback(op);
+    }
+
     if (op->synchronous) {
         action_synced_wait(op, pmask);
         sigchld_cleanup();
@@ -1004,6 +1036,26 @@ resources_os_list_ocf_agents(const char *provider)
     return result;
 }
 
+gboolean
+services__ocf_agent_exists(const char *provider, const char *agent)
+{
+    char *buf = NULL;
+    gboolean rc = FALSE;
+    struct stat st;
+
+    if (provider == NULL || agent == NULL) {
+        return rc;
+    }
+
+    buf = crm_strdup_printf(OCF_ROOT_DIR "/resource.d/%s/%s", provider, agent);
+    if (stat(buf, &st) == 0) {
+        rc = TRUE;
+    }
+
+    free(buf);
+    return rc;
+}
+
 #if SUPPORT_NAGIOS
 GList *
 resources_os_list_nagios_agents(void)
@@ -1028,5 +1080,25 @@ resources_os_list_nagios_agents(void)
     }
     g_list_free_full(plugin_list, free);
     return result;
+}
+
+gboolean
+services__nagios_agent_exists(const char *name)
+{
+    char *buf = NULL;
+    gboolean rc = FALSE;
+    struct stat st;
+
+    if (name == NULL) {
+        return rc;
+    }
+
+    buf = crm_strdup_printf(NAGIOS_PLUGIN_DIR "/%s", name);
+    if (stat(buf, &st) == 0) {
+        rc = TRUE;
+    }
+
+    free(buf);
+    return rc;
 }
 #endif

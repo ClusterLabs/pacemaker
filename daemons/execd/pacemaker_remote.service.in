@@ -33,8 +33,11 @@ ExecStart=@sbindir@/pacemaker-remoted
 # get rid of the resulting log warnings, comment out this option.
 TasksMax=infinity
 
-# Pacemaker Remote can exit only after all managed services have shut down;
-# an HA database could conceivably take even longer than this 
+# If connected to the cluster and when the service functions properly, it will
+# wait to exit until the cluster notifies it all resources on the remote node
+# have been stopped.  The default of 30min should cover most typical cluster
+# configurations, but it may need an increase to adapt to local conditions
+# (e.g. a large, clustered database could conceivably take longer to stop).
 TimeoutStopSec=30min
 TimeoutStartSec=30s
 

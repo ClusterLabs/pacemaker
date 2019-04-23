@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -75,12 +77,15 @@ do_ha_control(long long action,
             registered = crm_connect_corosync(cluster);
 #endif
         }
-        controld_election_init(cluster->uname);
-        fsa_our_uname = cluster->uname;
-        fsa_our_uuid = cluster->uuid;
-        if(cluster->uuid == NULL) {
-            crm_err("Could not obtain local uuid");
-            registered = FALSE;
+
+        if (registered == TRUE) {
+            controld_election_init(cluster->uname);
+            fsa_our_uname = cluster->uname;
+            fsa_our_uuid = cluster->uuid;
+            if(cluster->uuid == NULL) {
+                crm_err("Could not obtain local uuid");
+                registered = FALSE;
+            }
         }
 
         if (registered == FALSE) {
@@ -138,7 +143,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern crm_ipc_t *attrd_ipc;
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
@@ -158,7 +162,7 @@ crmd_fast_exit(crm_exit_t exit_code)
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }
 
 crm_exit_t
@@ -195,13 +199,7 @@ crmd_exit(crm_exit_t exit_code)
         ipcs = NULL;
     }
 
-    if (attrd_ipc) {
-        crm_trace("Closing connection to pacemaker-attrd");
-        crm_ipc_close(attrd_ipc);
-        crm_ipc_destroy(attrd_ipc);
-        attrd_ipc = NULL;
-    }
-
+    controld_close_attrd_ipc();
     pe_subsystem_free();
 
     if(stonith_api) {
@@ -638,7 +636,7 @@ do_started(long long action,
     set_bit(fsa_input_register, R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 
-    crm_notice("The local CRM is operational");
+    crm_notice("Pacemaker controller successfully started and accepting connections");
     clear_bit(fsa_input_register, R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }

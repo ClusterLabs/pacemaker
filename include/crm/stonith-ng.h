@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -23,6 +25,8 @@ extern "C" {
 #  include <stdbool.h>  // bool
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
+
+#  include <crm/common/output.h>
 
 #  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 #  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
@@ -522,6 +526,31 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
+
+/**
+ * Does the given agent describe a stonith resource that can exist?
+ *
+ * \param[in] agent     What is the name of the agent?
+ * \param[in] timeout   Timeout to use when querying.  If 0 is given,
+ *                      use a default of 120.
+ *
+ * \return A boolean
+ */
+bool stonith_agent_exists(const char *agent, int timeout);
+
+/*!
+ * \brief Register stonith-specific messages.
+ *
+ * \param out The output functions structure.
+ */
+void stonith_register_messages(pcmk__output_t *out);
+
+/*!
+ * \brief Turn stonith action into a more readable string.
+ *
+ * \param action Stonith action
+ */
+const char *stonith_action_str(const char *action);
 
 #ifdef __cplusplus
 }

@@ -11,13 +11,6 @@ AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/pengine/libpe_status.la	\
-		libpengine.la
-
-## libraries
-lib_LTLIBRARIES	= libpengine.la
-
 ## binary progs
 
 halib_PROGRAMS	= pacemaker-schedulerd
@@ -28,36 +21,11 @@ endif
 
 ## SOURCES
 
-noinst_HEADERS	= pacemaker-schedulerd.h \
-		  sched_allocate.h \
-		  sched_notif.h \
-		  sched_utils.h
-		  
-
-libpengine_la_LDFLAGS	= -version-info 27:1:0
-
-libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
-libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
-
-libpengine_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/lib/cib/libcib.la
-# -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-libpengine_la_SOURCES	= sched_allocate.c \
-			  sched_bundle.c \
-			  sched_clone.c \
-			  sched_constraints.c \
-			  sched_graph.c \
-			  sched_group.c \
-			  sched_messages.c \
-			  sched_native.c \
-			  sched_notif.c \
-			  sched_promotable.c \
-			  sched_utilization.c \
-			  sched_utils.c
-
 pacemaker_schedulerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_schedulerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
-pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
+pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la \
+							  $(top_builddir)/lib/pengine/libpe_status.la \
+							  $(top_builddir)/lib/pacemaker/libpacemaker.la
 # libcib for get_object_root()
 pacemaker_schedulerd_SOURCES	= pacemaker-schedulerd.c
 

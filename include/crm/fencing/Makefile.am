@@ -1,5 +1,7 @@
 #
-# Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2012-2016 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

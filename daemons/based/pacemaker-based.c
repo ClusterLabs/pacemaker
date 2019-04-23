@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -39,8 +41,7 @@ const char *cib_root = NULL;
 char *cib_our_uname = NULL;
 static gboolean preserve_status = FALSE;
 
-/* volatile because it may be changed in a signal handler */
-volatile gboolean cib_writes_enabled = TRUE;
+gboolean cib_writes_enabled = TRUE;
 
 int remote_fd = 0;
 int remote_tls_fd = 0;
@@ -48,7 +49,7 @@ int remote_tls_fd = 0;
 GHashTable *config_hash = NULL;
 GHashTable *local_notify_queue = NULL;
 
-int cib_init(void);
+static void cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
@@ -59,12 +60,6 @@ cib_enable_writes(int nsig)
 {
     crm_info("(Re)enabling disk writes");
     cib_writes_enabled = TRUE;
-}
-
-static void
-log_cib_client(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_info("Client %s", crm_client_name(value));
 }
 
 /* *INDENT-OFF* */
@@ -89,12 +84,11 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
     struct passwd *pwentry = NULL;
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
-
-    crm_peer_init();
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
@@ -170,6 +164,21 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
+    crm_notice("Starting Pacemaker CIB manager");
+
+    old_instance = crm_ipc_new(CIB_CHANNEL_RO, 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("pacemaker-based is already active, aborting startup");
+        crm_exit(CRM_EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     if (cib_root == NULL) {
         cib_root = CRM_CONFIG_DIR;
     } else {
@@ -184,16 +193,21 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
-    /* read local config file */
+    crm_peer_init();
+
+    // Read initial CIB, connect to cluster, and start IPC servers
     cib_init();
 
-    // This should not be reachable
-    CRM_CHECK(crm_hash_table_size(client_connections) == 0,
-              crm_warn("Not all clients gone at exit"));
-    g_hash_table_foreach(client_connections, log_cib_client, NULL);
-    cib_cleanup();
+    // Run the main loop
+    mainloop = g_main_loop_new(NULL, FALSE);
+    crm_notice("Pacemaker CIB manager successfully started and accepting connections");
+    g_main_loop_run(mainloop);
 
-    crm_info("Done");
+    /* If main loop returned, clean up and exit. We disconnect in case
+     * terminate_cib() was called with fast=-1.
+     */
+    crm_cluster_disconnect(&crm_cluster);
+    cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
     return CRM_EX_OK;
 }
 
@@ -281,7 +295,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
-int
+static void
 cib_init(void)
 {
     if (is_corosync_cluster()) {
@@ -323,19 +337,6 @@ cib_init(void)
     if (stand_alone) {
         cib_is_master = TRUE;
     }
-
-    /* Create the mainloop and run it... */
-    mainloop = g_main_loop_new(NULL, FALSE);
-    crm_info("Starting %s mainloop", crm_system_name);
-    g_main_loop_run(mainloop);
-
-    /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib() was called with fast=-1.
-     */
-    crm_cluster_disconnect(&crm_cluster);
-    cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
-
-    return crm_exit(CRM_EX_OK);
 }
 
 static bool
@@ -363,9 +364,6 @@ startCib(const char *filename)
             port = crm_parse_int(port_s, "0");
             remote_fd = init_remote_listener(port, FALSE);
         }
-
-        crm_info("CIB Initialization completed successfully");
     }
-
     return active;
 }

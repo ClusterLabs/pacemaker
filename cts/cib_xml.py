@@ -4,7 +4,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright 2008-2018 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys

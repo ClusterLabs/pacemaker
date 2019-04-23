@@ -89,7 +89,11 @@
         <attributes CRM_meta_migrate_source="rhel7-node2" CRM_meta_migrate_target="rhel7-node3" CRM_meta_on_node="rhel7-node2" CRM_meta_on_node_uuid="2" CRM_meta_record_pending="true" CRM_meta_remote_node="rhel7-node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="rhel7-node1_monitor_0" on_node="rhel7-node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="8">
     <action_set>

@@ -33,7 +33,7 @@
  * \internal
  * \brief Allocate a new name/value pair
  *
- * \param[in] name   New name
+ * \param[in] name   New name (required)
  * \param[in] value  New value
  *
  * \return Newly allocated name/value pair
@@ -43,11 +43,15 @@
 static pcmk_nvpair_t *
 pcmk__new_nvpair(const char *name, const char *value)
 {
-    pcmk_nvpair_t *nvpair = calloc(1, sizeof(pcmk_nvpair_t));
+    pcmk_nvpair_t *nvpair = NULL;
 
+    CRM_ASSERT(name);
+
+    nvpair = calloc(1, sizeof(pcmk_nvpair_t));
     CRM_ASSERT(nvpair);
+
     nvpair->name = strdup(name);
-    nvpair->value = strdup(value);
+    nvpair->value = value? strdup(value) : NULL;
     return nvpair;
 }
 
@@ -196,6 +200,65 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
     g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
 }
 
+// convenience function for name=value strings
+
+/*!
+ * \brief Extract the name and value from an input string formatted as "name=value".
+ * If unable to extract them, they are returned as NULL.
+ *
+ * \param[in]  input The input string, likely from the command line
+ * \param[out] name  Everything before the first '=' in the input string
+ * \param[out] value Everything after the first '=' in the input string
+ *
+ * \return 2 if both name and value could be extracted, 1 if only one could, and
+ *         and error code otherwise
+ */
+int
+pcmk_scan_nvpair(const char *input, char **name, char **value)
+{
+#ifdef SSCANF_HAS_M
+    *name = NULL;
+    *value = NULL;
+    if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
+        return -pcmk_err_bad_nvpair;
+    }
+#else
+    char *sep = NULL;
+    *name = NULL;
+    *value = NULL;
+
+    sep = strstr(optarg, "=");
+    if (sep == NULL) {
+        return -pcmk_err_bad_nvpair;
+    }
+
+    *name = strndup(input, sep-input);
+
+    if (*name == NULL) {
+        return -ENOMEM;
+    }
+
+    /* If the last char in optarg is =, the user gave no
+     * value for the option.  Leave it as NULL.
+     */
+    if (*(sep+1) != '\0') {
+        *value = strdup(sep+1);
+
+        if (*value == NULL) {
+            return -ENOMEM;
+        }
+    }
+#endif
+
+    if (*name != NULL && *value != NULL) {
+        return 2;
+    } else if (*name != NULL || *value != NULL) {
+        return 1;
+    } else {
+        return -pcmk_err_bad_nvpair;
+    }
+}
+
 // XML attribute handling
 
 /*!
@@ -246,7 +309,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
+    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }
@@ -296,7 +359,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         }
     }
 
-    attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
+    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }
@@ -374,7 +437,7 @@ crm_element_value(const xmlNode *data, const char *name)
     /* The first argument to xmlHasProp() has always been const,
      * but libxml2 <2.9.2 didn't declare that, so cast it
      */
-    attr = xmlHasProp((xmlNode *) data, (const xmlChar *)name);
+    attr = xmlHasProp((xmlNode *) data, (pcmkXmlStr) name);
     if (!attr || !attr->children) {
         return NULL;
     }

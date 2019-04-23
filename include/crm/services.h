@@ -1,5 +1,7 @@
 /*
- * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -231,6 +233,17 @@ typedef struct svc_action_s {
  */
     GList *resources_list_standards(void);
 
+/**
+ * Does the given standard, provider, and agent describe a resource that can exist?
+ *
+ * \param[in] standard  Which class of agent does the resource belong to?
+ * \param[in] provider  What provides the agent (NULL for most standards)?
+ * \param[in] agent     What is the name of the agent?
+ *
+ * \return A boolean
+ */
+    gboolean resources_agent_exists(const char *standard, const char *provider, const char *agent);
+
 svc_action_t *services_action_create(const char *name, const char *action,
                                      guint interval_ms, int timeout /* ms */);
 
@@ -292,11 +305,17 @@ gboolean services_action_kick(const char *name, const char *action,
  *
  * \param[in] op services action data
  * \param[in] action_callback callback for when the action completes
+ * \param[in] action_fork_callback callback for when action forked successfully
  *
  * \retval TRUE succesfully started execution
  * \retval FALSE failed to start execution, no callback will be received
  */
-    gboolean services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *));
+    gboolean services_action_async_fork_notify(svc_action_t * op,
+        void (*action_callback) (svc_action_t *),
+        void (*action_fork_callback) (svc_action_t *));
+
+    gboolean services_action_async(svc_action_t * op,
+                                   void (*action_callback) (svc_action_t *));
 
 gboolean services_action_cancel(const char *name, const char *action,
                                 guint interval_ms);

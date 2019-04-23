@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -33,6 +35,9 @@ extern "C" {
 
 #  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client
+
+// public name/value pair functions (from nvpair.c)
+int pcmk_scan_nvpair(const char *input, char **name, char **value);
 
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);

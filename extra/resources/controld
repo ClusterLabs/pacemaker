@@ -2,7 +2,9 @@
 #
 # OCF resource agent for managing the DLM controld process
 #
-# Copyright 2009-2018 Novell, Inc
+# Copyright 2008-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify

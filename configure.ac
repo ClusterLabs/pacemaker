@@ -1,7 +1,9 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+dnl Copyright 2009-2019 the Pacemaker project contributors
+dnl
+dnl The version control history for this file may have further details.
 dnl
 dnl This source code is licensed under the GNU General Public License version 2
 dnl or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -92,6 +94,8 @@ AC_PROG_CC_STDC
 AC_PROG_CXX dnl C++ is not needed for build, just maintainer utilities
 
 gl_EARLY
+# We expressly don't want to introduce OpenSSL dependency by default.
+gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
 LT_INIT([dlopen])
@@ -242,6 +246,12 @@ AC_ARG_WITH(brand,
     [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
+
+BUG_URL=""
+AC_ARG_WITH(bug-url,
+    [  --with-bug-url=DIR  Address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@],
+    [ BUG_URL="$withval" ]
+)
 
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
@@ -398,6 +408,11 @@ fi
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
 
+if test x"${BUG_URL}" = x""; then
+    BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
+fi
+AC_SUBST(BUG_URL)
+
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
     mandir INITDIR docdir CONFIGDIR
@@ -409,6 +424,48 @@ do
         AC_MSG_WARN([$j directory ($dirname) does not exist!])
     fi
 done
+
+us_auth=
+AC_CHECK_HEADER([sys/socket.h], [
+    AC_CHECK_DECL([SO_PEERCRED], [
+        # Linux
+        AC_CHECK_TYPE([struct ucred], [
+            us_auth=peercred_ucred;
+            AC_DEFINE([US_AUTH_PEERCRED_UCRED], [1],
+                      [Define if Unix socket auth method is
+                       getsockopt(s, SO_PEERCRED, &ucred, ...)])
+        ], [
+            # OpenBSD
+            AC_CHECK_TYPE([struct sockpeercred], [
+                us_auth=localpeercred_sockepeercred;
+                AC_DEFINE([US_AUTH_PEERCRED_SOCKPEERCRED], [1],
+                          [Define if Unix socket auth method is
+                           getsockopt(s, SO_PEERCRED, &sockpeercred, ...)])
+            ], [], [[#include <sys/socket.h>]])
+        ], [[#define _GNU_SOURCE
+             #include <sys/socket.h>]])
+    ], [], [[#include <sys/socket.h>]])
+])
+
+if test -z "${us_auth}"; then
+    # FreeBSD
+    AC_CHECK_DECL([getpeereid], [
+        us_auth=getpeereid;
+        AC_DEFINE([US_AUTH_GETPEEREID], [1],
+                  [Define if Unix socket auth method is
+                   getpeereid(s, &uid, &gid)])
+    ], [
+        # Solaris/OpenIndiana
+        AC_CHECK_DECL([getpeerucred], [
+            us_auth=getpeerucred;
+            AC_DEFINE([US_AUTH_GETPEERUCRED], [1],
+                      [Define if Unix socket auth method is
+                       getpeercred(s, &ucred)])
+        ], [
+            AC_MSG_ERROR([No way to authenticate a Unix socket peer])
+        ], [[#include <ucred.h>]])
+    ])
+fi
 
 dnl This OS-based decision-making is poor autotools practice;
 dnl feature-based mechanisms are strongly preferred.
@@ -803,6 +860,23 @@ dnl ========================================================================
 
 AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
+
+AC_CACHE_CHECK(whether sscanf supports %m,
+               pf_cv_var_sscanf,
+               AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <stdio.h>
+const char *s = "some-command-line-arg";
+int main(int argc, char **argv) {
+char *name = NULL;
+int n = sscanf(s, "%ms", &name);
+return n == 1 ? 0 : 1;
+}
+]])],
+                                 pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
+
+if test "$pf_cv_var_sscanf" = "yes"; then
+    AC_DEFINE(SSCANF_HAS_M, 1, [ ])
+fi
 
 dnl ========================================================================
 dnl   bzip2
@@ -1699,6 +1773,7 @@ AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
 AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
 AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
+AC_CONFIG_FILES([doc/abi-check], [chmod +x doc/abi-check])
 AC_CONFIG_FILES([extra/resources/ClusterMon],  [chmod +x extra/resources/ClusterMon])
 AC_CONFIG_FILES([extra/resources/HealthSMART], [chmod +x extra/resources/HealthSMART])
 AC_CONFIG_FILES([extra/resources/SysInfo],     [chmod +x extra/resources/SysInfo])
@@ -1712,7 +1787,6 @@ AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
-                Doxyfile                                            \
                 cts/Makefile                                        \
                 cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
@@ -1732,6 +1806,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
+                doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \
@@ -1750,21 +1825,24 @@ AC_CONFIG_FILES(Makefile                                            \
                 include/crm/cluster/Makefile                        \
                 include/crm/fencing/Makefile                        \
                 include/crm/pengine/Makefile                        \
+                include/pcmki/Makefile                              \
                 replace/Makefile                                    \
                 lib/Makefile                                        \
+                lib/libpacemaker.pc                                 \
                 lib/pacemaker.pc                                    \
                 lib/pacemaker-cib.pc                                \
                 lib/pacemaker-lrmd.pc                               \
                 lib/pacemaker-service.pc                            \
-                lib/pacemaker-pengine.pc                            \
+                lib/pacemaker-pe_rules.pc                           \
+                lib/pacemaker-pe_status.pc                          \
                 lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-cluster.pc                            \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
                 lib/gnu/Makefile                                    \
+                lib/pacemaker/Makefile                              \
                 lib/pengine/Makefile                                \
-                lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
@@ -1809,3 +1887,4 @@ AC_MSG_RESULT([  LDFLAGS_HARDENED_EXE     = ${LDFLAGS_HARDENED_EXE}])
 AC_MSG_RESULT([  LDFLAGS_HARDENED_LIB     = ${LDFLAGS_HARDENED_LIB}])
 AC_MSG_RESULT([  Libraries                = ${LIBS}])
 AC_MSG_RESULT([  Stack Libraries          = ${CLUSTERLIBS}])
+AC_MSG_RESULT([  Unix socket auth method  = ${us_auth}])

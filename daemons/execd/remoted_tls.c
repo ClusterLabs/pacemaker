@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -313,7 +315,7 @@ lrmd_init_remote_tls_server()
         .destroy = lrmd_remote_connection_destroy,
     };
 
-    crm_notice("Starting TLS listener on port %d", port);
+    crm_debug("Starting TLS listener on port %d", port);
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 

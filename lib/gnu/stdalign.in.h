@@ -1,6 +1,6 @@
 /* A substitute for ISO C11 <stdalign.h>.
 
-   Copyright 2011-2012 Free Software Foundation, Inc.
+   Copyright 2011-2019 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
@@ -13,7 +13,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   along with this program; if not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Paul Eggert and Bruno Haible.  */
 
@@ -41,15 +41,35 @@
    are 4 unless the option '-malign-double' is used.
 
    The result cannot be used as a value for an 'enum' constant, if you
-   want to be portable to HP-UX 10.20 cc and AIX 3.2.5 xlc.  */
+   want to be portable to HP-UX 10.20 cc and AIX 3.2.5 xlc.
+
+   Include <stddef.h> for offsetof.  */
 #include <stddef.h>
-#if defined __cplusplus
+
+/* FreeBSD 9.1 <sys/cdefs.h>, included by <stddef.h> and lots of other
+   standard headers, defines conflicting implementations of _Alignas
+   and _Alignof that are no better than ours; override them.  */
+#undef _Alignas
+#undef _Alignof
+
+/* GCC releases before GCC 4.9 had a bug in _Alignof.  See GCC bug 52023
+   <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52023>.  */
+#if (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112 \
+     || (defined __GNUC__ && __GNUC__ < 4 + (__GNUC_MINOR__ < 9)))
+# ifdef __cplusplus
+#  if 201103 <= __cplusplus
+#   define _Alignof(type) alignof (type)
+#  else
    template <class __t> struct __alignof_helper { char __a; __t __b; };
-# define _Alignof(type) offsetof (__alignof_helper<type>, __b)
-#else
-# define _Alignof(type) offsetof (struct { char __a; type __b; }, __b)
+#   define _Alignof(type) offsetof (__alignof_helper<type>, __b)
+#  endif
+# else
+#  define _Alignof(type) offsetof (struct { char __a; type __b; }, __b)
+# endif
 #endif
-#define alignof _Alignof
+#if ! (defined __cplusplus && 201103 <= __cplusplus)
+# define alignof _Alignof
+#endif
 #define __alignof_is_defined 1
 
 /* alignas (A), also known as _Alignas (A), aligns a variable or type
@@ -77,13 +97,24 @@
 
    */
 
-#if __GNUC__ || __IBMC__ || __IBMCPP__ || 0x5110 <= __SUNPRO_C
-# define _Alignas(a) __attribute__ ((__aligned__ (a)))
-#elif 1300 <= _MSC_VER
-# define _Alignas(a) __declspec (align (a))
+#if !defined __STDC_VERSION__ || __STDC_VERSION__ < 201112
+# if defined __cplusplus && 201103 <= __cplusplus
+#  define _Alignas(a) alignas (a)
+# elif ((defined __APPLE__ && defined __MACH__                  \
+         ? 4 < __GNUC__ + (1 <= __GNUC_MINOR__)                 \
+         : __GNUC__)                                            \
+        || (__ia64 && (61200 <= __HP_cc || 61200 <= __HP_aCC)) \
+        || __ICC || 0x590 <= __SUNPRO_C || 0x0600 <= __xlC__)
+#  define _Alignas(a) __attribute__ ((__aligned__ (a)))
+# elif 1300 <= _MSC_VER
+#  define _Alignas(a) __declspec (align (a))
+# endif
 #endif
-#ifdef _Alignas
+#if ((defined _Alignas && ! (defined __cplusplus && 201103 <= __cplusplus)) \
+     || (defined __STDC_VERSION__ && 201112 <= __STDC_VERSION__))
 # define alignas _Alignas
+#endif
+#if defined alignas || (defined __cplusplus && 201103 <= __cplusplus)
 # define __alignas_is_defined 1
 #endif
 

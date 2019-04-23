@@ -1,5 +1,7 @@
 #
-# Copyright 2008-2019 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2008-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -58,13 +60,6 @@ LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_
 COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 SPECVERSION	?= $(COUNT)
-
-# toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
-
-# recursive, preserve symlinks/permissions/times, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlptvzxS --progress
 
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
@@ -259,19 +254,23 @@ COVFILE          = $(PACKAGE)-coverity-$(TAG).tgz
 COVHOST		?= scan5.coverity.com
 COVPASS		?= password
 
-# Public coverity
-coverity:
+# Static analysis via coverity
+
+coverity-common:
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
 	make core-clean
 	rm -rf $(COVERITY_DIR)
 	cov-build --dir $(COVERITY_DIR) make core
+
+coverity: coverity-common
 	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
 	@echo "Uploading to public Coverity instance..."
 	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
 	rm -rf $(COVFILE) $(COVERITY_DIR)
+	make core-clean
 
-coverity-corp:
+coverity-corp: coverity-common
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
 	make core-clean
@@ -281,44 +280,10 @@ coverity-corp:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/$(PACKAGE)/coverity/$(TAG)/"
+#	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/$(PACKAGE)/coverity/$(TAG)/"
 	make core-clean
 #	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
-	rm -rf $(COVERITY_DIR)
-
-global: clean-generic
-	gtags -q
-
-global-upload: global
-	htags -sanhIT
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
-
-%.8.html: %.8
-	echo groff -mandoc `man -w ./$<` -T html > $@
-	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
-
-%.7.html: %.7
-	echo groff -mandoc `man -w ./$<` -T html > $@
-	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
-
-manhtml-upload: all
-	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
-
-doxygen: Doxyfile
-	doxygen Doxyfile
-
-doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
-
-abi:
-	./abi-check pacemaker $(LAST_RELEASE) $(TAG)
-abi-www:
-	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
-
-www:	manhtml-upload global-upload doxygen-upload
-	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
+#	rm -rf $(COVERITY_DIR)
 
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
@@ -373,9 +338,17 @@ clang:
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
-# http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
-GNU_MODS	= crypto/md5
+# https://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
+# previously, this was crypto/md5, but got spoiled with streams/kernel crypto
+GNU_MODS	= crypto/md5-buffer
+# stdint appears to be surrogate only for C99-lacking environments
+GNU_MODS_AVOID	= stdint
+# only for plain crypto/md5: we make do without kernel-assisted crypto
+# GNU_MODS_AVOID	+= crypto/af_alg
 gnulib-update:
-	-test ! -e gnulib && git clone git://git.savannah.gnu.org/gnulib.git
-	cd gnulib && git pull
-	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)
+	-test -e maint/gnulib \
+	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
+	cd maint/gnulib && git pull
+	maint/gnulib/gnulib-tool \
+	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
+	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)

@@ -1,6 +1,8 @@
 #!@BASH_PATH@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -440,6 +442,7 @@ do_test group-fail "Ensure stop order is preserved for partially active groups"
 do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
 do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
 do_test group-dependents "Account for the location preferences of things colocated with a group"
+do_test group-stop-ordering "Ensure blocked group member stop does not force other member stops"
 
 echo ""
 do_test rsc_dep1 "Must not     "
@@ -945,6 +948,7 @@ do_test honor_stonith_rsc_order3 "cl#5056- Honor order constraint, stonith clone
 do_test honor_stonith_rsc_order4 "cl#5056- Honor order constraint, between two native stonith rscs."
 do_test multiply-active-stonith
 do_test probe-timeout "cl#5099 - Default probe timeout"
+do_test order-first-probes "cl#5301 - respect order constraints when relevant resources are being probed"
 
 do_test concurrent-fencing "Allow performing fencing operations in parallel"
 

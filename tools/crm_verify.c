@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -23,11 +25,11 @@
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
+#include <pacemaker-internal.h>
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 extern gboolean stage0(pe_working_set_t * data_set);
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -234,7 +236,7 @@ main(int argc, char **argv)
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {
         /* live queries will always have a status section and can do a full simulation */
-        do_calculations(data_set, cib_object, NULL);
+        pcmk__schedule_actions(data_set, cib_object, NULL);
 
     } else {
         data_set->now = crm_time_new(NULL);
@@ -264,5 +266,5 @@ main(int argc, char **argv)
     }
 
   done:
-    return crm_exit(crm_errno2exit(rc));
+    crm_exit(crm_errno2exit(rc));
 }
