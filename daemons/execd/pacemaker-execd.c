@@ -519,6 +519,12 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+#ifdef ENABLE_PCMK_REMOTE
+#  define EXECD_TYPE "remote"
+#else
+#  define EXECD_TYPE "local"
+#endif
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -587,6 +593,8 @@ main(int argc, char **argv, char **envp)
         }
     }
 
+    crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
+
     /* The presence of this variable allegedly controls whether child
      * processes like httpd will try and use Systemd's sd_notify
      * API
@@ -613,7 +621,7 @@ main(int argc, char **argv, char **envp)
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_info("Starting");
+    crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     /* should never get here */

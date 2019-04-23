@@ -315,6 +315,8 @@ main(int argc, char **argv)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_notice("Starting Pacemaker scheduler");
+
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
         crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
         fprintf(stderr,
@@ -323,7 +325,6 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
-    crm_debug("Init server comms");
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
@@ -331,9 +332,8 @@ main(int argc, char **argv)
     }
 
     /* Create the mainloop and run it... */
-    crm_info("Starting %s", crm_system_name);
-
     mainloop = g_main_loop_new(NULL, FALSE);
+    crm_notice("Pacemaker scheduler successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     pe_free_working_set(sched_data_set);

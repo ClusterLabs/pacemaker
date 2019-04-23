@@ -380,14 +380,14 @@ main(int argc, char **argv)
     }
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_info("Starting up");
+    crm_notice("Starting Pacemaker node attribute manager");
 
     old_instance = crm_ipc_new(T_ATTRD, 0);
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-attrdd is already active, aborting startup");
+        crm_err("pacemaker-attrd is already active, aborting startup");
         crm_exit(CRM_EX_OK);
     } else {
         /* not up or not authentic, we'll proceed either way */
@@ -425,7 +425,7 @@ main(int argc, char **argv)
     attrd_broadcast_protocol();
 
     attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
-    crm_info("Accepting attribute updates");
+    crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
     attrd_run_mainloop();
 
   done:
