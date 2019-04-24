@@ -569,7 +569,7 @@ refresh:
 }
 #endif
 
-// Basically crm_signal(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
+// Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
 static void
 avoid_zombies()
 {
@@ -936,7 +936,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
-        ncurses_winch_handler = crm_signal(SIGWINCH, mon_winresize);
+        ncurses_winch_handler = crm_signal_handler(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;

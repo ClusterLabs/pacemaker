@@ -325,7 +325,7 @@ static GSourceFuncs crm_signal_funcs = {
  * \note The dispatch function must be async-safe.
  */
 sighandler_t
-crm_signal(int sig, sighandler_t dispatch)
+crm_signal_handler(int sig, sighandler_t dispatch)
 {
     sigset_t mask;
     struct sigaction sa;
@@ -348,6 +348,16 @@ crm_signal(int sig, sighandler_t dispatch)
         return SIG_ERR;
     }
     return old.sa_handler;
+}
+
+/*
+ * \brief Use crm_signal_handler() instead
+ * \deprecated
+ */
+gboolean
+crm_signal(int sig, void (*dispatch) (int sig))
+{
+    return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
 static void
@@ -408,7 +418,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
     crm_signals[sig]->handler = dispatch;
     crm_signals[sig]->signal = sig;
 
-    if (crm_signal(sig, mainloop_signal_handler) == SIG_ERR) {
+    if (crm_signal_handler(sig, mainloop_signal_handler) == SIG_ERR) {
         mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
@@ -433,7 +443,7 @@ mainloop_destroy_signal(int sig)
         crm_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if (crm_signal(sig, NULL) == SIG_ERR) {
+    } else if (crm_signal_handler(sig, NULL) == SIG_ERR) {
         crm_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
         return FALSE;
 
