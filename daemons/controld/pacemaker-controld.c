@@ -30,7 +30,7 @@
 #define OPTARGS	"hV"
 
 void usage(const char *cmd, int exit_status);
-int crmd_init(void);
+_Noreturn void crmd_init(void);
 void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
@@ -125,7 +125,8 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
-    return crmd_init();
+    crmd_init();
+    return 0; // not reachable
 }
 
 static void
@@ -134,7 +135,7 @@ log_deprecation_warnings()
     // Add deprecations here as needed
 }
 
-int
+void
 crmd_init(void)
 {
     crm_exit_t exit_code = CRM_EX_OK;
@@ -169,5 +170,5 @@ crmd_init(void)
     crm_info("%s[%lu] exiting with status %d (%s)",
              crm_system_name, (unsigned long) getpid(), exit_code,
              crm_exit_str(exit_code));
-    return crmd_fast_exit(exit_code);
+    crmd_fast_exit(exit_code);
 }
