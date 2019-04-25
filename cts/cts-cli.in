@@ -462,6 +462,16 @@ function test_dates() {
     desc="2009-03-31 - 1 Month"
     cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert $CRM_EX_OK 0
+
+    # would be 1556302734 previously instead of expected 1556221374
+    # (see also date -d '2019-04-25T21:42:54+0200' '+%s')
+    desc="Test correct immediate plus-sign at timezone parsing"
+    cmd="iso8601 -d 2019-04-25T21:42:54+0200 -S"
+    test_assert $CRM_EX_OK 0
+
+    desc="Like the previous, with exotic timezone to avoid false negative"
+    cmd="iso8601 -d 2019-04-25T21:42:54+0420 -S"
+    test_assert $CRM_EX_OK 0
 }
 
 function test_acl_loop() {

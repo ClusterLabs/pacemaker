@@ -240,3 +240,11 @@ Duration: -1 month
 Duration ends at: 2009-02-28 00:00:00Z
 =#=#=#= End test: 2009-03-31 - 1 Month - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-03-31 - 1 Month
+=#=#=#= Begin test: Test correct immediate plus-sign at timezone parsing =#=#=#=
+Date: 1556221374
+=#=#=#= End test: Test correct immediate plus-sign at timezone parsing - OK (0) =#=#=#=
+* Passed: iso8601        - Test correct immediate plus-sign at timezone parsing
+=#=#=#= Begin test: Like the previous, with exotic timezone to avoid false negative =#=#=#=
+Date: 1556212974
+=#=#=#= End test: Like the previous, with exotic timezone to avoid false negative - OK (0) =#=#=#=
+* Passed: iso8601        - Like the previous, with exotic timezone to avoid false negative
