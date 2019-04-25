@@ -360,3 +360,23 @@ Duration:  3 months
 Duration ends at: 2038-04-01 00:00:00Z
 =#=#=#= End test: 2038-01-01 + 3 Months - OK (0) =#=#=#=
 * Passed: iso8601        - 2038-01-01 + 3 Months
+=#=#=#= Begin test: No white space before or within timezone =#=#=#=
+Date: 1556242974
+=#=#=#= End test: No white space before or within timezone - OK (0) =#=#=#=
+* Passed: iso8601        - No white space before or within timezone
+=#=#=#= Begin test: Whitespace within timezone =#=#=#=
+Date: 1556242974
+=#=#=#= End test: Whitespace within timezone - OK (0) =#=#=#=
+* Passed: iso8601        - Whitespace within timezone
+=#=#=#= Begin test: Whitespace before timezone =#=#=#=
+Date: 1556242974
+=#=#=#= End test: Whitespace before timezone - OK (0) =#=#=#=
+* Passed: iso8601        - Whitespace before timezone
+=#=#=#= Begin test: Whitespace before and within timezone =#=#=#=
+Date: 1556242974
+=#=#=#= End test: Whitespace before and within timezone - OK (0) =#=#=#=
+* Passed: iso8601        - Whitespace before and within timezone
+=#=#=#= Begin test: No white space before or within timezone, different timezone =#=#=#=
+Date: 1556242974
+=#=#=#= End test: No white space before or within timezone, different timezone - OK (0) =#=#=#=
+* Passed: iso8601        - No white space before or within timezone, different timezone

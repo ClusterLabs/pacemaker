@@ -2382,6 +2382,26 @@ function test_dates() {
     desc="2038-01-01 + 3 Months"
     cmd="iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'"
     test_assert $CRM_EX_OK 0
+
+    desc="No white space before or within timezone"
+    cmd="iso8601 -d 2019-04-25T21:42:54+0200 -S"
+    test_assert $CRM_EX_OK 0
+
+    desc="Whitespace within timezone"
+    cmd="iso8601 -d 2019-04-25T21:42:54+02 00 -S"
+    test_assert $CRM_EX_OK 0
+
+    desc="Whitespace before timezone"
+    cmd="iso8601 -d 2019-04-25T21:42:54 +0200 -S"
+    test_assert $CRM_EX_OK 0
+
+    desc="Whitespace before and within timezone"
+    cmd="iso8601 -d 2019-04-25T21:42:54 +02 00 -S"
+    test_assert $CRM_EX_OK 0
+
+    desc="No white space before or within timezone, different timezone"
+    cmd="iso8601 -d 2019-04-25T21:42:54+0420 -S"
+    test_assert $CRM_EX_OK 0
 }
 
 function test_acl_loop() {

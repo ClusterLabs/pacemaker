@@ -788,25 +788,14 @@ crm_time_parse_offset(const char *offset_str, int *offset)
     if (offset_str[0] == 'Z') { // @TODO invalid if anything after?
         *offset = 0;
         return TRUE;
-    }
-
-    *offset = 0;
-    if ((offset_str[0] == '+') || (offset_str[0] == '-')
-        || isdigit((int)offset_str[0])) {
-
-        gboolean negate = FALSE;
-
-        if (offset_str[0] == '+') {
-            offset_str++;
-        } else if (offset_str[0] == '-') {
-            negate = TRUE;
-            offset_str++;
-        }
-        if (crm_time_parse_sec(offset_str, offset) == FALSE) {
+    } else if (offset_str[0] == '+' || offset_str[0] == '-'
+                || isdigit(offset_str[0])) {
+        if (crm_time_parse_sec(offset_str + !isdigit(offset_str[0]), offset)) {
+            if (offset_str[0] == '-') {
+                *offset = -*offset;
+            }
+        } else {
             return FALSE;
-        }
-        if (negate) {
-            *offset = 0 - *offset;
         }
     } // @TODO else invalid?
     return TRUE;
@@ -825,23 +814,27 @@ crm_time_parse_offset(const char *offset_str, int *offset)
 static bool
 crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
-    uint32_t h, m, s;
-    char *offset_s = NULL;
+    uint h, m, s;
+    const char *offset_s = NULL;
+    crm_time_t *dt = a_time;
 
     tzset();
 
     if (time_str) {
+
+        if (crm_time_parse_sec(time_str, &(dt->seconds))) {
+            // true
+        } else {
+            return FALSE;
+        }
+
         if (crm_time_parse_sec(time_str, &(a_time->seconds)) == FALSE) {
             return FALSE;
         }
-        offset_s = strstr(time_str, "Z");
-        if (offset_s == NULL) {
-            offset_s = strstr(time_str, " ");
-            if (offset_s) {
-                while (isspace(offset_s[0])) {
-                    offset_s++;
-                }
-            }
+        /* standard doesn't allow spaces, but be/stay tolerant */
+        offset_s = time_str + strcspn(time_str, " \f\n\r\t\v-+Z");
+        while (isspace(*offset_s)) {
+            offset_s++;
         }
     }
 
@@ -857,6 +850,16 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         a_time->seconds = 0;
         crm_time_add_days(a_time, 1);
     }
+
+    if (crm_time_parse_offset(offset_s, &(dt->offset))) {
+        //true
+    } else {
+        return FALSE;
+    }
+
+    crm_time_get_sec(dt->offset, &h, &m, &s);
+    crm_trace("Got tz: %c%2.d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
+
     return TRUE;
 }
 
