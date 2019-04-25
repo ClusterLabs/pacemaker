@@ -76,7 +76,7 @@ typedef struct remote_ra_data_s {
      */
     gboolean is_maintenance;
 
-    /* Similar for if we are controlling a guest or a bare-metal remote.
+    /* Similar for whether we are controlling a guest node or remote node.
      * Fortunately there is a meta-attribute in the transition already and
      * as the situation doesn't change over time we can use the
      * resource start for noting down the information for later use when

@@ -1,20 +1,16 @@
 /*
- * Copyright 2005-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2005-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 /*
- * Primary reference:
- *	http://en.wikipedia.org/wiki/ISO_8601 (as at 2005-08-01)
- *
- * Secondary references:
- *	http://hydracen.com/dx/iso8601.htm
- *	http://www.personal.ecu.edu/mccartyr/ISOwdALG.txt
- *	http://www.personal.ecu.edu/mccartyr/isowdcal.html
- *	http://www.phys.uu.nl/~vgent/calendar/isocalendar.htm
- *
+ * References:
+ *	https://en.wikipedia.org/wiki/ISO_8601
+ *	http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm
  */
 
 #include <crm_internal.h>
@@ -121,7 +117,7 @@ year_days(int year)
     return d;
 }
 
-/* http://www.personal.ecu.edu/mccartyr/ISOwdALG.txt
+/* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
  *
  * 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
  *  YY = (Y-1) % 100
@@ -710,14 +706,12 @@ parse_date(const char *date_str)
             crm_err("Invalid day: %d", day);
         } else {
             /*
-             * http://en.wikipedia.org/wiki/ISO_week_date
+             * See https://en.wikipedia.org/wiki/ISO_week_date
              *
              * Monday 29 December 2008 is written "2009-W01-1"
              * Sunday 3 January 2010 is written "2009-W53-7"
-             *
              * Saturday 27 September 2008 is written "2008-W37-6"
              *
-             * http://en.wikipedia.org/wiki/ISO_week_date
              * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it is in week 01.
              * If 1 January is on a Friday, Saturday or Sunday, it is in week 52 or 53 of the previous year.
              */

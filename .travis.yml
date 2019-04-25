@@ -1,3 +1,7 @@
+# Copyright 2012-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+
 # Control file for the Travis autobuilder
 # https://docs.travis-ci.com/user/customizing-the-build/
 
@@ -70,10 +74,14 @@ install:
       make libxml2-utils xsltproc
 
 before_script:
-# Save and restore CC so that ./configure can pass
+# Save and restore CC so that ./configure can pass;
+# some tests (e.g. cts-exec-helper) require actual system-wide credentials
  - test $MAINT_EXTRA -ne 0 || {
      export CC_SAVED=$CC;
      export CC=$(echo ${CC} | sed s/cov-build/gcc/);
+     sed -e 's|^\(CRM_DAEMON_USER=\).*$|\1nobody|'
+         -e 's|^\(CRM_DAEMON_GROUP=\).*$|\1nobody|'
+         -i -- configure.ac;
      ./autogen.sh;
      ./configure;
      export CC=$CC_SAVED;
@@ -99,13 +107,13 @@ script:
         | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
     } && (
       cd xml;
-      ./regression.sh && ./regression.sh -B && {
+      ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
         schemas=; for schema in *.rng; do
           case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
         done;
         test -s .relaxng.org/relaxng.rng 2>/dev/null
-          || curl --create-dirs -Lo .relaxng.org/relaxng.rng
-             'http://relaxng.org/relaxng.rng';
+          || curl --create-dirs -SsLo .relaxng.org/relaxng.rng
+             'https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng';
         xmllint --noout --relaxng .relaxng.org/relaxng.rng ${schemas};
       }
     );

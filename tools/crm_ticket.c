@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 Gao,Yan <ygao@suse.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -28,7 +30,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
-#include <pacemaker-schedulerd.h>
+#include <pacemaker-internal.h>
 
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
@@ -42,11 +44,6 @@ const char *attr_default = NULL;
 char ticket_cmd = 'S';
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
-
-#define CMD_ERR(fmt, args...) do {          \
-        crm_warn(fmt, ##args);              \
-        fprintf(stderr, fmt "\n", ##args);  \
-    } while(0)
 
 static ticket_t *
 find_ticket(const char *ticket_id, pe_working_set_t * data_set)
@@ -903,5 +900,5 @@ main(int argc, char **argv)
         CMD_ERR("Use --force to ignore quorum");
     }
 
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

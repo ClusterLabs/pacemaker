@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -20,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <signal.h>
 #include <sys/utsname.h>
 
 #include <crm/msg_xml.h>
@@ -35,7 +38,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
-#include <pacemaker-schedulerd.h>
+#include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
 
 static void clean_up_connections(void);
@@ -254,15 +257,9 @@ mon_shutdown(int nsig)
     clean_up(CRM_EX_OK);
 }
 
-#if ON_DARWIN
-#  define sighandler_t sig_t
-#endif
-
 #if CURSES_ENABLED
-#  ifndef HAVE_SIGHANDLER_T
-typedef void (*sighandler_t) (int);
-#  endif
 static sighandler_t ncurses_winch_handler;
+
 static void
 mon_winresize(int nsig)
 {
@@ -572,6 +569,24 @@ refresh:
 }
 #endif
 
+// Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
+static void
+avoid_zombies()
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(struct sigaction));
+    if (sigemptyset(&sa.sa_mask) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        return;
+    }
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
+    if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -586,10 +601,8 @@ main(int argc, char **argv)
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-#if !defined (ON_DARWIN) && !defined (ON_BSD)
-    /* prevent zombies */
-    signal(SIGCLD, SIG_IGN);
-#endif
+    // Avoid needing to wait for subprocesses forked for -E/--external-agent
+    avoid_zombies();
 
     if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
@@ -668,20 +681,20 @@ main(int argc, char **argv)
             case 'p':
                 free(pid_file);
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 setenv("CIB_file", optarg, 1);
                 one_shot = TRUE;
                 break;
             case 'h':
                 if(optarg == NULL) {
-                    return crm_help(flag, CRM_EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
@@ -720,7 +733,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                return crm_help(flag, CRM_EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -923,7 +936,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, mon_shutdown);
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
-        ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
+        ncurses_winch_handler = crm_signal_handler(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;
@@ -2057,7 +2070,7 @@ get_node_display_name(node_t *node)
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
     /* Host is displayed only if this is a guest node */
-    if (is_container_remote_node(node)) {
+    if (pe__is_guest_node(node)) {
         node_t *host_node = pe__current_node(node->details->remote_rsc);
 
         if (host_node && host_node->details) {
@@ -3112,29 +3125,6 @@ sort_stonith_history(stonith_history_t *history)
 
 /*!
  * \internal
- * \brief Turn stonith action into a better readable string
- *
- * \param[in] action     Stonith action
- */
-static char *
-fence_action_str(const char *action)
-{
-    char *str = NULL;
-
-    if (action == NULL) {
-        str = strdup("fencing");
-    } else if (!strcmp(action, "on")) {
-        str = strdup("unfencing");
-    } else if (!strcmp(action, "off")) {
-        str = strdup("turning off");
-    } else {
-        str = strdup(action);
-    }
-    return str;
-}
-
-/*!
- * \internal
  * \brief Print a stonith action
  *
  * \param[in] stream     File stream to display output to
@@ -3143,7 +3133,7 @@ fence_action_str(const char *action)
 static void
 print_stonith_action(FILE *stream, stonith_history_t *event)
 {
-    char *action_s = fence_action_str(event->action);
+    const char *action_s = stonith_action_str(event->action);
     char *run_at_s = ctime(&event->completed);
 
     if ((run_at_s) && (run_at_s[0] != 0)) {
@@ -3241,8 +3231,6 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
             /* no support for fence history for other formats so far */
             break;
     }
-
-    free(action_s);
 }
 
 /*!
@@ -3490,9 +3478,9 @@ print_status(pe_working_set_t * data_set,
         } else if (node->details->online) {
             node_mode = "online";
             if (group_by_node == FALSE) {
-                if (is_container_remote_node(node)) {
+                if (pe__is_guest_node(node)) {
                     online_guest_nodes = add_list_element(online_guest_nodes, node_name);
-                } else if (is_baremetal_remote_node(node)) {
+                } else if (pe__is_remote_node(node)) {
                     online_remote_nodes = add_list_element(online_remote_nodes, node_name);
                 } else {
                     online_nodes = add_list_element(online_nodes, node_name);
@@ -3503,9 +3491,9 @@ print_status(pe_working_set_t * data_set,
         } else {
             node_mode = "OFFLINE";
             if (group_by_node == FALSE) {
-                if (is_baremetal_remote_node(node)) {
+                if (pe__is_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
-                } else if (is_container_remote_node(node)) {
+                } else if (pe__is_guest_node(node)) {
                     /* ignore offline guest nodes */
                 } else {
                     offline_nodes = add_list_element(offline_nodes, node_name);
@@ -3518,9 +3506,9 @@ print_status(pe_working_set_t * data_set,
         /* If we get here, node is in bad state, or we're grouping by node */
 
         /* Print the node name and status */
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             print_as("Guest");
-        } else if (is_baremetal_remote_node(node)) {
+        } else if (pe__is_remote_node(node)) {
             print_as("Remote");
         }
         print_as("Node %s: %s\n", node_name, node_mode);
@@ -3667,7 +3655,7 @@ print_xml_status(pe_working_set_t * data_set,
         fprintf(stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
         fprintf(stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
         fprintf(stream, "type=\"%s\" ", node_type);
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 
@@ -3927,9 +3915,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 {
     int rc = -1;
     int status = -1;
-    int action = -1;
     int target_rc = -1;
-    int transition_num = -1;
     gboolean notify = TRUE;
 
     char *rsc = NULL;
@@ -3937,7 +3923,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     const char *desc = NULL;
     const char *magic = NULL;
     const char *id = NULL;
-    char *update_te_uuid = NULL;
     const char *node = NULL;
 
     xmlNode *n = xml;
@@ -3965,8 +3950,8 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (FALSE == decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
-                                         &status, &rc, &target_rc)) {
+    if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
+                                 &target_rc)) {
         crm_err("Invalid event %s detected for %s", magic, id);
         return;
     }
@@ -4020,7 +4005,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
   bail:
-    free(update_te_uuid);
     free(rsc);
     free(task);
 }
@@ -4444,8 +4428,8 @@ clean_up(crm_exit_t exit_code)
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
         } else {
-            return crm_help('?', CRM_EX_USAGE);
+            crm_help('?', CRM_EX_USAGE);
         }
     }
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

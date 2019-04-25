@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -20,17 +22,21 @@
 int
 crm_pid_active(long pid, const char *daemon)
 {
+    static int last_asked_pid = 0;  /* log spam prevention */
+#if SUPPORT_PROCFS
     static int have_proc_pid = 0;
+#else
+    static int have_proc_pid = -1;
+#endif
+    int rc = 0;
 
     if (have_proc_pid == 0) {
+        /* evaluation of /proc/PID/exe applicability via self-introspection */
         char proc_path[PATH_MAX], exe_path[PATH_MAX];
-
-        // Make sure pid hasn't been reused by another process
         snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe",
-                 (long unsigned int)getpid());
-
+                 (long unsigned int) getpid());
         have_proc_pid = 1;
-        if (readlink(proc_path, exe_path, PATH_MAX - 1) < 0) {
+        if (readlink(proc_path, exe_path, sizeof(exe_path) - 1) < 0) {
             have_proc_pid = -1;
         }
     }
@@ -38,40 +44,52 @@ crm_pid_active(long pid, const char *daemon)
     if (pid <= 0) {
         return -1;
 
-    } else if ((kill(pid, 0) < 0) && (errno == ESRCH)) {
-        return 0;
+    } else if ((rc = kill(pid, 0)) < 0 && errno == ESRCH) {
+        return 0;  /* no such PID detected */
 
-    } else if ((daemon == NULL) || (have_proc_pid == -1)) {
-        return 1;
+    } else if (rc < 0 && have_proc_pid == -1) {
+        if (last_asked_pid != pid) {
+            crm_info("Cannot examine PID %ld: %s", pid, strerror(errno));
+            last_asked_pid = pid;
+        }
+        return -2;  /* errno != ESRCH */
 
-    } else {
-        int rc = 0;
+    } else if (rc == 0 && (daemon == NULL || have_proc_pid == -1)) {
+        return 1;  /* kill as the only indicator, cannot double check */
+
+    } else if (daemon != NULL) {
+        /* make sure PID hasn't been reused by another process
+           XXX: might still be just a zombie, which could confuse decisions */
+        bool checked_through_kill = (rc == 0);
         char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
-
-        // Make sure pid hasn't been reused by another process
         snprintf(proc_path, sizeof(proc_path), "/proc/%ld/exe", pid);
 
-        rc = readlink(proc_path, exe_path, PATH_MAX - 1);
+        rc = readlink(proc_path, exe_path, sizeof(exe_path) - 1);
         if ((rc < 0) && (errno == EACCES)) {
-            crm_perror(LOG_INFO, "Could not read from %s", proc_path);
-            return 1;
+            if (last_asked_pid != pid) {
+                crm_info("Could not read from %s: %s", proc_path,
+                         strerror(errno));
+                last_asked_pid = pid;
+            }
+            return checked_through_kill ? 1 : -2;
         } else if (rc < 0) {
-            crm_perror(LOG_ERR, "Could not read from %s", proc_path);
-            return 0;
+            if (last_asked_pid != pid) {
+                crm_err("Could not read from %s: %s (%d)", proc_path,
+                        strerror(errno), errno);
+                last_asked_pid = pid;
+            }
+            return 0;  /* most likely errno == ENOENT */
         }
-
-        exe_path[rc] = 0;
+        exe_path[rc] = '\0';
 
         if (daemon[0] != '/') {
-            rc = snprintf(myexe_path, sizeof(proc_path), CRM_DAEMON_DIR"/%s",
+            rc = snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
                           daemon);
-            myexe_path[rc] = 0;
         } else {
-            rc = snprintf(myexe_path, sizeof(proc_path), "%s", daemon);
-            myexe_path[rc] = 0;
+            rc = snprintf(myexe_path, sizeof(myexe_path), "%s", daemon);
         }
 
-        if (strcmp(exe_path, myexe_path) == 0) {
+        if (rc > 0 && rc < sizeof(myexe_path) && !strcmp(exe_path, myexe_path)) {
             return 1;
         }
     }

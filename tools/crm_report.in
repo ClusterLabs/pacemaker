@@ -1,6 +1,8 @@
 #!/bin/sh
 #
-# Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2010-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -214,7 +216,7 @@ EOF
 	log "Collected results are available in $fname"
 	log " "
 	log "Please create a bug entry at"
-	log "    http://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
+	log "    @BUG_URL@"
 	log "Include a description of your problem and attach this tarball"
 	log " "
 	log "Thank you for taking time to create this report."

@@ -4,7 +4,9 @@
 # as a node attribute in the CIB based on the sum of speeds of its active (up,
 # link detected, not blocked) underlying interfaces.
 #
-# Copyright 2011-2018 Vladislav Bogdanov <bubble@hoster-ok.com>
+# Copyright 2011-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 # Partially based on 'ping' RA by Andrew Beekhof
 #
 # Change on 2017 by Tomer Azran <tomerazran@gmail.com>:

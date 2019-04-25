@@ -1,8 +1,10 @@
-# gnulib-common.m4 serial 32
-dnl Copyright (C) 2007-2012 Free Software Foundation, Inc.
+# gnulib-common.m4 serial 44
+dnl Copyright (C) 2007-2019 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+
+AC_PREREQ([2.62])
 
 # gl_COMMON
 # is expanded unconditionally through gnulib-tool magic.
@@ -14,11 +16,18 @@ AC_DEFUN([gl_COMMON], [
 AC_DEFUN([gl_COMMON_BODY], [
   AH_VERBATIM([_Noreturn],
 [/* The _Noreturn keyword of C11.  */
-#if !defined _Noreturn && __STDC_VERSION__ < 201112
-# if (3 <= __GNUC__ || (__GNUC__ == 2 && 8 <= __GNUC_MINOR__) \
-      || 0x5110 <= __SUNPRO_C)
+#ifndef _Noreturn
+# if (defined __cplusplus \
+      && ((201103 <= __cplusplus && !(__GNUC__ == 4 && __GNUC_MINOR__ == 7)) \
+          || (defined _MSC_VER && 1900 <= _MSC_VER)))
+#  define _Noreturn [[noreturn]]
+# elif ((!defined __cplusplus || defined __clang__) \
+        && (201112 <= (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0)  \
+            || 4 < __GNUC__ + (7 <= __GNUC_MINOR__)))
+   /* _Noreturn works as-is.  */
+# elif 2 < __GNUC__ + (8 <= __GNUC_MINOR__) || 0x5110 <= __SUNPRO_C
 #  define _Noreturn __attribute__ ((__noreturn__))
-# elif defined _MSC_VER && 1200 <= _MSC_VER
+# elif 1200 <= (defined _MSC_VER ? _MSC_VER : 0)
 #  define _Noreturn __declspec (noreturn)
 # else
 #  define _Noreturn
@@ -29,7 +38,7 @@ AC_DEFUN([gl_COMMON_BODY], [
 [/* Work around a bug in Apple GCC 4.0.1 build 5465: In C99 mode, it supports
    the ISO C 99 semantics of 'extern inline' (unlike the GNU C semantics of
    earlier versions), but does not display it by setting __GNUC_STDC_INLINE__.
-   __APPLE__ && __MACH__ test for MacOS X.
+   __APPLE__ && __MACH__ test for Mac OS X.
    __APPLE_CC__ tests for the Apple compiler and its version.
    __STDC_VERSION__ tests for the C99 mode.  */
 #if defined __APPLE__ && defined __MACH__ && __APPLE_CC__ >= 5465 && !defined __cplusplus && __STDC_VERSION__ >= 199901L && !defined __GNUC_STDC_INLINE__
@@ -48,6 +57,16 @@ AC_DEFUN([gl_COMMON_BODY], [
    is a misnomer outside of parameter lists.  */
 #define _UNUSED_PARAMETER_ _GL_UNUSED
 
+/* gcc supports the "unused" attribute on possibly unused labels, and
+   g++ has since version 4.5.  Note to support C++ as well as C,
+   _GL_UNUSED_LABEL should be used with a trailing ;  */
+#if !defined __cplusplus || __GNUC__ > 4 \
+    || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
+# define _GL_UNUSED_LABEL _GL_UNUSED
+#else
+# define _GL_UNUSED_LABEL
+#endif
+
 /* The __pure__ attribute was added in gcc 2.96.  */
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 96)
 # define _GL_ATTRIBUTE_PURE __attribute__ ((__pure__))
@@ -61,6 +80,40 @@ AC_DEFUN([gl_COMMON_BODY], [
 #else
 # define _GL_ATTRIBUTE_CONST /* empty */
 #endif
+
+/* The __malloc__ attribute was added in gcc 3.  */
+#if 3 <= __GNUC__
+# define _GL_ATTRIBUTE_MALLOC __attribute__ ((__malloc__))
+#else
+# define _GL_ATTRIBUTE_MALLOC /* empty */
+#endif
+])
+  AH_VERBATIM([async_safe],
+[/* The _GL_ASYNC_SAFE marker should be attached to functions that are
+   signal handlers (for signals other than SIGABRT, SIGPIPE) or can be
+   invoked from such signal handlers.  Such functions have some restrictions:
+     * All functions that it calls should be marked _GL_ASYNC_SAFE as well,
+       or should be listed as async-signal-safe in POSIX
+       <http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_04>
+       section 2.4.3.  Note that malloc(), sprintf(), and fwrite(), in
+       particular, are NOT async-signal-safe.
+     * All memory locations (variables and struct fields) that these functions
+       access must be marked 'volatile'.  This holds for both read and write
+       accesses.  Otherwise the compiler might optimize away stores to and
+       reads from such locations that occur in the program, depending on its
+       data flow analysis.  For example, when the program contains a loop
+       that is intended to inspect a variable set from within a signal handler
+           while (!signal_occurred)
+             ;
+       the compiler is allowed to transform this into an endless loop if the
+       variable 'signal_occurred' is not declared 'volatile'.
+   Additionally, recall that:
+     * A signal handler should not modify errno (except if it is a handler
+       for a fatal signal and ends by raising the same signal again, thus
+       provoking the termination of the process).  If it invokes a function
+       that may clobber errno, it needs to save and restore the value of
+       errno.  */
+#define _GL_ASYNC_SAFE
 ])
   dnl Preparation for running test programs:
   dnl Tell glibc to write diagnostics from -D_FORTIFY_SOURCE=2 to stderr, not
@@ -196,13 +249,6 @@ AC_DEFUN([gl_FEATURES_H],
   AC_SUBST([HAVE_FEATURES_H])
 ])
 
-# m4_foreach_w
-# is a backport of autoconf-2.59c's m4_foreach_w.
-# Remove this macro when we can assume autoconf >= 2.60.
-m4_ifndef([m4_foreach_w],
-  [m4_define([m4_foreach_w],
-    [m4_foreach([$1], m4_split(m4_normalize([$2]), [ ]), [$3])])])
-
 # AS_VAR_IF(VAR, VALUE, [IF-MATCH], [IF-NOT-MATCH])
 # ----------------------------------------------------
 # Backport of autoconf-2.63b's macro.
@@ -215,15 +261,14 @@ m4_ifndef([AS_VAR_IF],
 # Modifies the value of the shell variable CC in an attempt to make $CC
 # understand ISO C99 source code.
 # This is like AC_PROG_CC_C99, except that
-# - AC_PROG_CC_C99 did not exist in Autoconf versions < 2.60,
 # - AC_PROG_CC_C99 does not mix well with AC_PROG_CC_STDC
-#   <http://lists.gnu.org/archive/html/bug-gnulib/2011-09/msg00367.html>,
+#   <https://lists.gnu.org/r/bug-gnulib/2011-09/msg00367.html>,
 #   but many more packages use AC_PROG_CC_STDC than AC_PROG_CC_C99
-#   <http://lists.gnu.org/archive/html/bug-gnulib/2011-09/msg00441.html>.
+#   <https://lists.gnu.org/r/bug-gnulib/2011-09/msg00441.html>.
 # Remaining problems:
 # - When AC_PROG_CC_STDC is invoked twice, it adds the C99 enabling options
 #   to CC twice
-#   <http://lists.gnu.org/archive/html/bug-gnulib/2011-09/msg00431.html>.
+#   <https://lists.gnu.org/r/bug-gnulib/2011-09/msg00431.html>.
 # - AC_PROG_CC_STDC is likely to change now that C11 is an ISO standard.
 AC_DEFUN([gl_PROG_CC_C99],
 [
@@ -242,9 +287,11 @@ AC_DEFUN([gl_PROG_AR_RANLIB],
 [
   dnl Minix 3 comes with two toolchains: The Amsterdam Compiler Kit compiler
   dnl as "cc", and GCC as "gcc". They have different object file formats and
-  dnl library formats. In particular, the GNU binutils programs ar, ranlib
+  dnl library formats. In particular, the GNU binutils programs ar and ranlib
   dnl produce libraries that work only with gcc, not with cc.
   AC_REQUIRE([AC_PROG_CC])
+  dnl The '][' hides this use from 'aclocal'.
+  AC_BEFORE([$0], [A][M_PROG_AR])
   AC_CACHE_CHECK([for Minix Amsterdam compiler], [gl_cv_c_amsterdam_compiler],
     [
       AC_EGREP_CPP([Amsterdam],
@@ -256,25 +303,39 @@ Amsterdam
         [gl_cv_c_amsterdam_compiler=yes],
         [gl_cv_c_amsterdam_compiler=no])
     ])
-  if test -z "$AR"; then
-    if test $gl_cv_c_amsterdam_compiler = yes; then
+
+  dnl Don't compete with AM_PROG_AR's decision about AR/ARFLAGS if we are not
+  dnl building with __ACK__.
+  if test $gl_cv_c_amsterdam_compiler = yes; then
+    if test -z "$AR"; then
       AR='cc -c.a'
-      if test -z "$ARFLAGS"; then
-        ARFLAGS='-o'
-      fi
-    else
-      dnl Use the Automake-documented default values for AR and ARFLAGS,
-      dnl but prefer ${host}-ar over ar (useful for cross-compiling).
-      AC_CHECK_TOOL([AR], [ar], [ar])
-      if test -z "$ARFLAGS"; then
-        ARFLAGS='cru'
-      fi
+    fi
+    if test -z "$ARFLAGS"; then
+      ARFLAGS='-o'
     fi
   else
-    if test -z "$ARFLAGS"; then
-      ARFLAGS='cru'
-    fi
+    dnl AM_PROG_AR was added in automake v1.11.2.  AM_PROG_AR does not AC_SUBST
+    dnl ARFLAGS variable (it is filed into Makefile.in directly by automake
+    dnl script on-demand, if not specified by ./configure of course).
+    dnl Don't AC_REQUIRE the AM_PROG_AR otherwise the code for __ACK__ above
+    dnl will be ignored.  Also, pay attention to call AM_PROG_AR in else block
+    dnl because AM_PROG_AR is written so it could re-set AR variable even for
+    dnl __ACK__.  It may seem like its easier to avoid calling the macro here,
+    dnl but we need to AC_SUBST both AR/ARFLAGS (thus those must have some good
+    dnl default value and automake should usually know them).
+    dnl
+    dnl The '][' hides this use from 'aclocal'.
+    m4_ifdef([A][M_PROG_AR], [A][M_PROG_AR], [:])
   fi
+
+  dnl In case the code above has not helped with setting AR/ARFLAGS, use
+  dnl Automake-documented default values for AR and ARFLAGS, but prefer
+  dnl ${host}-ar over ar (useful for cross-compiling).
+  AC_CHECK_TOOL([AR], [ar], [ar])
+  if test -z "$ARFLAGS"; then
+    ARFLAGS='cr'
+  fi
+
   AC_SUBST([AR])
   AC_SUBST([ARFLAGS])
   if test -z "$RANLIB"; then
@@ -288,42 +349,29 @@ Amsterdam
   AC_SUBST([RANLIB])
 ])
 
-# AC_PROG_MKDIR_P
-# is a backport of autoconf-2.60's AC_PROG_MKDIR_P, with a fix
-# for interoperability with automake-1.9.6 from autoconf-2.62.
-# Remove this macro when we can assume autoconf >= 2.62 or
-# autoconf >= 2.60 && automake >= 1.10.
-m4_ifdef([AC_PROG_MKDIR_P], [
-  dnl For automake-1.9.6 && autoconf < 2.62: Ensure MKDIR_P is AC_SUBSTed.
-  m4_define([AC_PROG_MKDIR_P],
-    m4_defn([AC_PROG_MKDIR_P])[
-    AC_SUBST([MKDIR_P])])], [
-  dnl For autoconf < 2.60: Backport of AC_PROG_MKDIR_P.
-  AC_DEFUN_ONCE([AC_PROG_MKDIR_P],
-    [AC_REQUIRE([AM_PROG_MKDIR_P])dnl defined by automake
-     MKDIR_P='$(mkdir_p)'
-     AC_SUBST([MKDIR_P])])])
-
 # AC_C_RESTRICT
-# This definition overrides the AC_C_RESTRICT macro from autoconf 2.60..2.61,
-# so that mixed use of GNU C and GNU C++ and mixed use of Sun C and Sun C++
-# works.
-# This definition can be removed once autoconf >= 2.62 can be assumed.
-m4_if(m4_version_compare(m4_defn([m4_PACKAGE_VERSION]),[2.62]),[-1],[
+# This definition is copied from post-2.69 Autoconf and overrides the
+# AC_C_RESTRICT macro from autoconf 2.60..2.69.  It can be removed
+# once autoconf >= 2.70 can be assumed.  It's painful to check version
+# numbers, and in practice this macro is more up-to-date than Autoconf
+# is, so override Autoconf unconditionally.
 AC_DEFUN([AC_C_RESTRICT],
 [AC_CACHE_CHECK([for C/C++ restrict keyword], [ac_cv_c_restrict],
   [ac_cv_c_restrict=no
    # The order here caters to the fact that C++ does not require restrict.
    for ac_kw in __restrict __restrict__ _Restrict restrict; do
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-      [[typedef int * int_ptr;
-        int foo (int_ptr $ac_kw ip) {
-        return ip[0];
-       }]],
-      [[int s[1];
-        int * $ac_kw t = s;
-        t[0] = 0;
-        return foo(t)]])],
+     AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[typedef int *int_ptr;
+           int foo (int_ptr $ac_kw ip) { return ip[0]; }
+           int bar (int [$ac_kw]); /* Catch GCC bug 14050.  */
+           int bar (int ip[$ac_kw]) { return ip[0]; }
+         ]],
+         [[int s[1];
+           int *$ac_kw t = s;
+           t[0] = 0;
+           return foo (t) + bar (t);
+         ]])],
       [ac_cv_c_restrict=$ac_kw])
      test "$ac_cv_c_restrict" != no && break
    done
@@ -333,21 +381,21 @@ AC_DEFUN([AC_C_RESTRICT],
    nothing if this is not supported.  Do not define if restrict is
    supported directly.  */
 #undef restrict
-/* Work around a bug in Sun C++: it does not support _Restrict, even
-   though the corresponding Sun C compiler does, which causes
-   "#define restrict _Restrict" in the previous line.  Perhaps some future
-   version of Sun C++ will work with _Restrict; if so, it'll probably
-   define __RESTRICT, just as Sun C does.  */
+/* Work around a bug in Sun C++: it does not support _Restrict or
+   __restrict__, even though the corresponding Sun C compiler ends up with
+   "#define restrict _Restrict" or "#define restrict __restrict__" in the
+   previous line.  Perhaps some future version of Sun C++ will work with
+   restrict; if so, hopefully it defines __RESTRICT like Sun C does.  */
 #if defined __SUNPRO_CC && !defined __RESTRICT
 # define _Restrict
+# define __restrict__
 #endif])
  case $ac_cv_c_restrict in
    restrict) ;;
    no) AC_DEFINE([restrict], []) ;;
    *)  AC_DEFINE_UNQUOTED([restrict], [$ac_cv_c_restrict]) ;;
  esac
-])
-])
+])# AC_C_RESTRICT
 
 # gl_BIGENDIAN
 # is like AC_C_BIGENDIAN, except that it can be AC_REQUIREd.
@@ -370,3 +418,7 @@ AC_DEFUN([gl_CACHE_VAL_SILENT],
   AC_CACHE_VAL([$1], [$2])
   as_echo_n="$saved_as_echo_n"
 ])
+
+# AS_VAR_COPY was added in autoconf 2.63b
+m4_define_default([AS_VAR_COPY],
+[AS_LITERAL_IF([$1[]$2], [$1=$$2], [eval $1=\$$2])])

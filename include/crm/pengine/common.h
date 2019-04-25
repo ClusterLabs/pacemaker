@@ -1,5 +1,7 @@
 /* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,14 +42,12 @@ enum action_fail_response {
     action_fail_standby,
     action_fail_fence,
     action_fail_restart_container,
-    /* This is reserved for internal use for baremetal remote node connection
-     * resources. This fail action means
-     * 1. If stonith is enabled, fence the baremetal remote node
-     * 2. stonith not enabled, attempt to recover the connection resources
-     *
-     * This response value gives us control of saying types of
-     * connection resource failures result in fencing the remote node.
-     * Example: recurring monitors failure should result in fencing.
+
+    /* This is reserved for internal use for remote node connection resources.
+     * Fence the remote node if stonith is enabled, otherwise attempt to recover
+     * the connection resource. This allows us to specify types of connection
+     * resource failures that should result in fencing the remote node
+     * (for example, recurring monitor failures).
      */
     action_fail_reset_remote,
 

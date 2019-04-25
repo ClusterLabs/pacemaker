@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -33,7 +35,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
-#include <sched_allocate.h>
+#include <pacemaker-internal.h>
 
 #include <pacemaker-fenced.h>
 
@@ -677,8 +679,6 @@ update_done:
     }
 }
 
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
-
 /*!
  * \internal
  * \brief Update all STONITH device definitions based on current CIB
@@ -700,7 +700,7 @@ cib_devices_update(void)
     fenced_data_set->localhost = stonith_our_uname;
 
     cluster_status(fenced_data_set);
-    do_calculations(fenced_data_set, NULL, NULL);
+    pcmk__schedule_actions(fenced_data_set, NULL, NULL);
 
     for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
         cib_device_update(gIter->data, fenced_data_set);
@@ -1262,6 +1262,7 @@ main(int argc, char **argv)
     int option_index = 0;
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
+    crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -1432,6 +1433,22 @@ main(int argc, char **argv)
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    crm_notice("Starting Pacemaker fencer");
+
+    old_instance = crm_ipc_new("stonith-ng", 0);
+    if (crm_ipc_connect(old_instance)) {
+        /* IPC end-point already up */
+        crm_ipc_close(old_instance);
+        crm_ipc_destroy(old_instance);
+        crm_err("pacemaker-fenced is already active, aborting startup");
+        crm_exit(CRM_EX_OK);
+    } else {
+        /* not up or not authentic, we'll proceed either way */
+        crm_ipc_destroy(old_instance);
+        old_instance = NULL;
+    }
+
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
@@ -1492,10 +1509,10 @@ main(int argc, char **argv)
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_info("Starting %s mainloop", crm_system_name);
+    crm_notice("Pacemaker fencer successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     stonith_cleanup();
     pe_free_working_set(fenced_data_set);
-    return crm_exit(CRM_EX_OK);
+    crm_exit(CRM_EX_OK);
 }

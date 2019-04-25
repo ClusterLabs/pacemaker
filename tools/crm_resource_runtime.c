@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -434,7 +436,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-        if (node && is_remote_node(node)) {
+        if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
@@ -641,7 +643,7 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
     int attr_options = attrd_opt_none;
     char *rsc_name = rsc_fail_name(rsc);
 
-    if (is_remote_node(node)) {
+    if (pe__is_guest_or_remote_node(node)) {
         attr_options |= attrd_opt_remote;
     }
     rc = attrd_clear_delegate(NULL, node->details->uname, rsc_name, operation,
@@ -781,7 +783,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
             CMD_ERR("Unknown node: %s", node_name);
             return -ENXIO;
         }
-        if (is_remote_node(node)) {
+        if (pe__is_guest_or_remote_node(node)) {
             attr_options |= attrd_opt_remote;
         }
     }
@@ -988,8 +990,8 @@ get_active_resources(const char *host, GList *rsc_list)
     return active;
 }
 
-static GList*
-subtract_lists(GList *from, GList *items) 
+GList*
+subtract_lists(GList *from, GList *items, GCompareFunc cmp)
 {
     GList *item = NULL;
     GList *result = g_list_copy(from);
@@ -999,7 +1001,7 @@ subtract_lists(GList *from, GList *items)
         for (candidate = from; candidate != NULL; candidate = candidate->next) {
             crm_info("Comparing %s with %s", (const char *) candidate->data,
                      (const char *) item->data);
-            if(strcmp(candidate->data, item->data) == 0) {
+            if(cmp(candidate->data, item->data) == 0) {
                 result = g_list_remove(result, candidate->data);
                 break;
             }
@@ -1125,7 +1127,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        do_calculations(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set, data_set->input, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
@@ -1332,7 +1334,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     target_active = get_active_resources(host, data_set->resources);
     dump_list(target_active, "Target");
 
-    list_delta = subtract_lists(current_active, target_active);
+    list_delta = subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
     fprintf(stdout, "Waiting for %d resources to stop:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
@@ -1361,7 +1363,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
             }
             current_active = get_active_resources(host, data_set->resources);
             g_list_free(list_delta);
-            list_delta = subtract_lists(current_active, target_active);
+            list_delta = subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
@@ -1405,7 +1407,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (list_delta) {
         g_list_free(list_delta);
     }
-    list_delta = subtract_lists(target_active, current_active);
+    list_delta = subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
@@ -1440,7 +1442,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
              */
             current_active = get_active_resources(NULL, data_set->resources);
             g_list_free(list_delta);
-            list_delta = subtract_lists(target_active, current_active);
+            list_delta = subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
@@ -1610,7 +1612,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
             pe_free_working_set(data_set);
             return rc;
         }
-        do_calculations(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set, data_set->input, NULL);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two
@@ -1638,94 +1640,59 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 }
 
 int
-cli_resource_execute(resource_t *rsc, const char *requested_name,
-                     const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
+cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
+                                 const char *rsc_prov, const char *rsc_type,
+                                 const char *action, GHashTable *params,
+                                 GHashTable *override_hash, int timeout_ms)
 {
+    GHashTable *params_copy = NULL;
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
-    const char *rid = NULL;
-    const char *rtype = NULL;
-    const char *rprov = NULL;
-    const char *rclass = NULL;
-    const char *action = NULL;
-    GHashTable *params = NULL;
 
-    if (safe_str_eq(rsc_action, "validate")) {
-        action = "validate-all";
-
-    } else if (safe_str_eq(rsc_action, "force-check")) {
-        action = "monitor";
-
-    } else if (safe_str_eq(rsc_action, "force-stop")) {
-        action = rsc_action+6;
-
-    } else if (safe_str_eq(rsc_action, "force-start")
-               || safe_str_eq(rsc_action, "force-demote")
-               || safe_str_eq(rsc_action, "force-promote")) {
-        action = rsc_action+6;
-
-        if(pe_rsc_is_clone(rsc)) {
-            rc = cli_resource_search(rsc, requested_name, data_set);
-            if(rc > 0 && do_force == FALSE) {
-                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
-                        action, rsc->id);
-                CMD_ERR("Try setting target-role=Stopped first or specifying "
-                        "the force option");
-                crm_exit(CRM_EX_UNSAFE);
-            }
-        }
-    }
-
-    if(pe_rsc_is_clone(rsc)) {
-        /* Grab the first child resource in the hope it's not a group */
-        rsc = rsc->children->data;
-    }
-
-    if(rsc->variant == pe_group) {
-        CMD_ERR("Sorry, the %s option doesn't support group resources",
-                rsc_action);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    }
-
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (safe_str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH)) {
         CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
-                rsc_action, rclass);
+                action, rsc_class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
-    params = generate_resource_params(rsc, data_set);
+    /* If no timeout was provided, grab the default. */
+    if (timeout_ms == 0) {
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    }
 
     /* add meta_timeout env needed by some resource agents */
-    if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
-    }
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
                         crm_strdup_printf("%d", timeout_ms));
 
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+    /* resources_action_create frees the params hash table it's passed, but we
+     * may need to reuse it in a second call to resources_action_create.  Thus
+     * we'll make a copy here so that gets freed and the original remains for
+     * reuse.
+     */
+    params_copy = crm_str_table_dup(params);
 
-    op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
-                                 timeout_ms, params, 0);
+    op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
+                                 timeout_ms, params_copy, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
-        op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
-                                     timeout_ms, params, 0);
+        params_copy = crm_str_table_dup(params);
+        op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
+                                     timeout_ms, params_copy, 0);
+
+        /* Callers of cli_resource_execute expect that the params hash table will
+         * be freed.  That function uses this one, so for that reason and for
+         * making the two act the same, we should free the hash table here too.
+         */
+        g_hash_table_destroy(params);
 
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
-
-        return crm_exit(CRM_EX_DATAERR);
+        crm_exit(CRM_EX_DATAERR);
     }
-
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
     if(resource_verbose > 1) {
@@ -1746,7 +1713,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
             printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
-                   rsc->id, name, value);
+                   rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
@@ -1755,13 +1722,15 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         int more, lpc, last;
         char *local_copy = NULL;
 
+        rc = op->rc;
+
         if (op->status == PCMK_LRM_OP_DONE) {
             printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                    services_ocf_exitcode_str(op->rc), op->rc);
         } else {
             printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                    services_lrm_status_str(op->status), op->status);
         }
 
@@ -1797,10 +1766,84 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
             }
             free(local_copy);
         }
+    } else {
+        rc = op->rc == 0 ? pcmk_err_generic : op->rc;
     }
-  done:
-    rc = op->rc;
+
+done:
     services_action_free(op);
+    /* See comment above about why we free params here. */
+    g_hash_table_destroy(params);
+    return rc;
+}
+
+int
+cli_resource_execute(resource_t *rsc, const char *requested_name,
+                     const char *rsc_action, GHashTable *override_hash,
+                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
+{
+    int rc = pcmk_ok;
+    const char *rid = NULL;
+    const char *rtype = NULL;
+    const char *rprov = NULL;
+    const char *rclass = NULL;
+    const char *action = NULL;
+    GHashTable *params = NULL;
+
+    if (safe_str_eq(rsc_action, "validate")) {
+        action = "validate-all";
+
+    } else if (safe_str_eq(rsc_action, "force-check")) {
+        action = "monitor";
+
+    } else if (safe_str_eq(rsc_action, "force-stop")) {
+        action = rsc_action+6;
+
+    } else if (safe_str_eq(rsc_action, "force-start")
+               || safe_str_eq(rsc_action, "force-demote")
+               || safe_str_eq(rsc_action, "force-promote")) {
+        action = rsc_action+6;
+
+        if(pe_rsc_is_clone(rsc)) {
+            rc = cli_resource_search(rsc, requested_name, data_set);
+            if(rc > 0 && do_force == FALSE) {
+                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
+                        action, rsc->id);
+                CMD_ERR("Try setting target-role=Stopped first or specifying "
+                        "the force option");
+                crm_exit(CRM_EX_UNSAFE);
+            }
+        }
+
+    } else {
+        action = rsc_action;
+    }
+
+    if(pe_rsc_is_clone(rsc)) {
+        /* Grab the first child resource in the hope it's not a group */
+        rsc = rsc->children->data;
+    }
+
+    if(rsc->variant == pe_group) {
+        CMD_ERR("Sorry, the %s option doesn't support group resources",
+                rsc_action);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    }
+
+    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+
+    params = generate_resource_params(rsc, data_set);
+
+    if (timeout_ms == 0) {
+        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
+    }
+
+    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+
+    rc = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
+                                          params, override_hash, timeout_ms);
     return rc;
 }
 
@@ -1952,7 +1995,7 @@ cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,node_t
     const char* host_uname =  node->details->uname;
     GListPtr allResources = node->details->allocated_rsc;
     GListPtr activeResources = node->details->running_rsc;
-    GListPtr unactiveResources = subtract_lists(allResources,activeResources);
+    GListPtr unactiveResources = subtract_lists(allResources,activeResources,(GCompareFunc) strcmp);
     GListPtr lpc = NULL;
 
     for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {

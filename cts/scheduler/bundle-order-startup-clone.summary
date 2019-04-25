@@ -5,11 +5,11 @@ RemoteOFFLINE: [ rabbitmq-bundle-0 ]
 
  Clone Set: storage-clone [storage]
      Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
- Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+ Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
    galera-bundle-0	(ocf::heartbeat:galera):	Stopped
- Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+ Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
    haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
- Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+ Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
    redis-bundle-0	(ocf::heartbeat:redis):	Stopped
 
 Transition Summary:
@@ -64,14 +64,14 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ metal-1 metal-2 metal-3 ]
 RemoteOFFLINE: [ rabbitmq-bundle-0 ]
-Containers: [ redis-bundle-0:redis-bundle-docker-0 ]
+GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 ]
 
  Clone Set: storage-clone [storage]
      Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
- Docker container: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
+ Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
    galera-bundle-0	(ocf::heartbeat:galera):	Stopped
- Docker container: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
+ Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
    haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started metal-2
- Docker container: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
+ Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
    redis-bundle-0	(ocf::heartbeat:redis):	Slave metal-2
 

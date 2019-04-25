@@ -1,0 +1,161 @@
+Created new pacemaker configuration
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Try to check a rule that doesn't exist =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+No rule found with ID=blahblah containing a date_expression
+Error checking rule: No such device or address
+=#=#=#= Current cib after: Try to check a rule that doesn't exist =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Try to check a rule that doesn't exist - No such object (105) =#=#=#=
+* Passed: crm_rule       - Try to check a rule that doesn't exist
+=#=#=#= Begin test: Try to check a rule that has no date_expression =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+No rule found with ID=no-date-expression containing a date_expression
+Error checking rule: No such device or address
+=#=#=#= Current cib after: Try to check a rule that has no date_expression =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Try to check a rule that has no date_expression - No such object (105) =#=#=#=
+* Passed: crm_rule       - Try to check a rule that has no date_expression
+=#=#=#= Begin test: Verify basic rule is expired =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule cli-prefer-rule-dummy-expired is expired
+=#=#=#= Current cib after: Verify basic rule is expired =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Verify basic rule is expired - Requested item has expired (110) =#=#=#=
+* Passed: crm_rule       - Verify basic rule is expired
+=#=#=#= Begin test: Verify basic rule worked in the past =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule cli-prefer-rule-dummy-expired is still in effect
+=#=#=#= Current cib after: Verify basic rule worked in the past =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Verify basic rule worked in the past - OK (0) =#=#=#=
+* Passed: crm_rule       - Verify basic rule worked in the past
+=#=#=#= Begin test: Verify basic rule is not yet in effect =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule cli-prefer-rule-dummy-not-yet has not yet taken effect
+=#=#=#= Current cib after: Verify basic rule is not yet in effect =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Verify basic rule is not yet in effect - Requested item is not yet in effect (111) =#=#=#=
+* Passed: crm_rule       - Verify basic rule is not yet in effect

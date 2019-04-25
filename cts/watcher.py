@@ -4,7 +4,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2014-2018 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright 2014-2019 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -31,7 +31,7 @@ class SearchObj(object):
         self.offset = "EOF"
 
         if host == None:
-            host = "localhost"
+            self.host = "localhost"
 
     def __str__(self):
         if self.host:
@@ -63,8 +63,7 @@ class FileObj(SearchObj):
     def __init__(self, filename, host=None, name=None):
         SearchObj.__init__(self, filename, host, name)
 
-        if host is not None:
-            self.harvest()
+        self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
         for line in outLines:

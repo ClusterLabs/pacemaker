@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -22,8 +24,7 @@
 #include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
-#include <sched_allocate.h>
-#include "fake_transition.h"
+#include <pacemaker-internal.h>
 
 cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
@@ -38,8 +39,6 @@ extern gboolean bringing_nodes_online;
 	    printf(fmt , ##args);		\
 	}					\
     } while(0)
-
-extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 char *use_date = NULL;
 
@@ -77,7 +76,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 {
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
-    char *online_remote_containers = NULL;
+    char *online_guest_nodes = NULL;
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
@@ -88,7 +87,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
         const char *node_mode = NULL;
         char *node_name = NULL;
 
-        if (is_container_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
             node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
         } else {
             node_name = crm_strdup_printf("%s", node->details->uname);
@@ -126,9 +125,9 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             }
 
         } else if (node->details->online) {
-            if (is_container_remote_node(node)) {
-                online_remote_containers = add_list_element(online_remote_containers, node_name);
-            } else if (is_baremetal_remote_node(node)) {
+            if (pe__is_guest_node(node)) {
+                online_guest_nodes = add_list_element(online_guest_nodes, node_name);
+            } else if (pe__is_remote_node(node)) {
                 online_remote_nodes = add_list_element(online_remote_nodes, node_name);
             } else {
                 online_nodes = add_list_element(online_nodes, node_name);
@@ -137,9 +136,9 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             continue;
 
         } else {
-            if (is_baremetal_remote_node(node)) {
+            if (pe__is_remote_node(node)) {
                 offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
-            } else if (is_container_remote_node(node)) {
+            } else if (pe__is_guest_node(node)) {
                 /* ignore offline container nodes */
             } else {
                 offline_nodes = add_list_element(offline_nodes, node_name);
@@ -148,9 +147,9 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             continue;
         }
 
-        if (is_container_remote_node(node)) {
-            printf("ContainerNode %s: %s\n", node_name, node_mode);
-        } else if (is_baremetal_remote_node(node)) {
+        if (pe__is_guest_node(node)) {
+            printf("GuestNode %s: %s\n", node_name, node_mode);
+        } else if (pe__is_remote_node(node)) {
             printf("RemoteNode %s: %s\n", node_name, node_mode);
         } else if (safe_str_eq(node->details->uname, node->details->id)) {
             printf("Node %s: %s\n", node_name, node_mode);
@@ -177,9 +176,9 @@ print_cluster_status(pe_working_set_t * data_set, long options)
         printf("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
         free(offline_remote_nodes);
     }
-    if (online_remote_containers) {
-        printf("Containers: [%s ]\n", online_remote_containers);
-        free(online_remote_containers);
+    if (online_guest_nodes) {
+        printf("GuestOnline: [%s ]\n", online_guest_nodes);
+        free(online_guest_nodes);
     }
 
     fprintf(stdout, "\n");
@@ -470,7 +469,7 @@ static struct crm_option long_options[] = {
     {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
-    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/ch07.html#s-ocf-return-codes"},
+    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html"},
     {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
@@ -531,7 +530,7 @@ profile_one(const char *xml_file, pe_working_set_t *data_set)
 
     data_set->input = cib_object;
     get_date(data_set);
-    do_calculations(data_set, cib_object, NULL);
+    pcmk__schedule_actions(data_set, cib_object, NULL);
     pe_reset_working_set(data_set);
 }
 
@@ -872,7 +871,7 @@ main(int argc, char **argv)
             printf("Utilization information:\n");
         }
 
-        do_calculations(data_set, input, local_date);
+        pcmk__schedule_actions(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
@@ -926,5 +925,5 @@ main(int argc, char **argv)
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    return crm_exit(crm_errno2exit(rc));
+    crm_exit(crm_errno2exit(rc));
 }

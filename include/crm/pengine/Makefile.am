@@ -1,5 +1,7 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2006-2017 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,4 +22,4 @@ MAINTAINERCLEANFILES    = Makefile.in
 headerdir=$(pkgincludedir)/crm/pengine
 
 noinst_HEADERS		= internal.h rules_internal.h
-header_HEADERS		= common.h complex.h remote.h rules.h status.h
+header_HEADERS		= common.h complex.h pe_types.h remote.h rules.h status.h

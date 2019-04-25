@@ -228,6 +228,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="testip_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="33" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_demote_0"/>
        </trigger>
        <trigger>
@@ -297,6 +300,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="drbd1:1_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
+      </trigger>
+      <trigger>
         <rsc_op id="9" operation="stop" operation_key="drbd1:0_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
        </trigger>
       <trigger>

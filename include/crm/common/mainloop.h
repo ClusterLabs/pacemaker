@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -18,6 +20,7 @@ extern "C" {
  * \ingroup core
  */
 
+#  include <signal.h> // sighandler_t
 #  include <glib.h>
 
 enum mainloop_child_flags {
@@ -41,7 +44,12 @@ void mainloop_trigger_complete(crm_trigger_t * trig);
 
 gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
-gboolean crm_signal(int sig, void (*dispatch) (int sig));
+#  ifndef HAVE_SIGHANDLER_T
+typedef void (*sighandler_t)(int);
+#  endif
+
+sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
+gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
 
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 

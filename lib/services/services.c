@@ -21,6 +21,7 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/services.h>
+#include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
 #include "services_lsb.h"
@@ -372,35 +373,6 @@ services_action_user(svc_action_t *op, const char *user)
     return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
 }
 
-static void
-set_alert_env(gpointer key, gpointer value, gpointer user_data)
-{
-    int rc;
-
-    if (value) {
-        rc = setenv(key, value, 1);
-    } else {
-        rc = unsetenv(key);
-    }
-
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "setenv %s=%s",
-                  (char*)key, (value? (char*)value : ""));
-    } else {
-        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
-    }
-}
-
-static void
-unset_alert_env(gpointer key, gpointer value, gpointer user_data)
-{
-    if (unsetenv(key) < 0) {
-        crm_perror(LOG_ERR, "unset %s", (char*)key);
-    } else {
-        crm_trace("unset %s", (char*)key);
-    }
-}
-
 /*!
  * \brief Execute an alert agent action
  *
@@ -415,18 +387,9 @@ unset_alert_env(gpointer key, gpointer value, gpointer user_data)
 gboolean
 services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
 {
-    gboolean responsible;
-
     action->synchronous = false;
     action->opaque->callback = cb;
-    if (action->params) {
-        g_hash_table_foreach(action->params, set_alert_env, NULL);
-    }
-    responsible = services_os_action_execute(action);
-    if (action->params) {
-        g_hash_table_foreach(action->params, unset_alert_env, NULL);
-    }
-    return responsible;
+    return services_os_action_execute(action);
 }
 
 #if SUPPORT_DBUS
@@ -765,11 +728,16 @@ services_untrack_op(svc_action_t *op)
 }
 
 gboolean
-services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
+services_action_async_fork_notify(svc_action_t * op,
+                                  void (*action_callback) (svc_action_t *),
+                                  void (*action_fork_callback) (svc_action_t *))
 {
     op->synchronous = false;
     if (action_callback) {
         op->opaque->callback = action_callback;
+    }
+    if (action_fork_callback) {
+        op->opaque->fork_callback = action_fork_callback;
     }
 
     if (op->interval_ms > 0) {
@@ -790,6 +758,12 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     return action_exec_helper(op);
 }
 
+gboolean
+services_action_async(svc_action_t * op,
+                      void (*action_callback) (svc_action_t *))
+{
+    return services_action_async_fork_notify(op, action_callback, NULL);
+}
 
 static gboolean processing_blocked_ops = FALSE;
 
@@ -1085,4 +1059,91 @@ resources_list_agents(const char *standard, const char *provider)
     }
 
     return NULL;
+}
+
+gboolean
+resources_agent_exists(const char *standard, const char *provider, const char *agent)
+{
+    GList *standards = NULL;
+    GList *providers = NULL;
+    GListPtr iter = NULL;
+    gboolean rc = FALSE;
+    gboolean has_providers = FALSE;
+
+    standards = resources_list_standards();
+    for (iter = standards; iter != NULL; iter = iter->next) {
+        if (crm_str_eq(iter->data, standard, TRUE)) {
+            rc = TRUE;
+            break;
+        }
+    }
+
+    if (rc == FALSE) {
+        goto done;
+    }
+
+    rc = FALSE;
+
+    has_providers = is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    if (has_providers == TRUE && provider != NULL) {
+        providers = resources_list_providers(standard);
+        for (iter = providers; iter != NULL; iter = iter->next) {
+            if (crm_str_eq(iter->data, provider, TRUE)) {
+                rc = TRUE;
+                break;
+            }
+        }
+    } else if (has_providers == FALSE && provider == NULL) {
+        rc = TRUE;
+    }
+
+    if (rc == FALSE) {
+        goto done;
+    }
+
+    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE)) {
+        if (services__lsb_agent_exists(agent)) {
+            rc = TRUE;
+#if SUPPORT_SYSTEMD
+        } else if (systemd_unit_exists(agent)) {
+            rc = TRUE;
+#endif
+
+#if SUPPORT_UPSTART
+        } else if (upstart_job_exists(agent)) {
+            rc = TRUE;
+#endif
+        } else {
+            rc = FALSE;
+        }
+
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
+        rc = services__ocf_agent_exists(provider, agent);
+
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_LSB)) {
+        rc = services__lsb_agent_exists(agent);
+
+#if SUPPORT_SYSTEMD
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
+        rc = systemd_unit_exists(agent);
+#endif
+
+#if SUPPORT_UPSTART
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+        rc = upstart_job_exists(agent);
+#endif
+
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+        rc = services__nagios_agent_exists(agent);
+#endif
+
+    } else {
+        rc = FALSE;
+    }
+
+done:
+    g_list_free(standards);
+    g_list_free(providers);
+    return rc;
 }

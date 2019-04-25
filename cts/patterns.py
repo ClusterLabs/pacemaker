@@ -4,7 +4,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright 2008-2019 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, os
@@ -57,7 +57,7 @@ class BasePatterns(object):
             "Pat:DC_IDLE"      : "pacemaker-controld.*State transition.*-> S_IDLE",
             
             # This won't work if we have multiple partitions
-            "Pat:Local_started" : "%s\W.*The local CRM is operational",
+            "Pat:Local_started" : "%s\W.*controller successfully started",
             "Pat:NonDC_started" : r"%s\W.*State transition.*-> S_NOT_DC",
             "Pat:DC_started"    : r"%s\W.*State transition.*-> S_IDLE",
             "Pat:We_stopped"    : "%s\W.*OVERRIDE THIS PATTERN",

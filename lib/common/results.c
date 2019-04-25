@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -176,6 +178,8 @@ pcmk_errorname(int rc)
         case pcmk_err_multiple: return "pcmk_err_multiple";
         case pcmk_err_node_unknown: return "pcmk_err_node_unknown";
         case pcmk_err_already: return "pcmk_err_already";
+        case pcmk_err_bad_nvpair: return "pcmk_err_bad_nvpair";
+        case pcmk_err_unknown_format: return "pcmk_err_unknown_format";
     }
     return "Unknown";
 }
@@ -220,8 +224,12 @@ pcmk_strerror(int rc)
             return "Node not found";
         case pcmk_err_already:
             return "Situation already as requested";
+        case pcmk_err_bad_nvpair:
+            return "Bad name/value pair given";
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";
+        case pcmk_err_unknown_format:
+            return "Unknown output format";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */
@@ -284,6 +292,9 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_UNSAFE: return "CRM_EX_UNSAFE";
         case CRM_EX_EXISTS: return "CRM_EX_EXISTS";
         case CRM_EX_MULTIPLE: return "CRM_EX_MULTIPLE";
+        case CRM_EX_EXPIRED: return "CRM_EX_EXPIRED";
+        case CRM_EX_NOT_YET_IN_EFFECT: return "CRM_EX_NOT_YET_IN_EFFECT";
+        case CRM_EX_INDETERMINATE: return "CRM_EX_INDETERMINATE";
         case CRM_EX_OLD: return "CRM_EX_OLD";
         case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
         case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
@@ -327,6 +338,9 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_UNSAFE: return "Operation not safe";
         case CRM_EX_EXISTS: return "Requested item already exists";
         case CRM_EX_MULTIPLE: return "Multiple items match request";
+        case CRM_EX_EXPIRED: return "Requested item has expired";
+        case CRM_EX_NOT_YET_IN_EFFECT: return "Requested item is not yet in effect";
+        case CRM_EX_INDETERMINATE: return "Could not determine status";
         case CRM_EX_OLD: return "Update was older than existing configuration";
         case CRM_EX_TIMEOUT: return "Timeout occurred";
         case CRM_EX_MAX: return "Error occurred";
@@ -364,6 +378,9 @@ crm_errno2exit(int rc)
         case pcmk_err_schema_validation:
         case pcmk_err_transform_failed:
             return CRM_EX_CONFIG;
+
+        case pcmk_err_bad_nvpair:
+            return CRM_EX_INVALID_PARAM;
 
         case EACCES:
             return CRM_EX_INSUFFICIENT_PRIV;
@@ -410,6 +427,7 @@ crm_errno2exit(int rc)
 
         case ENXIO:
         case pcmk_err_node_unknown:
+        case pcmk_err_unknown_format:
             return CRM_EX_NOSUCH;
 
         case ETIME:
@@ -424,7 +442,7 @@ crm_errno2exit(int rc)
 const char *
 bz2_strerror(int rc)
 {
-    /* http://www.bzip.org/1.0.3/html/err-handling.html */
+    // See ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC17
     switch (rc) {
         case BZ_OK:
         case BZ_RUN_OK:
@@ -478,8 +496,4 @@ crm_exit(crm_exit_t rc)
     }
 
     exit(rc);
-    return rc;     /* Can never happen, but allows return crm_exit(rc)
-                    * where "return rc" was used previously - which
-                    * keeps compilers happy.
-                    */
 }

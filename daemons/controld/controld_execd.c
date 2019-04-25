@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -286,32 +288,38 @@ send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
     lrmd_free_event(op);
 }
 
+static inline const char *
+op_node_name(lrmd_event_data_t *op)
+{
+    return op->remote_nodename? op->remote_nodename : fsa_our_uname;
+}
+
 void
 lrm_op_callback(lrmd_event_data_t * op)
 {
-    const char *nodename = NULL;
-    lrm_state_t *lrm_state = NULL;
-
     CRM_CHECK(op != NULL, return);
+    switch (op->type) {
+        case lrmd_event_disconnect:
+            if (op->remote_nodename == NULL) {
+                /* If this is the local executor IPC connection, set the right
+                 * bits in the controller when the connection goes down.
+                 */
+                lrm_connection_destroy();
+            }
+            break;
 
-    /* determine the node name for this connection. */
-    nodename = op->remote_nodename ? op->remote_nodename : fsa_our_uname;
+        case lrmd_event_exec_complete:
+            {
+                lrm_state_t *lrm_state = lrm_state_find(op_node_name(op));
 
-    if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, fsa_our_uname))) {
-        /* If this is the local executor IPC connection, set the right bits in the
-         * controller when the connection goes down.
-         */
-        lrm_connection_destroy();
-        return;
-    } else if (op->type != lrmd_event_exec_complete) {
-        /* we only need to process execution results */
-        return;
+                CRM_ASSERT(lrm_state != NULL);
+                process_lrm_event(lrm_state, op, NULL, NULL);
+            }
+            break;
+
+        default:
+            break;
     }
-
-    lrm_state = lrm_state_find(nodename);
-    CRM_ASSERT(lrm_state != NULL);
-
-    process_lrm_event(lrm_state, op, NULL, NULL);
 }
 
 /*	 A_LRM_CONNECT	*/
@@ -2293,15 +2301,10 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         if ((op->interval_ms > 0)
             && (op->start_delay > START_DELAY_THRESHOLD)) {
-
-            char *uuid = NULL;
-            int dummy = 0, target_rc = 0;
+            int target_rc = 0;
 
             crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
-
-            decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
-            free(uuid);
-
+            decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
             op->rc = target_rc;
             op->op_status = PCMK_LRM_OP_DONE;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);

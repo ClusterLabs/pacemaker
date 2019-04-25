@@ -1,0 +1,274 @@
+# Copyright 2018-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# SPDX-License-Identifier: FSFAP
+
+# Conventions:
+# 0/ subject to change: compatibility with GitLab (CE) as old as 10.8
+# 1/ heavy reuse (compatible map merges for now, see fedora-rawhide example)
+# 2/ consolidated prefixes for custom variable names: GLOBAL_* and LOCAL_*
+
+variables:
+  GIT_DEPTH: "16"  # nice-to-have automatic "bisect" for even more convenience
+
+stages:
+  - buildenv
+  - build
+  - test
+
+# currently, 1:1 with the eponymous stage
+.buildenv: &buildenv-anchor
+  stage: buildenv
+
+# currently, subset of all jobs pertaining "build" stage
+.compilation: &compilation-anchor
+  variables:
+    GLOBAL_COMPILATION: "1"  # bogus content so that this anchor is not empty
+  # only since GitLab 11.4
+  #  changes:
+  #    - "configure.ac"
+  #    - "**/*.[ch]"
+  #    - "**/*.xml"
+  #    - "**/*.xsl"
+  #    - "**/Makefile.am"
+  #    - ".gitlab-ci.yml"
+
+
+#
+# Fedora Rawhide
+#
+# In case of failure imposed with branching/changed GPG keys, downgrade, e.g.:
+# sed -i.orig 's|fedora-rawhide|fedora|g;s|rawhide|fedora|g;s|:rawhide|:29|' \
+#   .gitlab-ci.yml
+# and run it through your side branch (omit such changes for upstream request).
+#
+.fedora-rawhide: &fedora-rawhide-anchor
+  tags:
+    - docker
+  image: registry.fedoraproject.org/fedora:rawhide  # down? mere fedora:rawhide
+
+.fedora-rawhide-variables-rpm: &fedora-rawhide-variables-rpm-anchor
+  # below are captured major sets of packages that need to be installed on top
+  # of what the base image contains; some packages named individually later;
+  # transitive dependencies preferably kept at minimum, i.e., w/o proliferation
+  GLOBAL_RPM_BR_BASIC:          autoconf
+                                automake
+                                pkgconf-pkg-config
+                                libtool
+                                libtool-ltdl-devel
+                                make
+  # with these two, first word denotes also the derived value of CC variable
+  GLOBAL_RPM_BR_GCC:            gcc
+  GLOBAL_RPM_BR_CLANG:          clang  # compiler-rt  # for when with coverage
+  GLOBAL_RPM_BR_LIBS_PLAIN:     libuuid-devel
+                                libxslt-devel
+                                bzip2-devel
+  # note a special trick using \v escaped character, since it's not in IFS
+  # (word separators) in Bash, while fulfilling the requirements in libdnf
+  # (cf. https://github.com/rpm-software-management/libdnf/pull/476)
+  GLOBAL_RPM_BR_LIBS_PKGCONFIG: "pkgconfig(glib-2.0)\v>=2.16.0
+                                pkgconfig(libxml-2.0)
+                                pkgconfig(libqb)\v>=0.13
+                                pkgconfig(libcpg)"
+  GLOBAL_RPM_REQ_LIBS:          bzip2-libs glib2  # not dragged transitively
+
+.fedora-rawhide-gcc: &fedora-rawhide-gcc-anchor
+  <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide
+  variables:
+    <<: *fedora-rawhide-variables-rpm-anchor
+    LOCAL_RPM_COMPILER:  $GLOBAL_RPM_BR_GCC
+    LOCAL_WITH_COVERAGE: --with-coverage
+
+.fedora-rawhide-clang: &fedora-rawhide-clang-anchor
+  <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide
+  variables:
+    <<: *fedora-rawhide-variables-rpm-anchor
+    LOCAL_RPM_COMPILER:  $GLOBAL_RPM_BR_CLANG
+    LOCAL_WITH_COVERAGE: ""  # override from enabling in GCC case for now
+
+# buildenv
+
+buildenv:fedora-rawhide:info:
+  # to gather some info about the image itself/container settings
+  <<: *buildenv-anchor  #extends: .buildenv
+  <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide
+  variables:
+    GIT_STRATEGY: "none"  # invariant stage, not project dependence at all
+  script:
+   - cat /proc/meminfo | grep Free
+   - df -H
+   - lsblk
+   - nproc
+   - ulimit -a
+   - uname -r
+   - dnf --version
+
+buildenv:fedora-rawhide:rpms:
+  # primarily to download RPMs, but alas, "download" plugin not baked into image
+  <<: *buildenv-anchor  #extends: .buildenv
+  <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide
+  variables:
+    <<: *fedora-rawhide-variables-rpm-anchor
+    GIT_STRATEGY: "none"  # invariant stage, not project dependence at all
+  cache:
+    key: "fedora-rawhide-dnf"
+    paths:
+      - ".cache/fedora-rawhide/dnf/rawhide-*"
+      - "xml/assets/*.rng"
+  script:
+    - mkdir -p .cache/fedora-rawhide/dnf
+    - pushd .cache/fedora-rawhide
+    - mv dnf/rawhide-* /var/cache/dnf 2>/dev/null || true
+    - dnf-custom() { timeout 192 dnf -y --noplugins --nodocs
+                                 --setopt=tsflags=test
+                                 --setopt=install_weak_deps=0
+                                 --setopt=keepcache=1
+                                 --setopt=autocheck_running_kernel=0
+                                 --disablerepo='*' --enablerepo=rawhide "$@"; };
+      dnf-custom install $GLOBAL_RPM_BR_BASIC
+                         $GLOBAL_RPM_BR_GCC
+                         $GLOBAL_RPM_BR_CLANG
+                         $GLOBAL_RPM_BR_LIBS_PLAIN
+                         $GLOBAL_RPM_BR_LIBS_PKGCONFIG
+                         $GLOBAL_RPM_REQ_LIBS
+                         findutils
+                         libxml libxslt
+                         psmisc which
+                         gcovr
+    - mv /var/cache/dnf/rawhide-* dnf
+    - popd
+    # we don't have any other warm-up-cache job around, so piggyback it here
+    - test -s xml/assets/relaxng.rng 2>/dev/null
+         || curl -SsLo xml/assets/relaxng.rng
+            'https://raw.githubusercontent.com/relaxng/relaxng.org/master/relaxng.rng'
+    - test -s xml/assets/xslt.rng 2>/dev/null
+         || curl -SsLo xml/assets/xslt.rng
+            'https://raw.githubusercontent.com/relaxng/jing-trang/master/eg/xslt.rng'
+
+# build
+
+maint:fedora-rawhide:
+  # to run some compilation-less checks
+  <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide
+  stage: build
+  cache:
+    key: "fedora-rawhide-dnf"
+    policy: pull
+    paths:
+      - ".cache/fedora-rawhide/dnf/rawhide-*"
+      - "xml/assets/*.rng"
+  before_script:
+    - mkdir -p .cache/fedora-rawhide/dnf
+    - pushd .cache/fedora-rawhide
+    - mv dnf/rawhide-* /var/cache/dnf 2>/dev/null || true
+    - dnf-custom() { timeout 96 dnf -y --cacheonly --noplugins --nodocs
+                                --setopt=install_weak_deps=0
+                                --setopt=autocheck_running_kernel=0
+                                --disablerepo='*' --enablerepo=rawhide "$@"; };
+      dnf-custom install findutils
+                         make
+                         libxml
+                         libxslt
+    - popd
+    - ( cd xml;
+        { cat Makefile.am; printf 'hack_rng\x3a %s' '${RNG_generated}'; }
+          | make -f- top_srcdir=$(pwd)/.. top_builddir=$(pwd)/.. hack_rng )
+
+  script:
+   - echo 'looking for presence of control characters...';
+      { git ls-files
+        | xargs grep -Ensv "^([^[:cntrl:]]*|$(printf '\t'))*$"||:; } 2>/dev/null
+        | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
+
+   - cd xml;
+     ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
+       schemas=; for schema in *.rng; do
+         case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
+       done;
+       xmllint --noout --relaxng assets/relaxng.rng ${schemas};
+     }
+
+build:fedora-rawhide:gcc: &build-fedora-rawhide-gcc-anchor
+  # to build using GCC
+  <<: *compilation-anchor  #extends: .compilation
+  <<: *fedora-rawhide-gcc-anchor  #extends: .fedora-rawhide-gcc
+  stage: build
+  cache:
+    key: "fedora-rawhide-dnf"
+    policy: pull
+    paths:
+      - ".cache/fedora-rawhide/dnf/rawhide-*"
+  artifacts:
+    name: "fedora-rawhide-gcc-$CI_COMMIT_REF_SLUG"
+    untracked: true
+    expire_in: "10h"
+  before_script:
+    - mkdir -p .cache/fedora-rawhide/dnf
+    - pushd .cache/fedora-rawhide
+    - mv dnf/rawhide-* /var/cache/dnf 2>/dev/null || true
+    - dnf-custom() { timeout 96 dnf -y --cacheonly --noplugins --nodocs
+                                --setopt=install_weak_deps=0
+                                --setopt=autocheck_running_kernel=0
+                                --disablerepo='*' --enablerepo=rawhide "$@"; };
+      dnf-custom install $GLOBAL_RPM_BR_BASIC
+                         $LOCAL_RPM_COMPILER
+                         $GLOBAL_RPM_BR_LIBS_PLAIN
+                         $GLOBAL_RPM_BR_LIBS_PKGCONFIG
+    - popd
+  script:
+    - ./autogen.sh
+    - CC=$(echo $LOCAL_RPM_COMPILER | cut -d ' ' -f1)
+      ./configure --enable-silent-rules $LOCAL_WITH_COVERAGE
+      || { cat config.log; false; }
+    - timeout 480 make -j$(nproc)  # -j$(($(nproc) + 1)) all
+    - find \( -name '*.l[ao]' -o -name 'config.*' -o -name configure -o -name
+        Makefile.in -o -name Makefile \) -delete  # *.o need to remain for test
+
+build:fedora-rawhide:clang:
+  # to build using Clang
+  <<: *build-fedora-rawhide-gcc-anchor  #extends build:fedora-rawhide:gcc
+  <<: *fedora-rawhide-clang-anchor  #extends: .fedora-rawhide-clang
+
+# test
+
+test:fedora-rawhide:gcc: &test-fedora-rawhide-gcc-anchor
+  # to test the result of GCC build + measure coverage for that
+  <<: *compilation-anchor  #extends: .compilation
+  <<: *fedora-rawhide-gcc-anchor  #extends: .fedora-rawhide-gcc
+  stage: test
+  cache:
+    key: "fedora-rawhide-dnf"
+    policy: pull
+    paths:
+      - ".cache/fedora-rawhide/dnf/rawhide-*"
+  dependencies:
+   - build:fedora-rawhide:gcc
+  before_script:
+    - mkdir -p .cache/fedora-rawhide/dnf
+    - pushd .cache/fedora-rawhide
+    - mv dnf/rawhide-* /var/cache/dnf 2>/dev/null || true
+    - dnf-custom() { timeout 96 dnf -y --cacheonly --noplugins --nodocs
+                                --setopt=install_weak_deps=0
+                                --setopt=autocheck_running_kernel=0
+                                --disablerepo='*' --enablerepo=rawhide "$@"; };
+      dnf-custom install $LOCAL_RPM_COMPILER
+                         $GLOBAL_RPM_BR_LIBS_PLAIN
+                         $GLOBAL_RPM_BR_LIBS_PKGCONFIG
+                         psmisc which
+                         $(test -z "$LOCAL_WITH_COVERAGE" || echo gcovr)
+                         findutils
+    - popd
+  script:
+    - timeout 600 ./cts/cts-regression -V cli scheduler
+  after_script:
+    - gcovr -r .
+    - find -name 'core*' || true
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+
+test:fedora-rawhide:clang:
+  # to test the result of Clang build (+ possibly measure coverage for that)
+  <<: *test-fedora-rawhide-gcc-anchor  #extends: test:fedora-rawhide:gcc
+  <<: *fedora-rawhide-clang-anchor  #extends: .fedora-rawhide-clang
+  dependencies:
+    - build:fedora-rawhide:clang

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -471,10 +473,10 @@ struct fsa_data_s {
 };
 
 /* Global FSA stuff */
-extern volatile gboolean do_fsa_stall;
-extern volatile enum crmd_fsa_state fsa_state;
-extern volatile long long fsa_input_register;
-extern volatile long long fsa_actions;
+extern gboolean do_fsa_stall;
+extern enum crmd_fsa_state fsa_state;
+extern long long fsa_input_register;
+extern long long fsa_actions;
 
 extern cib_t *fsa_cib_conn;
 

@@ -25,6 +25,7 @@ struct svc_action_private_s {
 
     guint repeat_timer;
     void (*callback) (svc_action_t * op);
+    void (*fork_callback) (svc_action_t * op);
 
     int stderr_fd;
     mainloop_io_t *stderr_gsource;
@@ -52,7 +53,13 @@ G_GNUC_INTERNAL
 GList *resources_os_list_ocf_agents(const char *provider);
 
 G_GNUC_INTERNAL
+gboolean services__ocf_agent_exists(const char *provider, const char *agent);
+
+G_GNUC_INTERNAL
 GList *resources_os_list_nagios_agents(void);
+
+G_GNUC_INTERNAL
+gboolean services__nagios_agent_exists(const char *agent);
 
 G_GNUC_INTERNAL
 gboolean cancel_recurring_action(svc_action_t * op);

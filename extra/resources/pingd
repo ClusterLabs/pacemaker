@@ -5,7 +5,9 @@
 #	Records (in the CIB) the current number of ping nodes a 
 #	   cluster node can connect to.
 #
-# Copyright (c) 2006 Andrew Beekhof
+# Copyright 2006-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify

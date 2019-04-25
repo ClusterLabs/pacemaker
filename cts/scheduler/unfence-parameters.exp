@@ -121,6 +121,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
         <rsc_op id="11" operation="stop" operation_key="dlm_stop_0" internal_operation_key="dlm:0_stop_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
@@ -207,6 +210,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="clvmd:1_monitor_0" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="26" operation="stop" operation_key="clvmd-clone_stop_0"/>
       </trigger>
     </inputs>
@@ -284,6 +290,12 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="clvmd:1_monitor_0" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
       <trigger>
         <rsc_op id="20" operation="stop" operation_key="clvmd_stop_0" internal_operation_key="clvmd:0_stop_0" on_node="virt-1" on_node_uuid="1"/>
       </trigger>

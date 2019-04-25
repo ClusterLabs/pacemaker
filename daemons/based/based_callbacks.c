@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -51,8 +53,8 @@ static void cib_process_request(xmlNode* request, gboolean force_synchronous,
                                 gboolean privileged, crm_client_t *cib_client);
 
 
-int cib_process_command(xmlNode * request, xmlNode ** reply,
-                        xmlNode ** cib_diff, gboolean privileged);
+static int cib_process_command(xmlNode *request, xmlNode **reply,
+                               xmlNode **cib_diff, gboolean privileged);
 
 gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
                              gboolean privileged);
@@ -1132,7 +1134,7 @@ cib_process_request(xmlNode *request, gboolean force_synchronous,
     return;
 }
 
-int
+static int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
     xmlNode *input = NULL;

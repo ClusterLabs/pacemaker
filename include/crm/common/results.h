@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -16,6 +18,26 @@ extern "C" {
  * \brief Function and executable result codes
  * \ingroup core
  */
+
+// Lifted from config.h
+/* The _Noreturn keyword of C11.  */
+#ifndef _Noreturn
+# if (defined __cplusplus \
+      && ((201103 <= __cplusplus && !(__GNUC__ == 4 && __GNUC_MINOR__ == 7)) \
+          || (defined _MSC_VER && 1900 <= _MSC_VER)))
+#  define _Noreturn [[noreturn]]
+# elif ((!defined __cplusplus || defined __clang__) \
+        && (201112 <= (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0)  \
+            || 4 < __GNUC__ + (7 <= __GNUC_MINOR__)))
+   /* _Noreturn works as-is.  */
+# elif 2 < __GNUC__ + (8 <= __GNUC_MINOR__) || 0x5110 <= __SUNPRO_C
+#  define _Noreturn __attribute__ ((__noreturn__))
+# elif 1200 <= (defined _MSC_VER ? _MSC_VER : 0)
+#  define _Noreturn __declspec (noreturn)
+# else
+#  define _Noreturn
+# endif
+#endif
 
 #  define CRM_ASSERT(expr) do {                                              \
         if(__unlikely((expr) == FALSE)) {                                    \
@@ -50,6 +72,8 @@ extern "C" {
 #  define pcmk_err_multiple             213
 #  define pcmk_err_node_unknown         214
 #  define pcmk_err_already              215
+#  define pcmk_err_bad_nvpair           216
+#  define pcmk_err_unknown_format       217
 
 /*
  * Exit status codes
@@ -117,6 +141,9 @@ typedef enum crm_exit_e {
     CRM_EX_UNSAFE               = 107, // requires --force or new conditions
     CRM_EX_EXISTS               = 108, // requested item already exists
     CRM_EX_MULTIPLE             = 109, // requested item has multiple matches
+    CRM_EX_EXPIRED              = 110, // requested item has expired
+    CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
+    CRM_EX_INDETERMINATE        = 112, // could not determine status
 
     // Other
     CRM_EX_TIMEOUT              = 124, // convention from timeout(1)
@@ -129,7 +156,7 @@ const char *bz2_strerror(int rc);
 crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
-crm_exit_t crm_exit(crm_exit_t rc);
+_Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
 #ifdef __cplusplus
 }

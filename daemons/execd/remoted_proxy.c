@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -49,6 +51,17 @@ ipc_proxy_get_provider()
     return ipc_providers? (crm_client_t*) (ipc_providers->data) : NULL;
 }
 
+/*!
+ * \internal
+ * \brief Accept a client connection on a proxy IPC server
+ *
+ * \param[in] c            Client's IPC connection
+ * \param[in] uid          Client's user ID
+ * \param[in] gid          Client's group ID
+ * \param[in] ipc_channel  Name of IPC server to proxy
+ *
+ * \return pcmk_ok on success, -errno on error
+ */
 static int32_t
 ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc_channel)
 {
@@ -56,15 +69,15 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     crm_client_t *ipc_proxy = ipc_proxy_get_provider();
     xmlNode *msg;
 
-    crm_trace("Connection %p on channel %s", c, ipc_channel);
-
     if (ipc_proxy == NULL) {
-        crm_err("No ipc providers available for uid %d gid %d", uid, gid);
+        crm_warn("Cannot proxy IPC connection from uid %d gid %d to %s "
+                 "because not connected to cluster", uid, gid, ipc_channel);
         return -EREMOTEIO;
     }
 
-    /* this new client is a local ipc client on a remote
-     * guest wanting to access the ipc on any available cluster nodes */
+    /* This new client is a local IPC client on a Pacemaker Remote controlled
+     * node, needing to access cluster node IPC services.
+     */
     client = crm_client_new(c, uid, gid);
     if (client == NULL) {
         return -EREMOTEIO;
@@ -83,7 +96,9 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     free_xml(msg);
-    crm_debug("created new ipc proxy with session id %s", client->id);
+    crm_debug("Accepted IPC proxy connection (session ID %s) "
+              "from uid %d gid %d on channel %s",
+              client->id, uid, gid, ipc_channel);
     return 0;
 }
 

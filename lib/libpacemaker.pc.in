@@ -1,0 +1,16 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@/@PACKAGE_TARNAME@
+
+build=@BUILD_VERSION@
+
+Name:         lib@PACKAGE_NAME@
+URL:	      @PACKAGE_URL@
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
+Requires:     
+Conflicts:    
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -l@PACKAGE_NAME@
+Libs.private:
+

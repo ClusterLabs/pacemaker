@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -39,10 +41,10 @@ int lrmd_call_id = 0;
 
 #ifdef ENABLE_PCMK_REMOTE
 /* whether shutdown request has been sent */
-static volatile sig_atomic_t shutting_down = FALSE;
+static sig_atomic_t shutting_down = FALSE;
 
 /* timer for waiting for acknowledgment of shutdown request */
-static volatile guint shutdown_ack_timer = 0;
+static guint shutdown_ack_timer = 0;
 
 static gboolean lrmd_exit(gpointer data);
 #endif
@@ -517,6 +519,12 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+#ifdef ENABLE_PCMK_REMOTE
+#  define EXECD_TYPE "remote"
+#else
+#  define EXECD_TYPE "local"
+#endif
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -585,6 +593,8 @@ main(int argc, char **argv, char **envp)
         }
     }
 
+    crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
+
     /* The presence of this variable allegedly controls whether child
      * processes like httpd will try and use Systemd's sd_notify
      * API
@@ -611,7 +621,7 @@ main(int argc, char **argv, char **envp)
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_info("Starting");
+    crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     /* should never get here */

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -511,7 +513,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                return crm_help(flag, CRM_EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'Q':
                 // currently unused
@@ -552,7 +554,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        return crm_help('?', CRM_EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {

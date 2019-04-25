@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -90,6 +92,14 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 #  define NAME_MAX 256
 #endif
 
+/*!
+ * \internal
+ * \brief Write out a blackbox (enabling blackboxes if needed)
+ *
+ * \param[in] nsig  Signal number that was received
+ *
+ * \note This is a true signal handler, and so must be async-safe.
+ */
 static void
 crm_trigger_blackbox(int nsig)
 {
@@ -346,7 +356,7 @@ crm_add_logfile(const char *filename)
 }
 
 static int blackbox_trigger = 0;
-static char *blackbox_file_prefix = NULL;
+static volatile char *blackbox_file_prefix = NULL;
 
 #ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
 typedef struct timespec *log_time_t;
@@ -391,11 +401,11 @@ crm_control_blackbox(int nsig, bool enable)
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
         /* Save to disk on abnormal termination */
-        crm_signal(SIGSEGV, crm_trigger_blackbox);
-        crm_signal(SIGABRT, crm_trigger_blackbox);
-        crm_signal(SIGILL,  crm_trigger_blackbox);
-        crm_signal(SIGBUS,  crm_trigger_blackbox);
-        crm_signal(SIGFPE,  crm_trigger_blackbox);
+        crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
+        crm_signal_handler(SIGABRT, crm_trigger_blackbox);
+        crm_signal_handler(SIGILL,  crm_trigger_blackbox);
+        crm_signal_handler(SIGBUS,  crm_trigger_blackbox);
+        crm_signal_handler(SIGFPE,  crm_trigger_blackbox);
 
         crm_update_callsites();
 
@@ -428,11 +438,21 @@ crm_disable_blackbox(int nsig)
     crm_control_blackbox(nsig, FALSE);
 }
 
+/*!
+ * \internal
+ * \brief Write out a blackbox, if blackboxes are enabled
+ *
+ * \param[in] nsig  Signal that was received
+ * \param[in] cs    libqb callsite
+ *
+ * \note This may be called via a true signal handler and so must be async-safe.
+ * @TODO actually make this async-safe
+ */
 void
 crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
 {
-    static int counter = 1;
-    static time_t last = 0;
+    static volatile int counter = 1;
+    static volatile time_t last = 0;
 
     char buffer[NAME_MAX];
     time_t now = time(NULL);
@@ -477,8 +497,8 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
             /* Do as little as possible, just try to get what we have out
              * We logged the filename when the blackbox was enabled
              */
-            crm_signal(nsig, SIG_DFL);
-            qb_log_blackbox_write_to_file(blackbox_file_prefix);
+            crm_signal_handler(nsig, SIG_DFL);
+            qb_log_blackbox_write_to_file((const char *)blackbox_file_prefix);
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
             raise(nsig);
             break;

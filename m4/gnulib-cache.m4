@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2012 Free Software Foundation, Inc.
+# Copyright (C) 2002-2019 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this file.  If not, see <http://www.gnu.org/licenses/>.
+# along with this file.  If not, see <https://www.gnu.org/licenses/>.
 #
 # As a special exception to the GNU General Public License,
 # this file may be distributed as part of a program that
@@ -27,14 +27,27 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib/gnu --m4-base=m4 --doc-base=doc --tests-base=tests --aux-dir=. --lgpl=2 --no-conditional-dependencies --no-libtool --macro-prefix=gl --no-vc-files crypto/md5
+# gnulib-tool --import \
+#  --lib=libgnu \
+#  --source-base=lib/gnu \
+#  --m4-base=m4 \
+#  --doc-base=doc \
+#  --tests-base=tests \
+#  --aux-dir=. \
+#  --lgpl=2 \
+#  --no-conditional-dependencies \
+#  --no-libtool \
+#  --macro-prefix=gl \
+#  --no-vc-files \
+#  --avoid=stdint \
+#  crypto/md5-buffer
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
-  crypto/md5
+  crypto/md5-buffer
 ])
-gl_AVOID([])
+gl_AVOID([ stdint])
 gl_SOURCE_BASE([lib/gnu])
 gl_M4_BASE([m4])
 gl_PO_BASE([])
@@ -45,5 +58,5 @@ gl_LGPL([2])
 gl_MAKEFILE_NAME([])
 gl_MACRO_PREFIX([gl])
 gl_PO_DOMAIN([])
-gl_WITNESS_C_DOMAIN([])
+gl_WITNESS_C_MACRO([])
 gl_VC_FILES([false])

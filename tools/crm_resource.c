@@ -1,15 +1,19 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_resource.h>
+#include <pacemaker-internal.h>
 
 #include <sys/param.h>
 
 #include <crm/crm.h>
+#include <crm/stonith-ng.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -35,7 +39,7 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "Aborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
-    return crm_exit(CRM_EX_TIMEOUT);
+    crm_exit(CRM_EX_TIMEOUT);
 }
 
 static void
@@ -76,11 +80,37 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
 
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        return crm_exit(CRM_EX_OK);
+        crm_exit(CRM_EX_OK);
     }
 
     free_xml(msg);
     return 0;
+}
+
+static int
+compare_id(gconstpointer a, gconstpointer b)
+{
+    return strcmp((const char *)a, (const char *)b);
+}
+
+static GListPtr
+build_constraint_list(xmlNode *root)
+{
+    GListPtr retval = NULL;
+    xmlNode *cib_constraints = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    int ndx = 0;
+
+    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, root);
+    xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
+
+    for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
+        xmlNode *match = getXpathResult(xpathObj, ndx);
+        retval = g_list_insert_sorted(retval, (gpointer) ID(match), compare_id);
+    }
+
+    freeXpathObject(xpathObj);
+    return retval;
 }
 
 struct ipc_client_callbacks crm_callbacks = {
@@ -193,7 +223,10 @@ static struct crm_option long_options[] = {
     { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
     {
         "validate", no_argument, NULL, 0,
-        "\t\tCall the validate-all action of the local given resource"
+        "\t\tCall the validate-all action.  There are two different things that can be validated.  One\n"
+        "\t\t\t\tmethod is to validate the resource given by the -r option.  The other method is to validate\n"
+        "\t\t\t\ta not-yet-existing resource.  This method requires the --class, --agent, and --provider\n"
+        "\t\t\t\targuments, plus at least one --option argument."
     },
     {
         "cleanup", no_argument, NULL, 'C',
@@ -313,6 +346,29 @@ static struct crm_option long_options[] = {
         "\t(Advanced) Bypass the cluster and check the state of a resource on the local node."
     },
 
+    { "-spacer-", no_argument, NULL, '-', "\nValidate Options:" },
+    {
+        "class", required_argument, NULL, 0,
+        "\tThe standard the resource agent confirms to (for example, ocf).\n"
+        "\t\t\t\tUse with --agent, --provider, --option, and --validate."
+    },
+    {
+        "agent", required_argument, NULL, 0,
+        "\tThe agent to use (for example, IPaddr).\n"
+        "\t\t\t\tUse with --class, --provider, --option, and --validate."
+    },
+    {
+        "provider", required_argument, NULL, 0,
+        "\tThe vendor that supplies the resource agent (for example, heartbeat).\n"
+        "\t\t\t\tuse with --class, --agent, --option, and --validate."
+    },
+    {
+        "option", required_argument, NULL, 0,
+        "\tSpecify a device configuration parameter as NAME=VALUE\n"
+        "\t\t\t\t(may be specified multiple times).  Use with --validate\n"
+        "\t\t\t\tand without the -r option."
+    },
+
     { "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
     {
         "node", required_argument, NULL, 'N',
@@ -401,6 +457,13 @@ main(int argc, char **argv)
 {
     char rsc_cmd = 'L';
 
+    const char *v_class = NULL;
+    const char *v_agent = NULL;
+    const char *v_provider = NULL;
+    char *name = NULL;
+    char *value = NULL;
+    GHashTable *validate_options = NULL;
+
     const char *rsc_id = NULL;
     const char *host_uname = NULL;
     const char *prop_name = NULL;
@@ -418,11 +481,13 @@ main(int argc, char **argv)
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
     pe_working_set_t *data_set = NULL;
+    xmlNode *cib_xml_copy = NULL;
     cib_t *cib_conn = NULL;
     resource_t *rsc = NULL;
     bool recursive = FALSE;
     char *our_pid = NULL;
 
+    bool validate_cmdline = FALSE; /* whether we are just validating based on command line options */
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    // whether command requires controller connection
@@ -440,6 +505,8 @@ main(int argc, char **argv)
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
                     "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
+
+    validate_options = crm_str_table_new();
 
     while (1) {
         flag = crm_get_option_long(argc, argv, &option_index, &longname);
@@ -561,6 +628,43 @@ main(int argc, char **argv)
                     }
                     lrmd_api_delete(lrmd_conn);
                     crm_exit(exit_code);
+
+                } else if (safe_str_eq("class", longname)) {
+                    if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
+                        if (BE_QUIET == FALSE) {
+                            fprintf(stdout, "Standard %s does not support parameters\n",
+                                    optarg);
+                        }
+
+                        crm_exit(exit_code);
+                    } else {
+                        v_class = optarg;
+                    }
+
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+
+                } else if (safe_str_eq("agent", longname)) {
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+                    v_agent = optarg;
+
+                } else if (safe_str_eq("provider", longname)) {
+                    validate_cmdline = TRUE;
+                    require_resource = FALSE;
+                    v_provider = optarg;
+
+                } else if (safe_str_eq("option", longname)) {
+                    crm_info("Scanning: --option %s", optarg);
+                    rc = pcmk_scan_nvpair(optarg, &name, &value);
+                    if (rc != 2) {
+                        fprintf(stderr, "Invalid option: --option %s: %s", optarg, pcmk_strerror(rc));
+                        argerr++;
+                    } else {
+                        crm_info("Got: '%s'='%s'", name, value);
+                    }
+
+                    g_hash_table_replace(validate_options, name, value);
 
                 } else {
                     crm_err("Unhandled long option: %s", longname);
@@ -767,6 +871,49 @@ main(int argc, char **argv)
         ++argerr;
     }
 
+    // Sanity check validating from command line parameters.  If everything checks out,
+    // go ahead and run the validation.  This way we don't need a CIB connection.
+    if (validate_cmdline == TRUE) {
+        // -r cannot be used with any of --class, --agent, or --provider
+        if (rsc_id != NULL) {
+            CMD_ERR("--resource cannot be used with --class, --agent, and --provider");
+            argerr++;
+
+        // If --class, --agent, or --provider are given, --validate must also be given.
+        } else if (!safe_str_eq(rsc_long_cmd, "validate")) {
+            CMD_ERR("--class, --agent, and --provider require --validate");
+            argerr++;
+
+        // Not all of --class, --agent, and --provider need to be given.  Not all
+        // classes support the concept of a provider.  Check that what we were given
+        // is valid.
+        } else if (crm_str_eq(v_class, "stonith", TRUE)) {
+            if (v_provider != NULL) {
+                CMD_ERR("stonith does not support providers");
+                argerr++;
+
+            } else if (stonith_agent_exists(v_agent, 0) == FALSE) {
+                CMD_ERR("%s is not a known stonith agent", v_agent ? v_agent : "");
+                argerr++;
+            }
+
+        } else if (resources_agent_exists(v_class, v_provider, v_agent) == FALSE) {
+            CMD_ERR("%s:%s:%s is not a known resource",
+                    v_class ? v_class : "",
+                    v_provider ? v_provider : "",
+                    v_agent ? v_agent : "");
+            argerr++;
+        }
+
+        if (argerr == 0) {
+            rc = cli_resource_execute_from_params("test", v_class, v_provider, v_agent,
+                                                  "validate-all", validate_options,
+                                                  override_params, timeout_ms);
+            exit_code = crm_errno2exit(rc);
+            crm_exit(exit_code);
+        }
+    }
+
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
         crm_exit(CRM_EX_USAGE);
@@ -799,8 +946,6 @@ main(int argc, char **argv)
 
     /* Populate working set from XML file if specified or CIB query otherwise */
     if (require_dataset) {
-        xmlNode *cib_xml_copy = NULL;
-
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
 
@@ -971,7 +1116,15 @@ main(int argc, char **argv)
         rc = pcmk_ok;
 
     } else if (rsc_cmd == 'U') {
+        GListPtr before = NULL;
+        GListPtr after = NULL;
+        GListPtr remaining = NULL;
+        GListPtr ele = NULL;
         node_t *dest = NULL;
+
+        if (BE_QUIET == FALSE) {
+            before = build_constraint_list(data_set->input);
+        }
 
         if (clear_expired == TRUE) {
             rc = cli_resource_clear_all_expired(data_set->input, cib_conn, rsc_id, host_uname, scope_master);
@@ -980,12 +1133,38 @@ main(int argc, char **argv)
             dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 rc = -pcmk_err_node_unknown;
+                if (BE_QUIET == FALSE) {
+                    g_list_free(before);
+                }
                 goto bail;
             }
             rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn, TRUE);
 
         } else {
             rc = cli_resource_clear(rsc_id, NULL, data_set->nodes, cib_conn, TRUE);
+        }
+
+        if (BE_QUIET == FALSE) {
+            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+            if (rc != pcmk_ok) {
+                CMD_ERR("Could not get modified CIB: %s\n", pcmk_strerror(rc));
+                g_list_free(before);
+                goto bail;
+            }
+
+            data_set->input = cib_xml_copy;
+            cluster_status(data_set);
+
+            after = build_constraint_list(data_set->input);
+            remaining = subtract_lists(before, after, (GCompareFunc) strcmp);
+
+            for (ele = remaining; ele != NULL; ele = ele->next) {
+                printf("Removing constraint: %s\n", (char *) ele->data);
+            }
+
+            g_list_free(before);
+            g_list_free(after);
+            g_list_free(remaining);
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {
@@ -1149,7 +1328,7 @@ main(int argc, char **argv)
         if (host_uname) {
             node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-            if (node && is_remote_node(node)) {
+            if (pe__is_guest_or_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);
                 if (node == NULL) {
                     CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
@@ -1231,5 +1410,5 @@ main(int argc, char **argv)
         }
     }
 
-    return crm_exit(exit_code);
+    crm_exit(exit_code);
 }

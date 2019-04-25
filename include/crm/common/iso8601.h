@@ -1,19 +1,10 @@
-/* 
- * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2005-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CRM_COMMON_ISO8601
@@ -30,13 +21,13 @@ extern "C" {
  */
 
 /*
- * http://en.wikipedia.org/wiki/ISO_8601
- *
+ * See https://en.wikipedia.org/wiki/ISO_8601
  */
 
 #  include <time.h>
 #  include <ctype.h>
-#  include <stdbool.h>
+#  include <stdint.h>   // uint32_t
+#  include <stdbool.h>  // bool
 
 typedef struct crm_time_s crm_time_t;
 
@@ -46,10 +37,7 @@ typedef struct crm_time_period_s {
     crm_time_t *diff;
 } crm_time_period_t;
 
-/* Creates a new date/time object conforming to iso8601:
- *     http://en.wikipedia.org/wiki/ISO_8601
- *
- * Eg.
+/* Creates a new date/time object conforming to ISO 8601, for example:
  *   Ordinal:   2010-01 12:00:00 +10:00
  *   Gregorian: 2010-01-01 12:00:00 +10:00
  *   ISO Week:  2010-W53-6 12:00:00 +10:00

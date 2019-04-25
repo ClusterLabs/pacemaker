@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -256,34 +258,16 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
     const char *this_event = NULL;
     const char *ignore_s = "";
 
-    /* Remap operation status based on return code */
+    // Remap operation status to DONE or ERROR based on return code
     op_status = status_from_rc(action, op_status, op_rc, target_rc);
 
-    /* Process OP status */
-    switch (op_status) {
-        case PCMK_LRM_OP_DONE:
-            break;
-        case PCMK_LRM_OP_ERROR:
-        case PCMK_LRM_OP_TIMEOUT:
-        case PCMK_LRM_OP_NOTSUPPORTED:
-            if (ignore_failures) {
-                ignore_s = ", ignoring failure";
-            } else {
-                action->failed = TRUE;
-            }
-            break;
-        case PCMK_LRM_OP_CANCELLED:
-            /* do nothing?? */
-            crm_err("Don't know what to do for cancelled ops yet");
-            break;
-        default:
-            /*
-             PCMK_LRM_OP_ERROR_HARD,
-             PCMK_LRM_OP_ERROR_FATAL,
-             PCMK_LRM_OP_NOT_INSTALLED
-             */
+    // Mark action as failed if not ignoring failures
+    if (op_status == PCMK_LRM_OP_ERROR) {
+        if (ignore_failures) {
+            ignore_s = ", ignoring failure";
+        } else {
             action->failed = TRUE;
-            crm_err("Unsupported action result: %d", op_status);
+        }
     }
 
     /* stop this event's timer if it had one */
@@ -480,8 +464,21 @@ process_graph_event(xmlNode *event, const char *event_node)
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 
     } else if (transition_graph->id != transition_num) {
-        desc = "arrived really late";
-        abort_transition(INFINITY, tg_restart, "Old event", event);
+        guint interval_ms = 0;
+
+        if (parse_op_key(id, NULL, NULL, &interval_ms)
+            && (interval_ms != 0)) {
+            /* Recurring actions have the transition number they were first
+             * scheduled in.
+             */
+            desc = "arrived after initial scheduling";
+            abort_transition(INFINITY, tg_restart, "Change in recurring result",
+                             event);
+
+        } else {
+            desc = "arrived really late";
+            abort_transition(INFINITY, tg_restart, "Old event", event);
+        }
 
     } else if (transition_graph->complete) {
         desc = "arrived late";

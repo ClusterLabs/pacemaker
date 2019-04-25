@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -244,15 +246,29 @@ mainloop_destroy_trigger(crm_trigger_t * source)
     return TRUE;
 }
 
-typedef struct signal_s {
-    crm_trigger_t trigger;      /* must be first */
-    void (*handler) (int sig);
-    int signal;
+// Define a custom glib source for signal handling
 
+// Data structure for custom glib source
+typedef struct signal_s {
+    crm_trigger_t trigger;      // trigger that invoked source (must be first)
+    void (*handler) (int sig);  // signal handler
+    int signal;                 // signal that was received
 } crm_signal_t;
 
+// Table to associate signal handlers with signal numbers
 static crm_signal_t *crm_signals[NSIG];
 
+/*!
+ * \internal
+ * \brief Dispatch an event from custom glib source for signals
+ *
+ * Given an signal event, clear the event trigger and call any registered
+ * signal handler.
+ *
+ * \param[in] source    glib source that triggered this dispatch
+ * \param[in] callback  (ignored)
+ * \param[in] userdata  (ignored)
+ */
 static gboolean
 crm_signal_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
 {
@@ -271,6 +287,15 @@ crm_signal_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Handle a signal by setting a trigger for signal source
+ *
+ * \param[in] sig  Signal number that was received
+ *
+ * \note This is the true signal handler for the mainloop signal source, and
+ *       must be async-safe.
+ */
 static void
 mainloop_signal_handler(int sig)
 {
@@ -279,6 +304,7 @@ mainloop_signal_handler(int sig)
     }
 }
 
+// Functions implementing our custom glib source for signal handling
 static GSourceFuncs crm_signal_funcs = {
     crm_trigger_prepare,
     crm_trigger_check,
@@ -286,16 +312,29 @@ static GSourceFuncs crm_signal_funcs = {
     crm_trigger_finalize,
 };
 
-gboolean
-crm_signal(int sig, void (*dispatch) (int sig))
+/*!
+ * \internal
+ * \brief Set a true signal handler
+ *
+ * signal()-like interface to sigaction()
+ *
+ * \param[in] sig       Signal number to register handler for
+ * \param[in] dispatch  Signal handler
+ *
+ * \return The previous value of the signal handler, or SIG_ERR on error
+ * \note The dispatch function must be async-safe.
+ */
+sighandler_t
+crm_signal_handler(int sig, sighandler_t dispatch)
 {
     sigset_t mask;
     struct sigaction sa;
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
-        crm_perror(LOG_ERR, "Call to sigemptyset failed");
-        return FALSE;
+        crm_err("Could not set handler for signal %d: %s",
+                sig, pcmk_strerror(errno));
+        return SIG_ERR;
     }
 
     memset(&sa, 0, sizeof(struct sigaction));
@@ -304,11 +343,21 @@ crm_signal(int sig, void (*dispatch) (int sig))
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
-        crm_perror(LOG_ERR, "Could not install signal handler for signal %d", sig);
-        return FALSE;
+        crm_err("Could not set handler for signal %d: %s",
+                sig, pcmk_strerror(errno));
+        return SIG_ERR;
     }
+    return old.sa_handler;
+}
 
-    return TRUE;
+/*
+ * \brief Use crm_signal_handler() instead
+ * \deprecated
+ */
+gboolean
+crm_signal(int sig, void (*dispatch) (int sig))
+{
+    return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
 static void
@@ -322,6 +371,17 @@ mainloop_destroy_signal_entry(int sig)
     mainloop_destroy_trigger((crm_trigger_t *) tmp);
 }
 
+/*!
+ * \internal
+ * \brief Add a signal handler to a mainloop
+ *
+ * \param[in] sig       Signal number to handle
+ * \param[in] dispatch  Signal handler function
+ *
+ * \note The true signal handler merely sets a mainloop trigger to call this
+ *       dispatch function via the mainloop. Therefore, the dispatch function
+ *       does not need to be async-safe.
+ */
 gboolean
 mainloop_add_signal(int sig, void (*dispatch) (int sig))
 {
@@ -358,7 +418,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
     crm_signals[sig]->handler = dispatch;
     crm_signals[sig]->signal = sig;
 
-    if (crm_signal(sig, mainloop_signal_handler) == FALSE) {
+    if (crm_signal_handler(sig, mainloop_signal_handler) == SIG_ERR) {
         mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
@@ -383,7 +443,7 @@ mainloop_destroy_signal(int sig)
         crm_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if (crm_signal(sig, NULL) == FALSE) {
+    } else if (crm_signal_handler(sig, NULL) == SIG_ERR) {
         crm_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
         return FALSE;
 

@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -47,7 +49,28 @@ void crm_schema_cleanup(void);
 
 /* internal functions related to process IDs (from pid.c) */
 
+/*!
+ * \internal
+ * \brief Detect if process per PID and optionally exe path (component) exists
+ *
+ * \param[in] pid     PID of process assumed alive, disproving of which to try
+ * \param[in] daemon  exe path (component) to possibly match with procfs entry
+ *
+ * \return -1 on invalid PID specification, -2 when the calling process has no
+ *         (is refused an) ability to (dis)prove the predicate,
+ *         0 if the negation of the predicate is confirmed (check-through-kill
+ *         indicates so, or the subsequent check-through-procfs-match on
+ *         \p daemon when provided and procfs available at the standard path),
+ *         1 if it cannot be disproved (reliably [modulo race conditions]
+ *         when \p daemon provided, procfs available at the standard path
+ *         and the calling process has permissions to access the respective
+ *         procfs location, less so otherwise, since mere check-through-kill
+ *         is exercised without powers to exclude PID recycled in the interim).
+ *
+ * \note This function cannot be used to verify \e authenticity of the process.
+ */
 int crm_pid_active(long pid, const char *daemon);
+
 long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
 long crm_read_pidfile(const char *filename);
 int crm_lock_pidfile(const char *filename, const char *name);
@@ -59,8 +82,6 @@ char *generate_op_key(const char *rsc_id, const char *op_type,
                       guint interval_ms);
 char *generate_notify_key(const char *rsc_id, const char *notify_type,
                           const char *op_type);
-char *generate_transition_magic(const char *transition_key, int op_status,
-                                int op_rc);
 char *generate_transition_key(int action, int transition_id, int target_rc,
                               const char *node);
 void filter_action_parameters(xmlNode *param_set, const char *version);

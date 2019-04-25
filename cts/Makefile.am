@@ -1,5 +1,7 @@
 #
-# Copyright 2001-2018 Michael Moerz
+# Copyright 2001-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -55,7 +57,7 @@ cts_SCRIPTS	=	cts			\
 clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
 		  cli/regression.acls.exp cli/regression.validity.exp \
-		  cli/regression.upgrade.exp
+		  cli/regression.upgrade.exp cli/regression.rules.exp
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler

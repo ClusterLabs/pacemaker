@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1663,7 +1665,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
-            crm_trace("Running %s command to see if %s can fence %s (%s)",
+            crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                       check_type, dev->id, search->host, search->action);
 
             schedule_internal_command(__FUNCTION__, dev, "list", NULL,
@@ -1678,20 +1680,24 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         }
 
     } else if (safe_str_eq(check_type, "status")) {
-        crm_trace("Running %s command to see if %s can fence %s (%s)",
+        crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                   check_type, dev->id, search->host, search->action);
         schedule_internal_command(__FUNCTION__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
     } else {
-        crm_err("Unknown check type: %s", check_type);
+        crm_err("Invalid value for " STONITH_ATTR_HOSTCHECK ": %s", check_type);
+        check_type = "Invalid " STONITH_ATTR_HOSTCHECK;
     }
 
     if (safe_str_eq(host, alias)) {
-        crm_notice("%s can%s fence (%s) %s: %s", dev->id, can ? "" : " not", search->action, host, check_type);
+        crm_notice("%s is%s eligible to fence (%s) %s: %s",
+                   dev->id, (can? "" : " not"), search->action, host,
+                   check_type);
     } else {
-        crm_notice("%s can%s fence (%s) %s (aka. '%s'): %s", dev->id, can ? "" : " not", search->action, host, alias,
+        crm_notice("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
+                   dev->id, (can? "" : " not"), search->action, host, alias,
                    check_type);
     }
 

@@ -210,6 +210,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="26" operation="stop" operation_key="vip-master_stop_0"/>
       </trigger>
       <trigger>
@@ -307,6 +313,9 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+      </trigger>
       <trigger>
         <pseudo_event id="29" operation="stop" operation_key="vip-rep_stop_0"/>
       </trigger>

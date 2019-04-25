@@ -5,7 +5,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright 2012-2019 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -660,7 +660,7 @@ class Tests(object):
                      '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete"')
         test.add_cmd('-c exec -r test_rsc -a start -k monitor_delay -v 30 ' +
                      '-t 1000 -w') # -t must be less than self.action_timeout
-        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out" '
+        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:OCF_TIMEOUT op_status:Timed Out" '
                      + self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -82,7 +84,7 @@ pe_free_rsc_action_details(pe_action_t *action)
  *
  * \return TRUE if node can be fenced, FALSE otherwise
  *
- * \note This function should only be called for cluster nodes and baremetal
+ * \note This function should only be called for cluster nodes and
  *       remote nodes; guest nodes are fenced by stopping their container
  *       resource, so fence execution requirements do not apply to them.
  */
@@ -568,7 +570,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
 /*   			action->runnable = FALSE; */
 
         } else if (action->node->details->online == FALSE
-                   && (!is_container_remote_node(action->node) || action->node->details->remote_requires_reset)) {
+                   && (!pe__is_guest_node(action->node)
+                       || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
@@ -1085,9 +1088,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         action->on_fail = action_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
-    /* for baremetal remote nodes, ensure that any failure that results in
-     * dropping an active connection to a remote node results in fencing of
-     * the remote node.
+    /* For remote nodes, ensure that any failure that results in dropping an
+     * active connection to the node results in fencing of the node.
      *
      * There are only two action failures that don't result in fencing.
      * 1. probes - probe failures are expected.
@@ -1095,20 +1097,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
     } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
-                (is_rsc_baremetal_remote_node(action->rsc, data_set) &&
+                (pe__resource_is_remote_conn(action->rsc, data_set) &&
                !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && (interval_ms == 0)) &&
                 (safe_str_neq(action->task, CRMD_ACTION_START)))) {
 
         if (!is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
-            value = "stop unmanaged baremetal remote node (enforcing default)";
+            value = "stop unmanaged remote node (enforcing default)";
 
         } else {
             if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-                value = "fence baremetal remote node (default)";
+                value = "fence remote node (default)";
             } else {
-                value = "recover baremetal remote node connection (default)";
+                value = "recover remote node connection (default)";
             }
 
             if (action->rsc->remote_reconnect_ms) {
@@ -1462,8 +1464,8 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     return result;
 }
 
-GListPtr
-find_actions_exact(GListPtr input, const char *key, node_t * on_node)
+GList *
+find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
 {
     GList *result = NULL;
 
@@ -1496,6 +1498,34 @@ find_actions_exact(GListPtr input, const char *key, node_t * on_node)
         }
     }
 
+    return result;
+}
+
+/*!
+ * \brief Find all actions of given type for a resource
+ *
+ * \param[in] rsc           Resource to search
+ * \param[in] node          Find only actions scheduled on this node
+ * \param[in] task          Action name to search for
+ * \param[in] require_node  If TRUE, NULL node or action node will not match
+ *
+ * \return List of actions found (or NULL if none)
+ * \note If node is not NULL and require_node is FALSE, matching actions
+ *       without a node will be assigned to node.
+ */
+GList *
+pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+                     const char *task, bool require_node)
+{
+    GList *result = NULL;
+    char *key = generate_op_key(rsc->id, task, 0);
+
+    if (require_node) {
+        result = find_actions_exact(rsc->actions, key, node);
+    } else {
+        result = find_actions(rsc->actions, key, node);
+    }
+    free(key);
     return result;
 }
 
@@ -1642,16 +1672,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
         int a_id = -1;
         int b_id = -1;
-        int dummy = -1;
 
         const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
         const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
-        if(!decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy)) {
+        if (!decode_transition_magic(a_magic, &a_uuid, &a_id, NULL, NULL, NULL,
+                                     NULL)) {
             sort_return(0, "bad magic a");
         }
-        if(!decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy)) {
+        if (!decode_transition_magic(b_magic, &b_uuid, &b_id, NULL, NULL, NULL,
+                                     NULL)) {
             sort_return(0, "bad magic b");
         }
         /* try to determine the relative age of the operation...
@@ -1935,7 +1966,8 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
         data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
         // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-        if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
+        if (pe__add_bundle_remote_name(rsc, data->params_all,
+                                       XML_RSC_ATTR_REMOTE_RA_ADDR)) {
             crm_trace("Set address for bundle connection %s (on %s)",
                       rsc->id, node->details->uname);
         }
@@ -2180,7 +2212,8 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if(is_remote_node(node) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        if (pe__is_guest_or_remote_node(node)
+            && is_set(data_set->flags, pe_flag_enable_unfencing)) {
             /* Extra work to detect device changes on remotes
              *
              * We may do this for all nodes in the future, but for now

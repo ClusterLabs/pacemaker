@@ -720,6 +720,18 @@ stonith_action_async_done(svc_action_t *svc_action)
     stonith__destroy_action(action);
 }
 
+static void
+stonith_action_async_forked(svc_action_t *svc_action)
+{
+    stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
+
+    action->pid = svc_action->pid;
+    action->svc_action = svc_action;
+
+    crm_trace("Child process %d performing action '%s' successfully forked",
+              action->pid, action->action);
+}
+
 static int
 internal_stonith_action_execute(stonith_action_t * action)
 {
@@ -766,12 +778,12 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     if (action->async) {
         /* async */
-        if(services_action_async(svc_action, &stonith_action_async_done) == FALSE) {
+        if(services_action_async_fork_notify(svc_action,
+            &stonith_action_async_done,
+            &stonith_action_async_forked) == FALSE) {
             services_action_free(svc_action);
             svc_action = NULL;
         } else {
-            action->pid = svc_action->pid;
-            action->svc_action = svc_action;
             rc = 0;
         }
 
@@ -2211,4 +2223,45 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     }
     free(name);
     return when;
+}
+
+bool
+stonith_agent_exists(const char *agent, int timeout)
+{
+    stonith_t *st = NULL;
+    stonith_key_value_t *devices = NULL;
+    stonith_key_value_t *dIter = NULL;
+    bool rc = FALSE;
+
+    if (agent == NULL) {
+        return rc;
+    }
+
+    st = stonith_api_new();
+    st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
+
+    for (dIter = devices; dIter != NULL; dIter = dIter->next) {
+        if (crm_str_eq(dIter->value, agent, TRUE)) {
+            rc = TRUE;
+            break;
+        }
+    }
+
+    stonith_key_value_freeall(devices, 1, 1);
+    stonith_api_delete(st);
+    return rc;
+}
+
+const char *
+stonith_action_str(const char *action)
+{
+    if (action == NULL) {
+        return "fencing";
+    } else if (!strcmp(action, "on")) {
+        return "unfencing";
+    } else if (!strcmp(action, "off")) {
+        return "turning off";
+    } else {
+        return action;
+    }
 }

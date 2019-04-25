@@ -2,9 +2,9 @@ Using the original execution date of: 2018-10-31 11:51:32Z
 
 Current cluster status:
 Online: [ controller-0 controller-1 controller-2 ]
-Containers: [ rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
+GuestOnline: [ rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
 
- Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
+ Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
    rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started controller-0
    rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started controller-1
    rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started controller-2
@@ -14,11 +14,11 @@ Containers: [ rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbi
  ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Started controller-0
  ip-172.17.3.16	(ocf::heartbeat:IPaddr2):	Started controller-1
  ip-172.17.4.15	(ocf::heartbeat:IPaddr2):	Started controller-2
- Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
+ Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
    haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0
    haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-1
    haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
- Docker container: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
+ Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
    openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started controller-0
 
 Transition Summary:
@@ -76,9 +76,9 @@ Using the original execution date of: 2018-10-31 11:51:32Z
 
 Revised cluster status:
 Online: [ controller-0 controller-1 controller-2 ]
-Containers: [ rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
+GuestOnline: [ rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
 
- Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
+ Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
    rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Stopped
    rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started controller-1
    rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started controller-2
@@ -88,10 +88,10 @@ Containers: [ rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbi
  ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Started controller-1
  ip-172.17.3.16	(ocf::heartbeat:IPaddr2):	Started controller-1
  ip-172.17.4.15	(ocf::heartbeat:IPaddr2):	Started controller-2
- Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
+ Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
    haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
    haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-1
    haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
- Docker container: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
+ Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
    openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started controller-2
 

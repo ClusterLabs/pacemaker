@@ -1,5 +1,5 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2012 Free Software Foundation, Inc.
+# Copyright (C) 2002-2019 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this file.  If not, see <http://www.gnu.org/licenses/>.
+# along with this file.  If not, see <https://www.gnu.org/licenses/>.
 #
 # As a special exception to the GNU General Public License,
 # this file may be distributed as part of a program that
@@ -37,12 +37,14 @@ AC_DEFUN([gl_EARLY],
   m4_pattern_allow([^gl_ES$])dnl a valid locale name
   m4_pattern_allow([^gl_LIBOBJS$])dnl a variable
   m4_pattern_allow([^gl_LTLIBOBJS$])dnl a variable
+
+  # Pre-early section.
   AC_REQUIRE([gl_PROG_AR_RANLIB])
-  # Code from module crypto/md5:
-  # Code from module include_next:
-  # Code from module multiarch:
+
+  # Code from module byteswap:
+  # Code from module crypto/md5-buffer:
+  # Code from module extern-inline:
   # Code from module stdalign:
-  # Code from module stdint:
 ])
 
 # This macro should be invoked from ./configure.ac, in the section
@@ -61,10 +63,10 @@ AC_DEFUN([gl_INIT],
   m4_pushdef([gl_LIBSOURCES_DIR], [])
   gl_COMMON
   gl_source_base='lib/gnu'
-gl_MD5
-gl_MULTIARCH
-gl_STDALIGN_H
-gl_STDINT_H
+  gl_BYTESWAP
+  gl_MD5
+  AC_REQUIRE([gl_EXTERN_INLINE])
+  gl_STDALIGN_H
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
     m4_syscmd([test ! -d ]m4_defn([gl_LIBSOURCES_DIR])[ ||
@@ -205,17 +207,16 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # This macro records the list of files which have been installed by
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
+  lib/byteswap.in.h
+  lib/gl_openssl.h
   lib/md5.c
   lib/md5.h
   lib/stdalign.in.h
-  lib/stdint.in.h
   m4/00gnulib.m4
+  m4/byteswap.m4
+  m4/extern-inline.m4
+  m4/gl-openssl.m4
   m4/gnulib-common.m4
-  m4/include_next.m4
-  m4/longlong.m4
   m4/md5.m4
-  m4/multiarch.m4
-  m4/onceonly.m4
   m4/stdalign.m4
-  m4/stdint.m4
 ])

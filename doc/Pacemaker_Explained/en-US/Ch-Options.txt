@@ -146,6 +146,17 @@ their default values, by running the `man pacemaker-schedulerd` and
 |=========================================================
 |Option |Default |Description
 
+| cluster-name | |
+indexterm:[cluster-name,Cluster Property]
+indexterm:[Cluster,Property,cluster-name]
+An (optional) name for the cluster as a whole. This is mostly for users'
+convenience for use as desired in administration, but this can be used
+in the Pacemaker configuration in <<ch-rules,rules>> (as the
++#cluster-name+ <<node-attribute-expressions-special,node attribute>>). It may
+also be used by higher-level tools when displaying cluster information, and by
+certain resource agents (for example, the +ocf:heartbeat:GFS2+ agent stores the
+cluster name in filesystem meta-data).
+
 | dc-version | |
 indexterm:[dc-version,Cluster Property]
 indexterm:[Cluster,Property,dc-version]
@@ -183,8 +194,8 @@ calculated limit only when any node has high load.
 | migration-limit | -1 |
 indexterm:[migration-limit,Cluster Option]
 indexterm:[Cluster,Option,migration-limit]
-The number of migration jobs that the TE is allowed to execute in
-parallel on a node. A value of -1 means unlimited.
+The number of <<s-migrating-resources,live migration>> actions that the cluster
+is allowed to execute in parallel on a node. A value of -1 means unlimited.
 
 | symmetric-cluster | TRUE |
 indexterm:[symmetric-cluster,Cluster Option]
@@ -274,8 +285,8 @@ Is the cluster allowed to initiate multiple fence actions concurrently?
 indexterm:[cluster-delay,Cluster Option]
 indexterm:[Cluster,Option,cluster-delay]
 Estimated maximum round-trip delay over the network (excluding action
-execution). If the TE requires an action to be executed on another node,
-it will consider the action failed if it does not get a response
+execution). If the DC requires an action to be executed on another
+node, it will consider the action failed if it does not get a response
 from the other node in this time (after considering the action's
 own timeout). The "correct" value will depend on the speed and load of your
 network and cluster nodes.

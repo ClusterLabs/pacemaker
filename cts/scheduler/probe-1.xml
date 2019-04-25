@@ -48,7 +48,7 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22114">
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" transition-key="0:b3a2f3e9-59cb-456d-bc4c-3b62d7741b43" transition-magic="4:7;0:b3a2f3e9-59cb-456d-bc4c-3b62d7741b43" call-id="2" crm_feature_set="1.0.6" rc-code="-1" op-status="-1" interval="0" op-digest="04a9f199a105776fe062c96980aebbf1"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" transition-key="0:0:7:b3a2f3e9-59cb-456d-bc4c-3b62d7741b43" transition-magic="4:7;0:0:7:b3a2f3e9-59cb-456d-bc4c-3b62d7741b43" call-id="2" crm_feature_set="1.0.6" rc-code="-1" op-status="-1" interval="0" op-digest="04a9f199a105776fe062c96980aebbf1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
