@@ -48,7 +48,8 @@ gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 typedef void (*sighandler_t)(int);
 #  endif
 
-sighandler_t crm_signal(int sig, sighandler_t dispatch);
+sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
+gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
 
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 

@@ -1,3 +1,29 @@
+* Wed Apr 24 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc1
+- Changesets: 258
+- Diff:       225 files changed, 28421 insertions(+), 24443 deletions(-)
+
+- Features added since Pacemaker-2.0.1
+  + tools: crm_resource --validate can get resource parameters from command line
+  + tools: crm_resource --clear prints out any cleared constraints
+  + tools: new crm_rule tool for checking rule expiration (experimental)
+  + tools: stonith_admin supports XML output for machine parsing (experimental)
+  + resources: new HealthIOWait resource agent for node health tracking
+
+- Changes since Pacemaker-2.0.1
+  + Important security fixes for CVE-2018-16878, CVE-2018-16877, CVE-2019-3885
+  + build: crm_report bug report URL is now configurable at build time
+  + build: private libpengine/libtransitioner libraries combined as libpacemaker
+  + attrd: prevent race when writer leaves where new writer is not elected
+  + controller: prevent race when DC leaves where new DC is not elected
+  + scheduler: respect order constraints when resources are being probed
+  + scheduler: don't disable waiting for DC fencing
+  + scheduler: don't order non-DC shutdowns before DC fencing
+  + scheduler: one group stop shouldn't make another required
+  + libcrmcommon: handle out-of-range integers in configuration better
+  + libcrmservice: cancel in-flight systemd/upstart DBus calls immediately
+  + libcrmservice: fix use-after-free memory error in alert handling
+
+
 * Mon Mar 4 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-1
 - Changesets: 592
  173 files changed, 9268 insertions(+), 5344 deletions(-)

@@ -401,11 +401,11 @@ crm_control_blackbox(int nsig, bool enable)
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
         /* Save to disk on abnormal termination */
-        crm_signal(SIGSEGV, crm_trigger_blackbox);
-        crm_signal(SIGABRT, crm_trigger_blackbox);
-        crm_signal(SIGILL,  crm_trigger_blackbox);
-        crm_signal(SIGBUS,  crm_trigger_blackbox);
-        crm_signal(SIGFPE,  crm_trigger_blackbox);
+        crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
+        crm_signal_handler(SIGABRT, crm_trigger_blackbox);
+        crm_signal_handler(SIGILL,  crm_trigger_blackbox);
+        crm_signal_handler(SIGBUS,  crm_trigger_blackbox);
+        crm_signal_handler(SIGFPE,  crm_trigger_blackbox);
 
         crm_update_callsites();
 
@@ -497,7 +497,7 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
             /* Do as little as possible, just try to get what we have out
              * We logged the filename when the blackbox was enabled
              */
-            crm_signal(nsig, SIG_DFL);
+            crm_signal_handler(nsig, SIG_DFL);
             qb_log_blackbox_write_to_file((const char *)blackbox_file_prefix);
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
             raise(nsig);

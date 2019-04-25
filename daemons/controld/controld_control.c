@@ -149,7 +149,7 @@ extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern char *te_client_id;
 
-crm_exit_t
+void
 crmd_fast_exit(crm_exit_t exit_code)
 {
     if (is_set(fsa_input_register, R_STAYDOWN)) {
@@ -223,7 +223,7 @@ crmd_exit(crm_exit_t exit_code)
         crm_notice("Forcing immediate exit with status %d (%s)",
                    exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
-        return crmd_fast_exit(exit_code);
+        crmd_fast_exit(exit_code);
     }
 
 /* Clean up as much memory as possible for valgrind */
