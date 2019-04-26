@@ -9,10 +9,14 @@ HEADERS[crmcommon]="include/crm/crm.h
 HEADERS[crmcluster]="include/crm/cluster.h include/crm/cluster/*.h"
 HEADERS[crmservice]="include/crm/services.h"
 HEADERS[lrmd]="include/crm/lrmd*.h"
-HEADERS[pacemaker]="include/pacemaker*.h include/pcmki/*.h"
 HEADERS[pe_rules]="include/crm/pengine/rules*.h"
 HEADERS[pe_status]="include/crm/pengine/*.h"
+HEADERS[pengine]="include/crm/pengine/common.h
+                  include/crm/pengine/complex.h
+                  include/crm/pengine/rules.h
+                  include/crm/pengine/status.h"
 HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/*.h"
+HEADERS[transitioner]="include/crm/transition.h"
 
 prompt_to_continue() {
     local RESPONSE
