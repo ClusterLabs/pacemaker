@@ -22,6 +22,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
 #include "crmcommon_private.h"
@@ -2309,10 +2310,7 @@ filename2xml(const char *filename)
 const char *
 crm_xml_add_last_written(xmlNode *xml_node)
 {
-    time_t now = time(NULL);
-    char *now_str = ctime(&now);
-
-    now_str[24] = EOS; /* replace the newline */
+    const char *now_str = crm_now_string();
     return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
 }
 
