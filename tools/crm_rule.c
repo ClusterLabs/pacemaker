@@ -28,14 +28,14 @@ static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_t
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",       no_argument,       NULL, '?', "\tThis text"},
-    {"version",    no_argument,       NULL, '$', "\tVersion information"  },
+    {"version",    no_argument,       NULL, '$', "\tVersion information"},
     {"verbose",    no_argument,       NULL, 'V', "\tIncrease debug output"},
 
-    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):" },
-    {"check",      no_argument,       NULL, 'c', "\tCheck whether a rule is in effect" },
+    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):"},
+    {"check",      no_argument,       NULL, 'c', "\tCheck if a rule is in effect, now or at given date/time"},
 
-    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:" },
-    {"date",       required_argument, NULL, 'd', "Whether the rule is in effect on a given date" },
+    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:"},
+    {"date",       required_argument, NULL, 'd', "Date/time (ISO 8601) specification as a mode's input"},
     {"rule",       required_argument, NULL, 'r', "The ID of the rule to check" },
 
     {"-spacer-",   no_argument,       NULL, '-', "\nData:"},
@@ -44,7 +44,19 @@ static struct crm_option long_options[] = {
     {"-spacer-",   required_argument, NULL, '-', "\n\nThis tool is currently experimental.",
      pcmk_option_paragraph},
     {"-spacer-",   required_argument, NULL, '-', "The interface, behavior, and output may "
-                                                 "change with any version of pacemaker.", pcmk_option_paragraph},
+                                                 "change with any version of pacemaker.",
+     pcmk_option_paragraph},
+    {"-spacer-",   required_argument, NULL, '-', "Important: avoid making conclusion based on"
+                                                 " this tool when it is not of the same version as"
+                                                 " an overall pacemaker deployment."
+                                                 "\nThe exact date/time parsing behaviour may get altered"
+                                                 " over time, so only the above requirement guarantees"
+                                                 " reliable outcomes related to particular deployment"
+                                                 " (i.e. without a generic validity for older/newer"
+                                                 " versions of pacemaker, possibly -- depending on the"
+                                                 " permanency of the arising decisions -- mandating"
+                                                 " any such to be re-evaluated anew upon an update).",
+     pcmk_option_paragraph},
 
     {0, 0, 0, 0}
 };
