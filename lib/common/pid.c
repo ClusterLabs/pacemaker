@@ -47,7 +47,7 @@ crm_pid_active(long pid, const char *daemon)
     } else if ((rc = kill(pid, 0)) < 0 && errno == ESRCH) {
         return 0;  /* no such PID detected */
 
-    } else if (rc < 0 && have_proc_pid == -1) {
+    } else if (rc < 0 && (daemon == NULL || have_proc_pid == -1)) {
         if (last_asked_pid != pid) {
             crm_info("Cannot examine PID %ld: %s", pid, strerror(errno));
             last_asked_pid = pid;
