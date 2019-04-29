@@ -1573,6 +1573,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 
         } else {
             crm_err("Unknown operation: %s", op);
+            rc = -pcmk_err_diff_failed;
         }
     }
 
