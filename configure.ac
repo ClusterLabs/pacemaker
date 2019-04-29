@@ -111,14 +111,6 @@ AC_CHECK_SIZEOF(long long)
 dnl ===============================================
 dnl Helpers
 dnl ===============================================
-cc_supports_flag() {
-    local CFLAGS="-Werror $@"
-    AC_MSG_CHECKING(whether $CC supports "$@")
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-                      [RC=0; AC_MSG_RESULT(yes)],
-                      [RC=1; AC_MSG_RESULT(no)])
-    return $RC
-}
 
 # Some tests need to use their own CFLAGS
 
@@ -129,6 +121,16 @@ cc_temp_flags() {
 
 cc_restore_flags() {
     CFLAGS=$ac_save_CFLAGS
+}
+
+cc_supports_flag() {
+    cc_temp_flags "-Werror $@"
+    AC_MSG_CHECKING(whether $CC supports "$@")
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                      [RC=0; AC_MSG_RESULT(yes)],
+                      [RC=1; AC_MSG_RESULT(no)])
+    cc_restore_flags
+    return $RC
 }
 
 dnl ===============================================
@@ -955,14 +957,14 @@ dnl Check for printw() prototype compatibility
 if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    cc_temp_flags "-Wcast-qual $WERROR"
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
     if cc_supports_flag -fPIC; then
-        CFLAGS="$CFLAGS -fPIC"
+        cc_temp_flags "-Wcast-qual $WERROR -fPIC"
+    else
+        cc_temp_flags "-Wcast-qual $WERROR"
     fi
-
     AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     AC_LINK_IFELSE(
         [AC_LANG_PROGRAM([
