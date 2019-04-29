@@ -1506,10 +1506,11 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
         int position = -1;
 
-        crm_trace("Processing %s %s", change->name, op);
         if(op == NULL) {
             continue;
         }
+
+        crm_trace("Processing %s %s", change->name, op);
 
         // "delete" changes for XML comments are generated with "position"
         if(strcmp(op, "delete") == 0) {
