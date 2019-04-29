@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-09-12 10:51:59Z
+Using the original execution date of: 2017-09-12T10:51:59Z
 
 Current cluster status:
 Node controller-0 (1): UNCLEAN (offline)
@@ -182,7 +182,7 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
  * Pseudo action:   redis-bundle_promoted_0
  * Resource action: redis           monitor=20000 on redis-bundle-1
-Using the original execution date of: 2017-09-12 10:51:59Z
+Using the original execution date of: 2017-09-12T10:51:59Z
 
 Revised cluster status:
 Online: [ controller-1 controller-2 ]

@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-02-13 23:40:47Z
+Using the original execution date of: 2018-02-13T23:40:47Z
 
 Current cluster status:
 Online: [ controller-1 controller-2 ]
@@ -73,7 +73,7 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
  * Pseudo action:   redis-bundle_running_0
  * Pseudo action:   rabbitmq-bundle_running_0
-Using the original execution date of: 2018-02-13 23:40:47Z
+Using the original execution date of: 2018-02-13T23:40:47Z
 
 Revised cluster status:
 Online: [ controller-1 controller-2 ]

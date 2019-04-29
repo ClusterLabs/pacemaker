@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-04-09 07:55:35Z
+Using the original execution date of: 2018-04-09T07:55:35Z
 
 Current cluster status:
 RemoteNode overcloud-novacompute-1: UNCLEAN (offline)
@@ -63,7 +63,7 @@ Executing cluster transition:
  * Pseudo action:   compute-unfence-trigger_stop_0
  * Pseudo action:   compute-unfence-trigger-clone_stopped_0
  * Resource action: overcloud-novacompute-1 stop on controller-1
-Using the original execution date of: 2018-04-09 07:55:35Z
+Using the original execution date of: 2018-04-09T07:55:35Z
 
 Revised cluster status:
 RemoteNode overcloud-novacompute-1: UNCLEAN (offline)

@@ -520,7 +520,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     result_s = calloc(1, 100);
 
     snprintf(result_s, 100, "%s%s%s%s",
-             date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? " " : "",
+             date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? "T" : "",
              time_s ? time_s : "", offset_s ? offset_s : "");
 
   cleanup:

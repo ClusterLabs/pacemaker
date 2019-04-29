@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-03-21 23:12:42Z
+Using the original execution date of: 2018-03-21T23:12:42Z
 
 Current cluster status:
 Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
@@ -33,7 +33,7 @@ Executing cluster transition:
  * Resource action: rsc2            monitor=40000 on rhel7-3
  * Resource action: rsc5            monitor=20000 on rhel7-2
  * Resource action: rsc6            monitor=28000 on rhel7-1
-Using the original execution date of: 2018-03-21 23:12:42Z
+Using the original execution date of: 2018-03-21T23:12:42Z
 
 Revised cluster status:
 Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]

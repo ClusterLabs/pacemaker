@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-11-28 18:37:16Z
+Using the original execution date of: 2018-11-28T18:37:16Z
 
 Current cluster status:
 Node rhel7-1 (1): UNCLEAN (online)
@@ -56,7 +56,7 @@ Executing cluster transition:
  * Cluster action:  do_shutdown on rhel7-5
  * Cluster action:  do_shutdown on rhel7-4
  * Cluster action:  do_shutdown on rhel7-2
-Using the original execution date of: 2018-11-28 18:37:16Z
+Using the original execution date of: 2018-11-28T18:37:16Z
 
 Revised cluster status:
 Online: [ rhel7-2 rhel7-4 rhel7-5 ]

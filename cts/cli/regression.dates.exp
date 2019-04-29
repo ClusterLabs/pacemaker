@@ -1,243 +1,243 @@
 =#=#=#= Begin test: 2014-01-01 00:30:00 - 1 Hour =#=#=#=
-Date: 2014-01-01 00:30:00Z
+Date: 2014-01-01T00:30:00Z
 Duration: -3600 seconds ( 1 hour )
-Duration ends at: 2013-12-31 23:30:00Z
+Duration ends at: 2013-12-31T23:30:00Z
 =#=#=#= End test: 2014-01-01 00:30:00 - 1 Hour - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-01-01 00:30:00 - 1 Hour
 =#=#=#= Begin test: 2006-W01-7 =#=#=#=
-Date: 2006-01-08 00:00:00Z
+Date: 2006-01-08T00:00:00Z
 =#=#=#= End test: 2006-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2006-W01-7
 =#=#=#= Begin test: 2006-W01-7 - round-trip =#=#=#=
-Date: 2006-W01-7 00:00:00Z
+Date: 2006-W01-7T00:00:00Z
 =#=#=#= End test: 2006-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2006-W01-7 - round-trip
 =#=#=#= Begin test: 2006-W01-1 =#=#=#=
-Date: 2006-01-02 00:00:00Z
+Date: 2006-01-02T00:00:00Z
 =#=#=#= End test: 2006-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2006-W01-1
 =#=#=#= Begin test: 2006-W01-1 - round-trip =#=#=#=
-Date: 2006-W01-1 00:00:00Z
+Date: 2006-W01-1T00:00:00Z
 =#=#=#= End test: 2006-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2006-W01-1 - round-trip
 =#=#=#= Begin test: 2007-W01-7 =#=#=#=
-Date: 2007-01-07 00:00:00Z
+Date: 2007-01-07T00:00:00Z
 =#=#=#= End test: 2007-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2007-W01-7
 =#=#=#= Begin test: 2007-W01-7 - round-trip =#=#=#=
-Date: 2007-W01-7 00:00:00Z
+Date: 2007-W01-7T00:00:00Z
 =#=#=#= End test: 2007-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2007-W01-7 - round-trip
 =#=#=#= Begin test: 2007-W01-1 =#=#=#=
-Date: 2007-01-01 00:00:00Z
+Date: 2007-01-01T00:00:00Z
 =#=#=#= End test: 2007-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2007-W01-1
 =#=#=#= Begin test: 2007-W01-1 - round-trip =#=#=#=
-Date: 2007-W01-1 00:00:00Z
+Date: 2007-W01-1T00:00:00Z
 =#=#=#= End test: 2007-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2007-W01-1 - round-trip
 =#=#=#= Begin test: 2008-W01-7 =#=#=#=
-Date: 2008-01-06 00:00:00Z
+Date: 2008-01-06T00:00:00Z
 =#=#=#= End test: 2008-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2008-W01-7
 =#=#=#= Begin test: 2008-W01-7 - round-trip =#=#=#=
-Date: 2008-W01-7 00:00:00Z
+Date: 2008-W01-7T00:00:00Z
 =#=#=#= End test: 2008-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2008-W01-7 - round-trip
 =#=#=#= Begin test: 2008-W01-1 =#=#=#=
-Date: 2007-12-31 00:00:00Z
+Date: 2007-12-31T00:00:00Z
 =#=#=#= End test: 2008-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2008-W01-1
 =#=#=#= Begin test: 2008-W01-1 - round-trip =#=#=#=
-Date: 2008-W01-1 00:00:00Z
+Date: 2008-W01-1T00:00:00Z
 =#=#=#= End test: 2008-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2008-W01-1 - round-trip
 =#=#=#= Begin test: 2009-W01-7 =#=#=#=
-Date: 2009-01-04 00:00:00Z
+Date: 2009-01-04T00:00:00Z
 =#=#=#= End test: 2009-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W01-7
 =#=#=#= Begin test: 2009-W01-7 - round-trip =#=#=#=
-Date: 2009-W01-7 00:00:00Z
+Date: 2009-W01-7T00:00:00Z
 =#=#=#= End test: 2009-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W01-7 - round-trip
 =#=#=#= Begin test: 2009-W01-1 =#=#=#=
-Date: 2008-12-29 00:00:00Z
+Date: 2008-12-29T00:00:00Z
 =#=#=#= End test: 2009-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W01-1
 =#=#=#= Begin test: 2009-W01-1 - round-trip =#=#=#=
-Date: 2009-W01-1 00:00:00Z
+Date: 2009-W01-1T00:00:00Z
 =#=#=#= End test: 2009-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W01-1 - round-trip
 =#=#=#= Begin test: 2010-W01-7 =#=#=#=
-Date: 2010-01-10 00:00:00Z
+Date: 2010-01-10T00:00:00Z
 =#=#=#= End test: 2010-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2010-W01-7
 =#=#=#= Begin test: 2010-W01-7 - round-trip =#=#=#=
-Date: 2010-W01-7 00:00:00Z
+Date: 2010-W01-7T00:00:00Z
 =#=#=#= End test: 2010-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2010-W01-7 - round-trip
 =#=#=#= Begin test: 2010-W01-1 =#=#=#=
-Date: 2010-01-04 00:00:00Z
+Date: 2010-01-04T00:00:00Z
 =#=#=#= End test: 2010-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2010-W01-1
 =#=#=#= Begin test: 2010-W01-1 - round-trip =#=#=#=
-Date: 2010-W01-1 00:00:00Z
+Date: 2010-W01-1T00:00:00Z
 =#=#=#= End test: 2010-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2010-W01-1 - round-trip
 =#=#=#= Begin test: 2011-W01-7 =#=#=#=
-Date: 2011-01-09 00:00:00Z
+Date: 2011-01-09T00:00:00Z
 =#=#=#= End test: 2011-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2011-W01-7
 =#=#=#= Begin test: 2011-W01-7 - round-trip =#=#=#=
-Date: 2011-W01-7 00:00:00Z
+Date: 2011-W01-7T00:00:00Z
 =#=#=#= End test: 2011-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2011-W01-7 - round-trip
 =#=#=#= Begin test: 2011-W01-1 =#=#=#=
-Date: 2011-01-03 00:00:00Z
+Date: 2011-01-03T00:00:00Z
 =#=#=#= End test: 2011-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2011-W01-1
 =#=#=#= Begin test: 2011-W01-1 - round-trip =#=#=#=
-Date: 2011-W01-1 00:00:00Z
+Date: 2011-W01-1T00:00:00Z
 =#=#=#= End test: 2011-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2011-W01-1 - round-trip
 =#=#=#= Begin test: 2012-W01-7 =#=#=#=
-Date: 2012-01-08 00:00:00Z
+Date: 2012-01-08T00:00:00Z
 =#=#=#= End test: 2012-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2012-W01-7
 =#=#=#= Begin test: 2012-W01-7 - round-trip =#=#=#=
-Date: 2012-W01-7 00:00:00Z
+Date: 2012-W01-7T00:00:00Z
 =#=#=#= End test: 2012-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2012-W01-7 - round-trip
 =#=#=#= Begin test: 2012-W01-1 =#=#=#=
-Date: 2012-01-02 00:00:00Z
+Date: 2012-01-02T00:00:00Z
 =#=#=#= End test: 2012-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2012-W01-1
 =#=#=#= Begin test: 2012-W01-1 - round-trip =#=#=#=
-Date: 2012-W01-1 00:00:00Z
+Date: 2012-W01-1T00:00:00Z
 =#=#=#= End test: 2012-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2012-W01-1 - round-trip
 =#=#=#= Begin test: 2013-W01-7 =#=#=#=
-Date: 2013-01-06 00:00:00Z
+Date: 2013-01-06T00:00:00Z
 =#=#=#= End test: 2013-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2013-W01-7
 =#=#=#= Begin test: 2013-W01-7 - round-trip =#=#=#=
-Date: 2013-W01-7 00:00:00Z
+Date: 2013-W01-7T00:00:00Z
 =#=#=#= End test: 2013-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2013-W01-7 - round-trip
 =#=#=#= Begin test: 2013-W01-1 =#=#=#=
-Date: 2012-12-31 00:00:00Z
+Date: 2012-12-31T00:00:00Z
 =#=#=#= End test: 2013-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2013-W01-1
 =#=#=#= Begin test: 2013-W01-1 - round-trip =#=#=#=
-Date: 2013-W01-1 00:00:00Z
+Date: 2013-W01-1T00:00:00Z
 =#=#=#= End test: 2013-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2013-W01-1 - round-trip
 =#=#=#= Begin test: 2014-W01-7 =#=#=#=
-Date: 2014-01-05 00:00:00Z
+Date: 2014-01-05T00:00:00Z
 =#=#=#= End test: 2014-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-W01-7
 =#=#=#= Begin test: 2014-W01-7 - round-trip =#=#=#=
-Date: 2014-W01-7 00:00:00Z
+Date: 2014-W01-7T00:00:00Z
 =#=#=#= End test: 2014-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-W01-7 - round-trip
 =#=#=#= Begin test: 2014-W01-1 =#=#=#=
-Date: 2013-12-30 00:00:00Z
+Date: 2013-12-30T00:00:00Z
 =#=#=#= End test: 2014-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-W01-1
 =#=#=#= Begin test: 2014-W01-1 - round-trip =#=#=#=
-Date: 2014-W01-1 00:00:00Z
+Date: 2014-W01-1T00:00:00Z
 =#=#=#= End test: 2014-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-W01-1 - round-trip
 =#=#=#= Begin test: 2015-W01-7 =#=#=#=
-Date: 2015-01-04 00:00:00Z
+Date: 2015-01-04T00:00:00Z
 =#=#=#= End test: 2015-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2015-W01-7
 =#=#=#= Begin test: 2015-W01-7 - round-trip =#=#=#=
-Date: 2015-W01-7 00:00:00Z
+Date: 2015-W01-7T00:00:00Z
 =#=#=#= End test: 2015-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2015-W01-7 - round-trip
 =#=#=#= Begin test: 2015-W01-1 =#=#=#=
-Date: 2014-12-29 00:00:00Z
+Date: 2014-12-29T00:00:00Z
 =#=#=#= End test: 2015-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2015-W01-1
 =#=#=#= Begin test: 2015-W01-1 - round-trip =#=#=#=
-Date: 2015-W01-1 00:00:00Z
+Date: 2015-W01-1T00:00:00Z
 =#=#=#= End test: 2015-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2015-W01-1 - round-trip
 =#=#=#= Begin test: 2016-W01-7 =#=#=#=
-Date: 2016-01-10 00:00:00Z
+Date: 2016-01-10T00:00:00Z
 =#=#=#= End test: 2016-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2016-W01-7
 =#=#=#= Begin test: 2016-W01-7 - round-trip =#=#=#=
-Date: 2016-W01-7 00:00:00Z
+Date: 2016-W01-7T00:00:00Z
 =#=#=#= End test: 2016-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2016-W01-7 - round-trip
 =#=#=#= Begin test: 2016-W01-1 =#=#=#=
-Date: 2016-01-04 00:00:00Z
+Date: 2016-01-04T00:00:00Z
 =#=#=#= End test: 2016-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2016-W01-1
 =#=#=#= Begin test: 2016-W01-1 - round-trip =#=#=#=
-Date: 2016-W01-1 00:00:00Z
+Date: 2016-W01-1T00:00:00Z
 =#=#=#= End test: 2016-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2016-W01-1 - round-trip
 =#=#=#= Begin test: 2017-W01-7 =#=#=#=
-Date: 2017-01-08 00:00:00Z
+Date: 2017-01-08T00:00:00Z
 =#=#=#= End test: 2017-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2017-W01-7
 =#=#=#= Begin test: 2017-W01-7 - round-trip =#=#=#=
-Date: 2017-W01-7 00:00:00Z
+Date: 2017-W01-7T00:00:00Z
 =#=#=#= End test: 2017-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2017-W01-7 - round-trip
 =#=#=#= Begin test: 2017-W01-1 =#=#=#=
-Date: 2017-01-02 00:00:00Z
+Date: 2017-01-02T00:00:00Z
 =#=#=#= End test: 2017-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2017-W01-1
 =#=#=#= Begin test: 2017-W01-1 - round-trip =#=#=#=
-Date: 2017-W01-1 00:00:00Z
+Date: 2017-W01-1T00:00:00Z
 =#=#=#= End test: 2017-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2017-W01-1 - round-trip
 =#=#=#= Begin test: 2018-W01-7 =#=#=#=
-Date: 2018-01-07 00:00:00Z
+Date: 2018-01-07T00:00:00Z
 =#=#=#= End test: 2018-W01-7 - OK (0) =#=#=#=
 * Passed: iso8601        - 2018-W01-7
 =#=#=#= Begin test: 2018-W01-7 - round-trip =#=#=#=
-Date: 2018-W01-7 00:00:00Z
+Date: 2018-W01-7T00:00:00Z
 =#=#=#= End test: 2018-W01-7 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2018-W01-7 - round-trip
 =#=#=#= Begin test: 2018-W01-1 =#=#=#=
-Date: 2018-01-01 00:00:00Z
+Date: 2018-01-01T00:00:00Z
 =#=#=#= End test: 2018-W01-1 - OK (0) =#=#=#=
 * Passed: iso8601        - 2018-W01-1
 =#=#=#= Begin test: 2018-W01-1 - round-trip =#=#=#=
-Date: 2018-W01-1 00:00:00Z
+Date: 2018-W01-1T00:00:00Z
 =#=#=#= End test: 2018-W01-1 - round-trip - OK (0) =#=#=#=
 * Passed: iso8601        - 2018-W01-1 - round-trip
 =#=#=#= Begin test: 2009-W53-07 =#=#=#=
-Date: 2009-W53-7 00:00:00Z
+Date: 2009-W53-7T00:00:00Z
 =#=#=#= End test: 2009-W53-07 - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W53-07
 =#=#=#= Begin test: 2009-01-31 + 1 Month =#=#=#=
-Date: 2009-01-31 00:00:00Z
+Date: 2009-01-31T00:00:00Z
 Duration:  1 month 
-Duration ends at: 2009-02-28 00:00:00Z
+Duration ends at: 2009-02-28T00:00:00Z
 =#=#=#= End test: 2009-01-31 + 1 Month - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-01-31 + 1 Month
 =#=#=#= Begin test: 2009-01-31 + 2 Months =#=#=#=
-Date: 2009-01-31 00:00:00Z
+Date: 2009-01-31T00:00:00Z
 Duration:  2 months 
-Duration ends at: 2009-03-31 00:00:00Z
+Duration ends at: 2009-03-31T00:00:00Z
 =#=#=#= End test: 2009-01-31 + 2 Months - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-01-31 + 2 Months
 =#=#=#= Begin test: 2009-01-31 + 3 Months =#=#=#=
-Date: 2009-01-31 00:00:00Z
+Date: 2009-01-31T00:00:00Z
 Duration:  3 months 
-Duration ends at: 2009-04-30 00:00:00Z
+Duration ends at: 2009-04-30T00:00:00Z
 =#=#=#= End test: 2009-01-31 + 3 Months - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-01-31 + 3 Months
 =#=#=#= Begin test: 2009-03-31 - 1 Month =#=#=#=
-Date: 2009-03-31 00:00:00Z
+Date: 2009-03-31T00:00:00Z
 Duration: -1 month 
-Duration ends at: 2009-02-28 00:00:00Z
+Duration ends at: 2009-02-28T00:00:00Z
 =#=#=#= End test: 2009-03-31 - 1 Month - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-03-31 - 1 Month
 =#=#=#= Begin test: Test correct immediate plus-sign at timezone parsing =#=#=#=

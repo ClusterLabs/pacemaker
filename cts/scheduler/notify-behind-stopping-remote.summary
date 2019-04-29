@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-11-22 20:36:07Z
+Using the original execution date of: 2018-11-22T20:36:07Z
 
 Current cluster status:
 Online: [ ra1 ra2 ra3 ]
@@ -49,7 +49,7 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
  * Pseudo action:   redis-bundle_promoted_0
  * Resource action: redis           monitor=20000 on redis-bundle-0
-Using the original execution date of: 2018-11-22 20:36:07Z
+Using the original execution date of: 2018-11-22T20:36:07Z
 
 Revised cluster status:
 Online: [ ra1 ra2 ra3 ]

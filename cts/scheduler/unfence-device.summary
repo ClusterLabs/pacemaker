@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-11-30 10:44:29Z
+Using the original execution date of: 2017-11-30T10:44:29Z
 
 Current cluster status:
 Online: [ virt-008 virt-009 virt-013 ]
@@ -20,7 +20,7 @@ Executing cluster transition:
  * Resource action: fence_scsi      monitor on virt-008
  * Resource action: fence_scsi      start on virt-008
  * Resource action: fence_scsi      monitor=60000 on virt-008
-Using the original execution date of: 2017-11-30 10:44:29Z
+Using the original execution date of: 2017-11-30T10:44:29Z
 
 Revised cluster status:
 Online: [ virt-008 virt-009 virt-013 ]

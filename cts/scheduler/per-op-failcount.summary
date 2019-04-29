@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-04-06 09:04:22Z
+Using the original execution date of: 2017-04-06T09:04:22Z
 
 Current cluster status:
 Node rh73-01-snmp (3232238265): UNCLEAN (online)
@@ -20,7 +20,7 @@ Executing cluster transition:
  * Resource action: prmStonith2-1   start on rh73-02-snmp
  * Resource action: prmDummy        start on rh73-02-snmp
  * Resource action: prmDummy        monitor=10000 on rh73-02-snmp
-Using the original execution date of: 2017-04-06 09:04:22Z
+Using the original execution date of: 2017-04-06T09:04:22Z
 
 Revised cluster status:
 Online: [ rh73-02-snmp ]
