@@ -31,7 +31,11 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+    </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
@@ -117,7 +121,11 @@
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="monitor" operation_key="rsc5_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+    </inputs>
    </synapse>
   <synapse id="11">
      <action_set>
