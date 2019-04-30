@@ -128,6 +128,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="7" operation="monitor" operation_key="rsc5_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
@@ -169,6 +172,12 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="22" operation="stop" operation_key="foo_stop_0"/>
        </trigger>
      </inputs>
@@ -340,6 +349,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="rsc6_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="10" operation="monitor" operation_key="rsc8_monitor_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
       <trigger>
@@ -381,6 +393,12 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="rsc6_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="rsc7_monitor_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="31" operation="stop" operation_key="bar_stop_0"/>
        </trigger>
      </inputs>
