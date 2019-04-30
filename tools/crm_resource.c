@@ -1168,6 +1168,10 @@ main(int argc, char **argv)
              cli_resource_check(cib_conn, rsc);
          }
 
+         if (rc == pcmk_ok) {
+             start_mainloop();
+         }
+
     } else if (rsc_cmd == 'R') {
 #if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
