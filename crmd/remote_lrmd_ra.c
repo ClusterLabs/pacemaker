@@ -1,5 +1,7 @@
 /* 
- * Copyright (C) 2013 David Vossel <davidvossel@gmail.com>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -1102,7 +1104,8 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
 
     cmd = handle_dup_monitor(ra_data, interval, userdata);
     if (cmd) {
-       return cmd->call_id;
+        rc = cmd->call_id;
+        goto exec_done;
     }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
