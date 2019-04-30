@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1105,7 +1107,8 @@ remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
 
     cmd = handle_dup_monitor(ra_data, interval_ms, userdata);
     if (cmd) {
-       return cmd->call_id;
+        rc = cmd->call_id;
+        goto exec_done;
     }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
