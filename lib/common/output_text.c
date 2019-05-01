@@ -124,8 +124,8 @@ text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun
 
     new_list = calloc(1, sizeof(text_list_data_t));
     new_list->len = 0;
-    new_list->singular_noun = strdup(singular_noun);
-    new_list->plural_noun = strdup(plural_noun);
+    new_list->singular_noun = singular_noun == NULL ? NULL : strdup(singular_noun);
+    new_list->plural_noun = plural_noun == NULL ? NULL : strdup(plural_noun);
 
     g_queue_push_tail(priv->parent_q, new_list);
 }
