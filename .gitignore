@@ -169,7 +169,6 @@ xml/api/api-result*.rng
 *.coverity
 
 # Gnulib-related caching and build products
-/lib/gnu/libgnu.a
 /lib/gnu/stdalign.h
 
 # Test detritus

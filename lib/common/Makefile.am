@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -27,7 +29,7 @@ libcrmcommon_la_LDFLAGS	= -version-info 36:0:2
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS)
+libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS) $(top_builddir)/lib/gnu/libgnu.la
 
 # Use += rather than backlashed continuation lines for parsing by bumplibs.sh
 libcrmcommon_la_SOURCES	=
@@ -60,7 +62,6 @@ libcrmcommon_la_SOURCES	+= utils.c
 libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xpath.c
-libcrmcommon_la_SOURCES	+= ../gnu/md5.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

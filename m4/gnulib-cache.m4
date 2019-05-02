@@ -36,7 +36,7 @@
 #  --aux-dir=. \
 #  --lgpl=2 \
 #  --no-conditional-dependencies \
-#  --no-libtool \
+#  --libtool \
 #  --macro-prefix=gl \
 #  --no-vc-files \
 #  --avoid=stdint \
@@ -56,6 +56,7 @@ gl_TESTS_BASE([tests])
 gl_LIB([libgnu])
 gl_LGPL([2])
 gl_MAKEFILE_NAME([])
+gl_LIBTOOL
 gl_MACRO_PREFIX([gl])
 gl_PO_DOMAIN([])
 gl_WITNESS_C_MACRO([])

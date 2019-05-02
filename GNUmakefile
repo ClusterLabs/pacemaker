@@ -345,10 +345,27 @@ GNU_MODS	= crypto/md5-buffer
 GNU_MODS_AVOID	= stdint
 # only for plain crypto/md5: we make do without kernel-assisted crypto
 # GNU_MODS_AVOID	+= crypto/af_alg
-gnulib-update:
-	-test -e maint/gnulib \
-	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
-	cd maint/gnulib && git pull
-	maint/gnulib/gnulib-tool \
+# this is not needed with autoconf >= 2.64, which we already require
+GNULIB_UPDATE_BLOCK_FILES = m4/00gnulib.m4
+
+# this dependency so as not to trigger this sort of refreshing too spuriously
+maint/gnulib/.git: m4
+	if test -d maint/gnulib/.git; then \
+	  ( cd maint/gnulib; git checkout -f master; git pull ); \
+	else \
+	  git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib; \
+	fi
+
+.PHONY: gnulib-update
+gnulib-update: gnulib-update-install
+	# standard modules patching
+	## patch m4/gnulib-common.m4 so that it doesn't require m4/00gnulib.m4
+	sed -e 's/.*gl_00GNULIB.*/dnl&/' \
+	  maint/gnulib/m4/gnulib-common.m4 >m4/gnulib-common.m4
+
+.PHONY: gnulib-update-install
+gnulib-update-install: maint/gnulib/.git
+	maint/gnulib/gnulib-tool --libtool \
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
+	rm $(GNULIB_UPDATE_BLOCK_FILES)

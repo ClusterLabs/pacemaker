@@ -31,7 +31,7 @@
 #  --aux-dir=. \
 #  --lgpl=2 \
 #  --no-conditional-dependencies \
-#  --no-libtool \
+#  --libtool \
 #  --macro-prefix=gl \
 #  --no-vc-files \
 #  --avoid=stdint \
@@ -56,12 +56,15 @@ MAINTAINERCLEANFILES =
 AM_CPPFLAGS =
 AM_CFLAGS =
 
-noinst_LIBRARIES += libgnu.a
+noinst_LTLIBRARIES += libgnu.la
 
-libgnu_a_SOURCES =
-libgnu_a_LIBADD = $(gl_LIBOBJS)
-libgnu_a_DEPENDENCIES = $(gl_LIBOBJS)
-EXTRA_libgnu_a_SOURCES =
+libgnu_la_SOURCES =
+libgnu_la_LIBADD = $(gl_LTLIBOBJS)
+libgnu_la_DEPENDENCIES = $(gl_LTLIBOBJS)
+EXTRA_libgnu_la_SOURCES =
+libgnu_la_LDFLAGS = $(AM_LDFLAGS)
+libgnu_la_LDFLAGS += -no-undefined
+libgnu_la_LDFLAGS += $(LIB_CRYPTO)
 
 ## begin gnulib module byteswap
 
@@ -88,7 +91,7 @@ EXTRA_DIST += byteswap.in.h
 
 ## begin gnulib module crypto/md5-buffer
 
-libgnu_a_SOURCES += md5.c
+libgnu_la_SOURCES += md5.c
 
 EXTRA_DIST += gl_openssl.h md5.h
 
