@@ -9,19 +9,22 @@ Makefile
 Makefile.in
 .deps
 .dirstamp
-.libs
 *.pc
-*.pyc
 *.bz2
 *.tar.gz
-*.rpm
-*.la
-*.lo
-*.o
 *~
 *.gcda
 *.gcno
 
+## Immediate build products
+*.o
+*.pyc
+*.rpm
+
+## Libtool specific build products
+.libs
+*.la
+*.lo
 
 # Autobuild
 aclocal.m4
@@ -163,9 +166,11 @@ xml/crm.dtd
 xml/pacemaker*.rng
 xml/versions.rng
 xml/api/api-result*.rng
-lib/gnu/libgnu.a
-lib/gnu/stdalign.h
 *.coverity
+
+# Gnulib-related caching and build products
+/lib/gnu/libgnu.a
+/lib/gnu/stdalign.h
 
 # Test detritus
 /cts/.regression.failed.diff
