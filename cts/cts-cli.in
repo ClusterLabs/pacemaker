@@ -881,9 +881,9 @@ EOF
     rm -f "$TMPXML"
 
     if [ "$(uname)" == "FreeBSD" ]; then
-        tomorrow=$(date -v+1d +"%F %T %z")
+        tomorrow=$(date -v+1d -Iminutes)
     else
-        tomorrow=$(date --date=tomorrow +"%F %T %z")
+        tomorrow=$(date --date=tomorrow -Iminutes)
     fi
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
@@ -917,6 +917,16 @@ EOF
     desc="Verify basic rule is not yet in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
     test_assert $CRM_EX_NOT_YET_IN_EFFECT
+
+    if test "@SUPPORT_DATE_VERSATILITY@" -ne 0; then
+        desc="Verify basic rule is not yet in effect (free form)"
+        cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -d \"23 hours 55 min hence\""
+        test_assert $CRM_EX_NOT_YET_IN_EFFECT
+
+        desc="Verify basic rule already in effect (free form)"
+        cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -d \"24 hours 5 min hence\""
+        test_assert $CRM_EX_OK
+    fi
 
     unset CIB_shadow_dir
 }
@@ -1007,8 +1017,8 @@ for t in $tests; do
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
-        -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
-        -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
+        -e 's/ end=\"[0-9][-+: T0-9]*Z*\"/ end=\"\"/' \
+        -e 's/ start=\"[0-9][-+: T0-9]*Z*\"/ start=\"\"/' \
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
