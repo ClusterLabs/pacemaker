@@ -111,11 +111,9 @@ publican.cfg
 
 # Build targets
 *.7
-*.7.xml
-*.7.html
+*.7.*
 *.8
-*.8.xml
-*.8.html
+*.8.*
 /daemons/attrd/pacemaker-attrd
 /daemons/based/pacemaker-based
 /daemons/based/cibmon

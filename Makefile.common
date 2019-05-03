@@ -36,9 +36,25 @@ if BUILD_HELP
 man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 endif
 
+# help2man doesn't recognize embedded "See also", we need to help it a bit
 %.8:	% $(MAN8DEPS)
 	chmod a+x $(abs_builddir)/$<
-	$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+	$(abs_builddir)/$< --help | $(SED) -n \
+	  -e ':a' -e '$$p' -e 's/See also:$$//;tb' \
+	    -e 'N;ba' \
+	    -e ':b' -e 'w $@.pre-seealso' -e 's/.*/[=SEE ALSO]/' \
+	  -e ':c' -e 'N;s/\n\n$$/&/;td' -e 'bc' \
+	    -e ':d' -e 'w $@.seealso' -e 'd' \
+	  > $@.post-seealso
+	test -s $@.seealso || rm $@.seealso
+	printf '#!/bin/sh\n%s\n%s\n' \
+	  'case $$1 in --version) $(abs_builddir)/$< $$1;;' \
+	    '--help) cat $@.pre-seealso $@.post-seealso;; esac' > $@.exec
+	chmod +x $@.exec
+	$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) --output $@ --no-info \
+	  --section 8 --name "Part of the Pacemaker cluster resource manager" \
+	  --opt-include $@.seealso $@.exec
+	rm $@.*
 
 %.xml:  %
 	$(AM_V_GEN)$(abs_builddir)/$< metadata > $@
