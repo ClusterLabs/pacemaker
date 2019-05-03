@@ -33,6 +33,10 @@ extern int cib_options;
 extern int crmd_replies_needed;
 
 extern char *move_lifetime;
+extern enum move_lifetime_use {
+    move_lifetime_rel,
+    move_lifetime_abs,
+} move_lifetime_use;
 
 extern const char *attr_set_type;
 

@@ -407,12 +407,23 @@ function test_tools() {
     cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_OK
 
-    desc="Ban dummy from node1 for a short time"
-    cmd="crm_resource -r dummy -B -N node1 --lifetime=PT1S"
-    test_assert $CRM_EX_OK
+    if test "@SUPPORT_DATE_VERSATILITY@" -ne 0; then
+        if [ "$(uname)" == "FreeBSD" ]; then
+            aboutnow=$(date -v+2S)
+        else
+            aboutnow=$(date --date=+2sec)
+        fi
+        desc="Ban dummy from node1 for a short time (free form period)"
+        cmd="crm_resource -r dummy -B -N node1 --lifetime-until \"$aboutnow\""
+        test_assert $CRM_EX_OK
+    else
+        desc="Ban dummy from node1 for a short time (ISO 8601 period)"
+        cmd="crm_resource -r dummy -B -N node1 --lifetime=PT1S"
+        test_assert $CRM_EX_OK
+    fi
 
     desc="Remove expired constraints"
-    sleep 2
+    sleep 3
     cmd="crm_resource --clear --expired"
     test_assert $CRM_EX_OK
 

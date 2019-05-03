@@ -293,8 +293,16 @@ static struct crm_option long_options[] = {
     },
     {
         "lifetime", required_argument, NULL, 'u',
-        "\tLifespan (as ISO 8601 duration) of created constraints (with -B, -M)\n"
-        "\t\t\t\t(see https://en.wikipedia.org/wiki/ISO_8601#Durations)"
+        "\tLifespan (as ISO 8601 duration) of created constraints (with -B, -M) since now"
+    },
+    {
+        "lifetime-until", required_argument, NULL, 0,
+#if SUPPORT_DATE_VERSATILITY
+        "\tLifetime in terms of \"until (free form) date/time specification\""
+#else
+        "\tLifetime in terms of \"until (ISO 8601) date/time specification\""
+#endif
+          " of created constraints (with -B, -M), must be later than now"
     },
     {
         "master", no_argument, NULL, 0,
@@ -446,6 +454,30 @@ static struct crm_option long_options[] = {
     {"-spacer-", 1, NULL, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
     {"-spacer-", 1, NULL, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
     {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
+
+    {"-spacer-", 1, NULL, '-', "Environment:"},
+    {"-spacer-", 1, NULL, '-', "-   TZ:"},
+    {"-spacer-", 1, NULL, '-', "    time zone specification to be considered"
+                               " unless expressly defined (especially for --lifetime-until);"
+                               " see tzset(3)"},
+
+    /* SEE ALSO pasted verbatim */
+    {"-spacer-", 1, NULL, '-', "\nSee also:"},
+    {"-spacer-", 1, NULL, '-', "* regarding durations specified per ISO 8601 (for -u)"},
+    {"-spacer-", 1, NULL, '-', "  https://en.wikipedia.org/wiki/ISO_8601#Durations",
+                               pcmk_option_paragraph},
+#if SUPPORT_DATE_VERSATILITY
+    {"-spacer-", 1, NULL, '-', "* regarding generic date/time specified in free form"
+                               " (for --lifetime-until)"},
+    {"-spacer-", 1, NULL, '-', "  manually invoked \"info coreutils 'date input formats'\""
+                               " or https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html",
+                               pcmk_option_paragraph},
+#else
+    {"-spacer-", 1, NULL, '-', "* regarding generic date/time specified per ISO 8601"
+                               " (for --lifetime-until)"},
+    {"-spacer-", 1, NULL, '-', "  https://en.wikipedia.org/wiki/ISO_8601",
+                               pcmk_option_paragraph},
+#endif
 
     {0, 0, 0, 0}
 };
@@ -666,6 +698,10 @@ main(int argc, char **argv)
 
                     g_hash_table_replace(validate_options, name, value);
 
+                } else if (safe_str_eq("lifetime-until", longname)) {
+                    move_lifetime = strdup(optarg);
+                    move_lifetime_use = move_lifetime_abs;
+
                 } else {
                     crm_err("Unhandled long option: %s", longname);
                 }
@@ -692,6 +728,7 @@ main(int argc, char **argv)
                 break;
             case 'u':
                 move_lifetime = strdup(optarg);
+                move_lifetime_use = move_lifetime_rel;
                 break;
             case 'f':
                 do_force = TRUE;
