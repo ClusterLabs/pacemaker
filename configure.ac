@@ -902,6 +902,8 @@ AC_SUBST([SUPPORT_DATE_VERSATILITY],
          [$HAVE_date_versatility])
 AM_CONDITIONAL([BUILD_DATE_VERSATILITY],
                [test $HAVE_date_versatility = 1])
+test x"$HAVE_date_versatility" = x0 \
+  || PCMK_FEATURES="$PCMK_FEATURES date-versatility"
 
 dnl ========================================================================
 dnl   bzip2
