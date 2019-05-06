@@ -42,6 +42,24 @@
 #  define GMTOFF(tm) (-timezone+daylight)
 #endif
 
+#define DO_TOLERANT_CHECK(expr, tolerant, failure_action)  do { \
+        if (!tolerant) {                                        \
+            CRM_CHECK(expr, failure_action);                    \
+        } else if (!(expr)) {                                   \
+            crm_trace("tolerated violation: %s", #expr);        \
+           failure_action;                                      \
+        }                                                       \
+    } while(0)
+
+#define DO_TOLERANT_ERRLOG(tolerant, ...)  do { \
+        if (tolerant) {                         \
+            crm_trace(__VA_ARGS__);              \
+        } else {                                \
+            crm_err(__VA_ARGS__);                \
+        }                                       \
+    } while(0)
+
+
 struct crm_time_s {
     int years;
     int months;                 /* Only for durations */
@@ -55,6 +73,9 @@ char *crm_time_as_string(crm_time_t * date_time, int flags);
 crm_time_t *parse_date(const char *date_str);
 
 gboolean check_for_ordinal(const char *str);
+
+static crm_time_t* do_parse_date(const char *date_str, bool tolerant);
+static bool do_time_check(const crm_time_t *dt, bool tolerant);
 
 static crm_time_t *
 crm_get_utc_time(crm_time_t * dt)
@@ -92,7 +113,7 @@ crm_time_new(const char *date_time)
         dt = calloc(1, sizeof(crm_time_t));
         crm_time_set_timet(dt, &tm_now);
     } else {
-        dt = parse_date(date_time);
+        dt = do_parse_date(date_time, false);
     }
     return dt;
 }
@@ -532,8 +553,9 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     return result_s;
 }
 
+/* returns -1 when time_str is an invalid specification AND tolerant==true */
 static int
-crm_time_parse_sec(const char *time_str)
+crm_time_parse_sec(const char *time_str, bool tolerant)
 {
     int rc;
     uint hour = 0;
@@ -548,23 +570,26 @@ crm_time_parse_sec(const char *time_str)
     if (rc > 0 && rc < 4) {
         crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
         if (hour >= 24) {
-            crm_err("Invalid hour: %d", hour);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid hour: %d", hour);
         } else if (minute >= 60) {
-            crm_err("Invalid minute: %d", minute);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid minute: %d", minute);
         } else if (second >= 60) {
-            crm_err("Invalid second: %d", second);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid second: %d", second);
         } else {
             second += (minute * 60);
             second += (hour * 60 * 60);
         }
     } else {
-        crm_err("Bad time: %s (%d)", time_str, rc);
+        DO_TOLERANT_ERRLOG(tolerant, "Bad time: %s (%d)", time_str, rc);
+        if (tolerant) {
+            return -1;
+        }
     }
     return second;
 }
 
 static int
-crm_time_parse_offset(const char *offset_str)
+crm_time_parse_offset(const char *offset_str, bool tolerant)
 {
     int offset = 0;
 
@@ -592,7 +617,7 @@ crm_time_parse_offset(const char *offset_str)
             negate = TRUE;
             offset_str++;
         }
-        offset = crm_time_parse_sec(offset_str);
+        offset = crm_time_parse_sec(offset_str, tolerant);
         if (negate) {
             offset = 0 - offset;
         }
@@ -600,8 +625,10 @@ crm_time_parse_offset(const char *offset_str)
     return offset;
 }
 
+/* returns NULL when time_str is an invalid specification AND tolerant==true
+   (invalidating a_time argument!) */
 static crm_time_t *
-crm_time_parse(const char *time_str, crm_time_t * a_time)
+crm_time_parse(const char *time_str, crm_time_t *a_time, bool tolerant)
 {
     uint h, m, s;
     char *offset_s = NULL;
@@ -613,7 +640,11 @@ crm_time_parse(const char *time_str, crm_time_t * a_time)
     }
 
     if (time_str) {
-        dt->seconds = crm_time_parse_sec(time_str);
+        dt->seconds = crm_time_parse_sec(time_str, tolerant);
+        if (dt->seconds == -1) {
+            free(dt);
+            return NULL;
+        }
 
         offset_s = strstr(time_str, "Z");
         if (offset_s == NULL) {
@@ -626,14 +657,14 @@ crm_time_parse(const char *time_str, crm_time_t * a_time)
             offset_s++;
         }
     }
-    dt->offset = crm_time_parse_offset(offset_s);
+    dt->offset = crm_time_parse_offset(offset_s, tolerant);
     crm_time_get_sec(dt->offset, &h, &m, &s);
     crm_trace("Got tz: %c%2.d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
     return dt;
 }
 
-crm_time_t *
-parse_date(const char *date_str)
+static crm_time_t*
+do_parse_date(const char *date_str, bool tolerant)
 {
     char *time_s;
     crm_time_t *dt = NULL;
@@ -645,12 +676,16 @@ parse_date(const char *date_str)
     int rc = 0;
 
     CRM_CHECK(date_str != NULL, return NULL);
-    CRM_CHECK(strlen(date_str) > 0, return NULL);
+    CRM_CHECK(*date_str != '\0', return NULL);
 
     if (date_str[0] == 'T' || date_str[2] == ':') {
         /* Just a time supplied - Infer current date */
         dt = crm_time_new(NULL);
-        dt = crm_time_parse(date_str, dt);
+        dt = crm_time_parse(date_str, dt, tolerant);
+        if (dt == NULL) {
+            DO_TOLERANT_ERRLOG(tolerant, "Couldn't parse %s", date_str);
+            return NULL;
+        }
         goto done;
 
     } else {
@@ -672,9 +707,9 @@ parse_date(const char *date_str)
     }
     if (rc == 3) {
         if (month > 12) {
-            crm_err("Invalid month: %d", month);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid month: %d", month);
         } else if (day > 31) {
-            crm_err("Invalid day: %d", day);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid day: %d", day);
         } else {
             dt->years = year;
             dt->days = get_ordinal_days(year, month, day);
@@ -688,7 +723,8 @@ parse_date(const char *date_str)
     if (rc == 2) {
         crm_trace("Got ordinal date");
         if (day > year_days(year)) {
-            crm_err("Invalid day: %d (max=%d)", day, year_days(year));
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid day: %d (max=%d)",
+                               day, year_days(year));
         } else {
             dt->days = day;
             dt->years = year;
@@ -701,9 +737,10 @@ parse_date(const char *date_str)
     if (rc == 3) {
         crm_trace("Got week date");
         if (week > crm_time_weeks_in_year(year)) {
-            crm_err("Invalid week: %d (max=%d)", week, crm_time_weeks_in_year(year));
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid week: %d (max=%d)",
+                               week, crm_time_weeks_in_year(year));
         } else if (day < 1 || day > 7) {
-            crm_err("Invalid day: %d", day);
+            DO_TOLERANT_ERRLOG(tolerant, "Invalid day: %d", day);
         } else {
             /*
              * See https://en.wikipedia.org/wiki/ISO_week_date
@@ -733,7 +770,7 @@ parse_date(const char *date_str)
         goto done;
     }
 
-    crm_err("Couldn't parse %s", date_str);
+    DO_TOLERANT_ERRLOG(tolerant, "Couldn't parse %s", date_str);
   done:
 
     time_s = strstr(date_str, " ");
@@ -743,14 +780,25 @@ parse_date(const char *date_str)
 
     if (dt && time_s) {
         time_s++;
-        crm_time_parse(time_s, dt);
+        dt = crm_time_parse(time_s, dt, tolerant);
+        if (dt == NULL) {
+            DO_TOLERANT_ERRLOG(tolerant, "Couldn't parse %s", time_s);
+            return NULL;
+        }
     }
 
     crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
 
-    CRM_CHECK(crm_time_check(dt), return NULL);
+    DO_TOLERANT_CHECK(do_time_check(dt, tolerant), tolerant,
+                      {free(dt); return NULL;});
 
     return dt;
+}
+
+crm_time_t*
+parse_date(const char *date_str)
+{
+    return do_parse_date(date_str, false);
 }
 
 static int
@@ -1097,23 +1145,29 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
     return answer;
 }
 
-bool
-crm_time_check(crm_time_t * dt)
+static bool
+do_time_check(const crm_time_t *dt, bool tolerant)
 {
     int ydays = 0;
 
-    CRM_CHECK(dt != NULL, return FALSE);
+    DO_TOLERANT_CHECK(dt != NULL, tolerant, return FALSE);
 
     ydays = year_days(dt->years);
     crm_trace("max ydays: %d", ydays);
 
-    CRM_CHECK(dt->days > 0, return FALSE);
-    CRM_CHECK(dt->days <= ydays, return FALSE);
+    DO_TOLERANT_CHECK(dt->days > 0, tolerant, return FALSE);
+    DO_TOLERANT_CHECK(dt->days <= ydays, tolerant, return FALSE);
 
-    CRM_CHECK(dt->seconds >= 0, return FALSE);
-    CRM_CHECK(dt->seconds < 24 * 60 * 60, return FALSE);
+    DO_TOLERANT_CHECK(dt->seconds >= 0, tolerant, return FALSE);
+    DO_TOLERANT_CHECK(dt->seconds < 24 * 60 * 60, tolerant, return FALSE);
 
     return TRUE;
+}
+
+bool
+crm_time_check(const crm_time_t * dt)
+{
+    return do_time_check(dt, false);
 }
 
 #define do_cmp_field(l, r, field)					\
