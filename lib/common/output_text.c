@@ -253,6 +253,10 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
         for (int i = 0; i < level; i++) {
             putc('\t', out->dest);
         }
+
+        if (level > 0) {
+            fprintf(out->dest, "* ");
+        }
     }
 
     va_start(ap, format);
