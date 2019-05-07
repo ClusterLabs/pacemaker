@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2018 the Pacemaker project contributors
+ * Copyright 2011-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #  define STONITH_NG_INTERNAL__H
 
 #  include <crm/common/ipc.h>
+#  include <crm/common/output.h>
 #  include <crm/common/xml.h>
 
 struct stonith_action_s;
@@ -44,6 +45,8 @@ xmlNode *create_device_registration_xml(const char *id,
                                         const char *agent,
                                         stonith_key_value_t *params,
                                         const char *rsc_provides);
+
+void stonith__register_messages(pcmk__output_t *out);
 
 #  define ST_LEVEL_MAX 10
 
