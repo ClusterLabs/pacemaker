@@ -17,6 +17,11 @@
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
+
+#if SUPPORT_DATE_VERSATILITY
+#include <parse-datetime.h>
+#endif
+
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
 
@@ -117,6 +122,34 @@ crm_time_new(const char *date_time)
     }
     return dt;
 }
+
+static void ha_set_tm_time(crm_time_t * target, struct tm *source);
+
+#if SUPPORT_DATE_VERSATILITY
+crm_time_t *
+pcmk__time_new_versatile(const char *date_time)
+{
+    struct timespec ts;
+    struct tm *tm_spec;
+    crm_time_t *dt = NULL;
+
+    if (date_time == NULL) {
+        dt = crm_time_new(date_time);
+
+    } else {
+        tzset();
+        dt = do_parse_date(date_time, true);
+        if (dt == NULL) {
+            parse_datetime(&ts, date_time, NULL);
+            dt = calloc(1, sizeof(crm_time_t));
+            tm_spec = localtime(&ts.tv_sec);
+            ha_set_tm_time(dt, tm_spec);
+        }
+    }
+
+    return dt;
+}
+#endif
 
 void
 crm_time_free(crm_time_t * dt)

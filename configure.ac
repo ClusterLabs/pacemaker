@@ -879,6 +879,30 @@ if test "$pf_cv_var_sscanf" = "yes"; then
     AC_DEFINE(SSCANF_HAS_M, 1, [ ])
 fi
 
+# do not use $BISON instead of correctly predefined $YACC in make recipes
+AC_ARG_VAR([BISON], [Bison path override, set to /dev/null to disable its use])
+BISON=
+HAVE_date_versatility=0
+AC_CHECK_PROGS([BISON], [$YACC])
+if test -n "$BISON"; then
+    # see lib/gnu/parse-datetime.h
+    AC_CHECK_DECL([CLOCK_REALTIME], [HAVE_date_versatility=1],[],[
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+    ])
+fi
+AC_DEFINE_UNQUOTED([SUPPORT_DATE_VERSATILITY],
+                   [$HAVE_date_versatility],
+                   [Support versatile date input in tools])
+AC_SUBST([SUPPORT_DATE_VERSATILITY],
+         [$HAVE_date_versatility])
+AM_CONDITIONAL([BUILD_DATE_VERSATILITY],
+               [test $HAVE_date_versatility = 1])
+
 dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================

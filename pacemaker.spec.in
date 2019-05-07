@@ -157,6 +157,10 @@
 ## Add option to disable links for legacy daemon names
 %bcond_without legacy_links
 
+## Add option to disable "free form" date/time format support
+## (works only one-way, start with clean buildroot or remove bison to be sure)
+%bcond_without date_versatility
+
 
 # Keep sane profiling data if requested
 %if %{with profiling}
@@ -225,6 +229,9 @@ BuildRequires: automake autoconf gcc libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: bzip2-devel
+%if %{with date_versatility}
+BuildRequires: bison
+%endif
 
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
@@ -269,8 +276,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : coverage doc stonithd hardening pre_release profiling
-                upstart_job
+  --with(out) : coverage date_versatility doc stonithd hardening
+                pre_release profiling upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -438,6 +445,10 @@ export CFLAGS_HARDENED_EXE="%{?_hardening_cflags}"
 export CFLAGS_HARDENED_LIB="%{?_hardening_cflags}"
 export LDFLAGS_HARDENED_EXE="%{?_hardening_ldflags}"
 export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
+%endif
+
+%if %{without date_versatility}
+export BISON=/dev/null
 %endif
 
 ./autogen.sh
