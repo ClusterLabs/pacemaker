@@ -748,16 +748,19 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
         const char *shortpath = NULL;
 
-        if(op == NULL || strcmp(op, "move") == 0) {
+        if ((op == NULL) ||
+            (strcmp(op, "move") == 0) ||
+            strstr(xpath, "/"XML_CIB_TAG_STATUS)) {
             continue;
-
-        } else if(safe_str_eq(op, "delete") && strstr(xpath, XML_CIB_TAG_RESOURCE)) {
+        } else if (safe_str_eq(op, "delete") && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
 
-            if (strstr(xpath, XML_TAG_ATTR_SETS)) {
+            if (strstr(xpath, XML_TAG_ATTR_SETS) ||
+                strstr(xpath, XML_TAG_META_SETS)) {
                 needs_update = TRUE;
+                reason = strdup("(meta) attribute deleted from resource");
                 break;
             } 
             mutable = strdup(xpath);
@@ -774,13 +777,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             }
             free(mutable);
 
-        } else if(strstr(xpath, XML_CIB_TAG_RESOURCES)) {
-            shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
-            reason = crm_strdup_printf("%s %s", op, shortpath+1);
-            needs_update = TRUE;
-            break;
-
-        } else if(strstr(xpath, XML_CIB_TAG_CONSTRAINTS)) {
+        } else if (strstr(xpath, "/"XML_CIB_TAG_RESOURCES) ||
+                   strstr(xpath, "/"XML_CIB_TAG_CONSTRAINTS) ||
+                   strstr(xpath, "/"XML_CIB_TAG_RSCCONFIG)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
