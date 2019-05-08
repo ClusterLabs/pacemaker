@@ -97,6 +97,7 @@ gl_EARLY
 # We expressly don't want to introduce OpenSSL dependency by default.
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
+gl_PARSE_DATETIME
 
 LT_INIT([dlopen])
 LTDL_INIT([convenience])

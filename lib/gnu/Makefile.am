@@ -34,8 +34,15 @@
 #  --libtool \
 #  --macro-prefix=gl \
 #  --no-vc-files \
+#  --avoid=stdbool \
 #  --avoid=stdint \
-#  crypto/md5-buffer
+#  --avoid=stddef \
+#  c-ctype \
+#  crypto/md5-buffer \
+#  gettext-h \
+#  intprops \
+#  timegm \
+#  verify
 
 AUTOMAKE_OPTIONS = 1.11 gnits
 
@@ -65,6 +72,16 @@ EXTRA_libgnu_la_SOURCES =
 libgnu_la_LDFLAGS = $(AM_LDFLAGS)
 libgnu_la_LDFLAGS += -no-undefined
 libgnu_la_LDFLAGS += $(LIB_CRYPTO)
+libgnu_la_LDFLAGS += $(LTLIBINTL)
+
+## begin gnulib module absolute-header
+
+# Use this preprocessor expression to decide whether #include_next works.
+# Do not rely on a 'configure'-time test for this, since the expression
+# might appear in an installed header, which is used by some other compiler.
+HAVE_INCLUDE_NEXT = (__GNUC__ || 60000000 <= __DECC_VER)
+
+## end   gnulib module absolute-header
 
 ## begin gnulib module byteswap
 
@@ -89,6 +106,12 @@ EXTRA_DIST += byteswap.in.h
 
 ## end   gnulib module byteswap
 
+## begin gnulib module c-ctype
+
+libgnu_la_SOURCES += c-ctype.h c-ctype.c
+
+## end   gnulib module c-ctype
+
 ## begin gnulib module crypto/md5-buffer
 
 libgnu_la_SOURCES += md5.c
@@ -96,6 +119,80 @@ libgnu_la_SOURCES += md5.c
 EXTRA_DIST += gl_openssl.h md5.h
 
 ## end   gnulib module crypto/md5-buffer
+
+## begin gnulib module gettext-h
+
+libgnu_la_SOURCES += gettext.h
+
+## end   gnulib module gettext-h
+
+## begin gnulib module intprops
+
+
+EXTRA_DIST += intprops.h
+
+## end   gnulib module intprops
+
+## begin gnulib module libc-config
+
+
+EXTRA_DIST += cdefs.h libc-config.h
+
+## end   gnulib module libc-config
+
+## begin gnulib module mktime
+
+
+EXTRA_DIST += mktime-internal.h mktime.c
+
+EXTRA_libgnu_la_SOURCES += mktime.c
+
+## end   gnulib module mktime
+
+## begin gnulib module mktime-internal
+
+
+EXTRA_DIST += mktime-internal.h mktime.c
+
+EXTRA_libgnu_la_SOURCES += mktime.c
+
+## end   gnulib module mktime-internal
+
+## begin gnulib module snippet/arg-nonnull
+
+# Because this Makefile snippet defines a variable used by other
+# gnulib Makefile snippets, it must be present in all makefiles that
+# need it. This is ensured by the applicability 'all' defined above.
+
+ARG_NONNULL_H=$(srcdir)/arg-nonnull.h
+
+EXTRA_DIST += arg-nonnull.h
+
+## end   gnulib module snippet/arg-nonnull
+
+## begin gnulib module snippet/c++defs
+
+# Because this Makefile snippet defines a variable used by other
+# gnulib Makefile snippets, it must be present in all makefiles that
+# need it. This is ensured by the applicability 'all' defined above.
+
+CXXDEFS_H=$(srcdir)/c++defs.h
+
+EXTRA_DIST += c++defs.h
+
+## end   gnulib module snippet/c++defs
+
+## begin gnulib module snippet/warn-on-use
+
+# Because this Makefile snippet defines a variable used by other
+# gnulib Makefile snippets, it must be present in all makefiles that
+# need it. This is ensured by the applicability 'all' defined above.
+
+WARN_ON_USE_H=$(srcdir)/warn-on-use.h
+
+EXTRA_DIST += warn-on-use.h
+
+## end   gnulib module snippet/warn-on-use
 
 ## begin gnulib module stdalign
 
@@ -120,6 +217,86 @@ EXTRA_DIST += stdalign.in.h
 
 ## end   gnulib module stdalign
 
+## begin gnulib module time
+
+BUILT_SOURCES += time.h
+
+# We need the following in order to create <time.h> when the system
+# doesn't have one that works with the given compiler.
+time.h: time.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) $(WARN_ON_USE_H)
+	$(AM_V_GEN)rm -f $@-t $@ && \
+	{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */' && \
+	  sed -e 's|@''GUARD_PREFIX''@|GL|g' \
+	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
+	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
+	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
+	      -e 's|@''NEXT_TIME_H''@|$(NEXT_TIME_H)|g' \
+	      -e 's/@''GNULIB_CTIME''@/$(GNULIB_CTIME)/g' \
+	      -e 's/@''GNULIB_LOCALTIME''@/$(GNULIB_LOCALTIME)/g' \
+	      -e 's/@''GNULIB_MKTIME''@/$(GNULIB_MKTIME)/g' \
+	      -e 's/@''GNULIB_NANOSLEEP''@/$(GNULIB_NANOSLEEP)/g' \
+	      -e 's/@''GNULIB_STRFTIME''@/$(GNULIB_STRFTIME)/g' \
+	      -e 's/@''GNULIB_STRPTIME''@/$(GNULIB_STRPTIME)/g' \
+	      -e 's/@''GNULIB_TIMEGM''@/$(GNULIB_TIMEGM)/g' \
+	      -e 's/@''GNULIB_TIME_R''@/$(GNULIB_TIME_R)/g' \
+	      -e 's/@''GNULIB_TIME_RZ''@/$(GNULIB_TIME_RZ)/g' \
+	      -e 's/@''GNULIB_TZSET''@/$(GNULIB_TZSET)/g' \
+	      -e 's|@''HAVE_DECL_LOCALTIME_R''@|$(HAVE_DECL_LOCALTIME_R)|g' \
+	      -e 's|@''HAVE_NANOSLEEP''@|$(HAVE_NANOSLEEP)|g' \
+	      -e 's|@''HAVE_STRPTIME''@|$(HAVE_STRPTIME)|g' \
+	      -e 's|@''HAVE_TIMEGM''@|$(HAVE_TIMEGM)|g' \
+	      -e 's|@''HAVE_TIMEZONE_T''@|$(HAVE_TIMEZONE_T)|g' \
+	      -e 's|@''HAVE_TZSET''@|$(HAVE_TZSET)|g' \
+	      -e 's|@''REPLACE_CTIME''@|$(REPLACE_CTIME)|g' \
+	      -e 's|@''REPLACE_GMTIME''@|$(REPLACE_GMTIME)|g' \
+	      -e 's|@''REPLACE_LOCALTIME''@|$(REPLACE_LOCALTIME)|g' \
+	      -e 's|@''REPLACE_LOCALTIME_R''@|$(REPLACE_LOCALTIME_R)|g' \
+	      -e 's|@''REPLACE_MKTIME''@|$(REPLACE_MKTIME)|g' \
+	      -e 's|@''REPLACE_NANOSLEEP''@|$(REPLACE_NANOSLEEP)|g' \
+	      -e 's|@''REPLACE_STRFTIME''@|$(REPLACE_STRFTIME)|g' \
+	      -e 's|@''REPLACE_TIMEGM''@|$(REPLACE_TIMEGM)|g' \
+	      -e 's|@''REPLACE_TZSET''@|$(REPLACE_TZSET)|g' \
+	      -e 's|@''PTHREAD_H_DEFINES_STRUCT_TIMESPEC''@|$(PTHREAD_H_DEFINES_STRUCT_TIMESPEC)|g' \
+	      -e 's|@''SYS_TIME_H_DEFINES_STRUCT_TIMESPEC''@|$(SYS_TIME_H_DEFINES_STRUCT_TIMESPEC)|g' \
+	      -e 's|@''TIME_H_DEFINES_STRUCT_TIMESPEC''@|$(TIME_H_DEFINES_STRUCT_TIMESPEC)|g' \
+	      -e 's|@''UNISTD_H_DEFINES_STRUCT_TIMESPEC''@|$(UNISTD_H_DEFINES_STRUCT_TIMESPEC)|g' \
+	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
+	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
+	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
+	      < $(srcdir)/time.in.h; \
+	} > $@-t && \
+	mv $@-t $@
+MOSTLYCLEANFILES += time.h time.h-t
+
+EXTRA_DIST += time.in.h
+
+## end   gnulib module time
+
+## begin gnulib module time_r
+
+
+EXTRA_DIST += time_r.c
+
+EXTRA_libgnu_la_SOURCES += time_r.c
+
+## end   gnulib module time_r
+
+## begin gnulib module timegm
+
+
+EXTRA_DIST += mktime-internal.h timegm.c
+
+EXTRA_libgnu_la_SOURCES += timegm.c
+
+## end   gnulib module timegm
+
+## begin gnulib module verify
+
+
+EXTRA_DIST += verify.h
+
+## end   gnulib module verify
+
 
 mostlyclean-local: mostlyclean-generic
 	@for dir in '' $(MOSTLYCLEANDIRS); do \
@@ -128,3 +305,5 @@ mostlyclean-local: mostlyclean-generic
 	  fi; \
 	done; \
 	:
+libgnu_a_CFLAGS = $(CFLAGS_CLONE) -Wno-missing-prototypes -Wno-missing-declarations -Wno-declaration-after-statement
+CFLAGS = 

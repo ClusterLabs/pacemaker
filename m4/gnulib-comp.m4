@@ -39,12 +39,30 @@ AC_DEFUN([gl_EARLY],
   m4_pattern_allow([^gl_LTLIBOBJS$])dnl a variable
 
   # Pre-early section.
+  AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
   AC_REQUIRE([gl_PROG_AR_RANLIB])
 
+  # Code from module absolute-header:
   # Code from module byteswap:
+  # Code from module c-ctype:
   # Code from module crypto/md5-buffer:
+  # Code from module extensions:
   # Code from module extern-inline:
+  # Code from module gettext-h:
+  # Code from module include_next:
+  # Code from module intprops:
+  # Code from module libc-config:
+  # Code from module mktime:
+  # Code from module mktime-internal:
+  # Code from module multiarch:
+  # Code from module snippet/arg-nonnull:
+  # Code from module snippet/c++defs:
+  # Code from module snippet/warn-on-use:
   # Code from module stdalign:
+  # Code from module time:
+  # Code from module time_r:
+  # Code from module timegm:
+  # Code from module verify:
 ])
 
 # This macro should be invoked from ./configure.ac, in the section
@@ -64,7 +82,35 @@ AC_DEFUN([gl_INIT],
   gl_BYTESWAP
   gl_MD5
   AC_REQUIRE([gl_EXTERN_INLINE])
+  AC_SUBST([LIBINTL])
+  AC_SUBST([LTLIBINTL])
+  gl___INLINE
+  gl_FUNC_MKTIME
+  if test $REPLACE_MKTIME = 1; then
+    AC_LIBOBJ([mktime])
+    gl_PREREQ_MKTIME
+  fi
+  gl_TIME_MODULE_INDICATOR([mktime])
+  gl_FUNC_MKTIME_INTERNAL
+  if test $WANT_MKTIME_INTERNAL = 1; then
+    AC_LIBOBJ([mktime])
+    gl_PREREQ_MKTIME
+  fi
+  gl_MULTIARCH
   gl_STDALIGN_H
+  gl_HEADER_TIME_H
+  gl_TIME_R
+  if test $HAVE_LOCALTIME_R = 0 || test $REPLACE_LOCALTIME_R = 1; then
+    AC_LIBOBJ([time_r])
+    gl_PREREQ_TIME_R
+  fi
+  gl_TIME_MODULE_INDICATOR([time_r])
+  gl_FUNC_TIMEGM
+  if test $HAVE_TIMEGM = 0 || test $REPLACE_TIMEGM = 1; then
+    AC_LIBOBJ([timegm])
+    gl_PREREQ_TIMEGM
+  fi
+  gl_TIME_MODULE_INDICATOR([timegm])
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
     m4_syscmd([test ! -d ]m4_defn([gl_LIBSOURCES_DIR])[ ||
@@ -201,16 +247,41 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # This macro records the list of files which have been installed by
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
+  lib/arg-nonnull.h
   lib/byteswap.in.h
+  lib/c++defs.h
+  lib/c-ctype.c
+  lib/c-ctype.h
+  lib/cdefs.h
+  lib/gettext.h
   lib/gl_openssl.h
+  lib/intprops.h
+  lib/libc-config.h
   lib/md5.c
   lib/md5.h
+  lib/mktime-internal.h
+  lib/mktime.c
   lib/stdalign.in.h
+  lib/time.in.h
+  lib/time_r.c
+  lib/timegm.c
+  lib/verify.h
+  lib/warn-on-use.h
   m4/00gnulib.m4
+  m4/__inline.m4
+  m4/absolute-header.m4
   m4/byteswap.m4
+  m4/extensions.m4
   m4/extern-inline.m4
   m4/gl-openssl.m4
   m4/gnulib-common.m4
+  m4/include_next.m4
   m4/md5.m4
+  m4/mktime.m4
+  m4/multiarch.m4
   m4/stdalign.m4
+  m4/time_h.m4
+  m4/time_r.m4
+  m4/timegm.m4
+  m4/warn-on-use.m4
 ])

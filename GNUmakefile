@@ -341,10 +341,27 @@ clang:
 # https://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
 # previously, this was crypto/md5, but got spoiled with streams/kernel crypto
 GNU_MODS	= crypto/md5-buffer
-# stdint appears to be surrogate only for C99-lacking environments
-GNU_MODS_AVOID	= stdint
+# If we want HEAD, we'd have to consume this directly (without gnulib-tool)
+# for LGPLv2+ (cf. ff9debcf7), but we avoid that either and will consume the
+# older revision that doesn't rely on so many other modules, some of which
+# are licensed as "LGPL", which is not assuring that we'd effectively retain
+# pacemaker's own libraries (libcrmcommon and transitive dependencies) at
+# LGPLv2.1+ as intended.  Hopefully this explains the extra hops below.
+# Note that it is expected to receive a very seldom use if at all.
+#GNU_MODS        += parse-datetime
+# Following dependencies for parse-datetime module, are needed regardless.
+GNU_MODS        += c-ctype gettext-h intprops timegm verify
+# stdbool/stdint appears to be surrogate only for C99-lacking environments
+GNU_MODS_AVOID	= stdbool stdint
+# keep system stddef.h not working with the chosen compiler as a clear blocker
+GNU_MODS_AVOID	+= stddef
 # only for plain crypto/md5: we make do without kernel-assisted crypto
 # GNU_MODS_AVOID	+= crypto/af_alg
+GNULIB_UPDATE_FILES_PARSE_DATETIME = \
+	lib/parse-datetime.[hy] \
+	m4/parse-datetime.m4 \
+	m4/bison.m4 \
+	m4/tm_gmtoff.m4
 # this is not needed with autoconf >= 2.64, which we already require
 GNULIB_UPDATE_BLOCK_FILES = m4/00gnulib.m4
 
@@ -356,12 +373,54 @@ maint/gnulib/.git: m4
 	  git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib; \
 	fi
 
+$(GNULIB_UPDATE_FILES_PARSE_DATETIME:%=maint/gnulib-t/%): gnulib-update-install
+	# https://lists.gnu.org/archive/html/bug-gnulib/2016-10/msg00045.html
+	test -d maint/gnulib-t || mkdir maint/gnulib-t
+	cd maint/gnulib \
+	  && git reset 4e6e16b3f^ $(GNULIB_UPDATE_FILES_PARSE_DATETIME) \
+	  && git checkout-index --prefix ../gnulib-t/ \
+	    $(GNULIB_UPDATE_FILES_PARSE_DATETIME) \
+	  && git reset HEAD \
+	    $(GNULIB_UPDATE_FILES_PARSE_DATETIME)  # restore
+
 .PHONY: gnulib-update
-gnulib-update: gnulib-update-install
+gnulib-update: gnulib-update-install $(GNULIB_UPDATE_FILES_PARSE_DATETIME:%=maint/gnulib-t/%)
 	# standard modules patching
 	## patch m4/gnulib-common.m4 so that it doesn't require m4/00gnulib.m4
 	sed -e 's/.*gl_00GNULIB.*/dnl&/' \
 	  maint/gnulib/m4/gnulib-common.m4 >m4/gnulib-common.m4
+	# parse-datetime related patching
+	## remove some hard-coded but expendable parse-datetime pre-checks
+	mv maint/gnulib-t/m4/parse-datetime.m4 maint/gnulib-t/m4/parse-datetime.m4-t
+	sed -e 's/.*gl_TIMESPEC.*/dnl&/' \
+	  -e 's/.*gl_CLOCK_TIME.*/dnl&/' \
+	  -e 's/.*AM_STDBOOL_H.*/dnl&/' \
+	  maint/gnulib-t/m4/parse-datetime.m4-t >maint/gnulib-t/m4/parse-datetime.m4
+	rm maint/gnulib-t/m4/parse-datetime.m4-t
+	## we are done with m4 files
+	mv maint/gnulib-t/m4/* m4
+	rmdir maint/gnulib-t/m4
+	## now, parse-datetime source files
+	sed -n -e 's/^#include.*/&/;p;ta;d;:a;n;s/#include.*/&/;p;tb' \
+	  -e 'n;s/.*/#define gettime(ts) clock_gettime(CLOCK_REALTIME, ts)\n\n&/;p;d;:b;ba' \
+	  maint/gnulib-t/lib/parse-datetime.h > lib/gnu/parse-datetime.h
+	## https://lists.gnu.org/archive/html/bug-gnulib/2017-04/msg00028.html
+	sed -e 's/\f//g' -e 's/abs [(]n_minutes[)]/labs (n_minutes)/g' \
+	  maint/gnulib-t/lib/parse-datetime.y >lib/gnu/parse-datetime.y
+	rm maint/gnulib-t/lib/parse-datetime.[hy]
+	rmdir maint/gnulib-t/lib
+	rmdir maint/gnulib-t
+	## emulate some headers we would otherwise need from gnulib
+	touch lib/gnu/timespec.h
+	printf '#include <glib.h>\n#define xmalloc g_malloc\n#define xmemdup g_memdup\n' \
+	  >lib/gnu/xalloc.h
+	printf '#define nstrftime(_1, _2, _3, _4, _5, _6) strftime(_1, _2, _3, _4)\n' \
+	  >lib/gnu/strftime.h
+	## some our warning classes are not compatible
+	printf 'libgnu_a_CFLAGS = $$(CFLAGS_CLONE) %s %s\n' \
+	  "-Wno-missing-prototypes -Wno-missing-declarations" \
+	  "-Wno-declaration-after-statement" >>lib/gnu/Makefile.am
+	printf 'CFLAGS = \n' >>lib/gnu/Makefile.am
 
 .PHONY: gnulib-update-install
 gnulib-update-install: maint/gnulib/.git
