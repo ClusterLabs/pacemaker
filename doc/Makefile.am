@@ -90,7 +90,12 @@ publican_docs	+= $(docbook)
 endif
 endif
 
-EXTRA_DIST	= $(docbook:%=%.xml)
+EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(SVGS)
+EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
+EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
+EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
+EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
+EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
 
 %.html: %.txt
 if IS_ASCIIDOC
@@ -122,6 +127,8 @@ publican-catalog: publican-catalog-fallback
 	&& echo '</catalog>'
 	$(AM_V_GEN)mv $@-t $@
 
+COMMON_XML = Author_Group.xml Book_Info.xml Revision_History.xml
+
 SHARED_TXT=$(wildcard shared/en-US/*.txt)
 SHARED_XML=$(SHARED_TXT:%.txt=%.xml)
 
@@ -130,6 +137,8 @@ CFS_SHARED_TXT=$(addprefix shared/en-US/,pacemaker-intro.txt)
 CFS_SHARED_XML=$(CFS_SHARED_TXT:%.txt=%.xml)
 CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
 CFS_XML=$(CFS_TXT:%.txt=%.xml)
+CFS_XML_ONLY=$(addprefix Clusters_from_Scratch/en-US/,$(COMMON_XML) \
+  Clusters_from_Scratch.ent Clusters_from_Scratch.xml Preface.xml)
 
 $(CFS_XML): $(CFS_SHARED_XML)
 
@@ -140,7 +149,7 @@ endif
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+Clusters_from_Scratch.build: $(PNGS)  $(CFS_XML_ONLY) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
@@ -160,10 +169,12 @@ endif
 
 PA_TXT=$(wildcard Pacemaker_Administration/en-US/*.txt)
 PA_XML=$(PA_TXT:%.txt=%.xml)
+PA_XML_ONLY=$(addprefix Pacemaker_Administration/en-US/,$(COMMON_XML) \
+  Pacemaker_Administration.ent Pacemaker_Administration.xml Preface.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Administration.build: $(wildcard Pacemaker_Administration/en-US/*.xml) $(PA_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Administration.build: $(PA_XML_ONLY) $(PA_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
 if PUBLICAN_INTREE_BRAND
@@ -183,10 +194,12 @@ endif
 
 PD_TXT=$(wildcard Pacemaker_Development/en-US/*.txt)
 PD_XML=$(PD_TXT:%.txt=%.xml)
+PD_XML_ONLY=$(addprefix Pacemaker_Development/en-US/,$(COMMON_XML) \
+  Pacemaker_Development.ent Pacemaker_Development.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Development.build: $(wildcard Pacemaker_Development/en-US/*.xml) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Development.build: $(PD_XML_ONLY) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
@@ -208,12 +221,14 @@ PE_SHARED_TXT=$(addprefix shared/en-US/,pacemaker-intro.txt)
 PE_SHARED_XML=$(PE_SHARED_TXT:%.txt=%.xml)
 PE_TXT=$(wildcard Pacemaker_Explained/en-US/*.txt)
 PE_XML=$(PE_TXT:%.txt=%.xml)
+PE_XML_ONLY=$(addprefix Pacemaker_Explained/en-US/,$(COMMON_XML) \
+  Pacemaker_Explained.ent Pacemaker_Explained.xml Preface.xml)
 
 $(PE_XML): $(PE_SHARED_XML)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Explained.build: $(PNGS) $(PE_XML_ONLY) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
@@ -233,10 +248,12 @@ endif
 
 PR_TXT=$(wildcard Pacemaker_Remote/en-US/*.txt)
 PR_XML=$(PR_TXT:%.txt=%.xml)
+PR_XML_ONLY=$(addprefix Pacemaker_Remote/en-US/,$(COMMON_XML) \
+  Pacemaker_Remote.ent Pacemaker_Remote.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Remote.build: $(PNGS) $(PR_XML_ONLY) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
