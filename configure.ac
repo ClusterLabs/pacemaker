@@ -59,7 +59,8 @@ AC_ARG_WITH(pkg-name,
     [ PACKAGE_NAME="$withval" ])
 
 dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
-AM_INIT_AUTOMAKE([foreign])
+dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
+AM_INIT_AUTOMAKE([foreign tar-ustar])
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
 dnl Versioned attributes implementation is not yet production-ready
