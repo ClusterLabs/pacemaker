@@ -112,6 +112,8 @@ void crmd_peer_down(crm_node_t *peer, bool full);
 unsigned int cib_op_timeout(void);
 bool controld_action_is_recordable(const char *action);
 
+const char *get_node_id(xmlNode *lrm_rsc_op);
+
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
  */
