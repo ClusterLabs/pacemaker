@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/iso8601_internal.h>
 #include "crmcommon_private.h"
 
 /*
@@ -257,6 +258,43 @@ pcmk_scan_nvpair(const char *input, char **name, char **value)
     } else {
         return -pcmk_err_bad_nvpair;
     }
+}
+
+/*!
+ * \internal
+ * \brief Format a name/value pair.
+ *
+ * Units can optionally be provided for the value.  Note that unlike most
+ * formatting functions, this one returns the formatted string.  It is
+ * assumed that the most common use of this function will be to build up
+ * a string to be output as part of other functions.
+ *
+ * \note The caller is responsible for freeing the return value after use.
+ *
+ * \param[in]     name  The name of the nvpair.
+ * \param[in]     value The value of the nvpair.
+ * \param[in]     units Optional units for the value, or NULL.
+ */
+char *
+pcmk_format_nvpair(const char *name, const char *value, const char *units) {
+    return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
+}
+
+/*!
+ * \internal
+ * \brief Format a name/time pair.
+ *
+ * See pcmk_format_nvpair() for more details.
+ *
+ * \note The caller is responsible for freeing the return value after use.
+ *
+ * \param[in]     name       The name for the time.
+ * \param[in]     epoch_time The time to format.
+ */
+char *
+pcmk_format_named_time(const char *name, time_t epoch_time) {
+    const char *now_str = crm_now_string(&epoch_time);
+    return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
 }
 
 // XML attribute handling
