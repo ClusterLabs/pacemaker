@@ -1444,14 +1444,25 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
  *       overwritten by subsequent calls to any of the C library date and time functions.
  */
 const char *
-crm_now_string(void)
+crm_now_string(time_t *when)
 {
-    time_t a_time = time(NULL);
-    char *since_epoch = ctime(&a_time);
+    char *since_epoch = NULL;
 
-    if ((a_time == (time_t) -1) || (since_epoch == NULL)) {
-        return "Could not determine current time";
+    if (when == NULL) {
+        time_t a_time = time(NULL);
+
+        if (a_time == (time_t) -1) {
+            return NULL;
+        } else {
+            since_epoch = ctime(&a_time);
+        }
+    } else {
+        since_epoch = ctime(when);
     }
-    since_epoch[strlen(since_epoch) - 1] = EOS; /* trim newline */
-    return (since_epoch);
+
+    if (since_epoch == NULL) {
+        return NULL;
+    } else {
+        return crm_strip_trailing_newline(since_epoch);
+    }
 }
