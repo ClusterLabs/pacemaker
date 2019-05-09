@@ -32,19 +32,6 @@ static unsigned long int stonith_max_attempts = 10;
 /* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
 
-static const char *
-get_node_id(xmlNode * rsc_op)
-{
-    xmlNode *node = rsc_op;
-
-    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
-        node = node->parent;
-    }
-
-    CRM_CHECK(node != NULL, return NULL);
-    return ID(node);
-}
-
 void
 update_stonith_max_attempts(const char* value)
 {
@@ -374,12 +361,8 @@ process_op_deletion(const char *xpath, xmlNode *change)
     node_uuid = extract_node_uuid(xpath);
     cancel = get_cancel_action(key, node_uuid);
     if (cancel) {
-        crm_info("Cancellation of %s on %s confirmed (%d)",
-                 key, node_uuid, cancel->id);
-        stop_te_timer(cancel->timer);
-        te_action_confirmed(cancel);
-        update_graph(transition_graph, cancel);
-        trigger_graph();
+        confirm_cancel_action(cancel);
+
     } else {
         abort_transition(INFINITY, tg_restart, "Resource operation removal",
                          change);

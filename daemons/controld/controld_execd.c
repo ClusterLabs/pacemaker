@@ -2476,6 +2476,30 @@ unescape_newlines(const char *string)
     return ret;
 }
 
+static bool
+did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
+                    const char * op_type, guint interval_ms)
+{
+    rsc_history_t *entry = NULL;
+
+    CRM_CHECK(lrm_state != NULL, return FALSE);
+    CRM_CHECK(rsc_id != NULL, return FALSE);
+    CRM_CHECK(op_type != NULL, return FALSE);
+
+    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+    if (entry == NULL || entry->failed == NULL) {
+        return FALSE;
+    }
+
+    if (crm_str_eq(entry->failed->rsc_id, rsc_id, TRUE)
+        && safe_str_eq(entry->failed->op_type, op_type)
+        && entry->failed->interval_ms == interval_ms) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                   struct recurring_op_s *pending, xmlNode *action_xml)
@@ -2603,6 +2627,20 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
          */
         if (lrm_state) {
             erase_lrm_history_by_op(lrm_state, op);
+        }
+
+        /* If the recurring operation had failed, the lrm_rsc_op is recorded as
+         * "last_failure" which won't get erased from the cib given the logic on
+         * purpose in erase_lrm_history_by_op(). So that the cancel action won't
+         * have a chance to get confirmed by DC with process_op_deletion().
+         * Cluster transition would get stuck waiting for the remaining action
+         * timer to time out.
+         *
+         * Directly acknowledge the cancel operation in this case.
+         */
+        if (did_lrm_rsc_op_fail(lrm_state, pending->rsc_id,
+                                pending->op_type, pending->interval_ms)) {
+            need_direct_ack = TRUE;
         }
 
     } else if (op->rsc_deleted) {
