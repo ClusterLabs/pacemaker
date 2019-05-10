@@ -1948,9 +1948,24 @@ append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNo
 }
 #endif
 
+/*!
+ * \internal
+ * \brief Calculate action digests and store in node's digest cache
+ *
+ * \param[in] rsc          Resource that action was for
+ * \param[in] task         Name of action performed
+ * \param[in] key          Action's task key
+ * \param[in] node         Node action was performed on
+ * \param[in] xml_op       XML of operation in CIB status (if available)
+ * \param[in] calc_secure  Whether to calculate secure digest
+ * \param[in] data_set     Cluster working set
+ *
+ * \return Pointer to node's digest cache entry
+ */
 static op_digest_cache_t *
-rsc_action_digest(resource_t * rsc, const char *task, const char *key,
-                  node_t * node, xmlNode * xml_op, pe_working_set_t * data_set) 
+rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
+                  pe_node_t *node, xmlNode *xml_op, bool calc_secure,
+                  pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
 
@@ -2018,7 +2033,7 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 
         data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
-        if (is_set(data_set->flags, pe_flag_sanitized)) {
+        if (calc_secure) {
             data->params_secure = copy_xml(data->params_all);
             if(secure_list) {
                 filter_parameters(data->params_secure, secure_list, FALSE);
@@ -2064,7 +2079,9 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     interval = crm_parse_int(interval_s, "0");
     key = generate_op_key(rsc->id, task, interval);
-    data = rsc_action_digest(rsc, task, key, node, xml_op, data_set);
+    data = rsc_action_digest(rsc, task, key, node, xml_op,
+                             is_set(data_set->flags, pe_flag_sanitized),
+                             data_set);
 
     data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
@@ -2178,7 +2195,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     // Calculate device's current parameter digests
     char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key,
-                                                node, NULL, data_set);
+                                                node, NULL, TRUE, data_set);
 
     free(key);
 
