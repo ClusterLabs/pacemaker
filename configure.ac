@@ -62,9 +62,10 @@ AC_ARG_WITH(pkg-name,
 
 dnl 1.11:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
+dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
 dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
-AM_INIT_AUTOMAKE([1.11 foreign silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([1.11 foreign tar-ustar silent-rules subdir-objects])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
