@@ -14,6 +14,7 @@
 #include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
+#include <crm/fencing/internal.h>
 
 static int
 fence_target_text(pcmk__output_t *out, va_list args) {

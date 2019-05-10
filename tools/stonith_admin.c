@@ -30,6 +30,7 @@
 #include <crm/common/output.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
 

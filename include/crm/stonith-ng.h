@@ -26,8 +26,6 @@ extern "C" {
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
 
-#  include <crm/common/output.h>
-
 #  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 #  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
 #  define T_STONITH_NOTIFY_HISTORY        "st_notify_history"
@@ -537,14 +535,6 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
  * \return A boolean
  */
 bool stonith_agent_exists(const char *agent, int timeout);
-
-/*!
- * \internal
- * \brief Register stonith-specific messages.
- *
- * \param out The output functions structure.
- */
-void stonith__register_messages(pcmk__output_t *out);
 
 /*!
  * \brief Turn stonith action into a more readable string.
