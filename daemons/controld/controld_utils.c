@@ -1073,3 +1073,16 @@ feature_set_compatible(const char *dc_version, const char *join_version)
     // DC's minor version must be the same or older
     return dc_v <= join_v;
 }
+
+const char *
+get_node_id(xmlNode *lrm_rsc_op)
+{
+    xmlNode *node = lrm_rsc_op;
+
+    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+        node = node->parent;
+    }
+
+    CRM_CHECK(node != NULL, return NULL);
+    return ID(node);
+}
