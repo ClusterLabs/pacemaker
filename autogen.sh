@@ -25,6 +25,7 @@ if test $# -gt 0 && test "x$1" = xroll; then
 		#export CONFIG_SHELL=$sh  # no gain + extra shell re-exec
 		test -x "$sh" && exec $sh $shargs ./configure \
 		  "CONFIG_SHELL=$sh${shargs:+ $shargs}" \
+		  "SHELL=$sh${shargs:+ $shargs}" \
 		  "$@"
 	done
 else
