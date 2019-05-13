@@ -965,15 +965,18 @@ ways:
 == Bundles - Isolated Environments ==
 indexterm:[bundle]
 indexterm:[Resource,bundle]
+indexterm:[container,bundle]
 indexterm:[Docker,bundle]
+indexterm:[podman,bundle]
 indexterm:[rkt,bundle]
 
 Pacemaker supports a special syntax for launching a
 https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
 with any infrastructure it requires: the 'bundle'.
 
-Pacemaker bundles support https://www.docker.com/[Docker] and
-https://coreos.com/rkt/[rkt] container technologies.
+Pacemaker bundles support https://www.docker.com/[Docker],
+https://podman.io/[podman], and https://coreos.com/rkt/[rkt]
+container technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]
 
@@ -982,7 +985,7 @@ association with Docker, Inc. is implied.]
 [source,XML]
 ----
 <bundle id="httpd-bundle">
-   <docker image="pcmk:http" replicas="3"/>
+   <podman image="pcmk:http" replicas="3"/>
    <network ip-range-start="192.168.122.131"
             host-netmask="24"
             host-interface="eth0">
@@ -1007,6 +1010,18 @@ association with Docker, Inc. is implied.]
 ----
 ====
 
+=== Bundle Prerequisites ===
+indexterm:[bundle,prerequisites]
+
+Before configuring a bundle in Pacemaker, the user must install the appropriate
+container launch technology (Docker, podman, or rkt), and supply a fully
+configured container image, on every node allowed to run the bundle.
+
+Pacemaker will create an implicit resource of type +ocf:heartbeat:docker+,
++ocf:heartbeat:podman+, or +ocf:heartbeat:rkt+ to manage a bundle's
+container. The user must ensure that the appropriate resource agent is
+installed on every node allowed to run the bundle.
+
 === Bundle Properties ===
 
 .Properties of a Bundle
@@ -1028,96 +1043,17 @@ association with Docker, Inc. is implied.]
 
 |=========================================================
 
-A bundle must contain exactly one +<docker>+ or +<rkt>+ element.
+A bundle must contain exactly one +<docker>+, +<podman>+, or +<rkt>+ element.
 
-=== Docker Properties ===
+=== Bundle Container Properties ===
+indexterm:[container,Properties]
+indexterm:[Docker,Properties]
+indexterm:[podman,Properties]
+indexterm:[rkt,Properties]
 
-Before configuring a Docker bundle in Pacemaker, the user must install Docker
-and supply a fully configured Docker image on every node allowed to run the
-bundle.
-
-Pacemaker will create an implicit +ocf:heartbeat:docker+ resource to manage
-a bundle's Docker container. The user must ensure that resource agent is
-installed on every node allowed to run the bundle.
-
-.Properties of a Bundle's Docker Element
+.Properties of a Bundle's docker, podman, or rkt Element
 [width="95%",cols="3m,4,<5",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|image
-|
-|Docker image tag (required)
- indexterm:[image,Docker]
- indexterm:[Docker,Property,image]
-
-|replicas
-|Value of +promoted-max+ if that is positive, else 1
-|A positive integer specifying the number of container instances to launch
- indexterm:[replicas,Docker]
- indexterm:[Docker,Property,replicas]
-
-|replicas-per-host
-|1
-|A positive integer specifying the number of container instances allowed to run
- on a single node
- indexterm:[replicas-per-host,Docker]
- indexterm:[Docker,Property,replicas-per-host]
-
-|promoted-max
-|0
-|A non-negative integer that, if positive, indicates that the containerized
- service should be treated as a promotable service, with this many replicas
- allowed to run the service in the master role
- indexterm:[promoted-max,Docker]
- indexterm:[Docker,Property,promoted-max]
-
-|network
-|
-|If specified, this will be passed to +docker run+ as the
- https://docs.docker.com/engine/reference/run/#network-settings[network setting]
- for the Docker container.
- indexterm:[network,Docker]
- indexterm:[Docker,Property,network]
-
-|run-command
-|`/usr/sbin/pacemaker-remoted` if bundle contains a +primitive+, otherwise none
-|This command will be run inside the container when launching it ("PID 1"). If
- the bundle contains a +primitive+, this command 'must' start pacemaker-remoted
- (but could, for example, be a script that does other stuff, too). If the
- container image has a pre-2.0.0 version of Pacemaker, set this to
- +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
- indexterm:[run-command,Docker]
- indexterm:[Docker,Property,run-command]
-
-|options
-|
-|Extra command-line options to pass to `docker run`
- indexterm:[options,Docker]
- indexterm:[Docker,Property,options]
-
-|=========================================================
-
-For backward compatibility, +masters+ is accepted as an alias for
-+promoted-max+, but is deprecated since 2.0.0, and support for it will be
-removed in a future version.
-
-=== rkt Properties ===
-
-Before configuring a rkt bundle in Pacemaker, the user must install rkt
-and supply a fully configured container image on every node allowed to run the
-bundle.
-
-Pacemaker will create an implicit +ocf:heartbeat:rkt+ resource to manage
-a bundle's rkt container. The user must ensure that resource agent is
-installed on every node allowed to run the bundle.
-
-.Properties of a Bundle's rkt Element
-[width="95%",cols="3m,4,<5",options="header",align="center"]
-|=========================================================
+|====
 
 |Field
 |Default
@@ -1126,58 +1062,65 @@ installed on every node allowed to run the bundle.
 |image
 |
 |Container image tag (required)
- indexterm:[image,rkt]
- indexterm:[rkt,Property,image]
+ indexterm:[image,container]
+ indexterm:[container,Property,image]
 
 |replicas
 |Value of +promoted-max+ if that is positive, else 1
 |A positive integer specifying the number of container instances to launch
- indexterm:[replicas,rkt]
- indexterm:[rkt,Property,replicas]
+ indexterm:[replicas,container]
+ indexterm:[container,Property,replicas]
 
 |replicas-per-host
 |1
 |A positive integer specifying the number of container instances allowed to run
  on a single node
- indexterm:[replicas-per-host,rkt]
- indexterm:[rkt,Property,replicas-per-host]
+ indexterm:[replicas-per-host,container]
+ indexterm:[container,Property,replicas-per-host]
 
 |promoted-max
 |0
 |A non-negative integer that, if positive, indicates that the containerized
  service should be treated as a promotable service, with this many replicas
  allowed to run the service in the master role
- indexterm:[promoted-max,rkt]
- indexterm:[rkt,Property,promoted-max]
+ indexterm:[promoted-max,container]
+ indexterm:[container,Property,promoted-max]
 
 |network
 |
-|If specified, this will be passed to +rkt run+ as the
- network setting for the rkt container.
- indexterm:[network,rkt]
- indexterm:[rkt,Property,network]
+|If specified, this will be passed to the `docker run`, `podman run`, or
+ `rkt run` command as the network setting for the container.
+ indexterm:[network,container]
+ indexterm:[container,Property,network]
 
 |run-command
 |`/usr/sbin/pacemaker-remoted` if bundle contains a +primitive+, otherwise none
 |This command will be run inside the container when launching it ("PID 1"). If
  the bundle contains a +primitive+, this command 'must' start pacemaker-remoted
- (but could, for example, be a script that does other stuff, too). If the
- container image has a pre-2.0.0 version of Pacemaker, set this to
- +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
- indexterm:[run-command,rkt]
- indexterm:[rkt,Property,run-command]
+ (but could, for example, be a script that does other stuff, too).
+ indexterm:[run-command,container]
+ indexterm:[container,Property,run-command]
 
 |options
 |
-|Extra command-line options to pass to `rkt run`
- indexterm:[options,rkt]
- indexterm:[rkt,Property,options]
+|Extra command-line options to pass to the `docker run`, `podman run`, or
+ `rkt run` command
+ indexterm:[options,container]
+ indexterm:[container,Property,options]
 
-|=========================================================
+|====
 
-For backward compatibility, +masters+ is accepted as an alias for
-+promoted-max+, but is deprecated since 2.0.0, and support for it will be
-removed in a future version.
+[NOTE]
+====
+Considerations when using cluster configurations or container images from
+Pacemaker 1.1:
+
+- If the container image has a pre-2.0.0 version of Pacemaker, set +run-command+
+to +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
+
+- +masters+ is accepted as an alias for +promoted-max+, but is deprecated since
+2.0.0, and support for it will be removed in a future version.
+====
 
 === Bundle Network Properties ===
 
