@@ -27,7 +27,7 @@ env:
     - COVERITY_SCAN_BUILD_COMMAND="make"
 
     # Email address for notifications related to this build
-    - OWNER_EMAIL="andrew@beekhof.net"
+    - OWNER_EMAIL="admin@clusterlabs.org"
 
     # Regular expression selects on which branches to run analysis
     # Be aware of quotas. Do not run on every branch/commit
