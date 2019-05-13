@@ -40,6 +40,18 @@
         </revdescription>
       </revision>
 
+      <revision>
+        <revnumber>1-2</revnumber>
+        <date>Mon May 13 2019</date>
+        <author>
+          <firstname>Ken</firstname><surname>Gaillot</surname>
+          <email>kgaillot@redhat.com</email>
+        </author>
+        <revdescription>
+          <simplelist><member>Overhaul configuration how-to</member></simplelist>
+        </revdescription>
+      </revision>
+
     </revhistory>
   </simpara>
 </appendix>
