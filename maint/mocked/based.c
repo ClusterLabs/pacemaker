@@ -138,6 +138,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
                                   xmlNode *op_request, crm_client_t *cib_client)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
+    mock_based_context_t *ctxt;
 
     if (!strcmp(op, CRM_OP_REGISTER)) {
         if (flags & crm_ipc_client_response) {
@@ -159,6 +160,13 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
 
         if (!strcmp(type, T_CIB_DIFF_NOTIFY) && on_off) {
             cib_client->options |= cib_notify_diff;
+        }
+
+        ctxt = (mock_based_context_t *) cib_client->userdata;
+        for (size_t c = ctxt->modules_cnt; c > 0; c--) {
+            if (ctxt->modules[c - 1]->hooks.cib_notify != NULL) {
+                ctxt->modules[c - 1]->hooks.cib_notify(cib_client);
+            }
         }
 
         if (flags & crm_ipc_client_response) {

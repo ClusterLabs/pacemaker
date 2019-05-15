@@ -29,6 +29,7 @@ typedef int (*mock_based_argparse_hook)(mock_based_context_t *,
 typedef void (*mock_based_destroy_hook)(struct module_s *);
 
 /* specialized callbacks... */
+typedef void (*mock_based_cib_notify_hook)(crm_client_t *);
 
 typedef struct mock_based_hooks_s {
     /* generic ones */
@@ -36,6 +37,7 @@ typedef struct mock_based_hooks_s {
     mock_based_destroy_hook destroy;
 
     /* specialized callbacks... */
+    mock_based_cib_notify_hook cib_notify;
 } mock_based_hooks_t;
 
 typedef struct module_s {
