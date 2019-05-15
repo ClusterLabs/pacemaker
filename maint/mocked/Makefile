@@ -29,6 +29,9 @@ PROGRAMS = based
 
 BASED_OBJECTS = based.o
 
+# include or not the modules as you wish
+BASED_OBJECTS += based-notifyfenced.o
+
 all: ${PROGRAMS}
 
 based: $(BASED_OBJECTS)
