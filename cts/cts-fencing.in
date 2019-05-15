@@ -716,6 +716,19 @@ class Tests(object):
             if test_type["use_cpg"] == 1:
                 test.add_stonith_log_pattern("Total timeout set to 6")
 
+        # test what happens when we try to use a missing fence-agent.
+        for test_type in test_types:
+            test = self.new_test("%s_fence_missing_agent" % test_type["prefix"],
+                                 "Verify proper error-handling when using a non-existent fence-agent.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         "-R true1 -a fence_missing -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin",
+                         "-R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
+
+            test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 5", CrmExit.ERROR)
+            test.add_cmd("stonith_admin", "-F node2 -t 5")
+
         # simple topology test for one device
         for test_type in test_types:
             if test_type["use_cpg"] == 0:
