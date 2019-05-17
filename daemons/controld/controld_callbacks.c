@@ -228,7 +228,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         crm_trace("Alive=%d, appeared=%d, down=%d",
                   alive, appeared, (down? down->id : -1));
 
-        if (appeared && (alive > 0)) {
+        if (appeared && (alive > 0) && !is_remote) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
