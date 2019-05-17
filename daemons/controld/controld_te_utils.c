@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -385,10 +385,18 @@ te_trigger_stonith_history_sync(void)
     mainloop_timer_start(stonith_history_sync_timer);
 }
 
+/*!
+ * \brief Connect to fencer
+ *
+ * \param[in] user_data  If NULL, retry failures now, otherwise retry in main loop
+ *
+ * \return TRUE
+ * \note If user_data is NULL, this will wait 2s between attempts, for up to
+ *       30 attempts, meaning the controller could be blocked as long as 58s.
+ */
 gboolean
 te_connect_stonith(gpointer user_data)
 {
-    int lpc = 0;
     int rc = pcmk_ok;
 
     if (stonith_api == NULL) {
@@ -396,42 +404,41 @@ te_connect_stonith(gpointer user_data)
     }
 
     if (stonith_api->state != stonith_disconnected) {
-        crm_trace("Still connected");
+        crm_trace("Already connected to fencer, no need to retry");
         return TRUE;
     }
 
-    for (lpc = 0; lpc < 30; lpc++) {
-        crm_debug("Attempting connection to fencing daemon...");
-
-        sleep(1);
-        rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
-
-        if (rc == pcmk_ok) {
-            break;
+    if (user_data == NULL) {
+        // Blocking (retry failures now until successful)
+        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
+        if (rc != pcmk_ok) {
+            crm_err("Could not connect to fencer in 30 attempts: %s "
+                    CRM_XS " rc=%d", pcmk_strerror(rc), rc);
         }
-
-        if (user_data != NULL) {
+    } else {
+        // Non-blocking (retry failures later in main loop)
+        rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
+        if (rc != pcmk_ok) {
             if (is_set(fsa_input_register, R_ST_REQUIRED)) {
-                crm_err("Sign-in failed: triggered a retry");
+                crm_err("Fencer connection failed (will retry): %s "
+                        CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);
             } else {
-                crm_info("Sign-in failed, but no longer required");
+                crm_info("Fencer connection failed (ignoring because no longer required): %s "
+                         CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             }
             return TRUE;
         }
-
-        crm_err("Sign-in failed: pausing and trying again in 2s...");
-        sleep(1);
     }
 
-    CRM_CHECK(rc == pcmk_ok, return TRUE);      /* If not, we failed 30 times... just get out */
-    stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT,
-                                             tengine_stonith_connection_destroy);
-
-    stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE,
-                                             tengine_stonith_notify);
-
-    crm_trace("Connected");
+    if (rc == pcmk_ok) {
+        stonith_api->cmds->register_notification(stonith_api,
+                                                 T_STONITH_NOTIFY_DISCONNECT,
+                                                 tengine_stonith_connection_destroy);
+        stonith_api->cmds->register_notification(stonith_api,
+                                                 T_STONITH_NOTIFY_FENCE,
+                                                 tengine_stonith_notify);
+    }
     return TRUE;
 }
 

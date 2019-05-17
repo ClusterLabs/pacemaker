@@ -198,31 +198,6 @@ struct {
     int rc;
 } async_fence_data;
 
-static int
-try_mainloop_connect(void)
-{
-    stonith_t *st = async_fence_data.st;
-    int tries = 10;
-    int i = 0;
-    int rc = 0;
-
-    for (i = 0; i < tries; i++) {
-        crm_debug("Connecting as %s", async_fence_data.name);
-        rc = st->cmds->connect(st, async_fence_data.name, NULL);
-
-        if (!rc) {
-            crm_debug("stonith client connection established");
-            return 0;
-        } else {
-            crm_debug("stonith client connection failed");
-        }
-        sleep(1);
-    }
-
-    crm_err("Could not connect to the fencer");
-    return -1;
-}
-
 static void
 notify_callback(stonith_t * st, stonith_event_t * e)
 {
@@ -251,8 +226,10 @@ async_fence_helper(gpointer user_data)
 {
     stonith_t *st = async_fence_data.st;
     int call_id = 0;
+    int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
 
-    if (try_mainloop_connect()) {
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not connect to fencer: %s\n", pcmk_strerror(rc));
         g_main_loop_quit(mainloop);
         return TRUE;
     }

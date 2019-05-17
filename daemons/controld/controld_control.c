@@ -628,10 +628,11 @@ do_started(long long action,
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 
+    // Try connecting to fencer (retrying later in mainloop if failed)
     if (stonith_reconnect == NULL) {
-        int dummy;
-
-        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW, te_connect_stonith, &dummy);
+        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW,
+                                                 te_connect_stonith,
+                                                 GINT_TO_POINTER(TRUE));
     }
     set_bit(fsa_input_register, R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
