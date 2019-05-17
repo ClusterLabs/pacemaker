@@ -778,11 +778,13 @@ handle_remote_ra_exec(gpointer user_data)
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                 /* take care of this later when we get async connection result */
-                crm_debug("Remote connection started, waiting for connect event");
+                crm_debug("Initiated async remote connection, %s action will complete after connect event",
+                          cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             } else {
-                crm_debug("connect failed, not expecting to match any connection event later");
+                crm_debug("Could not initiate remote connection for %s action",
+                          cmd->action);
                 cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
                 cmd->op_status = PCMK_LRM_OP_ERROR;
             }
