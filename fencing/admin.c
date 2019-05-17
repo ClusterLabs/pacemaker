@@ -58,7 +58,7 @@ static struct crm_option long_options[] = {
         "\tBe less descriptive in output."
     },
     {   "cleanup", no_argument, NULL, 'c',
-        "\tCleanup wherever appropriate."
+        "\tCleanup wherever appropriate. Requires: --history."
     },
     {   "broadcast", no_argument, NULL, 'b',
         "Broadcast wherever appropriate."
