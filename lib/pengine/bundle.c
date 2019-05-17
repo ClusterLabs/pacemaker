@@ -1020,6 +1020,30 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
     return node->details->uname;
 }
 
+/*!
+ * Add an implicit storage entry for the container's /var/log
+ */
+static void
+add_log_mount(pe__bundle_variant_data_t *bundle_data,
+              pe_working_set_t *data_set)
+{
+    const char *mount_options = NULL;
+    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
+
+    if (((bundle_data->agent_type == PE__CONTAINER_AGENT_DOCKER)
+        || (bundle_data->agent_type == PE__CONTAINER_AGENT_PODMAN))
+        && ((version == NULL) || (compare_version(version, "3.2.0") >= 0))) {
+        /* For the agents that support it, "Z" gives the directory a
+         * container-specific SELinux label allowing the container to write to
+         * the directory. Don't use it if the DC wouldn't use it, so simulations
+         * (including crm_resource --wait) work properly.
+         */
+        mount_options = "rw,Z";
+    }
+    mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", mount_options,
+              pe__bundle_mount_subdir);
+}
+
 gboolean
 pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -1257,9 +1281,9 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
 
+        // Add an implicit mount for the container's logs so they persist
         if (need_log_mount) {
-            mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
-                      pe__bundle_mount_subdir);
+            add_log_mount(bundle_data, data_set);
         }
 
         port = calloc(1, sizeof(pe__bundle_port_t));

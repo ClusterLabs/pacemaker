@@ -50,6 +50,7 @@ extern "C" {
  *           XML v2 patchsets are created by default
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
+ *           Docker and podman bundles get "Z" added to implicit /var/log mounts
  */
 #  define CRM_FEATURE_SET		"3.2.0"
 
