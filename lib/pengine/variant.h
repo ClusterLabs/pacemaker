@@ -51,11 +51,18 @@ typedef struct {
     pe_resource_t *remote;
 } pe__bundle_replica_t;
 
+enum pe__bundle_mount_flags {
+    pe__bundle_mount_none       = 0x00,
+
+    // mount instance-specific subdirectory rather than source directly
+    pe__bundle_mount_subdir     = 0x01
+};
+
 typedef struct {
     char *source;
     char *target;
     char *options;
-    int flags;
+    uint32_t flags; // bitmask of pe__bundle_mount_flags
 } pe__bundle_mount_t;
 
 typedef struct {
