@@ -107,6 +107,7 @@ typedef struct async_command_s {
     int last_timeout_signo;
 
     stonith_device_t *active_on;
+    stonith_device_t *activating_on;
 } async_command_t;
 
 static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
@@ -301,6 +302,19 @@ get_active_cmds(stonith_device_t * device)
     return counter;
 }
 
+static void
+fork_cb(GPid pid, gpointer user_data)
+{
+    async_command_t *cmd = (async_command_t *) user_data;
+    stonith_device_t * device = cmd->activating_on;
+
+    crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
+                  cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
+                  device->id, pid, cmd->timeout);
+    cmd->active_on = device;
+    cmd->activating_on = NULL;
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -387,19 +401,17 @@ stonith_device_execute(stonith_device_t * device)
                                    cmd->victim_nodeid,
                                    cmd->timeout, device->params, device->aliases);
 
-    /* for async exec, exec_rc is pid if positive and error code if negative/zero */
-    exec_rc = stonith_action_execute_async(action, (void *)cmd, cmd->done_cb);
+    /* for async exec, exec_rc is negative for early error exit
+       otherwise handling of success/errors is done via callbacks */
+    cmd->activating_on = device;
+    exec_rc = stonith_action_execute_async(action, (void *)cmd,
+                                           cmd->done_cb, fork_cb);
 
-    if (exec_rc > 0) {
-        crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
-                  cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
-                  device->id, exec_rc, cmd->timeout);
-        cmd->active_on = device;
-
-    } else {
+    if (exec_rc < 0) {
         crm_warn("Operation %s%s%s on %s failed: %s (%d)",
                  cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                  device->id, pcmk_strerror(exec_rc), exec_rc);
+        cmd->activating_on = NULL;
         cmd->done_cb(0, exec_rc, NULL, cmd);
     }
     return TRUE;

@@ -54,6 +54,7 @@ struct stonith_action_s {
     int async;
     void *userdata;
     void (*done_cb) (GPid pid, gint status, const char *output, gpointer user_data);
+    void (*fork_cb) (GPid pid, gpointer user_data);
 
     svc_action_t *svc_action;
 
@@ -835,6 +836,10 @@ stonith_action_async_forked(svc_action_t *svc_action)
     action->pid = svc_action->pid;
     action->svc_action = svc_action;
 
+    if (action->fork_cb) {
+        (action->fork_cb) (svc_action->pid, action->userdata);
+    }
+
     crm_trace("Child process %d performing action '%s' successfully forked",
               action->pid, action->action);
 }
@@ -916,25 +921,34 @@ internal_stonith_action_execute(stonith_action_t * action)
     return rc;
 }
 
-GPid
+/*!
+ * \internal
+ * \brief Kick off execution of an async stonith action
+ *
+ * \param[in,out] action        Action to be executed
+ * \param[in,out] userdata      Datapointer to be passed to callbacks
+ * \param[in]     done          Callback to notify action has failed/succeeded
+ * \param[in]     fork_callback Callback to notify successful fork of child
+ *
+ * \return pcmk_ok if ownership of action has been taken, -errno otherwise
+ */
+int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
                              void (*done) (GPid pid, int rc, const char *output,
-                                           gpointer user_data))
+                                           gpointer user_data),
+                             void (*fork_cb) (GPid pid, gpointer user_data))
 {
-    int rc = 0;
-
     if (!action) {
         return -1;
     }
 
     action->userdata = userdata;
     action->done_cb = done;
+    action->fork_cb = fork_cb;
     action->async = 1;
 
-    rc = internal_stonith_action_execute(action);
-
-    return rc < 0 ? rc : action->pid;
+    return internal_stonith_action_execute(action);
 }
 
 /*!
