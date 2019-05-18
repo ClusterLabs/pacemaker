@@ -14,6 +14,7 @@ import sys
 import subprocess
 import shlex
 import time
+import signal
 
 FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
 
@@ -137,13 +138,27 @@ class Test(object):
         """ Clean up the host after executing a test """
 
         if self.stonith_process:
-            self.stonith_process.terminate()
-            self.stonith_process.wait()
+            if self.stonith_process.poll() == None:
+                self.stonith_process.terminate()
+                self.stonith_process.wait()
+            else:
+                return_code = {
+                    getattr(signal, _signame): _signame
+                        for _signame in dir(signal)
+                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
+                }.get(-self.stonith_process.returncode, "RET=%d" % (self.stonith_process.returncode))
+                msg = "FAILURE - '%s' failed. stonithd abnormally exited during test (%s)."
+                self.result_txt = msg % (self.name, return_code)
+                self.result_exitcode = 55
 
         self.stonith_output = ""
         self.stonith_process = None
 
-        logfile = io.open('/tmp/stonith-regression.log', 'rt')
+        # the default for utf-8 encoding would error out if e.g. memory corruption
+        # makes stonithd output any kind of 8 bit value - while still interesting
+        # for debugging and we'd still like the regression-test to go over the
+        # full set of test-cases
+        logfile = io.open('/tmp/stonith-regression.log', 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
             self.stonith_output = self.stonith_output + line
 
