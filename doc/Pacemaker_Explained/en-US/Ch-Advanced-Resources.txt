@@ -999,11 +999,11 @@ association with Docker, Inc. is implied.]
       <storage-mapping id="httpd-root"
                        source-dir="/srv/html"
                        target-dir="/var/www/html"
-                       options="rw"/>
+                       options="rw,Z"/>
       <storage-mapping id="httpd-logs"
                        source-dir-root="/var/log/pacemaker/bundles"
                        target-dir="/etc/httpd/logs"
-                       options="rw"/>
+                       options="rw,Z"/>
    </storage>
    <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
 </bundle>
@@ -1293,7 +1293,8 @@ indexterm:[bundle,storage,storage-mapping]
 
 |options
 |
-|File system mount options to use when mapping the storage
+|A comma-separated list of file system mount options to use when mapping the
+ storage
  indexterm:[options,storage-mapping]
  indexterm:[storage-mapping,Property,options]
 
@@ -1320,6 +1321,14 @@ container, so it is not necessary to specify those paths in a
 ====
 The +PCMK_authkey_location+ environment variable must not be set to anything
 other than the default of `/etc/pacemaker/authkey` on any node in the cluster.
+====
+
+[IMPORTANT]
+====
+If SELinux is used in enforcing mode on the host, you must ensure the container
+is allowed to use any storage you mount into it. For Docker and podman bundles,
+adding "Z" to the mount options will create a container-specific label for the
+mount that allows the container access.
 ====
 
 === Bundle Primitive ===
