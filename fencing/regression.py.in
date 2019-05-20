@@ -14,6 +14,7 @@ import sys
 import subprocess
 import shlex
 import time
+import signal
 
 FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
 
@@ -137,13 +138,27 @@ class Test(object):
         """ Clean up the host after executing a test """
 
         if self.stonith_process:
-            self.stonith_process.terminate()
-            self.stonith_process.wait()
+            if self.stonith_process.poll() == None:
+                self.stonith_process.terminate()
+                self.stonith_process.wait()
+            else:
+                return_code = {
+                    getattr(signal, _signame): _signame
+                        for _signame in dir(signal)
+                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
+                }.get(-self.stonith_process.returncode, "RET=%d" % (self.stonith_process.returncode))
+                msg = "FAILURE - '%s' failed. stonithd abnormally exited during test (%s)."
+                self.result_txt = msg % (self.name, return_code)
+                self.result_exitcode = 55
 
         self.stonith_output = ""
         self.stonith_process = None
 
-        logfile = io.open('/tmp/stonith-regression.log', 'rt')
+        # the default for utf-8 encoding would error out if e.g. memory corruption
+        # makes stonithd output any kind of 8 bit value - while still interesting
+        # for debugging and we'd still like the regression-test to go over the
+        # full set of test-cases
+        logfile = io.open('/tmp/stonith-regression.log', 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
             self.stonith_output = self.stonith_output + line
 
@@ -437,9 +452,9 @@ class Tests(object):
                      '-R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1"')
         test.add_cmd('stonith_admin',
                      '-R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4"')
-        test.add_cmd("stonith_admin", "-F node3 -t 2")
-        # timeout is 2+1+4 = 7
-        test.add_stonith_log_pattern("Total timeout set to 7")
+        test.add_cmd("stonith_admin", "-F node3 -t 5")
+        # timeout is 5+1+4 = 10
+        test.add_stonith_log_pattern("Total timeout set to 10")
 
         # custom timeout _WITH_ topology
         test = self.new_test("cpg_custom_timeout_2",
@@ -453,9 +468,9 @@ class Tests(object):
         test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
         test.add_cmd("stonith_admin", "-r node3 -i 3 -v false2")
-        test.add_cmd("stonith_admin", "-F node3 -t 2")
-        # timeout is 2+1+4000 = 4003
-        test.add_stonith_log_pattern("Total timeout set to 4003")
+        test.add_cmd("stonith_admin", "-F node3 -t 5")
+        # timeout is 5+1+4000 = 4006
+        test.add_stonith_log_pattern("Total timeout set to 4006")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
@@ -588,10 +603,29 @@ class Tests(object):
                          "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin",
                          "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "-F node3 -t 2")
+            test.add_cmd("stonith_admin", "-F node3 -t 5")
 
             if test_type["use_cpg"] == 1:
-                test.add_stonith_log_pattern("Total timeout set to 6")
+                test.add_stonith_log_pattern("Total timeout set to 15")
+
+        # test what happens when we try to use a missing fence-agent.
+        for test_type in test_types:
+            test = self.new_test("%s_fence_missing_agent" % test_type["prefix"],
+                                 "Verify proper error-handling when using a non-existent fence-agent.",
+                                 test_type["use_cpg"])
+            test.add_cmd("stonith_admin",
+                         "-R true1 -a fence_missing -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin",
+                         "-R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
+
+            if test_type["use_cpg"] == 0:
+                # 195 = (unsigned char)-61 (-ENODATA)
+                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 5", 195)
+            else:
+                # 143 = (unsigned char)-113 (-EHOSTUNREACH)
+                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 5", 143)
+
+            test.add_cmd("stonith_admin", "-F node2 -t 5")
 
         # simple topology test for one device
         for test_type in test_types:
@@ -603,9 +637,9 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "-R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
-            test.add_cmd("stonith_admin", "-F node3 -t 2")
+            test.add_cmd("stonith_admin", "-F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 2")
+            test.add_stonith_log_pattern("Total timeout set to 5")
             test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 
@@ -621,9 +655,9 @@ class Tests(object):
                          "-R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
             test.add_cmd("stonith_admin", "-d node3 -i 1")
-            test.add_cmd("stonith_admin", "-F node3 -t 2")
+            test.add_cmd("stonith_admin", "-F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 2")
+            test.add_stonith_log_pattern("Total timeout set to 5")
             test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
         # test what happens when the first fencing level has multiple devices.
@@ -707,7 +741,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "-r node3 -i 3 -v true3")
             test.add_cmd("stonith_admin", "-r node3 -i 3 -v true4")
 
-            test.add_cmd("stonith_admin", "-F node3 -t 2")
+            test.add_cmd("stonith_admin", "-F node3 -t 5")
 
         # Test what happens if multiple fencing levels are defined, and then the first one is removed.
         for test_type in test_types:
@@ -760,7 +794,7 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          """-R true -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1 node2 node3" """)
             test.add_cmd("stonith_admin", """-r '@node.*' -i 1 -v true""")
-            test.add_cmd("stonith_admin", "-F node3 -t 2")
+            test.add_cmd("stonith_admin", "-F node3 -t 5")
             test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
         # test allowing commas and semicolons as delimiters in pcmk_host_list
@@ -772,8 +806,8 @@ class Tests(object):
                          """-R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1,node2,node3" """)
             test.add_cmd("stonith_admin",
                          """-R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=pcmk1;pcmk2;pcmk3" """)
-            test.add_cmd("stonith_admin", "stonith_admin -F node2 -t 2")
-            test.add_cmd("stonith_admin", "stonith_admin -F pcmk3 -t 2")
+            test.add_cmd("stonith_admin", "stonith_admin -F node2 -t 5")
+            test.add_cmd("stonith_admin", "stonith_admin -F pcmk3 -t 5")
             test.add_stonith_log_pattern("for host 'node2' with device 'true1' returned: 0")
             test.add_stonith_log_pattern("for host 'pcmk3' with device 'true2' returned: 0")
 
@@ -844,7 +878,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
 
-            test.add_cmd("stonith_admin", "-B node3 -t 2")
+            test.add_cmd("stonith_admin", "-B node3 -t 5")
 
             test.add_cmd("stonith_admin", "-D true1")
 
@@ -859,7 +893,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
 
-            test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
+            test.add_cmd("stonith_admin", "-F node3 -t 5 -V")
 
             test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 
