@@ -27,11 +27,12 @@ void stonith__destroy_action(stonith_action_t *action);
 void stonith__action_result(stonith_action_t *action, int *rc, char **output,
                             char **error_output);
 
-GPid
+int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
                              void (*done) (GPid pid, int rc, const char *output,
-                                           gpointer user_data));
+                                           gpointer user_data),
+                             void (*fork_cb) (GPid pid, gpointer user_data));
 
 int stonith__execute(stonith_action_t *action);
 
