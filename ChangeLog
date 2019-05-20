@@ -1,3 +1,12 @@
+* Mon May 20 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc2
+- Changesets: 19
+- Diff:       11 files changed, 63 insertions(+), 37 deletions(-)
+
+- Changes since Pacemaker-2.0.2-rc1
+  + controller: avoid memory leak when duplicate monitor is scheduled
+  + fencing: avoid use-after-free on early failure return
+  + libcrmcommon: avoid segfault when beginning formatted text list
+
 * Wed Apr 24 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc1
 - Changesets: 258
 - Diff:       225 files changed, 28421 insertions(+), 24443 deletions(-)
