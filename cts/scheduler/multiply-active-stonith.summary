@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-05-09 09:54:39Z
+Using the original execution date of: 2018-05-09T09:54:39Z
 
 Current cluster status:
 Node node2 (2): UNCLEAN (online)
@@ -15,7 +15,7 @@ Executing cluster transition:
  * Resource action: fencer          monitor=60000 on node3
  * Fencing node2 (reboot)
  * Pseudo action:   rsc1_stop_0
-Using the original execution date of: 2018-05-09 09:54:39Z
+Using the original execution date of: 2018-05-09T09:54:39Z
 
 Revised cluster status:
 Online: [ node1 node3 ]

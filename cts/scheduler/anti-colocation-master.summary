@@ -1,4 +1,4 @@
-Using the original execution date of: 2016-04-29 09:06:59Z
+Using the original execution date of: 2016-04-29T09:06:59Z
 
 Current cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
@@ -23,7 +23,7 @@ Executing cluster transition:
  * Resource action: dummy1          start on sle12sp2-1
  * Resource action: state1          promote on sle12sp2-2
  * Pseudo action:   ms1_promoted_0
-Using the original execution date of: 2016-04-29 09:06:59Z
+Using the original execution date of: 2016-04-29T09:06:59Z
 
 Revised cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]

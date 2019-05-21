@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-09-11 21:23:25Z
+Using the original execution date of: 2018-09-11T21:23:25Z
 
 Current cluster status:
 Online: [ controller-0 controller-1 controller-2 ]
@@ -116,7 +116,7 @@ Executing cluster transition:
  * Pseudo action:   galera-bundle-master_promoted_0
  * Pseudo action:   galera-bundle_promoted_0
  * Resource action: galera          monitor=10000 on galera-bundle-0
-Using the original execution date of: 2018-09-11 21:23:25Z
+Using the original execution date of: 2018-09-11T21:23:25Z
 
 Revised cluster status:
 Online: [ controller-0 controller-1 controller-2 ]

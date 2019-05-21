@@ -1,5 +1,5 @@
 Allocation scores:
-Using the original execution date of: 2017-07-14 08:50:25Z
+Using the original execution date of: 2017-07-14T08:50:25Z
 clone_color: rabbitmq-bundle-clone allocation score on overcloud-controller-0: -INFINITY
 clone_color: rabbitmq-bundle-clone allocation score on overcloud-controller-1: -INFINITY
 clone_color: rabbitmq-bundle-clone allocation score on overcloud-controller-2: -INFINITY

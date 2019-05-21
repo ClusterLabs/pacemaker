@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-05-24 15:29:56Z
+Using the original execution date of: 2018-05-24T15:29:56Z
 
 Current cluster status:
 Node rhel7-5 (5): UNCLEAN (offline)
@@ -29,7 +29,7 @@ Executing cluster transition:
  * Resource action: dummy-crowd     start on rhel7-2
  * Pseudo action:   dummy-crowd-clone_running_0
  * Resource action: dummy-crowd     monitor=10000 on rhel7-2
-Using the original execution date of: 2018-05-24 15:29:56Z
+Using the original execution date of: 2018-05-24T15:29:56Z
 
 Revised cluster status:
 Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 ]

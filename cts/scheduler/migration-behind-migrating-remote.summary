@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-08-21 17:12:54Z
+Using the original execution date of: 2017-08-21T17:12:54Z
 
 Current cluster status:
 Online: [ node1 node2 ]
@@ -24,7 +24,7 @@ Executing cluster transition:
  * Pseudo action:   remote1_start_0
  * Resource action: rsc1            monitor=10000 on remote2
  * Resource action: remote1         monitor=60000 on node2
-Using the original execution date of: 2017-08-21 17:12:54Z
+Using the original execution date of: 2017-08-21T17:12:54Z
 
 Revised cluster status:
 Online: [ node1 node2 ]

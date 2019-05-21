@@ -1,4 +1,4 @@
-Using the original execution date of: 2016-10-05 07:32:34Z
+Using the original execution date of: 2016-10-05T07:32:34Z
 
 Current cluster status:
 Node rh72-01 (3232238257): standby
@@ -23,7 +23,7 @@ Executing cluster transition:
  * Pseudo action:   grpDummy_running_0
  * Resource action: prmDummy1       monitor=10000 on rh72-02
  * Resource action: prmDummy2       monitor=10000 on rh72-02
-Using the original execution date of: 2016-10-05 07:32:34Z
+Using the original execution date of: 2016-10-05T07:32:34Z
 
 Revised cluster status:
 Node rh72-01 (3232238257): standby

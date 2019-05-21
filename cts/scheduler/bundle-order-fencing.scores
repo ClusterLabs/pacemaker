@@ -1,5 +1,5 @@
 Allocation scores:
-Using the original execution date of: 2017-09-12 10:51:59Z
+Using the original execution date of: 2017-09-12T10:51:59Z
 clone_color: galera-bundle-master allocation score on controller-0: -INFINITY
 clone_color: galera-bundle-master allocation score on controller-1: -INFINITY
 clone_color: galera-bundle-master allocation score on controller-2: -INFINITY

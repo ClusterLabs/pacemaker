@@ -1,4 +1,4 @@
-Using the original execution date of: 2018-10-31 11:51:32Z
+Using the original execution date of: 2018-10-31T11:51:32Z
 
 Current cluster status:
 Online: [ controller-0 controller-1 controller-2 ]
@@ -72,7 +72,7 @@ Executing cluster transition:
  * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
  * Pseudo action:   rabbitmq-bundle_running_0
-Using the original execution date of: 2018-10-31 11:51:32Z
+Using the original execution date of: 2018-10-31T11:51:32Z
 
 Revised cluster status:
 Online: [ controller-0 controller-1 controller-2 ]

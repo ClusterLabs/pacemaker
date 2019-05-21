@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-10-12 07:31:57Z
+Using the original execution date of: 2017-10-12T07:31:57Z
 
 Current cluster status:
 GuestNode galera-bundle-0:galera-bundle-docker-0: maintenance
@@ -16,7 +16,7 @@ Executing cluster transition:
  * Resource action: galera-bundle-docker-2 monitor on centos3
  * Resource action: galera-bundle-docker-2 monitor on centos2
  * Resource action: galera-bundle-docker-2 monitor on centos1
-Using the original execution date of: 2017-10-12 07:31:57Z
+Using the original execution date of: 2017-10-12T07:31:57Z
 
 Revised cluster status:
 GuestNode galera-bundle-0:galera-bundle-docker-0: maintenance

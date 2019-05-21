@@ -1,4 +1,4 @@
-Using the original execution date of: 2015-08-12 02:53:40Z
+Using the original execution date of: 2015-08-12T02:53:40Z
 
 Current cluster status:
 Online: [ bl460g8n3 bl460g8n4 ]
@@ -80,7 +80,7 @@ Executing cluster transition:
  * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
  * Pseudo action:   pgsql_notified_0
  * Resource action: pgsql           monitor=9000 on pgsr01
-Using the original execution date of: 2015-08-12 02:53:40Z
+Using the original execution date of: 2015-08-12T02:53:40Z
 
 Revised cluster status:
 Online: [ bl460g8n3 bl460g8n4 ]

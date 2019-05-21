@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-07-14 08:50:25Z
+Using the original execution date of: 2017-07-14T08:50:25Z
 
 Current cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 ]
@@ -83,7 +83,7 @@ Executing cluster transition:
  * Resource action: rabbitmq:0      monitor=10000 on rabbitmq-bundle-0
  * Resource action: rabbitmq:1      monitor=10000 on rabbitmq-bundle-1
  * Resource action: rabbitmq:2      monitor=10000 on rabbitmq-bundle-2
-Using the original execution date of: 2017-07-14 08:50:25Z
+Using the original execution date of: 2017-07-14T08:50:25Z
 
 Revised cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 ]

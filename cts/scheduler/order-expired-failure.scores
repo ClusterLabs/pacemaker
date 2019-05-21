@@ -1,5 +1,5 @@
 Allocation scores:
-Using the original execution date of: 2018-04-09 07:55:35Z
+Using the original execution date of: 2018-04-09T07:55:35Z
 clone_color: compute-unfence-trigger-clone allocation score on controller-0: -INFINITY
 clone_color: compute-unfence-trigger-clone allocation score on controller-1: -INFINITY
 clone_color: compute-unfence-trigger-clone allocation score on controller-2: -INFINITY

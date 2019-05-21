@@ -1,4 +1,4 @@
-Using the original execution date of: 2017-10-26 14:23:50Z
+Using the original execution date of: 2017-10-26T14:23:50Z
 
 Current cluster status:
 Online: [ 407888-db1 407892-db2 ]
@@ -18,7 +18,7 @@ Executing cluster transition:
  * Resource action: fence_db2       stop on 407888-db1
  * Resource action: fence_db2       start on 407888-db1
  * Resource action: fence_db2       monitor=60000 on 407888-db1
-Using the original execution date of: 2017-10-26 14:23:50Z
+Using the original execution date of: 2017-10-26T14:23:50Z
 
 Revised cluster status:
 Online: [ 407888-db1 407892-db2 ]
