@@ -446,10 +446,7 @@ pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \internal
  * \brief Create a shutdown op for a scheduler transition
  *
- * \param[in] rsc          Resource of action to cancel
- * \param[in] task         Name of action to cancel
- * \param[in] interval_ms  Interval of action to cancel
- * \param[in] node         Node of action to cancel
+ * \param[in] node         Node being shut down
  * \param[in] data_set     Working set of cluster
  *
  * \return Created op
