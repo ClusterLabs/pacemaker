@@ -60,6 +60,8 @@ enum stonith_call_options {
     st_opt_cleanup         = 0x000080000,
     /* used where ever apropriate - e.g. send out a history query to all nodes */
     st_opt_broadcast       = 0x000100000,
+    /* used where ever apropriate - e.g. cleanup of failed history */
+    st_opt_cleanup_only_failed = 0x001000000,
 };
 
 /*! Order matters here, do not change values */

@@ -59,16 +59,21 @@ stonith_send_broadcast_history(xmlNode *history,
     free_xml(bcast);
 }
 
+struct cleanup_data {
+    gboolean only_failed;
+    const char *target; 
+};
+
 static gboolean
 stonith_remove_history_entry (gpointer key,
                               gpointer value,
                               gpointer user_data)
 {
     remote_fencing_op_t *op = value;
-    const char *target = (const char *) user_data;
+    struct cleanup_data *data = user_data;
 
-    if ((op->state == st_failed) || (op->state == st_done)) {
-        if ((target) && (strcmp(op->target, target) != 0)) {
+    if ((op->state == st_failed) || (op->state == st_done && data->only_failed == FALSE)) {
+        if ((data->target) && (strcmp(op->target, data->target) != 0)) {
             return FALSE;
         }
         return TRUE;
@@ -84,19 +89,26 @@ stonith_remove_history_entry (gpointer key,
  * \param[in] target    Cleanup can be limited to certain fence-targets
  * \param[in] broadcast Send out a cleanup broadcast
  */
-static void
+void
 stonith_fence_history_cleanup(const char *target,
-                              gboolean broadcast)
+                              gboolean broadcast,
+                              gboolean only_failed)
 {
+    struct cleanup_data data;
+
     if (broadcast) {
         stonith_send_broadcast_history(NULL,
-                                       st_opt_cleanup | st_opt_discard_reply,
+                                       st_opt_cleanup | st_opt_discard_reply | (only_failed ? st_opt_cleanup_only_failed : st_opt_none), 
                                        target);
         /* we'll do the local clean when we receive back our own broadcast */
     } else if (stonith_remote_op_list) {
+        data.only_failed = only_failed; 
+        data.target = target;
+
         g_hash_table_foreach_remove(stonith_remote_op_list,
                              stonith_remove_history_entry,
-                             (gpointer) target);
+                             &data);
+
         do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
     }
 }
@@ -403,7 +415,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                   stonith_remote_op_list);
 
         stonith_fence_history_cleanup(target,
-            crm_element_value(msg, F_STONITH_CALLID) != NULL);
+            crm_element_value(msg, F_STONITH_CALLID) != NULL,
+            (options & st_opt_cleanup_only_failed ? TRUE : FALSE));
     } else if (options & st_opt_broadcast) {
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API

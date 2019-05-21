@@ -417,6 +417,11 @@ handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
     do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data);
     do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
 
+    if (rc == pcmk_ok) {
+        /* If fencing succeeds, clear the failed history. */
+        stonith_fence_history_cleanup(op->target, TRUE, TRUE);
+    }
+
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
     free_xml(reply);
