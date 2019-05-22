@@ -121,7 +121,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
     crm_time_t *crm_when = crm_time_new(NULL);
     char *buf = NULL;
 
-    node = xmlNewNode(NULL, (pcmkXmlStr) "stonith-event");
+    node = xmlNewNode(NULL, (pcmkXmlStr) "fence_event");
 
     switch (event->state) {
         case st_failed:
@@ -129,12 +129,13 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
             break;
 
         case st_done:
-            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "done");
+            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "success");
             break;
 
         default: {
             char *state = crm_itoa(event->state);
-            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) state);
+            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "pending");
+            xmlSetProp(node, (pcmkXmlStr) "extended-status", (pcmkXmlStr) state);
             free(state);
             break;
         }
@@ -149,14 +150,16 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(node, (pcmkXmlStr) "client", (pcmkXmlStr) event->client);
     xmlSetProp(node, (pcmkXmlStr) "origin", (pcmkXmlStr) event->origin);
 
-    crm_time_set_timet(crm_when, &event->completed);
-    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
+    if (event->state == st_failed || event->state == st_done) {
+        crm_time_set_timet(crm_when, &event->completed);
+        buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        xmlSetProp(node, (pcmkXmlStr) "completed", (pcmkXmlStr) buf);
+        free(buf);
+    }
 
     pcmk__xml_add_node(out, node);
 
     crm_time_free(crm_when);
-    free(buf);
     return 0;
 }
 
