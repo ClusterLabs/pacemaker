@@ -308,8 +308,13 @@ static void
 fork_cb(GPid pid, gpointer user_data)
 {
     async_command_t *cmd = (async_command_t *) user_data;
-    stonith_device_t * device = cmd->activating_on;
+    stonith_device_t * device =
+        /* in case of a retry we've done the move from
+           activating_on to active_on already
+         */
+        cmd->activating_on?cmd->activating_on:cmd->active_on;
 
+    CRM_ASSERT(device);
     crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
                   cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                   device->id, pid, cmd->timeout);
