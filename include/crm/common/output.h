@@ -144,7 +144,7 @@ struct pcmk__output_s {
     /*!
      * \brief The name of this output formatter.
      */
-    char *fmt_name;
+    const char *fmt_name;
 
     /*!
      * \brief A copy of the request that generated this output.

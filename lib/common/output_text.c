@@ -210,6 +210,7 @@ pcmk__mk_text_output(char **argv) {
         return NULL;
     }
 
+    retval->fmt_name = "text";
     retval->request = g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
