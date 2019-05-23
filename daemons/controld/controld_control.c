@@ -25,6 +25,7 @@
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
+#include <controld_fencing.h>
 #include <controld_alerts.h>
 #include <controld_metadata.h>
 #include <controld_transition.h>
@@ -147,7 +148,6 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
-extern char *te_client_id;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -17,6 +17,7 @@
 
 #include <controld_fsa.h>
 #include <controld_lrm.h>
+#include <controld_fencing.h>
 #include <controld_messages.h>
 #include <crm/cluster.h>
 #include <controld_throttle.h>
@@ -73,124 +74,6 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
     te_action_confirmed(pseudo);
     update_graph(graph, pseudo);
     trigger_graph();
-    return TRUE;
-}
-
-void
-send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
-{
-    int rc = pcmk_ok;
-    crm_node_t *peer = NULL;
-
-    /* We (usually) rely on the membership layer to do node_update_cluster,
-     * and the peer status callback to do node_update_peer, because the node
-     * might have already rejoined before we get the stonith result here.
-     */
-    int flags = node_update_join | node_update_expected;
-
-    /* zero out the node-status & remove all LRM status info */
-    xmlNode *node_state = NULL;
-
-    CRM_CHECK(target != NULL, return);
-    CRM_CHECK(uuid != NULL, return);
-
-    /* Make sure the membership and join caches are accurate */
-    peer = crm_get_peer_full(0, target, CRM_GET_PEER_ANY);
-
-    CRM_CHECK(peer != NULL, return);
-
-    if (peer->state == NULL) {
-        /* Usually, we rely on the membership layer to update the cluster state
-         * in the CIB. However, if the node has never been seen, do it here, so
-         * the node is not considered unclean.
-         */
-        flags |= node_update_cluster;
-    }
-
-    if (peer->uuid == NULL) {
-        crm_info("Recording uuid '%s' for node '%s'", uuid, target);
-        peer->uuid = strdup(uuid);
-    }
-
-    crmd_peer_down(peer, TRUE);
-
-    /* Generate a node state update for the CIB */
-    node_state = create_node_state_update(peer, flags, NULL, __FUNCTION__);
-
-    /* we have to mark whether or not remote nodes have already been fenced */
-    if (peer->flags & crm_remote_node) {
-        time_t now = time(NULL);
-        char *now_s = crm_itoa(now);
-        crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
-        free(now_s);
-    }
-
-    /* Force our known ID */
-    crm_xml_add(node_state, XML_ATTR_UUID, uuid);
-
-    rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
-                                    cib_quorum_override | cib_scope_local | cib_can_create);
-
-    /* Delay processing the trigger until the update completes */
-    crm_debug("Sending fencing update %d for %s", rc, target);
-    fsa_register_cib_callback(rc, FALSE, strdup(target), cib_fencing_updated);
-
-    /* Make sure it sticks */
-    /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
-
-    erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-
-    free_xml(node_state);
-    return;
-}
-
-static gboolean
-te_fence_node(crm_graph_t * graph, crm_action_t * action)
-{
-    int rc = 0;
-    const char *id = NULL;
-    const char *uuid = NULL;
-    const char *target = NULL;
-    const char *type = NULL;
-    gboolean invalid_action = FALSE;
-    enum stonith_call_options options = st_opt_none;
-
-    id = ID(action->xml);
-    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-    type = crm_meta_value(action->params, "stonith_action");
-
-    CRM_CHECK(id != NULL, invalid_action = TRUE);
-    CRM_CHECK(uuid != NULL, invalid_action = TRUE);
-    CRM_CHECK(type != NULL, invalid_action = TRUE);
-    CRM_CHECK(target != NULL, invalid_action = TRUE);
-
-    if (invalid_action) {
-        crm_log_xml_warn(action->xml, "BadAction");
-        return FALSE;
-    }
-
-    crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%d",
-               type, target, id, transition_graph->stonith_timeout);
-
-    /* Passing NULL means block until we can connect... */
-    te_connect_stonith(NULL);
-
-    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
-        options |= st_opt_allow_suicide;
-    }
-
-    rc = stonith_api->cmds->fence(stonith_api, options, target, type,
-                                  transition_graph->stonith_timeout / 1000, 0);
-
-    stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
-                                         st_opt_timeout_updates,
-                                         generate_transition_key(transition_graph->id, action->id,
-                                                                 0, te_uuid),
-                                         "tengine_stonith_callback", tengine_stonith_callback);
-
     return TRUE;
 }
 
