@@ -341,9 +341,9 @@ execute_stonith_cleanup()
  * Functions that need to interact directly with the fencer via its API
  */
 
-stonith_t *stonith_api = NULL;
-crm_trigger_t *stonith_reconnect = NULL;
-char *te_client_id = NULL;
+static stonith_t *stonith_api = NULL;
+static crm_trigger_t *stonith_reconnect = NULL;
+static char *te_client_id = NULL;
 
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph)
@@ -571,7 +571,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
  * \note If user_data is NULL, this will wait 2s between attempts, for up to
  *       30 attempts, meaning the controller could be blocked as long as 58s.
  */
-gboolean
+static gboolean
 te_connect_stonith(gpointer user_data)
 {
     int rc = pcmk_ok;
@@ -617,6 +617,47 @@ te_connect_stonith(gpointer user_data)
                                                  tengine_stonith_notify);
     }
     return TRUE;
+}
+
+/*!
+    \internal
+    \brief Schedule fencer connection attempt in main loop
+*/
+void
+controld_trigger_fencer_connect()
+{
+    if (stonith_reconnect == NULL) {
+        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW,
+                                                 te_connect_stonith,
+                                                 GINT_TO_POINTER(TRUE));
+    }
+    set_bit(fsa_input_register, R_ST_REQUIRED);
+    mainloop_set_trigger(stonith_reconnect);
+}
+
+void
+controld_disconnect_fencer(bool destroy)
+{
+    if (stonith_api) {
+        // Prevent fencer connection from coming up again
+        clear_bit(fsa_input_register, R_ST_REQUIRED);
+
+        stonith_api->cmds->disconnect(stonith_api);
+    }
+    if (destroy) {
+        if (stonith_api) {
+            stonith_api->cmds->free(stonith_api);
+            stonith_api = NULL;
+        }
+        if (stonith_reconnect) {
+            mainloop_destroy_trigger(stonith_reconnect);
+            stonith_reconnect = NULL;
+        }
+        if (te_client_id) {
+            free(te_client_id);
+            te_client_id = NULL;
+        }
+    }
 }
 
 static gboolean

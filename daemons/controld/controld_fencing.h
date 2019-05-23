@@ -13,16 +13,13 @@
 #include <stdbool.h>                // bool
 #include <crm/transition.h>         // crm_graph_t, crm_action_t
 
-extern crm_trigger_t *stonith_reconnect;
-extern char *te_client_id;
-extern stonith_t *stonith_api;
-
 // stonith fail counts
 void st_fail_count_reset(const char * target);
 void update_stonith_max_attempts(const char* value);
 
 // stonith API client
-gboolean te_connect_stonith(gpointer user_data);
+void controld_trigger_fencer_connect(void);
+void controld_disconnect_fencer(bool destroy);
 gboolean te_fence_node(crm_graph_t *graph, crm_action_t *action);
 
 // stonith cleanup list
