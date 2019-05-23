@@ -2992,6 +2992,12 @@ print_failed_actions(FILE *stream, pe_working_set_t *data_set)
  * \param[in] history    List of stonith actions
  *
  */
+enum redude_state {
+    reduce_none,
+    reduce_purge,
+    reduce_replace
+};
+
 static stonith_history_t *
 reduce_stonith_history(stonith_history_t *history)
 {
@@ -3000,21 +3006,44 @@ reduce_stonith_history(stonith_history_t *history)
     for (hp = history; hp; ) {
         for (np = new; np; np = np->next) {
             if ((hp->state == st_done) || (hp->state == st_failed)) {
+                enum redude_state reduce = reduce_none;
+
                 /* action not in progress */
                 if (safe_str_eq(hp->target, np->target) &&
-                    safe_str_eq(hp->action, np->action) &&
-                    (hp->state == np->state)) {
-                    if ((hp->state == st_done) ||
-                        safe_str_eq(hp->delegate, np->delegate)) {
-                        /* replace or purge */
-                        if (hp->completed < np->completed) {
-                            /* purge older hp */
-                            tmp = hp->next;
-                            hp->next = NULL;
-                            stonith_history_free(hp);
-                            hp = tmp;
-                            break;
+                    safe_str_eq(hp->action, np->action)) {
+                    if (hp->state == np->state) {
+                        if ((hp->state == st_done) ||
+                            safe_str_eq(hp->delegate, np->delegate)) {
+                            /* replace or purge */
+                            if (hp->completed < np->completed) {
+                                reduce = reduce_purge;
+                            }
+                            reduce = reduce_replace;
                         }
+                    } else if (safe_str_eq(hp->delegate, np->delegate)) {
+                        if((hp->state == st_failed) && (np->state == st_done)) {
+                            if (hp->completed < np->completed) {
+                                reduce = reduce_purge;
+                            }
+                        } else {
+                            /* hp->state == st_done && np->state == st_failed */
+                            if (hp->completed > np->completed) {
+                                reduce = reduce_replace;
+                                /* Erase hp and rewrite state to st_done to activate np. */
+                                np->state = st_done;
+                            }
+                        }
+                    }
+                 
+                    /* purge or replace */
+                    if (reduce == reduce_purge) {
+                        /* purge older hp */
+                        tmp = hp->next;
+                        hp->next = NULL;
+                        stonith_history_free(hp);
+                        hp = tmp;
+                        break;
+                    } else if (reduce == reduce_replace) {
                         /* damn single linked list */
                         free(hp->target);
                         free(hp->action);
