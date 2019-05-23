@@ -595,6 +595,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int option_index = 0;
     int rc = pcmk_ok;
+    long long reconnect_msec_tmp;
 
     pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
@@ -629,7 +630,14 @@ main(int argc, char **argv)
                 show &= ~mon_show_times;
                 break;
             case 'i':
-                reconnect_msec = crm_get_msec(optarg);
+                reconnect_msec_tmp = crm_get_msec(optarg);
+                if (reconnect_msec_tmp > INT_MAX) {
+                    crm_err("--interval accepts range [0, %d] (seconds)",
+                            INT_MAX/1000);
+                    argerr++;
+                } else {
+                    reconnect_msec = reconnect_msec_tmp;
+                }
                 break;
             case 'n':
                 group_by_node = TRUE;

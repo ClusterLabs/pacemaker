@@ -501,6 +501,7 @@ main(int argc, char **argv)
     int flag;
     int find_flags = 0;           // Flags to use when searching for resource
     crm_exit_t exit_code = CRM_EX_OK;
+    long long timeout_ms_tmp;
 
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
@@ -713,7 +714,14 @@ main(int argc, char **argv)
                 rsc_type = optarg;
                 break;
             case 'T':
-                timeout_ms = crm_get_msec(optarg);
+                timeout_ms_tmp = crm_get_msec(optarg);
+                if (timeout_ms_tmp > INT_MAX) {
+                        CMD_ERR("--timeout accepts range [0, %d] (seconds)",
+                                INT_MAX/1000);
+                        argerr++;
+                } else {
+                    timeout_ms = timeout_ms_tmp;
+                }
                 break;
             case 'e':
                 clear_expired = TRUE;

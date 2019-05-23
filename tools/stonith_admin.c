@@ -414,6 +414,7 @@ main(int argc, char **argv)
     int tolerance = 0;
     int as_nodeid = FALSE;
     bool required_agent = false;
+    long long tolerance_tmp;
 
     char *name = NULL;
     char *value = NULL;
@@ -561,7 +562,14 @@ main(int argc, char **argv)
                 break;
             case 0:
                 if (safe_str_eq("tolerance", longname)) {
-                    tolerance = crm_get_msec(optarg) / 1000;    /* Send in seconds */
+                    tolerance_tmp = crm_get_msec(optarg) / 1000;  /* to secs */
+                    if (tolerance_tmp > INT_MAX) {
+                        crm_err("--tolerance accepts range [0, %d] (seconds)",
+                                INT_MAX);
+                        argerr++;
+                    } else {
+                        tolerance = tolerance_tmp;
+                    }
                 } else if (pcmk__parse_output_args(longname, optarg, &output_ty,
                                                    &output_dest) == false) {
                     fprintf(stderr, "Unknown long option used: %s\n", longname);
