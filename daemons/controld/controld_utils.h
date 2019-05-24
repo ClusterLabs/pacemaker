@@ -11,11 +11,10 @@
 #  define CRMD_UTILS__H
 
 #  include <crm/crm.h>
-#  include <crm/transition.h>
 #  include <crm/common/xml.h>
-#  include <crm/cib/internal.h> /* For CIB_OP_MODIFY */
-#  include "controld_fsa.h"     // For fsa_cib_conn
-#  include "controld_alerts.h"
+#  include <crm/cib/internal.h>     // CIB_OP_MODIFY
+#  include <controld_fsa.h>         // fsa_cib_conn
+#  include <controld_alerts.h>
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 

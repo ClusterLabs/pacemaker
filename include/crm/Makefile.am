@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,7 +22,6 @@ MAINTAINERCLEANFILES	= Makefile.in
 headerdir=$(pkgincludedir)/crm
 
 header_HEADERS		= attrd.h cib.h cluster.h compatibility.h crm.h \
-			  lrmd.h msg_xml.h services.h stonith-ng.h \
-			  transition.h
+			  lrmd.h msg_xml.h services.h stonith-ng.h
 
 SUBDIRS                 = common pengine cib fencing cluster

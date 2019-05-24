@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/util.h>
-#include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
