@@ -3013,7 +3013,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     return expired;
 }
 
-int get_target_rc(xmlNode *xml_op)
+int pe__target_rc_from_xml(xmlNode *xml_op)
 {
     int target_rc = 0;
     const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
@@ -3141,7 +3141,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
 
     int rc = 0;
     int status = PCMK_LRM_OP_UNKNOWN;
-    int target_rc = get_target_rc(xml_op);
+    int target_rc = pe__target_rc_from_xml(xml_op);
     guint interval_ms = 0;
 
     gboolean expired = FALSE;
