@@ -833,7 +833,7 @@ stonith_action_execute_async(stonith_action_t * action,
                              void (*fork_cb) (GPid pid, gpointer user_data))
 {
     if (!action) {
-        return -1;
+        return -EINVAL;
     }
 
     action->userdata = userdata;
