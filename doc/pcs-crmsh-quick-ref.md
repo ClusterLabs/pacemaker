@@ -196,12 +196,12 @@ edited and verified before committing to the live configuration.
 ## List the current resource defaults
 
     crmsh # crm configure show type:rsc_defaults
-    pcs   # pcs resource rsc defaults
+    pcs   # pcs resource defaults
 
 ## Set resource defaults
 
     crmsh # crm configure rsc_defaults resource-stickiness=100
-    pcs   # pcs resource rsc defaults resource-stickiness=100
+    pcs   # pcs resource defaults resource-stickiness=100
     
 ## List the current operation defaults
 
