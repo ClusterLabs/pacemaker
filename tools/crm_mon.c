@@ -3002,33 +3002,44 @@ reduce_stonith_history(stonith_history_t *history)
             if ((hp->state == st_done) || (hp->state == st_failed)) {
                 /* action not in progress */
                 if (safe_str_eq(hp->target, np->target) &&
-                    safe_str_eq(hp->action, np->action) &&
-                    (hp->state == np->state)) {
-                    if ((hp->state == st_done) ||
-                        safe_str_eq(hp->delegate, np->delegate)) {
-                        /* replace or purge */
-                        if (hp->completed < np->completed) {
-                            /* purge older hp */
-                            tmp = hp->next;
-                            hp->next = NULL;
-                            stonith_history_free(hp);
-                            hp = tmp;
+                    safe_str_eq(hp->action, np->action)) {
+                    if (hp->state == np->state) {
+                        if ((hp->state == st_done) ||
+                            safe_str_eq(hp->delegate, np->delegate)) {
+                            /* replace or purge */
+                            if (hp->completed < np->completed) {
+                                /* purge older hp */
+                                tmp = hp->next;
+                                hp->next = NULL;
+                                stonith_history_free(hp);
+                                hp = tmp;
+                                break;
+                            }
+                            /* damn single linked list */
+                            free(hp->target);
+                            free(hp->action);
+                            free(np->origin);
+                            np->origin = hp->origin;
+                            free(np->delegate);
+                            np->delegate = hp->delegate;
+                            free(np->client);
+                            np->client = hp->client;
+                            np->completed = hp->completed;
+                            tmp = hp;
+                            hp = hp->next;
+                            free(tmp);
                             break;
                         }
-                        /* damn single linked list */
-                        free(hp->target);
-                        free(hp->action);
-                        free(np->origin);
-                        np->origin = hp->origin;
-                        free(np->delegate);
-                        np->delegate = hp->delegate;
-                        free(np->client);
-                        np->client = hp->client;
-                        np->completed = hp->completed;
-                        tmp = hp;
-                        hp = hp->next;
-                        free(tmp);
-                        break;
+                    } else if (hp->state == st_done) {
+                        /* If the hp data event is completed after the failed np data event, set the flag to suppress the display. */
+                        if (hp->completed > np->completed) {
+                            np->ignore_old_failed = TRUE;
+                        }
+                    } else if (np->state == st_done) {
+                        /* If the np data event is completed after the failed hp data event, set the flag to suppress the display. */
+                        if (hp->completed < np->completed) {
+                            hp->ignore_old_failed = TRUE;
+                        }
                     }
                 }
                 if (np->next) {
@@ -3227,7 +3238,7 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
     stonith_history_t *hp;
 
     for (hp = history; hp; hp = hp->next) {
-        if (hp->state == st_failed) {
+        if (hp->state == st_failed && hp->ignore_old_failed == FALSE) {
             break;
         }
     }
@@ -3256,7 +3267,7 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
 
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
-        if (hp->state == st_failed) {
+        if (hp->state == st_failed && hp->ignore_old_failed == FALSE) {
             print_stonith_action(stream, hp);
         }
     }

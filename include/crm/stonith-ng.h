@@ -105,6 +105,7 @@ typedef struct stonith_history_s {
     int state;
     time_t completed;
     struct stonith_history_s *next;
+    gboolean ignore_old_failed;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
