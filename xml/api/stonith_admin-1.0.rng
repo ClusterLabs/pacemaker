@@ -66,8 +66,17 @@
     </define>
 
     <define name="fencing-history-event">
-        <element name="stonith-event">
-            <attribute name="status"> <text /> </attribute>
+        <element name="fence_event">
+            <attribute name="status">
+                <choice>
+                    <value>failed</value>
+                    <value>success</value>
+                    <value>pending</value>
+                </choice>
+            </attribute>
+            <optional>
+                <attribute name="extended-status"> <text /> </attribute>
+            </optional>
             <optional>
                 <attribute name="delegate"> <text /> </attribute>
             </optional>
@@ -75,7 +84,9 @@
             <attribute name="target"> <text /> </attribute>
             <attribute name="client"> <text /> </attribute>
             <attribute name="origin"> <text /> </attribute>
-            <attribute name="when"> <text /> </attribute>
+            <optional>
+                <attribute name="completed"> <text /> </attribute>
+            </optional>
         </element>
     </define>
 </grammar>
