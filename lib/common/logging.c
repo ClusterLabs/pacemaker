@@ -334,6 +334,11 @@ crm_add_logfile(const char *filename)
     if(is_default) {
         default_fd = fd;
 
+        // Some resource agents will log only if environment variable is set
+        if (daemon_option("logfile") == NULL) {
+            set_daemon_option("logfile", filename);
+        }
+
     } else if(default_fd >= 0) {
         crm_notice("Switching to %s", filename);
         qb_log_ctl(default_fd, QB_LOG_CONF_ENABLED, QB_FALSE);
