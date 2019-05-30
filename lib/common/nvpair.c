@@ -447,12 +447,13 @@ crm_element_value(const xmlNode *data, const char *name)
 /*!
  * \brief Retrieve the integer value of an XML attribute
  *
- * This is like \c crm_element_value() but returning the value as an integer.
+ * This is like \c crm_element_value() but getting the value as an integer.
  *
  * \param[in] data   XML node to check
  * \param[in] name   Attribute name to check
+ * \param[in] dest   Where to store element value
  *
- * \return Integer value of specified attribute on success, -1 otherwise
+ * \return 0 on success, -1 otherwise
  */
 int
 crm_element_value_int(const xmlNode *data, const char *name, int *dest)
