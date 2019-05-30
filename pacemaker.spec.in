@@ -724,11 +724,10 @@ exit 0
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
 %{_sbindir}/stonith_admin
-%exclude %{_datadir}/pacemaker/alerts
-%exclude %{_datadir}/pacemaker/tests
-%{_datadir}/pacemaker
-%exclude %{_datadir}/pacemaker/*.rng
-%exclude %{_datadir}/pacemaker/*.xsl
+# "dirname" is owned by -schemas, which is a prerequisite
+%{_datadir}/pacemaker/report.collector
+%{_datadir}/pacemaker/report.common
+# XXX "dirname" is not owned by any prerequisite
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
@@ -831,9 +830,10 @@ exit 0
 
 %files schemas
 %license licenses/GPLv2
+%dir %{_datadir}/pacemaker
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
-%{_datadir}/pacemaker/api/*.rng
+%{_datadir}/pacemaker/api
 
 %changelog
 

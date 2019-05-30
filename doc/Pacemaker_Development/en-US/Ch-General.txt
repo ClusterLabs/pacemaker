@@ -6,13 +6,15 @@
 indexterm:[copyright]
 
 When copyright notices are added to a file, they should look like this:
+
+.Copyright Notice Format
 ====
-Copyright <YYYY[-YYYY]> the Pacemaker project contributors
+Copyright +YYYY[-YYYY]+ the Pacemaker project contributors
 
 The version control history for this file may have further details.
 ====
 
-The first +<YYYY>+ is the year the file was originally published. The original
+The first +YYYY+ is the year the file was originally published. The original
 date is important for two reasons: when two entities claim copyright ownership
 of the same work, the earlier claim generally prevails; and copyright
 expiration is generally calculated from the original publication date.

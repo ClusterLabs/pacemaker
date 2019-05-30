@@ -19,6 +19,7 @@ extern "C" {
  * \brief Formatted output for pacemaker tools
  */
 
+#  include <stdbool.h>
 #  include <stdio.h>
 #  include <libxml/tree.h>
 
