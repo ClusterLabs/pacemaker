@@ -1,3 +1,13 @@
+* Thu May 30 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc3
+- Changesets: 8
+- Diff:       5 files changed, 36 insertions(+), 11 deletions(-)
+
+- Features added since Pacemaker-2.0.2-rc2
+
+- Changes since Pacemaker-2.0.2-rc2
+  + libstonithd: avoid use-after-free when retrying a failed action
+  + libcrmcommon: export logfile environment variable if using default
+
 * Mon May 20 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc2
 - Changesets: 19
 - Diff:       11 files changed, 63 insertions(+), 37 deletions(-)
@@ -26,6 +36,7 @@
   + scheduler: one group stop shouldn't make another required
   + libcrmcommon: handle out-of-range integers in configuration better
   + libcrmservice: fix use-after-free memory error in alert handling
+  + libstonithd: handle more than 64KB output from fence agents
 
 
 * Mon Mar 4 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1-1
