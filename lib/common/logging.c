@@ -241,6 +241,7 @@ crm_add_logfile(const char *filename)
 
     if (filename == NULL && have_logfile == FALSE) {
         filename = default_logfile;
+        set_daemon_option("logfile", filename);
     }
 
     if (filename == NULL) {
