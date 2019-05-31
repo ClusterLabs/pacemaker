@@ -11,6 +11,7 @@
 #include <stdarg.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/util.h>
@@ -19,6 +20,17 @@
 #include <crm/pengine/pe_types.h>
 
 #include "crm_mon.h"
+
+static char *
+time_t_string(time_t when) {
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
+
+    crm_time_set_timet(crm_when, &when);
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_free(crm_when);
+    return buf;
+}
 
 static char *
 last_changed_string(const char *last_written, const char *user,
@@ -454,6 +466,45 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
 
 
 static int
+stonith_event_console(pcmk__output_t *out, va_list args) {
+    stonith_history_t *event = va_arg(args, stonith_history_t *);
+    int full_history = va_arg(args, int);
+    gboolean later_succeeded = va_arg(args, gboolean);
+
+    char *buf = NULL;
+
+    buf = time_t_string(event->completed);
+
+    switch (event->state) {
+        case st_failed:
+            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s %s'\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-failed", buf,
+                                   later_succeeded ? "(a later attempt succeeded)" : "");
+            break;
+
+        case st_done:
+            curses_indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-successful", buf);
+            break;
+
+        default:
+            curses_indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->client, event->origin);
+            break;
+    }
+
+    free(buf);
+    return 0;
+}
+
+static int
 ticket_console(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
 
@@ -498,6 +549,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "html", cluster_times_html },
     { "cluster-times", "text", cluster_times_text },
     { "cluster-times", "xml", cluster_times_xml },
+    { "stonith-event", "console", stonith_event_console },
     { "ticket", "console", ticket_console },
 
     { NULL, NULL, NULL }
