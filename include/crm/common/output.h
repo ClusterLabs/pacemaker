@@ -507,6 +507,23 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
 void
 pcmk__xml_pop_parent(pcmk__output_t *out);
 
+/*!
+ * \internal
+ * \brief Peek a parent XML node onto the stack.  This is used when implementing
+ *        custom message functions.
+ *
+ * This function peeks a parent node on stack.  See pcmk__xml_push_parent()
+ * for more details. It has no side-effect and can be called for an empty stack.
+ *
+ * \note Little checking is done with this function.
+ *
+ * \param[in,out] out The output functions structure.
+ *
+ * \return NULL if stack is empty, otherwise the parent of the stack.
+ */
+xmlNodePtr
+pcmk__xml_peek_parent(pcmk__output_t *out);
+
 #ifdef __cplusplus
 }
 #endif

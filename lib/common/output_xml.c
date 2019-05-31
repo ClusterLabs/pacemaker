@@ -255,3 +255,13 @@ pcmk__xml_pop_parent(pcmk__output_t *out) {
 
     g_queue_pop_tail(priv->parent_q);
 }
+
+xmlNodePtr
+pcmk__xml_peek_parent(pcmk__output_t *out) {
+    xml_private_t *priv = out->priv;
+
+    CRM_ASSERT(priv != NULL);
+
+    /* If queue is empty NULL will be returned */
+    return g_queue_peek_tail(priv->parent_q);
+}

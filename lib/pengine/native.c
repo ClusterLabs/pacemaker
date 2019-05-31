@@ -767,6 +767,73 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
+int
+pe__resource_xml(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *rsc_state = native_displayable_state(rsc, options);
+
+    long is_print_pending = options & pe_print_pending;
+    long is_print_dev = options & pe_print_dev;
+
+    char ra_name[LINE_MAX];
+    char *nodes_running_on = NULL;
+    char *priority = NULL;
+    int rc = 0;
+
+    CRM_ASSERT(rsc->variant == pe_native);
+
+    /* resource information. */
+    sprintf(ra_name, "%s%s%s:%s", class, prov ? "::" : "", prov ? prov : ""
+           , crm_element_value(rsc->xml, XML_ATTR_TYPE));
+
+    nodes_running_on = crm_itoa(g_list_length(rsc->running_on));
+    priority = crm_ftoa(rsc->priority);
+
+    rc = pe__name_and_nvpairs_xml(out, true, "resource", 16
+                 , "id", rsc_printable_id(rsc)
+                 , "resource_agent", ra_name
+                 , "role", rsc_state
+                 , "target_role", (rsc->meta ? g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE) : NULL)
+                 , "active ", BOOL2STR(rsc->fns->active(rsc, TRUE))
+                 , "orphaned", BOOL2STR(is_set(rsc->flags, pe_rsc_orphan))
+                 , "blocked", BOOL2STR(is_set(rsc->flags, pe_rsc_block))
+                 , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
+                 , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
+                 , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
+                 , "nodes_running_on", nodes_running_on
+                 , "pending", (is_print_pending ? native_pending_task(rsc) : NULL)
+                 , "provisional", (is_print_dev ? BOOL2STR(is_set(rsc->flags, pe_rsc_provisional)) : NULL)
+                 , "runnable", (is_print_dev ? BOOL2STR(is_set(rsc->flags, pe_rsc_runnable)) : NULL)
+                 , "priority", (is_print_dev ? priority : NULL)
+                 , "variant", (is_print_dev ? crm_element_name(rsc->xml) : NULL));
+    free(priority);
+    free(nodes_running_on);
+
+    CRM_ASSERT(rc == 0);
+
+    if (rsc->running_on != NULL) {
+        GListPtr gIter = rsc->running_on;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            node_t *node = (node_t *) gIter->data;
+
+            rc = pe__name_and_nvpairs_xml(out, false, "node", 3
+                                          , "name", node->details->uname
+                                          , "id", node->details->id
+                                          , "cached", BOOL2STR(node->details->online));
+            CRM_ASSERT(rc == 0);
+        }
+    }
+
+    pcmk__xml_pop_parent(out);
+    return rc;
+}
+
 void
 native_free(resource_t * rsc)
 {

@@ -65,6 +65,12 @@ crm_itoa(int an_int)
     return crm_strdup_printf("%d", an_int);
 }
 
+static inline char *
+crm_ftoa(double a_float)
+{
+    return crm_strdup_printf("%f", a_float);
+}
+
 /*!
  * \brief Create hash table with dynamically allocated string keys/values
  *
