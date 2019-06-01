@@ -647,8 +647,14 @@ get_agent_metadata(const char *agent)
 
     } else if(buffer == NULL) {
         stonith_t *st = stonith_api_new();
-        int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+        int rc;
 
+        if (st == NULL) {
+            crm_warn("Could not get agent meta-data: "
+                     "API memory allocation failed");
+            return NULL;
+        }
+        rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
         stonith_api_delete(st);
         if (rc || !buffer) {
             crm_err("Could not retrieve metadata for fencing agent %s", agent);

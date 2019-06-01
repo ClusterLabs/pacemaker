@@ -690,14 +690,15 @@ main(int argc, char **argv)
     }
 
     st = stonith_api_new();
-
-    if (!no_connect) {
+    if (st == NULL) {
+        rc = -ENOMEM;
+    } else if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
-        if (rc < 0) {
-            out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
-            exit_code = CRM_EX_DISCONNECT;
-            goto done;
-        }
+    }
+    if (rc < 0) {
+        out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
+        exit_code = CRM_EX_DISCONNECT;
+        goto done;
     }
 
     switch (action) {

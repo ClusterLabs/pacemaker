@@ -570,6 +570,10 @@ te_connect_stonith(gpointer user_data)
 
     if (stonith_api == NULL) {
         stonith_api = stonith_api_new();
+        if (stonith_api == NULL) {
+            crm_err("Could not connect to fencer: API memory allocation failed");
+            return TRUE;
+        }
     }
 
     if (stonith_api->state != stonith_disconnected) {

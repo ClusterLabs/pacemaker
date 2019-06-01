@@ -631,8 +631,11 @@ main(int argc, char **argv)
         crm_help('?', CRM_EX_USAGE);
     }
 
-    crm_debug("Create");
     st = stonith_api_new();
+    if (st == NULL) {
+        crm_err("Could not connect to fencer: API memory allocation failed");
+        crm_exit(CRM_EX_DISCONNECT);
+    }
 
     switch (mode) {
         case test_standard:

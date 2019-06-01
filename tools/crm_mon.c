@@ -297,7 +297,7 @@ cib_connect(gboolean full)
         st = stonith_api_new();
     }
 
-    if ((fence_connect) && (st->state == stonith_disconnected)) {
+    if (fence_connect && (st != NULL) && (st->state == stonith_disconnected)) {
         rc = st->cmds->connect(st, crm_system_name, NULL);
         if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
