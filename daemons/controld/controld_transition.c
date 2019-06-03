@@ -18,7 +18,6 @@
 
 
 extern crm_graph_functions_t te_graph_fns;
-stonith_t *stonith_api = NULL;
 
 static void
 global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -22,6 +22,7 @@
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
+#include <controld_fencing.h>
 #include <controld_transition.h>
 #include <controld_membership.h>
 

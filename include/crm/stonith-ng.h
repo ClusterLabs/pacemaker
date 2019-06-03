@@ -430,6 +430,10 @@ void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
 void stonith_history_free(stonith_history_t *history);
 
+// Convenience functions
+int stonith_api_connect_retry(stonith_t *st, const char *name,
+                              int max_attempts);
+
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
  *

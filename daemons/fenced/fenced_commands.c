@@ -996,7 +996,7 @@ target_list_type(stonith_device_t * dev)
     return check_type;
 }
 
-void
+static void
 schedule_internal_command(const char *origin,
                           stonith_device_t * device,
                           const char *action,

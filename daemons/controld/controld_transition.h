@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -12,15 +12,6 @@
 #  include <crm/common/mainloop.h>
 #  include <crm/stonith-ng.h>
 #  include <crm/services.h>
-extern stonith_t *stonith_api;
-extern void send_stonith_update(crm_action_t * stonith_action, const char *target,
-                                const char *uuid);
-
-/* stonith cleanup list */
-void add_stonith_cleanup(const char *target);
-void remove_stonith_cleanup(const char *target);
-void purge_stonith_cleanup(void);
-void execute_stonith_cleanup(void);
 
 /* tengine */
 extern crm_action_t *match_down_event(const char *target);
@@ -46,16 +37,11 @@ extern char *te_uuid;
 
 extern void notify_crmd(crm_graph_t * graph);
 
-void cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
-                         void *user_data);
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data);
 gboolean action_timer_callback(gpointer data);
 gboolean te_graph_trigger(gpointer user_data);
 void te_update_diff(const char *event, xmlNode *msg);
-void tengine_stonith_callback(stonith_t *stonith,
-                              stonith_callback_data_t *data);
-void update_stonith_max_attempts(const char* value);
 
 extern void trigger_graph_processing(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum transition_action abort_action,
@@ -68,12 +54,7 @@ extern void abort_transition_graph(int abort_priority, enum transition_action ab
 #  define abort_transition(pri, action, text, reason)			\
 	abort_transition_graph(pri, action, text, reason,__FUNCTION__,__LINE__);
 
-extern gboolean te_connect_stonith(gpointer user_data);
-
-extern void te_trigger_stonith_history_sync(void);
-
 extern crm_trigger_t *transition_trigger;
-extern crm_trigger_t *stonith_reconnect;
 
 extern char *failed_stop_offset;
 extern char *failed_start_offset;

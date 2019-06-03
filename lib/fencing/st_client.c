@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -833,7 +833,7 @@ stonith_action_execute_async(stonith_action_t * action,
                              void (*fork_cb) (GPid pid, gpointer user_data))
 {
     if (!action) {
-        return -1;
+        return -EINVAL;
     }
 
     action->userdata = userdata;
@@ -1415,14 +1415,21 @@ static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
     int rc = pcmk_ok;
-    stonith_private_t *native = stonith->st_private;
+    stonith_private_t *native = NULL;
+    const char *display_name = name? name : "client";
 
     static struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
         .destroy = stonith_connection_destroy
     };
 
-    crm_trace("Connecting command channel");
+    CRM_CHECK(stonith != NULL, return -EINVAL);
+
+    native = stonith->st_private;
+    CRM_ASSERT(native != NULL);
+
+    crm_debug("Attempting fencer connection by %s with%s mainloop",
+              display_name, (stonith_fd? "out" : ""));
 
     stonith->state = stonith_connected_command;
     if (stonith_fd) {
@@ -1432,8 +1439,9 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to fencer failed");
-            rc = -ENOTCONN;
+            crm_ipc_close(native->ipc);
+            crm_ipc_destroy(native->ipc);
+            native->ipc = NULL;
         }
 
     } else {
@@ -1444,11 +1452,8 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     }
 
     if (native->ipc == NULL) {
-        crm_debug("Could not connect to the Stonith API");
         rc = -ENOTCONN;
-    }
-
-    if (rc == pcmk_ok) {
+    } else {
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
@@ -1458,11 +1463,12 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if (rc < 0) {
-            crm_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
+            crm_debug("Couldn't register with the fencer: %s "
+                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             rc = -ECOMM;
 
         } else if (reply == NULL) {
-            crm_err("Did not receive registration reply");
+            crm_debug("Couldn't register with the fencer: no reply");
             rc = -EPROTO;
 
         } else {
@@ -1470,18 +1476,23 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             const char *tmp_ticket = crm_element_value(reply, F_STONITH_CLIENTID);
 
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
-                crm_err("Invalid registration message: %s", msg_type);
-                crm_log_xml_err(reply, "Bad reply");
+                crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
+                          (msg_type? msg_type : "(missing)"));
+                crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else if (tmp_ticket == NULL) {
-                crm_err("No registration token provided");
-                crm_log_xml_err(reply, "Bad reply");
+                crm_debug("Couldn't register with the fencer: no token in reply");
+                crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else {
-                crm_trace("Obtained registration token: %s", tmp_ticket);
                 native->token = strdup(tmp_ticket);
+#if HAVE_MSGFROMIPC_TIMEOUT
+                stonith->call_timeout = MAX_IPC_DELAY;
+#endif
+                crm_debug("Connection to fencer by %s succeeded (registration token: %s)",
+                          display_name, native->token);
                 rc = pcmk_ok;
             }
         }
@@ -1490,16 +1501,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         free_xml(hello);
     }
 
-    if (rc == pcmk_ok) {
-#if HAVE_MSGFROMIPC_TIMEOUT
-        stonith->call_timeout = MAX_IPC_DELAY;
-#endif
-        crm_debug("Connection to fencer successful");
-        return pcmk_ok;
+    if (rc != pcmk_ok) {
+        crm_debug("Connection attempt to fencer by %s failed: %s "
+                  CRM_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
+        stonith->cmds->disconnect(stonith);
     }
-
-    crm_debug("Connection to fencer failed: %s", pcmk_strerror(rc));
-    stonith->cmds->disconnect(stonith);
     return rc;
 }
 
@@ -2071,6 +2077,36 @@ stonith_api_new(void)
     return new_stonith;
 }
 
+/*!
+ * \brief Make a blocking connection attempt to the fencer
+ *
+ * \param[in,out] st            Fencer API object
+ * \param[in]     name          Client name to use with fencer
+ * \param[in]     max_attempts  Return error if this many attempts fail
+ *
+ * \return pcmk_ok on success, result of last attempt otherwise
+ */
+int
+stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
+{
+    int rc = -EINVAL; // if max_attempts is not positive
+
+    for (int attempt = 1; attempt <= max_attempts; attempt++) {
+        rc = st->cmds->connect(st, name, NULL);
+        if (rc == pcmk_ok) {
+            return pcmk_ok;
+        } else if (attempt < max_attempts) {
+            crm_notice("Fencer connection attempt %d of %d failed (retrying in 2s): %s "
+                       CRM_XS " rc=%d",
+                       attempt, max_attempts, pcmk_strerror(rc), rc);
+            sleep(2);
+        }
+    }
+    crm_notice("Could not connect to fencer: %s " CRM_XS " rc=%d",
+               pcmk_strerror(rc), rc);
+    return rc;
+}
+
 stonith_key_value_t *
 stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
 {
@@ -2122,85 +2158,78 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 int
 stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
-    char *name = NULL;
-    const char *action = "reboot";
-
-    int rc = -EPROTO;
-    stonith_t *st = NULL;
-    enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
+    int rc = pcmk_ok;
+    stonith_t *st = stonith_api_new();
+    const char *action = off? "off" : "reboot";
 
     api_log_open();
-    st = stonith_api_new();
-    if (st) {
-        rc = st->cmds->connect(st, "stonith-api", NULL);
-        if(rc != pcmk_ok) {
-            api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+    if (st == NULL) {
+        api_log(LOG_ERR, "API initialization failed, could not kick (%s) node %u/%s",
+                action, nodeid, uname);
+        return -EPROTO;
+    }
+
+    rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (rc != pcmk_ok) {
+        api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)",
+                action, nodeid, uname, pcmk_strerror(rc), rc);
+    } else {
+        char *name = NULL;
+        enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
+
+        if (uname != NULL) {
+            name = strdup(uname);
+        } else if (nodeid > 0) {
+            opts |= st_opt_cs_nodeid;
+            name = crm_itoa(nodeid);
         }
-    }
-
-    if (uname != NULL) {
-        name = strdup(uname);
-
-    } else if (nodeid > 0) {
-        opts |= st_opt_cs_nodeid;
-        name = crm_itoa(nodeid);
-    }
-
-    if (off) {
-        action = "off";
-    }
-
-    if (rc == pcmk_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout, 0);
-        if(rc != pcmk_ok) {
-            api_log(LOG_ERR, "Could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+        free(name);
+
+        if (rc != pcmk_ok) {
+            api_log(LOG_ERR, "Could not kick (%s) node %u/%s : %s (%d)",
+                    action, nodeid, uname, pcmk_strerror(rc), rc);
         } else {
-            api_log(LOG_NOTICE, "Node %u/%s kicked: %s ", nodeid, uname, action);
+            api_log(LOG_NOTICE, "Node %u/%s kicked: %s", nodeid, uname, action);
         }
     }
 
-    if (st) {
-        st->cmds->disconnect(st);
-        stonith_api_delete(st);
-    }
-
-    free(name);
+    stonith_api_delete(st);
     return rc;
 }
 
 time_t
 stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 {
-    int rc = 0;
-    char *name = NULL;
-
+    int rc = pcmk_ok;
     time_t when = 0;
-    stonith_t *st = NULL;
+    stonith_t *st = stonith_api_new();
     stonith_history_t *history = NULL, *hp = NULL;
-    enum stonith_call_options opts = st_opt_sync_call;
 
-    st = stonith_api_new();
-    if (st) {
-        rc = st->cmds->connect(st, "stonith-api", NULL);
-        if(rc != pcmk_ok) {
-            api_log(LOG_NOTICE, "Connection failed: %s (%d)", pcmk_strerror(rc), rc);
-        }
+    if (st == NULL) {
+        api_log(LOG_ERR, "Could not retrieve fence history for %u/%s: "
+                "API initialization failed", nodeid, uname);
+        return when;
     }
 
-    if (uname != NULL) {
-        name = strdup(uname);
-
-    } else if (nodeid > 0) {
-        opts |= st_opt_cs_nodeid;
-        name = crm_itoa(nodeid);
-    }
-
-    if (st && rc == pcmk_ok) {
+    rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (rc != pcmk_ok) {
+        api_log(LOG_NOTICE, "Connection failed: %s (%d)", pcmk_strerror(rc), rc);
+    } else {
         int entries = 0;
         int progress = 0;
         int completed = 0;
+        char *name = NULL;
+        enum stonith_call_options opts = st_opt_sync_call;
 
+        if (uname != NULL) {
+            name = strdup(uname);
+        } else if (nodeid > 0) {
+            opts |= st_opt_cs_nodeid;
+            name = crm_itoa(nodeid);
+        }
         rc = st->cmds->history(st, opts, name, &history, 120);
+        free(name);
 
         for (hp = history; hp; hp = hp->next) {
             entries++;
@@ -2227,15 +2256,11 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         }
     }
 
-    if (st) {
-        st->cmds->disconnect(st);
-        stonith_api_delete(st);
-    }
+    stonith_api_delete(st);
 
     if(when) {
         api_log(LOG_INFO, "Node %u/%s last kicked at: %ld", nodeid, uname, (long int)when);
     }
-    free(name);
     return when;
 }
 

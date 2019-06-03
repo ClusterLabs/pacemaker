@@ -65,28 +65,20 @@ get_stonith_connection(void)
         stonith_api = NULL;
     }
 
-    if (!stonith_api) {
-        int rc = 0;
-        int tries = 10;
+    if (stonith_api == NULL) {
+        int rc = pcmk_ok;
 
         stonith_api = stonith_api_new();
-        do {
-            rc = stonith_api->cmds->connect(stonith_api, "pacemaker-execd", NULL);
-            if (rc == pcmk_ok) {
-                stonith_api->cmds->register_notification(stonith_api,
-                                                         T_STONITH_NOTIFY_DISCONNECT,
-                                                         stonith_connection_destroy_cb);
-                break;
-            }
-            sleep(1);
-            tries--;
-        } while (tries);
-
-        if (rc) {
-            crm_err("Unable to connect to stonith daemon to execute command. error: %s",
-                    pcmk_strerror(rc));
+        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 10);
+        if (rc != pcmk_ok) {
+            crm_err("Could not connect to fencer in 10 attempts: %s "
+                    CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             stonith_api_delete(stonith_api);
             stonith_api = NULL;
+        } else {
+            stonith_api->cmds->register_notification(stonith_api,
+                                                     T_STONITH_NOTIFY_DISCONNECT,
+                                                     stonith_connection_destroy_cb);
         }
     }
     return stonith_api;

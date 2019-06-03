@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -244,16 +244,6 @@ int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 gboolean string_in_list(GListPtr list, const char *item);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
-
-void
-schedule_internal_command(const char *origin,
-                          stonith_device_t * device,
-                          const char *action,
-                          const char *victim,
-                          int timeout,
-                          void *internal_user_data,
-                          void (*done_cb) (GPid pid, int rc, const char *output,
-                                           gpointer user_data));
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;

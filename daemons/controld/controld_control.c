@@ -25,6 +25,7 @@
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
+#include <controld_fencing.h>
 #include <controld_alerts.h>
 #include <controld_metadata.h>
 #include <controld_transition.h>
@@ -112,14 +113,7 @@ do_shutdown(long long action,
 {
     /* just in case */
     set_bit(fsa_input_register, R_SHUTDOWN);
-
-    if (stonith_api) {
-        /* Prevent it from coming up again */
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
-
-        crm_info("Disconnecting from fencer");
-        stonith_api->cmds->disconnect(stonith_api);
-    }
+    controld_disconnect_fencer(FALSE);
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -147,7 +141,6 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
-extern char *te_client_id;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
@@ -201,12 +194,7 @@ crmd_exit(crm_exit_t exit_code)
 
     controld_close_attrd_ipc();
     pe_subsystem_free();
-
-    if(stonith_api) {
-        crm_trace("Disconnecting fencing API");
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
-        stonith_api->cmds->free(stonith_api); stonith_api = NULL;
-    }
+    controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
         crm_debug("No mainloop detected");
@@ -258,7 +246,6 @@ crmd_exit(crm_exit_t exit_code)
     mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
 
     mainloop_destroy_trigger(config_read); config_read = NULL;
-    mainloop_destroy_trigger(stonith_reconnect); stonith_reconnect = NULL;
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
     crm_client_cleanup();
@@ -288,7 +275,6 @@ crmd_exit(crm_exit_t exit_code)
     free(fsa_cluster_name); fsa_cluster_name = NULL;
 
     free(te_uuid); te_uuid = NULL;
-    free(te_client_id); te_client_id = NULL;
     free(fsa_pe_ref); fsa_pe_ref = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
@@ -627,14 +613,7 @@ do_started(long long action,
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-
-    if (stonith_reconnect == NULL) {
-        int dummy;
-
-        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW, te_connect_stonith, &dummy);
-    }
-    set_bit(fsa_input_register, R_ST_REQUIRED);
-    mainloop_set_trigger(stonith_reconnect);
+    controld_trigger_fencer_connect();
 
     crm_notice("Pacemaker controller successfully started and accepting connections");
     clear_bit(fsa_input_register, R_STARTING);
