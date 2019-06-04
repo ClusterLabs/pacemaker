@@ -1,25 +1,6 @@
-* Thu May 30 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc3
-- Changesets: 8
-- Diff:       5 files changed, 36 insertions(+), 11 deletions(-)
-
-- Features added since Pacemaker-2.0.2-rc2
-
-- Changes since Pacemaker-2.0.2-rc2
-  + libstonithd: avoid use-after-free when retrying a failed action
-  + libcrmcommon: export logfile environment variable if using default
-
-* Mon May 20 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc2
-- Changesets: 19
-- Diff:       11 files changed, 63 insertions(+), 37 deletions(-)
-
-- Changes since Pacemaker-2.0.2-rc1
-  + controller: avoid memory leak when duplicate monitor is scheduled
-  + fencing: avoid use-after-free on early failure return
-  + libcrmcommon: avoid segfault when beginning formatted text list
-
-* Wed Apr 24 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-rc1
-- Changesets: 258
-- Diff:       225 files changed, 28421 insertions(+), 24443 deletions(-)
+* Tue Jun 04 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2-1
+- Changesets: 288
+ 225 files changed, 28494 insertions(+), 24465 deletions(-)
 
 - Features added since Pacemaker-2.0.1
   + tools: crm_resource --validate can get resource parameters from command line
@@ -32,9 +13,12 @@
   + Important security fixes for CVE-2018-16878, CVE-2018-16877, CVE-2019-3885
   + build: crm_report bug report URL is now configurable at build time
   + build: private libpengine/libtransitioner libraries combined as libpacemaker
+  + controller: avoid memory leak when duplicate monitor is scheduled
   + scheduler: respect order constraints when resources are being probed
   + scheduler: one group stop shouldn't make another required
   + libcrmcommon: handle out-of-range integers in configuration better
+  + libcrmcommon: export logfile environment variable if using default
+  + libcrmcommon: avoid segmentation fault when beginning formatted text list
   + libcrmservice: fix use-after-free memory error in alert handling
   + libstonithd: handle more than 64KB output from fence agents
 
