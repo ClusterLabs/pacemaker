@@ -1444,6 +1444,8 @@ dnl    PAM
 dnl ========================================================================
 
 AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
+AM_CONDITIONAL([HAVE_PAM], [test $HAVE_SECURITY_PAM_APPL_H = 1
+                            || test $HAVE_PAM_PAM_APPL_H = 1])
 
 dnl ========================================================================
 dnl    System Health
@@ -1806,6 +1808,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
+                data/Makefile                                       \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
