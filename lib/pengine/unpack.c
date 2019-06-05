@@ -3163,7 +3163,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return FALSE);
-    CRM_CHECK(status <= PCMK_LRM_OP_NOT_CONNECTED, return FALSE);
+    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return FALSE);
     CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
 
     if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
@@ -3305,6 +3305,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
         case PCMK_LRM_OP_NOT_CONNECTED:
+        case PCMK_LRM_OP_INVALID:
 
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
             if ((failure_strategy == action_fail_ignore)

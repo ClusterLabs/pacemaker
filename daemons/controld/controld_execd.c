@@ -2254,8 +2254,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
                    operation, rsc->id, fsa_state2string(fsa_state),
                    is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
 
-        op->rc = CRM_DIRECT_NACK_RC;
-        op->op_status = PCMK_LRM_OP_ERROR;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->op_status = PCMK_LRM_OP_INVALID;
         send_direct_ack(NULL, NULL, rsc, op, rsc->id);
         lrmd_free_event(op);
         free(op_id);
@@ -2539,6 +2539,10 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
             case PCMK_LRM_OP_NOT_CONNECTED:
                 op->op_status = PCMK_LRM_OP_ERROR;
                 op->rc = PCMK_OCF_CONNECTION_DIED;
+                break;
+            case PCMK_LRM_OP_INVALID:
+                op->op_status = PCMK_LRM_OP_ERROR;
+                op->rc = CRM_DIRECT_NACK_RC;
                 break;
             default:
                 break;

@@ -127,6 +127,7 @@ enum op_status {
     PCMK_LRM_OP_ERROR_FATAL,
     PCMK_LRM_OP_NOT_INSTALLED,
     PCMK_LRM_OP_NOT_CONNECTED,
+    PCMK_LRM_OP_INVALID,
 };
 
 enum nagios_exitcode {
@@ -339,6 +340,7 @@ gboolean services_alert_async(svc_action_t *action,
                 case PCMK_LRM_OP_ERROR:return "Error";
                 case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
                 case PCMK_LRM_OP_NOT_CONNECTED:return "No executor connection";
+                case PCMK_LRM_OP_INVALID:return "Cannot execute now";
                 default:return "UNKNOWN!";
         }
     }
