@@ -1424,8 +1424,22 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
+/*!
+ * \internal
+ * \brief Fail a requested action without actually executing it
+ *
+ * For an action that can't be executed, process it similarly to an actual
+ * execution result, with specified error status (except for notify actions,
+ * which will always be treated as successful).
+ *
+ * \param[in] lrm_state  Executor connection that action is for
+ * \param[in] action     Action XML from request
+ * \param[in] rc         Desired return code to use
+ * \param[in] op_status  Desired operation status to use
+ */
 static void
-synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc) 
+synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
+                        int op_status, enum ocf_exitcode rc)
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
@@ -1451,7 +1465,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     if (safe_str_eq(operation, RSC_NOTIFY)) { // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_OK);
     } else {
-        fake_op_status(lrm_state, op, PCMK_LRM_OP_ERROR, rc);
+        fake_op_status(lrm_state, op, op_status, rc);
     }
 
     crm_info("Faking " CRM_OP_FMT " result (%d) on %s",
@@ -1744,7 +1758,8 @@ do_lrm_invoke(long long action,
     if ((lrm_state == NULL) && is_remote_node) {
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
-        synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
+        synthesize_lrmd_failure(NULL, input->xml, PCMK_LRM_OP_ERROR,
+                                PCMK_OCF_CONNECTION_DIED);
         return;
     }
     CRM_ASSERT(lrm_state != NULL);
@@ -1800,7 +1815,7 @@ do_lrm_invoke(long long action,
 
         rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
         if (rc == -ENOTCONN) {
-            synthesize_lrmd_failure(lrm_state, input->xml,
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
                                     PCMK_OCF_CONNECTION_DIED);
             return;
 
@@ -1822,7 +1837,7 @@ do_lrm_invoke(long long action,
             // Resource operation on malformed resource
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
-            synthesize_lrmd_failure(lrm_state, input->xml,
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
                                     PCMK_OCF_NOT_CONFIGURED); // fatal error
             return;
 
@@ -1832,7 +1847,7 @@ do_lrm_invoke(long long action,
                     CRM_XS " rc=%d",
                     ID(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
-            synthesize_lrmd_failure(lrm_state, input->xml,
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
                                     PCMK_OCF_INVALID_PARAM); // hard error
             return;
         }
