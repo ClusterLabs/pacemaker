@@ -144,6 +144,7 @@ publican.cfg
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
 /maint/testcc
+/maint/mocked/based
 scratch
 /tools/attrd_updater
 /tools/cibadmin
