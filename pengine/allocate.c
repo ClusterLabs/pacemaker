@@ -2091,14 +2091,13 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                        pe_order_implies_first, data_set);
 
             } else if(state == remote_state_failed) {
-                /* We would only be here if the resource is
-                 * running on the remote node.  Since we have no
-                 * way to stop it, it is necessary to fence the
-                 * node.
+                /* The resource is active on the node, but since we don't have a
+                 * valid connection, the only way to stop the resource is by
+                 * fencing the node. There is no need to order the stop relative
+                 * to the remote connection, since the stop will become implied
+                 * by the fencing.
                  */
                 pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
-                order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first, data_set);
 
             } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
                 /* State must be remote_state_unknown or remote_state_stopped.
