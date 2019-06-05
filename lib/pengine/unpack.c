@@ -3299,12 +3299,25 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
             unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
             break;
 
+        case PCMK_LRM_OP_NOT_CONNECTED:
+            if (pe__is_guest_or_remote_node(node)
+                && is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
+                /* We should never get into a situation where a managed remote
+                 * connection resource is considered OK but a resource action
+                 * behind the connection gets a "not connected" status. But as a
+                 * fail-safe in case a bug or unusual circumstances do lead to
+                 * that, ensure the remote connection is considered failed.
+                 */
+                set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+            }
+
+            // fall through
+
         case PCMK_LRM_OP_ERROR:
         case PCMK_LRM_OP_ERROR_HARD:
         case PCMK_LRM_OP_ERROR_FATAL:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
-        case PCMK_LRM_OP_NOT_CONNECTED:
         case PCMK_LRM_OP_INVALID:
 
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
