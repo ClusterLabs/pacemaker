@@ -3068,7 +3068,7 @@ class RemoteStonithd(RemoteDriver):
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
-            r"error: Result of monitor operation for .* on remote-.*: Error",
+            r"error: Result of monitor operation for .* on remote-.*: No executor connection",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))

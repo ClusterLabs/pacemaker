@@ -395,6 +395,7 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_LRM_OP_NOTSUPPORTED:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_ERROR:
+        case PCMK_LRM_OP_NOT_CONNECTED:
             return TRUE;
             break;
 

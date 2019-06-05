@@ -1758,8 +1758,8 @@ do_lrm_invoke(long long action,
     if ((lrm_state == NULL) && is_remote_node) {
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
-        synthesize_lrmd_failure(NULL, input->xml, PCMK_LRM_OP_ERROR,
-                                PCMK_OCF_CONNECTION_DIED);
+        synthesize_lrmd_failure(NULL, input->xml, PCMK_LRM_OP_NOT_CONNECTED,
+                                PCMK_OCF_UNKNOWN_ERROR);
         return;
     }
     CRM_ASSERT(lrm_state != NULL);
@@ -1815,8 +1815,9 @@ do_lrm_invoke(long long action,
 
         rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
         if (rc == -ENOTCONN) {
-            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
-                                    PCMK_OCF_CONNECTION_DIED);
+            synthesize_lrmd_failure(lrm_state, input->xml,
+                                    PCMK_LRM_OP_NOT_CONNECTED,
+                                    PCMK_OCF_UNKNOWN_ERROR);
             return;
 
         } else if ((rc < 0) && !create_rsc) {
@@ -2531,6 +2532,18 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(op->rsc_id != NULL, return);
+
+    // Remap new status codes for older DCs
+    if (compare_version(fsa_our_dc_version, "3.2.0") < 0) {
+        switch (op->op_status) {
+            case PCMK_LRM_OP_NOT_CONNECTED:
+                op->op_status = PCMK_LRM_OP_ERROR;
+                op->rc = PCMK_OCF_CONNECTION_DIED;
+                break;
+            default:
+                break;
+        }
+    }
 
     op_id = make_stop_id(op->rsc_id, op->call_id);
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval_ms);

@@ -100,7 +100,7 @@ enum ocf_exitcode {
 
 
     /* 150-199	reserved for application use */
-    PCMK_OCF_CONNECTION_DIED = 189, /* Operation failure implied by disconnection of the LRM API to a local or remote node */
+    PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
 
     PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
     PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
@@ -126,6 +126,7 @@ enum op_status {
     PCMK_LRM_OP_ERROR_HARD,
     PCMK_LRM_OP_ERROR_FATAL,
     PCMK_LRM_OP_NOT_INSTALLED,
+    PCMK_LRM_OP_NOT_CONNECTED,
 };
 
 enum nagios_exitcode {
@@ -337,6 +338,7 @@ gboolean services_alert_async(svc_action_t *action,
                 case PCMK_LRM_OP_NOTSUPPORTED:return "NOT SUPPORTED";
                 case PCMK_LRM_OP_ERROR:return "Error";
                 case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
+                case PCMK_LRM_OP_NOT_CONNECTED:return "No executor connection";
                 default:return "UNKNOWN!";
         }
     }

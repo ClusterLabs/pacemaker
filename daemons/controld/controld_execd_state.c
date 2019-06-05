@@ -1,6 +1,8 @@
 /*
  * Copyright 2012-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -76,8 +78,8 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.user_data = op->user_data;
     event.timeout = 0;
     event.interval_ms = op->interval_ms;
-    event.rc = PCMK_OCF_CONNECTION_DIED;
-    event.op_status = PCMK_LRM_OP_ERROR;
+    event.rc = PCMK_OCF_UNKNOWN_ERROR;
+    event.op_status = PCMK_LRM_OP_NOT_CONNECTED;
     event.t_run = op->start_time;
     event.t_rcchange = op->start_time;
 
