@@ -1,4 +1,4 @@
-* Wed May 22 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.21-rc1
+* Thu Jun 6 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.21
 - Changesets: 64
 - Diff:       39 files changed, 1985 insertions(+), 843 deletions(-)
 
