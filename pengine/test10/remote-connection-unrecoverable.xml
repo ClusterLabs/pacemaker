@@ -7,6 +7,7 @@
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1459735110"/>
+        <nvpair id="options-concurrent-fencing" name="concurrent-fencing" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
