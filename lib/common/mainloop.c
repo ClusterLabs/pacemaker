@@ -456,6 +456,65 @@ gio_poll_destroy(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Convert libqb's poll priority into GLib's one
+ *
+ * \param[in] prio  libqb's poll priority (#QB_LOOP_MED assumed as fallback)
+ *
+ * \return  best matching GLib's priority
+ */
+static gint
+conv_prio_libqb2glib(enum qb_loop_priority prio)
+{
+    gint ret = G_PRIORITY_DEFAULT;
+    switch (prio) {
+        case QB_LOOP_LOW:
+            ret = G_PRIORITY_LOW;
+            break;
+        case QB_LOOP_HIGH:
+            ret = G_PRIORITY_HIGH;
+            break;
+        default:
+            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
+                      prio);
+            /* fall-through */
+        case QB_LOOP_MED:
+            break;
+    }
+    return ret;
+}
+
+/*!
+ * \internal
+ * \brief Convert libqb's poll priority to rate limiting spec
+ *
+ * \param[in] prio  libqb's poll priority (#QB_LOOP_MED assumed as fallback)
+ *
+ * \return  best matching rate limiting spec
+ */
+static enum qb_ipcs_rate_limit
+conv_libqb_prio2ratelimit(enum qb_loop_priority prio)
+{
+    /* this is an inversion of what libqb's qb_ipcs_request_rate_limit does */
+    enum qb_ipcs_rate_limit ret = QB_IPCS_RATE_NORMAL;
+    switch (prio) {
+        case QB_LOOP_LOW:
+            ret = QB_IPCS_RATE_SLOW;
+            break;
+        case QB_LOOP_HIGH:
+            ret = QB_IPCS_RATE_FAST;
+            break;
+        default:
+            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
+                      prio);
+            /* fall-through */
+        case QB_LOOP_MED:
+            break;
+    }
+    return ret;
+}
+
 static int32_t
 gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
                          void *data, qb_ipcs_dispatch_fn_t fn, int32_t add)
@@ -502,8 +561,8 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
     adaptor->p = p;
     adaptor->is_used++;
     adaptor->source =
-        g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
-                            gio_poll_destroy);
+        g_io_add_watch_full(channel, conv_prio_libqb2glib(p), evts,
+                            gio_read_socket, adaptor, gio_poll_destroy);
 
     /* Now that mainloop now holds a reference to channel,
      * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
@@ -587,7 +646,15 @@ pick_ipc_type(enum qb_ipc_type requested)
 
 qb_ipcs_service_t *
 mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
-                        struct qb_ipcs_service_handlers * callbacks)
+                        struct qb_ipcs_service_handlers *callbacks)
+{
+    return mainloop_add_ipc_server_with_prio(name, type, callbacks, QB_LOOP_MED);
+}
+
+qb_ipcs_service_t *
+mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
+                                  struct qb_ipcs_service_handlers *callbacks,
+                                  enum qb_loop_priority prio)
 {
     int rc = 0;
     qb_ipcs_service_t *server = NULL;
@@ -598,6 +665,15 @@ mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
 
     crm_client_init();
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
+
+    if (server == NULL) {
+        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
+        return NULL;
+    }
+
+    if (prio != QB_LOOP_MED) {
+        qb_ipcs_request_rate_limit(server, conv_libqb_prio2ratelimit(prio));
+    }
 
 #ifdef HAVE_IPCS_GET_BUFFER_SIZE
     /* All clients should use at least ipc_buffer_max as their buffer size */
