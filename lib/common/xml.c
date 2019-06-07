@@ -1467,22 +1467,53 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
     return target;
 }
 
+typedef struct xml_change_obj_s {
+    xmlNode *change;
+    xmlNode *match;
+} xml_change_obj_t;
+
+static gint
+sort_change_obj_by_position(gconstpointer a, gconstpointer b)
+{
+    const xml_change_obj_t *change_obj_a = a;
+    const xml_change_obj_t *change_obj_b = b;
+    int position_a = -1;
+    int position_b = -1;
+
+    crm_element_value_int(change_obj_a->change, XML_DIFF_POSITION, &position_a);
+    crm_element_value_int(change_obj_b->change, XML_DIFF_POSITION, &position_b);
+
+    if (position_a < position_b) {
+        return -1;
+
+    } else if (position_a > position_b) {
+        return 1;
+    }
+
+    return 0;
+}
+
 static int
 xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     xmlNode *change = NULL;
+    GListPtr change_objs = NULL;
+    GListPtr gIter = NULL;
+
     for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
         xmlNode *match = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
         int position = -1;
 
-        crm_trace("Processing %s %s", change->name, op);
         if(op == NULL) {
             continue;
         }
 
+        crm_trace("Processing %s %s", change->name, op);
+
+        // "delete" changes for XML comments are generated with "position"
         if(strcmp(op, "delete") == 0) {
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
         }
@@ -1502,7 +1533,72 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             rc = -pcmk_err_diff_failed;
             continue;
 
-        } else if(strcmp(op, "create") == 0) {
+        } else if (strcmp(op, "create") == 0 || strcmp(op, "move") == 0) {
+            // Delay the adding of a "create" object
+            xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
+
+            CRM_ASSERT(change_obj != NULL);
+
+            change_obj->change = change;
+            change_obj->match = match;
+
+            change_objs = g_list_append(change_objs, change_obj);
+
+            if (strcmp(op, "move") == 0) {
+                // Temporarily put the "move" object after the last sibling
+                if (match->parent != NULL && match->parent->last != NULL) {
+                    xmlAddNextSibling(match->parent->last, match);
+                }
+            }
+
+        } else if(strcmp(op, "delete") == 0) {
+            free_xml(match);
+
+        } else if(strcmp(op, "modify") == 0) {
+            xmlAttr *pIter = pcmk__first_xml_attr(match);
+            xmlNode *attrs = __xml_first_child(first_named_child(change, XML_DIFF_RESULT));
+
+            if(attrs == NULL) {
+                rc = -ENOMSG;
+                continue;
+            }
+            while(pIter != NULL) {
+                const char *name = (const char *)pIter->name;
+
+                pIter = pIter->next;
+                xml_remove_prop(match, name);
+            }
+
+            for (pIter = pcmk__first_xml_attr(attrs); pIter != NULL; pIter = pIter->next) {
+                const char *name = (const char *)pIter->name;
+                const char *value = crm_element_value(attrs, name);
+
+                crm_xml_add(match, name, value);
+            }
+
+        } else {
+            crm_err("Unknown operation: %s", op);
+            rc = -pcmk_err_diff_failed;
+        }
+    }
+
+    // Changes should be generated in the right order. Double checking.
+    change_objs = g_list_sort(change_objs, sort_change_obj_by_position);
+
+    for (gIter = change_objs; gIter; gIter = gIter->next) {
+        xml_change_obj_t *change_obj = gIter->data;
+        xmlNode *match = change_obj->match;
+        const char *op = NULL;
+        const char *xpath = NULL;
+
+        change = change_obj->change;
+
+        op = crm_element_value(change, XML_DIFF_OP);
+        xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        crm_trace("Continue performing %s on %s with %p", op, xpath, match);
+
+        if(strcmp(op, "create") == 0) {
             int position = 0;
             xmlNode *child = NULL;
             xmlNode *match_child = NULL;
@@ -1570,36 +1666,10 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
                         match->name, ID(match), __xml_offset(match), position, match->prev);
                 rc = -pcmk_err_diff_failed;
             }
-
-        } else if(strcmp(op, "delete") == 0) {
-            free_xml(match);
-
-        } else if(strcmp(op, "modify") == 0) {
-            xmlAttr *pIter = pcmk__first_xml_attr(match);
-            xmlNode *attrs = __xml_first_child(first_named_child(change, XML_DIFF_RESULT));
-
-            if(attrs == NULL) {
-                rc = -ENOMSG;
-                continue;
-            }
-            while(pIter != NULL) {
-                const char *name = (const char *)pIter->name;
-
-                pIter = pIter->next;
-                xml_remove_prop(match, name);
-            }
-
-            for (pIter = pcmk__first_xml_attr(attrs); pIter != NULL; pIter = pIter->next) {
-                const char *name = (const char *)pIter->name;
-                const char *value = crm_element_value(attrs, name);
-
-                crm_xml_add(match, name, value);
-            }
-
-        } else {
-            crm_err("Unknown operation: %s", op);
         }
     }
+
+    g_list_free_full(change_objs, free);
     return rc;
 }
 
