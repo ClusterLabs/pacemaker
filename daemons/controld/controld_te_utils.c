@@ -390,9 +390,18 @@ te_connect_stonith(gpointer user_data)
 {
     int lpc = 0;
     int rc = pcmk_ok;
+    gboolean trigger_stonith_history_sync = FALSE;
 
     if (stonith_api == NULL) {
         stonith_api = stonith_api_new();
+    } else {
+        /* If a node is coming up, DC in the partial cluster
+           is gonna trigger a history-sync.
+           If the stonith_api is there already let's assume
+           we are recovering from something that doesn't
+           necessarily trigger that mechanism on the DC.
+         */
+        trigger_stonith_history_sync = TRUE;
     }
 
     if (stonith_api->state != stonith_disconnected) {
@@ -432,6 +441,12 @@ te_connect_stonith(gpointer user_data)
                                              tengine_stonith_notify);
 
     crm_trace("Connected");
+
+    if (trigger_stonith_history_sync) {
+        crm_debug("Reconnecting fencing daemon ... so trigger history-sync");
+        te_trigger_stonith_history_sync();
+    }
+
     return TRUE;
 }
 
