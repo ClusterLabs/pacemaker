@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -382,6 +373,27 @@ get_cancel_action(const char *id, const char *node)
     return NULL;
 }
 
+void
+confirm_cancel_action(crm_action_t *cancel)
+{
+    const char *op_key = NULL;
+    const char *node_name = NULL;
+
+    CRM_ASSERT(cancel != NULL);
+
+    op_key = crm_element_value(cancel->xml, XML_LRM_ATTR_TASK_KEY);
+    node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
+
+    stop_te_timer(cancel->timer);
+    te_action_confirmed(cancel);
+    update_graph(transition_graph, cancel);
+
+    crm_info("Cancellation of %s on %s confirmed (action %d)",
+             op_key, node_name, cancel->id);
+
+    trigger_graph();
+}
+
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
 #define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
                      "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UUID "='%s']"
@@ -495,8 +507,32 @@ process_graph_event(xmlNode *event, const char *event_node)
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 
     } else if (transition_graph->id != transition_num) {
-        desc = "arrived really late";
-        abort_transition(INFINITY, tg_restart, "Old event", event);
+        int interval_ms = 0;
+
+        if (parse_op_key(id, NULL, NULL, &interval_ms)
+            && (interval_ms != 0)) {
+            /* Recurring actions have the transition number they were first
+             * scheduled in.
+             */
+
+            if (status == PCMK_LRM_OP_CANCELLED) {
+                const char *node_id = get_node_id(event);
+
+                action = get_cancel_action(id, node_id);
+                if (action) {
+                    confirm_cancel_action(action);
+                }
+                goto bail;
+            }
+
+            desc = "arrived after initial scheduling";
+            abort_transition(INFINITY, tg_restart, "Change in recurring result",
+                             event);
+
+        } else {
+            desc = "arrived really late";
+            abort_transition(INFINITY, tg_restart, "Old event", event);
+        }
 
     } else if (transition_graph->complete) {
         desc = "arrived late";
