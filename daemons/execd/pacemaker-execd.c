@@ -429,6 +429,14 @@ static void spawn_pidone(int argc, char **argv, char **envp)
         return;
     }
 
+    /* Containers can be expected to have /var/log, but they may not have
+     * /var/log/pacemaker, so use a different default if no value has been
+     * explicitly configured in the container's environment.
+     */
+    if (daemon_option("logfile") == NULL) {
+        set_daemon_option("logfile", "/var/log/pcmk-init.log");
+    }
+
     sigfillset(&set);
     sigprocmask(SIG_BLOCK, &set, 0);
 

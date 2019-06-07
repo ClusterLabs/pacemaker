@@ -228,7 +228,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -396,7 +396,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -562,7 +562,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -894,7 +894,7 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
 static void
 mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
-          const char *target, const char *options, int flags)
+          const char *target, const char *options, uint32_t flags)
 {
     pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
 
@@ -1142,11 +1142,11 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         const char *source = crm_element_value(xml_child, "source-dir");
         const char *target = crm_element_value(xml_child, "target-dir");
         const char *options = crm_element_value(xml_child, "options");
-        int flags = 0;
+        int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
             source = crm_element_value(xml_child, "source-dir-root");
-            flags = 1;
+            set_bit(flags, pe__bundle_mount_subdir);
         }
 
         if (source && target) {
@@ -1251,9 +1251,10 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
          * reasonable.
          */
         mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
-                  DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
+                  DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
 
-        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
+        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
+                  pe__bundle_mount_subdir);
 
         port = calloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {
