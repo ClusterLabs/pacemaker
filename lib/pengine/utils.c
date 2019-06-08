@@ -2510,3 +2510,23 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Check whether shutdown has been requested for a node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return TRUE if node has shutdown attribute set and nonzero, FALSE otherwise
+ * \note This differs from simply using node->details->shutdown in that it can
+ *       be used before that has been determined (and in fact to determine it),
+ *       and it can also be used to distinguish requested shutdown from implicit
+ *       shutdown of remote nodes by virtue of their connection stopping.
+ */
+bool
+pe__shutdown_requested(pe_node_t *node)
+{
+    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+
+    return shutdown && strcmp(shutdown, "0");
+}

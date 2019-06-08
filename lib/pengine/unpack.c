@@ -909,7 +909,6 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     const char *resource_discovery_enabled = NULL;
     xmlNode *attrs = NULL;
     resource_t *rsc = NULL;
-    const char *shutdown = NULL;
 
     if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
         return;
@@ -931,8 +930,7 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
-    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
-    if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+    if (pe__shutdown_requested(this_node)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
         if (rsc) {
@@ -1392,7 +1390,6 @@ gboolean
 determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set_t * data_set)
 {
     gboolean online = FALSE;
-    const char *shutdown = NULL;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
     if (this_node == NULL) {
@@ -1402,9 +1399,8 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
-    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
 
-    if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+    if (pe__shutdown_requested(this_node)) {
         this_node->details->shutdown = TRUE;
 
     } else if (safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
