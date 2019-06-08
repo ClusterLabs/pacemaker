@@ -17,9 +17,9 @@ Transition Summary:
  * Move       fake2       ( c7auto4 -> c7auto1 )  
 
 Executing cluster transition:
+ * Resource action: c7auto4         stop on c7auto1
  * Fencing c7auto4 (reboot)
  * Pseudo action:   fake2_stop_0
- * Resource action: c7auto4         stop on c7auto1
  * Resource action: fake2           start on c7auto1
  * Resource action: fake2           monitor=10000 on c7auto1
 

@@ -54,6 +54,7 @@ Transition Summary:
  * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:
+ * Pseudo action:   messaging-1_stop_0
  * Pseudo action:   galera-0_stop_0
  * Pseudo action:   galera-2_stop_0
  * Pseudo action:   redis-master_pre_notify_stop_0
@@ -92,7 +93,6 @@ Executing cluster transition:
  * Pseudo action:   ip-172.17.1.17_stop_0
  * Pseudo action:   ip-172.17.4.11_stop_0
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 monitor=60000 on controller-2
- * Pseudo action:   messaging-1_stop_0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
  * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
