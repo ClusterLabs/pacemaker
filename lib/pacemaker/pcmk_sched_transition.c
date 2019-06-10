@@ -653,7 +653,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
 
-        if (pe_find_resource(fake_resource_list, longname)) {
+        if (longname && pe_find_resource(fake_resource_list, longname)) {
             resource = longname;
         }
     }
