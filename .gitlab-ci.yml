@@ -58,6 +58,7 @@ stages:
                                 libtool
                                 libtool-ltdl-devel
                                 make
+                                bison
   # with these two, first word denotes also the derived value of CC variable
   GLOBAL_RPM_BR_GCC:            gcc
   GLOBAL_RPM_BR_CLANG:          clang  # compiler-rt  # for when with coverage

@@ -36,18 +36,30 @@
 #  --aux-dir=. \
 #  --lgpl=2 \
 #  --no-conditional-dependencies \
-#  --no-libtool \
+#  --libtool \
 #  --macro-prefix=gl \
 #  --no-vc-files \
+#  --avoid=stdbool \
 #  --avoid=stdint \
-#  crypto/md5-buffer
+#  --avoid=stddef \
+#  c-ctype \
+#  crypto/md5-buffer \
+#  gettext-h \
+#  intprops \
+#  timegm \
+#  verify
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
+  c-ctype
   crypto/md5-buffer
+  gettext-h
+  intprops
+  timegm
+  verify
 ])
-gl_AVOID([ stdint])
+gl_AVOID([ stdbool stdint stddef])
 gl_SOURCE_BASE([lib/gnu])
 gl_M4_BASE([m4])
 gl_PO_BASE([])
@@ -56,6 +68,7 @@ gl_TESTS_BASE([tests])
 gl_LIB([libgnu])
 gl_LGPL([2])
 gl_MAKEFILE_NAME([])
+gl_LIBTOOL
 gl_MACRO_PREFIX([gl])
 gl_PO_DOMAIN([])
 gl_WITNESS_C_MACRO([])

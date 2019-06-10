@@ -8,13 +8,16 @@
  */
 
 #include <crm_resource.h>
+#include <crm/common/iso8601_internal.h>
 
 #define XPATH_MAX 1024
 
 char *move_lifetime = NULL;
+enum move_lifetime_use move_lifetime_use = move_lifetime_rel;
 
+/* this function has no sife-effects in terms of touching globals */
 static char *
-parse_cli_lifetime(const char *input)
+parse_cli_lifetime(const char *input, enum move_lifetime_use use)
 {
     char *later_s = NULL;
     crm_time_t *now = NULL;
@@ -25,25 +28,48 @@ parse_cli_lifetime(const char *input)
         return NULL;
     }
 
-    duration = crm_time_parse_duration(move_lifetime);
-    if (duration == NULL) {
-        CMD_ERR("Invalid duration specified: %s", move_lifetime);
-        CMD_ERR("Please refer to"
-                " https://en.wikipedia.org/wiki/ISO_8601#Durations"
-                " for examples of valid durations");
-        return NULL;
+    now = crm_time_new(NULL);
+
+    if (use == move_lifetime_rel) {
+        duration = crm_time_parse_duration(input);
+        if (duration == NULL) {
+            CMD_ERR("Invalid duration specified: %s", input);
+            CMD_ERR("Please refer to"
+                    " https://en.wikipedia.org/wiki/ISO_8601#Durations"
+                    " for examples of valid durations");
+            goto error;
+        }
+        later = crm_time_add(now, duration);
+    } else if (use == move_lifetime_abs) {
+#if SUPPORT_DATE_VERSATILITY
+        later = pcmk__time_new_versatile(input);
+#else
+        later = crm_time_new(input);
+#endif
+    } else {
+        CMD_ERR("Invalid use of lifetime specification: %d", use);
+        goto error;
     }
 
-    now = crm_time_new(NULL);
-    later = crm_time_add(now, duration);
     crm_time_log(LOG_INFO, "now     ", now,
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_INFO, "later   ", later,
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
-    later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+
+    later_s = crm_time_as_string(later, crm_time_log_date
+                                        | crm_time_log_timeofday
+                                        | crm_time_log_with_timezone);
+    if (crm_time_compare(now, later) > 0) {
+        CMD_ERR("Lifetime specification cannot precede this moment: %s", later_s);
+        free(later_s);
+        later_s = NULL;
+        goto error;
+    }
+
     printf("Migration will take effect until: %s\n", later_s);
 
+error:
     crm_time_free(duration);
     crm_time_free(later);
     crm_time_free(now);
@@ -68,7 +94,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         return rc;
     }
 
-    later_s = parse_cli_lifetime(move_lifetime);
+    later_s = parse_cli_lifetime(move_lifetime, move_lifetime_use);
     if(move_lifetime && later_s == NULL) {
         return -EINVAL;
     }
@@ -134,7 +160,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 int
 cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
 {
-    char *later_s = parse_cli_lifetime(move_lifetime);
+    char *later_s = parse_cli_lifetime(move_lifetime, move_lifetime_use);
     int rc = pcmk_ok;
     xmlNode *location = NULL;
     xmlNode *fragment = NULL;

@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/iso8601_internal.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -52,7 +53,11 @@ get_date(pe_working_set_t * data_set)
     original_date = value;
 
     if (use_date) {
+#if SUPPORT_DATE_VERSATILITY
+        data_set->now = pcmk__time_new_versatile(use_date);
+#else
         data_set->now = crm_time_new(use_date);
+#endif
         quiet_log(" + Setting effective cluster time: %s", use_date);
         crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
                      crm_time_log_date | crm_time_log_timeofday);
@@ -475,7 +480,11 @@ static struct crm_option long_options[] = {
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
     {   "set-datetime", required_argument, NULL, 't',
-        "Set date/time (ISO 8601 format, see https://en.wikipedia.org/wiki/ISO_8601)"
+#if SUPPORT_DATE_VERSATILITY
+        "Date/time (free form) specification as an operation's input"
+#else
+        "Date/time (ISO 8601) specification as an operation's input"
+#endif
     },
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
     {"watchdog",     1, 0, 'w', "\tAssume a watchdog device is active"},
@@ -502,6 +511,25 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " crm_simulate -LS --op-inject memcached:0_monitor_20000@bart.example.com=7 --op-fail memcached:0_stop_0@fred.example.com=1 --save-output /tmp/memcached-test.xml", pcmk_option_example},
     {"-spacer-",    0, 0, '-', "Now see what the reaction to the stop failure would be", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " crm_simulate -S --xml-file /tmp/memcached-test.xml", pcmk_option_example},
+
+    {"-spacer-", 1, NULL, '-', "Environment:"},
+    {"-spacer-", 1, NULL, '-', "-   TZ:"},
+    {"-spacer-", 1, NULL, '-', "    time zone specification to be considered"
+                               " unless expressly defined (especially for -t);"
+                               " see tzset(3)"},
+
+    /* SEE ALSO pasted verbatim */
+    {"-spacer-", 1, NULL, '-', "\nSee also:"},
+#if SUPPORT_DATE_VERSATILITY
+    {"-spacer-", 1, NULL, '-', "* regarding date/time specified in free form (for -t):"},
+    {"-spacer-", 1, NULL, '-', "  manually invoked \"info coreutils 'date input formats'\""
+                               " or https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html",
+                               pcmk_option_paragraph},
+#else
+    {"-spacer-", 1, NULL, '-', "* regarding date/time specified per ISO 8601 (for -t):"},
+    {"-spacer-", 1, NULL, '-', "  https://en.wikipedia.org/wiki/ISO_8601",
+                               pcmk_option_paragraph},
+#endif
 
     {0, 0, 0, 0}
 };

@@ -68,7 +68,7 @@ install:
       libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
       libquorum-dev libsam-dev libtotem-pg-dev libvotequorum-dev
-      cluster-glue-dev resource-agents
+      cluster-glue-dev resource-agents bison
  - test $MAINT_EXTRA -eq 0
    || sudo apt-get install -qq
       make libxml2-utils xsltproc

@@ -82,4 +82,7 @@
 /* Support upstart based system services */
 #undef SUPPORT_UPSTART
 
+/* Support versatile date input in tools */
+#undef SUPPORT_DATE_VERSATILITY
+
 #endif /* CRM_CONFIG__H__IN */

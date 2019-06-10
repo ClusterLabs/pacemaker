@@ -3068,12 +3068,12 @@ Migration will take effect until:
 </cib>
 =#=#=#= End test: Try to move a resource previously moved with a lifetime - OK (0) =#=#=#=
 * Passed: crm_resource   - Try to move a resource previously moved with a lifetime
-=#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
+=#=#=#= Begin test: Ban dummy from node1 for a short time (free form period) =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 Migration will take effect until:
-=#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
+=#=#=#= Current cib after: Ban dummy from node1 for a short time (free form period) =#=#=#=
 <cib epoch="46" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
@@ -3122,8 +3122,8 @@ Migration will take effect until:
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Ban dummy from node1 for a short time - OK (0) =#=#=#=
-* Passed: crm_resource   - Ban dummy from node1 for a short time
+=#=#=#= End test: Ban dummy from node1 for a short time (free form period) - OK (0) =#=#=#=
+* Passed: crm_resource   - Ban dummy from node1 for a short time (free form period)
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=

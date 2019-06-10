@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/iso8601_internal.h>
 
 #include <crm/cib.h>
 #include <crm/common/iso8601.h>
@@ -28,14 +29,18 @@ static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_t
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",       no_argument,       NULL, '?', "\tThis text"},
-    {"version",    no_argument,       NULL, '$', "\tVersion information"  },
+    {"version",    no_argument,       NULL, '$', "\tVersion information"},
     {"verbose",    no_argument,       NULL, 'V', "\tIncrease debug output"},
 
-    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):" },
-    {"check",      no_argument,       NULL, 'c', "\tCheck whether a rule is in effect" },
+    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):"},
+    {"check",      no_argument,       NULL, 'c', "\tCheck if a rule is in effect, now or at given date/time"},
 
-    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:" },
-    {"date",       required_argument, NULL, 'd', "Whether the rule is in effect on a given date" },
+    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:"},
+#if SUPPORT_DATE_VERSATILITY
+    {"date",       required_argument, NULL, 'd', "Date/time (free form) specification as a mode's input"},
+#else
+    {"date",       required_argument, NULL, 'd', "Date/time (ISO 8601) specification as a mode's input"},
+#endif
     {"rule",       required_argument, NULL, 'r', "The ID of the rule to check" },
 
     {"-spacer-",   no_argument,       NULL, '-', "\nData:"},
@@ -45,6 +50,25 @@ static struct crm_option long_options[] = {
      pcmk_option_paragraph},
     {"-spacer-",   required_argument, NULL, '-', "The interface, behavior, and output may "
                                                  "change with any version of pacemaker.", pcmk_option_paragraph},
+
+    {"-spacer-", 1, NULL, '-', "Environment:"},
+    {"-spacer-", 1, NULL, '-', "-   TZ:"},
+    {"-spacer-", 1, NULL, '-', "    time zone specification to be considered"
+                               " unless expressly defined (especially for -d);"
+                               " see tzset(3)"},
+
+    /* SEE ALSO pasted verbatim */
+    {"-spacer-", 1, NULL, '-', "\n\nSee also:"},
+#if SUPPORT_DATE_VERSATILITY
+    {"-spacer-", 1, NULL, '-', "* regarding date/time specified in free form (for -d):"},
+    {"-spacer-", 1, NULL, '-', "  manually invoked \"info coreutils 'date input formats'\""
+                               " or https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html",
+                               pcmk_option_paragraph},
+#else
+    {"-spacer-", 1, NULL, '-', "* regarding date/time specified per ISO 8601 (for -d):"},
+    {"-spacer-", 1, NULL, '-', "  https://en.wikipedia.org/wiki/ISO_8601",
+                               pcmk_option_paragraph},
+#endif
 
     {0, 0, 0, 0}
 };
@@ -153,7 +177,11 @@ main(int argc, char **argv)
                 break;
 
             case 'd':
+#if SUPPORT_DATE_VERSATILITY
+                rule_date = pcmk__time_new_versatile(optarg);
+#else
                 rule_date = crm_time_new(optarg);
+#endif
                 if (rule_date == NULL) {
                     exit_code = CRM_EX_DATAERR;
                     goto bail;

@@ -31,6 +31,7 @@
 * publican (documentation)
 * inkscape (documentation)
 * docbook-style-xsl (documentation)
+* bison (free form date/time specifications to tools)
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
