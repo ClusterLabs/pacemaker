@@ -617,93 +617,6 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
     return aliases;
 }
 
-static void
-parse_host_line(const char *line, int max, GListPtr * output)
-{
-    int lpc = 0;
-    int last = 0;
-
-    if (max <= 0) {
-        return;
-    }
-
-    /* Check for any complaints about additional parameters that the device doesn't understand */
-    if (strstr(line, "invalid") || strstr(line, "variable")) {
-        crm_debug("Skipping: %s", line);
-        return;
-    }
-
-    crm_trace("Processing %d bytes: [%s]", max, line);
-    /* Skip initial whitespace */
-    for (lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
-        last = lpc + 1;
-    }
-
-    /* Now the actual content */
-    for (lpc = 0; lpc <= max; lpc++) {
-        gboolean a_space = isspace(line[lpc]);
-
-        if (a_space && lpc < max && isspace(line[lpc + 1])) {
-            /* fast-forward to the end of the spaces */
-
-        } else if (a_space || line[lpc] == ',' || line[lpc] == ';' || line[lpc] == 0) {
-            int rc = 1;
-            char *entry = NULL;
-
-            if (lpc != last) {
-                entry = calloc(1, 1 + lpc - last);
-                rc = sscanf(line + last, "%[a-zA-Z0-9_-.]", entry);
-            }
-
-            if (entry == NULL) {
-                /* Skip */
-            } else if (rc != 1) {
-                crm_warn("Could not parse (%d %d): %s", last, lpc, line + last);
-            } else if (safe_str_neq(entry, "on") && safe_str_neq(entry, "off")) {
-                crm_trace("Adding '%s'", entry);
-                *output = g_list_append(*output, entry);
-                entry = NULL;
-            }
-
-            free(entry);
-            last = lpc + 1;
-        }
-    }
-}
-
-static GListPtr
-parse_host_list(const char *hosts)
-{
-    int lpc = 0;
-    int max = 0;
-    int last = 0;
-    GListPtr output = NULL;
-
-    if (hosts == NULL) {
-        return output;
-    }
-
-    max = strlen(hosts);
-    for (lpc = 0; lpc <= max; lpc++) {
-        if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
-            int len = lpc - last;
-
-            if(len > 1) {
-                char *line = strndup(hosts + last, len);
-
-                line[len] = 0; /* Because it might be '\n' */
-                parse_host_line(line, len, &output);
-                free(line);
-            }
-
-            last = lpc + 1;
-        }
-    }
-
-    crm_trace("Parsed %d entries from '%s'", g_list_length(output), hosts);
-    return output;
-}
-
 GHashTable *metadata_cache = NULL;
 
 void
@@ -937,7 +850,7 @@ build_device_from_xml(xmlNode * msg)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
     if (value) {
-        device->targets = parse_host_list(value);
+        device->targets = stonith__parse_targets(value);
     }
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
@@ -1108,7 +1021,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     } else if (!rc) {
         crm_info("Refreshing port list for %s", dev->id);
         g_list_free_full(dev->targets, free);
-        dev->targets = parse_host_list(output);
+        dev->targets = stonith__parse_targets(output);
         dev->targets_age = time(NULL);
     }
 
