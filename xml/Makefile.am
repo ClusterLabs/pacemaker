@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -63,8 +63,9 @@ RNG_max			?= $(lastword $(RNG_numeric_versions))
 
 # A sorted list of all API and RNG versions (numeric and "next")
 API_versions 		= next $(API_numeric_versions)
-API_base 			= command-output stonith_admin
-API_files 			= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
+API_request_base 	= command-output stonith_admin
+API_base		= $(API_request_base) item
+API_files 		= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
 
 RNG_versions		= next $(RNG_numeric_versions)
 RNG_version_pairs	= $(call version_pairs,${RNG_numeric_versions})
@@ -139,7 +140,7 @@ api/api-result-%.rng: $(API_files) Makefile.am
 	echo '      <attribute name="request"> <text /> </attribute>' >> $@
 	echo '      <optional>' >> $@
 	echo '        <choice>' >> $@
-	for rng in $(API_base); do $(top_srcdir)/xml/best-match.sh api/$$rng $(*) $(@) "          " || :; done
+	for rng in $(API_request_base); do $(top_srcdir)/xml/best-match.sh api/$$rng $(*) $(@) "          " || :; done
 	echo '        </choice>' >> $@
 	echo '      </optional>' >> $@
 	echo '      <element name="status">' >> $@
