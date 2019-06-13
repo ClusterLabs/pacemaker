@@ -3005,28 +3005,11 @@ reduce_stonith_history(stonith_history_t *history)
                     (hp->state == np->state)) {
                     if ((hp->state == st_done) ||
                         safe_str_eq(hp->delegate, np->delegate)) {
-                        /* replace or purge */
-                        if (hp->completed < np->completed) {
-                            /* purge older hp */
-                            tmp = hp->next;
-                            hp->next = NULL;
-                            stonith_history_free(hp);
-                            hp = tmp;
-                            break;
-                        }
-                        /* damn single linked list */
-                        free(hp->target);
-                        free(hp->action);
-                        free(np->origin);
-                        np->origin = hp->origin;
-                        free(np->delegate);
-                        np->delegate = hp->delegate;
-                        free(np->client);
-                        np->client = hp->client;
-                        np->completed = hp->completed;
-                        tmp = hp;
-                        hp = hp->next;
-                        free(tmp);
+                        /* purge older hp */
+                        tmp = hp->next;
+                        hp->next = NULL;
+                        stonith_history_free(hp);
+                        hp = tmp;
                         break;
                     }
                 }
@@ -4221,10 +4204,10 @@ mon_refresh_display(gpointer user_data)
                 fprintf(stderr, "Critical: Unable to get stonith-history\n");
                 mon_cib_connection_destroy(NULL);
             } else {
+                stonith_history = sort_stonith_history(stonith_history);
                 if ((!fence_full_history) && (output_format != mon_output_xml)) {
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
-                stonith_history = sort_stonith_history(stonith_history);
                 break; /* all other cases are errors */
             }
         } else {
