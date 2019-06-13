@@ -12,7 +12,7 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 __copyright__ = """Original Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright 2004 International Business Machines
 
-with later changes copyright 2004-2018 the Pacemaker project contributors.
+with later changes copyright 2004-2019 the Pacemaker project contributors.
 The version control history for this file may have further details.
 """
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -318,7 +318,7 @@ class crm_common(ClusterManager):
 
         stonith_ignore = [
             r"Updating failcount for child_DoFencing",
-            r"(ERROR|error).*: Sign-in failed: triggered a retry",
+            r"error.*: Fencer connection failed \(will retry\)",
             "pacemaker-execd.*(ERROR|error): stonithd_receive_ops_result failed.",
              ]
 

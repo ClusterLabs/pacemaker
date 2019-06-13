@@ -21,7 +21,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/util.h>
-#include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>

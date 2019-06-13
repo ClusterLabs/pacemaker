@@ -8,10 +8,10 @@
 #ifndef TENGINE__H
 #  define TENGINE__H
 
-#  include <crm/transition.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/stonith-ng.h>
 #  include <crm/services.h>
+#  include <pacemaker-internal.h>
 
 /* tengine */
 extern crm_action_t *match_down_event(const char *target);

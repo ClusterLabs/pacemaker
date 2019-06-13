@@ -6,6 +6,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.17-1"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="suicide"/>
+        <nvpair id="options-concurrent-fencing" name="concurrent-fencing" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

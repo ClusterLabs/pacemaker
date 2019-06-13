@@ -11,7 +11,7 @@
 #  define CONTROLD_FENCING__H
 
 #include <stdbool.h>                // bool
-#include <crm/transition.h>         // crm_graph_t, crm_action_t
+#include <pacemaker-internal.h>     // crm_graph_t, crm_action_t
 
 // stonith fail counts
 void st_fail_count_reset(const char * target);

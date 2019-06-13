@@ -308,7 +308,7 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-fenced-ignore"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
-            r"error:.*Sign-in failed: triggered a retry",
+            r"error:.*Fencer connection failed \(will retry\)",
             r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
         ]

@@ -130,7 +130,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
     if (proc_stderr != NULL) {
         child_node = xmlNewTextChild(node, NULL, (pcmkXmlStr) "output",
                                      (pcmkXmlStr) proc_stderr);
-        xmlSetProp(node, (pcmkXmlStr) "source", (pcmkXmlStr) "stderr");
+        xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stderr");
     }
 
     pcmk__xml_add_node(out, node);

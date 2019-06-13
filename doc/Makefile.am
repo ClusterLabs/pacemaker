@@ -25,6 +25,9 @@ RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 # don't cross filesystems, sparse, show progress
 RSYNC_OPTS      = -rlptvzxS --progress
 
+LAST_RELEASE	?= Pacemaker-$(VERSION)
+TAG		?= $(shell git log --pretty=format:%H -n 1 HEAD)
+
 publican_docs   =
 generated_docs	=
 generated_mans	=
@@ -363,9 +366,6 @@ doxygen-upload: doxygen
 
 
 # ABI compatibility report as HTML
-
-LAST_RELEASE	?= Pacemaker-$(VERSION)
-TAG		?= $(git log --pretty=format:%H -n 1 HEAD)
 
 abi: abi-check
 	./abi-check $(PACKAGE) $(LAST_RELEASE) $(TAG)

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <libgen.h>
@@ -2303,4 +2304,131 @@ stonith_action_str(const char *action)
     } else {
         return action;
     }
+}
+
+/*!
+ * \internal
+ * \brief Parse a target name from one line of a target list string
+ *
+ * \param[in]     line    One line of a target list string
+ * \parma[in]     len     String length of line
+ * \param[in,out] output  List to add newly allocated target name to
+ */
+static void
+parse_list_line(const char *line, int len, GList **output)
+{
+    size_t i = 0;
+    size_t entry_start = 0;
+
+    /* Skip complaints about additional parameters device doesn't understand
+     *
+     * @TODO Document or eliminate the implied restriction of target names
+     */
+    if (strstr(line, "invalid") || strstr(line, "variable")) {
+        crm_debug("Skipping list output line: %s", line);
+        return;
+    }
+
+    // Process line content, character by character
+    for (i = 0; i <= len; i++) {
+
+        if (isspace(line[i]) || (line[i] == ',') || (line[i] == ';')
+            || (line[i] == '\0')) {
+            // We've found a separator (i.e. the end of an entry)
+
+            int rc = 0;
+            char *entry = NULL;
+
+            if (i == entry_start) {
+                // Skip leading and sequential separators
+                entry_start = i + 1;
+                continue;
+            }
+
+            entry = calloc(i - entry_start + 1, sizeof(char));
+            CRM_ASSERT(entry != NULL);
+
+            /* Read entry, stopping at first separator
+             *
+             * @TODO Document or eliminate these character restrictions
+             */
+            rc = sscanf(line + entry_start, "%[a-zA-Z0-9_-.]", entry);
+            if (rc != 1) {
+                crm_warn("Could not parse list output entry: %s "
+                         CRM_XS " entry_start=%d position=%d",
+                         line + entry_start, entry_start, i);
+                free(entry);
+
+            } else if (safe_str_eq(entry, "on") || safe_str_eq(entry, "off")) {
+                /* Some agents print the target status in the list output,
+                 * though none are known now (the separate list-status command
+                 * is used for this, but it can also print "UNKNOWN"). To handle
+                 * this possibility, skip such entries.
+                 *
+                 * @TODO Document or eliminate the implied restriction of target
+                 * names.
+                 */
+                free(entry);
+
+            } else {
+                // We have a valid entry
+                *output = g_list_append(*output, entry);
+            }
+            entry_start = i + 1;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Parse a list of targets from a string
+ *
+ * \param[in] list_output  Target list as a string
+ *
+ * \return List of target names
+ * \note The target list string format is flexible, to allow for user-specified
+ *       lists such pcmk_host_list and the output of an agent's list action
+ *       (whether direct or via the API, which escapes newlines). There may be
+ *       multiple lines, separated by either a newline or an escaped newline
+ *       (backslash n). Each line may have one or more target names, separated
+ *       by any combination of whitespace, commas, and semi-colons. Lines
+ *       containing "invalid" or "variable" will be ignored entirely. Target
+ *       names "on" or "off" (case-insensitive) will be ignored. Target names
+ *       may contain only alphanumeric characters, underbars (_), dashes (-),
+ *       and dots (.) (if any other character occurs in the name, it and all
+ *       subsequent characters in the name will be ignored).
+ * \note The caller is responsible for freeing the result with
+ *       g_list_free_full(result, free).
+ */
+GList *
+stonith__parse_targets(const char *target_spec)
+{
+    GList *targets = NULL;
+
+    if (target_spec != NULL) {
+        size_t out_len = strlen(target_spec);
+        size_t line_start = 0; // Starting index of line being processed
+
+        for (size_t i = 0; i <= out_len; ++i) {
+            if ((target_spec[i] == '\n') || (target_spec[i] == '\0')
+                || ((target_spec[i] == '\\') && (target_spec[i + 1] == 'n'))) {
+                // We've reached the end of one line of output
+
+                int len = i - line_start;
+
+                if (len > 0) {
+                    char *line = strndup(target_spec + line_start, len);
+
+                    line[len] = '\0'; // Because it might be a newline
+                    parse_list_line(line, len, &targets);
+                    free(line);
+                }
+                if (target_spec[i] == '\\') {
+                    ++i; // backslash-n takes up two positions
+                }
+                line_start = i + 1;
+            }
+        }
+    }
+    return targets;
 }

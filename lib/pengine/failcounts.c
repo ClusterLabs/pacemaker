@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -62,7 +62,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 
         if (safe_str_eq(expected_op_key, lrm_op_id)) {
             int rc = 0;
-            int target_rc = get_target_rc(lrm_op_xml);
+            int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
             crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
             if (rc != target_rc) {

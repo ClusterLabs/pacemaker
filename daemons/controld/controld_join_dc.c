@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -15,7 +15,7 @@
 
 #include <controld_fsa.h>
 #include <controld_messages.h>
-#include "controld_transition.h"
+#include <controld_transition.h>
 
 char *max_epoch = NULL;
 char *max_generation_from = NULL;

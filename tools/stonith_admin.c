@@ -635,53 +635,17 @@ main(int argc, char **argv)
             break;
         case 's':
             rc = st->cmds->list(st, st_opts, device, &lists, timeout);
-            if (rc == 0 && lists) {
-                char *head = lists;
-                char *eol = NULL;
+            if (rc == 0) {
+                GList *targets = stonith__parse_targets(lists);
 
                 out->begin_list(out, "Fence targets", "fence target", "fence targets");
-
-                do {
-                    char *line = NULL;
-                    char *elem = NULL;
-
-                    char *hostname = NULL;
-                    char *uuid = NULL;
-                    char *status = NULL;
-
-                    eol = strstr(head, "\\n");
-                    line = strndup(head, eol-head);
-
-                    while ((elem = strsep(&line, " ")) != NULL) {
-                        if (strcmp(elem, "") == 0) {
-                            continue;
-                        }
-
-                        if (hostname == NULL) {
-                            hostname = elem;
-                        } else if (uuid == NULL) {
-                            uuid = elem;
-                        } else if (status == NULL) {
-                            char *end = NULL;
-                            status = elem;
-
-                            end = strchr(status, '\n');
-                            if (end != NULL) {
-                                *end = '\0';
-                            }
-                        }
-                    }
-
-                    if (hostname != NULL && uuid != NULL && status != NULL) {
-                        out->message(out, "fence-target", hostname, uuid, status);
-                    }
-
-                    free(line);
-
-                    head = eol+2;
-                } while (eol != NULL);
-
+                while (targets != NULL) {
+                    out->list_item(out, NULL, (const char *) targets->data);
+                    targets = targets->next;
+                }
                 out->end_list(out);
+                free(lists);
+
             } else if (rc != 0) {
                 fprintf(stderr, "List command returned error. rc : %d\n", rc);
             }

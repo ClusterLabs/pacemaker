@@ -17,32 +17,6 @@
 #include <crm/fencing/internal.h>
 
 static int
-fence_target_text(pcmk__output_t *out, va_list args) {
-    const char *hostname = va_arg(args, const char *);
-    const char *uuid = va_arg(args, const char *);
-    const char *status = va_arg(args, const char *);
-
-    pcmk__indented_printf(out, "%s\t%s\t%s\n", hostname, uuid, status);
-    return 0;
-}
-
-static int
-fence_target_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
-    const char *hostname = va_arg(args, const char *);
-    const char *uuid = va_arg(args, const char *);
-    const char *status = va_arg(args, const char *);
-
-    node = xmlNewNode(NULL, (pcmkXmlStr) "target");
-    xmlSetProp(node, (pcmkXmlStr) "hostname", (pcmkXmlStr) hostname);
-    xmlSetProp(node, (pcmkXmlStr) "uuid", (pcmkXmlStr) uuid);
-    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) status);
-
-    pcmk__xml_add_node(out, node);
-    return 0;
-}
-
-static int
 last_fenced_text(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
@@ -216,8 +190,6 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "fence-target", "text", fence_target_text },
-    { "fence-target", "xml", fence_target_xml },
     { "last-fenced", "text", last_fenced_text },
     { "last-fenced", "xml", last_fenced_xml },
     { "stonith-event", "text", stonith_event_text },

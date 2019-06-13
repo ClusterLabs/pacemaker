@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -10,6 +10,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
 
+#include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
 #include <controld_fsa.h>
 #include <controld_messages.h>
@@ -18,7 +19,6 @@
 #include <controld_alerts.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
-#include <crm/transition.h>
 #include <crm/lrmd_alerts_internal.h>
 
 GHashTable *lrm_state_table = NULL;
