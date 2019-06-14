@@ -2697,8 +2697,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
             break;
 
         case PCMK_LRM_OP_DONE:
-            do_crm_log((op->interval_ms? LOG_INFO : LOG_NOTICE),
-                       "Result of %s operation for %s on %s: %d (%s) "
+            crm_notice("Result of %s operation for %s on %s: %d (%s) "
                        CRM_XS " call=%d key=%s confirmed=%s cib-update=%d",
                        crm_action_str(op->op_type, op->interval_ms),
                        op->rsc_id, node_name,

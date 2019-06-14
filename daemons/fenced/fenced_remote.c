@@ -1473,14 +1473,14 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
                           get_device_timeout(op, peer, device);
-            crm_info("Requesting that '%s' perform op '%s %s' with '%s' for %s (%ds)", peer->host,
+            crm_notice("Requesting that '%s' perform op '%s %s' with '%s' " CRM_XS " for %s (%ds)", peer->host,
                      op->target, op->action, device, op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
             crm_xml_add(remote_op, F_STONITH_MODE, "slave");
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
-            crm_info("Requesting that '%s' perform op '%s %s' for %s (%ds, %lds)",
+            crm_notice("Requesting that '%s' perform op '%s %s' " CRM_XS " for %s (%ds, %lds)",
                      peer->host, op->target, op->action, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
 
