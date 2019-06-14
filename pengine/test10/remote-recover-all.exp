@@ -9,9 +9,6 @@
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="39" operation="stop" operation_key="rabbitmq_stop_0" internal_operation_key="rabbitmq:2_stop_0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
@@ -63,9 +60,6 @@
     <inputs>
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
