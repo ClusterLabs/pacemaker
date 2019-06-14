@@ -403,7 +403,14 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
     }
 
     if (stonith_api) {
-        stonith_api->state = stonith_disconnected;
+        /* the client API won't properly reconnect notifications
+         * if they are still in the table - so remove them
+         */
+        stonith_api->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+        stonith_api->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+        if (stonith_api->state != stonith_disconnected) {
+            stonith_api->cmds->disconnect(st);
+        }
     }
 
     if (AM_I_DC) {
