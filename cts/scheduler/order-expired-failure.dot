@@ -4,7 +4,6 @@ digraph "g" {
 "compute-unfence-trigger-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
 "compute-unfence-trigger-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
 "compute-unfence-trigger_stop_0 overcloud-novacompute-1" -> "compute-unfence-trigger-clone_stopped_0" [ style = bold]
-"compute-unfence-trigger_stop_0 overcloud-novacompute-1" -> "overcloud-novacompute-1_stop_0 controller-1" [ style = bold]
 "compute-unfence-trigger_stop_0 overcloud-novacompute-1" [ style=bold color="green" fontcolor="orange"]
 "ip-10.0.0.110_monitor_10000 controller-1" [ style=bold color="green" fontcolor="black"]
 "ip-10.0.0.110_start_0 controller-1" -> "ip-10.0.0.110_monitor_10000 controller-1" [ style = bold]

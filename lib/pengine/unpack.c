@@ -909,7 +909,6 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     const char *resource_discovery_enabled = NULL;
     xmlNode *attrs = NULL;
     resource_t *rsc = NULL;
-    const char *shutdown = NULL;
 
     if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
         return;
@@ -931,8 +930,7 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
-    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
-    if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+    if (pe__shutdown_requested(this_node)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
         if (rsc) {
@@ -1392,7 +1390,6 @@ gboolean
 determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set_t * data_set)
 {
     gboolean online = FALSE;
-    const char *shutdown = NULL;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
     if (this_node == NULL) {
@@ -1402,9 +1399,8 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
-    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
 
-    if (shutdown != NULL && safe_str_neq("0", shutdown)) {
+    if (pe__shutdown_requested(this_node)) {
         this_node->details->shutdown = TRUE;
 
     } else if (safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
@@ -3163,7 +3159,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return FALSE);
-    CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
+    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return FALSE);
     CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
 
     if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
@@ -3299,11 +3295,26 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
             unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
             break;
 
+        case PCMK_LRM_OP_NOT_CONNECTED:
+            if (pe__is_guest_or_remote_node(node)
+                && is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
+                /* We should never get into a situation where a managed remote
+                 * connection resource is considered OK but a resource action
+                 * behind the connection gets a "not connected" status. But as a
+                 * fail-safe in case a bug or unusual circumstances do lead to
+                 * that, ensure the remote connection is considered failed.
+                 */
+                set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+            }
+
+            // fall through
+
         case PCMK_LRM_OP_ERROR:
         case PCMK_LRM_OP_ERROR_HARD:
         case PCMK_LRM_OP_ERROR_FATAL:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
+        case PCMK_LRM_OP_INVALID:
 
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
             if ((failure_strategy == action_fail_ignore)

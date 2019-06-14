@@ -5,14 +5,7 @@
         <attributes CRM_meta_timeout="20000"  reconnect_interval="60"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="6" operation="stop" operation_key="rsc1_stop_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="1">
     <action_set>

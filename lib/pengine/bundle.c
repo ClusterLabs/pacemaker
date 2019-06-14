@@ -1027,6 +1027,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     xmlNode *xml_obj = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
+    bool need_log_mount = TRUE;
 
     CRM_ASSERT(rsc != NULL);
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -1151,6 +1152,9 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (source && target) {
             mount_add(bundle_data, source, target, options, flags);
+            if (strcmp(target, "/var/log") == 0) {
+                need_log_mount = FALSE;
+            }
         } else {
             pe_err("Invalid mount directive %s", ID(xml_child));
         }
@@ -1253,8 +1257,10 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
 
-        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
-                  pe__bundle_mount_subdir);
+        if (need_log_mount) {
+            mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
+                      pe__bundle_mount_subdir);
+        }
 
         port = calloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {

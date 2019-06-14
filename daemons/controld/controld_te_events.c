@@ -123,10 +123,8 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     const char *on_uname = crm_peer_uname(event_node_uuid);
     const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
 
-    /* Nothing needs to be done for success, lrm status refresh,
-     * or direct nack (internal code for "busy, try again")
-     */
-    if ((rc == CRM_DIRECT_NACK_RC) || (rc == target_rc)) {
+    // Nothing needs to be done for success or status refresh
+    if (rc == target_rc) {
         return FALSE;
     } else if (safe_str_eq(origin, "build_active_RAs")) {
         crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
@@ -225,7 +223,7 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
         return PCMK_LRM_OP_DONE;
     }
 
-    if (rc != CRM_DIRECT_NACK_RC) {
+    if (orig_status != PCMK_LRM_OP_INVALID) {
         const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
         const char *uname = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
@@ -541,8 +539,9 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (action && (rc == target_rc)) {
         crm_trace("Processed update to %s: %s", id, magic);
     } else {
-        if (update_failcount(event, event_node, rc, target_rc,
-                             (transition_num == -1), ignore_failures)) {
+        if ((status != PCMK_LRM_OP_INVALID)
+            && update_failcount(event, event_node, rc, target_rc,
+                               (transition_num == -1), ignore_failures)) {
             desc = "failed";
         }
         crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num,
