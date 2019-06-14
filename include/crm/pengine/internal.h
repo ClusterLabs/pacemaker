@@ -11,7 +11,7 @@
 #  define PE_INTERNAL__H
 #  include <string.h>
 #  include <crm/pengine/status.h>
-#  include <crm/pengine/remote.h>
+#  include <crm/pengine/remote_internal.h>
 #  include <crm/common/output.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
