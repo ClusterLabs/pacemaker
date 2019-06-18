@@ -2021,6 +2021,18 @@ xml_get_path(xmlNode *xml)
     return NULL;
 }
 
+/*!
+ * Free an XML element and all of its children, removing it from its parent
+ *
+ * \param[in] xml  XML element to free
+ */
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
+
 static void
 free_xml_with_position(xmlNode * child, int position)
 {
@@ -2075,12 +2087,7 @@ free_xml_with_position(xmlNode * child, int position)
                     pcmk__set_xml_flag(child, xpf_dirty);
                 }
             }
-
-            /* Free this particular subtree
-             * Make sure to unlink it from the parent first
-             */
-            xmlUnlinkNode(child);
-            xmlFreeNode(child);
+            pcmk_free_xml_subtree(child);
         }
     }
 }
@@ -2296,8 +2303,7 @@ strip_text_nodes(xmlNode * xml)
         switch (iter->type) {
             case XML_TEXT_NODE:
                 /* Remove it */
-                xmlUnlinkNode(iter);
-                xmlFreeNode(iter);
+                pcmk_free_xml_subtree(iter);
                 break;
 
             case XML_ELEMENT_NODE:
