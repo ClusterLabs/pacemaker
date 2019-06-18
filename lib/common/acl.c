@@ -506,10 +506,22 @@ implicitly_allowed(xmlNode *xml)
 
 #define display_id(xml) (ID(xml)? ID(xml) : "<unset>")
 
+/*!
+ * \internal
+ * \brief Drop XML nodes created in violation of ACLs
+ *
+ * Given an XML element, free all of its descendent nodes created in violation
+ * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
+ * that aren't in the ACL section and don't have any attributes other than
+ * "id").
+ *
+ * \param[in,out] xml        XML to check
+ * \param[in]     check_top  Whether to apply checks to argument itself
+ *                           (if TRUE, xml might get freed)
+ */
 void
-pcmk__post_process_acl(xmlNode *xml)
+pcmk__post_process_acl(xmlNode *xml, bool check_top)
 {
-    xmlNode *cIter = __xml_first_child(xml);
     xml_private_t *p = xml->_private;
 
     if (is_set(p->flags, xpf_created)) {
@@ -522,20 +534,22 @@ pcmk__post_process_acl(xmlNode *xml)
             crm_trace("ACLs allow creation of <%s> with id=\"%s\"",
                       crm_element_name(xml), display_id(xml));
 
-        } else {
+        } else if (check_top) {
             crm_trace("ACLs disallow creation of <%s> with id=\"%s\"",
                       crm_element_name(xml), display_id(xml));
-            if (xml != xmlDocGetRootElement(xml->doc)) {
-                pcmk_free_xml_subtree(xml);
-            }
+            pcmk_free_xml_subtree(xml);
             return;
+
+        } else {
+            crm_trace("ACLs would disallow creation of <%s> with id=\"%s\"",
+                      crm_element_name(xml), display_id(xml));
         }
     }
 
-    while (cIter != NULL) {
+    for (xmlNode *cIter = __xml_first_child(xml); cIter != NULL; ) {
         xmlNode *child = cIter;
         cIter = __xml_next(cIter); /* In case it is free'd */
-        pcmk__post_process_acl(child);
+        pcmk__post_process_acl(child, TRUE);
     }
 }
 
@@ -558,7 +572,7 @@ xml_acl_disable(xmlNode *xml)
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acl(xml);
-        pcmk__post_process_acl(xml);
+        pcmk__post_process_acl(xml, FALSE);
         clear_bit(p->flags, xpf_acl_enabled);
     }
 }

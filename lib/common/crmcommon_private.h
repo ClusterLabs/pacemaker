@@ -1,5 +1,7 @@
 /*
- * Copyright 2018-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2018-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -66,7 +68,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_acl(xmlNode *xml);
 
 G_GNUC_INTERNAL
-void pcmk__post_process_acl(xmlNode *xml);
+void pcmk__post_process_acl(xmlNode *xml, bool check_top);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
