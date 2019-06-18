@@ -29,6 +29,7 @@ extern "C" {
 #  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 #  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
 #  define T_STONITH_NOTIFY_HISTORY        "st_notify_history"
+#  define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
 
 /* *INDENT-OFF* */
 enum stonith_state {
