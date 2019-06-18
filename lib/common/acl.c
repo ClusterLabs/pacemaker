@@ -471,6 +471,41 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether creation of an XML element is implicitly allowed
+ *
+ * Check whether XML is a "scaffolding" element whose creation is implicitly
+ * allowed regardless of ACLs (that is, it is not in the ACL section and has
+ * no attributes other than "id").
+ *
+ * \param[in] xml  XML element to check
+ *
+ * \return TRUE if XML element is implicitly allowed, FALSE otherwise
+ */
+static bool
+implicitly_allowed(xmlNode *xml)
+{
+    char *path = NULL;
+
+    for (xmlAttr *prop = xml->properties; prop != NULL; prop = prop->next) {
+        if (strcmp((const char *) prop->name, XML_ATTR_ID) != 0) {
+            return FALSE;
+        }
+    }
+
+    path = xml_get_path(xml);
+    if (strstr(path, "/" XML_CIB_TAG_ACLS "/") != NULL) {
+        free(path);
+        return FALSE;
+    }
+    free(path);
+
+    return TRUE;
+}
+
+#define display_id(xml) (ID(xml)? ID(xml) : "<unset>")
+
 void
 pcmk__post_process_acl(xmlNode *xml)
 {
@@ -478,38 +513,23 @@ pcmk__post_process_acl(xmlNode *xml)
     xml_private_t *p = xml->_private;
 
     if (is_set(p->flags, xpf_created)) {
-        xmlAttr *xIter = NULL;
-        char *path = xml_get_path(xml);
+        if (implicitly_allowed(xml)) {
+            crm_trace("Creation of <%s> scaffolding with id=\"%s\""
+                      " is implicitly allowed",
+                      crm_element_name(xml), display_id(xml));
 
-        /* Always allow new scaffolding (e.g. node with no attributes or only an
-         * 'id'), except in the ACLs section
-         */
+        } else if (pcmk__check_acl(xml, NULL, xpf_acl_write)) {
+            crm_trace("ACLs allow creation of <%s> with id=\"%s\"",
+                      crm_element_name(xml), display_id(xml));
 
-        for (xIter = xml->properties; xIter != NULL; xIter = xIter->next) {
-            const char *prop_name = (const char *)xIter->name;
-
-            if (!strcmp(prop_name, XML_ATTR_ID)
-                && !strstr(path, "/"XML_CIB_TAG_ACLS"/")) {
-                /* Delay the acl check */
-                continue;
-
-            } else if (pcmk__check_acl(xml, NULL, xpf_acl_write)) {
-                crm_trace("Creation of %s=%s is allowed",
-                          crm_element_name(xml), ID(xml));
-                break;
-
-            } else {
-                crm_trace("Cannot add new node %s at %s",
-                          crm_element_name(xml), path);
-
-                if (xml != xmlDocGetRootElement(xml->doc)) {
-                    pcmk_free_xml_subtree(xml);
-                }
-                free(path);
-                return;
+        } else {
+            crm_trace("ACLs disallow creation of <%s> with id=\"%s\"",
+                      crm_element_name(xml), display_id(xml));
+            if (xml != xmlDocGetRootElement(xml->doc)) {
+                pcmk_free_xml_subtree(xml);
             }
+            return;
         }
-        free(path);
     }
 
     while (cIter != NULL) {
