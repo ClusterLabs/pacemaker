@@ -67,6 +67,8 @@ typedef struct stonith_private_s {
     mainloop_io_t *source;
     GHashTable *stonith_op_callback_table;
     GList *notify_list;
+    int notify_refcnt;
+    bool notify_deletes;
 
     void (*op_callback) (stonith_t * st, stonith_callback_data_t * data);
 
@@ -77,6 +79,7 @@ typedef struct stonith_notify_client_s {
     const char *obj_id;         /* implement one day */
     const char *obj_type;       /* implement one day */
     void (*notify) (stonith_t * st, stonith_event_t * e);
+    bool delete;
 
 } stonith_notify_client_t;
 
@@ -211,6 +214,38 @@ log_action(stonith_action_t *action, pid_t pid)
     }
 }
 
+/* when cycling through the list we don't want to delete items
+   so just mark them and when we know nobody is using the list
+   loop over it to remove the marked items
+ */
+static void
+foreach_notify_entry (stonith_private_t *private,
+                GFunc func,
+                gpointer user_data)
+{
+    private->notify_refcnt++;
+    g_list_foreach(private->notify_list, func, user_data);
+    private->notify_refcnt--;
+    if ((private->notify_refcnt == 0) &&
+        private->notify_deletes) {
+        GList *list_item = private->notify_list;
+
+        private->notify_deletes = FALSE;
+        while (list_item != NULL)
+        {
+            stonith_notify_client_t *list_client = list_item->data;
+            GList *next = g_list_next(list_item);
+
+            if (list_client->delete) {
+                free(list_client);
+                private->notify_list =
+                    g_list_delete_link(private->notify_list, list_item);
+            }
+            list_item = next;
+        }
+    }
+}
+
 static void
 stonith_connection_destroy(gpointer user_data)
 {
@@ -230,7 +265,7 @@ stonith_connection_destroy(gpointer user_data)
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
 
-    g_list_foreach(native->notify_list, stonith_send_notification, &blob);
+    foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
 }
 
@@ -1140,6 +1175,10 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
     const stonith_notify_client_t *a_client = a;
     const stonith_notify_client_t *b_client = b;
 
+    if (a_client->delete || b_client->delete) {
+        /* make entries marked for deletion not findable */
+        return -1;
+    }
     CRM_CHECK(a_client->event != NULL && b_client->event != NULL, return 0);
     rc = strcmp(a_client->event, b_client->event);
     if (rc == 0) {
@@ -1394,7 +1433,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         stonith_perform_callback(st, blob.xml, 0, 0);
 
     } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
-        g_list_foreach(private->notify_list, stonith_send_notification, &blob);
+        foreach_notify_entry(private, stonith_send_notification, &blob);
     } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
         int call_id = 0;
         int timeout = 0;
@@ -1592,8 +1631,13 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
     if (list_item != NULL) {
         stonith_notify_client_t *list_client = list_item->data;
 
-        private->notify_list = g_list_remove(private->notify_list, list_client);
-        free(list_client);
+        if (private->notify_refcnt) {
+            list_client->delete = TRUE;
+            private->notify_deletes = TRUE;
+        } else {
+            private->notify_list = g_list_remove(private->notify_list, list_client);
+            free(list_client);
+        }
 
         crm_trace("Removed callback");
 
@@ -1752,6 +1796,10 @@ stonith_send_notification(gpointer data, gpointer user_data)
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
+        return;
+
+    } else if (entry->delete) {
+        crm_trace("Skipping callback - marked for deletion");
         return;
 
     } else if (entry->notify == NULL) {
@@ -2037,6 +2085,8 @@ stonith_api_new(void)
     private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                                                NULL, stonith_destroy_op_callback);
     private->notify_list = NULL;
+    private->notify_refcnt = 0;
+    private->notify_deletes = FALSE;
 
     new_stonith->call_id = 1;
     new_stonith->state = stonith_disconnected;
