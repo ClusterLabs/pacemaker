@@ -41,9 +41,9 @@ cib_rename(const char *old)
     int new_fd;
     char *new = crm_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
 
-    crm_err("Archiving unusable file %s as %s", old, new);
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     new_fd = mkstemp(new);
+    crm_err("Archiving unusable file %s as %s", old, new);
     if ((new_fd < 0) || (rename(old, new) < 0)) {
         crm_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
         crm_err("Disabling disk writes and continuing");
