@@ -2994,42 +2994,40 @@ print_failed_actions(FILE *stream, pe_working_set_t *data_set)
 static stonith_history_t *
 reduce_stonith_history(stonith_history_t *history)
 {
-    stonith_history_t *new = NULL, *hp, *np, *tmp;
+    stonith_history_t *new = NULL, *hp, *np;
 
     for (hp = history; hp; ) {
-        for (np = new; np; np = np->next) {
-            if ((hp->state == st_done) || (hp->state == st_failed)) {
-                /* action not in progress */
-                if (safe_str_eq(hp->target, np->target) &&
-                    safe_str_eq(hp->action, np->action) &&
-                    (hp->state == np->state)) {
-                    if ((hp->state == st_done) ||
-                        safe_str_eq(hp->delegate, np->delegate)) {
-                        /* purge older hp */
-                        tmp = hp->next;
-                        hp->next = NULL;
-                        stonith_history_free(hp);
-                        hp = tmp;
-                        break;
+        stonith_history_t *hp_next = hp->next;
+
+        hp->next = NULL;
+        if (!new) {
+            new = hp;
+        } else {
+            for (np = new; ; np = np->next) {
+                if ((hp->state == st_done) || (hp->state == st_failed)) {
+                    /* action not in progress */
+                    if (safe_str_eq(hp->target, np->target) &&
+                        safe_str_eq(hp->action, np->action) &&
+                        (hp->state == np->state) &&
+                        ((hp->state == st_done) ||
+                         safe_str_eq(hp->delegate, np->delegate)) &&
+                        (hp->completed < np->completed)) {
+                            /* purge older hp */
+                            stonith_history_free(hp);
+                            break;
                     }
                 }
-                if (np->next) {
-                    continue;
+                if (!np->next) {
+                    np->next = hp;
+                    break;
                 }
             }
-            np = 0; /* let outer loop progress hp */
-            break;
         }
-        /* simply move hp from history to new */
-        if (np == NULL) {
-            tmp = hp->next;
-            hp->next = new;
-            new = hp;
-            hp = tmp;
-        }
+        hp = hp_next;
     }
     return new;
 }
+
 
 /*!
  * \internal
