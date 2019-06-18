@@ -191,13 +191,15 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    if (pcmk__daemon_can_write(dir, file) == FALSE) {
+    sigfile = crm_concat(file, "sig", '.');
+    if (pcmk__daemon_can_write(dir, file) == FALSE
+            || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
 
     filename = crm_concat(dir, file, '/');
-    sigfile = crm_concat(filename, "sig", '.');
+    sigfile = crm_concat(dir, sigfile, '/');
 
     cib_status = pcmk_ok;
     root = retrieveCib(filename, sigfile);
