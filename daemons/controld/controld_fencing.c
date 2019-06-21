@@ -632,6 +632,7 @@ te_connect_stonith(gpointer user_data)
                                                  T_STONITH_NOTIFY_HISTORY_SYNCED,
                                                  tengine_stonith_history_synced);
         te_trigger_stonith_history_sync(TRUE);
+        crm_notice("Fencer successfully connected");
     }
 
     return TRUE;
