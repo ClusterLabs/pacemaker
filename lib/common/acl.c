@@ -55,6 +55,7 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
     const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
     const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
+    const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
 
     if (tag == NULL) {
         // @COMPAT rolling upgrades <=1.1.11
@@ -73,62 +74,62 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
     }
 
     acl = calloc(1, sizeof (xml_acl_t));
-    if (acl) {
-        const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
+    CRM_ASSERT(acl != NULL);
 
-        acl->mode = mode;
-        if (xpath) {
-            acl->xpath = strdup(xpath);
-            crm_trace("Unpacked ACL <%s> element using xpath: %s",
-                      crm_element_name(xml), acl->xpath);
+    acl->mode = mode;
+    if (xpath) {
+        acl->xpath = strdup(xpath);
+        CRM_ASSERT(acl->xpath != NULL);
+        crm_trace("Unpacked ACL <%s> element using xpath: %s",
+                  crm_element_name(xml), acl->xpath);
 
+    } else {
+        int offset = 0;
+        char buffer[MAX_XPATH_LEN];
+
+        if (tag) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "//%s", tag);
         } else {
-            int offset = 0;
-            char buffer[MAX_XPATH_LEN];
-
-            if (tag) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "//%s", tag);
-            } else {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "//*");
-            }
-
-            if (ref || attr) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "[");
-            }
-
-            if (ref) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "@id='%s'", ref);
-            }
-
-            // NOTE: schema currently does not allow this
-            if (ref && attr) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   " and ");
-            }
-
-            if (attr) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "@%s", attr);
-            }
-
-            if (ref || attr) {
-                offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                                   "]");
-            }
-
-            CRM_LOG_ASSERT(offset > 0);
-            acl->xpath = strdup(buffer);
-            crm_trace("Unpacked ACL <%s> element using equivalent xpath: %s",
-                      crm_element_name(xml), acl->xpath);
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "//*");
         }
 
-        acls = g_list_append(acls, acl);
+        if (ref || attr) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "[");
+        }
+
+        if (ref) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "@id='%s'", ref);
+        }
+
+        // NOTE: schema currently does not allow this
+        if (ref && attr) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               " and ");
+        }
+
+        if (attr) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "@%s", attr);
+        }
+
+        if (ref || attr) {
+            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
+                               "]");
+        }
+
+        CRM_LOG_ASSERT(offset > 0);
+        acl->xpath = strdup(buffer);
+        CRM_ASSERT(acl->xpath != NULL);
+
+        crm_trace("Unpacked ACL <%s> element using equivalent xpath: %s",
+                  crm_element_name(xml), acl->xpath);
     }
-    return acls;
+
+    return g_list_append(acls, acl);
 }
 
 /*!
