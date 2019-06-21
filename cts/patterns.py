@@ -303,7 +303,7 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-fenced"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"Fencing daemon connection failed",
-            r"pacemaker-controld.*:\s*warn.*:\s*Callback already present",
+            r"pacemaker-controld.*Fencer successfully connected",
         ]
         self.components["pacemaker-fenced-ignore"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",

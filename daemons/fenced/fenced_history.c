@@ -347,6 +347,21 @@ stonith_merge_in_history_list(GHashTable *history)
 
         updated = TRUE;
         g_hash_table_iter_steal(&iter);
+
+        if ((op->state != st_failed) &&
+            (op->state != st_done) &&
+            safe_str_eq(op->originator, stonith_our_uname)) {
+            crm_warn("received pending action we are supposed to be the "
+                     "owner but it's not in our records -> fail it");
+            op->state = st_failed;
+            op->completed = time(NULL);
+            /* use -EHOSTUNREACH to not introduce a new return-code that might
+               trigger unexpected results at other places and to prevent
+               remote_op_done from setting the delegate if not present
+             */
+            stonith_bcast_result_to_peers(op, -EHOSTUNREACH);
+        }
+
         g_hash_table_insert(stonith_remote_op_list, op->id, op);
         /* we could trim the history here but if we bail
          * out after trim we might miss more recent entries
@@ -405,6 +420,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         stonith_fence_history_cleanup(target,
             crm_element_value(msg, F_STONITH_CALLID) != NULL);
     } else if (options & st_opt_broadcast) {
+        /* there is no clear sign atm for when a history sync
+           is done so send a notification for anything
+           that smells like history-sync
+         */
+        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY_SYNCED, 0, NULL);
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API
             *

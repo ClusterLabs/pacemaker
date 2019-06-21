@@ -211,7 +211,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if(AM_I_DC) {
                 if (appeared) {
-                    te_trigger_stonith_history_sync();
+                    te_trigger_stonith_history_sync(FALSE);
                 } else {
                     erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 }

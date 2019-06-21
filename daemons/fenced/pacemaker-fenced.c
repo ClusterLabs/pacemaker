@@ -279,6 +279,9 @@ get_stonith_flag(const char *name)
     } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY)) {
         return st_callback_notify_history;
 
+    } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED)) {
+        return st_callback_notify_history_synced;
+
     }
     return st_callback_unknown;
 }

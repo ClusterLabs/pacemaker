@@ -29,6 +29,7 @@ void purge_stonith_cleanup(void);
 void execute_stonith_cleanup(void);
 
 // stonith history synchronization
-void te_trigger_stonith_history_sync(void);
+void te_trigger_stonith_history_sync(bool long_timeout);
+void te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers);
 
 #endif
