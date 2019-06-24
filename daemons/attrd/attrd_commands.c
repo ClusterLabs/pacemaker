@@ -189,7 +189,7 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
     char *host_alloc = NULL;
 
     if (host == NULL) {
-        int nodeid;
+        int nodeid = 0;
 
         crm_element_value_int(xml, F_ATTRD_HOST_ID, &nodeid);
         if (nodeid > 0) {
