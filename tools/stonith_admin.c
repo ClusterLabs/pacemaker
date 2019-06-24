@@ -556,9 +556,10 @@ main(int argc, char **argv)
     stonith__register_messages(out);
 
     if (args->version) {
-        fprintf(stdout, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(stdout, "Written by Andrew Beekhof\n");
+        out->info(out, "Pacemaker %s", PACEMAKER_VERSION);
+        out->info(out, "Written by Andrew Beekhof");
         crm_exit(CRM_EX_OK);
+        goto done;
     }
 
     if (options.validate_cfg) {
@@ -656,14 +657,16 @@ main(int argc, char **argv)
     }
 
     if (optind > argc || action == 0) {
-        fputs(g_option_context_get_help(context, TRUE, NULL), stderr);
-        crm_exit(CRM_EX_USAGE);
+        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     if (required_agent && options.agent == NULL) {
-        fprintf(stderr, "Please specify an agent to query using -a,--agent [value]\n");
-        fputs(g_option_context_get_help(context, TRUE, NULL), stderr);
-        crm_exit(CRM_EX_USAGE);
+        out->err(out, "Please specify an agent to query using -a,--agent [value]");
+        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     st = stonith_api_new();
@@ -671,8 +674,7 @@ main(int argc, char **argv)
     if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
         if (rc < 0) {
-            fprintf(stderr, "Could not connect to fencer: %s\n",
-                    pcmk_strerror(rc));
+            out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
             exit_code = CRM_EX_DISCONNECT;
             goto done;
         }
@@ -682,7 +684,7 @@ main(int argc, char **argv)
         case 'I':
             rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &options.devices, options.timeout);
             if (rc < 0) {
-                fprintf(stderr, "Failed to list installed devices: %s\n", pcmk_strerror(rc));
+                out->err(out, "Failed to list installed devices: %s", pcmk_strerror(rc));
                 break;
             }
 
@@ -700,7 +702,7 @@ main(int argc, char **argv)
         case 'L':
             rc = st->cmds->query(st, st_opts, target, &options.devices, options.timeout);
             if (rc < 0) {
-                fprintf(stderr, "Failed to list registered devices: %s\n", pcmk_strerror(rc));
+                out->err(out, "Failed to list registered devices: %s", pcmk_strerror(rc));
                 break;
             }
 
@@ -735,7 +737,7 @@ main(int argc, char **argv)
                 free(lists);
 
             } else if (rc != 0) {
-                fprintf(stderr, "List command returned error. rc : %d\n", rc);
+                out->err(out, "List command returned error. rc : %d", rc);
             }
             break;
         case 'R':

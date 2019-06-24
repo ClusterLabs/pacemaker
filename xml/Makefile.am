@@ -64,7 +64,7 @@ RNG_max			?= $(lastword $(RNG_numeric_versions))
 # A sorted list of all API and RNG versions (numeric and "next")
 API_versions 		= next $(API_numeric_versions)
 API_request_base 	= command-output stonith_admin
-API_base		= $(API_request_base) item
+API_base		= $(API_request_base) item status
 API_files 		= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
 
 RNG_versions		= next $(RNG_numeric_versions)
@@ -143,10 +143,7 @@ api/api-result-%.rng: $(API_files) Makefile.am
 	for rng in $(API_request_base); do $(top_srcdir)/xml/best-match.sh api/$$rng $(*) $(@) "          " || :; done
 	echo '        </choice>' >> $@
 	echo '      </optional>' >> $@
-	echo '      <element name="status">' >> $@
-	echo '        <attribute name="code"> <data type="integer" /> </attribute>' >> $@
-	echo '        <text />' >> $@
-	echo '      </element>' >> $@
+	$(top_srcdir)/xml/best-match.sh api/status $(*) $(@) "      " || :
 	echo '    </element>' >> $@
 	echo '  </start>' >> $@
 	echo '</grammar>' >> $@

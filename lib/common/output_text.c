@@ -90,6 +90,25 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 
 G_GNUC_PRINTF(2, 3)
 static void
+text_err(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+    int len = 0;
+
+    va_start(ap, format);
+
+    /* Informational output does not get indented, to separate it from other
+     * potentially indented list output.
+     */
+    len = vfprintf(stderr, format, ap);
+    CRM_ASSERT(len > 0);
+    va_end(ap);
+
+    /* Add a newline. */
+    fprintf(stderr, "\n");
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
 text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
@@ -194,6 +213,7 @@ pcmk__mk_text_output(char **argv) {
 
     retval->subprocess_output = text_subprocess_output;
     retval->info = text_info;
+    retval->err = text_err;
     retval->output_xml = text_output_xml;
 
     retval->begin_list = text_begin_list;

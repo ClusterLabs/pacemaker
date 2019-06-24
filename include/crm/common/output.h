@@ -308,6 +308,20 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Format an error message that should be shown to an interactive
+     *        user.  Not all formatters will do this.
+     *
+     * \note A newline will automatically be added to the end of the format
+     *       string, so callers should not include a newline.
+     *
+     * \param[in,out] out The output functions structure.
+     * \param[in]     buf The message to be printed.
+     * \param[in]     ... Arguments to be formatted.
+     */
+    void (*err) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+    /*!
+     * \internal
      * \brief Format already formatted XML.
      *
      * \param[in,out] out  The output functions structure.

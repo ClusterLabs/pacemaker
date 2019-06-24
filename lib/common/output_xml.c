@@ -27,6 +27,7 @@ GOptionEntry pcmk__xml_output_entries[] = {
 typedef struct xml_private_s {
     xmlNode *root;
     GQueue *parent_q;
+    GSList *errors;
 } xml_private_t;
 
 static void
@@ -39,6 +40,7 @@ xml_free_priv(pcmk__output_t *out) {
 
     xmlFreeNode(priv->root);
     g_queue_free(priv->parent_q);
+    g_slist_free(priv->errors);
     free(priv);
 }
 
@@ -66,9 +68,18 @@ xml_init(pcmk__output_t *out) {
     }
 
     priv->parent_q = g_queue_new();
+    priv->errors = NULL;
     g_queue_push_tail(priv->parent_q, priv->root);
 
     return true;
+}
+
+static void
+add_error_node(gpointer data, gpointer user_data) {
+    char *str = (char *) data;
+    xmlNodePtr node = (xmlNodePtr) user_data;
+
+    xmlNewTextChild(node, NULL, (pcmkXmlStr) "error", (pcmkXmlStr) str);
 }
 
 static void
@@ -87,9 +98,14 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
 
     rc_as_str = crm_itoa(exit_status);
 
-    node = xmlNewTextChild(priv->root, NULL, (pcmkXmlStr) "status",
-                           (pcmkXmlStr) crm_exit_str(exit_status));
+    node = xmlNewChild(priv->root, NULL, (pcmkXmlStr) "status", NULL);
     xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
+    xmlSetProp(node, (pcmkXmlStr) "message", (pcmkXmlStr) crm_exit_str(exit_status));
+
+    if (g_slist_length(priv->errors) > 0) {
+        xmlNodePtr errors_node = xmlNewChild(node, NULL, (pcmkXmlStr) "errors", NULL);
+        g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
+    }
 
     buf = dump_xml_formatted_with_text(priv->root);
     fprintf(out->dest, "%s", buf);
@@ -140,6 +156,23 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     pcmk__xml_add_node(out, node);
     free(rc_as_str);
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
+xml_err(pcmk__output_t *out, const char *format, ...) {
+    xml_private_t *priv = out->priv;
+    int len = 0;
+    char *buf = NULL;
+    va_list ap;
+
+    CRM_ASSERT(priv != NULL);
+    va_start(ap, format);
+    len = vasprintf(&buf, format, ap);
+    CRM_ASSERT(len > 0);
+    va_end(ap);
+
+    priv->errors = g_slist_append(priv->errors, buf);
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -222,6 +255,7 @@ pcmk__mk_xml_output(char **argv) {
 
     retval->subprocess_output = xml_subprocess_output;
     retval->info = xml_info;
+    retval->err = xml_err;
     retval->output_xml = xml_output_xml;
 
     retval->begin_list = xml_begin_list;
