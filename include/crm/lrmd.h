@@ -19,7 +19,8 @@ extern "C" {
  * \brief Resource agent executor
  * \ingroup lrmd
  */
-#include <stdbool.h>
+#include <stdbool.h>      // bool
+#include <glib.h>         // guint, GList
 #include <crm_config.h>
 #include <crm/services.h>
 
