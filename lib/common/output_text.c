@@ -10,11 +10,16 @@
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/output.h>
+#include <glib.h>
 
 /* Disabled for the moment, but we can enable it (or remove it entirely)
  * when we make a decision on whether this is preferred output.
  */
 #define FANCY_TEXT_OUTPUT 0
+
+GOptionEntry pcmk__text_output_entries[] = {
+    { NULL }
+};
 
 typedef struct text_list_data_s {
     unsigned int len;

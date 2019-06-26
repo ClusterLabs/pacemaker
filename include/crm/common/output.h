@@ -110,6 +110,10 @@ typedef struct pcmk__message_entry_s {
 /* Basic formatters everything supports.  This block needs to be updated every
  * time a new base formatter is added.
  */
+
+extern GOptionEntry pcmk__text_output_entries[];
+extern GOptionEntry pcmk__xml_output_entries[];
+
 pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
 

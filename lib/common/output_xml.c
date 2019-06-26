@@ -18,6 +18,11 @@
 #include <crm/crm.h>
 #include <crm/common/output.h>
 #include <crm/common/xml.h>
+#include <glib.h>
+
+GOptionEntry pcmk__xml_output_entries[] = {
+    { NULL }
+};
 
 typedef struct xml_private_s {
     xmlNode *root;
