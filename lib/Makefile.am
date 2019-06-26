@@ -25,9 +25,9 @@ target_LIBS		= $(LIBS:%=pacemaker-%.pc)
 
 target_PACKAGE		= pacemaker.pc
 
-all-local: $(target_LIBS) $(target_PACKAGE)
+all-local: $(target_LIBS) $(target_PACKAGE) pacemaker-pe_rules.pc pacemaker-pe_status.pc
 
-install-exec-local: $(target_LIBS) $(target_PACKAGE)
+install-exec-local: $(target_LIBS) $(target_PACKAGE) pacemaker-pe_rules.pc pacemaker-pe_status.pc
 	$(INSTALL) -d $(DESTDIR)/$(libdir)/pkgconfig
 	$(INSTALL) -m 644 $(target_LIBS) $(target_PACKAGE) $(DESTDIR)/$(libdir)/pkgconfig
 
