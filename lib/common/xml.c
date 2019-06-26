@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <bzlib.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -26,10 +27,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
 #include "crmcommon_private.h"
-
-#if HAVE_BZLIB_H
-#  include <bzlib.h>
-#endif
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
