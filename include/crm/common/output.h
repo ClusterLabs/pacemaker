@@ -107,8 +107,32 @@ typedef struct pcmk__message_entry_s {
     pcmk__message_fn_t fn;
 } pcmk__message_entry_t;
 
-/* Basic formatters everything supports.  This block needs to be updated every
- * time a new base formatter is added.
+/*!
+ * \internal
+ * \brief This structure contains everything needed to add support for a
+ *        single output formatter to a command line program.
+ */
+typedef struct pcmk__supported_format_s {
+    /*!
+     * \brief The name of this output formatter, which should match the
+     *        fmt_name parameter in some ::pcmk__output_t structure.
+     */
+    const char *name;
+
+    /*!
+     * \brief A function that creates a ::pcmk__output_t.
+     */
+    pcmk__output_factory_t create;
+
+    /*!
+     * \brief Format-specific command line options.  This can be NULL if
+     *        no command line options should be supported.
+     */
+    GOptionEntry *options;
+} pcmk__supported_format_t;
+
+/* The following three blocks need to be updated each time a new base formatter
+ * is added.
  */
 
 extern GOptionEntry pcmk__text_output_entries[];
@@ -116,6 +140,9 @@ extern GOptionEntry pcmk__xml_output_entries[];
 
 pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
+
+#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
+#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
 
 /*!
  * \brief This structure contains everything that makes up a single output
@@ -414,13 +441,32 @@ pcmk__parse_output_args(const char *argname, char *argvalue, char **output_ty,
  * \brief Register a new output formatter, making it available for use
  *        the same as a base formatter.
  *
- * \param[in] fmt The new output formatter to register.
+ * \param[in,out] context A context to add any format-specific options to.  This
+ *                        can be NULL for use outside of command line programs.
+ * \param[in]     name    The name of the format.  This will be used to select a
+ *                        format from command line options and for displaying help.
+ * \param[in]     create  A function that creates a ::pcmk__output_t.
+ * \param[in]     options Format-specific command line options.  These will be
+ *                        added to the context.  This argument can also be NULL.
  *
  * \return 0 on success or an error code on error.
  */
 int
-pcmk__register_format(const char *fmt_name, pcmk__output_factory_t create);
+pcmk__register_format(GOptionContext *context, const char *name,
+                      pcmk__output_factory_t create, GOptionEntry *options);
 
+/*!
+ * \internal
+ * \brief Register an entire table of output formatters at once.
+ *
+ * \param[in,out] context A context to add any format-specific options to.  This
+ *                        can be NULL for use outside of command line programs.
+ * \param[in]     table An array of ::pcmk__supported_format_t which should
+ *                      all be registered.  This array must be NULL-terminated.
+ *
+ */
+void
+pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *table);
 
 /*!
  * \internal

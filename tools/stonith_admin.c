@@ -185,6 +185,12 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
 static GMainLoop *mainloop = NULL;
@@ -412,6 +418,8 @@ main(int argc, char **argv)
     char *output_dest = NULL;
     pcmk__output_t *out = NULL;
 
+    GOptionContext *context = NULL;
+
     crm_log_cli_init("stonith_admin");
     crm_set_options(NULL, "<command> [<options>]", long_options,
                     "access the Pacemaker fencing API");
@@ -566,8 +574,8 @@ main(int argc, char **argv)
         crm_help('?', CRM_EX_USAGE);
     }
 
-    CRM_ASSERT(pcmk__register_format("text", pcmk__mk_text_output) == 0);
-    CRM_ASSERT(pcmk__register_format("xml", pcmk__mk_xml_output) == 0);
+    context = g_option_context_new(" - access the Pacemaker fencing API");
+    pcmk__register_formats(context, formats);
 
     rc = pcmk__output_new(&out, output_ty, output_dest, argv);
     if (rc != 0) {
@@ -715,6 +723,7 @@ main(int argc, char **argv)
     pcmk__output_free(out, exit_code);
 
   done:
+    g_option_context_free(context);
     free(async_fence_data.name);
     stonith_key_value_freeall(params, 1, 1);
 
