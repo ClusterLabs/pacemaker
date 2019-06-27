@@ -158,6 +158,21 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
     free(rc_as_str);
 }
 
+static void
+xml_version(pcmk__output_t *out, bool extended) {
+    xmlNodePtr node;
+    xml_private_t *priv = out->priv;
+    CRM_ASSERT(priv != NULL);
+
+    node = xmlNewChild(g_queue_peek_tail(priv->parent_q), NULL, (pcmkXmlStr) "version", NULL);
+
+    xmlSetProp(node, (pcmkXmlStr) "program", (pcmkXmlStr) "Pacemaker");
+    xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) PACEMAKER_VERSION);
+    xmlSetProp(node, (pcmkXmlStr) "author", (pcmkXmlStr) "Andrew Beekhof");
+    xmlSetProp(node, (pcmkXmlStr) "build", (pcmkXmlStr) BUILD_VERSION);
+    xmlSetProp(node, (pcmkXmlStr) "features", (pcmkXmlStr) CRM_FEATURES);
+}
+
 G_GNUC_PRINTF(2, 3)
 static void
 xml_err(pcmk__output_t *out, const char *format, ...) {
@@ -254,6 +269,7 @@ pcmk__mk_xml_output(char **argv) {
     retval->message = pcmk__call_message;
 
     retval->subprocess_output = xml_subprocess_output;
+    retval->version = xml_version;
     retval->info = xml_info;
     retval->err = xml_err;
     retval->output_xml = xml_output_xml;

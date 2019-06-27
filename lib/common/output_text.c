@@ -88,6 +88,16 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
     }
 }
 
+static void
+text_version(pcmk__output_t *out, bool extended) {
+    if (extended) {
+        fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    } else {
+        fprintf(out->dest, "Pacemaker %s\n", PACEMAKER_VERSION);
+        fprintf(out->dest, "Written by Andrew Beekhof\n");
+    }
+}
+
 G_GNUC_PRINTF(2, 3)
 static void
 text_err(pcmk__output_t *out, const char *format, ...) {
@@ -212,6 +222,7 @@ pcmk__mk_text_output(char **argv) {
     retval->message = pcmk__call_message;
 
     retval->subprocess_output = text_subprocess_output;
+    retval->version = text_version;
     retval->info = text_info;
     retval->err = text_err;
     retval->output_xml = text_output_xml;

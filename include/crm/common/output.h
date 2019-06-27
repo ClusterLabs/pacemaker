@@ -26,7 +26,7 @@ extern "C" {
 #  include <glib.h>
 #  include <crm/common/results.h>
 
-#  define PCMK__API_VERSION "1.0"
+#  define PCMK__API_VERSION "2.0"
 
 typedef struct pcmk__output_s pcmk__output_t;
 
@@ -291,6 +291,16 @@ struct pcmk__output_s {
      */
     void (*subprocess_output) (pcmk__output_t *out, int exit_status,
                                const char *proc_stdout, const char *proc_stderr);
+
+    /*!
+     * \internal
+     * \brief Format version information.  This is useful for the --version
+     *        argument of command line tools.
+     *
+     * \param[in,out] out      The output functions structure.
+     * \param[in]     extended Add additional version information.
+     */
+    void (*version) (pcmk__output_t *out, bool extended);
 
     /*!
      * \internal

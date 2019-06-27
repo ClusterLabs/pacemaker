@@ -63,7 +63,7 @@ RNG_max			?= $(lastword $(RNG_numeric_versions))
 
 # A sorted list of all API and RNG versions (numeric and "next")
 API_versions 		= next $(API_numeric_versions)
-API_request_base 	= command-output stonith_admin
+API_request_base 	= command-output stonith_admin version
 API_base		= $(API_request_base) item status
 API_files 		= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
 

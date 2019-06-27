@@ -556,9 +556,7 @@ main(int argc, char **argv)
     stonith__register_messages(out);
 
     if (args->version) {
-        out->info(out, "Pacemaker %s", PACEMAKER_VERSION);
-        out->info(out, "Written by Andrew Beekhof");
-        crm_exit(CRM_EX_OK);
+        out->version(out, false);
         goto done;
     }
 
