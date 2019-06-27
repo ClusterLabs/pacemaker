@@ -28,18 +28,6 @@ extern "C" {
 
 #  define PCMK__API_VERSION "1.0"
 
-/* Add to the long_options block in each tool to get the formatted output
- * command line options added.  Then call pcmk__parse_output_args to handle
- * them.
- */
-#  define PCMK__OUTPUT_OPTIONS(fmts) \
-    {   "output-as", required_argument, NULL, 0, \
-        "Specify the format for output, one of: " fmts \
-    }, \
-    {   "output-to", required_argument, NULL, 0, \
-        "Specify the destination for formatted output, \"-\" for stdout or a filename" \
-    }
-
 typedef struct pcmk__output_s pcmk__output_t;
 
 /*!
@@ -418,23 +406,6 @@ void pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status);
  */
 int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
                      const char *filename, char **argv);
-
-/*!
- * \internal
- * \brief Process formatted output related command line options.  This should
- *        be called wherever other long options are handled.
- *
- * \param[in]  argname      The long command line argument to process.
- * \param[in]  argvalue     The value of the command line argument.
- * \param[out] output_ty   How should output be formatted? ("text", "xml", etc.)
- * \param[out] output_dest Where should formatted output be written to?  This is
- *                         typically a filename, but could be NULL or "-".
- *
- * \return true if longname was handled, false otherwise.
- */
-bool
-pcmk__parse_output_args(const char *argname, char *argvalue, char **output_ty,
-                        char **output_dest);
 
 /*!
  * \internal

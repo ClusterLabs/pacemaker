@@ -81,24 +81,6 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     return 0;
 }
 
-bool
-pcmk__parse_output_args(const char *argname, char *argvalue, char **output_ty, char **output_dest) {
-    if (safe_str_eq("output-as", argname)) {
-        *output_ty = argvalue;
-        return true;
-    } else if (safe_str_eq("output-to", argname)) {
-        if (safe_str_eq(argvalue, "-")) {
-            *output_dest = NULL;
-        } else {
-            *output_dest = argvalue;
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
 int
 pcmk__register_format(GOptionContext *context, const char *name,
                       pcmk__output_factory_t create, GOptionEntry *options) {
