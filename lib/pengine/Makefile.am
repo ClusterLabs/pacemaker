@@ -40,6 +40,7 @@ libpe_status_la_SOURCES	+= rules.c
 libpe_status_la_SOURCES	+= status.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
+libpe_status_la_SOURCES	+= pe_output.c
 
 clean-generic:
 	rm -f *.log *.debug *~

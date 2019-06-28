@@ -567,6 +567,34 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     free(child_text);
 }
 
+int
+pe__clone_xml(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    GListPtr gIter = rsc->children;
+
+    int rc = pe__name_and_nvpairs_xml(out, true, "clone", 7
+                 , "id", rsc->id
+                 , "multi_state", BOOL2STR(is_set(rsc->flags, pe_rsc_promotable))
+                 , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
+                 , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
+                 , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
+                 , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
+                 , "target_role", configured_role_str(rsc));
+    CRM_ASSERT(rc == 0);
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+    }
+
+    pcmk__xml_pop_parent(out);
+    return rc;
+}
+
 void
 clone_free(resource_t * rsc)
 {

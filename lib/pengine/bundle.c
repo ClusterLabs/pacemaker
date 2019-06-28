@@ -1494,6 +1494,49 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
+int
+pe__bundle_xml(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    int rc = 0;
+
+    CRM_ASSERT(rsc != NULL);
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6
+                 , "id", rsc->id
+                 , "type", container_agent_str(bundle_data->agent_type)
+                 , "image", bundle_data->image
+                 , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
+                 , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
+                 , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed)));
+    CRM_ASSERT(rc == 0);
+
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
+        char *id = crm_itoa(replica->offset);
+
+        CRM_ASSERT(replica);
+
+        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
+        free(id);
+        CRM_ASSERT(rc == 0);
+
+        out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+        out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+        out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+        out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+
+        pcmk__xml_pop_parent(out); // replica
+    }
+    pcmk__xml_pop_parent(out); // bundle
+    return rc;
+}
+
 static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)

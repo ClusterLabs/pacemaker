@@ -12,6 +12,7 @@
 #  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote.h>
+#  include <crm/common/output.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -103,6 +104,13 @@ void clone_print(resource_t * rsc, const char *pre_text, long options, void *pri
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
+int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
+                         , size_t pairs_count, ...);
+
+int pe__clone_xml(pcmk__output_t *out, va_list args);
+int pe__bundle_xml(pcmk__output_t *out, va_list args);
+int pe__resource_xml(pcmk__output_t *out, va_list args);
+
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
@@ -174,8 +182,11 @@ GHashTable *node_hash_dup(GHashTable * hash);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
+extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
+extern void pe__output_node(node_t * node, gboolean details, pcmk__output_t *out);
 
 extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
+extern void pe__output_resource(int log_level, resource_t * rsc, gboolean details, pcmk__output_t *out);
 
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
@@ -361,4 +372,12 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
 void pe__free_param_checks(pe_working_set_t *data_set);
 
 bool pe__shutdown_requested(pe_node_t *node);
+
+#define BOOL2STR(x) ((x) ? "true" : "false")
+/*!
+ * \internal
+ * \brief Register xml formatting message functions.
+ */
+void pe__register_messages(pcmk__output_t *out);
+
 #endif
