@@ -2016,6 +2016,18 @@ xml_get_path(xmlNode *xml)
     return NULL;
 }
 
+/*!
+ * Free an XML element and all of its children, removing it from its parent
+ *
+ * \param[in] xml  XML element to free
+ */
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
+
 static void
 free_xml_with_position(xmlNode * child, int position)
 {
@@ -2070,12 +2082,7 @@ free_xml_with_position(xmlNode * child, int position)
                     pcmk__set_xml_flag(child, xpf_dirty);
                 }
             }
-
-            /* Free this particular subtree
-             * Make sure to unlink it from the parent first
-             */
-            xmlUnlinkNode(child);
-            xmlFreeNode(child);
+            pcmk_free_xml_subtree(child);
         }
     }
 }
@@ -2286,8 +2293,7 @@ strip_text_nodes(xmlNode * xml)
         switch (iter->type) {
             case XML_TEXT_NODE:
                 /* Remove it */
-                xmlUnlinkNode(iter);
-                xmlFreeNode(iter);
+                pcmk_free_xml_subtree(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -3417,7 +3423,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
 }
 
 static void
-__xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
+__xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
@@ -3425,7 +3431,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
         crm_node_created(new_xml);
-        pcmk__post_process_acl(new_xml); // Check creation is allowed
+        pcmk__apply_creation_acl(new_xml, check_top);
         return;
 
     } else {
@@ -3535,7 +3541,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
 
         cIter = __xml_next(cIter);
         if(new_child) {
-            __xml_diff_object(old_child, new_child);
+            __xml_diff_object(old_child, new_child, TRUE);
 
         } else {
             /* Create then free (which will check the acls if necessary) */
@@ -3563,7 +3569,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
         if(old_child == NULL) {
             xml_private_t *p = new_child->_private;
             p->flags |= xpf_skip;
-            __xml_diff_object(old_child, new_child);
+            __xml_diff_object(old_child, new_child, TRUE);
 
         } else {
             /* Check for movement, we already checked for differences */
@@ -3608,7 +3614,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
         xml_track_changes(new_xml, NULL, NULL, FALSE);
     }
 
-    __xml_diff_object(old_xml, new_xml);
+    __xml_diff_object(old_xml, new_xml, FALSE);
 }
 
 xmlNode *

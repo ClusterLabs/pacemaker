@@ -349,6 +349,12 @@ indexterm:[Cluster,Option,node-health-strategy]
  Allowed values are +none+, +migrate-on-red+, +only-green+, +progressive+, and
  +custom+.
 
+| enable-acl | FALSE |
+indexterm:[enable-acl,Cluster Option]
+indexterm:[Cluster,Option,enable-acl]
+ Whether access control lists (ACLs) (see <<ch-acls>>) can be used to authorize
+ modifications to the CIB.
+
 | node-health-base | 0 |
 indexterm:[node-health-base,Cluster Option]
 indexterm:[Cluster,Option,node-health-base]

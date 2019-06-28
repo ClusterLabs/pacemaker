@@ -257,6 +257,7 @@ __xml_next_element(const xmlNode *child)
     return next;
 }
 
+void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(const xmlNode *parent, const char *name);
