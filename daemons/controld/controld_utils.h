@@ -62,6 +62,7 @@ gboolean is_timer_started(fsa_timer_t * timer);
 crm_exit_t crmd_exit(crm_exit_t exit_code);
 _Noreturn void crmd_fast_exit(crm_exit_t exit_code);
 void pe_subsystem_free(void);
+void controld_stop_sched_timer(void);
 void controld_expect_sched_reply(xmlNode *msg);
 void controld_sched_cleanup(void);
 

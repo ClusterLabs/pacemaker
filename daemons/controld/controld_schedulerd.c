@@ -211,6 +211,45 @@ do_pe_control(long long action,
 
 int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
+static mainloop_timer_t *controld_sched_timer = NULL;
+
+// @TODO Make this a configurable cluster option if there's demand for it
+#define SCHED_TIMEOUT_MS (120000)
+
+/*!
+ * \internal
+ * \brief Handle a timeout waiting for scheduler reply
+ *
+ * \param[in] user_data  Ignored
+ *
+ * \return FALSE (indicating that timer should not be restarted)
+ */
+static gboolean
+controld_sched_timeout(gpointer user_data)
+{
+    if (AM_I_DC) {
+        /* If this node is the DC but can't communicate with the scheduler, just
+         * exit (and likely get fenced) so this node doesn't interfere with any
+         * further DC elections.
+         *
+         * @TODO We could try something less drastic first, like disconnecting
+         * and reconnecting to the scheduler, but something is likely going
+         * seriously wrong, so perhaps it's better to just fail as quickly as
+         * possible.
+         */
+        crmd_exit(CRM_EX_FATAL);
+    }
+    return FALSE;
+}
+
+void
+controld_stop_sched_timer()
+{
+    if (controld_sched_timer && fsa_pe_ref) {
+        crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
+    }
+    mainloop_timer_stop(controld_sched_timer);
+}
 
 /*!
  * \internal
@@ -226,6 +265,16 @@ controld_expect_sched_reply(xmlNode *msg)
     if (msg) {
         ref = crm_element_value_copy(msg, XML_ATTR_REFERENCE);
         CRM_ASSERT(ref != NULL);
+
+        if (controld_sched_timer == NULL) {
+            controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
+                                                      SCHED_TIMEOUT_MS, FALSE,
+                                                      controld_sched_timeout,
+                                                      NULL);
+        }
+        mainloop_timer_start(controld_sched_timer);
+    } else {
+        controld_stop_sched_timer();
     }
     free(fsa_pe_ref);
     fsa_pe_ref = ref;
@@ -238,6 +287,10 @@ controld_expect_sched_reply(xmlNode *msg)
 void
 controld_sched_cleanup()
 {
+    if (controld_sched_timer != NULL) {
+        mainloop_timer_del(controld_sched_timer);
+        controld_sched_timer = NULL;
+    }
     pe_subsystem_free();
     controld_expect_sched_reply(NULL);
 }

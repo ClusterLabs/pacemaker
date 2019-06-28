@@ -1018,9 +1018,9 @@ handle_response(xmlNode * stored_msg)
         } else if (safe_str_eq(msg_ref, fsa_pe_ref)) {
             ha_msg_input_t fsa_input;
 
+            controld_stop_sched_timer();
             fsa_input.msg = stored_msg;
             register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
-            crm_trace("Completed: %s...", fsa_pe_ref);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);
