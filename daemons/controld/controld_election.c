@@ -52,12 +52,6 @@ controld_remove_voter(const char *uname)
 }
 
 void
-controld_stop_election_timeout()
-{
-    election_timeout_stop(fsa_election);
-}
-
-void
 controld_election_fini()
 {
     election_fini(fsa_election);
