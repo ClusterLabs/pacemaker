@@ -68,7 +68,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_acl(xmlNode *xml);
 
 G_GNUC_INTERNAL
-void pcmk__post_process_acl(xmlNode *xml, bool check_top);
+void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);

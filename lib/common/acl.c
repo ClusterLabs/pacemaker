@@ -562,7 +562,7 @@ implicitly_allowed(xmlNode *xml)
  *                           (if TRUE, xml might get freed)
  */
 void
-pcmk__post_process_acl(xmlNode *xml, bool check_top)
+pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
     xml_private_t *p = xml->_private;
 
@@ -591,7 +591,7 @@ pcmk__post_process_acl(xmlNode *xml, bool check_top)
     for (xmlNode *cIter = __xml_first_child(xml); cIter != NULL; ) {
         xmlNode *child = cIter;
         cIter = __xml_next(cIter); /* In case it is free'd */
-        pcmk__post_process_acl(child, TRUE);
+        pcmk__apply_creation_acl(child, TRUE);
     }
 }
 
@@ -614,7 +614,7 @@ xml_acl_disable(xmlNode *xml)
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acl(xml);
-        pcmk__post_process_acl(xml, FALSE);
+        pcmk__apply_creation_acl(xml, FALSE);
         clear_bit(p->flags, xpf_acl_enabled);
     }
 }

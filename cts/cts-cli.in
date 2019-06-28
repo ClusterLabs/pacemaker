@@ -470,7 +470,7 @@ function test_acl_loop() {
     TMPXML="$1"
 
     # Make sure we're rejecting things for the right reasons
-    export PCMK_trace_functions=pcmk__check_acl,pcmk__post_process_acl
+    export PCMK_trace_functions=pcmk__check_acl,pcmk__apply_creation_acl
     export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'

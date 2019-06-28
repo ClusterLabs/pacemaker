@@ -3431,7 +3431,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
         crm_node_created(new_xml);
-        pcmk__post_process_acl(new_xml, check_top); // Check creation is allowed
+        pcmk__apply_creation_acl(new_xml, check_top);
         return;
 
     } else {
