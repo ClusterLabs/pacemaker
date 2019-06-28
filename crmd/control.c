@@ -339,7 +339,6 @@ crmd_exit(int rc)
     clear_bit(fsa_input_register, R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
 
-    free(pe_subsystem); pe_subsystem = NULL;
     free(te_subsystem); te_subsystem = NULL;
     free(cib_subsystem); cib_subsystem = NULL;
 
@@ -375,6 +374,7 @@ crmd_exit(int rc)
     crm_timer_stop(recheck_timer);
 
     te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_sched_cleanup();
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
@@ -393,7 +393,6 @@ crmd_exit(int rc)
 
     free(te_uuid); te_uuid = NULL;
     free(te_client_id); te_client_id = NULL;
-    free(fsa_pe_ref); fsa_pe_ref = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 

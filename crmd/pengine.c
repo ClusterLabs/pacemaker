@@ -1,5 +1,7 @@
 /* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -172,6 +174,36 @@ do_pe_control(long long action,
 int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
 
+/*!
+ * \internal
+ * \brief Set the scheduler request currently being waited on
+ *
+ * \param[in] msg  Request to expect reply to (or NULL for none)
+ */
+void
+controld_expect_sched_reply(xmlNode *msg)
+{
+    char *ref = NULL;
+
+    if (msg) {
+        ref = crm_element_value_copy(msg, XML_ATTR_REFERENCE);
+        CRM_ASSERT(ref != NULL);
+    }
+    free(fsa_pe_ref);
+    fsa_pe_ref = ref;
+}
+
+/*!
+ * \internal
+ * \brief Clean up all memory used by controller scheduler handling
+ */
+void
+controld_sched_cleanup()
+{
+    free(pe_subsystem); pe_subsystem = NULL;
+    controld_expect_sched_reply(NULL);
+}
+
 /*	 A_PE_INVOKE	*/
 void
 do_pe_invoke(long long action,
@@ -216,10 +248,7 @@ do_pe_invoke(long long action,
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(fsa_state));
 
-    /* Make sure any queued calculations are discarded */
-    free(fsa_pe_ref);
-    fsa_pe_ref = NULL;
-
+    controld_expect_sched_reply(NULL);
     fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
 }
 
@@ -335,16 +364,14 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     cmd = create_request(CRM_OP_PECALC, output, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
-    free(fsa_pe_ref);
-    fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
-
     sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem->source), cmd, 0, 0, NULL);
     if (sent <= 0) {
         crm_err("Could not contact the pengine: %d", sent);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+    } else {
+        controld_expect_sched_reply(cmd);
+        crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
+                  fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     }
-
-    crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
-              fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);
 }
