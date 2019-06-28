@@ -125,7 +125,7 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
         acl->xpath = strdup(buffer);
         CRM_ASSERT(acl->xpath != NULL);
 
-        crm_trace("Unpacked ACL <%s> element using equivalent xpath: %s",
+        crm_trace("Unpacked ACL <%s> element as xpath: %s",
                   crm_element_name(xml), acl->xpath);
     }
 
@@ -482,8 +482,8 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                     return TRUE;
                 }
             }
-            crm_trace("Enforced deny ACL %s (%d match%s)",
-                      acl->xpath, max, ((max == 1)? "" : "es"));
+            crm_trace("ACLs deny user '%s' access to %s (%d match%s)",
+                      user, acl->xpath, max, ((max == 1)? "" : "es"));
             freeXpathObject(xpathObj);
         }
     }
@@ -583,8 +583,9 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
             return;
 
         } else {
-            crm_trace("ACLs would disallow creation of <%s> with id=\"%s\"",
-                      crm_element_name(xml), display_id(xml));
+            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\" ",
+                       ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
+                       crm_element_name(xml), display_id(xml));
         }
     }
 
