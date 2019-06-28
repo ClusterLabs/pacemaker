@@ -119,12 +119,19 @@ An +acl_role+ element may contain any number of +acl_permission+ elements.
 
 [IMPORTANT]
 ====
-Permissions are applied to the selected XML element's entire XML subtree
-(all elements enclosed within it). Permissions for more specific matches (more
-deeply nested elements) take precedence over more general ones. If multiple
-permissions are configured for the same match (for example, in different roles
-applied to the same user), any +deny+ permission takes precedence, then
-+write+, then lastly +read+.
+* Permissions are applied to the selected XML element's entire XML subtree
+  (all elements enclosed within it).
+
+* Write permission grants the ability to create, modify, or remove the element
+  and its subtree, and also the ability to create any "scaffolding" elements
+  (enclosing elements that do not have attributes other than an ID).
+
+* Permissions for more specific matches (more deeply nested elements) take
+  precedence over more general ones.
+
+* If multiple permissions are configured for the same match (for example, in
+  different roles applied to the same user), any +deny+ permission takes
+  precedence, then +write+, then lastly +read+.
 ====
 
 == ACL Targets and Groups ==
