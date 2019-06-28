@@ -83,6 +83,7 @@ int crmd_exit(int rc);
 int crmd_fast_exit(int rc);
 gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
 gboolean start_subsystem(struct crm_subsystem_s *centry);
+void controld_stop_sched_timer(void);
 void controld_expect_sched_reply(xmlNode *msg);
 void controld_sched_cleanup(void);
 

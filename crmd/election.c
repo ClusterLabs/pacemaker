@@ -280,6 +280,7 @@ do_dc_release(long long action,
     if (action & A_DC_RELEASE) {
         crm_debug("Releasing the role of DC");
         clear_bit(fsa_input_register, R_THE_DC);
+        controld_expect_sched_reply(NULL);
 
     } else if (action & A_DC_RELEASED) {
         crm_info("DC role released");
