@@ -21,7 +21,7 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-EXTRA_DIST		= $(sbin_SCRIPTS)
+EXTRA_DIST		= $(sbin_SCRIPTS) stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
 			  cibadmin \

@@ -36,9 +36,15 @@ if BUILD_HELP
 man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 endif
 
+HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource manager"
+
 %.8:	% $(MAN8DEPS)
 	chmod a+x $(abs_builddir)/$<
-	$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+	if [ -f $(abs_builddir)/$@.inc ]; then \
+		$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS) -h --help-all -i $(abs_builddir)/$@.inc $(abs_builddir)/$< | sed -e '/.SS "Usage:"/,+3d' > $@ ; \
+	else \
+		$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS) $(abs_builddir)/$< --output $@ ; \
+	fi
 
 %.xml:  %
 	$(AM_V_GEN)$(abs_builddir)/$< metadata > $@
