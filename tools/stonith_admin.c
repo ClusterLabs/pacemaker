@@ -524,6 +524,7 @@ main(int argc, char **argv)
 
     GError *error = NULL;
     GOptionContext *context = NULL;
+    gchar **argv_copy = NULL;
 
     if (args == NULL) {
         crm_exit(crm_errno2exit(-ENOMEM));
@@ -536,8 +537,14 @@ main(int argc, char **argv)
 
     async_fence_data.name = strdup(crm_system_name);
 
+    /* g_option_context_parse will remove items from argv as it proceses them,
+     * but we also need the list of arguments to pass to pcmk__output_new.
+     * So make a copy here and free it when the program quits.
+     */
+    argv_copy = g_strdupv(argv);
+
     if (!g_option_context_parse(context, &argc, &argv, &error)) {
-        fprintf(stderr, "%s: %s\n", argv[0], error->message);
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
     }
 
     for (int i = 0; i < options.verbose; i++) {
@@ -546,7 +553,7 @@ main(int argc, char **argv)
 
     pcmk__register_formats(context, formats);
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv_copy);
     if (rc != 0) {
         fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
         exit_code = CRM_EX_ERROR;
@@ -611,27 +618,27 @@ main(int argc, char **argv)
         no_connect = true;
         action = 'B';
         target = options.reboot_host;
-        crm_log_args(argc, argv);
+        crm_log_args(argc, argv_copy);
     }
 
     if (options.fence_host != NULL) {
         no_connect = true;
         action = 'F';
         target = options.fence_host;
-        crm_log_args(argc, argv);
+        crm_log_args(argc, argv_copy);
     }
 
     if (options.unfence_host != NULL) {
         no_connect = true;
         action = 'U';
         target = options.unfence_host;
-        crm_log_args(argc, argv);
+        crm_log_args(argc, argv_copy);
     }
 
     if (options.confirm_host != NULL) {
         action = 'C';
         target = options.confirm_host;
-        crm_log_args(argc, argv);
+        crm_log_args(argc, argv_copy);
     }
 
     if (options.last_fenced != NULL) {
@@ -804,6 +811,7 @@ main(int argc, char **argv)
     exit_code = crm_errno2exit(rc);
 
   done:
+    g_strfreev(argv_copy);
     g_option_context_free(context);
     if (out != NULL) {
         pcmk__output_free(out, exit_code);
