@@ -81,26 +81,9 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     return 0;
 }
 
-bool
-pcmk__parse_output_args(const char *argname, char *argvalue, char **output_ty, char **output_dest) {
-    if (safe_str_eq("output-as", argname)) {
-        *output_ty = argvalue;
-        return true;
-    } else if (safe_str_eq("output-to", argname)) {
-        if (safe_str_eq(argvalue, "-")) {
-            *output_dest = NULL;
-        } else {
-            *output_dest = argvalue;
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
 int
-pcmk__register_format(const char *fmt_name, pcmk__output_factory_t create) {
+pcmk__register_format(GOptionContext *context, const char *name,
+                      pcmk__output_factory_t create, GOptionEntry *options) {
     if (create == NULL) {
         return -EINVAL;
     }
@@ -109,8 +92,33 @@ pcmk__register_format(const char *fmt_name, pcmk__output_factory_t create) {
         formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
     }
 
-    g_hash_table_insert(formatters, strdup(fmt_name), create);
+    if (options != NULL && context != NULL) {
+        char *group_name = crm_strdup_printf("output-%s", name);
+        char *group_desc = crm_strdup_printf("%s Output Options:", name);
+        char *group_help = crm_strdup_printf("Show %s output help", name);
+
+        GOptionGroup *group = g_option_group_new(group_name, group_desc,
+                                                 group_help, NULL, NULL);
+
+        g_option_group_add_entries(group, options);
+        g_option_context_add_group(context, group);
+
+        free(group_name);
+        free(group_desc);
+        free(group_help);
+    }
+
+    g_hash_table_insert(formatters, strdup(name), create);
     return 0;
+}
+
+void
+pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *formats) {
+    pcmk__supported_format_t *entry = NULL;
+
+    for (entry = formats; entry->name != NULL; entry++) {
+        pcmk__register_format(context, entry->name, entry->create, entry->options);
+    }
 }
 
 int
