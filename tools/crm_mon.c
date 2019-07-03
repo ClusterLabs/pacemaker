@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
+#include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
@@ -38,7 +39,6 @@
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <../lib/pengine/unpack.h>
 #include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
 

@@ -7,11 +7,11 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/curses_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>
-#include <unpack.h>
 #include <crm/msg_xml.h>
 #include <pe_status_private.h>
 
