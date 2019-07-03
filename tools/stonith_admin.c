@@ -219,6 +219,7 @@ static GOptionEntry addl_entries[] = {
 /* *INDENT-ON* */
 
 static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
@@ -482,7 +483,7 @@ build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
     GOptionGroup *defn_group, *query_group, *fence_group, *addl_group;
 
-    context = pcmk__build_arg_context(args, "text (default), xml");
+    context = pcmk__build_arg_context(args, "text (default), html, xml");
 
     defn_group = g_option_group_new("definition", "Device Definition Commands:",
                                     "Show device definition help", NULL, NULL);
