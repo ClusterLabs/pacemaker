@@ -27,13 +27,13 @@ typedef struct text_list_data_s {
     char *plural_noun;
 } text_list_data_t;
 
-typedef struct text_private_s {
+typedef struct private_data_s {
     GQueue *parent_q;
-} text_private_t;
+} private_data_t;
 
 static void
 text_free_priv(pcmk__output_t *out) {
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     if (priv == NULL) {
         return;
@@ -45,13 +45,13 @@ text_free_priv(pcmk__output_t *out) {
 
 static bool
 text_init(pcmk__output_t *out) {
-    text_private_t *priv = NULL;
+    private_data_t *priv = NULL;
 
     /* If text_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
         return true;
     } else {
-        out->priv = calloc(1, sizeof(text_private_t));
+        out->priv = calloc(1, sizeof(private_data_t));
         if (out->priv == NULL) {
             return false;
         }
@@ -138,7 +138,7 @@ text_info(pcmk__output_t *out, const char *format, ...) {
 
 static void
 text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
     pcmk__indented_printf(out, "%s", buf);
@@ -147,7 +147,7 @@ text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 static void
 text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
                 const char *plural_noun) {
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     text_list_data_t *new_list = NULL;
 
     CRM_ASSERT(priv != NULL);
@@ -166,7 +166,7 @@ text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun
 
 static void
 text_list_item(pcmk__output_t *out, const char *id, const char *content) {
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
@@ -185,7 +185,7 @@ text_list_item(pcmk__output_t *out, const char *id, const char *content) {
 
 static void
 text_end_list(pcmk__output_t *out) {
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     text_list_data_t *node = NULL;
 
     CRM_ASSERT(priv != NULL);
@@ -241,7 +241,7 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
     int len = 0;
 #if FANCY_TEXT_OUTPUT > 0
     int level = 0;
-    text_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
