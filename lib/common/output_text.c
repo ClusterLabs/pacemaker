@@ -12,12 +12,13 @@
 #include <crm/common/output.h>
 #include <glib.h>
 
-/* Disabled for the moment, but we can enable it (or remove it entirely)
- * when we make a decision on whether this is preferred output.
- */
-#define FANCY_TEXT_OUTPUT 0
+static gboolean fancy = FALSE;
 
 GOptionEntry pcmk__text_output_entries[] = {
+    { "fancy", 0, 0, G_OPTION_ARG_NONE, &fancy,
+      "Use more highly formatted output",
+      NULL },
+
     { NULL }
 };
 
@@ -152,9 +153,9 @@ text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun
 
     CRM_ASSERT(priv != NULL);
 
-#if FANCY_TEXT_OUTPUT > 0
-    pcmk__indented_printf(out, "%s:\n", name);
-#endif
+    if (fancy) {
+        pcmk__indented_printf(out, "%s:\n", name);
+    }
 
     new_list = calloc(1, sizeof(text_list_data_t));
     new_list->len = 0;
@@ -170,15 +171,15 @@ text_list_item(pcmk__output_t *out, const char *id, const char *content) {
 
     CRM_ASSERT(priv != NULL);
 
-#if FANCY_TEXT_OUTPUT > 0
-    if (id != NULL) {
-        pcmk__indented_printf(out, "* %s: %s\n", id, content);
+    if (fancy) {
+        if (id != NULL) {
+            pcmk__indented_printf(out, "* %s: %s\n", id, content);
+        } else {
+            pcmk__indented_printf(out, "* %s\n", content);
+        }
     } else {
-        pcmk__indented_printf(out, "* %s\n", content);
+        fprintf(out->dest, "%s\n", content);
     }
-#else
-    fprintf(out->dest, "%s\n", content);
-#endif
 
     ((text_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
 }
@@ -240,18 +241,19 @@ void
 pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
-#if FANCY_TEXT_OUTPUT > 0
-    int level = 0;
-    private_data_t *priv = out->priv;
 
-    CRM_ASSERT(priv != NULL);
+    if (fancy) {
+        int level = 0;
+        private_data_t *priv = out->priv;
 
-    level = g_queue_get_length(priv->parent_q);
+        CRM_ASSERT(priv != NULL);
 
-    for (int i = 0; i < level; i++) {
-        putc('\t', out->dest);
+        level = g_queue_get_length(priv->parent_q);
+
+        for (int i = 0; i < level; i++) {
+            putc('\t', out->dest);
+        }
     }
-#endif
 
     va_start(ap, format);
     len = vfprintf(out->dest, format, ap);

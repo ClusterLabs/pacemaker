@@ -532,6 +532,7 @@ main(int argc, char **argv)
 
     args->summary = strdup("stonith_admin - Access the Pacemaker fencing API");
     context = build_arg_context(args);
+    pcmk__register_formats(context, formats);
 
     crm_log_cli_init("stonith_admin");
 
@@ -550,8 +551,6 @@ main(int argc, char **argv)
     for (int i = 0; i < options.verbose; i++) {
         crm_bump_log_level(argc, argv);
     }
-
-    pcmk__register_formats(context, formats);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv_copy);
     if (rc != 0) {
