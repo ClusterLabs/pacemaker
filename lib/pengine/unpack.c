@@ -2537,7 +2537,8 @@ stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 }
 
 static void
-unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set)
+unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                          pe_working_set_t *data_set)
 {
     /* A successful migration sequence is:
      *    migrate_to on source node
@@ -2553,15 +2554,16 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
      *
      * If the migrate_to and migrate_from both succeeded (which also implies the
      * resource is no longer running on the source), but there is no stop, the
-     * migration is considered to be "dangling".
+     * migration is considered to be "dangling". Schedule a stop on the source
+     * in this case.
      */
     int from_rc = 0;
     int from_status = 0;
-    const char *migrate_source = NULL;
-    const char *migrate_target = NULL;
-    pe_node_t *target = NULL;
-    pe_node_t *source = NULL;
+    pe_node_t *target_node = NULL;
+    pe_node_t *source_node = NULL;
     xmlNode *migrate_from = NULL;
+    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
     if (stop_happened_after(rsc, node, xml_op, data_set)) {
         return;
@@ -2570,20 +2572,17 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
     // Clones are not allowed to migrate, so role can't be master
     rsc->role = RSC_ROLE_STARTED;
 
-    migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    target_node = pe_find_node(data_set->nodes, target);
+    source_node = pe_find_node(data_set->nodes, source);
 
-    target = pe_find_node(data_set->nodes, migrate_target);
-    source = pe_find_node(data_set->nodes, migrate_source);
-
-    // Check whether there was a migrate_from action
-    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target,
-                               migrate_source, data_set);
+    // Check whether there was a migrate_from action on the target
+    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
+                               source, data_set);
     if (migrate_from) {
         crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
         crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
         pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                     ID(migrate_from), migrate_target, from_status, from_rc);
+                     ID(migrate_from), target, from_status, from_rc);
     }
 
     if (migrate_from && from_rc == PCMK_OCF_OK
@@ -2593,32 +2592,32 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
          * source without affecting the target.
          */
         pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                     migrate_source);
+                     source);
         rsc->role = RSC_ROLE_STOPPED;
         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 
     } else if (migrate_from && (from_status != PCMK_LRM_OP_PENDING)) { // Failed
-        if (target && target->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                         target->details->online);
-            native_add_running(rsc, target, data_set);
+        if (target_node && target_node->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
+                         target_node->details->online);
+            native_add_running(rsc, target_node, data_set);
         }
 
     } else { // Pending, or complete but erased
-        if (target && target->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                         target->details->online);
+        if (target_node && target_node->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
+                         target_node->details->online);
 
-            native_add_running(rsc, target, data_set);
-            if (source && source->details->online) {
+            native_add_running(rsc, target_node, data_set);
+            if (source_node && source_node->details->online) {
                 /* This is a partial migration: the migrate_to completed
                  * successfully on the source, but the migrate_from has not
                  * completed. Remember the source and target; if the newly
                  * chosen target remains the same when we schedule actions
                  * later, we may continue with the migration.
                  */
-                rsc->partial_migration_target = target;
-                rsc->partial_migration_source = source;
+                rsc->partial_migration_target = target_node;
+                rsc->partial_migration_source = source_node;
             }
         } else {
             /* Consider it failed here - forces a restart, prevents migration */
@@ -2629,75 +2628,100 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
 }
 
 static void
-unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set) 
+unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                          pe_working_set_t *data_set)
 {
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    int target_stop_id = 0;
+    int target_migrate_from_id = 0;
+    xmlNode *target_stop = NULL;
+    xmlNode *target_migrate_from = NULL;
+    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-    CRM_ASSERT(rsc);
-    if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-        int stop_id = 0;
-        int migrate_id = 0;
-        const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    /* If a migration failed, we have to assume the resource is active. Clones
+     * are not allowed to migrate, so role can't be master.
+     */
+    rsc->role = RSC_ROLE_STARTED;
 
-        xmlNode *stop_op =
-            find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_source, NULL, data_set);
-        xmlNode *migrate_op =
-            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE, migrate_source, migrate_target,
-                        data_set);
+    // Check for stop on the target
+    target_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, target, NULL,
+                              data_set);
+    if (target_stop) {
+        crm_element_value_int(target_stop, XML_LRM_ATTR_CALLID,
+                              &target_stop_id);
+    }
 
-        if (stop_op) {
-            crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-        }
-        if (migrate_op) {
-            crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
-        }
+    // Check for migrate_from on the target
+    target_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
+                                      source, data_set);
+    if (target_migrate_from) {
+        crm_element_value_int(target_migrate_from, XML_LRM_ATTR_CALLID,
+                              &target_migrate_from_id);
+    }
 
-        /* Get our state right */
-        rsc->role = RSC_ROLE_STARTED;   /* can be master? */
+    if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
+        /* There was no stop on the source, or a stop that happened before a
+         * migrate_from, so assume the resource is still active on the target
+         * (if it is up).
+         */
+        node_t *target_node = pe_find_node(data_set->nodes, target);
 
-        if (stop_op == NULL || stop_id < migrate_id) {
-            node_t *source = pe_find_node(data_set->nodes, migrate_source);
-
-            if (source && source->details->online) {
-                native_add_running(rsc, source, data_set);
-            }
-        }
-
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
-        int stop_id = 0;
-        int migrate_id = 0;
-        const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-
-        xmlNode *stop_op =
-            find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_target, NULL, data_set);
-        xmlNode *migrate_op =
-            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
-                        data_set);
-
-        if (stop_op) {
-            crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-        }
-        if (migrate_op) {
-            crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
+        pe_rsc_trace(rsc, "stop (%d) + migrate_from (%d)",
+                     target_stop_id, target_migrate_from_id);
+        if (target_node && target_node->details->online) {
+            native_add_running(rsc, target_node, data_set);
         }
 
-        /* Get our state right */
-        rsc->role = RSC_ROLE_STARTED;   /* can be master? */
+    } else if (target_migrate_from == NULL) {
+        /* There was a stop, but no migrate_from. The stop could have happened
+         * before migrate_from was even scheduled, so mark it as dangling so we
+         * can force a stop later.
+         */
+        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+    }
+}
 
-        if (stop_op == NULL || stop_id < migrate_id) {
-            node_t *target = pe_find_node(data_set->nodes, migrate_target);
+static void
+unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
+                            xmlNode *xml_op, pe_working_set_t *data_set)
+{
+    int source_stop_id = 0;
+    int source_migrate_to_id = 0;
+    xmlNode *source_stop = NULL;
+    xmlNode *source_migrate_to = NULL;
+    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-            pe_rsc_trace(rsc, "Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op,
-                         migrate_id);
-            if (target && target->details->online) {
-                native_add_running(rsc, target, data_set);
-            }
+    /* If a migration failed, we have to assume the resource is active. Clones
+     * are not allowed to migrate, so role can't be master.
+     */
+    rsc->role = RSC_ROLE_STARTED;
 
-        } else if (migrate_op == NULL) {
-            /* Make sure it gets cleaned up, the stop may pre-date the migrate_from */
-            rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+    // Check for a stop on the source
+    source_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, source, NULL,
+                              data_set);
+    if (source_stop) {
+        crm_element_value_int(source_stop, XML_LRM_ATTR_CALLID,
+                              &source_stop_id);
+    }
+
+    // Check for a migrate_to on the source
+    source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
+                                    source, target, data_set);
+    if (source_migrate_to) {
+        crm_element_value_int(source_migrate_to, XML_LRM_ATTR_CALLID,
+                              &source_migrate_to_id);
+    }
+
+    if ((source_stop == NULL) || (source_stop_id < source_migrate_to_id)) {
+        /* There was no stop on the source, or a stop that happened before
+         * migrate_to, so assume the resource is still active on the source (if
+         * it is up).
+         */
+        pe_node_t *source_node = pe_find_node(data_set->nodes, source);
+
+        if (source_node && source_node->details->online) {
+            native_add_running(rsc, source_node, data_set);
         }
     }
 }
@@ -2797,8 +2821,11 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     if (safe_str_eq(task, CRMD_ACTION_STOP)) {
         resource_location(rsc, node, -INFINITY, "__stop_fail__", data_set);
 
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-        unpack_rsc_migration_failure(rsc, node, xml_op, data_set);
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+        unpack_migrate_to_failure(rsc, node, xml_op, data_set);
+
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        unpack_migrate_from_failure(rsc, node, xml_op, data_set);
 
     } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
         rsc->role = RSC_ROLE_MASTER;
@@ -3209,7 +3236,7 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
         clear_past_failure = TRUE;
 
     } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
-        unpack_rsc_migration(rsc, node, xml_op, data_set);
+        unpack_migrate_to_success(rsc, node, xml_op, data_set);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
         pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
