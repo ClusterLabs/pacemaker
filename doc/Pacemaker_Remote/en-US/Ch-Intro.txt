@@ -31,7 +31,9 @@ pacemaker_remote::
     may run cluster resources and most command-line tools, but cannot perform
     other functions of full cluster nodes such as fencing execution, quorum
     voting or DC eligibility. The pacemaker_remote daemon is an enhanced
-    version of Pacemaker's local resource management daemon (LRMD).
+    version of Pacemaker's local resource management daemon (+pacemaker-execd+,
+    formerly +lrmd+). This concept is materialized as +pacemaker_remoted+
+    binary, should this cause any confusion).
 (((pacemaker_remote)))
 
 remote node::

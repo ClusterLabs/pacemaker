@@ -36,10 +36,6 @@
 
 qb_ipcs_service_t *ipcs = NULL;
 
-#if SUPPORT_COROSYNC
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
-#endif
-
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
 
@@ -75,7 +71,7 @@ do_ha_control(long long action,
 
         if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
-            registered = crm_connect_corosync(cluster);
+            registered = crmd_connect_corosync(cluster);
 #endif
         }
 

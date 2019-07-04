@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -15,6 +17,7 @@
 
 #include <pacemaker-controld.h>
 #include <controld_fsa.h>
+#include <controld_membership.h>  /* post_cache_update */
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
@@ -24,8 +27,6 @@
 #include <sys/stat.h>
 
 #if SUPPORT_COROSYNC
-
-extern void post_cache_update(int seq);
 
 /*	 A_HA_CONNECT	*/
 
@@ -91,21 +92,16 @@ crmd_cs_destroy(gpointer user_data)
     }
 }
 
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
-
 gboolean
-crm_connect_corosync(crm_cluster_t * cluster)
+crmd_connect_corosync(crm_cluster_t * cluster)
 {
-    if (is_corosync_cluster()) {
-        crm_set_status_callback(&peer_update_callback);
-        cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
-        cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-        cluster->destroy = crmd_cs_destroy;
+    cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
+    cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+    cluster->destroy = crmd_cs_destroy;
 
-        if (crm_cluster_connect(cluster)) {
-            cluster_connect_quorum(crmd_quorum_callback, crmd_cs_destroy);
-            return TRUE;
-        }
+    if (crm_cluster_connect(cluster)) {
+        cluster_connect_quorum(crmd_quorum_callback, crmd_cs_destroy);
+        return TRUE;
     }
     return FALSE;
 }
