@@ -2500,12 +2500,28 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
+/*!
+ * \brief Check whether a stop happened on the same node after some event
+ *
+ * \param[in] rsc       Resource being checked
+ * \param[in] node      Node being checked
+ * \param[in] xml_op    Event that stop is being compared to
+ * \param[in] data_set  Cluster working set
+ *
+ * \return TRUE if stop happened after event, FALSE otherwise
+ *
+ * \note This is really unnecessary, but kept as a safety mechanism. We
+ *       currently don't save more than one successful event in history, so this
+ *       only matters when processing really old CIB files that we don't
+ *       technically support anymore, or as preparation for logging an extended
+ *       history in the future.
+ */
 static bool
 stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                     pe_working_set_t *data_set)
 {
-    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id,
-                                   NULL, data_set);
+    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP,
+                                   node->details->uname, NULL, data_set);
 
     if (stop_op) {
         int stop_id = 0;
