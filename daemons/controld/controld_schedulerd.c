@@ -30,6 +30,9 @@ static mainloop_io_t *pe_subsystem = NULL;
 void
 pe_subsystem_free(void)
 {
+    // If we aren't connected to the scheduler, we can't expect a reply
+    controld_expect_sched_reply(NULL);
+
     if (pe_subsystem) {
         mainloop_del_ipc_client(pe_subsystem);
         pe_subsystem = NULL;
@@ -282,17 +285,15 @@ controld_expect_sched_reply(xmlNode *msg)
 
 /*!
  * \internal
- * \brief Clean up all memory used by controller scheduler handling
+ * \brief Free the scheduler reply timer
  */
 void
-controld_sched_cleanup()
+controld_free_sched_timer()
 {
     if (controld_sched_timer != NULL) {
         mainloop_timer_del(controld_sched_timer);
         controld_sched_timer = NULL;
     }
-    pe_subsystem_free();
-    controld_expect_sched_reply(NULL);
 }
 
 /*	 A_PE_INVOKE	*/

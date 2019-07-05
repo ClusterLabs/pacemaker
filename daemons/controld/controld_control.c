@@ -260,7 +260,7 @@ crmd_exit(crm_exit_t exit_code)
     crm_timer_stop(recheck_timer);
 
     te_cleanup_stonith_history_sync(NULL, TRUE);
-    controld_sched_cleanup();
+    controld_free_sched_timer();
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
