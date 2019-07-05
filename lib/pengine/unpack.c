@@ -2445,6 +2445,9 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
+    // Sanity check
+    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
+
     if (stop_happened_after(rsc, node, xml_op, data_set)) {
         return;
     }
@@ -2518,6 +2521,9 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
+    // Sanity check
+    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
+
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be master.
      */
@@ -2571,6 +2577,9 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
     xmlNode *source_migrate_to = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+    // Sanity check
+    CRM_CHECK(source && target && !strcmp(target, node->details->uname), return);
 
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be master.
