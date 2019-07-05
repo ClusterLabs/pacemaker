@@ -84,8 +84,8 @@ int crmd_fast_exit(int rc);
 gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
 gboolean start_subsystem(struct crm_subsystem_s *centry);
 void controld_stop_sched_timer(void);
+void controld_free_sched_timer(void);
 void controld_expect_sched_reply(xmlNode *msg);
-void controld_sched_cleanup(void);
 
 void fsa_dump_actions(long long action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);

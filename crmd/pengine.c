@@ -97,6 +97,9 @@ pe_ipc_destroy(gpointer user_data)
         crm_info("Connection to the Policy Engine released");
     }
 
+    // If we aren't connected to the scheduler, we can't expect a reply
+    controld_expect_sched_reply(NULL);
+
     clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     pe_subsystem->pid = -1;
     pe_subsystem->source = NULL;
@@ -137,6 +140,9 @@ do_pe_control(long long action,
     };
 
     if (action & stop_actions) {
+        // If we aren't connected to the scheduler, we can't expect a reply
+        controld_expect_sched_reply(NULL);
+
         clear_bit(fsa_input_register, pe_subsystem->flag_required);
 
         mainloop_del_ipc_client(pe_subsystem->source);
@@ -244,17 +250,15 @@ controld_expect_sched_reply(xmlNode *msg)
 
 /*!
  * \internal
- * \brief Clean up all memory used by controller scheduler handling
+ * \brief Free the scheduler reply timer
  */
 void
-controld_sched_cleanup()
+controld_free_sched_timer()
 {
     if (controld_sched_timer != NULL) {
         mainloop_timer_del(controld_sched_timer);
         controld_sched_timer = NULL;
     }
-    free(pe_subsystem); pe_subsystem = NULL;
-    controld_expect_sched_reply(NULL);
 }
 
 /*	 A_PE_INVOKE	*/
