@@ -144,6 +144,7 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
+    rsc->st_probe_rc = -ENODEV; // if stonith, initialize to "not running"
     return rsc;
 }
 
@@ -1015,18 +1016,7 @@ stonith_rc2status(const char *action, guint interval_ms, int rc)
 
         case -ENODEV:
             // The device is not registered with the fencer
-
-            if (safe_str_neq(action, "monitor")) {
-                status = PCMK_LRM_OP_ERROR;
-
-            } else if (interval_ms > 0) {
-                /* If we get here, the fencer somehow lost the registration of a
-                 * previously active device (possibly due to crash and respawn). In
-                 * that case, we need to indicate that the recurring monitor needs
-                 * to be cancelled.
-                 */
-                status = PCMK_LRM_OP_CANCELLED;
-            }
+            status = PCMK_LRM_OP_ERROR;
             break;
 
         default:
@@ -1054,9 +1044,9 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         // Certain successful actions change the known state of the resource
         if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
             if (safe_str_eq(cmd->action, "start")) {
-                rsc->stonith_started = 1;
+                rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
             } else if (safe_str_eq(cmd->action, "stop")) {
-                rsc->stonith_started = 0;
+                rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
             }
         }
     }
@@ -1096,6 +1086,14 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+            /* This will cause future probes to return PCMK_OCF_UNKNOWN_ERROR
+             * until the resource is stopped or started successfully. This is
+             * especially important if the controller also went away (possibly
+             * due to a cluster layer restart) and won't receive our client
+             * notification of any monitors finalized below.
+             */
+            rsc->st_probe_rc = pcmk_err_generic;
+
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);
             }
@@ -1190,23 +1188,7 @@ execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
 
 /*!
  * \internal
- * \brief Execute a one-time stonith resource "monitor" action
- *
- * Probe a stonith resource by checking whether we started it
- *
- * \param[in] rsc  Stonith resource to probe
- *
- * \return pcmk_ok if started, -errno otherwise
- */
-static inline int
-execd_stonith_probe(lrmd_rsc_t *rsc)
-{
-    return rsc->stonith_started? 0 : -ENODEV;
-}
-
-/*!
- * \internal
- * \brief Initiate a stonith resource agent "monitor" action
+ * \brief Initiate a stonith resource agent recurring "monitor" action
  *
  * \param[in] stonith_api  Connection to fencer
  * \param[in] rsc          Stonith resource to monitor
@@ -1256,7 +1238,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         if (cmd->interval_ms > 0) {
             do_monitor = TRUE;
         } else {
-            rc = execd_stonith_probe(rsc);
+            rc = rsc->st_probe_rc;
         }
     }
 

@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
@@ -111,8 +113,9 @@ typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
 bool stonith_dispatch(stonith_t * st);
 xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                            int call_options);
-int stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data,
-                         xmlNode ** output_data, int call_options, int timeout);
+static int stonith_send_command(stonith_t *stonith, const char *op,
+                                xmlNode *data, xmlNode **output_data,
+                                int call_options, int timeout);
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
@@ -1820,47 +1823,51 @@ stonith_send_notification(gpointer data, gpointer user_data)
     event_free(st_event);
 }
 
-int
+/*!
+ * \internal
+ * \brief Create and send an API request
+ *
+ * \param[in]  stonith       Stonith connection
+ * \param[in]  op            API operation to request
+ * \param[in]  data          Data to attach to request
+ * \param[out] output_data   If not NULL, will be set to reply if synchronous
+ * \param[in]  call_options  Bitmask of stonith_call_options to use
+ * \param[in]  timeout       Error if not completed within this many seconds
+ *
+ * \return pcmk_ok (for synchronous requests) or positive call ID
+ *         (for asynchronous requests) on success, -errno otherwise
+ */
+static int
 stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNode ** output_data,
                      int call_options, int timeout)
 {
     int rc = 0;
     int reply_id = -1;
-    enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
+    stonith_private_t *native = NULL;
 
-    stonith_private_t *native = stonith->st_private;
-
-    if (stonith->state == stonith_disconnected) {
-        return -ENOTCONN;
-    }
+    CRM_ASSERT(stonith && stonith->st_private && op);
+    native = stonith->st_private;
 
     if (output_data != NULL) {
         *output_data = NULL;
     }
 
-    if (op == NULL) {
-        crm_err("No operation specified");
-        return -EINVAL;
+    if ((stonith->state == stonith_disconnected) || (native->token == NULL)) {
+        return -ENOTCONN;
     }
 
-    if (call_options & st_opt_sync_call) {
-        ipc_flags |= crm_ipc_client_response;
-    }
-
-    stonith->call_id++;
-    /* prevent call_id from being negative (or zero) and conflicting
-     *    with the stonith_errors enum
-     * use 2 because we use it as (stonith->call_id - 1) below
+    /* Increment the call ID, which must be positive to avoid conflicting with
+     * error codes. This shouldn't be a problem unless the client mucked with
+     * it or the counter wrapped around.
      */
+    stonith->call_id++;
     if (stonith->call_id < 1) {
         stonith->call_id = 1;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
     op_msg = stonith_create_op(stonith->call_id, native->token, op, data, call_options);
     if (op_msg == NULL) {
         return -EINVAL;
@@ -1869,7 +1876,15 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
-    rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, 1000 * (timeout + 60), &op_reply);
+    {
+        enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
+
+        if (call_options & st_opt_sync_call) {
+            ipc_flags |= crm_ipc_client_response;
+        }
+        rc = crm_ipc_send(native->ipc, op_msg, ipc_flags,
+                          1000 * (timeout + 60), &op_reply);
+    }
     free_xml(op_msg);
 
     if (rc < 0) {
@@ -1882,9 +1897,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     if (!(call_options & st_opt_sync_call)) {
         crm_trace("Async call %d, returning", stonith->call_id);
-        CRM_CHECK(stonith->call_id != 0, return -EPROTO);
         free_xml(op_reply);
-
         return stonith->call_id;
     }
 

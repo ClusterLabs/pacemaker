@@ -1445,38 +1445,56 @@ stonith_level_remove(xmlNode *msg, char **desc)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Schedule an (asynchronous) action directly on a stonith device
+ *
+ * Handle a STONITH_OP_EXEC API message by scheduling a requested agent action
+ * directly on a specified device. Only list, monitor, and status actions are
+ * expected to use this call, though it should work with any agent command.
+ *
+ * \param[in]  msg     API message XML with desired action
+ * \param[out] output  Unused
+ *
+ * \return -EINPROGRESS on success, -errno otherwise
+ * \note If the action is monitor, the device must be registered via the API
+ *       (CIB registration is not sufficient), because monitor should not be
+ *       possible unless the device is "started" (API registered).
+ */
 static int
 stonith_device_action(xmlNode * msg, char **output)
 {
-    int rc = pcmk_ok;
     xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
+    xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
-
+    const char *action = crm_element_value(op, F_STONITH_ACTION);
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
 
-    if (id) {
-        crm_trace("Looking for '%s'", id);
-        device = g_hash_table_lookup(device_list, id);
+    if ((id == NULL) || (action == NULL)) {
+        crm_info("Malformed API action request: device %s, action %s",
+                 (id? id : "not specified"),
+                 (action? action : "not specified"));
+        return -EPROTO;
     }
 
-    if (device && device->api_registered == FALSE) {
-        rc = -ENODEV;
+    device = g_hash_table_lookup(device_list, id);
+    if ((device == NULL)
+        || (!device->api_registered && !strcmp(action, "monitor"))) {
 
-    } else if (device) {
-        cmd = create_async_command(msg);
-        if (cmd == NULL) {
-            return -EPROTO;
-        }
-
-        schedule_stonith_command(cmd, device);
-        rc = -EINPROGRESS;
-
-    } else {
-        crm_info("Device %s not found", id ? id : "<none>");
-        rc = -ENODEV;
+        // Monitors may run only on "started" (API-registered) devices
+        crm_info("Ignoring API %s action request because device %s not found",
+                 action, id);
+        return -ENODEV;
     }
-    return rc;
+
+    cmd = create_async_command(msg);
+    if (cmd == NULL) {
+        return -EPROTO;
+    }
+
+    schedule_stonith_command(cmd, device);
+    return -EINPROGRESS;
 }
 
 static void
@@ -2071,7 +2089,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
-        if (rc == pcmk_ok &&
+        if (!device->verified && (rc == pcmk_ok) &&
             (safe_str_eq(cmd->action, "list") ||
              safe_str_eq(cmd->action, "monitor") || safe_str_eq(cmd->action, "status"))) {
 
