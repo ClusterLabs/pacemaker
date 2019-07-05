@@ -2349,10 +2349,11 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
 #define STATUS_PATH_MAX 1024
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
-            pe_working_set_t * data_set)
+            bool success_only, pe_working_set_t *data_set)
 {
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
+    xmlNode *xml = NULL;
 
     offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//node_state[@uname='%s']", node);
     offset +=
@@ -2377,7 +2378,19 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     }
 
     CRM_LOG_ASSERT(offset > 0);
-    return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+
+    if (xml && success_only) {
+        int rc = PCMK_OCF_UNKNOWN_ERROR;
+        int status = PCMK_LRM_OP_ERROR;
+
+        crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
+        crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS, &status);
+        if ((rc != PCMK_OCF_OK) || (status != PCMK_LRM_OP_DONE)) {
+            return NULL;
+        }
+    }
+    return xml;
 }
 
 /*!
@@ -2401,7 +2414,7 @@ stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                     pe_working_set_t *data_set)
 {
     xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP,
-                                   node->details->uname, NULL, data_set);
+                                   node->details->uname, NULL, TRUE, data_set);
 
     if (stop_op) {
         int stop_id = 0;
@@ -2460,7 +2473,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     // Check whether there was a migrate_from action on the target
     migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, data_set);
+                               source, FALSE, data_set);
     if (migrate_from) {
         crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
         crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
@@ -2531,7 +2544,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     // Check for stop on the target
     target_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, target, NULL,
-                              data_set);
+                              TRUE, data_set);
     if (target_stop) {
         crm_element_value_int(target_stop, XML_LRM_ATTR_CALLID,
                               &target_stop_id);
@@ -2539,7 +2552,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                                      source, data_set);
+                                      source, TRUE, data_set);
     if (target_migrate_from) {
         crm_element_value_int(target_migrate_from, XML_LRM_ATTR_CALLID,
                               &target_migrate_from_id);
@@ -2588,7 +2601,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
 
     // Check for a stop on the source
     source_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, source, NULL,
-                              data_set);
+                              TRUE, data_set);
     if (source_stop) {
         crm_element_value_int(source_stop, XML_LRM_ATTR_CALLID,
                               &source_stop_id);
@@ -2596,7 +2609,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
-                                    source, target, data_set);
+                                    source, target, TRUE, data_set);
     if (source_migrate_to) {
         crm_element_value_int(source_migrate_to, XML_LRM_ATTR_CALLID,
                               &source_migrate_to_id);
