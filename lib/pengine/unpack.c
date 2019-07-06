@@ -2393,6 +2393,17 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return xml;
 }
 
+static int
+pe__call_id(xmlNode *op_xml)
+{
+    int id = 0;
+
+    if (op_xml) {
+        crm_element_value_int(op_xml, XML_LRM_ATTR_CALLID, &id);
+    }
+    return id;
+}
+
 /*!
  * \brief Check whether a stop happened on the same node after some event
  *
@@ -2416,17 +2427,7 @@ stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP,
                                    node->details->uname, NULL, TRUE, data_set);
 
-    if (stop_op) {
-        int stop_id = 0;
-        int task_id = 0;
-
-        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-        crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
-        if (stop_id > task_id) {
-            return TRUE;
-        }
-    }
-    return FALSE;
+    return (stop_op && (pe__call_id(stop_op) > pe__call_id(xml_op)));
 }
 
 static void
@@ -2545,18 +2546,12 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     // Check for stop on the target
     target_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, target, NULL,
                               TRUE, data_set);
-    if (target_stop) {
-        crm_element_value_int(target_stop, XML_LRM_ATTR_CALLID,
-                              &target_stop_id);
-    }
+    target_stop_id = pe__call_id(target_stop);
 
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
                                       source, TRUE, data_set);
-    if (target_migrate_from) {
-        crm_element_value_int(target_migrate_from, XML_LRM_ATTR_CALLID,
-                              &target_migrate_from_id);
-    }
+    target_migrate_from_id = pe__call_id(target_migrate_from);
 
     if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
         /* There was no stop on the source, or a stop that happened before a
@@ -2584,8 +2579,6 @@ static void
 unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
                             xmlNode *xml_op, pe_working_set_t *data_set)
 {
-    int source_stop_id = 0;
-    int source_migrate_to_id = 0;
     xmlNode *source_stop = NULL;
     xmlNode *source_migrate_to = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
@@ -2602,20 +2595,13 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
     // Check for a stop on the source
     source_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, source, NULL,
                               TRUE, data_set);
-    if (source_stop) {
-        crm_element_value_int(source_stop, XML_LRM_ATTR_CALLID,
-                              &source_stop_id);
-    }
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
                                     source, target, TRUE, data_set);
-    if (source_migrate_to) {
-        crm_element_value_int(source_migrate_to, XML_LRM_ATTR_CALLID,
-                              &source_migrate_to_id);
-    }
 
-    if ((source_stop == NULL) || (source_stop_id < source_migrate_to_id)) {
+    if ((source_stop == NULL)
+        || (pe__call_id(source_stop) < pe__call_id(source_migrate_to))) {
         /* There was no stop on the source, or a stop that happened before
          * migrate_to, so assume the resource is still active on the source (if
          * it is up).
