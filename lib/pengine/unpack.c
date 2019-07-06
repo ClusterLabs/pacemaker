@@ -2567,10 +2567,33 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         }
 
     } else if (target_migrate_from == NULL) {
-        /* There was a stop, but no migrate_from. The stop could have happened
-         * before migrate_from was even scheduled, so mark it as dangling so we
-         * can force a stop later.
+        /* We know there was a stop on the target, but there may not have been a
+         * migrate_from (the stop could have happened before migrate_from was
+         * scheduled or attempted).
+         *
+         * That means this could be a "dangling" migration. But first, check
+         * whether there is a newer migrate_from or start on the source node --
+         * it's possible the failed migration was followed by a successful
+         * full restart or migration in the reverse direction, in which case we
+         * don't want to force it to stop.
          */
+        xmlNode *source_migrate_from = NULL;
+        xmlNode *source_start = NULL;
+        int source_migrate_to_id = pe__call_id(xml_op);
+
+        source_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, source,
+                                          NULL, TRUE, data_set);
+        if (pe__call_id(source_migrate_from) > source_migrate_to_id) {
+            return;
+        }
+
+        source_start = find_lrm_op(rsc->id, CRMD_ACTION_START, source, NULL,
+                                   TRUE, data_set);
+        if (pe__call_id(source_start) > source_migrate_to_id) {
+            return;
+        }
+
+        // Mark node as having dangling migration so we can force a stop later
         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
     }
 }
