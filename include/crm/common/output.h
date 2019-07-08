@@ -509,6 +509,20 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 
 /*!
  * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  This is used when implementing custom message
+ *        functions.
+ *
+ * \note This function is similar to create_xml_node.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_xml_node(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
  * \brief Add the given node as a child of the current list parent.  This is
  *        used when implementing custom message functions.
  *

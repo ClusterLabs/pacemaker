@@ -78,6 +78,16 @@ void fix_plus_plus_recursive(xmlNode * target);
 xmlNode *create_xml_node(xmlNode * parent, const char *name);
 
 /*
+ * Create a node named "name" as a child of "parent", giving it the provided
+ * text content.
+ * If parent is NULL, creates an unconnected node.
+ *
+ * Returns the created node
+ *
+ */
+xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content);
+
+/*
  *
  */
 void purge_diff_markers(xmlNode * a_node);
