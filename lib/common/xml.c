@@ -20,6 +20,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlIO.h>  /* xmlAllocOutputBuffer */
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -3166,6 +3167,8 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
     }
 }
 
+#define PCMK__XMLDUMP_STATS 0
+
 void
 crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
@@ -3174,58 +3177,58 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         *max = 0;
         return;
     }
-#if 0
-    if (is_not_set(options, xml_log_option_filtered)) {
-        /* Turning this code on also changes the scheduler tests for some reason
-         * (not just newlines).  Figure out why before considering to
-         * enable this permanently.
-         *
-         * It exists to help debug slowness in xmlNodeDump() and
-         * potentially if we ever want to go back to it.
-         *
-         * In theory it's a good idea (reuse) but our custom version does
-         * better for the filtered case and avoids the final strdup() for
-         * everything
-         */
 
-        time_t now, next;
-        xmlDoc *doc = NULL;
-        xmlBuffer *xml_buffer = NULL;
+    if (is_not_set(options, xml_log_option_filtered)
+            && is_set(options, xml_log_option_full_fledged)) {
+        /* libxml's serialization reuse is a good idea, sadly we cannot
+           apply it for the filtered cases (preceding filtering pass
+           would preclude further reuse of such in-situ modified XML
+           in generic context and is likely not a win performance-wise),
+           and there's also a historically unstable throughput argument
+           (likely stemming from memory allocation overhead, eventhough
+           that shall be minimized with defaults preset in crm_xml_init) */
+#if (PCMK__XMLDUMP_STATS - 0)
+        time_t next, new = time(NULL);
+#endif
+        xmlDoc *doc;
+        xmlOutputBuffer *xml_buffer;
 
-        *buffer = NULL;
         doc = getDocPtr(data);
         /* doc will only be NULL if data is */
         CRM_CHECK(doc != NULL, return);
 
-        now = time(NULL);
-        xml_buffer = xmlBufferCreate();
+        xml_buffer = xmlAllocOutputBuffer(NULL);
         CRM_ASSERT(xml_buffer != NULL);
 
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
-         *
-         * We could also use xmlBufferCreateSize() to start with a
-         * sane-ish initial size and avoid the first few doubles.
-         */
-        xmlBufferSetAllocationScheme(xml_buffer, XML_BUFFER_ALLOC_DOUBLEIT);
+        /* XXX we could setup custom allocation scheme for the particular
+               buffer, but it's subsumed with crm_xml_init that needs to
+               be invoked prior to entering this function as such, since
+               its other branch vitally depends on it -- what can be done
+               about this all is to have a facade parsing functions that
+               would 100% mark entering libxml code for us, since we don't
+               do anything as crazy as swapping out the binary form of the
+               parsed tree (but those would need to be strictly used as
+               opposed to libxml's raw functions) */
 
-        *max = xmlNodeDump(xml_buffer, doc, data, 0, (options & xml_log_option_formatted));
-        if (*max > 0) {
-            *buffer = strdup((char *)xml_buffer->content);
+        xmlNodeDumpOutput(xml_buffer, doc, data, 0,
+                          (options & xml_log_option_formatted), NULL);
+        xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");  /* final NL */
+        if (xml_buffer->buffer != NULL) {
+            buffer_print(*buffer, *max, *offset, "%s",
+                         (char *) xmlBufContent(xml_buffer->buffer));
         }
 
+#if (PCMK__XMLDUMP_STATS - 0)
         next = time(NULL);
         if ((now + 1) < next) {
             crm_log_xml_trace(data, "Long time");
             crm_err("xmlNodeDump() -> %dbytes took %ds", *max, next - now);
         }
+#endif
 
-        xmlBufferFree(xml_buffer);
+        xmlOutputBufferClose(xml_buffer);
         return;
     }
-#endif
 
     switch(data->type) {
         case XML_ELEMENT_NODE:
@@ -3283,7 +3286,9 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    crm_xml_dump(an_xml_node, xml_log_option_formatted|xml_log_option_text, &buffer, &offset, &max, 0);
+    crm_xml_dump(an_xml_node,
+                 xml_log_option_formatted|xml_log_option_full_fledged,
+                 &buffer, &offset, &max, 0);
     return buffer;
 }
 
