@@ -420,6 +420,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         stonith_fence_history_cleanup(target,
             crm_element_value(msg, F_STONITH_CALLID) != NULL);
     } else if (options & st_opt_broadcast) {
+        /* there is no clear sign atm for when a history sync
+           is done so send a notification for anything
+           that smells like history-sync
+         */
+        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY_SYNCED, 0, NULL);
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API
             *

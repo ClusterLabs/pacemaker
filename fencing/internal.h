@@ -151,11 +151,12 @@ typedef struct remote_fencing_op_s {
 void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc);
 
 enum st_callback_flags {
-    st_callback_unknown        = 0x0000,
-    st_callback_notify_fence   = 0x0001,
-    st_callback_device_add     = 0x0004,
-    st_callback_device_del     = 0x0010,
-    st_callback_notify_history = 0x0020
+    st_callback_unknown               = 0x0000,
+    st_callback_notify_fence          = 0x0001,
+    st_callback_device_add            = 0x0004,
+    st_callback_device_del            = 0x0010,
+    st_callback_notify_history        = 0x0020,
+    st_callback_notify_history_synced = 0x0040
 };
 
 /*
