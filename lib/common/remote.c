@@ -226,15 +226,23 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
                       gnutls_credentials_type_t cred_type, void *credentials)
 {
     int rc = GNUTLS_E_SUCCESS;
-    const char *prio = NULL;
+    const char *prio_base = NULL;
+    char *prio = NULL;
     gnutls_session_t *session = NULL;
 
-    if (cred_type == GNUTLS_CRD_ANON) {
-        // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-        prio = PCMK_GNUTLS_PRIORITIES ":+ANON-DH";
-    } else {
-        prio = PCMK_GNUTLS_PRIORITIES ":+DHE-PSK:+PSK";
+    /* Determine list of acceptable ciphers, etc. Pacemaker always adds the
+     * values required for its functionality.
+     *
+     * For an example of anonymous authentication, see:
+     * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
+     */
+
+    prio_base = getenv("PCMK_tls_priorities");
+    if (prio_base == NULL) {
+        prio_base = PCMK_GNUTLS_PRIORITIES;
     }
+    prio = crm_strdup_printf("%s:%s", prio_base,
+                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
 
     session = gnutls_malloc(sizeof(gnutls_session_t));
     if (session == NULL) {
@@ -266,6 +274,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
+    free(prio);
     return session;
 
 error:
@@ -274,6 +283,7 @@ error:
             (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
             (conn_type == GNUTLS_SERVER)? "server" : "client",
             gnutls_strerror(rc), rc, prio);
+    free(prio);
     if (session != NULL) {
         gnutls_free(session);
     }
