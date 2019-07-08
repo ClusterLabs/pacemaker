@@ -192,7 +192,12 @@ do_shutdown(long long action,
         clear_bit(fsa_input_register, R_ST_REQUIRED);
 
         crm_info("Disconnecting STONITH...");
-        stonith_api->cmds->disconnect(stonith_api);
+        if (stonith_api->state != stonith_disconnected) {
+            stonith_api->cmds->disconnect(stonith_api);
+        }
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_FENCE);
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_HISTORY_SYNCED);
     }
 }
 
@@ -368,6 +373,8 @@ crmd_exit(int rc)
     crm_timer_stop(shutdown_escalation_timer);
     crm_timer_stop(wait_timer);
     crm_timer_stop(recheck_timer);
+
+    te_cleanup_stonith_history_sync(NULL, TRUE);
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
