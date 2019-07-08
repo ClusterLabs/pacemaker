@@ -379,8 +379,8 @@ create_op_done_notify(remote_fencing_op_t * op, int rc)
     return notify_data;
 }
 
-static void
-bcast_result_to_peers(remote_fencing_op_t * op, int rc)
+void
+stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
@@ -518,7 +518,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     subt = crm_element_value(data, F_SUBTYPE);
     if (dup == FALSE && safe_str_neq(subt, "broadcast")) {
         /* Defer notification until the bcast message arrives */
-        bcast_result_to_peers(op, rc);
+        stonith_bcast_result_to_peers(op, rc);
         goto remote_op_done_cleanup;
     }
 
