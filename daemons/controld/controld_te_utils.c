@@ -165,10 +165,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     }
 
     abort_timer.aborted = TRUE;
-
-    /* Make sure any queued calculations are discarded ASAP */
-    free(fsa_pe_ref);
-    fsa_pe_ref = NULL;
+    controld_expect_sched_reply(NULL);
 
     if (transition_graph->complete == FALSE) {
         if(update_abort_priority(transition_graph, abort_priority, abort_action, abort_text)) {

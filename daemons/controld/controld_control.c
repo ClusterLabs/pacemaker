@@ -260,6 +260,7 @@ crmd_exit(crm_exit_t exit_code)
     crm_timer_stop(recheck_timer);
 
     te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_free_sched_timer();
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
@@ -277,7 +278,6 @@ crmd_exit(crm_exit_t exit_code)
     free(fsa_cluster_name); fsa_cluster_name = NULL;
 
     free(te_uuid); te_uuid = NULL;
-    free(fsa_pe_ref); fsa_pe_ref = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 
