@@ -13,7 +13,7 @@
 int
 pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...)
-{ 
+{
     xmlNodePtr xml_node = NULL;
     va_list args;
 
@@ -66,12 +66,46 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+static int
+pe__group_text(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+    const char *pre_text = va_arg(args, char *);
+    char *child_text = NULL;
+
+    if (pre_text == NULL) {
+        pre_text = " ";
+    }
+
+    child_text = crm_concat(pre_text, "   ", ' ');
+
+    fprintf(out->dest, "%sResource Group: %s", pre_text ? pre_text : "", rsc->id);
+    if (options & pe_print_brief) {
+        pe__rscs_brief_output_text(out, rsc->children, child_text, options, TRUE);
+
+    } else {
+        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc, child_text);
+        }
+    }
+
+    free(child_text);
+    return 0;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "bundle", "xml",  pe__bundle_xml },
+    { "bundle", "text",  pe__bundle_text },
     { "clone", "xml",  pe__clone_xml },
+    { "clone", "text",  pe__clone_text },
     { "group", "xml",  pe__group_xml },
+    { "group", "text",  pe__group_text },
     { "primitive", "xml",  pe__resource_xml },
-    
+    { "primitive", "text",  pe__resource_text },
+
     { NULL, NULL, NULL }
 };
 
