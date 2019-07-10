@@ -225,7 +225,7 @@ AC_ARG_WITH(cibsecrets,
 
 PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH(gnutls-priorities,
-    [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
+    [  --with-gnutls-priorities  Default GnuTLS cipher priorities @<:@NORMAL@:>@ ],
     [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ])
 
 INITDIR=""
