@@ -376,7 +376,7 @@ class crm_cs_v0(BasePatterns):
             "LRMD lost STONITH connection",
             "Connection to stonith-ng.* closed",
             "Fencing daemon connection failed",
-            r"crmd.*:\s*warn.*:\s*Callback already present",
+            r"pacemaker-controld.*Fencer successfully connected",
         ]
         self.components["stonith-ignore"] = [
             r"pengine.*: Recover Fencing",

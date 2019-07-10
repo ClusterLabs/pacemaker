@@ -33,7 +33,33 @@
 
 crm_trigger_t *stonith_reconnect = NULL;
 static crm_trigger_t *stonith_history_sync_trigger = NULL;
-static mainloop_timer_t *stonith_history_sync_timer = NULL;
+static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
+static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
+
+void
+te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
+{
+    if (free_timers) {
+        mainloop_timer_del(stonith_history_sync_timer_short);
+        stonith_history_sync_timer_short = NULL;
+        mainloop_timer_del(stonith_history_sync_timer_long);
+        stonith_history_sync_timer_long = NULL;
+    } else {
+        mainloop_timer_stop(stonith_history_sync_timer_short);
+        mainloop_timer_stop(stonith_history_sync_timer_long);
+    }
+
+    if (st) {
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY_SYNCED);
+    }
+}
+
+static void
+tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
+{
+    te_cleanup_stonith_history_sync(st, FALSE);
+    crm_debug("Fence-history synced - cancel all timers");
+}
 
 /*
  * stonith cleanup list
@@ -174,6 +200,8 @@ fail_incompletable_stonith(crm_graph_t * graph)
 static void
 tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 {
+    te_cleanup_stonith_history_sync(st, FALSE);
+
     if (is_set(fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
         mainloop_set_trigger(stonith_reconnect);
@@ -183,8 +211,16 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
     }
 
     /* cbchan will be garbage at this point, arrange for it to be reset */
-    if(stonith_api) {
-        stonith_api->state = stonith_disconnected;
+    if (stonith_api) {
+        /* the client API won't properly reconnect notifications
+         * if they are still in the table - so remove them
+         */
+        if (stonith_api->state != stonith_disconnected) {
+            stonith_api->cmds->disconnect(st);
+        }
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_FENCE);
+        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_HISTORY_SYNCED);
     }
 
     if (AM_I_DC) {
@@ -203,6 +239,9 @@ char *te_client_id = NULL;
 #  include <unistd.h>
 #  include <sys/reboot.h>
 #endif
+
+static void
+tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
 
 static void
 tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
@@ -397,6 +436,7 @@ do_stonith_history_sync(gpointer user_data)
     if (stonith_api && (stonith_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
 
+        te_cleanup_stonith_history_sync(stonith_api, FALSE);
         stonith_api->cmds->history(stonith_api,
                                    st_opt_sync_call | st_opt_broadcast,
                                    NULL, &history, 5);
@@ -416,11 +456,18 @@ stonith_history_sync_set_trigger(gpointer user_data)
 }
 
 void
-te_trigger_stonith_history_sync(void)
+te_trigger_stonith_history_sync(bool long_timeout)
 {
     /* trigger a sync in 5s to give more nodes the
      * chance to show up so that we don't create
      * unnecessary stonith-history-sync traffic
+     *
+     * the long timeout of 30s is there as a fallback
+     * so that after a successful connection to fenced
+     * we will wait for 30s for the DC to trigger a
+     * history-sync
+     * if this doesn't happen we trigger a sync locally
+     * (e.g. fenced segfaults and is restarted by pacemakerd)
      */
 
     /* as we are finally checking the stonith-connection
@@ -434,13 +481,25 @@ te_trigger_stonith_history_sync(void)
                                  do_stonith_history_sync, NULL);
     }
 
-    if(stonith_history_sync_timer == NULL) {
-        stonith_history_sync_timer =
-            mainloop_timer_add("history_sync", 5000,
-                               FALSE, stonith_history_sync_set_trigger,
-                               NULL);
+    if (long_timeout) {
+        if(stonith_history_sync_timer_long == NULL) {
+            stonith_history_sync_timer_long =
+                mainloop_timer_add("history_sync_long", 30000,
+                                   FALSE, stonith_history_sync_set_trigger,
+                                   NULL);
+        }
+        crm_info("Fence history will be synchronized cluster-wide within 30 seconds");
+        mainloop_timer_start(stonith_history_sync_timer_long);
+    } else {
+        if(stonith_history_sync_timer_short == NULL) {
+            stonith_history_sync_timer_short =
+                mainloop_timer_add("history_sync_short", 5000,
+                                   FALSE, stonith_history_sync_set_trigger,
+                                   NULL);
+        }
+        crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
+        mainloop_timer_start(stonith_history_sync_timer_short);
     }
-    mainloop_timer_start(stonith_history_sync_timer);
 }
 
 gboolean
@@ -489,7 +548,13 @@ te_connect_stonith(gpointer user_data)
     stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE,
                                              tengine_stonith_notify);
 
-    crm_trace("Connected");
+    stonith_api->cmds->register_notification(stonith_api,
+                                             T_STONITH_NOTIFY_HISTORY_SYNCED,
+                                             tengine_stonith_history_synced);
+
+    te_trigger_stonith_history_sync(TRUE);
+
+    crm_notice("Fencer successfully connected");
     return TRUE;
 }
 
