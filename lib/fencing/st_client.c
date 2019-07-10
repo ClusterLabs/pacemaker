@@ -264,6 +264,7 @@ stonith_connection_destroy(gpointer user_data)
     native->ipc = NULL;
     native->source = NULL;
 
+    free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
@@ -1935,6 +1936,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
   done:
     if (crm_ipc_connected(native->ipc) == FALSE) {
         crm_err("Fencer disconnected");
+        free(native->token); native->token = NULL;
         stonith->state = stonith_disconnected;
     }
 
