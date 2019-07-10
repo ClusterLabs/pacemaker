@@ -1,6 +1,6 @@
 <!--
- Configuration for the ACLs visualization
- ========================================
+ Configuration for the ACLs visualization (as with cibadmin -S)
+ ==============================================================
 
  To be deployed in Pacemaker configuration directory (normally /etc/pacemaker).
 
