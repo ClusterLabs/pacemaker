@@ -24,7 +24,6 @@ pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status) {
     out->free_priv(out);
 
     g_hash_table_destroy(out->messages);
-    free(out->fmt_name);
     free(out->request);
     free(out);
 }
@@ -54,12 +53,6 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     *out = create(argv);
     if (*out == NULL) {
         return ENOMEM;
-    }
-
-    if (fmt_name == NULL) {
-        (*out)->fmt_name = strdup("text");
-    } else {
-        (*out)->fmt_name = strdup(fmt_name);
     }
 
     if (filename == NULL || safe_str_eq(filename, "-")) {

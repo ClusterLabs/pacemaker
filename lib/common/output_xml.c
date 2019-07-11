@@ -24,15 +24,15 @@ GOptionEntry pcmk__xml_output_entries[] = {
     { NULL }
 };
 
-typedef struct xml_private_s {
+typedef struct private_data_s {
     xmlNode *root;
     GQueue *parent_q;
     GSList *errors;
-} xml_private_t;
+} private_data_t;
 
 static void
 xml_free_priv(pcmk__output_t *out) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     if (priv == NULL) {
         return;
@@ -46,13 +46,13 @@ xml_free_priv(pcmk__output_t *out) {
 
 static bool
 xml_init(pcmk__output_t *out) {
-    xml_private_t *priv = NULL;
+    private_data_t *priv = NULL;
 
     /* If xml_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
         return true;
     } else {
-        out->priv = calloc(1, sizeof(xml_private_t));
+        out->priv = calloc(1, sizeof(private_data_t));
         if (out->priv == NULL) {
             return false;
         }
@@ -78,8 +78,7 @@ static void
 add_error_node(gpointer data, gpointer user_data) {
     char *str = (char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-
-    xmlNewTextChild(node, NULL, (pcmkXmlStr) "error", (pcmkXmlStr) str);
+    pcmk_create_xml_text_node(node, "error", str);
 }
 
 static void
@@ -87,7 +86,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
     xmlNodePtr node;
     char *rc_as_str = NULL;
     char *buf = NULL;
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
      * in the pcmk__output_new path.
@@ -98,12 +97,12 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
 
     rc_as_str = crm_itoa(exit_status);
 
-    node = xmlNewChild(priv->root, NULL, (pcmkXmlStr) "status", NULL);
+    node = create_xml_node(priv->root, "status");
     xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
     xmlSetProp(node, (pcmkXmlStr) "message", (pcmkXmlStr) crm_exit_str(exit_status));
 
     if (g_slist_length(priv->errors) > 0) {
-        xmlNodePtr errors_node = xmlNewChild(node, NULL, (pcmkXmlStr) "errors", NULL);
+        xmlNodePtr errors_node = create_xml_node(node, "errors");
         g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
     }
 
@@ -117,7 +116,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
 static void
 xml_reset(pcmk__output_t *out) {
     char *buf = NULL;
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
@@ -134,23 +133,19 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
                       const char *proc_stdout, const char *proc_stderr) {
     xmlNodePtr node, child_node;
     char *rc_as_str = NULL;
-    xml_private_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
 
     rc_as_str = crm_itoa(exit_status);
 
-    node = xmlNewNode(g_queue_peek_tail(priv->parent_q), (pcmkXmlStr) "command");
+    node = pcmk__output_xml_node(out, "command");
     xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
 
     if (proc_stdout != NULL) {
-        child_node = xmlNewTextChild(node, NULL, (pcmkXmlStr) "output",
-                                     (pcmkXmlStr) proc_stdout);
+        child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
         xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stdout");
     }
 
     if (proc_stderr != NULL) {
-        child_node = xmlNewTextChild(node, NULL, (pcmkXmlStr) "output",
-                                     (pcmkXmlStr) proc_stderr);
+        child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
         xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stderr");
     }
 
@@ -161,10 +156,10 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 static void
 xml_version(pcmk__output_t *out, bool extended) {
     xmlNodePtr node;
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     CRM_ASSERT(priv != NULL);
 
-    node = xmlNewChild(g_queue_peek_tail(priv->parent_q), NULL, (pcmkXmlStr) "version", NULL);
+    node = create_xml_node(g_queue_peek_tail(priv->parent_q), "version");
 
     xmlSetProp(node, (pcmkXmlStr) "program", (pcmkXmlStr) "Pacemaker");
     xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) PACEMAKER_VERSION);
@@ -176,7 +171,7 @@ xml_version(pcmk__output_t *out, bool extended) {
 G_GNUC_PRINTF(2, 3)
 static void
 xml_err(pcmk__output_t *out, const char *format, ...) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     int len = 0;
     char *buf = NULL;
     va_list ap;
@@ -200,12 +195,11 @@ static void
 xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlNodePtr parent = NULL;
     xmlNodePtr cdata_node = NULL;
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
-    parent = xmlNewChild(g_queue_peek_tail(priv->parent_q), NULL,
-                         (pcmkXmlStr) name, NULL);
+    parent = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
     cdata_node = xmlNewCDataBlock(getDocPtr(parent), (pcmkXmlStr) buf, strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
@@ -214,31 +208,26 @@ static void
 xml_begin_list(pcmk__output_t *out, const char *name,
                const char *singular_noun, const char *plural_noun) {
     xmlNodePtr list_node = NULL;
-    xml_private_t *priv = out->priv;
 
-    CRM_ASSERT(priv != NULL);
-
-    list_node = create_xml_node(g_queue_peek_tail(priv->parent_q), "list");
+    list_node = pcmk__output_xml_node(out, "list");
     xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
-    g_queue_push_tail(priv->parent_q, list_node);
 }
 
 static void
 xml_list_item(pcmk__output_t *out, const char *name, const char *content) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     xmlNodePtr item_node = NULL;
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = xmlNewChild(g_queue_peek_tail(priv->parent_q), NULL,
-                            (pcmkXmlStr) "item", (pcmkXmlStr) content);
+    item_node = pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "item", content);
     xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 
 static void
 xml_end_list(pcmk__output_t *out) {
     char *buf = NULL;
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
     xmlNodePtr node;
 
     CRM_ASSERT(priv != NULL);
@@ -257,6 +246,7 @@ pcmk__mk_xml_output(char **argv) {
         return NULL;
     }
 
+    retval->fmt_name = "xml";
     retval->request = g_strjoinv(" ", argv);
     retval->supports_quiet = false;
 
@@ -281,9 +271,21 @@ pcmk__mk_xml_output(char **argv) {
     return retval;
 }
 
+xmlNodePtr
+pcmk__output_xml_node(pcmk__output_t *out, const char *name) {
+    private_data_t *priv = out->priv;
+    xmlNodePtr node = NULL;
+
+    CRM_ASSERT(priv != NULL);
+
+    node = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+    pcmk__xml_push_parent(out, node);
+    return node;
+}
+
 void
 pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
     CRM_ASSERT(node != NULL);
@@ -293,7 +295,7 @@ pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
 
 void
 pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
     CRM_ASSERT(parent != NULL);
@@ -303,7 +305,7 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
 
 void
 pcmk__xml_pop_parent(pcmk__output_t *out) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
     CRM_ASSERT(g_queue_get_length(priv->parent_q) > 0);
@@ -313,7 +315,7 @@ pcmk__xml_pop_parent(pcmk__output_t *out) {
 
 xmlNodePtr
 pcmk__xml_peek_parent(pcmk__output_t *out) {
-    xml_private_t *priv = out->priv;
+    private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 

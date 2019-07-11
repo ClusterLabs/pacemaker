@@ -1982,6 +1982,18 @@ create_xml_node(xmlNode * parent, const char *name)
     return node;
 }
 
+xmlNode *
+pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
+{
+    xmlNode *node = create_xml_node(parent, name);
+
+    if (node != NULL) {
+        xmlNodeSetContent(node, (pcmkXmlStr) content);
+    }
+
+    return node;
+}
+
 int
 pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
                     int offset, size_t buffer_size)

@@ -37,7 +37,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 
     if (when) {
         crm_time_t *crm_when = crm_time_new(NULL);
-        xmlNodePtr node = xmlNewNode(NULL, (pcmkXmlStr) "last-fenced");
+        xmlNodePtr node = pcmk__output_xml_node(out, "last-fenced");
         char *buf = NULL;
 
         crm_time_set_timet(crm_when, &when);
@@ -45,8 +45,6 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 
         xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) target);
         xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
-
-        pcmk__xml_add_node(out, node);
 
         crm_time_free(crm_when);
         free(buf);
@@ -90,12 +88,10 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
 
 static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
+    xmlNodePtr node = pcmk__output_xml_node(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     crm_time_t *crm_when = crm_time_new(NULL);
     char *buf = NULL;
-
-    node = xmlNewNode(NULL, (pcmkXmlStr) "fence_event");
 
     switch (event->state) {
         case st_failed:
@@ -131,8 +127,6 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
         free(buf);
     }
 
-    pcmk__xml_add_node(out, node);
-
     crm_time_free(crm_when);
     return 0;
 }
@@ -166,7 +160,7 @@ validate_agent_text(pcmk__output_t *out, va_list args) {
 
 static int
 validate_agent_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
+    xmlNodePtr node = pcmk__output_xml_node(out, "validate");
 
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
@@ -174,7 +168,6 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    node = xmlNewNode(NULL, (pcmkXmlStr) "validate");
     xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent);
     if (device != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "device", (pcmkXmlStr) device);
@@ -185,7 +178,6 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     out->subprocess_output(out, rc, output, error_output);
     pcmk__xml_pop_parent(out);
 
-    pcmk__xml_add_node(out, node);
     return rc;
 }
 

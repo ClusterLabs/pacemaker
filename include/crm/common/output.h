@@ -22,6 +22,7 @@ extern "C" {
 #  include <stdbool.h>
 #  include <stdio.h>
 #  include <libxml/tree.h>
+#  include <libxml/HTMLtree.h>
 
 #  include <glib.h>
 #  include <crm/common/results.h>
@@ -123,12 +124,18 @@ typedef struct pcmk__supported_format_s {
  * is added.
  */
 
+extern GOptionEntry pcmk__html_output_entries[];
+extern GOptionEntry pcmk__none_output_entries[];
 extern GOptionEntry pcmk__text_output_entries[];
 extern GOptionEntry pcmk__xml_output_entries[];
 
+pcmk__output_t *pcmk__mk_html_output(char **argv);
+pcmk__output_t *pcmk__mk_none_output(char **argv);
 pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
+#define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
+#define PCMK__SUPPORTED_FORMAT_NONE { "none", pcmk__mk_none_output, pcmk__none_output_entries }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
 #define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
 
@@ -144,7 +151,7 @@ struct pcmk__output_s {
     /*!
      * \brief The name of this output formatter.
      */
-    char *fmt_name;
+    const char *fmt_name;
 
     /*!
      * \brief A copy of the request that generated this output.
@@ -509,6 +516,20 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 
 /*!
  * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  This is used when implementing custom message
+ *        functions.
+ *
+ * \note This function is similar to create_xml_node.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_xml_node(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
  * \brief Add the given node as a child of the current list parent.  This is
  *        used when implementing custom message functions.
  *
@@ -568,6 +589,23 @@ pcmk__xml_pop_parent(pcmk__output_t *out);
  */
 xmlNodePtr
 pcmk__xml_peek_parent(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Create a new XML node consisting of the provided text inside an HTML
+ *        element node of the given name.
+ *
+ * \param[in,out] out          The output functions structure.
+ * \param[in]     element_name The name of the new HTML element.
+ * \param[in]     id           The CSS ID selector to apply to this element.
+ *                             If NULL, no ID is added.
+ * \param[in]     class_name   The CSS class selector to apply to this element.
+ *                             If NULL, no class is added.
+ * \param[in]     text         The text content of the node.
+ */
+xmlNodePtr
+pcmk__html_add_node(pcmk__output_t *out, const char *element_name, const char *id,
+                    const char *class_name, const char *text);
 
 #ifdef __cplusplus
 }
