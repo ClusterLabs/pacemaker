@@ -227,8 +227,7 @@ struct pcmk__output_s {
      * \brief Take whatever actions are necessary to end formatted output.
      *
      * This could include flushing output to a file, but does not include freeing
-     * anything.  Note that pcmk__output_free() will automatically call this
-     * function, so there is typically no need to do so manually.
+     * anything.
      *
      * \note For formatted output implementers - This function should be written in
      *       such a way that it can be called repeatedly on a previously finished
@@ -409,7 +408,7 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
 /*!
  * \internal
  * \brief Free a ::pcmk__output_t structure that was previously created by
- *        pcmk__output_new().  This will first call the finish function.
+ *        pcmk__output_new().
  *
  * \note While the create and finish functions are designed in such a way that
  *       they can be called repeatedly, this function will completely free the
@@ -417,9 +416,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
  *       more output requires starting over from pcmk__output_new().
  *
  * \param[in,out] out         The output structure.
- * \param[in]     exit_status The exit value of the whole program.
  */
-void pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status);
+void pcmk__output_free(pcmk__output_t *out);
 
 /*!
  * \internal

@@ -16,8 +16,7 @@
 static GHashTable *formatters = NULL;
 
 void
-pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status) {
-    out->finish(out, exit_status);
+pcmk__output_free(pcmk__output_t *out) {
     out->free_priv(out);
 
     g_hash_table_destroy(out->messages);
@@ -64,7 +63,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     (*out)->messages = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
 
     if ((*out)->init(*out) == false) {
-        pcmk__output_free(*out, 0);
+        pcmk__output_free(*out);
         return ENOMEM;
     }
 
