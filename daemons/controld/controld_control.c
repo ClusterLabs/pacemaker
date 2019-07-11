@@ -614,10 +614,11 @@ do_started(long long action,
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    } else {
+        crm_notice("Pacemaker controller successfully started and accepting connections");
     }
     controld_trigger_fencer_connect();
 
-    crm_notice("Pacemaker controller successfully started and accepting connections");
     clear_bit(fsa_input_register, R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
