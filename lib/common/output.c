@@ -17,9 +17,6 @@ static GHashTable *formatters = NULL;
 
 void
 pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status) {
-    pcmk__output_factory_t fn = g_hash_table_lookup(formatters, out->fmt_name);
-    CRM_ASSERT(fn != NULL);
-
     out->finish(out, exit_status);
     out->free_priv(out);
 
