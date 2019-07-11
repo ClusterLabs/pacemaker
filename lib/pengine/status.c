@@ -376,6 +376,9 @@ set_working_set_defaults(pe_working_set_t * data_set)
     set_bit(data_set->flags, pe_flag_symmetric_cluster);
     set_bit(data_set->flags, pe_flag_is_managed_default);
     set_bit(data_set->flags, pe_flag_stop_action_orphans);
+#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
+    set_bit(data_set->flags, pe_flag_concurrent_fencing);
+#endif
 }
 
 resource_t *

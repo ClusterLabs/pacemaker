@@ -101,6 +101,15 @@
 # value must be the same on all nodes. The default is "3121".
 # PCMK_remote_port=3121
 
+# Use these GnuTLS cipher priorities for TLS connections. See:
+#
+#   https://gnutls.org/manual/html_node/Priority-Strings.html
+#
+# Pacemaker will append ":+ANON-DH" for remote CIB access (when enabled) and
+# ":+DHE-PSK:+PSK" for Pacemaker Remote connections, as they are required for
+# the respective functionality.
+# PCMK_tls_priorities="NORMAL"
+
 # Set bounds on the bit length of the prime number generated for Diffie-Hellman
 # parameters needed by TLS connections. The default is not to set any bounds.
 #

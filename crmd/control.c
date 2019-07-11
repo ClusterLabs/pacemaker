@@ -297,6 +297,10 @@ crmd_exit(int rc)
 
     if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
         crm_trace("Disconnecting Policy Engine");
+
+        // If we aren't connected to the scheduler, we can't expect a reply
+        controld_expect_sched_reply(NULL);
+
         qb_ipcs_disconnect(pe_subsystem->client->ipcs);
     }
 
@@ -375,6 +379,7 @@ crmd_exit(int rc)
     crm_timer_stop(recheck_timer);
 
     te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_free_sched_timer();
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
@@ -393,7 +398,6 @@ crmd_exit(int rc)
 
     free(te_uuid); te_uuid = NULL;
     free(te_client_id); te_client_id = NULL;
-    free(fsa_pe_ref); fsa_pe_ref = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 

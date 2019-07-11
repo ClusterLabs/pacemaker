@@ -10,6 +10,7 @@
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="60s"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1493817755"/>
+        <nvpair id="options-concurrent-fencing" name="concurrent-fencing" value="false"/>
       </cluster_property_set>
       <cluster_property_set id="redis_replication">
         <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="controller-0"/>

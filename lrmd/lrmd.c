@@ -158,6 +158,7 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
+    rsc->st_probe_rc = -ENODEV; // if stonith, initialize to "not running"
     return rsc;
 }
 
@@ -1028,17 +1029,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
         // The device is not registered with the fencer
 
-        if (recurring) {
-            /* If we get here, the fencer somehow lost the registration of a
-             * previously active device (possibly due to crash and respawn). In
-             * that case, we need to indicate that the recurring monitor needs
-             * to be cancelled.
-             */
-            cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
-            recurring = FALSE;
-        } else {
-            cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        }
+        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
     } else if (rc) {
@@ -1057,8 +1048,12 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     } else {
         /* command successful */
         cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
-        if (safe_str_eq(cmd->action, "start") && rsc) {
-            rsc->stonith_started = 1;
+        if (rsc) {
+            if (safe_str_eq(cmd->action, "start")) {
+                rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
+            } else if (safe_str_eq(cmd->action, "stop")) {
+                rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
+            }
         }
     }
 
@@ -1090,6 +1085,14 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+            /* This will cause future probes to return PCMK_OCF_UNKNOWN_ERROR
+             * until the resource is stopped or started successfully. This is
+             * especially important if the controller also went away (possibly
+             * due to a cluster layer restart) and won't receive our client
+             * notification of any monitors finalized below.
+             */
+            rsc->st_probe_rc = pcmk_err_generic;
+
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);
             }
@@ -1160,12 +1163,11 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
-        rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
         if (cmd->interval) {
             do_monitor = 1;
         } else {
-            rc = rsc->stonith_started ? 0 : -ENODEV;
+            rc = rsc->st_probe_rc;
         }
     }
 
