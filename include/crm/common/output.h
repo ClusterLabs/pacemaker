@@ -227,16 +227,37 @@ struct pcmk__output_s {
      * \brief Take whatever actions are necessary to end formatted output.
      *
      * This could include flushing output to a file, but does not include freeing
-     * anything.
+     * anything.  The finish method can potentially be fairly complicated, adding
+     * additional information to the internal data structures or doing whatever
+     * else.  It is therefore suggested that finish only be called once.
      *
-     * \note For formatted output implementers - This function should be written in
-     *       such a way that it can be called repeatedly on a previously finished
-     *       object without crashing.
+     * \note The print parameter will only affect those formatters that do all
+     *       their output at the end.  Console-oriented formatters typically print
+     *       a line at a time as they go, so this parameter will not affect them.
+     *       Structured formatters will honor it, however.
+     *
+     * \note The copy_dest parameter does not apply to all formatters.  Console-
+     *       oriented formatters do not build up a structure as they go, and thus
+     *       do not have anything to return.  Structured formatters will honor it,
+     *       however.  Note that each type of formatter will return a different
+     *       type of value in this parameter.  To use this parameter, call this
+     *       function like so:
+     *
+     * \code
+     * xmlNode *dest = NULL;
+     * out->finish(out, exit_code, false, (void **) &dest);
+     * \endcode
      *
      * \param[in,out] out         The output functions structure.
      * \param[in]     exit_status The exit value of the whole program.
+     * \param[in]     print       Whether this function should write any output.
+     * \param[out]    copy_dest   A destination to store a copy of the internal
+     *                            data structure for this output, or NULL if no
+     *                            copy is required.  The caller should free this
+     *                            memory when done with it.
      */
-    void (*finish) (pcmk__output_t *out, crm_exit_t exit_status);
+    void (*finish) (pcmk__output_t *out, crm_exit_t exit_status, bool print,
+                    void **copy_dest);
 
     /*!
      * \internal

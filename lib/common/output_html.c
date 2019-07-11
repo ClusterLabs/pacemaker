@@ -107,7 +107,7 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-html_finish(pcmk__output_t *out, crm_exit_t exit_status) {
+html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
     private_data_t *priv = out->priv;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
@@ -119,7 +119,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status) {
         return;
     }
 
-    if (cgi_output) {
+    if (cgi_output && print) {
         fprintf(out->dest, "Content-Type: text/html\n\n");
     }
 
@@ -166,7 +166,13 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status) {
         out->end_list(out);
     }
 
-    htmlDocDump(out->dest, priv->root->doc);
+    if (print) {
+        htmlDocDump(out->dest, priv->root->doc);
+    }
+
+    if (copy_dest != NULL) {
+        *copy_dest = copy_xml(priv->root);
+    }
 }
 
 static void

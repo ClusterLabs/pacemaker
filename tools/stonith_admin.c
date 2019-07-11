@@ -814,7 +814,7 @@ main(int argc, char **argv)
     g_strfreev(argv_copy);
     g_option_context_free(context);
     if (out != NULL) {
-        out->finish(out, exit_code);
+        out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
     free(async_fence_data.name);
