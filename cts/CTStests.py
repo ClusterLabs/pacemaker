@@ -3066,8 +3066,6 @@ class RemoteStonithd(RemoteDriver):
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
-            r"Calculated [Tt]ransition .*pe-error",
-            r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
             r"error: Result of monitor operation for .* on remote-.*: No executor connection",
         ]
 
