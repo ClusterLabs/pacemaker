@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
@@ -97,36 +98,23 @@ enum mon_output_format_e {
 static char *output_filename = NULL;   /* if sending output to a file, its name */
 
 /* other globals */
-static char *pid_file = NULL;
-
-static gboolean group_by_node = FALSE;
-static gboolean inactive_resources = FALSE;
-static int reconnect_msec = 5000;
-static gboolean daemonize = FALSE;
 static GMainLoop *mainloop = NULL;
 static guint timer_id = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 static pe_working_set_t *mon_data_set = NULL;
 static GList *attr_list = NULL;
 
-static const char *external_agent = NULL;
-static const char *external_recipient = NULL;
-
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
 static xmlNode *current_cib = NULL;
 
-static gboolean one_shot = FALSE;
+static GOptionContext *context = NULL;
+
 static gboolean has_warnings = FALSE;
 static gboolean print_timing = FALSE;
-static gboolean watch_fencing = FALSE;
 static gboolean fence_history = FALSE;
 static gboolean fence_full_history = FALSE;
 static gboolean fence_connect = FALSE;
-static int fence_history_level = 1;
-static gboolean print_brief = FALSE;
-static gboolean print_pending = TRUE;
-static gboolean print_clone_detail = FALSE;
 #if CURSES_ENABLED
 static gboolean curses_console_initialized = FALSE;
 #endif
@@ -177,6 +165,269 @@ crm_trigger_t *refresh_trigger = NULL;
 #  define print_as(fmt, args...) fprintf(stdout, fmt, ##args);
 #endif
 
+struct {
+    int reconnect_msec;
+    int fence_history_level;
+    int verbose;
+    gboolean one_shot;
+    gboolean daemonize;
+    gboolean group_by_node;
+    gboolean inactive_resources;
+    gboolean watch_fencing;
+    gboolean show_bans;
+    gboolean print_clone_detail;
+    gboolean print_brief;
+    gboolean print_pending;
+    char *pid_file;
+    char *external_agent;
+    char *external_recipient;
+} options = {
+    .reconnect_msec = 5000,
+    .fence_history_level = 1
+};
+
+static gboolean
+as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    output_format = mon_output_cgi;
+    options.one_shot = TRUE;
+    return TRUE;
+}
+
+static gboolean
+as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (optarg == NULL) {
+        g_set_error(error, G_OPTION_ERROR, 1, "--as-html requires filename");
+        return FALSE;
+    }
+
+    output_format = mon_output_html;
+    output_filename = strdup(optarg);
+    umask(S_IWGRP | S_IWOTH);
+    return TRUE;
+}
+
+static gboolean
+as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    output_format = mon_output_monitor;
+    options.one_shot = TRUE;
+    return TRUE;
+}
+
+static gboolean
+as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    output_format = mon_output_xml;
+    options.one_shot = TRUE;
+    return TRUE;
+}
+
+static gboolean
+fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    int rc = crm_atoi(optarg, "2");
+
+    if (rc == -1 || rc > 3) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+        return FALSE;
+    } else {
+        options.fence_history_level = rc;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show &= ~mon_show_headers;
+    return TRUE;
+}
+
+static gboolean
+no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (output_format == mon_output_console) {
+        output_format = mon_output_plain;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    int rc = crm_get_msec(optarg);
+
+    if (rc == -1) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+        return FALSE;
+    } else {
+        options.reconnect_msec = crm_get_msec(optarg);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_attributes;
+    return TRUE;
+}
+
+static gboolean
+show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_bans;
+
+    if (optarg != NULL) {
+        print_neg_location_prefix = optarg;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_failcounts;
+    return TRUE;
+}
+
+static gboolean
+show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_operations;
+    return TRUE;
+}
+
+static gboolean
+show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_tickets;
+    return TRUE;
+}
+
+static gboolean
+use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    setenv("CIB_file", optarg, 1);
+    options.one_shot = TRUE;
+    return TRUE;
+}
+
+#define INDENT "                                    "
+
+/* *INDENT-OFF* */
+static GOptionEntry addl_entries[] = {
+    { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
+      "Update frequency in seconds",
+      "SECONDS" },
+
+    { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
+      "Display the cluster status once on the console and exit",
+      NULL },
+
+    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
+      "Disable the use of ncurses",
+      NULL },
+
+    { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
+      "Run in the background as a daemon",
+      NULL },
+
+    { "pid-file", 'p', 0, G_OPTION_ARG_FILENAME, &options.pid_file,
+      "(Advanced) Daemon pid file location",
+      "FILE" },
+
+    { "external-agent", 'E', 0, G_OPTION_ARG_FILENAME, &options.external_agent,
+      "A program to run when resource operations take place",
+      "FILE" },
+
+    { "external-recipient", 'e', 0, G_OPTION_ARG_STRING, &options.external_recipient,
+      "A recipient for your program (assuming you want the program to send something to someone).",
+      "RCPT" },
+
+    { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, use_cib_file_cb,
+      NULL,
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry display_entries[] = {
+    { "group-by-node", 'n', 0, G_OPTION_ARG_NONE, &options.group_by_node,
+      "Group resources by node",
+      NULL },
+
+    { "inactive", 'r', 0, G_OPTION_ARG_NONE, &options.inactive_resources,
+      "Display inactive resources",
+      NULL },
+
+    { "failcounts", 'f', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_failcounts_cb,
+      "Display resource fail counts",
+      NULL },
+
+    { "operations", 'o', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_operations_cb,
+      "Display resource operation history",
+      NULL },
+
+    { "timing-details", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_operations_cb,
+      "Display resource operation history with timing details",
+      NULL },
+
+    { "tickets", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_tickets_cb,
+      "Display cluster tickets",
+      NULL },
+
+    { "watch-fencing", 'W', 0, G_OPTION_ARG_NONE, &options.watch_fencing,
+      "Listen for fencing events. For use with --external-agent",
+      NULL },
+
+    { "fence-history", 'm', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, fence_history_cb,
+      "Show fence history:\n"
+      INDENT "0=off, 1=failures and pending (default without option),\n"
+      INDENT "2=add successes (default without value for option),\n"
+      INDENT "3=show full history without reduction to most recent of each flavor",
+      "LEVEL" },
+
+    { "neg-locations", 'L', 0, G_OPTION_ARG_CALLBACK, show_bans_cb,
+      "Display negative location constraints [optionally filtered by id prefix]",
+      NULL },
+
+    { "show-node-attributes", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_attributes_cb,
+      "Display node attributes",
+      NULL },
+
+    { "hide-headers", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, hide_headers_cb,
+      "Hide all headers",
+      NULL },
+
+    { "show-detail", 'R', 0, G_OPTION_ARG_NONE, &options.print_clone_detail,
+      "Show more details (node IDs, individual clone instances)",
+      NULL },
+
+    { "brief", 'b', 0, G_OPTION_ARG_NONE, &options.print_brief,
+      "Brief output",
+      NULL },
+
+    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
+      "Display pending state if 'record-pending' is enabled",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry mode_entries[] = {
+    { "as-html", 'h', G_OPTION_FLAG_FILENAME, G_OPTION_ARG_CALLBACK, as_html_cb,
+      "Write cluster status to the named HTML file",
+      "FILE" },
+
+    { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
+      "Write cluster status as XML to stdout. This will enable one-shot mode.",
+      NULL },
+
+    { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
+      "Web mode with output suitable for CGI (preselected when run as *.cgi)",
+      NULL },
+
+    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
+      "Display the cluster status once as a simple one line output (suitable for nagios)",
+      NULL },
+
+    { NULL }
+};
+/* *INDENT-ON* */
+
 static void
 blank_screen(void)
 {
@@ -213,7 +464,7 @@ mon_timer_popped(gpointer data)
     rc = cib_connect(TRUE);
 
     if (rc != pcmk_ok) {
-        timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
 }
@@ -244,7 +495,7 @@ mon_cib_connection_destroy(gpointer user_data)
     }
     if (cib) {
         cib->cmds->signoff(cib);
-        timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return;
 }
@@ -301,7 +552,7 @@ cib_connect(gboolean full)
         rc = st->cmds->connect(st, crm_system_name, NULL);
         if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
-            if (watch_fencing) {
+            if (options.watch_fencing) {
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                                 mon_st_callback_event);
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -362,99 +613,18 @@ cib_connect(gboolean full)
     return rc;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",           0, 0, '?', "\tThis text"},
-    {"version",        0, 0, '$', "\tVersion information"  },
-    {"verbose",        0, 0, 'V', "\tIncrease debug output"},
-    {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
-
-    {"-spacer-",	1, 0, '-', "\nModes (mutually exclusive):"},
-    {"as-html",        1, 0, 'h', "\tWrite cluster status to the named html file"},
-    {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
-    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for CGI (preselected when run as *.cgi)"},
-    {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
-    {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
-    {"group-by-node",  0, 0, 'n', "\tGroup resources by node"     },
-    {"inactive",       0, 0, 'r', "\t\tDisplay inactive resources"  },
-    {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
-    {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
-    {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
-    {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
-    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent"},
-    {"fence-history",  2, 0, 'm', "Show fence history\n"
-                                  "\t\t\t\t\t0=off, 1=failures and pending (default without option),\n"
-                                  "\t\t\t\t\t2=add successes (default without value for option),\n"
-                                  "\t\t\t\t\t3=show full history without reduction to most recent of each flavor"},
-    {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
-    {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
-    {"hide-headers",   0, 0, 'D', "\tHide all headers" },
-    {"show-detail",    0, 0, 'R', "\tShow more details (node IDs, individual clone instances)" },
-    {"brief",          0, 0, 'b', "\t\tBrief output" },
-    {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
-
-    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
-    {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
-    {"one-shot",       0, 0, '1', "\t\tDisplay the cluster status once on the console and exit"},
-    {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses", !CURSES_ENABLED},
-    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
-    {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
-    {"external-agent",    1, 0, 'E', "A program to run when resource operations take place."},
-    {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
-
-
-    {"xml-file",       1, 0, 'x', NULL, pcmk_option_hidden},
-
-    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', "Display the cluster status on the console with updates as they occur:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Display the cluster status on the console just once then exit:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon -1", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Display your cluster status, group resources by node, and include inactive resources in the list:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon --group-by-node --inactive", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Start crm_mon and export the current cluster status as xml to stdout, then exit.:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_mon --as-xml", pcmk_option_example},
-
-    {NULL, 0, 0, 0}
-};
-/* *INDENT-ON* */
-
 #if CURSES_ENABLED
 static const char *
 get_option_desc(char c)
 {
-    int lpc;
+    GOptionEntry *entry;
 
-    for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
-
-        if (long_options[lpc].name[0] == '-')
+    for (entry = display_entries; entry != NULL; entry++) {
+        if (entry->short_name != c) {
             continue;
-
-        if (long_options[lpc].val == c) {
-            static char *buf = NULL;
-            const char *rv;
-            char *nl;
-
-            /* chop off tabs and cut at newline */
-            free(buf); /* free string from last usage */
-            buf = strdup(long_options[lpc].desc);
-            rv = buf; /* make a copy to keep buf pointer unaltered
-                         for freeing when we come by next time.
-                         Like this the result stays valid until
-                         the next call.
-                       */
-            while(isspace(rv[0])) {
-                rv++;
-            }
-            nl = strchr(rv, '\n');
-            if (nl) {
-                *nl = '\0';
-            }
-            return rv;
         }
+
+        return strdup(entry->description);
     }
 
     return NULL;
@@ -476,7 +646,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
         switch (c) {
             case 'm':
-                if (!fence_history_level) {
+                if (!options.fence_history_level) {
                     fence_history = TRUE;
                     fence_connect = TRUE;
                     if (st == NULL) {
@@ -492,7 +662,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 show ^= mon_show_failcounts;
                 break;
             case 'n':
-                group_by_node = ! group_by_node;
+                options.group_by_node = ! options.group_by_node;
                 break;
             case 'o':
                 show ^= mon_show_operations;
@@ -501,10 +671,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 }
                 break;
             case 'r':
-                inactive_resources = ! inactive_resources;
+                options.inactive_resources = ! options.inactive_resources;
                 break;
             case 'R':
-                print_clone_detail = ! print_clone_detail;
+                options.print_clone_detail = ! options.print_clone_detail;
                 break;
             case 't':
                 print_timing = ! print_timing;
@@ -527,10 +697,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 }
                 break;
             case 'b':
-                print_brief = ! print_brief;
+                options.print_brief = ! options.print_brief;
                 break;
             case 'j':
-                print_pending = ! print_pending;
+                options.print_pending = ! options.print_pending;
                 break;
             case '?':
                 config_mode = TRUE;
@@ -548,16 +718,16 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("\n");
         print_option_help('c', show & mon_show_tickets);
         print_option_help('f', show & mon_show_failcounts);
-        print_option_help('n', group_by_node);
+        print_option_help('n', options.group_by_node);
         print_option_help('o', show & mon_show_operations);
-        print_option_help('r', inactive_resources);
+        print_option_help('r', options.inactive_resources);
         print_option_help('t', print_timing);
         print_option_help('A', show & mon_show_attributes);
         print_option_help('L', show & mon_show_bans);
         print_option_help('D', (show & mon_show_headers) == 0);
-        print_option_help('R', print_clone_detail);
-        print_option_help('b', print_brief);
-        print_option_help('j', print_pending);
+        print_option_help('R', options.print_clone_detail);
+        print_option_help('b', options.print_brief);
+        print_option_help('j', options.print_pending);
         print_option_help('m', (show & mon_show_fence_history));
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
@@ -587,164 +757,111 @@ avoid_zombies()
     }
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+    GOptionGroup *mode_group, *display_group, *addl_group;
+    GOptionGroup *main_group;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Be less descriptive in output.",
+          NULL },
+
+        { NULL }
+    };
+
+    const char *examples = "Examples:\n\n"
+                           "Display the cluster status on the console with updates as they occur:\n\n"
+                           "\tcrm_mon\n\n"
+                           "Display the cluster status on the console just once then exit:\n\n"
+                           "\tcrm_mon -1\n\n"
+                           "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
+                           "\tcrm_mon --group-by-node --inactive\n\n"
+                           "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
+                           "\tcrm_mon --daemonize --as-html /path/to/docroot/filename.html\n\n"
+                           "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
+                           "\tcrm_mon --as-xml\n";
+
+    context = pcmk__build_arg_context(args, NULL);
+    g_option_context_set_description(context, examples);
+
+    /* Add the -Q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    main_group = g_option_context_get_main_group(context);
+    g_option_group_add_entries(main_group, extra_prog_entries);
+
+    mode_group = g_option_group_new("mode", "Mode Options (mutually exclusive):", "Show mode options", NULL, NULL);
+    g_option_group_add_entries(mode_group, mode_entries);
+    g_option_context_add_group(context, mode_group);
+
+    display_group = g_option_group_new("display", "Display Options:", "Show display options", NULL, NULL);
+    g_option_group_add_entries(display_group, display_entries);
+    g_option_context_add_group(context, display_group);
+
+    addl_group = g_option_group_new("additional", "Additional Options:", "Show additional options", NULL, NULL);
+    g_option_group_add_entries(addl_group, addl_entries);
+    g_option_context_add_group(context, addl_group);
+
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int flag;
-    int argerr = 0;
-    int option_index = 0;
     int rc = pcmk_ok;
+    char **processed_args = NULL;
 
-    pid_file = strdup("/tmp/ClusterMon.pid");
+    pcmk__common_args_t *args = calloc(1, sizeof(pcmk__common_args_t));
+
+    GError *error = NULL;
+
+    if (args == NULL) {
+        crm_exit(crm_errno2exit(-ENOMEM));
+    }
+
+    args->summary = strdup("Provides a summary of cluster's current state.\n\n"
+                           "Outputs varying levels of detail in a number of different formats.");
+    context = build_arg_context(args);
+
+    options.pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Provides a summary of cluster's current state."
-                    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();
 
     if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
-        one_shot = TRUE;
+        options.one_shot = TRUE;
     }
 
-    /* to enable stonith-connection when called via some application like pcs
-     * set environment-variable FENCE_HISTORY to desired level
-     * so you don't have to modify this application
-     */
-    /* fence_history_level = crm_atoi(getenv("FENCE_HISTORY"), "0"); */
+    processed_args = pcmk__cmdline_preproc(argc, argv, "ehimpxEL");
 
-    while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 'Q':
-                show &= ~mon_show_times;
-                break;
-            case 'i':
-                reconnect_msec = crm_get_msec(optarg);
-                break;
-            case 'n':
-                group_by_node = TRUE;
-                break;
-            case 'r':
-                inactive_resources = TRUE;
-                break;
-            case 'W':
-                watch_fencing = TRUE;
-                fence_connect = TRUE;
-                break;
-            case 'm':
-                fence_history_level = crm_atoi(optarg, "2");
-                break;
-            case 'd':
-                daemonize = TRUE;
-                break;
-            case 't':
-                print_timing = TRUE;
-                show |= mon_show_operations;
-                break;
-            case 'o':
-                show |= mon_show_operations;
-                break;
-            case 'f':
-                show |= mon_show_failcounts;
-                break;
-            case 'A':
-                show |= mon_show_attributes;
-                break;
-            case 'L':
-                show |= mon_show_bans;
-                print_neg_location_prefix = optarg? optarg : "";
-                break;
-            case 'D':
-                show &= ~mon_show_headers;
-                break;
-            case 'b':
-                print_brief = TRUE;
-                break;
-            case 'j':
-                print_pending = TRUE;
-                break;
-            case 'R':
-                print_clone_detail = TRUE;
-                break;
-            case 'c':
-                show |= mon_show_tickets;
-                break;
-            case 'p':
-                free(pid_file);
-                if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
-                }
-                pid_file = strdup(optarg);
-                break;
-            case 'x':
-                if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
-                }
-                setenv("CIB_file", optarg, 1);
-                one_shot = TRUE;
-                break;
-            case 'h':
-                if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
-                }
-                argerr += (output_format != mon_output_console);
-                output_format = mon_output_html;
-                output_filename = strdup(optarg);
-                umask(S_IWGRP | S_IWOTH);
-                break;
-            case 'X':
-                argerr += (output_format != mon_output_console);
-                output_format = mon_output_xml;
-                one_shot = TRUE;
-                break;
-            case 'w':
-                /* do not allow argv[0] and argv[1...] redundancy */
-                argerr += (output_format != mon_output_console);
-                output_format = mon_output_cgi;
-                one_shot = TRUE;
-                break;
-            case 's':
-                argerr += (output_format != mon_output_console);
-                output_format = mon_output_monitor;
-                one_shot = TRUE;
-                break;
-            case 'E':
-                external_agent = optarg;
-                break;
-            case 'e':
-                external_recipient = optarg;
-                break;
-            case '1':
-                one_shot = TRUE;
-                break;
-            case 'N':
-                if (output_format == mon_output_console) {
-                    output_format = mon_output_plain;
-                }
-                break;
-            case '$':
-            case '?':
-                crm_help(flag, CRM_EX_OK);
-                break;
-            default:
-                printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
-        }
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        return clean_up(CRM_EX_USAGE);
     }
 
-    if (watch_fencing) {
+    for (int i = 0; i < options.verbose; i++) {
+        crm_bump_log_level(argc, argv);
+    }
+
+    if (args->version) {
+        crm_help('$', CRM_EX_OK);
+    }
+
+    if (args->quiet) {
+        show &= ~mon_show_times;
+    }
+
+    if (options.watch_fencing) {
+        fence_connect = TRUE;
+    }
+
+    if (options.watch_fencing) {
         /* don't moan as fence_history_level == 1 is default */
-        fence_history_level = 0;
+        options.fence_history_level = 0;
     }
 
     /* create the cib-object early to be able to do further
@@ -768,13 +885,13 @@ main(int argc, char **argv)
                  * not match the cib data from a file.
                  * As we don't expect cib-updates coming
                  * in enforce one-shot. */
-                fence_history_level = 0;
-                one_shot = TRUE;
+                options.fence_history_level = 0;
+                options.one_shot = TRUE;
                 break;
 
             case cib_remote:
                 /* updates coming in but no fencing */
-                fence_history_level = 0;
+                options.fence_history_level = 0;
                 break;
 
             case cib_undefined:
@@ -787,7 +904,7 @@ main(int argc, char **argv)
         }
     }
 
-    switch (fence_history_level) {
+    switch (options.fence_history_level) {
         case 3:
             fence_full_history = TRUE;
             /* fall through to next lower level */
@@ -804,21 +921,19 @@ main(int argc, char **argv)
 
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
-        argerr += (optind < argc);
-        argerr += (output_filename != NULL);
-        argerr += ((cib) && (cib->variant == cib_file));
-        argerr += (external_agent != NULL);
-        argerr += (daemonize == TRUE);  /* paranoia */
-
-    } else if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
-    }
-
-    if (argerr) {
-        return clean_up(CRM_EX_USAGE);
+        if (output_filename != NULL) {
+            fprintf(stderr, "CGI mode cannot be used with -h\n");
+            return clean_up(CRM_EX_USAGE);
+        } else if (cib && cib->variant == cib_file) {
+            fprintf(stderr, "CGI mode used with CIB file\n");
+            return clean_up(CRM_EX_USAGE);
+        } else if (options.external_agent != NULL) {
+            fprintf(stderr, "CGI mode cannot be used with --external-agent\n");
+            return clean_up(CRM_EX_USAGE);
+        } else if (options.daemonize == TRUE) {
+            fprintf(stderr, "CGI mode cannot be used with -d\n");
+            return clean_up(CRM_EX_USAGE);
+        }
     }
 
     /* XML output always prints everything */
@@ -827,19 +942,19 @@ main(int argc, char **argv)
         print_timing = TRUE;
     }
 
-    if (one_shot) {
+    if (options.one_shot) {
         if (output_format == mon_output_console) {
             output_format = mon_output_plain;
         }
 
-    } else if (daemonize) {
+    } else if (options.daemonize) {
         if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
             output_format = mon_output_none;
         }
         crm_enable_stderr(FALSE);
 
         if ((output_format != mon_output_html)
-            && !external_agent) {
+            && !options.external_agent) {
             printf ("Looks like you forgot to specify one or more of: "
                     "--as-html, --external-agent\n");
             return clean_up(CRM_EX_USAGE);
@@ -851,7 +966,7 @@ main(int argc, char **argv)
              */
             cib_delete(cib);
             cib = NULL;
-            crm_make_daemon(crm_system_name, TRUE, pid_file);
+            crm_make_daemon(crm_system_name, TRUE, options.pid_file);
             cib = cib_new();
             if (cib == NULL) {
                 rc = -EINVAL;
@@ -870,7 +985,7 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
         curses_console_initialized = TRUE;
 #else
-        one_shot = TRUE;
+        options.one_shot = TRUE;
         output_format = mon_output_plain;
         printf("Defaulting to one-shot mode\n");
         printf("You need to have curses available at compile time to enable console mode\n");
@@ -882,16 +997,16 @@ main(int argc, char **argv)
     if (cib) {
 
         do {
-            if (!one_shot) {
+            if (!options.one_shot) {
                 print_as("Waiting until cluster is available on this node ...\n");
             }
-            rc = cib_connect(!one_shot);
+            rc = cib_connect(!options.one_shot);
 
-            if (one_shot) {
+            if (options.one_shot) {
                 break;
 
             } else if (rc != pcmk_ok) {
-                sleep(reconnect_msec / 1000);
+                sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
                 if (output_format == mon_output_console) {
                     clear();
@@ -926,7 +1041,7 @@ main(int argc, char **argv)
         return clean_up(crm_errno2exit(rc));
     }
 
-    if (one_shot) {
+    if (options.one_shot) {
         return clean_up(CRM_EX_OK);
     }
 
@@ -1188,12 +1303,12 @@ print_resources_heading(FILE *stream)
 {
     const char *heading;
 
-    if (group_by_node) {
+    if (options.group_by_node) {
 
         /* Active resources have already been printed by node */
-        heading = (inactive_resources? "Inactive resources" : NULL);
+        heading = (options.inactive_resources? "Inactive resources" : NULL);
 
-    } else if (inactive_resources) {
+    } else if (options.inactive_resources) {
         heading = "Full list of resources";
 
     } else {
@@ -1234,9 +1349,9 @@ print_resources_closing(FILE *stream, gboolean printed_heading)
     const char *heading;
 
     /* What type of resources we did or did not display */
-    if (group_by_node) {
+    if (options.group_by_node) {
         heading = "inactive ";
-    } else if (inactive_resources) {
+    } else if (options.inactive_resources) {
         heading = "";
     } else {
         heading = "active ";
@@ -1281,12 +1396,12 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
     GListPtr rsc_iter;
     const char *prefix = NULL;
     gboolean printed_heading = FALSE;
-    gboolean brief_output = print_brief;
+    gboolean brief_output = options.print_brief;
 
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
-    if (group_by_node && !inactive_resources) {
+    if (options.group_by_node && !options.inactive_resources) {
         return;
     }
 
@@ -1298,11 +1413,11 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
 
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
-    if (brief_output && !group_by_node) {
+    if (brief_output && !options.group_by_node) {
         print_resources_heading(stream);
         printed_heading = TRUE;
         print_rscs_brief(data_set->resources, NULL, print_opts, stream,
-                         inactive_resources);
+                         options.inactive_resources);
     }
 
     /* For each resource, display it if appropriate */
@@ -1318,7 +1433,7 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
             continue;
 
         /* Skip active resources if we already displayed them by node */
-        } else if (group_by_node) {
+        } else if (options.group_by_node) {
             if (is_active) {
                 continue;
             }
@@ -1330,7 +1445,7 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
         /* Skip resources that aren't at least partially active,
          * unless we're displaying inactive resources
          */
-        } else if (!partially_active && !inactive_resources) {
+        } else if (!partially_active && !options.inactive_resources) {
             continue;
         }
 
@@ -2082,7 +2197,7 @@ get_node_display_name(node_t *node)
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
-    if (print_clone_detail && safe_str_neq(node->details->uname, node->details->id)) {
+    if (options.print_clone_detail && safe_str_neq(node->details->uname, node->details->id)) {
         node_id = node->details->id;
     }
 
@@ -2328,16 +2443,16 @@ get_resource_display_options(void)
     }
 
     /* Add optional display elements */
-    if (print_pending) {
+    if (options.print_pending) {
         print_opts |= pe_print_pending;
     }
-    if (print_clone_detail) {
+    if (options.print_clone_detail) {
         print_opts |= pe_print_clone_details|pe_print_implicit;
     }
-    if (!inactive_resources) {
+    if (!options.inactive_resources) {
         print_opts |= pe_print_clone_active;
     }
-    if (print_brief) {
+    if (options.print_brief) {
         print_opts |= pe_print_brief;
     }
     return print_opts;
@@ -3450,7 +3565,7 @@ print_status(pe_working_set_t * data_set,
 
         } else if (node->details->online) {
             node_mode = "online";
-            if (group_by_node == FALSE) {
+            if (options.group_by_node == FALSE) {
                 if (pe__is_guest_node(node)) {
                     online_guest_nodes = add_list_element(online_guest_nodes, node_name);
                 } else if (pe__is_remote_node(node)) {
@@ -3463,7 +3578,7 @@ print_status(pe_working_set_t * data_set,
             }
         } else {
             node_mode = "OFFLINE";
-            if (group_by_node == FALSE) {
+            if (options.group_by_node == FALSE) {
                 if (pe__is_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
                 } else if (pe__is_guest_node(node)) {
@@ -3487,8 +3602,8 @@ print_status(pe_working_set_t * data_set,
         print_as("Node %s: %s\n", node_name, node_mode);
 
         /* If we're grouping by node, print its resources */
-        if (group_by_node) {
-            if (print_brief) {
+        if (options.group_by_node) {
+            if (options.print_brief) {
                 print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
                                  stdout, FALSE);
             } else {
@@ -3632,7 +3747,7 @@ print_xml_status(pe_working_set_t * data_set,
             fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 
-        if (group_by_node) {
+        if (options.group_by_node) {
             GListPtr lpc2 = NULL;
 
             fprintf(stream, ">\n");
@@ -3725,7 +3840,7 @@ print_html_status(pe_working_set_t * data_set,
     fprintf(stream, "<html>\n");
     fprintf(stream, " <head>\n");
     fprintf(stream, "  <title>Cluster status</title>\n");
-    fprintf(stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", reconnect_msec / 1000);
+    fprintf(stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", options.reconnect_msec / 1000);
     fprintf(stream, " </head>\n");
     fprintf(stream, "<body>\n");
 
@@ -3757,13 +3872,13 @@ print_html_status(pe_working_set_t * data_set,
         } else {
             fprintf(stream, "<font color=\"red\">OFFLINE</font>\n");
         }
-        if (print_brief && group_by_node) {
+        if (options.print_brief && options.group_by_node) {
             fprintf(stream, "<ul>\n");
             print_rscs_brief(node->details->running_rsc, NULL, print_opts | pe_print_rsconly,
                              stream, FALSE);
             fprintf(stream, "</ul>\n");
 
-        } else if (group_by_node) {
+        } else if (options.group_by_node) {
             GListPtr lpc2 = NULL;
 
             fprintf(stream, "<ul>\n");
@@ -3851,13 +3966,13 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     char *status_s = crm_itoa(status);
     char *target_rc_s = crm_itoa(target_rc);
 
-    crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
+    crm_debug("Sending external notification to '%s' via '%s'", options.external_recipient, options.external_agent);
 
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
     }
-    if (external_recipient) {
-        setenv("CRM_notify_recipient", external_recipient, 1);
+    if (options.external_recipient) {
+        setenv("CRM_notify_recipient", options.external_recipient, 1);
     }
     setenv("CRM_notify_node", node, 1);
     setenv("CRM_notify_task", task, 1);
@@ -3872,11 +3987,11 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     }
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */
-        execl(external_agent, external_agent, NULL);
+        execl(options.external_agent, options.external_agent, NULL);
         exit(CRM_EX_ERROR);
     }
 
-    crm_trace("Finished running custom notification program '%s'.", external_agent);
+    crm_trace("Finished running custom notification program '%s'.", options.external_agent);
     free(target_rc_s);
     free(status_s);
     free(rc_s);
@@ -3974,7 +4089,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if (notify && external_agent) {
+    if (notify && options.external_agent) {
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
   bail:
@@ -4160,7 +4275,7 @@ crm_diff_update(const char *event, xmlNode * msg)
         cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 
-    if (external_agent) {
+    if (options.external_agent) {
         int format = 0;
         crm_element_value_int(diff, "format", &format);
         switch(format) {
@@ -4292,7 +4407,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
-    } else if (external_agent) {
+    } else if (options.external_agent) {
         char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
                                     e->operation, e->origin, e->target, pcmk_strerror(e->result),
                                     e->id);
@@ -4320,7 +4435,7 @@ kick_refresh(gboolean data_updated)
      * - every 10 cib-updates
      * - at most 2s after the last update
      */
-    if ((now - last_refresh) > (reconnect_msec / 1000)) {
+    if ((now - last_refresh) > (options.reconnect_msec / 1000)) {
         mainloop_set_trigger(refresh_trigger);
         mainloop_timer_stop(refresh_timer);
         updates = 0;
@@ -4391,7 +4506,7 @@ clean_up(crm_exit_t exit_code)
 
     clean_up_connections();
     free(output_filename);
-    free(pid_file);
+    free(options.pid_file);
 
     pe_free_working_set(mon_data_set);
     mon_data_set = NULL;
@@ -4401,7 +4516,7 @@ clean_up(crm_exit_t exit_code)
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
         } else {
-            crm_help('?', CRM_EX_USAGE);
+            fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
         }
     }
     crm_exit(exit_code);
