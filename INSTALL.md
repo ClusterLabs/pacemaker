@@ -1,9 +1,10 @@
 # How to Install Pacemaker
 
 ## Build Dependencies
+* GNU make
 * automake 1.11 or later
 * autoconf 2.64 or later
-* bash
+* bash (configuring build alone is served with a POSIX shell)
 * libtool
 * libtool-ltdl-devel
 * libuuid-devel
@@ -52,3 +53,9 @@
     $ ./configure
     $ make
     $ sudo make install
+
+For extra convenience (e.g. addressing the case `make` is not GNU compatible
+in your deployment, in which case you would need to switch that invocation
+above for something else like `gmake`), you can use `./autogen.sh roll along`
+instead of initial three steps (or `./autogen.sh roll` in place of just the
+first and second).
