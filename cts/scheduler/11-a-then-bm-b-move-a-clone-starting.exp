@@ -120,6 +120,10 @@
         <attributes CRM_meta_on_node="f20node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="monitor" operation_key="myclone_monitor_0" internal_operation_key="myclone:0_monitor_0" on_node="f20node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
 </transition_graph>

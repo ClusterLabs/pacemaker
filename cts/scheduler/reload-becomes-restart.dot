@@ -30,6 +30,7 @@ digraph "g" {
 "rsc1:0_start_0 node2" -> "rsc2:1_start_0 node2" [ style = bold]
 "rsc1:0_start_0 node2" [ style=bold color="green" fontcolor="black"]
 "rsc1:1_monitor_0 node1" -> "cl-rsc1_start_0" [ style = bold]
+"rsc1:1_monitor_0 node1" -> "rsc2_stop_0 node1" [ style = bold]
 "rsc1:1_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
 "rsc1:1_monitor_120000 node1" [ style=bold color="green" fontcolor="black"]
 "rsc1:1_start_0 node1" -> "cl-rsc1_running_0" [ style = bold]
