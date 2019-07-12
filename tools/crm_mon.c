@@ -94,7 +94,6 @@ static GMainLoop *mainloop = NULL;
 static guint timer_id = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 static pe_working_set_t *mon_data_set = NULL;
-static GList *attr_list = NULL;
 
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
@@ -1979,10 +1978,11 @@ compare_attribute(gconstpointer a, gconstpointer b)
 }
 
 static void
-create_attr_list(gpointer name, gpointer value, gpointer data)
+append_attr_list(gpointer name, gpointer value, gpointer user_data)
 {
     int i;
     const char *filt_str[] = FILTER_STR;
+    GList *attr_list = (GList *) user_data;
 
     CRM_CHECK(name != NULL, return);
 
@@ -2455,12 +2455,13 @@ print_node_attributes(FILE *stream, pe_working_set_t *data_set, unsigned int mon
         data.fmt = output_format;
 
         if (data.node && data.node->details && data.node->details->online) {
+            GList *attr_list = NULL;
+
             print_node_start(stream, data.node, mon_ops);
-            g_hash_table_foreach(data.node->details->attrs, create_attr_list, NULL);
+            g_hash_table_foreach(data.node->details->attrs, append_attr_list, attr_list);
 
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
-            attr_list = NULL;
             print_node_end(stream);
         }
     }
