@@ -59,9 +59,11 @@ class BasePatterns:
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
+            "Pat:Fencing_start"   : r"(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
+            "Pat:Fencing_ok"      : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover" : r"pengine.*: Recover %s",
+            "Pat:Fencing_active"  : r"pengine.*: Resource %s is active on .* nodes",
+            "Pat:Fencing_probe"   : r"crmd.*: Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"crmd.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"crmd.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
@@ -299,6 +301,12 @@ class crm_cs_v0(BasePatterns):
             r"error:.*STONITH connection failed",
             r"error: Connection to stonith-ng.* (failed|closed)",
             r"crit: Fencing daemon connection failed",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
             ]
 
         self.components["corosync"] = [
@@ -316,6 +324,12 @@ class crm_cs_v0(BasePatterns):
             "lrmd.*Connection to stonith-ng.* closed",
             "lrmd.*LRMD lost STONITH connection",
             "lrmd.*STONITH connection failed, finalizing .* pending operations",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
             ]
 
         self.components["cib"] = [
@@ -387,6 +401,12 @@ class crm_cs_v0(BasePatterns):
             r"error:.*Sign-in failed: triggered a retry",
             "STONITH connection failed, finalizing .* pending operations.",
             r"crmd.*:\s+Result of .* operation for Fencing.*Error",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 
