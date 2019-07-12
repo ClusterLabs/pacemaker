@@ -51,7 +51,7 @@ static int cib_connect(gboolean full);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void kick_refresh(gboolean data_updated);
-static char *get_node_display_name(node_t *node);
+static char *get_node_display_name(node_t *node, unsigned int mon_ops);
 
 /*
  * Definitions indicating which items to print
@@ -109,11 +109,21 @@ static stonith_t *st = NULL;
 static xmlNode *current_cib = NULL;
 gchar **argv_copy = NULL;
 
-static gboolean has_warnings = FALSE;
-static gboolean print_timing = FALSE;
-static gboolean fence_history = FALSE;
-static gboolean fence_full_history = FALSE;
-static gboolean fence_connect = FALSE;
+#define mon_op_group_by_node        (0x0001U)
+#define mon_op_inactive_resources   (0x0002U)
+#define mon_op_one_shot             (0x0004U)
+#define mon_op_has_warnings         (0x0008U)
+#define mon_op_print_timing         (0x0010U)
+#define mon_op_watch_fencing        (0x0020U)
+#define mon_op_fence_history        (0x0040U)
+#define mon_op_fence_full_history   (0x0080U)
+#define mon_op_fence_connect        (0x0100U)
+#define mon_op_print_brief          (0x0200U)
+#define mon_op_print_pending        (0x0400U)
+#define mon_op_print_clone_detail   (0x0800U)
+
+#define mon_op_default              (mon_op_print_pending)
+
 #if CURSES_ENABLED
 static gboolean curses_console_initialized = FALSE;
 #endif
@@ -168,50 +178,75 @@ struct {
     int reconnect_msec;
     int fence_history_level;
     int verbose;
-    gboolean one_shot;
     gboolean daemonize;
-    gboolean group_by_node;
-    gboolean inactive_resources;
-    gboolean watch_fencing;
     gboolean show_bans;
-    gboolean print_clone_detail;
-    gboolean print_brief;
-    gboolean print_pending;
     char *pid_file;
     char *external_agent;
     char *external_recipient;
+    unsigned int mon_ops;
 } options = {
     .reconnect_msec = 5000,
-    .fence_history_level = 2
+    .fence_history_level = 2,
+    .mon_ops = mon_op_default
 };
 
 static gboolean
-reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.reconnect_msec = crm_get_msec(optarg);
+as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (output_format != mon_output_console) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-w requires console output format");
+        return FALSE;
+    }
+
+    output_format = mon_output_cgi;
+    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    show |= mon_show_tickets;
+as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (optarg == NULL) {
+        g_set_error(error, G_OPTION_ERROR, 1, "--as-html requires filename");
+        return FALSE;
+    }
+
+    if (output_format != mon_output_console) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-h requires console output format");
+        return FALSE;
+    }
+
+    output_format = mon_output_html;
+    output_filename = strdup(optarg);
+    umask(S_IWGRP | S_IWOTH);
     return TRUE;
 }
 
 static gboolean
-show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    show |= mon_show_operations;
+as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (output_format != mon_output_console) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-s requires console output format");
+        return FALSE;
+    }
+
+    output_format = mon_output_monitor;
+    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    show |= mon_show_failcounts;
+as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (output_format != mon_output_console) {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-X requires console output format");
+        return FALSE;
+    }
+
+    output_format = mon_output_xml;
+    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    show |= mon_show_attributes;
+group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_group_by_node;
     return TRUE;
 }
 
@@ -222,9 +257,53 @@ hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 }
 
 static gboolean
-use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    setenv("CIB_file", optarg, 1);
-    options.one_shot = TRUE;
+inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_inactive_resources;
+    return TRUE;
+}
+
+static gboolean
+no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (output_format == mon_output_console) {
+        output_format = mon_output_plain;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_one_shot;
+    return TRUE;
+}
+
+static gboolean
+print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_print_brief;
+    return TRUE;
+}
+
+static gboolean
+print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_print_clone_detail;
+    return TRUE;
+}
+
+static gboolean
+print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_print_pending;
+    return TRUE;
+}
+
+static gboolean
+reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.reconnect_msec = crm_get_msec(optarg);
+    return TRUE;
+}
+
+static gboolean
+show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_attributes;
     return TRUE;
 }
 
@@ -240,65 +319,33 @@ show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format != mon_output_console) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-h requires console output format");
-        return FALSE;
-    }
-
-    if (optarg == NULL) {
-        g_set_error(error, G_OPTION_ERROR, 1, "--as-html requires filename");
-        return FALSE;
-    }
-
-    output_format = mon_output_html;
-    output_filename = strdup(optarg);
-    umask(S_IWGRP | S_IWOTH);
+show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_failcounts;
     return TRUE;
 }
 
 static gboolean
-as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format != mon_output_console) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-X requires console output format");
-        return FALSE;
-    }
-
-    output_format = mon_output_xml;
-    options.one_shot = TRUE;
+show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_operations;
     return TRUE;
 }
 
 static gboolean
-as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format != mon_output_console) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-w requires console output format");
-        return FALSE;
-    }
-
-    output_format = mon_output_cgi;
-    options.one_shot = TRUE;
+show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    show |= mon_show_tickets;
     return TRUE;
 }
 
 static gboolean
-as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format != mon_output_console) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-s requires console output format");
-        return FALSE;
-    }
-
-    output_format = mon_output_monitor;
-    options.one_shot = TRUE;
+use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    setenv("CIB_file", optarg, 1);
+    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format == mon_output_console) {
-        output_format = mon_output_plain;
-    }
-
+watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_watch_fencing;
     return TRUE;
 }
 
@@ -310,7 +357,7 @@ static GOptionEntry addl_entries[] = {
       "Update frequency in seconds",
       "SECONDS" },
 
-    { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
+    { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
       "Display the cluster status once on the console and exit",
       NULL },
 
@@ -342,11 +389,11 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry display_entries[] = {
-    { "group-by-node", 'n', 0, G_OPTION_ARG_NONE, &options.group_by_node,
+    { "group-by-node", 'n', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, group_by_node_cb,
       "Group resources by node",
       NULL },
 
-    { "inactive", 'r', 0, G_OPTION_ARG_NONE, &options.inactive_resources,
+    { "inactive", 'r', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, inactive_resources_cb,
       "Display inactive resources",
       NULL },
 
@@ -366,7 +413,7 @@ static GOptionEntry display_entries[] = {
       "Display cluster tickets",
       NULL },
 
-    { "watch-fencing", 'W', 0, G_OPTION_ARG_NONE, &options.watch_fencing,
+    { "watch-fencing", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, watch_fencing_cb,
       "Listen for fencing events. For use with --external-agent",
       NULL },
 
@@ -389,15 +436,15 @@ static GOptionEntry display_entries[] = {
       "Hide all headers",
       NULL },
 
-    { "show-detail", 'R', 0, G_OPTION_ARG_NONE, &options.print_clone_detail,
+    { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_clone_detail_cb,
       "Show more details (node IDs, individual clone instances)",
       NULL },
 
-    { "brief", 'b', 0, G_OPTION_ARG_NONE, &options.print_brief,
+    { "brief", 'b', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_brief_cb,
       "Brief output",
       NULL },
 
-    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
+    { "pending", 'j', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_pending_cb,
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
@@ -541,15 +588,15 @@ cib_connect(gboolean full)
         need_pass = FALSE;
     }
 
-    if ((fence_connect) && (st == NULL)) {
+    if (is_set(options.mon_ops, mon_op_fence_connect) && st == NULL) {
         st = stonith_api_new();
     }
 
-    if ((fence_connect) && (st->state == stonith_disconnected)) {
+    if (is_set(options.mon_ops, mon_op_fence_connect) && st->state == stonith_disconnected) {
         rc = st->cmds->connect(st, crm_system_name, NULL);
         if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
-            if (options.watch_fencing) {
+            if (is_set(options.mon_ops, mon_op_watch_fencing)) {
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                                 mon_st_callback_event);
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -663,8 +710,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         switch (c) {
             case 'm':
                 if (!options.fence_history_level) {
-                    fence_history = TRUE;
-                    fence_connect = TRUE;
+                    options.mon_ops |= mon_op_fence_history;
+                    options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
                         mon_cib_connection_destroy(NULL);
                     }
@@ -678,23 +725,23 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 show ^= mon_show_failcounts;
                 break;
             case 'n':
-                options.group_by_node = ! options.group_by_node;
+                options.mon_ops ^= mon_op_group_by_node;
                 break;
             case 'o':
                 show ^= mon_show_operations;
                 if ((show & mon_show_operations) == 0) {
-                    print_timing = 0;
+                    options.mon_ops &= ~mon_op_print_timing;
                 }
                 break;
             case 'r':
-                options.inactive_resources = ! options.inactive_resources;
+                options.mon_ops ^= mon_op_inactive_resources;
                 break;
             case 'R':
-                options.print_clone_detail = ! options.print_clone_detail;
+                options.mon_ops ^= mon_op_print_clone_detail;
                 break;
             case 't':
-                print_timing = ! print_timing;
-                if (print_timing) {
+                options.mon_ops ^= mon_op_print_timing;
+                if (is_set(options.mon_ops, mon_op_print_timing)) {
                     show |= mon_show_operations;
                 }
                 break;
@@ -713,10 +760,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 }
                 break;
             case 'b':
-                options.print_brief = ! options.print_brief;
+                options.mon_ops ^= mon_op_print_brief;
                 break;
             case 'j':
-                options.print_pending = ! options.print_pending;
+                options.mon_ops ^= mon_op_print_pending;
                 break;
             case '?':
                 config_mode = TRUE;
@@ -734,16 +781,16 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("\n");
         print_option_help('c', show & mon_show_tickets);
         print_option_help('f', show & mon_show_failcounts);
-        print_option_help('n', options.group_by_node);
+        print_option_help('n', is_set(options.mon_ops, mon_op_group_by_node));
         print_option_help('o', show & mon_show_operations);
-        print_option_help('r', options.inactive_resources);
-        print_option_help('t', print_timing);
+        print_option_help('r', is_set(options.mon_ops, mon_op_inactive_resources));
+        print_option_help('t', is_set(options.mon_ops, mon_op_print_timing));
         print_option_help('A', show & mon_show_attributes);
         print_option_help('L', show & mon_show_bans);
         print_option_help('D', (show & mon_show_headers) == 0);
-        print_option_help('R', options.print_clone_detail);
-        print_option_help('b', options.print_brief);
-        print_option_help('j', options.print_pending);
+        print_option_help('R', is_set(options.mon_ops, mon_op_print_clone_detail));
+        print_option_help('b', is_set(options.mon_ops, mon_op_print_brief));
+        print_option_help('j', is_set(options.mon_ops, mon_op_print_pending));
         print_option_help('m', (show & mon_show_fence_history));
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
@@ -850,7 +897,7 @@ main(int argc, char **argv)
 
     if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
         output_format = mon_output_cgi;
-        options.one_shot = TRUE;
+        options.mon_ops |= mon_op_one_shot;
     }
 
     argv_copy = g_strdupv(argv);
@@ -871,11 +918,8 @@ main(int argc, char **argv)
         show &= ~mon_show_times;
     }
 
-    if (options.watch_fencing) {
-        fence_connect = TRUE;
-    }
-
-    if (options.watch_fencing) {
+    if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+        options.mon_ops |= mon_op_fence_connect;
         /* don't moan as fence_history_level == 1 is default */
         options.fence_history_level = 0;
     }
@@ -902,7 +946,7 @@ main(int argc, char **argv)
                  * As we don't expect cib-updates coming
                  * in enforce one-shot. */
                 options.fence_history_level = 0;
-                options.one_shot = TRUE;
+                options.mon_ops |= mon_op_one_shot;
                 break;
 
             case cib_remote:
@@ -922,14 +966,14 @@ main(int argc, char **argv)
 
     switch (options.fence_history_level) {
         case 3:
-            fence_full_history = TRUE;
+            options.mon_ops |= mon_op_fence_full_history;
             /* fall through to next lower level */
         case 2:
             show |= mon_show_fence_history;
             /* fall through to next lower level */
         case 1:
-            fence_history = TRUE;
-            fence_connect = TRUE;
+            options.mon_ops |= mon_op_fence_history;
+            options.mon_ops |= mon_op_fence_connect;
             break;
         default:
             break;
@@ -955,10 +999,10 @@ main(int argc, char **argv)
     /* XML output always prints everything */
     if (output_format == mon_output_xml) {
         show = mon_show_all;
-        print_timing = TRUE;
+        options.mon_ops |= mon_op_print_timing;
     }
 
-    if (options.one_shot) {
+    if (is_set(options.mon_ops, mon_op_one_shot)) {
         if (output_format == mon_output_console) {
             output_format = mon_output_plain;
         }
@@ -1001,7 +1045,7 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
         curses_console_initialized = TRUE;
 #else
-        options.one_shot = TRUE;
+        options.mon_ops |= mon_op_one_shot;
         output_format = mon_output_plain;
         printf("Defaulting to one-shot mode\n");
         printf("You need to have curses available at compile time to enable console mode\n");
@@ -1013,12 +1057,12 @@ main(int argc, char **argv)
     if (cib) {
 
         do {
-            if (!options.one_shot) {
+            if (is_not_set(options.mon_ops, mon_op_one_shot)) {
                 print_as("Waiting until cluster is available on this node ...\n");
             }
-            rc = cib_connect(!options.one_shot);
+            rc = cib_connect(is_not_set(options.mon_ops, mon_op_one_shot));
 
-            if (options.one_shot) {
+            if (is_set(options.mon_ops, mon_op_one_shot)) {
                 break;
 
             } else if (rc != pcmk_ok) {
@@ -1057,7 +1101,7 @@ main(int argc, char **argv)
         return clean_up(crm_errno2exit(rc));
     }
 
-    if (options.one_shot) {
+    if (is_set(options.mon_ops, mon_op_one_shot)) {
         return clean_up(CRM_EX_OK);
     }
 
@@ -1084,14 +1128,14 @@ main(int argc, char **argv)
     return clean_up(CRM_EX_OK);
 }
 
-#define mon_warn(fmt...) do {			\
-	if (!has_warnings) {			\
+#define mon_warn(mon_ops, fmt...) do {			\
+	if (is_not_set(mon_ops, mon_op_has_warnings)) {			\
 	    print_as("CLUSTER WARN:");		\
 	} else {				\
 	    print_as(",");			\
 	}					\
 	print_as(fmt);				\
-	has_warnings = TRUE;			\
+	mon_ops |= mon_op_has_warnings;			\
     } while(0)
 
 static int
@@ -1126,7 +1170,7 @@ count_resources(pe_working_set_t * data_set, resource_t * rsc)
  */
 static void
 print_simple_status(pe_working_set_t * data_set,
-                    stonith_history_t *history)
+                    stonith_history_t *history, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     int nodes_online = 0;
@@ -1134,7 +1178,7 @@ print_simple_status(pe_working_set_t * data_set,
     int nodes_maintenance = 0;
 
     if (data_set->dc_node == NULL) {
-        mon_warn(" No DC");
+        mon_warn(mon_ops, " No DC");
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1147,11 +1191,11 @@ print_simple_status(pe_working_set_t * data_set,
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            mon_warn(" offline node: %s", node->details->uname);
+            mon_warn(mon_ops, " offline node: %s", node->details->uname);
         }
     }
 
-    if (!has_warnings) {
+    if (is_not_set(mon_ops, mon_op_has_warnings)) {
         int nresources = count_resources(data_set, NULL);
 
         print_as("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
@@ -1256,21 +1300,21 @@ print_nvpair(FILE *stream, const char *name, const char *value,
  * \param[in] node       Node to print
  */
 static void
-print_node_start(FILE *stream, node_t *node)
+print_node_start(FILE *stream, node_t *node, unsigned int mon_ops)
 {
     char *node_name;
 
     switch (output_format) {
         case mon_output_plain:
         case mon_output_console:
-            node_name = get_node_display_name(node);
+            node_name = get_node_display_name(node, mon_ops);
             print_as("* Node %s:\n", node_name);
             free(node_name);
             break;
 
         case mon_output_html:
         case mon_output_cgi:
-            node_name = get_node_display_name(node);
+            node_name = get_node_display_name(node, mon_ops);
             fprintf(stream, "  <h3>Node: %s</h3>\n  <ul>\n", node_name);
             free(node_name);
             break;
@@ -1315,16 +1359,16 @@ print_node_end(FILE *stream)
  * \param[in] stream      File stream to display output to
  */
 static void
-print_resources_heading(FILE *stream)
+print_resources_heading(FILE *stream, unsigned int mon_ops)
 {
     const char *heading;
 
-    if (options.group_by_node) {
+    if (is_set(mon_ops, mon_op_group_by_node)) {
 
         /* Active resources have already been printed by node */
-        heading = (options.inactive_resources? "Inactive resources" : NULL);
+        heading = is_set(mon_ops, mon_op_inactive_resources) ? "Inactive resources" : NULL;
 
-    } else if (options.inactive_resources) {
+    } else if (is_set(mon_ops, mon_op_inactive_resources)) {
         heading = "Full list of resources";
 
     } else {
@@ -1360,14 +1404,14 @@ print_resources_heading(FILE *stream)
  * \param[in] stream     File stream to display output to
  */
 static void
-print_resources_closing(FILE *stream, gboolean printed_heading)
+print_resources_closing(FILE *stream, gboolean printed_heading, unsigned int mon_ops)
 {
     const char *heading;
 
     /* What type of resources we did or did not display */
-    if (options.group_by_node) {
+    if (is_set(mon_ops, mon_op_group_by_node)) {
         heading = "inactive ";
-    } else if (options.inactive_resources) {
+    } else if (is_set(mon_ops, mon_op_inactive_resources)) {
         heading = "";
     } else {
         heading = "active ";
@@ -1407,17 +1451,17 @@ print_resources_closing(FILE *stream, gboolean printed_heading)
  * \param[in] print_opts  Bitmask of pe_print_options
  */
 static void
-print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
+print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts, unsigned int mon_ops)
 {
     GListPtr rsc_iter;
     const char *prefix = NULL;
     gboolean printed_heading = FALSE;
-    gboolean brief_output = options.print_brief;
+    gboolean brief_output = is_set(mon_ops, mon_op_print_brief);
 
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
-    if (options.group_by_node && !options.inactive_resources) {
+    if (is_set(mon_ops, mon_op_group_by_node) && is_not_set(mon_ops, mon_op_inactive_resources)) {
         return;
     }
 
@@ -1429,11 +1473,11 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
 
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
-    if (brief_output && !options.group_by_node) {
-        print_resources_heading(stream);
+    if (brief_output && is_not_set(mon_ops, mon_op_group_by_node)) {
+        print_resources_heading(stream, mon_ops);
         printed_heading = TRUE;
         print_rscs_brief(data_set->resources, NULL, print_opts, stream,
-                         options.inactive_resources);
+                         is_set(mon_ops, mon_op_inactive_resources));
     }
 
     /* For each resource, display it if appropriate */
@@ -1449,7 +1493,7 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
             continue;
 
         /* Skip active resources if we already displayed them by node */
-        } else if (options.group_by_node) {
+        } else if (is_set(mon_ops, mon_op_group_by_node)) {
             if (is_active) {
                 continue;
             }
@@ -1461,19 +1505,19 @@ print_resources(FILE *stream, pe_working_set_t *data_set, int print_opts)
         /* Skip resources that aren't at least partially active,
          * unless we're displaying inactive resources
          */
-        } else if (!partially_active && !options.inactive_resources) {
+        } else if (!partially_active && is_not_set(mon_ops, mon_op_inactive_resources)) {
             continue;
         }
 
         /* Print this resource */
         if (printed_heading == FALSE) {
-            print_resources_heading(stream);
+            print_resources_heading(stream, mon_ops);
             printed_heading = TRUE;
         }
         rsc->fns->print(rsc, prefix, print_opts, stream);
     }
 
-    print_resources_closing(stream, printed_heading);
+    print_resources_closing(stream, printed_heading, mon_ops);
 }
 
 /*!
@@ -1656,7 +1700,7 @@ print_rsc_history_end(FILE *stream)
 static void
 print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
                  xmlNode *xml_op, const char *task, const char *interval_ms_s,
-                 int rc)
+                 int rc, unsigned int mon_ops)
 {
     const char *value = NULL;
     const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
@@ -1686,7 +1730,7 @@ print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
     if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
         print_nvpair(stream, "interval", interval_ms_s, "ms", 0);
     }
-    if (print_timing) {
+    if (is_set(mon_ops, mon_op_print_timing)) {
         int int_value;
         const char *attr;
 
@@ -1754,7 +1798,7 @@ print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
  */
 static void
 print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
-                  xmlNode *rsc_entry, gboolean operations)
+                  xmlNode *rsc_entry, gboolean operations, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     GListPtr op_list = NULL;
@@ -1806,7 +1850,7 @@ print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
 
         /* Print the operation */
         print_op_history(stream, data_set, node, xml_op, task, interval_ms_s,
-                         rc);
+                         rc, mon_ops);
     }
 
     /* Free the list we created (no need to free the individual items) */
@@ -1829,14 +1873,14 @@ print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
  */
 static void
 print_node_history(FILE *stream, pe_working_set_t *data_set,
-                   xmlNode *node_state, gboolean operations)
+                   xmlNode *node_state, gboolean operations, unsigned int mon_ops)
 {
     node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
 
     if (node && node->details && node->details->online) {
-        print_node_start(stream, node);
+        print_node_start(stream, node, mon_ops);
 
         lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
         lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
@@ -1846,7 +1890,7 @@ print_node_history(FILE *stream, pe_working_set_t *data_set,
              rsc_entry = __xml_next(rsc_entry)) {
 
             if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                print_rsc_history(stream, data_set, node, rsc_entry, operations);
+                print_rsc_history(stream, data_set, node, rsc_entry, operations, mon_ops);
             }
         }
 
@@ -2029,7 +2073,7 @@ print_node_attribute(gpointer name, gpointer user_data)
 }
 
 static void
-print_node_summary(FILE *stream, pe_working_set_t * data_set, gboolean operations)
+print_node_summary(FILE *stream, pe_working_set_t * data_set, gboolean operations, unsigned int mon_ops)
 {
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
@@ -2066,7 +2110,7 @@ print_node_summary(FILE *stream, pe_working_set_t * data_set, gboolean operation
     for (node_state = __xml_first_child(cib_status); node_state != NULL;
          node_state = __xml_next(node_state)) {
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-            print_node_history(stream, data_set, node_state, operations);
+            print_node_history(stream, data_set, node_state, operations, mon_ops);
         }
     }
 
@@ -2191,7 +2235,7 @@ print_cluster_tickets(FILE *stream, pe_working_set_t * data_set)
  * \note It is the caller's responsibility to free the result with free().
  */
 static char *
-get_node_display_name(node_t *node)
+get_node_display_name(node_t *node, unsigned int mon_ops)
 {
     char *node_name;
     const char *node_host = NULL;
@@ -2213,7 +2257,7 @@ get_node_display_name(node_t *node)
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
-    if (options.print_clone_detail && safe_str_neq(node->details->uname, node->details->id)) {
+    if (is_set(mon_ops, mon_op_print_clone_detail) && safe_str_neq(node->details->uname, node->details->id)) {
         node_id = node->details->id;
     }
 
@@ -2251,14 +2295,14 @@ get_node_display_name(node_t *node)
  * \param[in] location   Constraint to print
  */
 static void
-print_ban(FILE *stream, pe_node_t *node, pe__location_t *location)
+print_ban(FILE *stream, pe_node_t *node, pe__location_t *location, unsigned int mon_ops)
 {
     char *node_name = NULL;
 
     switch (output_format) {
         case mon_output_plain:
         case mon_output_console:
-            node_name = get_node_display_name(node);
+            node_name = get_node_display_name(node, mon_ops);
             print_as(" %s\tprevents %s from running %son %s\n",
                      location->id, location->rsc_lh->id,
                      ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
@@ -2267,7 +2311,7 @@ print_ban(FILE *stream, pe_node_t *node, pe__location_t *location)
 
         case mon_output_html:
         case mon_output_cgi:
-            node_name = get_node_display_name(node);
+            node_name = get_node_display_name(node, mon_ops);
             fprintf(stream, "  <li>%s prevents %s from running %son %s</li>\n",
                      location->id, location->rsc_lh->id,
                      ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
@@ -2295,7 +2339,7 @@ print_ban(FILE *stream, pe_node_t *node, pe__location_t *location)
  * \param[in] data_set   Working set corresponding to CIB status to display
  */
 static void
-print_neg_locations(FILE *stream, pe_working_set_t *data_set)
+print_neg_locations(FILE *stream, pe_working_set_t *data_set, unsigned int mon_ops)
 {
     GListPtr gIter, gIter2;
 
@@ -2328,7 +2372,7 @@ print_neg_locations(FILE *stream, pe_working_set_t *data_set)
             node_t *node = (node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                print_ban(stream, node, location);
+                print_ban(stream, node, location, mon_ops);
             }
         }
     }
@@ -2371,7 +2415,7 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
  * \param[in] data_set   Working set of CIB state
  */
 static void
-print_node_attributes(FILE *stream, pe_working_set_t *data_set)
+print_node_attributes(FILE *stream, pe_working_set_t *data_set, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
 
@@ -2410,7 +2454,7 @@ print_node_attributes(FILE *stream, pe_working_set_t *data_set)
         data.node = (node_t *) gIter->data;
 
         if (data.node && data.node->details && data.node->details->online) {
-            print_node_start(stream, data.node);
+            print_node_start(stream, data.node, mon_ops);
             g_hash_table_foreach(data.node->details->attrs, create_attr_list, NULL);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
@@ -2437,7 +2481,7 @@ print_node_attributes(FILE *stream, pe_working_set_t *data_set)
  * \return Bitmask of pe_print_options suitable for resource print functions
  */
 static int
-get_resource_display_options(void)
+get_resource_display_options(unsigned int mon_ops)
 {
     int print_opts;
 
@@ -2459,16 +2503,16 @@ get_resource_display_options(void)
     }
 
     /* Add optional display elements */
-    if (options.print_pending) {
+    if (is_set(mon_ops, mon_op_print_pending)) {
         print_opts |= pe_print_pending;
     }
-    if (options.print_clone_detail) {
+    if (is_set(mon_ops, mon_op_print_clone_detail)) {
         print_opts |= pe_print_clone_details|pe_print_implicit;
     }
-    if (!options.inactive_resources) {
+    if (is_not_set(mon_ops, mon_op_inactive_resources)) {
         print_opts |= pe_print_clone_active;
     }
-    if (options.print_brief) {
+    if (is_set(mon_ops, mon_op_print_brief)) {
         print_opts |= pe_print_brief;
     }
     return print_opts;
@@ -2633,7 +2677,7 @@ print_cluster_stack(FILE *stream, const char *stack_s)
  * \param[in] data_set   Working set of CIB state
  */
 static void
-print_cluster_dc(FILE *stream, pe_working_set_t *data_set)
+print_cluster_dc(FILE *stream, pe_working_set_t *data_set, unsigned int mon_ops)
 {
     node_t *dc = data_set->dc_node;
     xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
@@ -2642,7 +2686,7 @@ print_cluster_dc(FILE *stream, pe_working_set_t *data_set)
                                crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                : NULL;
     const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-    char *dc_name = dc? get_node_display_name(dc) : NULL;
+    char *dc_name = dc? get_node_display_name(dc, mon_ops) : NULL;
 
     switch (output_format) {
         case mon_output_plain:
@@ -2891,7 +2935,7 @@ get_cluster_stack(pe_working_set_t *data_set)
  * \param[in] data_set   Working set of CIB state
  */
 static void
-print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
+print_cluster_summary(FILE *stream, pe_working_set_t *data_set, unsigned int mon_ops)
 {
     const char *stack_s = get_cluster_stack(data_set);
     gboolean header_printed = FALSE;
@@ -2910,7 +2954,7 @@ print_cluster_summary(FILE *stream, pe_working_set_t *data_set)
             print_cluster_summary_header(stream);
             header_printed = TRUE;
         }
-        print_cluster_dc(stream, data_set);
+        print_cluster_dc(stream, data_set, mon_ops);
     }
 
     if (show & mon_show_times) {
@@ -3252,7 +3296,7 @@ sort_stonith_history(stonith_history_t *history)
  * \param[in] event      stonith event
  */
 static void
-print_stonith_action(FILE *stream, stonith_history_t *event)
+print_stonith_action(FILE *stream, stonith_history_t *event, unsigned int mon_ops)
 {
     const char *action_s = stonith_action_str(event->action);
     char *run_at_s = ctime(&event->completed);
@@ -3300,7 +3344,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                              action_s, event->target,
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
-                             fence_full_history?"completed":"last-successful",
+                             is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-successful",
                              run_at_s?run_at_s:"");
                     break;
                 case st_failed:
@@ -3309,7 +3353,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                              action_s, event->target,
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
-                             fence_full_history?"completed":"last-failed",
+                             is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
                              run_at_s?run_at_s:"");
                     break;
                 default:
@@ -3328,7 +3372,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                                     action_s, event->target,
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
-                                    fence_full_history?"completed":"last-successful",
+                                    is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-successful",
                                     run_at_s?run_at_s:"");
                     break;
                 case st_failed:
@@ -3337,7 +3381,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                                     action_s, event->target,
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
-                                    fence_full_history?"completed":"last-failed",
+                                    is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
                                     run_at_s?run_at_s:"");
                     break;
                 default:
@@ -3363,7 +3407,7 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
  *
  */
 static void
-print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
+print_failed_stonith_actions(FILE *stream, stonith_history_t *history, unsigned int mon_ops)
 {
     stonith_history_t *hp;
 
@@ -3398,7 +3442,7 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, mon_ops);
         }
     }
 
@@ -3423,7 +3467,7 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
  *
  */
 static void
-print_stonith_pending(FILE *stream, stonith_history_t *history)
+print_stonith_pending(FILE *stream, stonith_history_t *history, unsigned int mon_ops)
 {
     /* xml-output always shows the full history
      * so we'll never have to show pending-actions
@@ -3453,7 +3497,7 @@ print_stonith_pending(FILE *stream, stonith_history_t *history)
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, mon_ops);
         }
 
         /* End section */
@@ -3478,7 +3522,7 @@ print_stonith_pending(FILE *stream, stonith_history_t *history)
  *
  */
 static void
-print_stonith_history(FILE *stream, stonith_history_t *history)
+print_stonith_history(FILE *stream, stonith_history_t *history, unsigned int mon_ops)
 {
     stonith_history_t *hp;
 
@@ -3504,7 +3548,7 @@ print_stonith_history(FILE *stream, stonith_history_t *history)
 
     for (hp = history; hp; hp = hp->next) {
         if ((hp->state != st_failed) || (output_format == mon_output_xml)) {
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, mon_ops);
         }
     }
 
@@ -3536,10 +3580,10 @@ print_stonith_history(FILE *stream, stonith_history_t *history)
  */
 static void
 print_status(pe_working_set_t * data_set,
-             stonith_history_t *stonith_history)
+             stonith_history_t *stonith_history, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options();
+    int print_opts = get_resource_display_options(mon_ops);
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -3551,14 +3595,14 @@ print_status(pe_working_set_t * data_set,
     if (output_format == mon_output_console) {
         blank_screen();
     }
-    print_cluster_summary(stdout, data_set);
+    print_cluster_summary(stdout, data_set, mon_ops);
     print_as("\n");
 
     /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
-        char *node_name = get_node_display_name(node);
+        char *node_name = get_node_display_name(node, mon_ops);
 
         /* Get node mode */
         if (node->details->unclean) {
@@ -3598,7 +3642,7 @@ print_status(pe_working_set_t * data_set,
 
         } else if (node->details->online) {
             node_mode = "online";
-            if (options.group_by_node == FALSE) {
+            if (is_not_set(mon_ops, mon_op_group_by_node)) {
                 if (pe__is_guest_node(node)) {
                     online_guest_nodes = add_list_element(online_guest_nodes, node_name);
                 } else if (pe__is_remote_node(node)) {
@@ -3611,7 +3655,7 @@ print_status(pe_working_set_t * data_set,
             }
         } else {
             node_mode = "OFFLINE";
-            if (options.group_by_node == FALSE) {
+            if (is_not_set(mon_ops, mon_op_group_by_node)) {
                 if (pe__is_remote_node(node)) {
                     offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
                 } else if (pe__is_guest_node(node)) {
@@ -3635,8 +3679,8 @@ print_status(pe_working_set_t * data_set,
         print_as("Node %s: %s\n", node_name, node_mode);
 
         /* If we're grouping by node, print its resources */
-        if (options.group_by_node) {
-            if (options.print_brief) {
+        if (is_set(mon_ops, mon_op_group_by_node)) {
+            if (is_set(mon_ops, mon_op_print_brief)) {
                 print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
                                  stdout, FALSE);
             } else {
@@ -3675,11 +3719,11 @@ print_status(pe_working_set_t * data_set,
     }
 
     /* Print resources section, if needed */
-    print_resources(stdout, data_set, print_opts);
+    print_resources(stdout, data_set, print_opts, mon_ops);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
-        print_node_attributes(stdout, data_set);
+        print_node_attributes(stdout, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -3687,7 +3731,7 @@ print_status(pe_working_set_t * data_set,
      */
     if (show & (mon_show_operations | mon_show_failcounts)) {
         print_node_summary(stdout, data_set,
-                           ((show & mon_show_operations)? TRUE : FALSE));
+                           ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -3696,8 +3740,8 @@ print_status(pe_working_set_t * data_set,
     }
 
     /* Print failed stonith actions */
-    if (fence_history) {
-        print_failed_stonith_actions(stdout, stonith_history);
+    if (is_set(mon_ops, mon_op_fence_history)) {
+        print_failed_stonith_actions(stdout, stonith_history, mon_ops);
     }
 
     /* Print tickets if requested */
@@ -3707,15 +3751,15 @@ print_status(pe_working_set_t * data_set,
 
     /* Print negative location constraints if requested */
     if (show & mon_show_bans) {
-        print_neg_locations(stdout, data_set);
+        print_neg_locations(stdout, data_set, mon_ops);
     }
 
     /* Print stonith history */
-    if (fence_history) {
+    if (is_set(mon_ops, mon_op_fence_history)) {
         if (show & mon_show_fence_history) {
-            print_stonith_history(stdout, stonith_history);
+            print_stonith_history(stdout, stonith_history, mon_ops);
         } else {
-            print_stonith_pending(stdout, stonith_history);
+            print_stonith_pending(stdout, stonith_history, mon_ops);
         }
     }
 
@@ -3734,16 +3778,16 @@ print_status(pe_working_set_t * data_set,
  */
 static void
 print_xml_status(pe_working_set_t * data_set,
-                 stonith_history_t *stonith_history)
+                 stonith_history_t *stonith_history, unsigned int mon_ops)
 {
     FILE *stream = stdout;
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options();
+    int print_opts = get_resource_display_options(mon_ops);
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
 
-    print_cluster_summary(stream, data_set);
+    print_cluster_summary(stream, data_set, mon_ops);
 
     /*** NODES ***/
     fprintf(stream, "    <nodes>\n");
@@ -3780,7 +3824,7 @@ print_xml_status(pe_working_set_t * data_set,
             fprintf(stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
         }
 
-        if (options.group_by_node) {
+        if (is_set(mon_ops, mon_op_group_by_node)) {
             GListPtr lpc2 = NULL;
 
             fprintf(stream, ">\n");
@@ -3797,11 +3841,11 @@ print_xml_status(pe_working_set_t * data_set,
     fprintf(stream, "    </nodes>\n");
 
     /* Print resources section, if needed */
-    print_resources(stream, data_set, print_opts);
+    print_resources(stream, data_set, print_opts, mon_ops);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
-        print_node_attributes(stream, data_set);
+        print_node_attributes(stream, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -3809,7 +3853,7 @@ print_xml_status(pe_working_set_t * data_set,
      */
     if (show & (mon_show_operations | mon_show_failcounts)) {
         print_node_summary(stream, data_set,
-                           ((show & mon_show_operations)? TRUE : FALSE));
+                           ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -3818,8 +3862,8 @@ print_xml_status(pe_working_set_t * data_set,
     }
 
     /* Print stonith history */
-    if (fence_history) {
-        print_stonith_history(stdout, stonith_history);
+    if (is_set(mon_ops, mon_op_fence_history)) {
+        print_stonith_history(stdout, stonith_history, mon_ops);
     }
 
     /* Print tickets if requested */
@@ -3829,7 +3873,7 @@ print_xml_status(pe_working_set_t * data_set,
 
     /* Print negative location constraints if requested */
     if (show & mon_show_bans) {
-        print_neg_locations(stream, data_set);
+        print_neg_locations(stream, data_set, mon_ops);
     }
 
     fprintf(stream, "</crm_mon>\n");
@@ -3849,12 +3893,12 @@ print_xml_status(pe_working_set_t * data_set,
 static int
 print_html_status(pe_working_set_t * data_set,
                   const char *filename,
-                  stonith_history_t *stonith_history)
+                  stonith_history_t *stonith_history, unsigned int mon_ops)
 {
     FILE *stream;
     GListPtr gIter = NULL;
     char *filename_tmp = NULL;
-    int print_opts = get_resource_display_options();
+    int print_opts = get_resource_display_options(mon_ops);
 
     if (output_format == mon_output_cgi) {
         stream = stdout;
@@ -3877,7 +3921,7 @@ print_html_status(pe_working_set_t * data_set,
     fprintf(stream, " </head>\n");
     fprintf(stream, "<body>\n");
 
-    print_cluster_summary(stream, data_set);
+    print_cluster_summary(stream, data_set, mon_ops);
 
     /*** NODE LIST ***/
 
@@ -3885,7 +3929,7 @@ print_html_status(pe_working_set_t * data_set,
     fprintf(stream, "<ul>\n");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        char *node_name = get_node_display_name(node);
+        char *node_name = get_node_display_name(node, mon_ops);
 
         fprintf(stream, "<li>Node: %s: ", node_name);
         if (node->details->standby_onfail && node->details->online) {
@@ -3905,13 +3949,13 @@ print_html_status(pe_working_set_t * data_set,
         } else {
             fprintf(stream, "<font color=\"red\">OFFLINE</font>\n");
         }
-        if (options.print_brief && options.group_by_node) {
+        if (is_set(mon_ops, mon_op_print_brief) && is_set(mon_ops, mon_op_group_by_node)) {
             fprintf(stream, "<ul>\n");
             print_rscs_brief(node->details->running_rsc, NULL, print_opts | pe_print_rsconly,
                              stream, FALSE);
             fprintf(stream, "</ul>\n");
 
-        } else if (options.group_by_node) {
+        } else if (is_set(mon_ops, mon_op_group_by_node)) {
             GListPtr lpc2 = NULL;
 
             fprintf(stream, "<ul>\n");
@@ -3930,11 +3974,11 @@ print_html_status(pe_working_set_t * data_set,
     fprintf(stream, "</ul>\n");
 
     /* Print resources section, if needed */
-    print_resources(stream, data_set, print_opts);
+    print_resources(stream, data_set, print_opts, mon_ops);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
-        print_node_attributes(stream, data_set);
+        print_node_attributes(stream, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -3942,7 +3986,7 @@ print_html_status(pe_working_set_t * data_set,
      */
     if (show & (mon_show_operations | mon_show_failcounts)) {
         print_node_summary(stream, data_set,
-                           ((show & mon_show_operations)? TRUE : FALSE));
+                           ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -3951,16 +3995,16 @@ print_html_status(pe_working_set_t * data_set,
     }
 
     /* Print failed stonith actions */
-    if (fence_history) {
-        print_failed_stonith_actions(stream, stonith_history);
+    if (is_set(mon_ops, mon_op_fence_history)) {
+        print_failed_stonith_actions(stream, stonith_history, mon_ops);
     }
 
     /* Print stonith history */
-    if (fence_history) {
+    if (is_set(mon_ops, mon_op_fence_history)) {
         if (show & mon_show_fence_history) {
-            print_stonith_history(stream, stonith_history);
+            print_stonith_history(stream, stonith_history, mon_ops);
         } else {
-            print_stonith_pending(stdout, stonith_history);
+            print_stonith_pending(stdout, stonith_history, mon_ops);
         }
     }
 
@@ -3971,7 +4015,7 @@ print_html_status(pe_working_set_t * data_set,
 
     /* Print negative location constraints if requested */
     if (show & mon_show_bans) {
-        print_neg_locations(stream, data_set);
+        print_neg_locations(stream, data_set, mon_ops);
     }
 
     fprintf(stream, "</body>\n");
@@ -4357,13 +4401,13 @@ mon_refresh_display(gpointer user_data)
 
     /* get the stonith-history if there is evidence we need it
      */
-    while (fence_history) {
+    while (is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             if (st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120)) {
                 fprintf(stderr, "Critical: Unable to get stonith-history\n");
                 mon_cib_connection_destroy(NULL);
             } else {
-                if ((!fence_full_history) && (output_format != mon_output_xml)) {
+                if (is_not_set(options.mon_ops, mon_op_fence_full_history) && output_format != mon_output_xml) {
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
                 stonith_history = sort_stonith_history(stonith_history);
@@ -4400,7 +4444,7 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(mon_data_set, output_filename, stonith_history) != 0) {
+            if (print_html_status(mon_data_set, output_filename, stonith_history, options.mon_ops) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -4408,12 +4452,12 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_xml:
-            print_xml_status(mon_data_set, stonith_history);
+            print_xml_status(mon_data_set, stonith_history, options.mon_ops);
             break;
 
         case mon_output_monitor:
-            print_simple_status(mon_data_set, stonith_history);
-            if (has_warnings) {
+            print_simple_status(mon_data_set, stonith_history, options.mon_ops);
+            if (is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
             }
@@ -4421,7 +4465,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_plain:
         case mon_output_console:
-            print_status(mon_data_set, stonith_history);
+            print_status(mon_data_set, stonith_history, options.mon_ops);
             break;
 
         case mon_output_none:
