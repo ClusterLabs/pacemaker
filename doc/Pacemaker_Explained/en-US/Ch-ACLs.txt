@@ -207,11 +207,14 @@ explicitly granted).
 
    <acl_role id="operator">
 
-       <acl_permission id="operator-maintenance" kind="write"
+       <acl_permission id="operator-maintenance-mode" kind="write"
            xpath="//crm_config//nvpair[@name='maintenance-mode']" />
 
+       <acl_permission id="operator-maintenance-attr" kind="write"
+           xpath="//nvpair[@name='maintenance']" />
+
        <acl_permission id="operator-target-role" kind="write"
-           xpath="//crm_config//nvpair[@name='target-role']" />
+           xpath="//resources//meta_attributes/nvpair[@name='target-role']" />
 
        <acl_permission id="operator-is-managed" kind="write"
            xpath="//resources//nvpair[@name='is-managed']" />
@@ -233,15 +236,15 @@ explicitly granted).
 
        <acl_permission id="minimal-maintenance" kind="read"
            description="allow reading maintenance node attribute (permanent or transient)"
-           xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+           xpath="//nvpair[@name='maintenance']"/>
 
        <acl_permission id="minimal-target-role" kind="read"
            description="allow reading resource target roles"
-           xpath="//meta_attributes/nvpair[@name='target-role']"/>
+           xpath="//resources//meta_attributes/nvpair[@name='target-role']"/>
 
        <acl_permission id="minimal-is-managed" kind="read"
            description="allow reading resource managed status"
-           xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+           xpath="//resources//meta_attributes/nvpair[@name='is-managed']"/>
 
        <acl_permission id="minimal-deny-instance-attributes" kind="deny"
            xpath="//instance_attributes"/>
