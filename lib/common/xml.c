@@ -4510,3 +4510,53 @@ crm_destroy_xml(gpointer data)
 {
     free_xml(data);
 }
+
+char *
+pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
+{
+    static const char *base = NULL;
+    char *ret = NULL;
+
+    if (base == NULL) {
+        base = getenv("PCMK_schema_directory");
+    }
+    if (base == NULL || base[0] == '\0') {
+        base = CRM_SCHEMA_DIRECTORY;
+    }
+
+    switch (ns) {
+        case pcmk__xml_artefact_ns_legacy_rng:
+        case pcmk__xml_artefact_ns_legacy_xslt:
+            ret = strdup(base);
+            break;
+        case pcmk__xml_artefact_ns_base_rng:
+        case pcmk__xml_artefact_ns_base_xslt:
+            ret = crm_strdup_printf("%s/base", base);
+            break;
+        default:
+            crm_err("XML artefact family specified as %u not recognized", ns);
+    }
+    return ret;
+}
+
+char *
+pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
+{
+    char *base = pcmk__xml_artefact_root(ns), *ret = NULL;
+
+    switch (ns) {
+        case pcmk__xml_artefact_ns_legacy_rng:
+        case pcmk__xml_artefact_ns_base_rng:
+            ret = crm_strdup_printf("%s/%s.rng", base, filespec);
+            break;
+        case pcmk__xml_artefact_ns_legacy_xslt:
+        case pcmk__xml_artefact_ns_base_xslt:
+            ret = crm_strdup_printf("%s/%s.xsl", base, filespec);
+            break;
+        default:
+            crm_err("XML artefact family specified as %u not recognized", ns);
+    }
+    free(base);
+
+    return ret;
+}
