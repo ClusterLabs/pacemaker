@@ -286,29 +286,19 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
 }
 
 crm_action_t *
-get_action(int id, gboolean confirmed)
+controld_get_action(int id)
 {
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    for (GList *item = transition_graph->synapses; item; item = item->next) {
+        synapse_t *synapse = (synapse_t *) item->data;
 
-    gIter = transition_graph->synapses;
-    for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
-
-        gIter2 = synapse->actions;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+        for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
+            crm_action_t *action = (crm_action_t *) item2->data;
 
             if (action->id == id) {
-                if (confirmed) {
-                    stop_te_timer(action->timer);
-                    te_action_confirmed(action);
-                }
                 return action;
             }
         }
     }
-
     return NULL;
 }
 
@@ -515,7 +505,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
     } else {
-        action = get_action(action_num, FALSE);
+        action = controld_get_action(action_num);
 
         if (action == NULL) {
             desc = "unknown";

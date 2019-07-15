@@ -23,7 +23,7 @@ extern gboolean fail_incompletable_actions(crm_graph_t * graph, const char *down
 void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
-extern crm_action_t *get_action(int id, gboolean confirmed);
+crm_action_t *controld_get_action(int id);
 extern gboolean stop_te_timer(crm_action_timer_t * timer);
 extern const char *get_rsc_state(const char *task, enum op_status status);
 

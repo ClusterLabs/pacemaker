@@ -735,7 +735,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    action = get_action(stonith_id, FALSE);
+    action = controld_get_action(stonith_id);
     if (action == NULL) {
         crm_err("Stonith action not matched");
         goto bail;
