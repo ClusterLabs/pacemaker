@@ -47,6 +47,7 @@
 #endif
 
 typedef enum mon_output_format_e {
+    mon_output_unset,
     mon_output_none,
     mon_output_monitor,
     mon_output_plain,
