@@ -13,9 +13,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 
 #######################################################################
 
@@ -199,7 +199,7 @@ SystemHealth_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_program=/usr/sbin/notifyServicelogEvent}
+: ${OCF_RESKEY_program:=/usr/sbin/notifyServicelogEvent}
 
 case $__OCF_ACTION in
 meta-data)      meta_data

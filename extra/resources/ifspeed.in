@@ -33,15 +33,15 @@
 #
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 
 # If these aren't available, we can still show help,
 # which is all that is needed to build the man pages.
 [ -r "${OCF_FUNCTIONS}" ] && . "${OCF_FUNCTIONS}"
 [ -r "${OCF_FUNCTIONS_DIR}/findif.sh" ] && . "${OCF_FUNCTIONS_DIR}/findif.sh"
-: ${OCF_SUCCESS=0}
+: ${OCF_SUCCESS:=0}
 
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 
 FINDIF=findif
 
@@ -51,10 +51,10 @@ OCF_RESKEY_bridge_ports_default="detect"
 OCF_RESKEY_weight_base_default=1000
 OCF_RESKEY_dampen_default=5
 
-: ${OCF_RESKEY_name=${OCF_RESKEY_name_default}}
-: ${OCF_RESKEY_bridge_ports=${OCF_RESKEY_bridge_ports_default}}
-: ${OCF_RESKEY_weight_base=${OCF_RESKEY_weight_base_default}}
-: ${OCF_RESKEY_dampen=${OCF_RESKEY_dampen_default}}
+: ${OCF_RESKEY_name:=${OCF_RESKEY_name_default}}
+: ${OCF_RESKEY_bridge_ports:=${OCF_RESKEY_bridge_ports_default}}
+: ${OCF_RESKEY_weight_base:=${OCF_RESKEY_weight_base_default}}
+: ${OCF_RESKEY_dampen:=${OCF_RESKEY_dampen_default}}
 
 meta_data() {
         cat <<END

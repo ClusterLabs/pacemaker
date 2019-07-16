@@ -17,9 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_interval:="1"}

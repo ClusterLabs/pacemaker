@@ -19,9 +19,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 #
 SMARTCTL=/usr/sbin/smartctl
 ATTRDUP=/usr/sbin/attrd_updater
@@ -279,7 +279,7 @@ HealthSMART_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then

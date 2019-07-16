@@ -16,9 +16,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 
 #######################################################################
 
@@ -249,21 +249,21 @@ controld_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_sctp=false}
+: ${OCF_RESKEY_sctp:=false}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$OCF_RESOURCE_INSTANCE" in
     *[gG][fF][sS]*)
         : ${OCF_RESKEY_args=-g 0}
-        : ${OCF_RESKEY_daemon=gfs_controld}
+        : ${OCF_RESKEY_daemon:=gfs_controld}
         ;;
     *[dD][lL][mM]*)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
         ;;
     *)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
 esac
 
 case $__OCF_ACTION in

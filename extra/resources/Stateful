@@ -17,9 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 CRM_MASTER="${HA_SBIN_DIR}/crm_master -l reboot"
 
 #######################################################################
@@ -202,11 +202,11 @@ stateful_validate() {
     exit $OCF_SUCCESS
 }
 
-: ${slave_score=5}
-: ${master_score=10}
+: ${slave_score:=5}
+: ${master_score:=10}
 
-: ${OCF_RESKEY_CRM_meta_interval=0}
-: ${OCF_RESKEY_notify_delay=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_notify_delay:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
