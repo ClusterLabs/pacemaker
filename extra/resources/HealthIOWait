@@ -1,7 +1,6 @@
 #!/bin/sh
 #
-# IOWait RA
-# Measures CPU iowait % via top and writes #health-iowait status into the CIB
+# ocf:pacemaker:HealthIOWait resource agent
 #
 # Copyright 2004-2018 the Pacemaker project contributors
 #
@@ -9,6 +8,10 @@
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.
+#
+
+#
+# Measures CPU iowait % via top and writes #health-iowait status into the CIB
 #
 #######################################################################
 # Initialization:

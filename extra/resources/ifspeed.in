@@ -1,12 +1,20 @@
 #!@BASH_PATH@
 #
-# OCF resource agent which monitors state of network interface and records it
-# as a node attribute in the CIB based on the sum of speeds of its active (up,
-# link detected, not blocked) underlying interfaces.
+# ocf:pacemaker:ifspeed resource agent
 #
 # Copyright 2011-2018 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+#
+# OCF resource agent which monitors state of network interface and records it
+# as a node attribute in the CIB based on the sum of speeds of its active (up,
+# link detected, not blocked) underlying interfaces.
+#
 # Partially based on 'ping' RA by Andrew Beekhof
 #
 # Change on 2017 by Tomer Azran <tomerazran@gmail.com>:

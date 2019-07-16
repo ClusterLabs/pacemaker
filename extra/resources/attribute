@@ -6,8 +6,8 @@
 #
 # The version control history for this file may have further details.
 #
-# This source code is licensed under GNU General Public License version 2 or
-# later (GPLv2+) WITHOUT ANY WARRANTY.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 USAGE="Usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}

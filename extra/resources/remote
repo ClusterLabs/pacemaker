@@ -1,12 +1,6 @@
 #!/bin/sh
 #
-# ocf:pacmaker:remote OCF resource agent
-#
-# This script provides metadata for Pacemaker's internal remote agent.
-# Outside of acting as a placeholder so the agent can be indexed, and
-# providing metadata, this script should never be invoked. The actual
-# functionality behind the remote connection lives within Pacemaker's
-# controller daemon.
+# ocf:pacemaker:remote OCF resource agent
 #
 # Copyright 2013-2018 the Pacemaker project contributors
 #
@@ -16,6 +10,12 @@
 # (GPLv2) WITHOUT ANY WARRANTY.
 #
 
+# This script provides metadata for Pacemaker's internal remote agent.
+# Outside of acting as a placeholder so the agent can be indexed, and
+# providing metadata, this script should never be invoked. The actual
+# functionality behind the remote connection lives within Pacemaker's
+# controller daemon.
+#
 #######################################################################
 # Initialization:
 

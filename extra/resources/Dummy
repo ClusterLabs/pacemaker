@@ -1,13 +1,17 @@
 #!/bin/sh
 #
-# Dummy OCF RA. Does nothing but wait a few seconds, can be
-# configured to fail occassionally.
+# ocf:pacemaker:Dummy resource agent
 #
-# Copyright 2004-2018 SUSE LINUX AG, Lars Marowsky-Brée
-# All Rights Reserved.
+# Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
+# Later changes copyright 2008-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.
+
+#
+# Does nothing but wait a few seconds, can be configured to fail occassionally
 #
 
 #######################################################################
