@@ -59,7 +59,7 @@ extern crm_trigger_t *transition_trigger;
 extern char *failed_stop_offset;
 extern char *failed_start_offset;
 
-void te_action_confirmed(crm_action_t * action);
+void te_action_confirmed(crm_action_t *action, crm_graph_t *graph);
 void te_reset_job_counts(void);
 
 #endif

@@ -684,11 +684,8 @@ action_timer_callback(gpointer data)
         print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
 
         timer->action->failed = TRUE;
-        te_action_confirmed(timer->action);
+        te_action_confirmed(timer->action, transition_graph);
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
-
-        update_graph(transition_graph, timer->action);
-        trigger_graph();
 
         // Record timeout in the CIB if appropriate
         if ((timer->action->type == action_type_rsc)

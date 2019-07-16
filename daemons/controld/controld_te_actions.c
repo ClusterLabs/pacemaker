@@ -71,9 +71,7 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
               crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));
-    te_action_confirmed(pseudo);
-    update_graph(graph, pseudo);
-    trigger_graph();
+    te_action_confirmed(pseudo, graph);
     return TRUE;
 }
 
@@ -135,9 +133,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         crm_info("crm-event (%s) is a local shutdown", crm_str(id));
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
-        te_action_confirmed(action);
-        update_graph(graph, action);
-        trigger_graph();
+        te_action_confirmed(action, graph);
         return TRUE;
 
     } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
@@ -160,9 +156,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
 
     } else if (no_wait) {
-        te_action_confirmed(action);
-        update_graph(graph, action);
-        trigger_graph();
+        te_action_confirmed(action, graph);
 
     } else {
         if (action->timeout <= 0) {
@@ -543,15 +537,26 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
     return te_should_perform_action_on(graph, action, target);
 }
 
+/*!
+ * \brief Confirm a graph action (and optionally update graph)
+ *
+ * \param[in] action  Action to confirm
+ * \param[in] graph   Update and trigger this graph (if non-NULL)
+ */
 void
-te_action_confirmed(crm_action_t * action)
+te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
 {
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-
-    if (action->confirmed == FALSE && action->type == action_type_rsc && target != NULL) {
-        te_update_job_count(action, -1);
+    if (action->confirmed == FALSE) {
+        if ((action->type == action_type_rsc)
+            && (crm_element_value(action->xml, XML_LRM_ATTR_TARGET) != NULL)) {
+            te_update_job_count(action, -1);
+        }
+        action->confirmed = TRUE;
     }
-    action->confirmed = TRUE;
+    if (graph) {
+        update_graph(graph, action);
+        trigger_graph();
+    }
 }
 
 

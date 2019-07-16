@@ -749,7 +749,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
         crm_info("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
-            te_action_confirmed(action);
+            te_action_confirmed(action, NULL);
             if (safe_str_eq("on", op)) {
                 const char *value = NULL;
                 char *now = crm_itoa(time(NULL));

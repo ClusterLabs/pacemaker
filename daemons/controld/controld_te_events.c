@@ -268,12 +268,8 @@ match_graph_event(crm_action_t *action, xmlNode *event, int op_status,
         }
     }
 
-    /* stop this event's timer if it had one */
     stop_te_timer(action->timer);
-    te_action_confirmed(action);
-
-    update_graph(transition_graph, action);
-    trigger_graph();
+    te_action_confirmed(action, transition_graph);
 
     if (action->failed) {
         abort_transition(action->synapse->priority + 1, tg_restart, "Event failed", event);
@@ -355,13 +351,10 @@ confirm_cancel_action(crm_action_t *cancel)
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
     stop_te_timer(cancel->timer);
-    te_action_confirmed(cancel);
-    update_graph(transition_graph, cancel);
+    te_action_confirmed(cancel, transition_graph);
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
              op_key, node_name, cancel->id);
-
-    trigger_graph();
 }
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
