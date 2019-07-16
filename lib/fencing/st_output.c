@@ -174,9 +174,9 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     }
     xmlSetProp(node, (pcmkXmlStr) "valid", (pcmkXmlStr) (rc ? "false" : "true"));
 
-    pcmk__xml_push_parent(out, node);
+    pcmk__output_xml_push_parent(out, node);
     out->subprocess_output(out, rc, output, error_output);
-    pcmk__xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
 
     return rc;
 }

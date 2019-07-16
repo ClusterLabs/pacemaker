@@ -537,7 +537,7 @@ pcmk__output_xml_node(pcmk__output_t *out, const char *name);
  * \param[in]     node An XML node to be added as a child.
  */
 void
-pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -554,7 +554,7 @@ pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
  * \param[in]     node The node to be added/
  */
 void
-pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -571,7 +571,7 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
  * \param[in,out] out The output functions structure.
  */
 void
-pcmk__xml_pop_parent(pcmk__output_t *out);
+pcmk__output_xml_pop_parent(pcmk__output_t *out);
 
 /*!
  * \internal
@@ -588,7 +588,7 @@ pcmk__xml_pop_parent(pcmk__output_t *out);
  * \return NULL if stack is empty, otherwise the parent of the stack.
  */
 xmlNodePtr
-pcmk__xml_peek_parent(pcmk__output_t *out);
+pcmk__output_xml_peek_parent(pcmk__output_t *out);
 
 /*!
  * \internal

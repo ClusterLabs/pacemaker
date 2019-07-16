@@ -338,6 +338,6 @@ pcmk__html_add_node(pcmk__output_t *out, const char *element_name, const char *i
         xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
     }
 
-    pcmk__xml_add_node(out, node);
+    pcmk__output_xml_add_node(out, node);
     return node;
 }

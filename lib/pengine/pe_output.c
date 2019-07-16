@@ -19,7 +19,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
 
     CRM_ASSERT(tag_name != NULL);
 
-    xml_node = pcmk__xml_peek_parent(out);
+    xml_node = pcmk__output_xml_peek_parent(out);
     CRM_ASSERT(xml_node != NULL);
     xml_node = is_list
         ? create_xml_node(xml_node, tag_name)
@@ -36,7 +36,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     va_end(args);
 
     if (is_list) {
-        pcmk__xml_push_parent(out, xml_node);
+        pcmk__output_xml_push_parent(out, xml_node);
     }
     return 0;
 }
@@ -62,7 +62,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
     }
 
-    pcmk__xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
     return rc;
 }
 
@@ -86,7 +86,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
 
             pcmk__output_xml_node(out, "li");
             out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
-            pcmk__xml_pop_parent(out);
+            pcmk__output_xml_pop_parent(out);
         }
     }
 
