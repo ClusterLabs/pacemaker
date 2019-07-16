@@ -358,7 +358,9 @@ class crm_cs_v0(BasePatterns):
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*Could not recover from internal error",
                     ]
-        self.components["lrmd-ignore"] = []
+        self.components["lrmd-ignore"] = [
+            r"attrd.*Connection to lrmd (failed|closed)",
+        ]
 
         self.components["crmd"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
