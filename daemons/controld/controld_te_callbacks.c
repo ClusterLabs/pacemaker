@@ -331,7 +331,6 @@ process_op_deletion(const char *xpath, xmlNode *change)
     char *mutable_key = strdup(xpath);
     char *key;
     char *node_uuid;
-    crm_action_t *cancel = NULL;
 
     // Extract the part of xpath between last pair of single quotes
     key = strrchr(mutable_key, '\'');
@@ -348,11 +347,7 @@ process_op_deletion(const char *xpath, xmlNode *change)
     ++key;
 
     node_uuid = extract_node_uuid(xpath);
-    cancel = get_cancel_action(key, node_uuid);
-    if (cancel) {
-        confirm_cancel_action(cancel);
-
-    } else {
+    if (confirm_cancel_action(key, node_uuid) == FALSE) {
         abort_transition(INFINITY, tg_restart, "Resource operation removal",
                          change);
     }

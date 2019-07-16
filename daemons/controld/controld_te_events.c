@@ -339,14 +339,16 @@ get_cancel_action(const char *id, const char *node)
     return NULL;
 }
 
-void
-confirm_cancel_action(crm_action_t *cancel)
+bool
+confirm_cancel_action(const char *id, const char *node_id)
 {
     const char *op_key = NULL;
     const char *node_name = NULL;
+    crm_action_t *cancel = get_cancel_action(id, node_id);
 
-    CRM_ASSERT(cancel != NULL);
-
+    if (cancel == NULL) {
+        return FALSE;
+    }
     op_key = crm_element_value(cancel->xml, XML_LRM_ATTR_TASK_KEY);
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
@@ -355,6 +357,7 @@ confirm_cancel_action(crm_action_t *cancel)
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
              op_key, node_name, cancel->id);
+    return TRUE;
 }
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
@@ -475,12 +478,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              */
 
             if (status == PCMK_LRM_OP_CANCELLED) {
-                const char *node_id = get_node_id(event);
-
-                action = get_cancel_action(id, node_id);
-                if (action) {
-                    confirm_cancel_action(action);
-                }
+                confirm_cancel_action(id, get_node_id(event));
                 goto bail;
             }
 
