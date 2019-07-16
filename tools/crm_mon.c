@@ -75,10 +75,6 @@ static pcmk__common_args_t *args = NULL;
 static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
 
-#if CURSES_ENABLED
-static gboolean curses_console_initialized = FALSE;
-#endif
-
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
 
@@ -86,6 +82,9 @@ long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
 static pcmk__supported_format_t formats[] = {
+#if CURSES_ENABLED
+    CRM_MON_SUPPORTED_FORMAT_CURSES,
+#endif
     PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -220,6 +219,12 @@ no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("text");
+    output_format = mon_output_plain;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -767,7 +772,7 @@ build_arg_context(pcmk__common_args_t *args) {
                            "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                            "\tcrm_mon --as-xml\n";
 
-    context = pcmk__build_arg_context(args, "text (default), html, xml");
+    context = pcmk__build_arg_context(args, "console (default), html, text, xml");
     g_option_context_set_description(context, examples);
 
     /* Add the -Q option, which cannot be part of the globally supported options
@@ -1040,7 +1045,6 @@ main(int argc, char **argv)
         cbreak();
         noecho();
         crm_enable_stderr(FALSE);
-        curses_console_initialized = TRUE;
 #else
         options.mon_ops |= mon_op_one_shot;
         output_format = mon_output_plain;
@@ -1842,12 +1846,11 @@ static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
-    if (curses_console_initialized) {
+    if (output_format == mon_output_console) {
         output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
-        curses_console_initialized = FALSE;
     }
 #endif
 
