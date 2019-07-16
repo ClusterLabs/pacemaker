@@ -604,8 +604,8 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out);
  * \param[in]     text         The text content of the node.
  */
 xmlNodePtr
-pcmk__html_add_node(pcmk__output_t *out, const char *element_name, const char *id,
-                    const char *class_name, const char *text);
+pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
+                              const char *class_name, const char *text);
 
 #ifdef __cplusplus
 }

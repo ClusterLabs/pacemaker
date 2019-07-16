@@ -191,16 +191,15 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
     pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", "Command Output");
-
-    pcmk__html_add_node(out, "div", NULL, NULL, rc_buf);
+    pcmk__output_create_html_node(out, "div", NULL, NULL, rc_buf);
 
     if (proc_stdout != NULL) {
-        pcmk__html_add_node(out, "div", NULL, NULL, "Stdout");
-        pcmk__html_add_node(out, "div", NULL, "output", proc_stdout);
+        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stdout");
+        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stdout);
     }
     if (proc_stderr != NULL) {
-        pcmk__html_add_node(out, "div", NULL, NULL, "Stderr");
-        pcmk__html_add_node(out, "div", NULL, "output", proc_stderr);
+        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stderr");
+        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stderr);
     }
 
     free(rc_buf);
@@ -212,11 +211,11 @@ html_version(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(priv != NULL);
 
     pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", "Version Information");
-    pcmk__html_add_node(out, "div", NULL, NULL, "Program: Pacemaker");
-    pcmk__html_add_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
-    pcmk__html_add_node(out, "div", NULL, NULL, "Author: Andrew Beekhof");
-    pcmk__html_add_node(out, "div", NULL, NULL, crm_strdup_printf("Build: %s", BUILD_VERSION));
-    pcmk__html_add_node(out, "div", NULL, NULL, crm_strdup_printf("Features: %s", CRM_FEATURES));
+    pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
+    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
+    pcmk__output_create_html_node(out, "div", NULL, NULL, "Author: Andrew Beekhof");
+    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Build: %s", BUILD_VERSION));
+    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Features: %s", CRM_FEATURES));
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -249,7 +248,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
     CRM_ASSERT(priv != NULL);
 
-    node = pcmk__html_add_node(out, "pre", NULL, NULL, buf);
+    node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
     xmlSetProp(node, (pcmkXmlStr) "lang", (pcmkXmlStr) "xml");
 }
 
@@ -324,8 +323,8 @@ pcmk__mk_html_output(char **argv) {
 }
 
 xmlNodePtr
-pcmk__html_add_node(pcmk__output_t *out, const char *element_name, const char *id,
-                    const char *class_name, const char *text) {
+pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
+                       const char *class_name, const char *text) {
     htmlNodePtr node = xmlNewNode(NULL, (pcmkXmlStr) element_name);
 
     xmlNodeSetContent(node, (pcmkXmlStr) text);
