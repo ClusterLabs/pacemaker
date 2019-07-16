@@ -385,7 +385,11 @@ process_graph_event(xmlNode *event, const char *event_node)
         desc = "initiated by a different DC";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 
-    } else if (transition_graph->id != transition_num) {
+    } else if ((transition_graph->id != transition_num)
+               || (transition_graph->complete)) {
+
+        // Action is not from currently active transition
+
         guint interval_ms = 0;
 
         if (parse_op_key(id, NULL, NULL, &interval_ms)
@@ -403,14 +407,13 @@ process_graph_event(xmlNode *event, const char *event_node)
             abort_transition(INFINITY, tg_restart, "Change in recurring result",
                              event);
 
-        } else {
+        } else if (transition_graph->id != transition_num) {
             desc = "arrived really late";
             abort_transition(INFINITY, tg_restart, "Old event", event);
+        } else {
+            desc = "arrived late";
+            abort_transition(INFINITY, tg_restart, "Inactive graph", event);
         }
-
-    } else if (transition_graph->complete) {
-        desc = "arrived late";
-        abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
     } else {
         // Event is result of an action from currently active transition
