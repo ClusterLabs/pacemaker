@@ -94,7 +94,7 @@ html_init(pcmk__output_t *out) {
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
-    pcmk__output_xml_node(out, "body");
+    pcmk__output_xml_create_parent(out, "body");
 
     return true;
 }
@@ -263,7 +263,7 @@ html_begin_list(pcmk__output_t *out, const char *name,
         pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", name);
     }
 
-    pcmk__output_xml_node(out, "ul");
+    pcmk__output_xml_create_parent(out, "ul");
 }
 
 static void

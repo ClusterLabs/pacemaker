@@ -1594,7 +1594,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        pcmk__output_xml_node(out, "li");
+        pcmk__output_xml_create_parent(out, "li");
         if (is_set(options, pe_print_implicit)) {
             if(g_list_length(bundle_data->replicas) > 1) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);

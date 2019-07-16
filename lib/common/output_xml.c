@@ -136,7 +136,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_as_str = crm_itoa(exit_status);
 
-    node = pcmk__output_xml_node(out, "command");
+    node = pcmk__output_xml_create_parent(out, "command");
     xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
 
     if (proc_stdout != NULL) {
@@ -209,7 +209,7 @@ xml_begin_list(pcmk__output_t *out, const char *name,
                const char *singular_noun, const char *plural_noun) {
     xmlNodePtr list_node = NULL;
 
-    list_node = pcmk__output_xml_node(out, "list");
+    list_node = pcmk__output_xml_create_parent(out, "list");
     xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 
@@ -272,7 +272,7 @@ pcmk__mk_xml_output(char **argv) {
 }
 
 xmlNodePtr
-pcmk__output_xml_node(pcmk__output_t *out, const char *name) {
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name) {
     private_data_t *priv = out->priv;
     xmlNodePtr node = NULL;
 

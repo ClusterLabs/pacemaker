@@ -548,7 +548,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         node = NULL;
     }
 
-    pcmk__output_xml_node(out, "font");
+    pcmk__output_xml_create_parent(out, "font");
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
         color = "yellow";

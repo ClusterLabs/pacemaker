@@ -37,7 +37,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 
     if (when) {
         crm_time_t *crm_when = crm_time_new(NULL);
-        xmlNodePtr node = pcmk__output_xml_node(out, "last-fenced");
+        xmlNodePtr node = pcmk__output_xml_create_parent(out, "last-fenced");
         char *buf = NULL;
 
         crm_time_set_timet(crm_when, &when);
@@ -88,7 +88,7 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
 
 static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_xml_node(out, "fence_event");
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     crm_time_t *crm_when = crm_time_new(NULL);
     char *buf = NULL;
@@ -160,7 +160,7 @@ validate_agent_text(pcmk__output_t *out, va_list args) {
 
 static int
 validate_agent_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_xml_node(out, "validate");
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "validate");
 
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
