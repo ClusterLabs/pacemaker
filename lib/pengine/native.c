@@ -671,7 +671,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         out->end_list(out);
     }
 
-    xmlNewChild(pcmk__xml_peek_parent(out), NULL, (pcmkXmlStr) "br", NULL);
+    pcmk__output_create_xml_node(out, "br");
 
     if (options & pe_print_details) {
         g_hash_table_foreach(rsc->parameters, pe__native_output_attr_html, out);

@@ -84,7 +84,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            pcmk__output_xml_node(out, "li");
+            pcmk__output_create_xml_node(out, "li");
             out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
             pcmk__output_xml_pop_parent(out);
         }

@@ -540,6 +540,29 @@ pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  This is used when implementing custom functions.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
+ * \brief Like pcmk__output_create_xml_node(), but add the given text content to the
+ *        new node.
+ *
+ * \param[in,out] out     The output functions structure.
+ * \param[in]     name    The name of the node to be created.
+ * \param[in]     content The text content of the node.
+ */
+xmlNodePtr
+pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content);
+
+/*!
+ * \internal
  * \brief Push a parent XML node onto the stack.  This is used when implementing
  *        custom message functions.
  *
