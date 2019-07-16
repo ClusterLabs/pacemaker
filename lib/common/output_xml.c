@@ -159,8 +159,7 @@ xml_version(pcmk__output_t *out, bool extended) {
     private_data_t *priv = out->priv;
     CRM_ASSERT(priv != NULL);
 
-    node = create_xml_node(g_queue_peek_tail(priv->parent_q), "version");
-
+    node = pcmk__output_create_xml_node(out, "version");
     xmlSetProp(node, (pcmkXmlStr) "program", (pcmkXmlStr) "Pacemaker");
     xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) PACEMAKER_VERSION);
     xmlSetProp(node, (pcmkXmlStr) "author", (pcmkXmlStr) "Andrew Beekhof");
@@ -199,7 +198,7 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
     CRM_ASSERT(priv != NULL);
 
-    parent = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+    parent = pcmk__output_create_xml_node(out, name);
     cdata_node = xmlNewCDataBlock(getDocPtr(parent), (pcmkXmlStr) buf, strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
@@ -220,7 +219,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *content) {
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "item", content);
+    item_node = pcmk__output_create_xml_text_node(out, "item", content);
     xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 

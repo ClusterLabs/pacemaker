@@ -190,7 +190,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
-    pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", "Command Output");
+    pcmk__output_create_xml_text_node(out, "h2", "Command Output");
     pcmk__output_create_html_node(out, "div", NULL, NULL, rc_buf);
 
     if (proc_stdout != NULL) {
@@ -210,7 +210,7 @@ html_version(pcmk__output_t *out, bool extended) {
     private_data_t *priv = out->priv;
     CRM_ASSERT(priv != NULL);
 
-    pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", "Version Information");
+    pcmk__output_create_xml_text_node(out, "h2", "Version Information");
     pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
     pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
     pcmk__output_create_html_node(out, "div", NULL, NULL, "Author: Andrew Beekhof");
@@ -260,7 +260,7 @@ html_begin_list(pcmk__output_t *out, const char *name,
     CRM_ASSERT(priv != NULL);
 
     if (name != NULL) {
-        pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "h2", name);
+        pcmk__output_create_xml_text_node(out, "h2", name);
     }
 
     pcmk__output_xml_create_parent(out, "ul");
@@ -273,7 +273,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *content) {
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "li", content);
+    item_node = pcmk__output_create_xml_text_node(out, "li", content);
 
     if (name != NULL) {
         xmlSetProp(item_node, (pcmkXmlStr) "class", (pcmkXmlStr) name);
@@ -325,9 +325,7 @@ pcmk__mk_html_output(char **argv) {
 xmlNodePtr
 pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
                        const char *class_name, const char *text) {
-    htmlNodePtr node = xmlNewNode(NULL, (pcmkXmlStr) element_name);
-
-    xmlNodeSetContent(node, (pcmkXmlStr) text);
+    htmlNodePtr node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "class", (pcmkXmlStr) class_name);
@@ -337,6 +335,5 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
         xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
     }
 
-    pcmk__output_xml_add_node(out, node);
     return node;
 }
