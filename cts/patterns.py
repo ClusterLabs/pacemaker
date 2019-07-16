@@ -287,7 +287,9 @@ class crm_corosync(BasePatterns):
             r"pacemakerd.*Respawning failed child process: pacemaker-execd",
             r"pacemakerd.*Respawning failed child process: pacemaker-controld",
         ]
-        self.components["pacemaker-execd-ignore"] = []
+        self.components["pacemaker-execd-ignore"] = [
+            r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+        ]
 
         self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
