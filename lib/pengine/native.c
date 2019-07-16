@@ -345,6 +345,16 @@ native_print_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+pe__native_output_attr_html(gpointer key, gpointer value, gpointer user_data)
+{
+    pcmk__output_t *out = (pcmk__output_t *)user_data;
+    char content[LINE_MAX];
+
+    snprintf(content, LINE_MAX, "Option: %s = %s<br/>", (char *)key, (char *)value);
+    xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)content);
+}
+
+static void
 pe__native_output_attr_text(gpointer key, gpointer value, gpointer user_data)
 {
     pcmk__output_t *out = (pcmk__output_t *)user_data;
@@ -503,6 +513,198 @@ static inline const char *
 comma_if(int i)
 {
     return i? ", " : "";
+}
+
+void
+pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
+                       const char *name, node_t *node, long options)
+{
+    const char *desc = NULL;
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *target_role = NULL;
+    enum rsc_role_e role = native_displayable_role(rsc);
+
+    int offset = 0;
+    int flagOffset = 0;
+    char buffer[LINE_MAX];
+    char buffer2[LINE_MAX*3];
+    char flagBuffer[LINE_MAX];
+    const char *color = NULL;
+
+    CRM_ASSERT(rsc->variant == pe_native);
+    CRM_ASSERT(kind != NULL);
+
+    if (rsc->meta) {
+        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
+            crm_trace("skipping print of internal resource %s", rsc->id);
+            return;
+        }
+        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    }
+
+    if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
+        node = NULL;
+    }
+
+    pcmk__output_xml_node(out, "font");
+
+    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        color = "yellow";
+
+    } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        color = "red";
+
+    } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
+        color = "red";
+
+    } else if (g_list_length(rsc->running_on) > 1) {
+        color = "orange";
+
+    } else if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        color = "yellow";
+
+    } else {
+        color = "green";
+    }
+    xmlSetProp(pcmk__xml_peek_parent(out), (pcmkXmlStr)"color", (pcmkXmlStr)color);
+
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
+    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
+        const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+    }
+    offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s):\t", kind);
+    if(is_set(rsc->flags, pe_rsc_orphan)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
+    }
+    if(role > RSC_ROLE_SLAVE && is_set(rsc->flags, pe_rsc_failed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED %s", role2text(role));
+    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED");
+    } else {
+        const char *rsc_state = native_displayable_state(rsc, options);
+
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc_state);
+    }
+
+    if(node) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " %s", node->details->uname);
+
+        if (node->details->online == FALSE && node->details->unclean) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sUNCLEAN", comma_if(flagOffset));
+        }
+    }
+
+    if (options & pe_print_pending) {
+        const char *pending_task = native_pending_task(rsc);
+
+        if (pending_task) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%s%s", comma_if(flagOffset), pending_task);
+        }
+    }
+
+    if (target_role) {
+        enum rsc_role_e target_role_e = text2role(target_role);
+
+        /* Ignore target role Started, as it is the default anyways
+         * (and would also allow a Master to be Master).
+         * Show if target role limits our abilities. */
+        if (target_role_e == RSC_ROLE_STOPPED) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%sdisabled", comma_if(flagOffset));
+            rsc->cluster->disabled_resources++;
+
+        } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
+                   && target_role_e == RSC_ROLE_SLAVE) {
+            flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                                   "%starget-role:%s", comma_if(flagOffset), target_role);
+            rsc->cluster->disabled_resources++;
+        }
+    }
+
+    if (is_set(rsc->flags, pe_rsc_block)) {
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sblocked", comma_if(flagOffset));
+        rsc->cluster->blocked_resources++;
+
+    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sunmanaged", comma_if(flagOffset));
+    }
+
+    if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
+                               "%sfailure ignored", comma_if(flagOffset));
+    }
+
+    if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
+        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+    }
+
+    CRM_LOG_ASSERT(offset > 0);
+    if(flagOffset > 0) {
+        snprintf(buffer2, LINE_MAX*3, "%s (%s)%s%s", buffer, flagBuffer, desc?" ":"", desc?desc:"");
+    } else {
+        snprintf(buffer2, LINE_MAX*3, "%s%s%s", buffer, desc?" ":"", desc?desc:"");
+    }
+
+    xmlNodeSetContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer2);
+    pcmk__xml_pop_parent(out); // </font>
+
+    if ((options & pe_print_rsconly)) {
+        /* nothing */
+    } else if (g_list_length(rsc->running_on) > 1) {
+        GListPtr gIter = rsc->running_on;
+
+        out->begin_list(out, NULL, NULL, NULL);
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            node_t *n = (node_t *) gIter->data;
+            out->list_item(out, NULL, n->details->uname);
+        }
+
+        out->end_list(out);
+    }
+
+    xmlNewChild(pcmk__xml_peek_parent(out), NULL, (pcmkXmlStr) "br", NULL);
+
+    if (options & pe_print_details) {
+        g_hash_table_foreach(rsc->parameters, pe__native_output_attr_html, out);
+    }
+
+    if (options & pe_print_dev) {
+        GHashTableIter iter;
+        node_t *n = NULL;
+
+        snprintf(buffer, LINE_MAX, " \t(%s%svariant=%s, priority=%f)",
+                     is_set(rsc->flags, pe_rsc_provisional) ? "provisional, " : "",
+                     is_set(rsc->flags, pe_rsc_runnable) ? "" : "non-startable, ",
+                     crm_element_name(rsc->xml), (double)rsc->priority);
+        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer);
+        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)" \tAllowed Nodes");
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
+            snprintf(buffer, LINE_MAX, " \t * %s %d", n->details->uname, n->weight);
+            xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer);
+        }
+    }
+
+    if (options & pe_print_max_details) {
+        GHashTableIter iter;
+        node_t *n = NULL;
+
+        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)" \t=== Allowed Nodes\n");
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
+            pe__output_node(n, FALSE, out);
+        }
+    }
 }
 
 void
@@ -1013,6 +1215,23 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 }
 
 int
+pe__resource_html(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+    node_t *node = pe__current_node(rsc);
+
+    CRM_ASSERT(rsc->variant == pe_native);
+
+    if (node == NULL) {
+        // This is set only if a non-probe action is pending on this node
+        node = rsc->pending_node;
+    }
+    pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
+    return 0;
+}
+
+int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, int);
@@ -1318,6 +1537,72 @@ pe__rscs_brief_output_text(pcmk__output_t *out, GListPtr rsc_list, const char *p
             fprintf(out->dest, "%s%d/%d\t(%s):\tActive\n", pre_text ? pre_text : "",
                          active_counter_all,
                          rsc_counter ? *rsc_counter : 0, type);
+        }
+    }
+
+    if (rsc_table) {
+        g_hash_table_destroy(rsc_table);
+        rsc_table = NULL;
+    }
+    if (active_table) {
+        g_hash_table_destroy(active_table);
+        active_table = NULL;
+    }
+}
+
+void
+pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all)
+{
+    GHashTable *rsc_table = crm_str_table_new();
+    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                     free, destroy_node_table);
+    GHashTableIter hash_iter;
+    char *type = NULL;
+    int *rsc_counter = NULL;
+
+    get_rscs_brief(rsc_list, rsc_table, active_table);
+
+    g_hash_table_iter_init(&hash_iter, rsc_table);
+    while (g_hash_table_iter_next(&hash_iter, (gpointer *)&type, (gpointer *)&rsc_counter)) {
+        GHashTableIter hash_iter2;
+        char *node_name = NULL;
+        GHashTable *node_table = NULL;
+        int active_counter_all = 0;
+        char buffer[LINE_MAX];
+
+        g_hash_table_iter_init(&hash_iter2, active_table);
+        while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
+            int *active_counter = g_hash_table_lookup(node_table, type);
+
+            if (active_counter == NULL || *active_counter == 0) {
+                continue;
+
+            } else {
+                active_counter_all += *active_counter;
+            }
+
+            if (options & pe_print_rsconly) {
+                node_name = NULL;
+            }
+
+            if (print_all) {
+                snprintf(buffer, LINE_MAX, " %d/%d\t(%s):\tActive %s\n",
+                             active_counter ? *active_counter : 0,
+                             rsc_counter ? *rsc_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            } else {
+                snprintf(buffer, LINE_MAX, " %d\t(%s):\tActive %s\n",
+                             active_counter ? *active_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            }
+            out->list_item(out, NULL, buffer);
+        }
+
+        if (print_all && active_counter_all == 0) {
+            snprintf(buffer, LINE_MAX, " %d/%d\t(%s):\tActive\n",
+                         active_counter_all,
+                         rsc_counter ? *rsc_counter : 0, type);
+            out->list_item(out, NULL, buffer);
         }
     }
 

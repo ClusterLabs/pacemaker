@@ -67,6 +67,35 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 }
 
 static int
+pe__group_html(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+    char buffer[LINE_MAX];
+
+    snprintf(buffer, LINE_MAX, "Resource Group: %s", rsc->id);
+
+    out->begin_list(out, buffer, NULL, NULL);
+
+    if (options & pe_print_brief) {
+        pe__rscs_brief_output_html(out, rsc->children, options, TRUE);
+
+    } else {
+        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+
+            pcmk__output_xml_node(out, "li");
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            pcmk__xml_pop_parent(out);
+        }
+    }
+
+    out->end_list(out);
+
+    return 0;
+}
+
+static int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
@@ -98,12 +127,16 @@ pe__group_text(pcmk__output_t *out, va_list args)
 
 static pcmk__message_entry_t fmt_functions[] = {
     { "bundle", "xml",  pe__bundle_xml },
+    { "bundle", "html",  pe__bundle_html },
     { "bundle", "text",  pe__bundle_text },
     { "clone", "xml",  pe__clone_xml },
+    { "clone", "html",  pe__clone_html },
     { "clone", "text",  pe__clone_text },
     { "group", "xml",  pe__group_xml },
+    { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "primitive", "xml",  pe__resource_xml },
+    { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
 
     { NULL, NULL, NULL }
