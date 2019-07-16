@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ifspeed resource agent
 #
-# Copyright 2011-2018 the Pacemaker project contributors
+# Copyright 2011-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -546,3 +546,5 @@ case $__OCF_ACTION in
 esac
 
 exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

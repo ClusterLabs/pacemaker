@@ -258,3 +258,5 @@ usage|help)     ClusterMon_usage
 esac
 
 exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

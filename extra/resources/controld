@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:controld resource agent
 #
-# Copyright 2008-2018 the Pacemaker project contributors
+# Copyright 2008-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -284,3 +284,5 @@ esac
 rc=$?
 
 exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

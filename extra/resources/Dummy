@@ -3,7 +3,7 @@
 # ocf:pacemaker:Dummy resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2018 the Pacemaker project contributors
+# Later changes copyright 2008-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -276,3 +276,5 @@ esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
 exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:
