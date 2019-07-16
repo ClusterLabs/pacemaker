@@ -88,6 +88,15 @@ xmlNode *create_xml_node(xmlNode * parent, const char *name);
 xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content);
 
 /*
+ * Create a new HTML node named "element_name" as a child of "parent", giving it the
+ * provided text content.  Optionally, apply a CSS #id and #class.
+ *
+ * Returns the created node.
+ */
+xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
+                               const char *class_name, const char *text);
+
+/*
  *
  */
 void purge_diff_markers(xmlNode * a_node);
