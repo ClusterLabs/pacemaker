@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2018 the Pacemaker project contributors
+# Copyright 2009-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -109,27 +109,27 @@ END
 check_temperature() {
     
     if [ $1 -lt ${lower_red_limit} ] ; then
-	ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-	$ATTRDUP -n "#health-smart" -U "red" -d "5s"
-	return 1
+        ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
+        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+        return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
-	ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-	$ATTRDUP -n "#health-smart" -U "red" -d "5s"
-	return 1
+        ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
+        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+        return 1
     fi
     
     if [ $1 -lt ${lower_yellow_limit} ] ; then
-	ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-	$ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
-	return 1
+        ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
+        $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
+        return 1
     fi
     
     if [ $1 -gt ${upper_yellow_limit} ] ; then
-	ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-	$ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
-	return 1
+        ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
+        $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
+        return 1
     fi
 }
 
@@ -137,7 +137,7 @@ check_temperature() {
 init_smart() {
     #Set temperature defaults
     if [ -z ${OCF_RESKEY_temp_warning} ]; then
-	yellow_threshold=5
+        yellow_threshold=5
     else
         yellow_threshold=${OCF_RESKEY_temp_warning}
     fi
@@ -170,21 +170,21 @@ init_smart() {
     fi
 
     for DRIVE in $DRIVES; do
-	if [ "${OCF_RESKEY_devices}" ]; then
-	    for DEVICE in ${OCF_RESKEY_devices}; do
-		$SMARTCTL -d $DEVICE -i ${DRIVE} | grep -q "SMART support is: Enabled"
-		if [ $? -ne "0" ] ; then
-		    ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
-		    exit $OCF_ERR_INSTALLED
-		fi
-	    done
-	else
-	    $SMARTCTL -i ${DRIVE} | grep -q "SMART support is: Enabled"
-	    if [ $? -ne "0" ] ; then
-		ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
-		exit $OCF_ERR_INSTALLED
-	    fi
-	fi
+        if [ "${OCF_RESKEY_devices}" ]; then
+            for DEVICE in ${OCF_RESKEY_devices}; do
+                $SMARTCTL -d $DEVICE -i ${DRIVE} | grep -q "SMART support is: Enabled"
+                if [ $? -ne "0" ] ; then
+                    ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
+                    exit $OCF_ERR_INSTALLED
+                fi
+            done
+        else
+            $SMARTCTL -i ${DRIVE} | grep -q "SMART support is: Enabled"
+            if [ $? -ne "0" ] ; then
+                ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
+                exit $OCF_ERR_INSTALLED
+            fi
+        fi
     done
 }
 
@@ -224,36 +224,36 @@ HealthSMART_monitor() {
 
         # Check overall S.M.A.R.T. status
         for DRIVE in $DRIVES; do
-	    if [ "${OCF_RESKEY_devices}" ]; then
-		for DEVICE in ${OCF_RESKEY_devices}; do
-		    $SMARTCTL -d $DEVICE -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-		    if [ $? -ne "0" ]; then
-			$ATTRDUP -n "#health-smart" -U "red" -d "5s"
-			return $OCF_SUCCESS
-		    fi
-		done
-	    else
-		$SMARTCTL -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-		if [ $? -ne "0" ]; then
-		    $ATTRDUP -n "#health-smart" -U "red" -d "5s"
-		    return $OCF_SUCCESS
-		fi
-	    fi
-	    
+            if [ "${OCF_RESKEY_devices}" ]; then
+                for DEVICE in ${OCF_RESKEY_devices}; do
+                    $SMARTCTL -d $DEVICE -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
+                    if [ $? -ne "0" ]; then
+                        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+                        return $OCF_SUCCESS
+                    fi
+                done
+            else
+                $SMARTCTL -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
+                if [ $? -ne "0" ]; then
+                    $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+                    return $OCF_SUCCESS
+                fi
+            fi
+            
             # Check drive temperature(s)
-	    if [ "${OCF_RESKEY_devices}" ]; then
-		for DEVICE in ${OCF_RESKEY_devices}; do
-		    check_temperature "$("$SMARTCTL" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
-		    if [ $? -ne 0 ]; then
-			return $OCF_SUCCESS
-		    fi
-		done
-	    else
-		check_temperature "$("$SMARTCTL" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
-		if [ $? -ne 0 ]; then
-		    return $OCF_SUCCESS
-		fi
-	    fi
+            if [ "${OCF_RESKEY_devices}" ]; then
+                for DEVICE in ${OCF_RESKEY_devices}; do
+                    check_temperature "$("$SMARTCTL" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+                    if [ $? -ne 0 ]; then
+                        return $OCF_SUCCESS
+                    fi
+                done
+            else
+                check_temperature "$("$SMARTCTL" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+                if [ $? -ne 0 ]; then
+                    return $OCF_SUCCESS
+                fi
+            fi
         done
 
         $ATTRDUP -n "#health-smart" -U "green" -d "5s"
@@ -268,7 +268,7 @@ HealthSMART_validate() {
 
     init_smart
 
-  # Is the state directory writable?
+    # Is the state directory writable?
     state_dir=`dirname "$OCF_RESKEY_state"`
     touch "$state_dir/$$"
     if [ $? != 0 ]; then
@@ -286,7 +286,7 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
     if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
         state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
 
-  # Strip off the trailing clone marker
+        # Strip off the trailing clone marker
         OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
     else
         OCF_RESKEY_state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
@@ -294,21 +294,21 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
 fi
 
 case $__OCF_ACTION in
-    start)	  HealthSMART_start;;
-    stop)	  HealthSMART_stop;;
-    monitor)	  HealthSMART_monitor;;
+    start)        HealthSMART_start;;
+    stop)         HealthSMART_stop;;
+    monitor)      HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
     meta-data) 
-	meta_data
-	exit $OCF_SUCCESS
-	;;
+        meta_data
+        exit $OCF_SUCCESS
+        ;;
     usage|help)
-	HealthSMART_usage
-	exit $OCF_SUCCESS
-	;;
+        HealthSMART_usage
+        exit $OCF_SUCCESS
+        ;;
     *)  HealthSMART_usage
-	exit $OCF_ERR_UNIMPLEMENTED
-	;;
+        exit $OCF_ERR_UNIMPLEMENTED
+        ;;
 esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"

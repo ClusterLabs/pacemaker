@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:Stateful resource agent
 #
-# Copyright 2006-2018 the Pacemaker project contributors
+# Copyright 2006-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,7 +25,7 @@ CRM_MASTER="${HA_SBIN_DIR}/crm_master -l reboot"
 #######################################################################
 
 meta_data() {
-	cat <<END
+    cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="Stateful" version="1.1">
@@ -76,36 +76,36 @@ to simulate a long-running notify.
 </actions>
 </resource-agent>
 END
-	exit $OCF_SUCCESS
+    exit $OCF_SUCCESS
 }
 
 #######################################################################
 
 stateful_usage() {
-	cat <<END
+    cat <<END
 usage: $0 {start|stop|promote|demote|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
-	exit $1
+    exit $1
 }
 
 stateful_update() {
-	echo $1 > ${OCF_RESKEY_state}
+    echo $1 > ${OCF_RESKEY_state}
 }
 
 stateful_check_state() {
     target=$1
     if [ -f ${OCF_RESKEY_state} ]; then
-	state=`cat ${OCF_RESKEY_state}`
-	if [ "x$target" = "x$state" ]; then
-	    return 0
-	fi
+        state=`cat ${OCF_RESKEY_state}`
+        if [ "x$target" = "x$state" ]; then
+            return 0
+        fi
 
     else
-	if [ "x$target" = "x" ]; then
-	    return 0
-	fi
+        if [ "x$target" = "x" ]; then
+            return 0
+        fi
     fi
 
     return 1
@@ -122,8 +122,8 @@ $(env | sort)
 stateful_start() {
     stateful_check_state master
     if [ $? = 0 ]; then
-       	# CRM Error - Should never happen
-	return $OCF_RUNNING_MASTER
+        # CRM Error - Should never happen
+        return $OCF_RUNNING_MASTER
     fi
     stateful_update slave
     $CRM_MASTER -v ${slave_score}
@@ -133,8 +133,8 @@ stateful_start() {
 stateful_demote() {
     stateful_check_state 
     if [ $? = 0 ]; then
-       	# CRM Error - Should never happen
-	return $OCF_NOT_RUNNING
+        # CRM Error - Should never happen
+        return $OCF_NOT_RUNNING
     fi
     stateful_update slave
     $CRM_MASTER -v ${slave_score}
@@ -144,7 +144,7 @@ stateful_demote() {
 stateful_promote() {
     stateful_check_state 
     if [ $? = 0 ]; then
-	return $OCF_NOT_RUNNING
+        return $OCF_NOT_RUNNING
     fi
     stateful_update master
     $CRM_MASTER -v ${master_score}
@@ -155,11 +155,11 @@ stateful_stop() {
     $CRM_MASTER -D
     stateful_check_state master
     if [ $? = 0 ]; then
-       	# CRM Error - Should never happen
-	return $OCF_RUNNING_MASTER
+        # CRM Error - Should never happen
+        return $OCF_RUNNING_MASTER
     fi
     if [ -f ${OCF_RESKEY_state} ]; then
-	rm ${OCF_RESKEY_state}
+        rm ${OCF_RESKEY_state}
     fi
     return 0
 }
@@ -167,26 +167,26 @@ stateful_stop() {
 stateful_monitor() {
     stateful_check_state "master"
     if [ $? = 0 ]; then
-	if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
-	    # Restore the master setting during probes
-	    $CRM_MASTER -v ${master_score}
-	fi
-	return $OCF_RUNNING_MASTER
+        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+            # Restore the master setting during probes
+            $CRM_MASTER -v ${master_score}
+        fi
+        return $OCF_RUNNING_MASTER
     fi
 
     stateful_check_state "slave"
     if [ $? = 0 ]; then
-	if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
-	    # Restore the master setting during probes
-	    $CRM_MASTER -v ${slave_score}
-	fi
-	return $OCF_SUCCESS
+        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+            # Restore the master setting during probes
+            $CRM_MASTER -v ${slave_score}
+        fi
+        return $OCF_SUCCESS
     fi
 
     if [ -f ${OCF_RESKEY_state} ]; then
-	echo "File '${OCF_RESKEY_state}' exists but contains unexpected contents"
-	cat ${OCF_RESKEY_state}
-	return $OCF_ERR_GENERIC
+        echo "File '${OCF_RESKEY_state}' exists but contains unexpected contents"
+        cat ${OCF_RESKEY_state}
+        return $OCF_ERR_GENERIC
     fi
     return 7
 }
@@ -199,7 +199,7 @@ stateful_notify() {
 }
 
 stateful_validate() {
-	exit $OCF_SUCCESS
+    exit $OCF_SUCCESS
 }
 
 : ${slave_score=5}
@@ -211,28 +211,28 @@ stateful_validate() {
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
     if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
-	state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
-	
-	# Strip off the trailing clone marker
-	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+        state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
+        
+        # Strip off the trailing clone marker
+        OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
     else 
-	OCF_RESKEY_state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
+        OCF_RESKEY_state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi
 
 dump_env
 
 case $__OCF_ACTION in
-meta-data)	meta_data;;
-start)		stateful_start;;
-promote)	stateful_promote;;
-demote)		stateful_demote;;
+meta-data)      meta_data;;
+start)          stateful_start;;
+promote)        stateful_promote;;
+demote)         stateful_demote;;
 notify)         stateful_notify ;;
-stop)		stateful_stop;;
-monitor)	stateful_monitor;;
-validate-all)	stateful_validate;;
-usage|help)	stateful_usage $OCF_SUCCESS;;
-*)		stateful_usage $OCF_ERR_UNIMPLEMENTED;;
+stop)           stateful_stop;;
+monitor)        stateful_monitor;;
+validate-all)   stateful_validate;;
+usage|help)     stateful_usage $OCF_SUCCESS;;
+*)              stateful_usage $OCF_ERR_UNIMPLEMENTED;;
 esac
 
 exit $?
