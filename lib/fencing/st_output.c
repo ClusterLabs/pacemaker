@@ -56,33 +56,38 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 static int
 stonith_event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
+    int full_history = va_arg(args, int);
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
+
+    crm_time_set_timet(crm_when, &event->completed);
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
     switch (event->state) {
         case st_failed:
-            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s",
-                                  event->delegate ? event->delegate : "We",
+            pcmk__indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s'\n",
                                   stonith_action_str(event->action), event->target,
-                                  event->client, event->origin, ctime(&event->completed));
+                                  event->delegate ? event->delegate : "",
+                                  event->client, event->origin,
+                                  full_history ? "completed" : "last-failed", buf);
             break;
 
         case st_done:
-            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s",
-                                  event->delegate ? event->delegate : "This node",
+            pcmk__indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
                                   stonith_action_str(event->action), event->target,
-                                  event->client, event->origin, ctime(&event->completed));
+                                  event->delegate ? event->delegate : "",
+                                  event->client, event->origin,
+                                  full_history ? "completed" : "last-successful", buf);
             break;
 
         default:
-            /* ocf:pacemaker:controld depends on "wishes to" being
-             * in this output, when used with older versions of DLM
-             * that don't report stateful_merge_wait
-             */
-            pcmk__indented_printf(out, "%s at %s wishes to %s node %s - %d %lld\n",
-                                  event->client, event->origin, stonith_action_str(event->action),
-                                  event->target, event->state, (long long) event->completed);
+            pcmk__indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
+                                  stonith_action_str(event->action), event->target,
+                                  event->client, event->origin);
             break;
     }
 
+    free(buf);
     return 0;
 }
 
