@@ -11,7 +11,27 @@
 # (GPLv2) WITHOUT ANY WARRANTY.
 
 #
-# Does nothing but wait a few seconds, can be configured to fail occassionally
+# The Dummy agent is intended primarily for testing, and has various options to
+# make actions intentionally fail or take a long time. It may also be used as a
+# template for resource agent writers, in which case:
+#
+# - Replace all occurrences of "dummy" and "Dummy" with your agent name.
+# - Update the meta-data appropriately for your agent, such as the description
+#   and supported options. Pay particular attention to the timeouts specified in
+#   the actions section; they should be meaningful for the kind of service the
+#   agent manages. They should be the minimum advised timeouts, but shouldn't
+#   try to cover _all_ possible instances. So, try to be neither overly generous
+#   nor too stingy, but moderate. The minimum timeouts should never be below 10
+#   seconds.
+# - Don't copy the stuff here that is just for testing, such as the
+#   sigterm_handler() or dump_env().
+# - You don't need the state file stuff here if you have a better way of
+#   determining whether your service is running. It's only useful for agents
+#   such as health agents that don't actually correspond to a running service.
+# - Implement the actions appropriately for your service. Your monitor action
+#   must differentiate correctly between running, not running, and failed (that
+#   is THREE states, not just yes/no). The migrate_to, migrate_from, and reload
+#   actions are optional and not appropriate to all services.
 #
 
 #######################################################################
@@ -31,16 +51,10 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-This is a Dummy Resource Agent. It does absolutely nothing except
-keep track of whether its running or not.
-Its purpose in life is for testing and to serve as a template for RA writers.
-
-NB: Please pay attention to the timeouts specified in the actions
-section below. They should be meaningful for the kind of resource
-the agent manages. They should be the minimum advised timeouts,
-but they shouldn't/cannot cover _all_ possible resource
-instances. So, try to be neither overly generous nor too stingy,
-but moderate. The minimum timeouts should never be below 10 seconds.
+This is a dummy OCF resource agent. It does absolutely nothing except keep track
+of whether it is running or not, and can be configured so that actions fail or
+take a long time. Its purpose is primarily for testing, and to serve as a
+template for resource agent writers.
 </longdesc>
 <shortdesc lang="en">Example stateless resource agent</shortdesc>
 
@@ -170,10 +184,6 @@ dummy_stop() {
 }
 
 dummy_monitor() {
-    # Monitor _MUST!_ differentiate correctly between running
-    # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
-    # That is THREE states, not just yes/no.
-
     if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
         if [ "$1" = "" ] && [ -f "${VERIFY_SERIALIZED_FILE}" ]; then
             # two monitor ops have occurred at the same time.
@@ -220,15 +230,12 @@ dummy_monitor() {
 }
 
 dummy_validate() {
-
     # Is the state directory writable?
     state_dir=$(dirname "$OCF_RESKEY_state")
-    touch "$state_dir/$$"
+    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
     if [ $? -ne 0 ]; then
         return $OCF_ERR_ARGS
     fi
-    rm "$state_dir/$$"
-
     return $OCF_SUCCESS
 }
 
