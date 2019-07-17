@@ -82,10 +82,9 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
+xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
     xmlNodePtr node;
     char *rc_as_str = NULL;
-    char *buf = NULL;
     private_data_t *priv = out->priv;
 
     /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
@@ -106,11 +105,17 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status) {
         g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
     }
 
-    buf = dump_xml_formatted_with_text(priv->root);
-    fprintf(out->dest, "%s", buf);
+    if (print) {
+        char *buf = dump_xml_formatted_with_text(priv->root);
+        fprintf(out->dest, "%s", buf);
+        free(buf);
+    }
+
+    if (copy_dest != NULL) {
+        *copy_dest = copy_xml(priv->root);
+    }
 
     free(rc_as_str);
-    free(buf);
 }
 
 static void

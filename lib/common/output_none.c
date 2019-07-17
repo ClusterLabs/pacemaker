@@ -27,7 +27,7 @@ none_init(pcmk__output_t *out) {
 }
 
 static void
-none_finish(pcmk__output_t *out, crm_exit_t exit_status) {
+none_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
     /* This function intentionally left blank */
 }
 
