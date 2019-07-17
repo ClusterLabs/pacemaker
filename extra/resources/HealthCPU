@@ -83,7 +83,7 @@ END
 
 #######################################################################
 
-dummy_usage() {
+healthcpu_usage() {
     cat <<END
 usage: $0 {start|stop|monitor|validate-all|meta-data}
 
@@ -91,27 +91,23 @@ Expects to have a fully populated OCF RA-compliant environment set.
 END
 }
 
-dummy_start() {
-    dummy_monitor
+healthcpu_start() {
+    healthcpu_monitor
     if [ $? -eq $OCF_SUCCESS ]; then
         return $OCF_SUCCESS
     fi
     touch "${OCF_RESKEY_state}"
 }
 
-dummy_stop() {
-    dummy_monitor
+healthcpu_stop() {
+    healthcpu_monitor
     if [ $? -eq $OCF_SUCCESS ]; then
         rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
 }
 
-dummy_monitor() {
-    # Monitor _MUST!_ differentiate correctly between running
-    # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
-    # That is THREE states, not just yes/no.
-
+healthcpu_monitor() {
     if [ -f "${OCF_RESKEY_state}" ]; then
 
         IDLE=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }')
@@ -136,22 +132,16 @@ dummy_monitor() {
         return $OCF_SUCCESS
     fi
 
-    if false ; then
-        return $OCF_ERR_GENERIC
-    fi
     return $OCF_NOT_RUNNING
 }
 
-dummy_validate() {
-
+healthcpu_validate() {
     # Is the state directory writable?
     state_dir=$(dirname "$OCF_RESKEY_state")
-    touch "$state_dir/$$"
+    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
     if [ $? -ne 0 ]; then
         return $OCF_ERR_ARGS
     fi
-    rm "$state_dir/$$"
-
     return $OCF_SUCCESS
 }
 
@@ -159,13 +149,12 @@ dummy_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ -z "$OCF_RESKEY_state" ]; then
+    state="${HA_VARRUN%%/}/HealthCPU-${OCF_RESOURCE_INSTANCE}.state"
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
-        state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
-
         # Strip off the trailing clone marker
         OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
     else
-        OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+        OCF_RESKEY_state="$state"
     fi
 fi
 
@@ -181,14 +170,14 @@ case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;
-start)          dummy_start;;
-stop)           dummy_stop;;
-monitor)        dummy_monitor;;
-validate-all)   dummy_validate;;
-usage|help)     dummy_usage
+start)          healthcpu_start;;
+stop)           healthcpu_stop;;
+monitor)        healthcpu_monitor;;
+validate-all)   healthcpu_validate;;
+usage|help)     healthcpu_usage
                 exit $OCF_SUCCESS
                 ;;
-*)              dummy_usage
+*)              healthcpu_usage
                 exit $OCF_ERR_UNIMPLEMENTED
                 ;;
 esac
