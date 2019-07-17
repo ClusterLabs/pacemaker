@@ -17,9 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -134,13 +134,13 @@ END
 #######################################################################
 
 UpdateStat() {
-    name=$1; shift
+    name="$1"; shift
     value="$*"
     printf "%s:\t%s\n" "$name" "$value"
     if [ "$__OCF_ACTION" = "start" ] ; then
-        ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -B "$value"
+        "${HA_SBIN_DIR}/attrd_updater" ${OCF_RESKEY_delay} -S status -n $name -B "$value"
     else
-        ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
+        "${HA_SBIN_DIR}/attrd_updater" ${OCF_RESKEY_delay} -S status -n $name -v "$value"
     fi
 }
 
@@ -153,8 +153,8 @@ SysInfoStats() {
         "Darwin")
             mem=`top -l 1 | grep Mem: | awk '{print $10}'`
             mem_used=`top -l 1 | grep Mem: | awk '{print $8}'`
-            mem=`SysInfo_mem_units $mem`
-            mem_used=`SysInfo_mem_units $mem_used`
+            mem=`SysInfo_mem_units "$mem"`
+            mem_used=`SysInfo_mem_units "$mem_used"`
             mem_total=`expr $mem_used + $mem`
             cpu_type=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}'`
             cpu_speed=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}'`
@@ -185,7 +185,7 @@ SysInfoStats() {
             if [ -f /proc/meminfo ]; then
                 # meminfo results are in kB
                 mem=`grep "SwapFree" /proc/meminfo | awk '{print $2"k"}'`
-                if [ ! -z $mem ]; then
+                if [ ! -z "$mem" ]; then
                     UpdateStat free_swap "$(SysInfo_mem_units "$mem")"
                 fi
                 mem=`grep "Inactive" /proc/meminfo | awk '{print $2"k"}'`
@@ -224,11 +224,11 @@ SysInfoStats() {
     #     'tail -n <c>' to the equivalent 'tail -<c>'.
     for disk in "/" ${OCF_RESKEY_disks}; do
         unset disk_free disk_label
-        disk_free=`df -h ${disk} | tail -1 | awk '{print $4}'`
+        disk_free=`df -h "${disk}" | tail -1 | awk '{print $4}'`
         if [ x != x"$disk_free" ]; then
             disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
-            disk_free=`SysInfo_hdd_units $disk_free`
-            UpdateStat ${disk_label}_free $disk_free
+            disk_free=`SysInfo_hdd_units "$disk_free"`
+            UpdateStat "${disk_label}_free" $disk_free
             if [ -n "$MIN_FREE" ]; then
                 if [ $disk_free -le $MIN_FREE ]; then
                     UpdateStat "#health_disk" "red"
@@ -252,9 +252,9 @@ SysInfo_megabytes() {
 }
 
 SysInfo_mem_units() {
-    mem=$1
+    mem="$1"
 
-    if [ -z $1 ]; then
+    if [ -z "$1" ]; then
         return
     fi
 
@@ -271,7 +271,7 @@ SysInfo_mem_units() {
 SysInfo_hdd_units() {
     # Defauts to size in gigabytes
 
-    case $OCF_RESKEY_disk_unit in
+    case "$OCF_RESKEY_disk_unit" in
         [Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
         [Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
         [Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
@@ -293,26 +293,26 @@ END
 }
 
 SysInfo_start() {
-    echo $OCF_RESKEY_clone > $OCF_RESKEY_pidfile
+    echo $OCF_RESKEY_clone > "$OCF_RESKEY_pidfile"
     SysInfoStats
     exit $OCF_SUCCESS
 }
 
 SysInfo_stop() {
-    rm $OCF_RESKEY_pidfile
+    rm "$OCF_RESKEY_pidfile"
     exit $OCF_SUCCESS
 }
 
 SysInfo_monitor() {
-    if [ -f $OCF_RESKEY_pidfile ]; then
-        clone=`cat $OCF_RESKEY_pidfile`
+    if [ -f "$OCF_RESKEY_pidfile" ]; then
+        clone=`cat "$OCF_RESKEY_pidfile"`
     fi
 
-    if [ x$clone = x ]; then
-        rm $OCF_RESKEY_pidfile
+    if [ "x$clone" = "x" ]; then
+        rm "$OCF_RESKEY_pidfile"
         exit $OCF_NOT_RUNNING
 
-    elif [ $clone = $OCF_RESKEY_clone ]; then
+    elif [ "$clone" = "$OCF_RESKEY_clone" ]; then
         SysInfoStats
         exit $OCF_SUCCESS
 
@@ -335,7 +335,7 @@ fi
 : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/SysInfo-${OCF_RESOURCE_INSTANCE}"}
 : ${OCF_RESKEY_disk_unit:="G"}
 : ${OCF_RESKEY_clone:="0"}
-if [ x != x${OCF_RESKEY_delay} ]; then
+if [ "x" != "x${OCF_RESKEY_delay}" ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
 else
     OCF_RESKEY_delay="-d 0"
@@ -347,7 +347,7 @@ if [ -n "$OCF_RESKEY_min_disk_free" ]; then
     MIN_FREE=`SysInfo_hdd_units $OCF_RESKEY_min_disk_free`
 fi
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;

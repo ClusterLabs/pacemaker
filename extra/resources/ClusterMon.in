@@ -23,9 +23,9 @@
 
 #######################################################################
 # Initialization:
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -117,30 +117,30 @@ ClusterMon_exit() {
 }
 
 ClusterMon_start() {
-    if [ ! -z $OCF_RESKEY_user ]; then
-        su - $OCF_RESKEY_user -c "$CMON_CMD"
+    if [ ! -z "$OCF_RESKEY_user" ]; then
+        su - "$OCF_RESKEY_user" -c "$CMON_CMD"
     else
-        $CMON_CMD
+        eval $CMON_CMD
     fi
     ClusterMon_exit $?
 }
 
 ClusterMon_stop() {
-    if [ -f $OCF_RESKEY_pidfile ]; then
-        pid=`cat $OCF_RESKEY_pidfile`
-        if [ ! -z $pid ]; then
+    if [ -f "$OCF_RESKEY_pidfile" ]; then
+        pid=`cat "$OCF_RESKEY_pidfile"`
+        if [ ! -z "$pid" ]; then
             kill -s 9 $pid
-            rm -f $OCF_RESKEY_pidfile
+            rm -f "$OCF_RESKEY_pidfile"
         fi
     fi
     ClusterMon_exit 0
 }
 
 ClusterMon_monitor() {
-    if [ -f $OCF_RESKEY_pidfile ]; then
-        pid=`cat $OCF_RESKEY_pidfile`
-        if [ ! -z $pid ]; then
-            str=$(echo "su - $OCF_RESKEY_user -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
+    if [ -f "$OCF_RESKEY_pidfile" ]; then
+        pid=`cat "$OCF_RESKEY_pidfile"`
+        if [ ! -z "$pid" ]; then
+            str=$(echo "su - \"$OCF_RESKEY_user\" -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
             ps -o "args=${str}" -p $pid 2>/dev/null | \
                 grep -qE "[c]rm_mon.*${OCF_RESKEY_pidfile}"
             rc=$?
@@ -157,7 +157,7 @@ ClusterMon_monitor() {
 CheckOptions() {
 while getopts Vi:nrh:cdp: OPTION
 do
-    case $OPTION in
+    case "$OPTION" in
     V|n|r|c|d);;
     i)  ocf_log warn "You should not have specified the -i option, since OCF_RESKEY_update is set already!";;
     h)  ocf_log warn "You should not have specified the -h option, since OCF_RESKEY_htmlfile is set already!";;
@@ -181,7 +181,7 @@ fi
 
 ClusterMon_validate() {
 # Existence of the user
-    if [ ! -z $OCF_RESKEY_user ]; then
+    if [ ! -z "$OCF_RESKEY_user" ]; then
         getent passwd "$OCF_RESKEY_user" >/dev/null
         if [ $? -eq 0 ]; then
             : Yes, user exists. We can further check his permission on crm_mon if necessary
@@ -192,7 +192,7 @@ ClusterMon_validate() {
     fi
 
 # Pidfile better be an absolute path
-    case $OCF_RESKEY_pidfile in
+    case "$OCF_RESKEY_pidfile" in
         /*) ;;
         *) ocf_log warn "You should have pidfile($OCF_RESKEY_pidfile) of absolute path!" ;;
     esac
@@ -213,7 +213,7 @@ ClusterMon_validate() {
     fi
 
 # Htmlfile better be an absolute path
-    case $OCF_RESKEY_htmlfile in
+    case "$OCF_RESKEY_htmlfile" in
         /*) ;;
         *) ocf_log warn "You should have htmlfile($OCF_RESKEY_htmlfile) of absolute path!" ;;
     esac
@@ -235,9 +235,9 @@ if [ ${OCF_RESKEY_update} -ge 1000 ]; then
     OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
 fi
 
-CMON_CMD="${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile"
+CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h \"$OCF_RESKEY_htmlfile\""
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;

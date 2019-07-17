@@ -17,10 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
-CRM_MASTER="${HA_SBIN_DIR}/crm_master -l reboot"
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -91,13 +90,13 @@ END
 }
 
 stateful_update() {
-    echo $1 > ${OCF_RESKEY_state}
+    echo $1 > "${OCF_RESKEY_state}"
 }
 
 stateful_check_state() {
-    target=$1
-    if [ -f ${OCF_RESKEY_state} ]; then
-        state=`cat ${OCF_RESKEY_state}`
+    target="$1"
+    if [ -f "${OCF_RESKEY_state}" ]; then
+        state=`cat "${OCF_RESKEY_state}"`
         if [ "x$target" = "x$state" ]; then
             return 0
         fi
@@ -119,6 +118,10 @@ $(env | sort)
     fi
 }
 
+set_master_score() {
+    "${HA_SBIN_DIR}/crm_master" -l reboot -v "$1"
+}
+
 stateful_start() {
     stateful_check_state master
     if [ $? = 0 ]; then
@@ -126,7 +129,7 @@ stateful_start() {
         return $OCF_RUNNING_MASTER
     fi
     stateful_update slave
-    $CRM_MASTER -v ${slave_score}
+    set_master_score "${slave_score}"
     return 0
 }
 
@@ -137,7 +140,7 @@ stateful_demote() {
         return $OCF_NOT_RUNNING
     fi
     stateful_update slave
-    $CRM_MASTER -v ${slave_score}
+    set_master_score "${slave_score}"
     return 0
 }
 
@@ -147,19 +150,19 @@ stateful_promote() {
         return $OCF_NOT_RUNNING
     fi
     stateful_update master
-    $CRM_MASTER -v ${master_score}
+    set_master_score "${master_score}"
     return 0
 }
 
 stateful_stop() {
-    $CRM_MASTER -D
+    "${HA_SBIN_DIR}/crm_master" -l reboot -D
     stateful_check_state master
     if [ $? = 0 ]; then
         # CRM Error - Should never happen
         return $OCF_RUNNING_MASTER
     fi
-    if [ -f ${OCF_RESKEY_state} ]; then
-        rm ${OCF_RESKEY_state}
+    if [ -f "${OCF_RESKEY_state}" ]; then
+        rm "${OCF_RESKEY_state}"
     fi
     return 0
 }
@@ -169,7 +172,7 @@ stateful_monitor() {
     if [ $? = 0 ]; then
         if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
             # Restore the master setting during probes
-            $CRM_MASTER -v ${master_score}
+            set_master_score "${master_score}"
         fi
         return $OCF_RUNNING_MASTER
     fi
@@ -178,14 +181,14 @@ stateful_monitor() {
     if [ $? = 0 ]; then
         if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
             # Restore the master setting during probes
-            $CRM_MASTER -v ${slave_score}
+            set_master_score "${slave_score}"
         fi
         return $OCF_SUCCESS
     fi
 
-    if [ -f ${OCF_RESKEY_state} ]; then
+    if [ -f "${OCF_RESKEY_state}" ]; then
         echo "File '${OCF_RESKEY_state}' exists but contains unexpected contents"
-        cat ${OCF_RESKEY_state}
+        cat "${OCF_RESKEY_state}"
         return $OCF_ERR_GENERIC
     fi
     return 7
@@ -210,7 +213,7 @@ stateful_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
 
         # Strip off the trailing clone marker
@@ -222,7 +225,7 @@ fi
 
 dump_env
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data;;
 start)          stateful_start;;
 promote)        stateful_promote;;

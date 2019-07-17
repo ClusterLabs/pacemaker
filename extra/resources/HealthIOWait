@@ -16,9 +16,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -95,7 +95,7 @@ agent_start() {
 agent_stop() {
     agent_monitor
     if [ $? =  $OCF_SUCCESS ]; then
-        rm ${OCF_RESKEY_state}
+        rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
 }
@@ -104,7 +104,7 @@ agent_monitor() {
         # Monitor _MUST!_ differentiate correctly between running
         # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
         # That is THREE states, not just yes/no.
-        if [ -f ${OCF_RESKEY_state} ]; then
+        if [ -f "${OCF_RESKEY_state}" ]; then
           WAIT=`top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }'`
           # echo "System iowait: " $WAIT
           # echo $OCF_RESKEY_yellow_limit
@@ -139,7 +139,7 @@ agent_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
       state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
       #Strip off the trailing clone marker
       OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`

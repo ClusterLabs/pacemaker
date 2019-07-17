@@ -19,9 +19,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 #
 SMARTCTL=/usr/sbin/smartctl
 ATTRDUP=/usr/sbin/attrd_updater
@@ -110,25 +110,25 @@ check_temperature() {
 
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
         return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
         return 1
     fi
 
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
+        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
         return 1
     fi
 
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
+        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
         return 1
     fi
 }
@@ -136,20 +136,20 @@ check_temperature() {
 
 init_smart() {
     #Set temperature defaults
-    if [ -z ${OCF_RESKEY_temp_warning} ]; then
+    if [ -z "${OCF_RESKEY_temp_warning}" ]; then
         yellow_threshold=5
     else
         yellow_threshold=${OCF_RESKEY_temp_warning}
     fi
 
-    if [ -z ${OCF_RESKEY_temp_lower_limit} ] ; then
+    if [ -z "${OCF_RESKEY_temp_lower_limit}" ] ; then
         lower_red_limit=0
     else
         lower_red_limit=${OCF_RESKEY_temp_lower_limit}
     fi
     lower_yellow_limit=$((${lower_red_limit}+${yellow_threshold}))
 
-    if [ -z ${OCF_RESKEY_temp_upper_limit} ] ; then
+    if [ -z "${OCF_RESKEY_temp_upper_limit}" ] ; then
         upper_red_limit=60
     else
         upper_red_limit=${OCF_RESKEY_temp_upper_limit}
@@ -164,7 +164,7 @@ init_smart() {
     fi
 
     #Test for presence of smartctl
-    if [ ! -x $SMARTCTL ] ; then
+    if [ ! -x "$SMARTCTL" ] ; then
         ocf_log err "${SMARTCTL} not installed."
         exit $OCF_ERR_INSTALLED
     fi
@@ -172,15 +172,15 @@ init_smart() {
     for DRIVE in $DRIVES; do
         if [ "${OCF_RESKEY_devices}" ]; then
             for DEVICE in ${OCF_RESKEY_devices}; do
-                $SMARTCTL -d $DEVICE -i ${DRIVE} | grep -q "SMART support is: Enabled"
-                if [ $? -ne "0" ] ; then
+                "$SMARTCTL" -d "$DEVICE" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
+                if [ $? -ne 0 ] ; then
                     ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
                     exit $OCF_ERR_INSTALLED
                 fi
             done
         else
-            $SMARTCTL -i ${DRIVE} | grep -q "SMART support is: Enabled"
-            if [ $? -ne "0" ] ; then
+            "$SMARTCTL" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
+            if [ $? -ne 0 ] ; then
                 ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
                 exit $OCF_ERR_INSTALLED
             fi
@@ -201,13 +201,13 @@ HealthSMART_start() {
     if [ $? =  $OCF_SUCCESS ]; then
         return $OCF_SUCCESS
     fi
-    touch ${OCF_RESKEY_state}
+    touch "${OCF_RESKEY_state}"
 }
 
 HealthSMART_stop() {
     HealthSMART_monitor
     if [ $? =  $OCF_SUCCESS ]; then
-        rm ${OCF_RESKEY_state}
+        rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
 }
@@ -220,22 +220,22 @@ HealthSMART_monitor() {
     # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
     # That is THREE states, not just yes/no.
 
-    if [ -f ${OCF_RESKEY_state} ]; then
+    if [ -f "${OCF_RESKEY_state}" ]; then
 
         # Check overall S.M.A.R.T. status
         for DRIVE in $DRIVES; do
             if [ "${OCF_RESKEY_devices}" ]; then
                 for DEVICE in ${OCF_RESKEY_devices}; do
-                    $SMARTCTL -d $DEVICE -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-                    if [ $? -ne "0" ]; then
-                        $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+                    "$SMARTCTL" -d "$DEVICE" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
+                    if [ $? -ne 0 ]; then
+                        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
                         return $OCF_SUCCESS
                     fi
                 done
             else
-                $SMARTCTL -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-                if [ $? -ne "0" ]; then
-                    $ATTRDUP -n "#health-smart" -U "red" -d "5s"
+                "$SMARTCTL" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
+                if [ $? -ne 0 ]; then
+                    "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
                     return $OCF_SUCCESS
                 fi
             fi
@@ -256,7 +256,7 @@ HealthSMART_monitor() {
             fi
         done
 
-        $ATTRDUP -n "#health-smart" -U "green" -d "5s"
+        "$ATTRDUP" -n "#health-smart" -U "green" -d "5s"
         return $OCF_SUCCESS
     fi
 
@@ -283,7 +283,7 @@ HealthSMART_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
 
         # Strip off the trailing clone marker
@@ -293,7 +293,7 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
     fi
 fi
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
     start)        HealthSMART_start;;
     stop)         HealthSMART_stop;;
     monitor)      HealthSMART_monitor;;

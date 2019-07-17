@@ -13,9 +13,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -74,7 +74,7 @@ SystemHealth_check_tools() {
         return $OCF_ERR_INSTALLED
     fi
 
-    test -x $OCF_RESKEY_program
+    test -x "$OCF_RESKEY_program"
     RC=$?
 
     if [ $RC != 0 ]; then
@@ -214,13 +214,13 @@ SystemHealth_check_tools
 RC=$?
 
 if [ $RC != 0 ]; then
-        case $__OCF_ACTION in
+        case "$__OCF_ACTION" in
         stop)           exit $OCF_SUCCESS;;
         *)              exit $RC;;
         esac
 fi
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 start)          SystemHealth_start;;
 stop)           SystemHealth_stop;;
 monitor)        SystemHealth_monitor;;

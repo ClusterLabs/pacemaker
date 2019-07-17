@@ -13,9 +13,9 @@
 
 #######################################################################
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 : ${OCF_RESKEY_stack:="pcmk"}
 : ${OCF_RESKEY_sysfs:="/sys/fs"}
@@ -54,7 +54,7 @@ driver_filesystem() {
 #
 check_filesystem()
 {
-    if [ "$#" != "2" -o -z "$1" -o -z "$2" ]
+    if [ $# != 2 -o -z "$1" -o -z "$2" ]
     then
         ocf_log err "check_filesystem(): Missing arguments"
         exit 4
@@ -76,7 +76,7 @@ check_filesystem()
 #
 unload_filesystem()
 {
-    if [ "$#" != "1" -o -z "$1" ]
+    if [ $# != 1 -o -z "$1" ]
     then
         ocf_log err "unload_filesystem(): Missing an argument"
         return 1
@@ -106,7 +106,7 @@ unload_filesystem()
     esac
 
     modprobe -rs "$FSNAME"
-    if [ "$?" != 0 ]; then
+    if [ $? != 0 ]; then
         ocf_log err "Unable to unload module: $FSNAME"
         return 1
     fi
@@ -177,7 +177,7 @@ kill_daemon()
 #
 unload_module()
 {
-    if [ "$#" -lt "1" -o -z "$1" ]
+    if [ $# -lt 1 -o -z "$1" ]
     then
         ocf_log err  "unload_module(): Requires an argument"
         return 1
@@ -203,7 +203,7 @@ unload_module()
     esac
 
     modprobe -rs "$MODNAME"
-    if [ "$?" != 0 ]; then
+    if [ $? != 0 ]; then
         ocf_log err "Unable to unload module \"$MODNAME\""
         return 1
     fi
@@ -258,7 +258,7 @@ o2cb_start() {
     driver_filesystem ocfs2; rc=$?
     if [ $rc != 0 ]; then
         modprobe -s ocfs2
-        if [ "$?" != 0 ]; then
+        if [ $? != 0 ]; then
             ocf_log err "Unable to load ocfs2 module"
             return $OCF_ERR_INSTALLED
         fi
@@ -356,7 +356,7 @@ o2cb_usage() {
 o2cb_validate() {
     check_binary ${DAEMON}
 
-    case ${OCF_RESKEY_CRM_meta_globally_unique} in
+    case "${OCF_RESKEY_CRM_meta_globally_unique}" in
         yes|Yes|true|True|1)
             ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
             exit $OCF_ERR_CONFIGURED
@@ -422,7 +422,7 @@ Number of seconds to allow the control daemon to come up
 END
 }
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;

@@ -17,9 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -163,7 +163,7 @@ dummy_start() {
 dummy_stop() {
     dummy_monitor --force
     if [ $? -eq $OCF_SUCCESS ]; then
-        rm ${OCF_RESKEY_state}
+        rm "${OCF_RESKEY_state}"
     fi
     rm -f "${VERIFY_SERIALIZED_FILE}"
     return $OCF_SUCCESS
@@ -232,7 +232,7 @@ dummy_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_fake:=dummy}
+: ${OCF_RESKEY_fake:="dummy"}
 : ${OCF_RESKEY_op_sleep:=0}
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
@@ -240,7 +240,7 @@ dummy_validate() {
 if [ -z "$OCF_RESKEY_state" ]; then
     OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
 
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         # Strip off the trailing clone marker (note + is not portable in sed)
         OCF_RESKEY_state=`echo $OCF_RESKEY_state | sed s/:[0-9][0-9]*\.state/.state/`
     fi
@@ -249,7 +249,7 @@ VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"
 
 dump_env
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;

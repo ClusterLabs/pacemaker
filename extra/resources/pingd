@@ -17,9 +17,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_interval:="1"}
@@ -29,7 +29,7 @@ upgrade1="This agent (ocf:pacemaker:pingd) has been replaced by the more reliabl
 upgrade2="Attempting automated conversion, run 'crm ra info ocf:pacemaker:ping' for all configuration options"
 upgrade3="You will need to remove the existing resource and replace it with one that uses 'ocf:pacemaker:ping' directly"
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
     start|monitor)
         if [ "x" != "x$OCF_RESKEY_host_list" ]; then
             ocf_log err "$upgrade1"
@@ -39,9 +39,9 @@ case $__OCF_ACTION in
             exit $OCF_ERR_ARGS
         fi
 
-        recurring=`crm configure show $OCF_RESOURCE_INSTANCE | grep "op monitor.*interval=\"[1-9]" | sed s/.*interval=// | awk -F\" '{print $2}' | sed s/.*interval=// | awk -F\" '{print $2}' | sort | head -n 1`
+        recurring=`crm configure show "$OCF_RESOURCE_INSTANCE" | grep "op monitor.*interval=\"[1-9]" | sed s/.*interval=// | awk -F\" '{print $2}' | sed s/.*interval=// | awk -F\" '{print $2}' | sort | head -n 1`
 
-        if [ -z $recurring ]; then
+        if [ -z "$recurring" ]; then
             ocf_log err "$upgrade1"
             ocf_log err "$upgrade2"
             ocf_log err "Automatic conversion to ocf:pacemaker:ping failed: no monitor operation configured"
@@ -183,7 +183,7 @@ END
         ;;
 esac
 
-${OCF_ROOT}/resource.d/pacemaker/ping $1
+"${OCF_ROOT}/resource.d/pacemaker/ping" "$1"
 exit $?
 
 # vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

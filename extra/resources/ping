@@ -13,9 +13,9 @@
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS:=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION:=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -137,9 +137,9 @@ END
 #######################################################################
 
 ping_conditional_log() {
-    level=$1; shift
-    if [ ${OCF_RESKEY_debug} = "true" ]; then
-        ocf_log $level "$*"
+    level="$1"; shift
+    if [ "${OCF_RESKEY_debug}" = "true" ]; then
+        ocf_log "$level" "$*"
     fi
 }
 
@@ -156,21 +156,21 @@ ping_start() {
     if [ $? =  $OCF_SUCCESS ]; then
         return $OCF_SUCCESS
     fi
-    touch ${OCF_RESKEY_pidfile}
+    touch "${OCF_RESKEY_pidfile}"
     ping_update
 }
 
 ping_stop() {
 
-    rm -f ${OCF_RESKEY_pidfile}
+    rm -f "${OCF_RESKEY_pidfile}"
 
-    attrd_updater -D -n $OCF_RESKEY_name -d $OCF_RESKEY_dampen $attrd_options
+    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen" $attrd_options
 
     return $OCF_SUCCESS
 }
 
 ping_monitor() {
-    if [ -f ${OCF_RESKEY_pidfile} ]; then
+    if [ -f "${OCF_RESKEY_pidfile}" ]; then
         ping_update
         if [ $? -eq 0 ]; then
             return $OCF_SUCCESS
@@ -191,7 +191,7 @@ ping_validate() {
     rm "$state_dir/$$"
 
 # Pidfile better be an absolute path
-    case $OCF_RESKEY_pidfile in
+    case "$OCF_RESKEY_pidfile" in
         /*) ;;
         *) ocf_log warn "You should use an absolute path for pidfile not: $OCF_RESKEY_pidfile" ;;
     esac
@@ -261,7 +261,7 @@ ping_check() {
             *) ocf_log err "Unknown host type: `uname`"; exit $OCF_ERR_INSTALLED;;
         esac
 
-        case $host in
+        case "$host" in
             *:*) p_exe=ping6
         esac
 
@@ -288,9 +288,9 @@ ping_update() {
 
     score=`expr $active \* $OCF_RESKEY_multiplier`
     if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n $OCF_RESKEY_name -B $score -d $OCF_RESKEY_dampen $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen" $attrd_options
     else
-        attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen" $attrd_options
     fi
     rc=$?
     case $rc in
@@ -330,7 +330,7 @@ hosts_family() {
     # For fping allow only same IP versions or hostnames
     family=0
     for host in $OCF_RESKEY_host_list; do
-        host_family $host
+        host_family "$host"
         f=$?
         if [ $family -ne 0 ] && [ $f -ne 0 ] && [ $f -ne $family ] ; then
             family=99
@@ -353,14 +353,14 @@ hosts_family() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
-case ${OCF_RESKEY_timeout} in
+case "${OCF_RESKEY_timeout}" in
     *[0-9]ms|*[0-9]msec) OCF_RESKEY_timeout=`expr $integer / 1000`;;
     *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=`expr $integer \* 60`;;
     *[0-9]h|*[0-9]hr)  OCF_RESKEY_timeout=`expr $integer \* 60 \* 60`;;
     *) OCF_RESKEY_timeout=$integer;;
 esac
 
-if [ -z ${OCF_RESKEY_timeout} ]; then
+if [ -z "${OCF_RESKEY_timeout}" ]; then
     if [ x"$OCF_RESKEY_host_list" != x ]; then
         host_count=`echo $OCF_RESKEY_host_list | awk '{print NF}'`
         OCF_RESKEY_timeout=`expr $OCF_RESKEY_CRM_meta_timeout / $host_count / $OCF_RESKEY_attempts`
@@ -377,7 +377,7 @@ elif [ ${OCF_RESKEY_timeout} -gt 1000 ]; then
     OCF_RESKEY_timeout=300
 fi
 
-if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
     : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESKEY_name}"}
 else
     : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}"}
@@ -394,11 +394,11 @@ case "${OCF_RESKEY_debug}" in
 esac
 
 attrd_options='-q'
-if [ ${OCF_RESKEY_debug} = "true" ]; then
+if [ "${OCF_RESKEY_debug}" = "true" ]; then
     attrd_options=''
 fi
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;
