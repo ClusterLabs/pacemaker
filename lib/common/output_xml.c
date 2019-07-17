@@ -141,7 +141,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_as_str = crm_itoa(exit_status);
 
-    node = pcmk__output_xml_node(out, "command");
+    node = pcmk__output_xml_create_parent(out, "command");
     xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
 
     if (proc_stdout != NULL) {
@@ -154,7 +154,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
         xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stderr");
     }
 
-    pcmk__xml_add_node(out, node);
+    pcmk__output_xml_add_node(out, node);
     free(rc_as_str);
 }
 
@@ -164,8 +164,7 @@ xml_version(pcmk__output_t *out, bool extended) {
     private_data_t *priv = out->priv;
     CRM_ASSERT(priv != NULL);
 
-    node = create_xml_node(g_queue_peek_tail(priv->parent_q), "version");
-
+    node = pcmk__output_create_xml_node(out, "version");
     xmlSetProp(node, (pcmkXmlStr) "program", (pcmkXmlStr) "Pacemaker");
     xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) PACEMAKER_VERSION);
     xmlSetProp(node, (pcmkXmlStr) "author", (pcmkXmlStr) "Andrew Beekhof");
@@ -204,7 +203,7 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
     CRM_ASSERT(priv != NULL);
 
-    parent = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+    parent = pcmk__output_create_xml_node(out, name);
     cdata_node = xmlNewCDataBlock(getDocPtr(parent), (pcmkXmlStr) buf, strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
@@ -214,7 +213,7 @@ xml_begin_list(pcmk__output_t *out, const char *name,
                const char *singular_noun, const char *plural_noun) {
     xmlNodePtr list_node = NULL;
 
-    list_node = pcmk__output_xml_node(out, "list");
+    list_node = pcmk__output_xml_create_parent(out, "list");
     xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 
@@ -225,7 +224,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *content) {
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = pcmk_create_xml_text_node(g_queue_peek_tail(priv->parent_q), "item", content);
+    item_node = pcmk__output_create_xml_text_node(out, "item", content);
     xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 
@@ -277,19 +276,14 @@ pcmk__mk_xml_output(char **argv) {
 }
 
 xmlNodePtr
-pcmk__output_xml_node(pcmk__output_t *out, const char *name) {
-    private_data_t *priv = out->priv;
-    xmlNodePtr node = NULL;
-
-    CRM_ASSERT(priv != NULL);
-
-    node = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
-    pcmk__xml_push_parent(out, node);
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name) {
+    xmlNodePtr node = pcmk__output_create_xml_node(out, name);
+    pcmk__output_xml_push_parent(out, node);
     return node;
 }
 
 void
-pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
+pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
@@ -298,8 +292,24 @@ pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
     xmlAddChild(g_queue_peek_tail(priv->parent_q), node);
 }
 
+xmlNodePtr
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name) {
+    private_data_t *priv = out->priv;
+
+    CRM_ASSERT(priv != NULL);
+
+    return create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+}
+
+xmlNodePtr
+pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content) {
+    xmlNodePtr node = pcmk__output_create_xml_node(out, name);
+    xmlNodeSetContent(node, (pcmkXmlStr) content);
+    return node;
+}
+
 void
-pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
@@ -309,7 +319,7 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
 }
 
 void
-pcmk__xml_pop_parent(pcmk__output_t *out) {
+pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
@@ -319,7 +329,7 @@ pcmk__xml_pop_parent(pcmk__output_t *out) {
 }
 
 xmlNodePtr
-pcmk__xml_peek_parent(pcmk__output_t *out) {
+pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);

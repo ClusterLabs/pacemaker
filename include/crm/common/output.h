@@ -536,16 +536,15 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 /*!
  * \internal
  * \brief Create and return a new XML node with the given name, as a child of the
- *        current list parent.  This is used when implementing custom message
- *        functions.
- *
- * \note This function is similar to create_xml_node.
+ *        current list parent.  The new node is then added as the new list parent,
+ *        meaning all subsequent nodes will be its children.  This is used when
+ *        implementing custom functions.
  *
  * \param[in,out] out  The output functions structure.
  * \param[in]     name The name of the node to be created.
  */
 xmlNodePtr
-pcmk__output_xml_node(pcmk__output_t *out, const char *name);
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name);
 
 /*!
  * \internal
@@ -556,7 +555,30 @@ pcmk__output_xml_node(pcmk__output_t *out, const char *name);
  * \param[in]     node An XML node to be added as a child.
  */
 void
-pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+
+/*!
+ * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  This is used when implementing custom functions.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
+ * \brief Like pcmk__output_create_xml_node(), but add the given text content to the
+ *        new node.
+ *
+ * \param[in,out] out     The output functions structure.
+ * \param[in]     name    The name of the node to be created.
+ * \param[in]     content The text content of the node.
+ */
+xmlNodePtr
+pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content);
 
 /*!
  * \internal
@@ -573,7 +595,7 @@ pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
  * \param[in]     node The node to be added/
  */
 void
-pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -590,7 +612,7 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
  * \param[in,out] out The output functions structure.
  */
 void
-pcmk__xml_pop_parent(pcmk__output_t *out);
+pcmk__output_xml_pop_parent(pcmk__output_t *out);
 
 /*!
  * \internal
@@ -607,7 +629,7 @@ pcmk__xml_pop_parent(pcmk__output_t *out);
  * \return NULL if stack is empty, otherwise the parent of the stack.
  */
 xmlNodePtr
-pcmk__xml_peek_parent(pcmk__output_t *out);
+pcmk__output_xml_peek_parent(pcmk__output_t *out);
 
 /*!
  * \internal
@@ -623,8 +645,8 @@ pcmk__xml_peek_parent(pcmk__output_t *out);
  * \param[in]     text         The text content of the node.
  */
 xmlNodePtr
-pcmk__html_add_node(pcmk__output_t *out, const char *element_name, const char *id,
-                    const char *class_name, const char *text);
+pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
+                              const char *class_name, const char *text);
 
 #ifdef __cplusplus
 }

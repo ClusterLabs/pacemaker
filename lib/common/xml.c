@@ -1991,6 +1991,23 @@ pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *conten
     return node;
 }
 
+xmlNode *
+pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
+                      const char *class_name, const char *text)
+{
+    xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
+
+    if (class_name != NULL) {
+        xmlSetProp(node, (pcmkXmlStr) "class", (pcmkXmlStr) class_name);
+    }
+
+    if (id != NULL) {
+        xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
+    }
+
+    return node;
+}
+
 int
 pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
                     int offset, size_t buffer_size)

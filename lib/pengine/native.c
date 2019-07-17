@@ -351,7 +351,7 @@ pe__native_output_attr_html(gpointer key, gpointer value, gpointer user_data)
     char content[LINE_MAX];
 
     snprintf(content, LINE_MAX, "Option: %s = %s<br/>", (char *)key, (char *)value);
-    xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)content);
+    xmlNodeAddContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)content);
 }
 
 static void
@@ -548,7 +548,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         node = NULL;
     }
 
-    pcmk__output_xml_node(out, "font");
+    pcmk__output_xml_create_parent(out, "font");
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
         color = "yellow";
@@ -568,7 +568,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
     } else {
         color = "green";
     }
-    xmlSetProp(pcmk__xml_peek_parent(out), (pcmkXmlStr)"color", (pcmkXmlStr)color);
+    xmlSetProp(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)"color", (pcmkXmlStr)color);
 
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
@@ -653,8 +653,8 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         snprintf(buffer2, LINE_MAX*3, "%s%s%s", buffer, desc?" ":"", desc?desc:"");
     }
 
-    xmlNodeSetContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer2);
-    pcmk__xml_pop_parent(out); // </font>
+    xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)buffer2);
+    pcmk__output_xml_pop_parent(out); // </font>
 
     if ((options & pe_print_rsconly)) {
         /* nothing */
@@ -671,7 +671,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         out->end_list(out);
     }
 
-    xmlNewChild(pcmk__xml_peek_parent(out), NULL, (pcmkXmlStr) "br", NULL);
+    pcmk__output_create_xml_node(out, "br");
 
     if (options & pe_print_details) {
         g_hash_table_foreach(rsc->parameters, pe__native_output_attr_html, out);
@@ -685,12 +685,12 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
                      is_set(rsc->flags, pe_rsc_provisional) ? "provisional, " : "",
                      is_set(rsc->flags, pe_rsc_runnable) ? "" : "non-startable, ",
                      crm_element_name(rsc->xml), (double)rsc->priority);
-        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer);
-        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)" \tAllowed Nodes");
+        xmlNodeAddContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)buffer);
+        xmlNodeAddContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)" \tAllowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
             snprintf(buffer, LINE_MAX, " \t * %s %d", n->details->uname, n->weight);
-            xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)buffer);
+            xmlNodeAddContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)buffer);
         }
     }
 
@@ -698,7 +698,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         GHashTableIter iter;
         node_t *n = NULL;
 
-        xmlNodeAddContent(pcmk__xml_peek_parent(out), (pcmkXmlStr)" \t=== Allowed Nodes\n");
+        xmlNodeAddContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)" \t=== Allowed Nodes\n");
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
@@ -1210,7 +1210,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         }
     }
 
-    pcmk__xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
     return rc;
 }
 

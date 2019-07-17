@@ -1531,9 +1531,9 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         out->message(out, crm_element_name(replica->container->xml), options, replica->container);
         out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
 
-        pcmk__xml_pop_parent(out); // replica
+        pcmk__output_xml_pop_parent(out); // replica
     }
-    pcmk__xml_pop_parent(out); // bundle
+    pcmk__output_xml_pop_parent(out); // bundle
     return rc;
 }
 
@@ -1585,7 +1585,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-    xmlNewChild(pcmk__xml_peek_parent(out), NULL, (pcmkXmlStr) "br", NULL);
+    pcmk__output_create_xml_node(out, "br");
     out->begin_list(out, buffer, NULL, NULL);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1594,13 +1594,13 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        pcmk__output_xml_node(out, "li");
+        pcmk__output_xml_create_parent(out, "li");
         if (is_set(options, pe_print_implicit)) {
             if(g_list_length(bundle_data->replicas) > 1) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
-                xmlNodeSetContent(pcmk__xml_peek_parent(out), (pcmkXmlStr) buffer);
+                xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
-            xmlNewChild(pcmk__xml_peek_parent(out), NULL, (pcmkXmlStr) "br", NULL);
+            pcmk__output_create_xml_node(out, "br");
             out->begin_list(out, NULL, NULL, NULL);
 
             out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
@@ -1613,7 +1613,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             pe__bundle_replica_output_html(out, replica, options);
         }
 
-        pcmk__xml_pop_parent(out);
+        pcmk__output_xml_pop_parent(out);
     }
 
     out->end_list(out);

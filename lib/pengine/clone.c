@@ -622,7 +622,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
     }
 
-    pcmk__xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
     return rc;
 }
 
@@ -721,9 +721,9 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            pcmk__output_xml_node(out, "li");
+            pcmk__output_xml_create_parent(out, "li");
             out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
-            pcmk__xml_pop_parent(out);
+            pcmk__output_xml_pop_parent(out);
         }
     }
 
