@@ -729,6 +729,12 @@ AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
 AC_CHECK_FUNCS([sched_setscheduler])
+if test "$ac_cv_func_sched_setscheduler" != yes; then
+	PC_LIBS_RT=""
+else
+	PC_LIBS_RT="-lrt"
+fi
+AC_SUBST(PC_LIBS_RT)
 
 AC_CHECK_LIB(uuid, uuid_parse)                  dnl load the library if necessary
 AC_CHECK_FUNCS(uuid_unparse)                    dnl OSX ships uuid_* as standard functions
@@ -924,28 +930,34 @@ AC_CHECK_HEADERS(ncurses/ncurses.h)
 
 dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
+PC_NAME_CURSES=""
+PC_LIBS_CURSES=""
 if test "$ac_cv_header_ncurses_h" = "yes"; then
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    PC_NAME_CURSES="ncurses"
 fi
 
 if test "$ac_cv_header_ncurses_ncurses_h" = "yes"; then
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    PC_NAME_CURSES="ncurses"
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_h" = "yes"; then
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
+    PC_LIBS_CURSES="$CURSESLIBS"
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_curses_h" = "yes"; then
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
+    PC_LIBS_CURSES="$CURSESLIBS"
 fi
 
 if test "x$CURSESLIBS" != "x"; then
@@ -994,6 +1006,8 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
 fi
 
 AC_SUBST(CURSESLIBS)
+AC_SUBST(PC_NAME_CURSES)
+AC_SUBST(PC_LIBS_CURSES)
 
 dnl ========================================================================
 dnl    Profiling and GProf
@@ -1174,6 +1188,12 @@ PKG_CHECK_MODULES([DBUS], [dbus-1],
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
+if test $HAVE_dbus = 0; then
+	PC_NAME_DBUS=""
+else
+	PC_NAME_DBUS="dbus-1"
+fi
+AC_SUBST(PC_NAME_DBUS)
 
 if test "x${enable_systemd}" != xno; then
     if test $HAVE_dbus = 0; then
@@ -1297,6 +1317,7 @@ AC_SUBST(NAGIOS_METADATA_DIR)
 
 STACKS=""
 CLUSTERLIBS=""
+PC_NAME_CLUSTER=""
 
 dnl ========================================================================
 dnl    Cluster stack - Corosync
@@ -1334,6 +1355,7 @@ else
     CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
     COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
+    PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
     STACKS="$STACKS corosync-native"
 fi
 
@@ -1359,6 +1381,7 @@ fi
 
 PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
+AC_SUBST(PC_NAME_CLUSTER)
 
 dnl ========================================================================
 dnl    ACL
@@ -1438,6 +1461,12 @@ AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
 if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
     AC_CHECK_HEADERS(gnutls/gnutls.h)
     AC_CHECK_FUNCS([gnutls_sec_param_to_pk_bits]) dnl since 2.12.0 (2011-03-24)
+    if test "$ac_cv_header_gnutls_gnutls_h" != "yes"; then
+        PC_NAME_GNUTLS=""
+    else
+        PC_NAME_GNUTLS="gnutls"
+    fi
+    AC_SUBST(PC_NAME_GNUTLS)
 fi
 
 dnl ========================================================================

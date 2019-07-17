@@ -1,16 +1,14 @@
-prefix=@prefix@
+sub=pacemaker
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-build=@BUILD_VERSION@
-
-Name:         lib@PACKAGE_NAME@
-URL:	      @PACKAGE_URL@
-Version:      @PACKAGE_VERSION@
-Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
-Requires:     
-Conflicts:    
-Cflags:       -I${includedir}
-Libs:         -L${libdir} -l@PACKAGE_NAME@
+Name:             lib${sub}
+URL:              @PACKAGE_URL@
+Version:          @PACKAGE_VERSION@
+Description:      High-level APIs for Pacemaker
+Requires:         pacemaker-pe_status pacemaker-cib pacemaker-lrmd pacemaker
+Requires.private: glib-2.0 libxml-2.0
+Conflicts:
+Cflags:           -I${includedir}
+Libs:             -L${libdir} -l${sub}
 Libs.private:
-

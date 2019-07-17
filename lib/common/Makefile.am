@@ -27,7 +27,7 @@ libcrmcommon_la_LDFLAGS	= -version-info 36:0:2
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS)
+libcrmcommon_la_LIBADD	= @LIBADD_DL@
 
 # Use += rather than backlashed continuation lines for parsing by bumplibs.sh
 libcrmcommon_la_SOURCES	=

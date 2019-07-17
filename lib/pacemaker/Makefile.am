@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -21,7 +23,8 @@ libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la \
-			$(top_builddir)/lib/lrmd/liblrmd.la
+			$(top_builddir)/lib/lrmd/liblrmd.la \
+			$(top_builddir)/lib/common/libcrmcommon.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 # Use += rather than backlashed continuation lines for parsing by bumplibs.sh
 libpacemaker_la_SOURCES	=

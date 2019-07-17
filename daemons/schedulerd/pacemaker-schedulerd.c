@@ -146,8 +146,9 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE) {
             free(filename);
-            filename =
-                generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, HAVE_BZLIB_H);
+            filename = generate_series_filename(PE_STATE_DIR,
+                                                series[series_id].name, seq,
+                                                TRUE);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -183,7 +184,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         if (is_repoke == FALSE && series_wrap != 0) {
             unlink(filename);
             crm_xml_add_int(xml_data, "execution-date", execution_date);
-            write_xml_file(xml_data, filename, HAVE_BZLIB_H);
+            write_xml_file(xml_data, filename, TRUE);
             write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
         } else {
             crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
