@@ -182,7 +182,7 @@ ping_monitor() {
 
 ping_validate() {
     # Is the state directory writable?
-    state_dir=`dirname "$OCF_RESKEY_pidfile"`
+    state_dir=$(dirname "$OCF_RESKEY_pidfile")
     touch "$state_dir/$$"
     if [ $? != 0 ]; then
         ocf_log err "Invalid location for 'state': $state_dir is not writable"
@@ -227,22 +227,22 @@ fping_check() {
 
     active=0
 
-    timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
+    timeout=$(expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts)
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    output=`$cmd 2>&1`; rc=$?
-    active=`echo "$output" | grep "is alive" | wc -l`
+    output=$($cmd 2>&1); rc=$?
+    active=$(echo "$output" | grep "is alive" | wc -l)
 
     case $rc in
         0)
             ;;
         1)
-            for h in `echo "$output" | grep "is unreachable" | awk '{print $1}'`; do
+            for h in $(echo "$output" | grep "is unreachable" | awk '{print $1}'); do
                 ping_conditional_log warn "$h is inactive"
             done
             ;;
         *)
-            ocf_log err "Unexpected result for '$cmd' $rc: `echo "$output" | tr '\n' ';'`"
+            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$output" | tr '\n' ';')"
             ;;
     esac
 
@@ -254,21 +254,21 @@ ping_check() {
     for host in $OCF_RESKEY_host_list; do
         p_exe=ping
 
-        case `uname` in
+        case $(uname) in
             Linux) p_args="-n -q -W $OCF_RESKEY_timeout -c $OCF_RESKEY_attempts";;
             Darwin) p_args="-n -q -t $OCF_RESKEY_timeout -c $OCF_RESKEY_attempts -o";;
             FreeBSD) p_args="-n -q -t $OCF_RESKEY_timeout -c $OCF_RESKEY_attempts -o";;
-            *) ocf_log err "Unknown host type: `uname`"; exit $OCF_ERR_INSTALLED;;
+            *) ocf_log err "Unknown host type: $(uname)"; exit $OCF_ERR_INSTALLED;;
         esac
 
         case "$host" in
             *:*) p_exe=ping6
         esac
 
-        p_out=`$p_exe $p_args $OCF_RESKEY_options $host 2>&1`; rc=$?
+        p_out=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
 
         case $rc in
-            0) active=`expr $active + 1`;;
+            0) active=$(expr $active + 1);;
             1) ping_conditional_log warn "$host is inactive: $p_out";;
             *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
         esac
@@ -286,7 +286,7 @@ ping_update() {
         active=$?
     fi
 
-    score=`expr $active \* $OCF_RESKEY_multiplier`
+    score=$(expr $active \* $OCF_RESKEY_multiplier)
     if [ "$__OCF_ACTION" = "start" ] ; then
         attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen" $attrd_options
     else
@@ -352,19 +352,19 @@ hosts_family() {
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
-integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
+integer=$(echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*')
 case "${OCF_RESKEY_timeout}" in
-    *[0-9]ms|*[0-9]msec) OCF_RESKEY_timeout=`expr $integer / 1000`;;
-    *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=`expr $integer \* 60`;;
-    *[0-9]h|*[0-9]hr)  OCF_RESKEY_timeout=`expr $integer \* 60 \* 60`;;
+    *[0-9]ms|*[0-9]msec) OCF_RESKEY_timeout=$(expr $integer / 1000);;
+    *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=$(expr $integer \* 60);;
+    *[0-9]h|*[0-9]hr)  OCF_RESKEY_timeout=$(expr $integer \* 60 \* 60);;
     *) OCF_RESKEY_timeout=$integer;;
 esac
 
 if [ -z "${OCF_RESKEY_timeout}" ]; then
     if [ x"$OCF_RESKEY_host_list" != x ]; then
-        host_count=`echo $OCF_RESKEY_host_list | awk '{print NF}'`
-        OCF_RESKEY_timeout=`expr $OCF_RESKEY_CRM_meta_timeout / $host_count / $OCF_RESKEY_attempts`
-        OCF_RESKEY_timeout=`expr $OCF_RESKEY_timeout / 1100` # Convert to seconds and finish 10% early
+        host_count=$(echo $OCF_RESKEY_host_list | awk '{print NF}')
+        OCF_RESKEY_timeout=$(expr $OCF_RESKEY_CRM_meta_timeout / $host_count / $OCF_RESKEY_attempts)
+        OCF_RESKEY_timeout=$(expr $OCF_RESKEY_timeout / 1100) # Convert to seconds and finish 10% early
     else
         OCF_RESKEY_timeout=5
     fi

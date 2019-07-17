@@ -222,7 +222,7 @@ dummy_monitor() {
 dummy_validate() {
 
     # Is the state directory writable?
-    state_dir=`dirname "$OCF_RESKEY_state"`
+    state_dir=$(dirname "$OCF_RESKEY_state")
     touch "$state_dir/$$"
     if [ $? -ne 0 ]; then
         return $OCF_ERR_ARGS
@@ -242,7 +242,7 @@ if [ -z "$OCF_RESKEY_state" ]; then
 
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         # Strip off the trailing clone marker (note + is not portable in sed)
-        OCF_RESKEY_state=`echo $OCF_RESKEY_state | sed s/:[0-9][0-9]*\.state/.state/`
+        OCF_RESKEY_state=$(echo $OCF_RESKEY_state | sed s/:[0-9][0-9]*\.state/.state/)
     fi
 fi
 VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"

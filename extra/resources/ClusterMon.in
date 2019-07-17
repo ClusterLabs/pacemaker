@@ -127,7 +127,7 @@ ClusterMon_start() {
 
 ClusterMon_stop() {
     if [ -f "$OCF_RESKEY_pidfile" ]; then
-        pid=`cat "$OCF_RESKEY_pidfile"`
+        pid=$(cat "$OCF_RESKEY_pidfile")
         if [ ! -z "$pid" ]; then
             kill -s 9 $pid
             rm -f "$OCF_RESKEY_pidfile"
@@ -138,7 +138,7 @@ ClusterMon_stop() {
 
 ClusterMon_monitor() {
     if [ -f "$OCF_RESKEY_pidfile" ]; then
-        pid=`cat "$OCF_RESKEY_pidfile"`
+        pid=$(cat "$OCF_RESKEY_pidfile")
         if [ ! -z "$pid" ]; then
             str=$(echo "su - \"$OCF_RESKEY_user\" -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
             ps -o "args=${str}" -p $pid 2>/dev/null | \

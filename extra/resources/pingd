@@ -39,7 +39,7 @@ case "$__OCF_ACTION" in
             exit $OCF_ERR_ARGS
         fi
 
-        recurring=`crm configure show "$OCF_RESOURCE_INSTANCE" | grep "op monitor.*interval=\"[1-9]" | sed s/.*interval=// | awk -F\" '{print $2}' | sed s/.*interval=// | awk -F\" '{print $2}' | sort | head -n 1`
+        recurring=$(crm configure show "$OCF_RESOURCE_INSTANCE" | grep "op monitor.*interval=\"[1-9]" | sed s/.*interval=// | awk -F\" '{print $2}' | sed s/.*interval=// | awk -F\" '{print $2}' | sort | head -n 1)
 
         if [ -z "$recurring" ]; then
             ocf_log err "$upgrade1"

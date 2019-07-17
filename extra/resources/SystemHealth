@@ -170,7 +170,7 @@ SystemHealth_monitor() {
     RC=$?
 
     if [ $RC != 0 ]; then
-        ocf_log debug "ipmiservicelogd's pid `cat /var/run/ipmiservicelogd.pid0` is not running!"
+        ocf_log debug "ipmiservicelogd's pid $(cat /var/run/ipmiservicelogd.pid0) is not running!"
 
         rm /var/run/ipmiservicelogd.pid0
 

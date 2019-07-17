@@ -146,52 +146,52 @@ UpdateStat() {
 
 SysInfoStats() {
 
-    UpdateStat arch "`uname -m`"
-    UpdateStat os "`uname -s`-`uname -r`"
+    UpdateStat arch "$(uname -m)"
+    UpdateStat os "$(uname -s)-$(uname -r)"
 
-    case `uname -s` in
+    case $(uname -s) in
         "Darwin")
-            mem=`top -l 1 | grep Mem: | awk '{print $10}'`
-            mem_used=`top -l 1 | grep Mem: | awk '{print $8}'`
-            mem=`SysInfo_mem_units "$mem"`
-            mem_used=`SysInfo_mem_units "$mem_used"`
-            mem_total=`expr $mem_used + $mem`
-            cpu_type=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}'`
-            cpu_speed=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}'`
-            cpu_cores=`system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}'`
-            cpu_load=`uptime | awk '{ print $10 }'`
+            mem=$(top -l 1 | grep Mem: | awk '{print $10}')
+            mem_used=$(top -l 1 | grep Mem: | awk '{print $8}')
+            mem=$(SysInfo_mem_units "$mem")
+            mem_used=$(SysInfo_mem_units "$mem_used")
+            mem_total=$(expr $mem_used + $mem)
+            cpu_type=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}')
+            cpu_speed=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}')
+            cpu_cores=$(system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}')
+            cpu_load=$(uptime | awk '{ print $10 }')
         ;;
         "FreeBSD")
-            cpu_type=`sysctl -in hw.model`
-            cpu_speed=`sysctl -in dev.cpu.0.freq`
-            cpu_cores=`sysctl -in hw.ncpu`
-            cpu_load=`sysctl -in vm.loadavg | awk '{ print $4 }'`
+            cpu_type=$(sysctl -in hw.model)
+            cpu_speed=$(sysctl -in dev.cpu.0.freq)
+            cpu_cores=$(sysctl -in hw.ncpu)
+            cpu_load=$(sysctl -in vm.loadavg | awk '{ print $4 }')
 
-            free_pages=`sysctl -in vm.stats.vm.v_free_count`
-            page_count=`sysctl -in vm.stats.vm.v_page_count`
-            page_size=`sysctl -in vm.stats.vm.v_page_size`
+            free_pages=$(sysctl -in vm.stats.vm.v_free_count)
+            page_count=$(sysctl -in vm.stats.vm.v_page_count)
+            page_size=$(sysctl -in vm.stats.vm.v_page_size)
 
-            mem=`expr $free_pages \* $page_size / 1024 / 1024`M
-            mem_total=`expr $page_count \* $page_size / 1024 / 1024`M
+            mem=$(expr $free_pages \* $page_size / 1024 / 1024)M
+            mem_total=$(expr $page_count \* $page_size / 1024 / 1024)M
         ;;
         "Linux")
             if [ -f /proc/cpuinfo ]; then
-                cpu_type=`awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo`
-                cpu_speed=`awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo`
-                cpu_cores=`grep "^processor" /proc/cpuinfo | wc -l`
+                cpu_type=$(awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo)
+                cpu_speed=$(awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo)
+                cpu_cores=$(grep "^processor" /proc/cpuinfo | wc -l)
             fi
-            cpu_load=`uptime | awk '{ print $10 }'`
+            cpu_load=$(uptime | awk '{ print $10 }')
 
             if [ -f /proc/meminfo ]; then
                 # meminfo results are in kB
-                mem=`grep "SwapFree" /proc/meminfo | awk '{print $2"k"}'`
+                mem=$(grep "SwapFree" /proc/meminfo | awk '{print $2"k"}')
                 if [ ! -z "$mem" ]; then
                     UpdateStat free_swap "$(SysInfo_mem_units "$mem")"
                 fi
-                mem=`grep "Inactive" /proc/meminfo | awk '{print $2"k"}'`
-                mem_total=`grep "MemTotal" /proc/meminfo | awk '{print $2"k"}'`
+                mem=$(grep "Inactive" /proc/meminfo | awk '{print $2"k"}')
+                mem_total=$(grep "MemTotal" /proc/meminfo | awk '{print $2"k"}')
             else
-                mem=`top -n 1 | grep Mem: | awk '{print $7}'`
+                mem=$(top -n 1 | grep Mem: | awk '{print $7}')
             fi
             ;;
         *)
@@ -224,10 +224,10 @@ SysInfoStats() {
     #     'tail -n <c>' to the equivalent 'tail -<c>'.
     for disk in "/" ${OCF_RESKEY_disks}; do
         unset disk_free disk_label
-        disk_free=`df -h "${disk}" | tail -1 | awk '{print $4}'`
+        disk_free=$(df -h "${disk}" | tail -1 | awk '{print $4}')
         if [ x != x"$disk_free" ]; then
-            disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
-            disk_free=`SysInfo_hdd_units "$disk_free"`
+            disk_label=$(echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g')
+            disk_free=$(SysInfo_hdd_units "$disk_free")
             UpdateStat "${disk_label}_free" $disk_free
             if [ -n "$MIN_FREE" ]; then
                 if [ $disk_free -le $MIN_FREE ]; then
@@ -305,7 +305,7 @@ SysInfo_stop() {
 
 SysInfo_monitor() {
     if [ -f "$OCF_RESKEY_pidfile" ]; then
-        clone=`cat "$OCF_RESKEY_pidfile"`
+        clone=$(cat "$OCF_RESKEY_pidfile")
     fi
 
     if [ "x$clone" = "x" ]; then
@@ -344,7 +344,7 @@ MIN_FREE=""
 if [ -n "$OCF_RESKEY_min_disk_free" ]; then
     ocf_is_decimal "$OCF_RESKEY_min_disk_free" &&
         OCF_RESKEY_min_disk_free="$OCF_RESKEY_min_disk_free$OCF_RESKEY_disk_unit"
-    MIN_FREE=`SysInfo_hdd_units $OCF_RESKEY_min_disk_free`
+    MIN_FREE=$(SysInfo_hdd_units $OCF_RESKEY_min_disk_free)
 fi
 
 case "$__OCF_ACTION" in

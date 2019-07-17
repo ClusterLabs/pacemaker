@@ -147,7 +147,7 @@ controld_start() {
     fi
 
     if ! ocf_is_true "$OCF_RESKEY_allow_stonith_disabled" && \
-        ! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`"; then
+        ! ocf_is_true "$(crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true)"; then
         ocf_log err "The cluster property stonith-enabled may not be deactivated to use the DLM"
         return $OCF_ERR_CONFIGURED
     fi

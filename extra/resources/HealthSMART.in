@@ -269,7 +269,7 @@ HealthSMART_validate() {
     init_smart
 
     # Is the state directory writable?
-    state_dir=`dirname "$OCF_RESKEY_state"`
+    state_dir=$(dirname "$OCF_RESKEY_state")
     touch "$state_dir/$$"
     if [ $? != 0 ]; then
         return $OCF_ERR_ARGS
@@ -287,7 +287,7 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
         state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
 
         # Strip off the trailing clone marker
-        OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+        OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
     else
         OCF_RESKEY_state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
     fi

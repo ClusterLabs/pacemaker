@@ -96,7 +96,7 @@ stateful_update() {
 stateful_check_state() {
     target="$1"
     if [ -f "${OCF_RESKEY_state}" ]; then
-        state=`cat "${OCF_RESKEY_state}"`
+        state=$(cat "${OCF_RESKEY_state}")
         if [ "x$target" = "x$state" ]; then
             return 0
         fi
@@ -217,7 +217,7 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
         state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
 
         # Strip off the trailing clone marker
-        OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+        OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
     else
         OCF_RESKEY_state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
     fi

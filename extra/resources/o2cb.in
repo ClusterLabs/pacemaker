@@ -62,8 +62,8 @@ check_filesystem()
     FSNAME="$1"
     MOUNTPOINT="$2"
 
-    FULL_MOUNTSEARCH="`echo "$MOUNTPOINT" | sed -e 's/\//\\\\\//g'`"
-    MOUNTOUT="`awk '$2 ~ /^'$FULL_MOUNTSEARCH'$/ && $3 ~ /^'$FSNAME'$/{print $2; exit}' < /proc/mounts 2>/dev/null`"
+    FULL_MOUNTSEARCH=$(echo "$MOUNTPOINT" | sed -e 's/\//\\\\\//g')
+    MOUNTOUT=$(awk '$2 ~ /^'$FULL_MOUNTSEARCH'$/ && $3 ~ /^'$FSNAME'$/{print $2; exit}' < /proc/mounts 2>/dev/null)
     test -n "$MOUNTOUT"
     return $?
 }
@@ -85,7 +85,7 @@ unload_filesystem()
 
     driver_filesystem "$FSNAME" || return 2
 
-    MODOUT="`awk '$1 ~ /^'$FSNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null`"
+    MODOUT=$(awk '$1 ~ /^'$FSNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null)
     if [ -z "$MODOUT" ]; then
         # The driver is built in, we can't unload it.
         return 0
@@ -116,7 +116,7 @@ unload_filesystem()
 
 status_daemon()
 {
-    PID=`pidof "$DAEMON"`
+    PID=$(pidof "$DAEMON")
     if [ -n "$PID" ]; then
         return $OCF_SUCCESS
     fi
@@ -141,9 +141,9 @@ bringup_daemon()
     rc=$OCF_NOT_RUNNING
 
     while [ $rc = $OCF_NOT_RUNNING ]; do
-        COUNT=`expr $COUNT + 1`
+        COUNT=$(expr $COUNT + 1)
         if [ $COUNT -gt $OCF_RESKEY_daemon_timeout ]; then
-            ocf_log err "`basename $DAEMON` did not come up"
+            ocf_log err "$(basename $DAEMON) did not come up"
             return $OCF_ERR_GENERIC
         fi
         status_daemon; rc=$?
@@ -160,7 +160,7 @@ kill_daemon()
         return $rc
     fi
 
-    ocf_log info "Stopping `basename "$DAEMON"`"
+    ocf_log info "Stopping $(basename "$DAEMON")"
     killproc "$DAEMON"
 
     while [ $rc = $OCF_NOT_RUNNING ]; do
@@ -184,7 +184,7 @@ unload_module()
     fi
     MODNAME="$1"
 
-    MODOUT="`awk '$1 ~ /^'$MODNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null`"
+    MODOUT=$(awk '$1 ~ /^'$MODNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null)
     if [ -z "$MODOUT" ]
     then
         return 2
@@ -333,7 +333,7 @@ o2cb_monitor() {
 
     grep user "$LOADED_PLUGINS_FILE" >/dev/null 2>&1; rc=$?
     if [ $rc != 0 ]; then
-        ocf_log err "Wrong stack `cat $LOADED_PLUGINS_FILE`"
+        ocf_log err "Wrong stack $(cat $LOADED_PLUGINS_FILE)"
         return $OCF_ERR_INSTALLED
     fi
 
