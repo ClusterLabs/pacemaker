@@ -218,7 +218,6 @@ ClusterMon_validate() {
         *) ocf_log warn "You should have htmlfile($OCF_RESKEY_htmlfile) of absolute path!" ;;
     esac
 
-     
     echo "Validate OK"
     return $OCF_SUCCESS
 }

@@ -131,7 +131,7 @@ stateful_start() {
 }
 
 stateful_demote() {
-    stateful_check_state 
+    stateful_check_state
     if [ $? = 0 ]; then
         # CRM Error - Should never happen
         return $OCF_NOT_RUNNING
@@ -142,7 +142,7 @@ stateful_demote() {
 }
 
 stateful_promote() {
-    stateful_check_state 
+    stateful_check_state
     if [ $? = 0 ]; then
         return $OCF_NOT_RUNNING
     fi
@@ -212,10 +212,10 @@ stateful_validate() {
 if [ "x$OCF_RESKEY_state" = "x" ]; then
     if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
         state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
-        
+
         # Strip off the trailing clone marker
         OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
-    else 
+    else
         OCF_RESKEY_state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi

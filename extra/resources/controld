@@ -166,10 +166,10 @@ controld_start() {
                 return $OCF_SUCCESS
             fi
             ;;
-          $OCF_NOT_RUNNING) 
+          $OCF_NOT_RUNNING)
             return $OCF_NOT_RUNNING
             ;;
-          *) 
+          *)
             return $OCF_ERR_GENERIC
             ;;
         esac
@@ -238,7 +238,7 @@ controld_validate() {
     check_binary ${OCF_RESKEY_daemon}
 
     case ${OCF_RESKEY_CRM_meta_globally_unique} in
-        yes|Yes|true|True|1) 
+        yes|Yes|true|True|1)
             ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
             exit $OCF_ERR_CONFIGURED
             ;;
@@ -253,7 +253,7 @@ controld_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$OCF_RESOURCE_INSTANCE" in
-    *[gG][fF][sS]*) 
+    *[gG][fF][sS]*)
         : ${OCF_RESKEY_args=-g 0}
         : ${OCF_RESKEY_daemon=gfs_controld}
         ;;

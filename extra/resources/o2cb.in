@@ -69,7 +69,7 @@ check_filesystem()
 }
 
 #
-# Unload a filesystem driver.  
+# Unload a filesystem driver.
 # Be careful to notice if the driver is built-in and do nothing.
 #
 # 0 is success, 1 is error, 2 is already unloaded.
@@ -214,7 +214,7 @@ unload_module()
 o2cb_start() {
 
     o2cb_monitor; rc=$?
-    if [ $rc != $OCF_NOT_RUNNING ]; then 
+    if [ $rc != $OCF_NOT_RUNNING ]; then
         return $rc
     fi
 
@@ -277,7 +277,7 @@ o2cb_stop() {
     ocf_log info "Stopping $OCF_RESOURCE_INSTANCE"
 
     kill_daemon
-    if [ $? != 0 ]; then 
+    if [ $? != 0 ]; then
         ocf_log err "Unable to unload modules: the cluster is still online"
         return $OCF_ERR_GENERIC
     fi
@@ -357,7 +357,7 @@ o2cb_validate() {
     check_binary ${DAEMON}
 
     case ${OCF_RESKEY_CRM_meta_globally_unique} in
-        yes|Yes|true|True|1) 
+        yes|Yes|true|True|1)
             ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
             exit $OCF_ERR_CONFIGURED
             ;;

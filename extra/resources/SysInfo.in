@@ -139,7 +139,7 @@ UpdateStat() {
     printf "%s:\t%s\n" "$name" "$value"
     if [ "$__OCF_ACTION" = "start" ] ; then
         ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -B "$value"
-    else 
+    else
         ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
     fi
 }
@@ -254,7 +254,7 @@ SysInfo_megabytes() {
 SysInfo_mem_units() {
     mem=$1
 
-    if [ -z $1 ]; then 
+    if [ -z $1 ]; then
         return
     fi
 
@@ -265,20 +265,20 @@ SysInfo_mem_units() {
         mem=$(($mem + 50 - $r))
     fi
 
-    echo $mem    
+    echo $mem
 }
 
 SysInfo_hdd_units() {
     # Defauts to size in gigabytes
 
-    case $OCF_RESKEY_disk_unit in 
+    case $OCF_RESKEY_disk_unit in
         [Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
         [Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
         [Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
         [Mm]) echo "$(SysInfo_megabytes "$1")" ;;
         [Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
         [Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
-        *) 
+        *)
             ocf_log err "Invalid value for disk_unit: $OCF_RESKEY_disk_unit"
             echo $(($(SysInfo_megabytes "$1") / 1024));;
     esac
@@ -337,7 +337,7 @@ fi
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
-else 
+else
     OCF_RESKEY_delay="-d 0"
 fi
 MIN_FREE=""

@@ -107,7 +107,7 @@ END
 #######################################################################
 
 check_temperature() {
-    
+
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
         $ATTRDUP -n "#health-smart" -U "red" -d "5s"
@@ -119,13 +119,13 @@ check_temperature() {
         $ATTRDUP -n "#health-smart" -U "red" -d "5s"
         return 1
     fi
-    
+
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
         $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
         return 1
     fi
-    
+
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
         $ATTRDUP -n "#health-smart" -U "yellow" -d "5s"
@@ -239,7 +239,7 @@ HealthSMART_monitor() {
                     return $OCF_SUCCESS
                 fi
             fi
-            
+
             # Check drive temperature(s)
             if [ "${OCF_RESKEY_devices}" ]; then
                 for DEVICE in ${OCF_RESKEY_devices}; do
@@ -298,7 +298,7 @@ case $__OCF_ACTION in
     stop)         HealthSMART_stop;;
     monitor)      HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
-    meta-data) 
+    meta-data)
         meta_data
         exit $OCF_SUCCESS
         ;;

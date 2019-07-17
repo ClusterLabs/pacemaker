@@ -188,7 +188,7 @@ SystemHealth_monitor() {
 }
 
 SystemHealth_validate() {
-    
+
     SystemHealth_check_tools
     RC=$?
 

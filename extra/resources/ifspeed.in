@@ -27,7 +27,7 @@
 #    OCF_RESKEY_iface:        network interface to monitor
 #    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
 #                             bridge ports to consider.
-#                             Default is all ports which have designated_bridge=root_id 
+#                             Default is all ports which have designated_bridge=root_id
 #    OCF_RESKEY_weight_base:  Relative weight of 1Gbps. This can be used to tune
 #                             value of resulting CIB attribute.
 #
@@ -85,7 +85,7 @@ For balancing bonds this RA summs speeds of underlying "up" slave interfaces
 (and applies coefficient 0.8 to result).
 
 For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
-speed of the currently active slave is used. 
+speed of the currently active slave is used.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
@@ -319,7 +319,7 @@ bridge_get_root_ports() {
 
     root_ports=${root_ports# }
 
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${root_ports}"
     else # Expect sub-shell
         echo ${root_ports}
@@ -363,7 +363,7 @@ bridge_get_active_ports() {
         fi
     done
     if [ ${warn} -eq 1 ] ; then
-        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}" 
+        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}"
     fi
     echo "${active_ports# }"
 }
@@ -381,7 +381,7 @@ bridge_get_speed() {
     for port in ${BGS_PORTS} ; do
         : $(( aggregate_speed += $( iface_get_speed ${port} ) ))
     done
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -400,8 +400,8 @@ hfi1_get_speed() {
     # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
     # 100 Gb/sec (4X EDR)
     read hfi1_speed hfi1_value hfi1_desc < /sys/class/net/${iface}/device/infiniband/*/ports/*/rate
-    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected speed $hfi1_speed $hfi1_value $hfi1_desc" 
-    
+    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected speed $hfi1_speed $hfi1_value $hfi1_desc"
+
     # hfi1_value always in Gb/sec, so we need to convert hfi1_speed in Mb/sec
     echo $(( hfi1_speed * 1000 ))
 }
@@ -410,7 +410,7 @@ bond_get_slaves() {
     local iface=$1
     local slaves
     read slaves < "/sys/class/net/${iface}/bonding/slaves"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${slaves}"
     else # Expect sub-shell
         echo ${slaves}
@@ -421,7 +421,7 @@ bond_get_active_iface() {
     local iface=$1
     local active
     read active < "/sys/class/net/${iface}/bonding/active_slave"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${active}"
     else # Expect sub-shell
         echo ${active}
@@ -465,7 +465,7 @@ bond_get_speed() {
         bond_get_active_iface ${iface} active_iface
         aggregate_speed=$( iface_get_speed $active_iface )
     fi
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -487,7 +487,7 @@ update() {
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
     if [ "$__OCF_ACTION" = "start" ] ; then
         attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
-    else 
+    else
         attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
     fi
     rc=$?

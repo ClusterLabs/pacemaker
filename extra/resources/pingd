@@ -49,7 +49,7 @@ case $__OCF_ACTION in
             ocf_log err "Preventing startup to ensure the issue is addressed before it matters"
             exit $OCF_ERR_ARGS
         fi
-        
+
         if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
             ocf_log warn "$upgrade1"
             ocf_log warn "$upgrade2"
