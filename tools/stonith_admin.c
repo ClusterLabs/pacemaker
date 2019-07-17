@@ -482,8 +482,23 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
     GOptionGroup *defn_group, *query_group, *fence_group, *addl_group;
+    GOptionGroup *main_group;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Be less descriptive in output.",
+          NULL },
+
+        { NULL }
+    };
 
     context = pcmk__build_arg_context(args, "text (default), html, xml");
+
+    /* Add the -q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    main_group = g_option_context_get_main_group(context);
+    g_option_group_add_entries(main_group, extra_prog_entries);
 
     defn_group = g_option_group_new("definition", "Device Definition Commands:",
                                     "Show device definition help", NULL, NULL);
