@@ -37,7 +37,8 @@ DEFAULT_INACTIVE_VALUE="0"
 : ${OCF_RESKEY_state:="$DEFAULT_STATE_FILE"}
 : ${OCF_RESKEY_name:="$DEFAULT_ATTR_NAME"}
 
-# Values may be empty string
+# If the user did not set a value, use the default. If the user explicitly set
+# a value to the empty string, use that (-z "${V+x}" tests whether $V was set).
 if [ -z "${OCF_RESKEY_active_value+x}" ]; then
     OCF_RESKEY_active_value="$DEFAULT_ACTIVE_VALUE"
 fi
