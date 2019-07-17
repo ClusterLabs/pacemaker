@@ -12,6 +12,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml_serialize_fd_formatted */
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
@@ -131,8 +132,6 @@ static struct crm_option long_options[] = {
 static void
 print_xml_output(xmlNode * xml)
 {
-    char *buffer;
-
     if (!xml) {
         return;
     } else if (xml->type != XML_ELEMENT_NODE) {
@@ -154,9 +153,7 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", crm_str(buffer));
-        free(buffer);
+        pcmk__xml_serialize_fd_formatted(STDOUT_FILENO, xml);
     }
 }
 
@@ -387,8 +384,8 @@ main(int argc, char **argv)
         if (optind < argc) {
             crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
         }
-        admin_input_xml = dump_xml_formatted(output);
-        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        pcmk__xml_serialize_fd_formatted(STDOUT_FILENO, output);
+        xmlFreeDoc(output->doc);
         crm_exit(CRM_EX_OK);
 
     } else if (safe_str_eq(cib_action, "md5-sum")) {

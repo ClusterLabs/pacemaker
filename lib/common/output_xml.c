@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/output.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml_serialize_fd_formatted */
 #include <glib.h>
 
 static gboolean legacy_xml = FALSE;
@@ -128,9 +129,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (print) {
-        char *buf = dump_xml_formatted_with_text(priv->root);
-        fprintf(out->dest, "%s", buf);
-        free(buf);
+        pcmk__xml_serialize_fd_formatted(fileno(out->dest), priv->root);
     }
 
     if (copy_dest != NULL) {
@@ -140,15 +139,12 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 xml_reset(pcmk__output_t *out) {
-    char *buf = NULL;
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
-    buf = dump_xml_formatted_with_text(priv->root);
-    fprintf(out->dest, "%s", buf);
+    pcmk__xml_serialize_fd_formatted(fileno(out->dest), priv->root);
 
-    free(buf);
     xml_free_priv(out);
     xml_init(out);
 }

@@ -2477,6 +2477,14 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \param[in] compress  Whether to compress XML before writing
  *
  * \return Number of bytes written on success, -errno otherwise
+ *
+ * \note Compress-less cases shall eventually switch to use
+ *       #pcmk__xml_serialize_fd_formatted for streaming vs.
+ *       memory inefficient full-buffer gather-then-print
+ *       round-trip (perhaps lbzip2 allows for streaming as well;
+ *       note that this might open new problems regarding "atomic"
+ *       writes, perhaps requiring a temporary file intermediate step
+ *       or an explicit locking -- still might be worth it, though)
  */
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
@@ -3310,6 +3318,17 @@ dump_xml_unformatted(xmlNode * an_xml_node)
 
     crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
     return buffer;
+}
+
+void
+pcmk__xml_serialize_fd_formatted(int fd, xmlNode *cur)
+{
+    xmlOutputBuffer *fd_out = xmlOutputBufferCreateFd(fd, NULL);
+    CRM_ASSERT(fd_out != NULL);
+    xmlNodeDumpOutput(fd_out, cur->doc, cur, 0, 1, NULL);
+    xmlOutputBufferWrite(fd_out, sizeof("\n") - 1, "\n");  /* final NL */
+    xmlOutputBufferClose(fd_out);
+    fdatasync(fd);
 }
 
 gboolean
