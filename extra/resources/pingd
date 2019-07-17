@@ -31,7 +31,7 @@ upgrade3="You will need to remove the existing resource and replace it with one 
 
 case "$__OCF_ACTION" in
     start|monitor)
-        if [ "x" != "x$OCF_RESKEY_host_list" ]; then
+        if [ -n "$OCF_RESKEY_host_list" ]; then
             ocf_log err "$upgrade1"
             ocf_log err "$upgrade2"
             ocf_log err "Automatic conversion to ocf:pacemaker:ping failed: no hosts were configured to check for connectivity"
@@ -50,10 +50,10 @@ case "$__OCF_ACTION" in
             exit $OCF_ERR_ARGS
         fi
 
-        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+        if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then
             ocf_log warn "$upgrade1"
             ocf_log warn "$upgrade2"
-            if [ $recurring != $OCF_RESKEY_interval ]; then
+            if [ $recurring -ne $OCF_RESKEY_interval ]; then
                 ocf_log warn "Your monitor operation happens every $recurring, which means that the $OCF_RESKEY_name attribute will be updated with a different frequency than the previously configured ( $OCF_RESKEY_interval )"
                 ocf_log warn "Either change the monitor interval to match or, ideally, switch to the ocf:pacemaker:ping agent and avoid all this compatibility nonsense."
             fi

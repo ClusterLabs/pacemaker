@@ -153,7 +153,7 @@ END
 
 ping_start() {
     ping_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
+    if [ $? -eq $OCF_SUCCESS ]; then
         return $OCF_SUCCESS
     fi
     touch "${OCF_RESKEY_pidfile}"
@@ -184,7 +184,7 @@ ping_validate() {
     # Is the state directory writable?
     state_dir=$(dirname "$OCF_RESKEY_pidfile")
     touch "$state_dir/$$"
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         ocf_log err "Invalid location for 'state': $state_dir is not writable"
         return $OCF_ERR_ARGS
     fi
@@ -197,7 +197,7 @@ ping_validate() {
     esac
 
 # Check the host list
-    if [ "x" = "x$OCF_RESKEY_host_list" ]; then
+    if [ -z "$OCF_RESKEY_host_list" ]; then
         ocf_log err "Empty host_list.  Please specify some nodes to ping"
         exit $OCF_ERR_CONFIGURED
     fi
@@ -361,7 +361,7 @@ case "${OCF_RESKEY_timeout}" in
 esac
 
 if [ -z "${OCF_RESKEY_timeout}" ]; then
-    if [ x"$OCF_RESKEY_host_list" != x ]; then
+    if [ -n "$OCF_RESKEY_host_list" ]; then
         host_count=$(echo $OCF_RESKEY_host_list | awk '{print NF}')
         OCF_RESKEY_timeout=$(expr $OCF_RESKEY_CRM_meta_timeout / $host_count / $OCF_RESKEY_attempts)
         OCF_RESKEY_timeout=$(expr $OCF_RESKEY_timeout / 1100) # Convert to seconds and finish 10% early

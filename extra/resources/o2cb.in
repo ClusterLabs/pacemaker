@@ -54,7 +54,7 @@ driver_filesystem() {
 #
 check_filesystem()
 {
-    if [ $# != 2 -o -z "$1" -o -z "$2" ]
+    if [ $# -ne 2 -o -z "$1" -o -z "$2" ]
     then
         ocf_log err "check_filesystem(): Missing arguments"
         exit 4
@@ -76,7 +76,7 @@ check_filesystem()
 #
 unload_filesystem()
 {
-    if [ $# != 1 -o -z "$1" ]
+    if [ $# -ne 1 -o -z "$1" ]
     then
         ocf_log err "unload_filesystem(): Missing an argument"
         return 1
@@ -106,7 +106,7 @@ unload_filesystem()
     esac
 
     modprobe -rs "$FSNAME"
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         ocf_log err "Unable to unload module: $FSNAME"
         return 1
     fi
@@ -131,7 +131,7 @@ bringup_daemon()
     fi
 
     "$DAEMON"; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         ocf_log err "Could not start $DAEMON"
         return $OCF_ERR_GENERIC
     fi
@@ -140,7 +140,7 @@ bringup_daemon()
     COUNT=0
     rc=$OCF_NOT_RUNNING
 
-    while [ $rc = $OCF_NOT_RUNNING ]; do
+    while [ $rc -eq $OCF_NOT_RUNNING ]; do
         COUNT=$(expr $COUNT + 1)
         if [ $COUNT -gt $OCF_RESKEY_daemon_timeout ]; then
             ocf_log err "$(basename $DAEMON) did not come up"
@@ -156,14 +156,14 @@ bringup_daemon()
 kill_daemon()
 {
     status_daemon; rc=$?
-    if [ $rc != $OCF_SUCCESS ]; then
+    if [ $rc -ne $OCF_SUCCESS ]; then
         return $rc
     fi
 
     ocf_log info "Stopping $(basename "$DAEMON")"
     killproc "$DAEMON"
 
-    while [ $rc = $OCF_NOT_RUNNING ]; do
+    while [ $rc -eq $OCF_NOT_RUNNING ]; do
         sleep 1
         status_daemon; rc=$?
     done
@@ -203,7 +203,7 @@ unload_module()
     esac
 
     modprobe -rs "$MODNAME"
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         ocf_log err "Unable to unload module \"$MODNAME\""
         return 1
     fi
@@ -214,7 +214,7 @@ unload_module()
 o2cb_start() {
 
     o2cb_monitor; rc=$?
-    if [ $rc != $OCF_NOT_RUNNING ]; then
+    if [ $rc -ne $OCF_NOT_RUNNING ]; then
         return $rc
     fi
 
@@ -222,7 +222,7 @@ o2cb_start() {
 
     if [ ! -e "$CLUSTER_STACK_FILE" ]; then
         modprobe -s ocfs2_stackglue
-        if [ $? != 0 ]; then
+        if [ $? -ne 0 ]; then
             ocf_log err "Could not load ocfs2_stackglue"
             return $OCF_ERR_INSTALLED
         fi
@@ -232,7 +232,7 @@ o2cb_start() {
     if [ -z "$SP_OUT" ]
     then
         modprobe -s ocfs2_stack_user
-        if [ $? != 0 ]; then
+        if [ $? -ne 0 ]; then
             ocf_log err "Could not load ocfs2_stack_user"
             return $OCF_ERR_INSTALLED
         fi
@@ -246,7 +246,7 @@ o2cb_start() {
 
     if [ -f "$CLUSTER_STACK_FILE" ]; then
         echo "$OCF_RESKEY_stack" >"$CLUSTER_STACK_FILE"
-        if [ $? != 0 ]; then
+        if [ $? -ne 0 ]; then
             ocf_log err "Userspace stack '$OCF_RESKEY_stack' not supported"
             return $OCF_ERR_INSTALLED
         fi
@@ -256,9 +256,9 @@ o2cb_start() {
     fi
 
     driver_filesystem ocfs2; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         modprobe -s ocfs2
-        if [ $? != 0 ]; then
+        if [ $? -ne 0 ]; then
             ocf_log err "Unable to load ocfs2 module"
             return $OCF_ERR_INSTALLED
         fi
@@ -277,13 +277,13 @@ o2cb_stop() {
     ocf_log info "Stopping $OCF_RESOURCE_INSTANCE"
 
     kill_daemon
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         ocf_log err "Unable to unload modules: the cluster is still online"
         return $OCF_ERR_GENERIC
     fi
 
     unload_filesystem ocfs2
-    if [ $? = 1 ]; then
+    if [ $? -eq 1 ]; then
         ocf_log err "Unable to unload ocfs2 module"
         return $OCF_ERR_GENERIC
     fi
@@ -294,14 +294,14 @@ o2cb_stop() {
     while read plugin
     do
         unload_module "ocfs2_stack_${plugin}"
-        if [ $? = 1 ]; then
+        if [ $? -eq 1 ]; then
             ocf_log err "Unable to unload ocfs2_stack_${plugin}"
             return $OCF_ERR_GENERIC
         fi
     done <"$LOADED_PLUGINS_FILE"
 
     unload_module "ocfs2_stackglue"
-    if [ $? = 1 ]; then
+    if [ $? -eq 1 ]; then
         ocf_log err "Unable to unload ocfs2_stackglue"
         return $OCF_ERR_GENERIC
     fi
@@ -315,13 +315,13 @@ o2cb_monitor() {
     # Assume that ocfs2_controld will terminate if any of the conditions below are met
 
     driver_filesystem configfs; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         ocf_log info "configfs not loaded"
         return $OCF_NOT_RUNNING
     fi
 
     check_filesystem configfs "${OCF_RESKEY_configfs}"; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         ocf_log info "configfs not mounted"
         return $OCF_NOT_RUNNING
     fi
@@ -332,13 +332,13 @@ o2cb_monitor() {
     fi
 
     grep user "$LOADED_PLUGINS_FILE" >/dev/null 2>&1; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         ocf_log err "Wrong stack $(cat $LOADED_PLUGINS_FILE)"
         return $OCF_ERR_INSTALLED
     fi
 
     driver_filesystem ocfs2; rc=$?
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         ocf_log info "ocfs2 not loaded"
         return $OCF_NOT_RUNNING
     fi

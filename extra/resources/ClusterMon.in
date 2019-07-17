@@ -109,7 +109,7 @@ END
 }
 
 ClusterMon_exit() {
-    if [ $1 != 0 ]; then
+    if [ $1 -ne 0 ]; then
         exit $OCF_ERR_GENERIC
     else
         exit $OCF_SUCCESS
@@ -117,7 +117,7 @@ ClusterMon_exit() {
 }
 
 ClusterMon_start() {
-    if [ ! -z "$OCF_RESKEY_user" ]; then
+    if [ -n "$OCF_RESKEY_user" ]; then
         su - "$OCF_RESKEY_user" -c "$CMON_CMD"
     else
         eval $CMON_CMD
@@ -128,7 +128,7 @@ ClusterMon_start() {
 ClusterMon_stop() {
     if [ -f "$OCF_RESKEY_pidfile" ]; then
         pid=$(cat "$OCF_RESKEY_pidfile")
-        if [ ! -z "$pid" ]; then
+        if [ -n "$pid" ]; then
             kill -s 9 $pid
             rm -f "$OCF_RESKEY_pidfile"
         fi
@@ -139,7 +139,7 @@ ClusterMon_stop() {
 ClusterMon_monitor() {
     if [ -f "$OCF_RESKEY_pidfile" ]; then
         pid=$(cat "$OCF_RESKEY_pidfile")
-        if [ ! -z "$pid" ]; then
+        if [ -n "$pid" ]; then
             str=$(echo "su - \"$OCF_RESKEY_user\" -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
             ps -o "args=${str}" -p $pid 2>/dev/null | \
                 grep -qE "[c]rm_mon.*${OCF_RESKEY_pidfile}"
@@ -181,7 +181,7 @@ fi
 
 ClusterMon_validate() {
 # Existence of the user
-    if [ ! -z "$OCF_RESKEY_user" ]; then
+    if [ -n "$OCF_RESKEY_user" ]; then
         getent passwd "$OCF_RESKEY_user" >/dev/null
         if [ $? -eq 0 ]; then
             : Yes, user exists. We can further check his permission on crm_mon if necessary

@@ -170,7 +170,7 @@ init_smart() {
     fi
 
     for DRIVE in $DRIVES; do
-        if [ "${OCF_RESKEY_devices}" ]; then
+        if [ -n "${OCF_RESKEY_devices}" ]; then
             for DEVICE in ${OCF_RESKEY_devices}; do
                 "$SMARTCTL" -d "$DEVICE" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
                 if [ $? -ne 0 ] ; then
@@ -198,7 +198,7 @@ END
 
 HealthSMART_start() {
     HealthSMART_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
+    if [ $? -eq $OCF_SUCCESS ]; then
         return $OCF_SUCCESS
     fi
     touch "${OCF_RESKEY_state}"
@@ -206,7 +206,7 @@ HealthSMART_start() {
 
 HealthSMART_stop() {
     HealthSMART_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
+    if [ $? -eq $OCF_SUCCESS ]; then
         rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
@@ -224,7 +224,7 @@ HealthSMART_monitor() {
 
         # Check overall S.M.A.R.T. status
         for DRIVE in $DRIVES; do
-            if [ "${OCF_RESKEY_devices}" ]; then
+            if [ -n "${OCF_RESKEY_devices}" ]; then
                 for DEVICE in ${OCF_RESKEY_devices}; do
                     "$SMARTCTL" -d "$DEVICE" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                     if [ $? -ne 0 ]; then
@@ -241,7 +241,7 @@ HealthSMART_monitor() {
             fi
 
             # Check drive temperature(s)
-            if [ "${OCF_RESKEY_devices}" ]; then
+            if [ -n "${OCF_RESKEY_devices}" ]; then
                 for DEVICE in ${OCF_RESKEY_devices}; do
                     check_temperature "$("$SMARTCTL" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
                     if [ $? -ne 0 ]; then
@@ -271,7 +271,7 @@ HealthSMART_validate() {
     # Is the state directory writable?
     state_dir=$(dirname "$OCF_RESKEY_state")
     touch "$state_dir/$$"
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         return $OCF_ERR_ARGS
     fi
     rm "$state_dir/$$"
@@ -282,7 +282,7 @@ HealthSMART_validate() {
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
-if [ "x$OCF_RESKEY_state" = "x" ]; then
+if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         state="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state"
 

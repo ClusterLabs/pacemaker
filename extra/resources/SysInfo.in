@@ -185,7 +185,7 @@ SysInfoStats() {
             if [ -f /proc/meminfo ]; then
                 # meminfo results are in kB
                 mem=$(grep "SwapFree" /proc/meminfo | awk '{print $2"k"}')
-                if [ ! -z "$mem" ]; then
+                if [ -n "$mem" ]; then
                     UpdateStat free_swap "$(SysInfo_mem_units "$mem")"
                 fi
                 mem=$(grep "Inactive" /proc/meminfo | awk '{print $2"k"}')
@@ -197,23 +197,23 @@ SysInfoStats() {
         *)
     esac
 
-    if [ x != x"$cpu_type" ]; then
+    if [ -n "$cpu_type" ]; then
         UpdateStat cpu_info "$cpu_type"
     fi
 
-    if [ x != x"$cpu_speed" ]; then
+    if [ -n "$cpu_speed" ]; then
         UpdateStat cpu_speed "$cpu_speed"
     fi
 
-    if [ x != x"$cpu_cores" ]; then
+    if [ -n "$cpu_cores" ]; then
         UpdateStat cpu_cores "$cpu_cores"
     fi
 
-    if [ x != x"$cpu_load" ]; then
+    if [ -n "$cpu_load" ]; then
         UpdateStat cpu_load "$cpu_load"
     fi
 
-    if [ ! -z "$mem" ]; then
+    if [ -n "$mem" ]; then
         # Massage the memory values
         UpdateStat ram_total "$(SysInfo_mem_units "$mem_total")"
         UpdateStat ram_free "$(SysInfo_mem_units "$mem")"
@@ -225,7 +225,7 @@ SysInfoStats() {
     for disk in "/" ${OCF_RESKEY_disks}; do
         unset disk_free disk_label
         disk_free=$(df -h "${disk}" | tail -1 | awk '{print $4}')
-        if [ x != x"$disk_free" ]; then
+        if [ -n "$disk_free" ]; then
             disk_label=$(echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g')
             disk_free=$(SysInfo_hdd_units "$disk_free")
             UpdateStat "${disk_label}_free" $disk_free
@@ -261,7 +261,7 @@ SysInfo_mem_units() {
     mem=$(SysInfo_megabytes "$1")
     # Round to the next multiple of 50
     r=$(($mem % 50))
-    if [ $r != 0 ]; then
+    if [ $r -ne 0 ]; then
         mem=$(($mem + 50 - $r))
     fi
 
@@ -308,7 +308,7 @@ SysInfo_monitor() {
         clone=$(cat "$OCF_RESKEY_pidfile")
     fi
 
-    if [ "x$clone" = "x" ]; then
+    if [ -z "$clone" ]; then
         rm "$OCF_RESKEY_pidfile"
         exit $OCF_NOT_RUNNING
 
@@ -335,7 +335,7 @@ fi
 : ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/SysInfo-${OCF_RESOURCE_INSTANCE}"}
 : ${OCF_RESKEY_disk_unit:="G"}
 : ${OCF_RESKEY_clone:="0"}
-if [ "x" != "x${OCF_RESKEY_delay}" ]; then
+if [ -n "${OCF_RESKEY_delay}" ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
 else
     OCF_RESKEY_delay="-d 0"

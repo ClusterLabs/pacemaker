@@ -181,23 +181,23 @@ controld_start() {
 controld_stop() {
     controld_monitor; rc=$?
 
-    if [ $rc = $OCF_NOT_RUNNING ]; then
+    if [ $rc -eq $OCF_NOT_RUNNING ]; then
         return $OCF_SUCCESS
     fi
 
     killall -TERM "${OCF_RESKEY_daemon}"; rc=$?
 
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         return $OCF_ERR_GENERIC
     fi
 
     rc=$OCF_SUCCESS
-    while [ $rc = $OCF_SUCCESS ]; do
+    while [ $rc -eq $OCF_SUCCESS ]; do
         controld_monitor; rc=$?
         sleep 1
     done
 
-    if [ $rc = $OCF_NOT_RUNNING ]; then
+    if [ $rc -eq $OCF_NOT_RUNNING ]; then
         rc=$OCF_SUCCESS
     fi
 

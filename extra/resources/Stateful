@@ -97,12 +97,12 @@ stateful_check_state() {
     target="$1"
     if [ -f "${OCF_RESKEY_state}" ]; then
         state=$(cat "${OCF_RESKEY_state}")
-        if [ "x$target" = "x$state" ]; then
+        if [ "$target" = "$state" ]; then
             return 0
         fi
 
     else
-        if [ "x$target" = "x" ]; then
+        if [ -z "$target" ]; then
             return 0
         fi
     fi
@@ -124,7 +124,7 @@ set_master_score() {
 
 stateful_start() {
     stateful_check_state master
-    if [ $? = 0 ]; then
+    if [ $? -eq 0 ]; then
         # CRM Error - Should never happen
         return $OCF_RUNNING_MASTER
     fi
@@ -135,7 +135,7 @@ stateful_start() {
 
 stateful_demote() {
     stateful_check_state
-    if [ $? = 0 ]; then
+    if [ $? -eq 0 ]; then
         # CRM Error - Should never happen
         return $OCF_NOT_RUNNING
     fi
@@ -146,7 +146,7 @@ stateful_demote() {
 
 stateful_promote() {
     stateful_check_state
-    if [ $? = 0 ]; then
+    if [ $? -eq 0 ]; then
         return $OCF_NOT_RUNNING
     fi
     stateful_update master
@@ -157,7 +157,7 @@ stateful_promote() {
 stateful_stop() {
     "${HA_SBIN_DIR}/crm_master" -l reboot -D
     stateful_check_state master
-    if [ $? = 0 ]; then
+    if [ $? -eq 0 ]; then
         # CRM Error - Should never happen
         return $OCF_RUNNING_MASTER
     fi
@@ -169,8 +169,8 @@ stateful_stop() {
 
 stateful_monitor() {
     stateful_check_state "master"
-    if [ $? = 0 ]; then
-        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+    if [ $? -eq 0 ]; then
+        if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then
             # Restore the master setting during probes
             set_master_score "${master_score}"
         fi
@@ -178,8 +178,8 @@ stateful_monitor() {
     fi
 
     stateful_check_state "slave"
-    if [ $? = 0 ]; then
-        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+    if [ $? -eq 0 ]; then
+        if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then
             # Restore the master setting during probes
             set_master_score "${slave_score}"
         fi
@@ -212,7 +212,7 @@ stateful_validate() {
 : ${OCF_RESKEY_notify_delay:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
-if [ "x$OCF_RESKEY_state" = "x" ]; then
+if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
         state="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state"
 
