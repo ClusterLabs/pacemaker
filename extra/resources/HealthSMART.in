@@ -36,7 +36,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-Systhem health agent that checks the S.M.A.R.T. status of the given drives and
+System health agent that checks the S.M.A.R.T. status of the given drives and
 updates the #health-smart attribute.
 </longdesc>
 <shortdesc lang="en">SMART health status</shortdesc>

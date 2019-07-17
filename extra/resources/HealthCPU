@@ -37,7 +37,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-Systhem health agent that measures the CPU idling and updates the #health-cpu attribute.
+System health agent that measures the CPU idling and updates the #health-cpu attribute.
 </longdesc>
 <shortdesc lang="en">System health CPU usage</shortdesc>
 

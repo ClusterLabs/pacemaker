@@ -30,7 +30,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-Systhem health agent that measures the CPU iowait via top and updates the #health-iowait attribute.
+System health agent that measures the CPU iowait via top and updates the #health-iowait attribute.
 </longdesc>
 <shortdesc lang="en">System health based on CPU iowait measurement</shortdesc>
 
