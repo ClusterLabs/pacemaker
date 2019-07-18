@@ -16,14 +16,14 @@
 /* tengine */
 extern crm_action_t *match_down_event(const char *target);
 extern crm_action_t *get_cancel_action(const char *id, const char *node);
-void confirm_cancel_action(crm_action_t *cancel);
+bool confirm_cancel_action(const char *id, const char *node_id);
 
 void controld_record_action_timeout(crm_action_t *action);
 extern gboolean fail_incompletable_actions(crm_graph_t * graph, const char *down_node);
 void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
-extern crm_action_t *get_action(int id, gboolean confirmed);
+crm_action_t *controld_get_action(int id);
 extern gboolean stop_te_timer(crm_action_timer_t * timer);
 extern const char *get_rsc_state(const char *task, enum op_status status);
 
@@ -59,7 +59,7 @@ extern crm_trigger_t *transition_trigger;
 extern char *failed_stop_offset;
 extern char *failed_start_offset;
 
-void te_action_confirmed(crm_action_t * action);
+void te_action_confirmed(crm_action_t *action, crm_graph_t *graph);
 void te_reset_job_counts(void);
 
 #endif

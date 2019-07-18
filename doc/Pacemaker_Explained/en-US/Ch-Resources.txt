@@ -334,6 +334,15 @@ indexterm:[Resource,Option,target-role]
  indexterm:[is-managed,Resource Option]
  indexterm:[Resource,Option,is-managed]
 
+|maintenance
+|FALSE
+|Similar to the +maintenance-mode+ <<s-cluster-options,cluster option>>, but for
+ a single resource. If true, the resource will not be started, stopped, or
+ monitored on any node. This differs from +is-managed+ in that monitors will
+ not be run. Allowed values: +true+, +false+
+ indexterm:[maintenance,Resource Option]
+ indexterm:[Resource,Option,maintenance]
+
 |resource-stickiness
 |1 for individual clone instances, 0 for all other resources
 |A score that will be added to the current node when a resource is already

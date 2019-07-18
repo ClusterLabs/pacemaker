@@ -1473,17 +1473,13 @@ process_lrmd_rsc_register(crm_client_t * client, uint32_t id, xmlNode * request)
         safe_str_eq(rsc->class, dup->class) &&
         safe_str_eq(rsc->provider, dup->provider) && safe_str_eq(rsc->type, dup->type)) {
 
-        crm_warn("Can't add, RSC '%s' already present in the rsc list (%d active resources)",
-                 rsc->rsc_id, g_hash_table_size(rsc_list));
-
+        crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
         return rc;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
-    crm_info("Added '%s' to the rsc list (%d active resources)",
-             rsc->rsc_id, g_hash_table_size(rsc_list));
-
+    crm_info("Cached agent information for '%s'", rsc->rsc_id);
     return rc;
 }
 
@@ -1501,8 +1497,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Resource '%s' not found (%d active resources)",
-                     rsc_id, g_hash_table_size(rsc_list));
+            crm_info("Agent information for '%s' not in cache", rsc_id);
             rc = -ENODEV;
         }
     }
@@ -1529,15 +1524,17 @@ process_lrmd_rsc_unregister(crm_client_t * client, uint32_t id, xmlNode * reques
         return -ENODEV;
     }
 
-    if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
+    rsc = g_hash_table_lookup(rsc_list, rsc_id);
+    if (rsc == NULL) {
+        crm_info("Ignoring unregistration of resource '%s', which is not registered",
+                 rsc_id);
         return pcmk_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation still in progress: %p", rsc->active);
+        crm_trace("Operation (0x%p) still in progress for unregistered resource %s",
+                  rsc->active, rsc_id);
         rc = -EINPROGRESS;
     }
 

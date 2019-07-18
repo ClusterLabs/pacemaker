@@ -580,7 +580,8 @@ main(int argc, char **argv, char **envp)
     }
 
     option = daemon_option("logfacility");
-    if(option && safe_str_neq(option, "none")) {
+    if (option && safe_str_neq(option, "none")
+        && safe_str_neq(option, "/dev/null")) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
