@@ -137,14 +137,24 @@ ClusterMon_stop() {
 }
 
 ClusterMon_monitor() {
+    local USERARG=""
+    local header
+    local pid
+
     if [ -f "$OCF_RESKEY_pidfile" ]; then
         pid=$(cat "$OCF_RESKEY_pidfile")
         if [ -n "$pid" ]; then
-            str=$(echo "su - \"$OCF_RESKEY_user\" -c \"$CMON_CMD\"" | tr 'crmon, \t' 'xxxxxxxx')
-            ps -o "args=${str}" -p $pid 2>/dev/null | \
+            if [ -n "$OCF_RESKEY_user" ]; then
+                USERARG="-u $OCF_RESKEY_user"
+            fi
+
+            # Use column header wide as command, to ensure it's shown in full
+            header=$(echo $CMON_CMD | tr 'crmon, \t' 'xxxxxxxx')
+
+            ps $USERARG -o "args=${header}" -p $pid 2>/dev/null | \
                 grep -qE "[c]rm_mon.*${OCF_RESKEY_pidfile}"
-            rc=$?
-            case $rc in
+
+            case $? in
                 0) exit $OCF_SUCCESS;;
                 1) exit $OCF_NOT_RUNNING;;
                 *) exit $OCF_ERR_GENERIC;;
