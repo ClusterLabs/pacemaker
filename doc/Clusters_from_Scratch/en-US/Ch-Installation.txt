@@ -466,6 +466,19 @@ pcmk-2: Authorized
 pcmk-1: Authorized
 ----
 
+.Note
+[NOTE]
+====
+In Fedora 29 and CentOS 8.0, the command has been changed to `pcs host auth`:
+----
+[root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
+Username: hacluster
+Password:
+pcmk-2: Authorized
+pcmk-1: Authorized
+----
+====
+
 Next, use `pcs cluster setup` on the same node to generate and synchronize the
 corosync configuration:
 ----
@@ -490,6 +503,36 @@ Restarting pcsd on the nodes in order to reload the certificates...
 pcmk-2: Success
 pcmk-1: Success
 ----
+
+.Note
+[NOTE]
+====
+In Fedora 29 and CentOS 8.0, the syntax has been changed and the +--name+ option
+has been dropped:
+----
+[root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
+No addresses specified for host 'pcmk-1', using 'pcmk-1'
+No addresses specified for host 'pcmk-2', using 'pcmk-2'
+Destroying cluster on hosts: 'pcmk-1', 'pcmk-2'...
+pcmk-1: Successfully destroyed cluster
+pcmk-2: Successfully destroyed cluster
+Requesting remove 'pcsd settings' from 'pcmk-1', 'pcmk-2'
+pcmk-1: successful removal of the file 'pcsd settings'
+pcmk-2: successful removal of the file 'pcsd settings'
+Sending 'corosync authkey', 'pacemaker authkey' to 'pcmk-1', 'pcmk-2'
+pcmk-2: successful distribution of the file 'corosync authkey'
+pcmk-2: successful distribution of the file 'pacemaker authkey'
+pcmk-1: successful distribution of the file 'corosync authkey'
+pcmk-1: successful distribution of the file 'pacemaker authkey'
+Synchronizing pcsd SSL certificates on nodes 'pcmk-1', 'pcmk-2'...
+pcmk-1: Success
+pcmk-2: Success
+Sending 'corosync.conf' to 'pcmk-1', 'pcmk-2'
+pcmk-2: successful distribution of the file 'corosync.conf'
+pcmk-1: successful distribution of the file 'corosync.conf'
+Cluster has been successfully set up.
+----
+====
 
 If you received an authorization error for either of those commands, make
 sure you configured the *hacluster* user account on each node
