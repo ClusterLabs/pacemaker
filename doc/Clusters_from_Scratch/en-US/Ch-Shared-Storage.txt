@@ -352,6 +352,29 @@ resource to allow the resource to run on both nodes at the same time.
      Stopped: [ pcmk-1 pcmk-2 ]
 ----
 
+.Note
+[NOTE]
+====
+In Fedora 29 and CentOS 8.0, 'master' resources have been renamed to
+'promotable clone' resources and the `pcs` command has been changed
+accordingly:
+----
+[root@pcmk-1 ~]# pcs -f drbd_cfg resource promotable WebData \
+         promoted-max=1 promoted-node-max=1 clone-max=2 clone-node-max=1 \
+         notify=true
+----
+The new command does not allow to set a custom name for the resulting
+promotable resource. `Pcs` automatically creates a name for the resource in
+the form of *pass:[<replaceable>resource_name</replaceable>]-clone*, that is
+*WebData-clone* in this case.
+
+To avoid confusion whether the +pcs resource show+ command displays resources'
+status or configuration, the command has been deprecated in Fedora 29 and
+CentOS 8.0. Two new commands have been introduced for displaying resources'
+status and configuration: `pcs resource status` and `pcs resource config`,
+respectively.
+====
+
 After you are satisfied with all the changes, you can commit
 them all at once by pushing the drbd_cfg file into the live CIB.
 
@@ -582,3 +605,10 @@ Daemon Status:
 
 Notice that *pcmk-1* is back to the *Online* state, and that the cluster resources
 stay where they are due to our resource stickiness settings configured earlier.
+
+.Note
+[NOTE]
+====
+Since Fedora 29 and CentOS 8.0, the commands for controlling standby mode are
+`pcs node standby` and `pcs node unstandby`.
+====
