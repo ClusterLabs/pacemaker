@@ -46,8 +46,8 @@ unresponsive node, without fencing.
 
 == Cluster Architecture ==
 
-At a high level, a cluster can viewed as having these parts (which together are
-often referred to as the 'cluster stack'):
+At a high level, a cluster can be viewed as having these parts (which together
+are often referred to as the 'cluster stack'):
 
  * *Resources:* These are the reason for the cluster's being -- the services
    that need to be kept highly available.
