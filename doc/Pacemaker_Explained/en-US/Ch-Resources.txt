@@ -186,7 +186,7 @@ indexterm:[Resource,STONITH]
 indexterm:[STONITH,Resources]
 
 The STONITH class is used exclusively for fencing-related resources.  This is
-discussed later in <<ch-stonith>>.
+discussed later in <<ch-fencing>>.
 
 === Nagios Plugins ===
 indexterm:[Resource,Nagios Plugins]
@@ -364,7 +364,7 @@ Allowed values:
   the configured nodes are active
 * +fencing:+ The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been <<ch-stonith,fenced>>
+  have been <<ch-fencing,fenced>>
 * +unfencing:+
   The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
