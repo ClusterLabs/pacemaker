@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -10,10 +12,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <controld_transition.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_throttle.h>
+#include <pacemaker-controld.h>
 
 gboolean
 stop_te_timer(crm_action_timer_t * timer)

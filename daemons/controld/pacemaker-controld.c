@@ -24,8 +24,6 @@
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
 
 #define OPTARGS	"hV"
 

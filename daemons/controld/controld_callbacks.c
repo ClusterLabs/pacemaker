@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -8,23 +10,15 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
-#include <crm/crm.h>
 #include <string.h>
-#include <controld_fsa.h>
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster.h>
 #include <crm/cib.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_fencing.h>
-#include <controld_transition.h>
-#include <controld_membership.h>
 
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);

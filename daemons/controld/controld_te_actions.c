@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -12,17 +14,11 @@
 #include <crm/cib.h>
 #include <crm/lrmd.h>               // lrmd_event_data_t, lrmd_free_event()
 #include <crm/msg_xml.h>
-
 #include <crm/common/xml.h>
-#include <pacemaker-internal.h>
-#include <controld_transition.h>
-
-#include <controld_fsa.h>
-#include <controld_lrm.h>
-#include <controld_fencing.h>
-#include <controld_messages.h>
 #include <crm/cluster.h>
-#include <controld_throttle.h>
+
+#include <pacemaker-internal.h>
+#include <pacemaker-controld.h>
 
 char *te_uuid = NULL;
 GHashTable *te_targets = NULL;

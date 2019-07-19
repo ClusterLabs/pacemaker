@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -13,9 +15,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_transition.h>
+#include <pacemaker-controld.h>
 
 char *max_epoch = NULL;
 char *max_generation_from = NULL;

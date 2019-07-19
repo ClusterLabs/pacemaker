@@ -1,5 +1,7 @@
 /*
- * Copyright 2017-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2017-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -14,7 +16,7 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 
-#include "controld_lrm.h"
+#include <pacemaker-controld.h>
 
 #if ENABLE_VERSIONED_ATTRS
 static regex_t *version_format_regex = NULL;

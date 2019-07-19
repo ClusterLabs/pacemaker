@@ -10,29 +10,17 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <crm/crm.h>
-
 #include <crm/msg_xml.h>
-
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_fencing.h>
-#include <controld_alerts.h>
-#include <controld_metadata.h>
-#include <controld_transition.h>
-#include <controld_throttle.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 qb_ipcs_service_t *ipcs = NULL;
 

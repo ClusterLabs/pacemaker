@@ -20,14 +20,9 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/election.h>
-
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_fsa.h>
-#include <controld_fencing.h>
-#include <controld_transition.h>
 #include <controld_matrix.h>
 
 char *fsa_our_dc = NULL;

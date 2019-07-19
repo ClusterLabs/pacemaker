@@ -10,6 +10,18 @@
 #ifndef CRMD__H
 #  define CRMD__H
 
+#include <controld_alerts.h>
+#include <controld_callbacks.h>
+#include <controld_fencing.h>
+#include <controld_fsa.h>
+#include <controld_lrm.h>
+#include <controld_membership.h>
+#include <controld_messages.h>
+#include <controld_metadata.h>
+#include <controld_throttle.h>
+#include <controld_transition.h>
+#include <controld_utils.h>
+
 extern GMainLoop *crmd_mainloop;
 extern bool no_quorum_suicide_escalation;
 

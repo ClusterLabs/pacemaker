@@ -18,8 +18,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>  /* register_fsa_error_adv */
 
 static mainloop_io_t *pe_subsystem = NULL;
 

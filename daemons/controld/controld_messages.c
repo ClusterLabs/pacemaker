@@ -10,24 +10,17 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
-#include <crm/crm.h>
 #include <string.h>
 #include <time.h>
-#include <controld_fsa.h>
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_lrm.h>
-#include <controld_fencing.h>
-#include <controld_transition.h>
-#include <controld_throttle.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);

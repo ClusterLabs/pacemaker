@@ -8,16 +8,13 @@
  */
 
 #include <crm_internal.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
 #include <crm/lrmd.h>
 #include <crm/services.h>
+
+#include <pacemaker-controld.h>
 
 #define REMOTE_LRMD_RA "remote"
 
