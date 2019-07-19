@@ -35,7 +35,7 @@
   - [Edit fail counts](#edit-fail-counts)
   - [Handling configuration elements by type](#handling-configuration-elements-by-type)
   - [Create a clone](#create-a-clone)
-  - [Create a master/slave clone](#create-a-masterslave-clone)
+  - [Create a promotable (master/slave) clone](#create-a-promotable-masterslave-clone)
 - [Other operations](#other-operations)
   - [Batch changes](#batch-changes)
   - [Template creation](#template-creation)
