@@ -13,6 +13,7 @@
 #include <stdbool.h>                    // bool
 #include <glib.h>                       // GList, GHashTable, gboolean, guint
 #include <crm/crm.h>                    // GListPtr
+#include <crm/lrmd.h>                   // lrmd_event_data_t
 #include <crm/cib.h>                    // cib_t
 #include <crm/pengine/pe_types.h>
 #include <crm/pengine/internal.h>
@@ -80,6 +81,11 @@ pe_action_t *pe_cancel_op(pe_resource_t *rsc, const char *name,
                           guint interval_ms, pe_node_t *node,
                           pe_working_set_t *data_set);
 pe_action_t *sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set);
+
+xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
+                                 const char *caller_version, int target_rc,
+                                 const char *node, const char *origin,
+                                 int level);
 
 #  define LOAD_STOPPED "load_stopped"
 

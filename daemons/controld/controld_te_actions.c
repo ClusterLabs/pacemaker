@@ -10,9 +10,11 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/lrmd.h>               // lrmd_event_data_t, lrmd_free_event()
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
+#include <pacemaker-internal.h>
 #include <controld_transition.h>
 
 #include <controld_fsa.h>
@@ -241,7 +243,8 @@ controld_record_action_timeout(crm_action_t *action)
     op->call_id = -1;
     op->user_data = generate_transition_key(transition_graph->id, action->id, target_rc, te_uuid);
 
-    xml_op = create_operation_update(rsc, op, CRM_FEATURE_SET, target_rc, target, __FUNCTION__, LOG_INFO);
+    xml_op = pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc,
+                                      target, __FUNCTION__, LOG_INFO);
     lrmd_free_event(op);
 
     crm_log_xml_trace(xml_op, "Action timeout");
