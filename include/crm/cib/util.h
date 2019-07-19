@@ -10,9 +10,9 @@
 #ifndef CIB_UTIL__H
 #  define CIB_UTIL__H
 
-#include <glib.h>           // gboolean
-#include <crm/cib.h>        // cib_t
-#include <libxml/tree.h>    // xmlNode
+#include <glib.h>               // gboolean
+#include <libxml/tree.h>        // xmlNode
+#include <crm/cib/cib_types.h>  // cib_t
 
 #ifdef __cplusplus
 extern "C" {
