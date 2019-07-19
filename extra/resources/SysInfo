@@ -157,6 +157,7 @@ UpdateStat() {
 }
 
 SysInfoStats() {
+    local DISK_STATUS="green"
 
     UpdateStat arch "`uname -m`"
     UpdateStat os "`uname -s`-`uname -r`"
@@ -241,15 +242,12 @@ SysInfoStats() {
 	    disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
 	    disk_free=`SysInfo_hdd_units $disk_free`
 	    UpdateStat ${disk_label}_free $disk_free
-	    if [ -n "$MIN_FREE" ]; then
-		if [ $disk_free -le $MIN_FREE ]; then
-		    UpdateStat "#health_disk" "red"
-		else
-		    UpdateStat "#health_disk" "green"
-		fi
+            if [ -n "$MIN_FREE" ] && [ $disk_free -le $MIN_FREE ]; then
+                DISK_STATUS="red"
 	    fi
 	fi
     done
+    UpdateStat "#health_disk" "$DISK_STATUS"
 }
 
 SysInfo_megabytes() {
