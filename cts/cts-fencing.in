@@ -20,6 +20,7 @@ import signal
 # Where to find test binaries
 # Prefer the source tree if available
 BUILD_DIR = "@abs_top_builddir@"
+SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
 TEST_DIR = sys.path[0]
 
 AUTOGEN_COROSYNC_TEMPLATE = """
@@ -108,11 +109,35 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-def pipe_output(pipes, stdout=True, stderr=False):
+def find_validator(rng_file):
+    if os.access("/usr/bin/xmllint", os.X_OK):
+        return ["xmllint", "--relaxng", rng_file, "-"]
+    else:
+        return None
+
+
+def rng_directory():
+    if "PCMK_schema_directory" in os.environ:
+        return os.environ["PCMK_schema_directory"]
+    elif os.path.exists("%s/cts-fencing.in" % TEST_DIR):
+        return "xml/api"
+    else:
+        return SCHEMA_DIR
+
+
+def pipe_communicate(pipes, stdout=True, stderr=False, stdin=None):
     """ Wrapper to get text output from pipes regardless of Python version """
 
     output = ""
-    pipe_outputs = pipes.communicate()
+
+    if stdin:
+        if sys.version_info < (3,):
+            pipe_outputs = pipes.communicate(input=stdin)
+        else:
+            pipe_outputs = pipes.communicate(input=stdin.encode())
+    else:
+        pipe_outputs = pipes.communicate()
+
     if sys.version_info < (3,):
         if stdout:
             output = output + pipe_outputs[0]
@@ -131,7 +156,7 @@ def output_from_command(command):
 
     test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     test.wait()
-    return pipe_output(test).split("\n")
+    return pipe_communicate(test).split("\n")
 
 
 def localname():
@@ -188,6 +213,16 @@ class OutputFoundError(TestError):
         return repr(self.output)
 
 
+class XmlValidationError(TestError):
+    """ Exception raised when xmllint fails """
+
+    def __init__(self, output):
+        self.output = output
+
+    def __str__(self):
+        return repr(self.output)
+
+
 class Test(object):
     """ Executor for a single test """
 
@@ -215,7 +250,7 @@ class Test(object):
 
         self.executed = 0
 
-    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None):
+    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None, validate=True):
         """ Add a command to be executed as part of this test """
 
         self.cmds.append(
@@ -227,6 +262,7 @@ class Test(object):
                 "stdout_match" : stdout_match,
                 "stdout_negative_match" : stdout_negative_match,
                 "no_wait" : no_wait,
+                "validate" : validate,
             }
         )
 
@@ -293,10 +329,10 @@ class Test(object):
 
         self.negative_stonith_patterns.append(pattern)
 
-    def add_cmd(self, cmd, args):
+    def add_cmd(self, cmd, args, validate=True):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, "")
+        self.__new_cmd(cmd, args, CrmExit.OK, "", validate=validate)
 
     def add_cmd_no_wait(self, cmd, args):
         """ Add a simple command to be executed (without waiting) as part of this test """
@@ -343,7 +379,7 @@ class Test(object):
         else:
             return CrmExit.OK
 
-        output = pipe_output(test, stderr=True)
+        output = pipe_communicate(test, stderr=True)
         if self.verbose:
             print(output)
 
@@ -355,6 +391,25 @@ class Test(object):
 
         if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
             raise OutputFoundError(output)
+
+        if args['validate']:
+            rng_file = rng_directory() + "/api-result.rng"
+
+            cmd = find_validator(rng_file)
+            if not cmd:
+                return
+
+            if self.verbose:
+                print("\nRunning: "+" ".join(cmd))
+
+            validator = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = pipe_communicate(validator, stderr=True, stdin=output)
+
+            if self.verbose:
+                print(output)
+
+            if validator.returncode != 0:
+                raise XmlValidationError(output)
 
 
     def count_negative_matches(self, outline):
@@ -560,10 +615,10 @@ class Tests(object):
             verbose_arg = "-V"
 
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
-        test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg), validate=False)
 
         test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
-        test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg), validate=False)
 
     def build_custom_timeout_tests(self):
         """ Register tests to verify custom timeout usage """
