@@ -25,6 +25,9 @@ static const char *cib_user = NULL;
 static const char *cib_action = NULL;
 static const char *obj_type = NULL;
 
+/* merely for pointer comparison with run-time set cib_action */
+static const char *cib_action_EMPTYCIB = "__emptycib__";
+
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
 static gboolean force_flag = FALSE;
@@ -177,6 +180,7 @@ main(int argc, char **argv)
     const char *source = NULL;
     const char *admin_input_xml = NULL;
     const char *admin_input_file = NULL;
+    const char *cib_action_old = cib_action;
     gboolean dangerous_cmd = FALSE;
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
@@ -313,19 +317,19 @@ main(int argc, char **argv)
                 crm_log_args(argc, argv);
                 break;
             case 'a':
-                output = createEmptyCib(1);
-                if (optind < argc) {
-                    crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
-                }
-                admin_input_xml = dump_xml_formatted(output);
-                fprintf(stdout, "%s\n", crm_str(admin_input_xml));
-                crm_exit(CRM_EX_OK);
+                cib_action = cib_action_EMPTYCIB;
                 break;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
                 ++argerr;
                 break;
         }
+        if (cib_action_old != NULL && cib_action != cib_action_old) {
+            printf("Combining multiple commands into one go not supported\n");
+            ++argerr;
+            break;
+        }
+        cib_action_old = cib_action;
     }
 
     while (bump_log_num > 0) {
@@ -378,7 +382,16 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_CONFIG);
     }
 
-    if (safe_str_eq(cib_action, "md5-sum")) {
+    if (cib_action == cib_action_EMPTYCIB  /* pointer comparison */) {
+        output = createEmptyCib(1);
+        if (optind < argc) {
+            crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
+        }
+        admin_input_xml = dump_xml_formatted(output);
+        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        crm_exit(CRM_EX_OK);
+
+    } else if (safe_str_eq(cib_action, "md5-sum")) {
         char *digest = NULL;
 
         if (input == NULL) {
