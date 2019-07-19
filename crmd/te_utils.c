@@ -235,11 +235,6 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 
 char *te_client_id = NULL;
 
-#ifdef HAVE_SYS_REBOOT_H
-#  include <unistd.h>
-#  include <sys/reboot.h>
-#endif
-
 static void
 tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
 
@@ -271,33 +266,19 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
 
     } else if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
+        /* We were notified of our own fencing. Most likely, either fencing was
+         * misconfigured, or fabric fencing that doesn't cut cluster
+         * communication is in use.
+         *
+         * Either way, shutting down the local host is a good idea, to require
+         * administrator intervention. Also, other nodes would otherwise likely
+         * set our status to lost because of the fencing callback and discard
+         * our subsequent election votes as "not part of our cluster".
+         */
         crm_crit("We were allegedly just fenced by %s for %s!",
-                 st_event->executioner ? st_event->executioner : "<anyone>", st_event->origin); /* Dumps blackbox if enabled */
-
-        qb_log_fini(); /* Try to get the above log message to disk - somehow */
-
-        /* Get out ASAP and do not come back up.
-         *
-         * Triggering a reboot is also not the worst idea either since
-         * the rest of the cluster thinks we're safely down
-         */
-
-#ifdef RB_HALT_SYSTEM
-        reboot(RB_HALT_SYSTEM);
-#endif
-
-        /*
-         * If reboot() fails or is not supported, coming back up will
-         * probably lead to a situation where the other nodes set our
-         * status to 'lost' because of the fencing callback and will
-         * discard subsequent election votes with:
-         *
-         * Election 87 (current: 5171, owner: 103): Processed vote from east-03 (Peer is not part of our cluster)
-         *
-         * So just stay dead, something is seriously messed up anyway.
-         *
-         */
-        exit(100); /* None of our wrappers since we already called qb_log_fini() */
+                 st_event->executioner? st_event->executioner : "the cluster",
+                 st_event->origin); /* Dumps blackbox if enabled */
+        pcmk_panic(__FUNCTION__);
         return;
     }
 
