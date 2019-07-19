@@ -90,17 +90,14 @@ crm_timer_popped(gpointer data)
 {
     fsa_timer_t *timer = (fsa_timer_t *) data;
 
-    if (timer == wait_timer
-        || timer == recheck_timer
-        || timer == transition_timer || timer == finalization_timer || timer == election_trigger) {
-        crm_info("%s (%s) just popped (%dms)",
-                 get_timer_desc(timer), fsa_input2string(timer->fsa_input), timer->period_ms);
-        timer->counter++;
-
-    } else {
+    if (timer->log_error) {
         crm_err("%s (%s) just popped in state %s! (%dms)",
                 get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                 fsa_state2string(fsa_state), timer->period_ms);
+    } else {
+        crm_info("%s (%s) just popped (%dms)",
+                 get_timer_desc(timer), fsa_input2string(timer->fsa_input), timer->period_ms);
+        timer->counter++;
     }
 
     if (timer == election_trigger && election_trigger->counter > 5) {
@@ -109,9 +106,7 @@ crm_timer_popped(gpointer data)
         election_trigger->counter = 0;
     }
 
-    if (timer->repeat == FALSE) {
-        crm_timer_stop(timer);  /* make it _not_ go off again */
-    }
+    crm_timer_stop(timer);  // Make timer _not_ go off again
 
     if (timer->fsa_input == I_INTEGRATED) {
         crm_info("Welcomed: %d, Integrated: %d",

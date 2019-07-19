@@ -440,15 +440,14 @@ enum crmd_fsa_cause {
     C_FSA_INTERNAL,
 };
 
-typedef struct fsa_timer_s fsa_timer_t;
-struct fsa_timer_s {
+typedef struct fsa_timer_s {
     guint source_id;            /* timer source id */
     int period_ms;              /* timer period */
     enum crmd_fsa_input fsa_input;
-     gboolean(*callback) (gpointer data);
-    gboolean repeat;
+    gboolean (*callback) (gpointer data);
+    bool log_error;
     int counter;
-};
+} fsa_timer_t;
 
 enum fsa_data_type {
     fsa_dt_none,
