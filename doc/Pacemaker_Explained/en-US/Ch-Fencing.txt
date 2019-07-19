@@ -5,7 +5,7 @@
 We prefer [[ch-stonith]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
-anchor:ch-stonith[Chapter 13, STONITH]
+anchor:ch-stonith[Chapter 6, STONITH]
 indexterm:[STONITH, Configuration]
 
 == What Is STONITH? ==
