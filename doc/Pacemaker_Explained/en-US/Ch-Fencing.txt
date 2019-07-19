@@ -1,76 +1,130 @@
 :compat-mode: legacy
-= STONITH =
+= Fencing =
 
 ////
-We prefer [[ch-stonith]], but older versions of asciidoc don't deal well
+We prefer [[ch-fencing]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
-anchor:ch-stonith[Chapter 6, STONITH]
+anchor:ch-fencing[Chapter 6, Fencing]
+indexterm:[Fencing, Configuration]
 indexterm:[STONITH, Configuration]
 
-== What Is STONITH? ==
+== What Is Fencing? ==
 
-STONITH (an acronym for "Shoot The Other Node In The Head"), also called
-'fencing', protects your data from being corrupted by rogue nodes or concurrent
-access.
+'Fencing' is the ability to make a node unable to run resources, even when that
+node is unresponsive to cluster commands.
 
-Just because a node is unresponsive, this doesn't mean it isn't
-accessing your data. The only way to be 100% sure that your data is
-safe, is to use STONITH so we can be certain that the node is truly
-offline, before allowing the data to be accessed from another node.
+Fencing is also known as 'STONITH', an acronym for "Shoot The Other Node In The
+Head", since the most common fencing method is cutting power to the node.
+Another method is "fabric fencing", cutting the node's access to some
+capability required to run resources (such as network access or a shared disk).
 
-STONITH also has a role to play in the event that a clustered service
-cannot be stopped. In this case, the cluster uses STONITH to force the
-whole node offline, thereby making it safe to start the service
-elsewhere.
+== Why Is Fencing Necessary? ==
 
-== What STONITH Device Should You Use? ==
+Fencing protects your data from being corrupted by malfunctioning nodes or
+unintentional concurrent access to shared resources.
 
-It is crucial that the STONITH device can allow the cluster to
-differentiate between a node failure and a network one.
+Fencing protects against the "split brain" failure scenario, where cluster
+nodes have lost the ability to reliably communicate with each other but are
+still able to run resources. If the cluster just assumed that uncommunicative
+nodes were down, then multiple instances of a resource could be started on
+different nodes.
 
-The biggest mistake people make in choosing a STONITH device is to
-use a remote power switch (such as many on-board IPMI controllers) that
-shares power with the node it controls. In such cases, the cluster
-cannot be sure if the node is really offline, or active and suffering
-from a network fault.
+The effect of split brain depends on the resource type. For example, an IP
+address brought up on two hosts on a network will cause packets to randomly be
+sent to one or the other host, rendering the IP useless. For a database or
+clustered file system, the effect could be much more severe, causing data
+corruption or divergence.
 
-Likewise, any device that relies on the machine being active (such as
-SSH-based "devices" used during testing) are inappropriate.
+Fencing also is used when a resource cannot otherwise be stopped. If a failed
+resource fails to stop, it cannot be recovered elsewhere. Fencing the
+resource's node is the only way to ensure the resource is recoverable.
 
-== Special Treatment of STONITH Resources ==
+Users may also configure the +on-fail+ property of any resource operation to
++fencing+, in which case the cluster will fence the resource's node if the
+operation fails.
 
-STONITH resources are somewhat special in Pacemaker.
+== Fence Devices ==
 
-STONITH may be initiated by pacemaker or by other parts of the cluster
-(such as resources like DRBD or DLM). To accommodate this, pacemaker
-does not require the STONITH resource to be in the 'started' state
-in order to be used, thus allowing reliable use of STONITH devices in such a
-case.
+A 'fence device' (or 'fencing device') is a special type of resource that
+provides the means to fence a node.
 
-All nodes have access to STONITH devices' definitions and instantiate them
-on-the-fly when needed, but preference is given to 'verified' instances, which
-are the ones that are 'started' according to the cluster's knowledge.
+Examples of fencing devices include intelligent power switches and IPMI devices
+that accept SNMP commands to cut power to a node, and iSCSI controllers that
+allow SCSI reservations to be used to cut a node's access to a shared disk.
 
-In the case of a cluster split, the partition with a verified instance
-will have a slight advantage, because the STONITH daemon in the other partition
-will have to hear from all its current peers before choosing a node to
-perform the fencing.
+Since fencing devices will be used to recover from loss of networking
+connectivity to other nodes, it is essential that they do not rely on the same
+network as the cluster itself, otherwise that network becomes a single point of
+failure.
 
-Fencing resources do work the same as regular resources in some respects:
+Since loss of a node due to power outage is indistinguishable from loss of
+network connectivity to that node, it is also essential that at least one fence
+device for a node does not share power with that node. For example, an on-board
+IPMI controller that shares power with its host should not be used as the sole
+fencing device for that host.
 
-* +target-role+ can be used to enable or disable the resource
-* Location constraints can be used to prevent a specific node from using the resource
+Since fencing is used to isolate malfunctioning nodes, no fence device should
+rely on its target functioning properly. This includes, for example, devices
+that ssh into a node and issue a shutdown command (such devices might be
+suitable for testing, but never for production).
 
-[IMPORTANT]
-===========
-Currently there is a limitation that fencing resources may only have
-one set of meta-attributes and one set of instance attributes.  This
-can be revisited if it becomes a significant limitation for people.
-===========
+== Fence Agents ==
 
-See the table below or run `man pacemaker-fenced` to see special instance attributes
-that may be set for any fencing resource, regardless of fence agent.
+A 'fence agent' (or 'fencing agent') is a +stonith+-class resource agent.
+
+The fence agent standard provides commands (such as +off+ and +reboot+) that
+the cluster can use to fence nodes. As with other resource agent classes,
+this allows a layer of abstraction so that Pacemaker doesn't need any knowledge
+about specific fencing technologies -- that knowledge is isolated in the agent.
+
+== When a Fence Device Can Be Used ==
+
+Fencing devices do not actually "run" like most services. Typically, they just
+provide an interface for sending commands to an external device.
+
+Additionally, fencing may be initiated by Pacemaker, by other cluster-aware software
+such as DRBD or DLM, or manually by an administrator, at any point in the
+cluster life cycle, including before any resources have been started.
+
+To accommodate this, Pacemaker does not require the fence device resource to be
+"started" in order to be used. Whether a fence device is started or not
+determines whether a node runs any recurring monitor for the device, and gives
+the node a slight preference for being chosen to execute fencing using that
+device.
+
+By default, any node can execute any fencing device. If a fence device is
+disabled by setting its +target-role+ to Stopped, then no node can use that
+device. If mandatory location constraints prevent a specific node from
+"running" a fence device, then that node will never be chosen to execute
+fencing using the device. A node may fence itself, but the cluster will choose
+that only if no other nodes can do the fencing.
+
+A common configuration scenario is to have one fence device per target node.
+In such a case, users often configure anti-location constraints so that
+the target node does not monitor its own device. The best practice is to make
+the constraint optional (i.e. a finite negative score rather than +-INFINITY+),
+so that the node can fence itself if no other nodes can.
+
+== Limitations of Fencing Resources ==
+
+Fencing resources have certain limitations that other resource classes don't:
+
+* They may have only one set of meta-attributes and one set of instance
+  attributes.
+* If <<ch-rules,rules>> are used to determine fencing resource options, these
+  may only be evaluated when first read, meaning that later changes to the
+  rules will have no effect. Therefore, it is better to avoid confusion and not
+  use rules at all with fencing resources.
+
+These limitations could be revisited if there is significant user demand.
+
+== Special Options for Fencing Resources ==
+
+The table below lists special instance attributes that may be set for any
+fencing resource ('not' meta-attributes, even though they are interpreted by
+pacemaker rather than the fence agent). These are also listed in the man page
+for +pacemaker-fenced+.
 
 .Additional Properties of Fencing Resources
 [width="95%",cols="8m,3,6,<12",options="header",align="center"]
@@ -145,7 +199,7 @@ indexterm:[Fencing,Property,pcmk_host_check]
 |pcmk_delay_max
 |time
 |0s
-|Enable a random delay of up to the time specified before executing stonith
+|Enable a random delay of up to the time specified before executing fencing
 actions. This is sometimes used in two-node clusters to ensure that the
 nodes don't fence each other at the same time. The overall delay introduced
 by pacemaker is derived from this random delay value adding a static delay so
@@ -157,7 +211,7 @@ indexterm:[Fencing,Property,pcmk_delay_max]
 |pcmk_delay_base
 |time
 |0s
-|Enable a static delay before executing stonith actions. This can be used
+|Enable a static delay before executing fencing actions. This can be used
  e.g. in two-node clusters to ensure that the nodes don't fence each other,
  by having separate fencing resources with different values. The node that is
  fenced with the shorter delay will lose a fencing race. The overall delay
@@ -346,32 +400,54 @@ to alter the number of times Pacemaker retries before giving up.
 [[s-unfencing]]
 == Unfencing ==
 
-Most fence devices cut the power to the target. By contrast, fence devices that
-perform 'fabric fencing' cut off a node's access to some critical resource,
-such as a shared disk or a network switch.
-
-With fabric fencing, it is expected that the cluster will fence the node, and
+With fabric fencing (such as cutting network or shared disk access rather than
+power), it is expected that the cluster will fence the node, and
 then a system administrator must manually investigate what went wrong, correct
 any issues found, then reboot (or restart the cluster services on) the node.
 
 Once the node reboots and rejoins the cluster, some fabric fencing devices
-require that an explicit command to restore the node's access to the critical
-resource. This capability is called 'unfencing' and is typically implemented
-as the fence agent's +on+ command.
+require an explicit command to restore the node's access. This capability is
+called 'unfencing' and is typically implemented as the fence agent's +on+
+command.
 
 If any cluster resource has +requires+ set to +unfencing+, then that resource
 will not be probed or started on a node until that node has been unfenced.
 
-== Configuring STONITH ==
+== Fence Devices Dependent on Other Resources ==
 
-[NOTE]
-===========
-Higher-level configuration shells include functionality to simplify the
-process below, particularly the step for deciding which parameters are
-required.  However since this document deals only with core
-components, you should refer to the STONITH chapter of the
-http://www.clusterlabs.org/doc/[Clusters from Scratch] guide for those details.
-===========
+In some cases, a fence device may require some other cluster resource (such as
+an IP address) to be active in order to function properly.
+
+This is obviously undesirable in general: fencing may be required when the
+depended-on resource is not active, or fencing may be required because the node
+running the depended-on resource is no longer responding.
+
+However, this may be acceptable under certain conditions:
+
+* The dependent fence device should not be able to target any node that is
+  allowed to run the depended-on resource.
+
+* The depended-on resource should not be disabled during production operation.
+
+* The +concurrent-fencing+ cluster property should be set to +true+. Otherwise,
+  if both the node running the depended-on resource and some node targeted by
+  the dependent fence device need to be fenced, the fencing of the node
+  running the depended-on resource might be ordered first, making the second
+  fencing impossible and blocking further recovery. With concurrent fencing,
+  the dependent fence device might fail at first due to the depended-on
+  resource being unavailable, but it will be retried and eventually succeed
+  once the resource is brought back up.
+
+Even under those conditions, there is one unlikely problem scenario. The DC
+always schedules fencing of itself after any other fencing needed, to avoid
+unnecessary repeated DC elections. If the dependent fence device targets the
+DC, and both the DC and a different node running the depended-on resource need
+to be fenced, the DC fencing will always fail and block further recovery. Note,
+however, that losing a DC node entirely causes some other node to become DC and
+schedule the fencing, so this is only a risk when a stop or other operation
+with +on-fail+ set to +fencing+ fails on the DC.
+
+== Configuring Fencing ==
 
 . Find the correct driver:
 +
@@ -422,13 +498,13 @@ http://www.clusterlabs.org/doc/[Clusters from Scratch] guide for those details.
 # stonith_admin --reboot nodename
 ----
 
-=== Example STONITH Configuration ===
+=== Example Fencing Configuration ===
 
-Assume we have an chassis containing four nodes and an IPMI device
+Assume we have a chassis containing four nodes and an IPMI device
 active on 192.0.2.1. We would choose the `fence_ipmilan` driver,
 and obtain the following list of parameters:
 
-.Obtaining a list of STONITH Parameters
+.Obtaining a list of Fence Agent Parameters
 ====
 ----
 # stonith_admin --metadata -a fence_ipmilan
@@ -547,10 +623,10 @@ and obtain the following list of parameters:
 ----
 ====
 
-Based on that, we would create a STONITH resource fragment that might look
+Based on that, we would create a fencing resource fragment that might look
 like this:
 
-.An IPMI-based STONITH Resource
+.An IPMI-based Fencing Resource
 ====
 [source,XML]
 ----
@@ -568,24 +644,21 @@ like this:
 ----
 ====
 
-Finally, we need to enable STONITH:
+Finally, we need to enable fencing:
 ----
 # crm_attribute -t crm_config -n stonith-enabled -v true
 ----
 
-== Advanced STONITH Configurations ==
+== Fencing Topologies ==
 
-Some people consider that having one fencing device is a single point
-of failure footnote:[Not true, since a node or resource must fail
-before fencing even has a chance to]; others prefer removing the node
-from the storage and network instead of turning it off.
+Pacemaker supports fencing nodes with multiple devices through a feature called
+'fencing topologies'. Fencing topologies may be used to provide alternative
+devices in case one fails, or to require multiple devices to all be executed
+successfully in order to consider the node successfully fenced, or even a
+combination of the two.
 
-Whatever the reason, Pacemaker supports fencing nodes with multiple
-devices through a feature called 'fencing topologies'.
-
-Simply create the individual devices as you normally would, then
-define one or more +fencing-level+ entries in the +fencing-topology+ section of
-the configuration.
+Create the individual devices as you normally would, then define one or more
++fencing-level+ entries in the +fencing-topology+ section of the configuration.
 
 * Each fencing level is attempted in order of ascending +index+. Allowed
   values are 1 through 9.
@@ -598,9 +671,11 @@ the configuration.
 
 Some possible uses of topologies include:
 
-* Try poison-pill and fail back to power
-* Try disk and network, and fall back to power if either fails
-* Initiate a kdump and then poweroff the node
+* Try on-board IPMI, then an intelligent power switch if that fails
+* Try fabric fencing of both disk and network, then fall back to power fencing
+  if either fails
+* Wait up to a certain time for a kernel dump to complete, then cut power to
+  the node
 
 .Properties of Fencing Levels
 [width="95%",cols="1m,<3",options="header",align="center"]
