@@ -105,6 +105,10 @@ void
 pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *formats) {
     pcmk__supported_format_t *entry = NULL;
 
+    if (formats == NULL) {
+        return;
+    }
+
     for (entry = formats; entry->name != NULL; entry++) {
         pcmk__register_format(context, entry->name, entry->create, entry->options);
     }

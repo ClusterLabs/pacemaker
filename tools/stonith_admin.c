@@ -219,6 +219,7 @@ static GOptionEntry addl_entries[] = {
 /* *INDENT-ON* */
 
 static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
@@ -440,14 +441,14 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             continue;
         }
 
-        out->message(out, "stonith-event", hp);
+        out->message(out, "stonith-event", hp, 1);
     }
 
     if (latest) {
         if (quiet && out->supports_quiet) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest);
+            out->message(out, "stonith-event", latest, 0);
         }
     }
 
@@ -481,8 +482,23 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
     GOptionGroup *defn_group, *query_group, *fence_group, *addl_group;
+    GOptionGroup *main_group;
 
-    context = pcmk__build_arg_context(args, "text (default), xml");
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Be less descriptive in output.",
+          NULL },
+
+        { NULL }
+    };
+
+    context = pcmk__build_arg_context(args, "text (default), html, xml");
+
+    /* Add the -q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    main_group = g_option_context_get_main_group(context);
+    g_option_group_add_entries(main_group, extra_prog_entries);
 
     defn_group = g_option_group_new("definition", "Device Definition Commands:",
                                     "Show device definition help", NULL, NULL);
@@ -532,6 +548,7 @@ main(int argc, char **argv)
 
     args->summary = strdup("stonith_admin - Access the Pacemaker fencing API");
     context = build_arg_context(args);
+    pcmk__register_formats(context, formats);
 
     crm_log_cli_init("stonith_admin");
 
@@ -550,8 +567,6 @@ main(int argc, char **argv)
     for (int i = 0; i < options.verbose; i++) {
         crm_bump_log_level(argc, argv);
     }
-
-    pcmk__register_formats(context, formats);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv_copy);
     if (rc != 0) {

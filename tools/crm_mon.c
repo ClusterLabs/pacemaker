@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
+#include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  /* crm_ends_with_ext */
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
@@ -38,7 +39,6 @@
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <../lib/pengine/unpack.h>
 #include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
 
@@ -2409,8 +2409,10 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
 
     switch (output_format) {
         case mon_output_plain:
-        case mon_output_console:
-            print_as("Last updated: %s", crm_now_string());
+        case mon_output_console: {
+            const char *now_str = crm_now_string(NULL);
+
+            print_as("Last updated: %s", now_str ? now_str : "Could not determine current time");
             print_as((user || client || origin)? "\n" : "\t\t");
             print_as("Last change: %s", last_written ? last_written : "");
             if (user) {
@@ -2424,10 +2426,14 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
             }
             print_as("\n");
             break;
+        }
 
         case mon_output_html:
-        case mon_output_cgi:
-            fprintf(stream, " <b>Last updated:</b> %s<br/>\n", crm_now_string());
+        case mon_output_cgi: {
+            const char *now_str = crm_now_string(NULL);
+
+            fprintf(stream, " <b>Last updated:</b> %s<br/>\n",
+                    now_str ? now_str : "Could not determine current time");
             fprintf(stream, " <b>Last change:</b> %s", last_written ? last_written : "");
             if (user) {
                 fprintf(stream, " by %s", user);
@@ -2440,13 +2446,18 @@ print_cluster_times(FILE *stream, pe_working_set_t *data_set)
             }
             fprintf(stream, "<br/>\n");
             break;
+        }
 
-        case mon_output_xml:
-            fprintf(stream, "        <last_update time=\"%s\" />\n", crm_now_string());
+        case mon_output_xml: {
+            const char *now_str = crm_now_string(NULL);
+
+            fprintf(stream, "        <last_update time=\"%s\" />\n",
+                    now_str ? now_str : "Could not determine current time");
             fprintf(stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
                     last_written ? last_written : "", user ? user : "",
                     client ? client : "", origin ? origin : "");
             break;
+        }
 
         default:
             break;

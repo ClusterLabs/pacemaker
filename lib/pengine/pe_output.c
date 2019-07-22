@@ -144,12 +144,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 
 void
 pe__register_messages(pcmk__output_t *out) {
-    static bool registered = FALSE;
-
-    if (!registered) {
-        pcmk__register_messages(out, fmt_functions);
-        registered = TRUE;
-    }
+    pcmk__register_messages(out, fmt_functions);
 }
 
 void

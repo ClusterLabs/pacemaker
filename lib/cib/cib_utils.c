@@ -443,10 +443,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      */
 
     if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
-        const char *now_str = crm_now_string();
+        const char *now_str = crm_now_string(NULL);
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN, now_str);
+        crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN,
+                        now_str ? now_str : "Could not determine current time");
 
         if (schema) {
             static int minimum_schema = 0;

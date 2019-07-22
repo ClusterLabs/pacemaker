@@ -31,56 +31,6 @@ extern gboolean add_node_attrs(xmlNode * attrs, node_t * node, gboolean overwrit
 extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
                                         pe_working_set_t * data_set);
 
-/*
- * The man pages for both curses and ncurses suggest inclusion of "curses.h".
- * We believe the following to be acceptable and portable.
- */
-
-#  if defined(HAVE_LIBNCURSES) || defined(HAVE_LIBCURSES)
-#    if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#      include <ncurses.h>
-#      define CURSES_ENABLED 1
-#    elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#      include <ncurses/ncurses.h>
-#      define CURSES_ENABLED 1
-#    elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#      include <curses.h>
-#      define CURSES_ENABLED 1
-#    elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#      include <curses/curses.h>
-#      define CURSES_ENABLED 1
-#    else
-#      define CURSES_ENABLED 0
-#    endif
-#  else
-#    define CURSES_ENABLED 0
-#  endif
-
-#  if CURSES_ENABLED
-#    define status_printw(fmt, args...) printw(fmt, ##args)
-#  else
-#    define status_printw(fmt, args...) \
-	crm_err("printw support requires ncurses to be available during configure"); \
-	do_crm_log(LOG_WARNING, fmt, ##args);
-#  endif
-
-#  define status_print(fmt, args...)			\
-	if(options & pe_print_html) {			\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_ncurses) {		\
-		status_printw(fmt, ##args);		\
-	} else if(options & pe_print_printf) {		\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_xml) {		\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_log) {		\
-		int log_level = *(int*)print_data;	\
-		do_crm_log(log_level, fmt, ##args);	\
-	}
-
 // Some warnings we don't want to print every transition
 
 enum pe_warn_once_e {
