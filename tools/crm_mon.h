@@ -93,13 +93,18 @@ typedef enum mon_output_format_e {
 
 #define mon_op_default              (mon_op_print_pending)
 
-void print_status(mon_output_format_t output_format, pe_working_set_t *data_set,
+typedef struct {
+    FILE *stream;
+    mon_output_format_t output_format;
+} mon_state_t;
+
+void print_status(mon_state_t *state, pe_working_set_t *data_set,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
                   unsigned int show, const char *prefix);
-void print_xml_status(mon_output_format_t output_format, pe_working_set_t *data_set,
+void print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
                       unsigned int show, const char *prefix);
-int print_html_status(mon_output_format_t output_format, pe_working_set_t *data_set,
+int print_html_status(mon_state_t *state, pe_working_set_t *data_set,
                       const char *filename, stonith_history_t *stonith_history,
                       unsigned int mon_ops, unsigned int show, const char *prefix,
                       unsigned int reconnect_msec);

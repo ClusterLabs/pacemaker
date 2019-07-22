@@ -1540,6 +1540,11 @@ mon_refresh_display(gpointer user_data)
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
 
+    /* stdout for everything except the HTML case, which does a bunch of file
+     * renaming.  We'll handle changing stream in print_html_status.
+     */
+    mon_state_t state = { .stream = stdout, .output_format = output_format };
+
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
@@ -1599,7 +1604,7 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(output_format, mon_data_set, output_filename,
+            if (print_html_status(&state, mon_data_set, output_filename,
                                   stonith_history, options.mon_ops, show,
                                   print_neg_location_prefix, options.reconnect_msec) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
@@ -1609,8 +1614,8 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_xml:
-            print_xml_status(output_format, mon_data_set, stonith_history, options.mon_ops,
-                             show, print_neg_location_prefix);
+            print_xml_status(&state, mon_data_set, stonith_history,
+                             options.mon_ops, show, print_neg_location_prefix);
             break;
 
         case mon_output_monitor:
@@ -1623,7 +1628,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_plain:
         case mon_output_console:
-            print_status(output_format ,mon_data_set, stonith_history, options.mon_ops,
+            print_status(&state, mon_data_set, stonith_history, options.mon_ops,
                          show, print_neg_location_prefix);
             break;
 
