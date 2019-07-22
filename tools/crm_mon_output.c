@@ -396,6 +396,27 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
+
+static int
+ticket_console(pcmk__output_t *out, va_list args) {
+    ticket_t *ticket = va_arg(args, ticket_t *);
+
+    if (ticket->last_granted > -1) {
+        char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+        out->list_item(out, ticket->id, "\t%s%s %s",
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "",
+                       time);
+        free(time);
+    } else {
+        out->list_item(out, ticket->id, "\t%s%s",
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "");
+    }
+
+    return 0;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-counts", "console", cluster_counts_text },
     { "cluster-counts", "html", cluster_counts_html },
@@ -417,6 +438,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "html", cluster_times_html },
     { "cluster-times", "text", cluster_times_text },
     { "cluster-times", "xml", cluster_times_xml },
+    { "ticket", "console", ticket_console },
 
     { NULL, NULL, NULL }
 };

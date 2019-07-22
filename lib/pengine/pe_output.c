@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/iso8601_internal.h>
 #include <crm/pengine/internal.h>
 
 int
@@ -122,6 +123,65 @@ pe__group_text(pcmk__output_t *out, va_list args)
     return 0;
 }
 
+static int
+pe__ticket_html(pcmk__output_t *out, va_list args) {
+    ticket_t *ticket = va_arg(args, ticket_t *);
+
+    if (ticket->last_granted > -1) {
+        char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+        out->list_item(out, NULL, "%s:\t%s%s %s", ticket->id,
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "",
+                       time);
+        free(time);
+    } else {
+        out->list_item(out, NULL, "%s:\t%s%s", ticket->id,
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "");
+    }
+
+    return 0;
+}
+
+static int
+pe__ticket_text(pcmk__output_t *out, va_list args) {
+    ticket_t *ticket = va_arg(args, ticket_t *);
+
+    if (ticket->last_granted > -1) {
+        char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+        out->list_item(out, ticket->id, "\t%s%s %s",
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "",
+                       time);
+        free(time);
+    } else {
+        out->list_item(out, ticket->id, "\t%s%s",
+                       ticket->granted ? "granted" : "revoked",
+                       ticket->standby ? " [standby]" : "");
+    }
+
+    return 0;
+}
+
+static int
+pe__ticket_xml(pcmk__output_t *out, va_list args) {
+    xmlNodePtr node = NULL;
+
+    ticket_t *ticket = va_arg(args, ticket_t *);
+
+    node = pcmk__output_create_xml_node(out, "ticket");
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) ticket->id);
+    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) (ticket->granted ? "granted" : "revoked"));
+    xmlSetProp(node, (pcmkXmlStr) "standby", (pcmkXmlStr) (ticket->standby ? "true" : "false"));
+
+    if (ticket->last_granted > -1) {
+        xmlSetProp(node, (pcmkXmlStr) "last-granted",
+                   (pcmkXmlStr) crm_now_string(&ticket->last_granted));
+    }
+
+    return 0;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
@@ -135,6 +195,9 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "xml",  pe__resource_xml },
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
+    { "ticket", "html", pe__ticket_html },
+    { "ticket", "text", pe__ticket_text },
+    { "ticket", "xml", pe__ticket_xml },
 
     { NULL, NULL, NULL }
 };
