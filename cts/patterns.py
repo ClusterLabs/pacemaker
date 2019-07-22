@@ -65,9 +65,11 @@ class BasePatterns(object):
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"schedulerd.*: Recover %s",
+            "Pat:Fencing_start"   : r"(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
+            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover %s",
+            "Pat:Fencing_active"  : r"pacemaker-schedulerd.*: Resource %s is active on .* nodes",
+            "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
@@ -227,6 +229,12 @@ class crm_corosync(BasePatterns):
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit: Fencing daemon connection failed",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
             ]
 
         self.components["corosync"] = [
@@ -260,6 +268,12 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
         self.components["pacemaker-execd"] = [
@@ -273,7 +287,9 @@ class crm_corosync(BasePatterns):
             r"pacemakerd.*Respawning failed child process: pacemaker-execd",
             r"pacemakerd.*Respawning failed child process: pacemaker-controld",
         ]
-        self.components["pacemaker-execd-ignore"] = []
+        self.components["pacemaker-execd-ignore"] = [
+            r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+        ]
 
         self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
@@ -311,6 +327,12 @@ class crm_corosync(BasePatterns):
             r"error:.*Fencer connection failed \(will retry\)",
             r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 

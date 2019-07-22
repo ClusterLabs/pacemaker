@@ -10,29 +10,17 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <crm/crm.h>
-
 #include <crm/msg_xml.h>
-
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_fencing.h>
-#include <controld_alerts.h>
-#include <controld_metadata.h>
-#include <controld_transition.h>
-#include <controld_throttle.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 qb_ipcs_service_t *ipcs = NULL;
 
@@ -392,7 +380,7 @@ do_startup(long long action,
         election_trigger->period_ms = -1;
         election_trigger->fsa_input = I_DC_TIMEOUT;
         election_trigger->callback = crm_timer_popped;
-        election_trigger->repeat = FALSE;
+        election_trigger->log_error = FALSE;
     } else {
         was_error = TRUE;
     }
@@ -402,7 +390,7 @@ do_startup(long long action,
         transition_timer->period_ms = -1;
         transition_timer->fsa_input = I_PE_CALC;
         transition_timer->callback = crm_timer_popped;
-        transition_timer->repeat = FALSE;
+        transition_timer->log_error = FALSE;
     } else {
         was_error = TRUE;
     }
@@ -412,7 +400,7 @@ do_startup(long long action,
         integration_timer->period_ms = -1;
         integration_timer->fsa_input = I_INTEGRATED;
         integration_timer->callback = crm_timer_popped;
-        integration_timer->repeat = FALSE;
+        integration_timer->log_error = TRUE;
     } else {
         was_error = TRUE;
     }
@@ -422,7 +410,7 @@ do_startup(long long action,
         finalization_timer->period_ms = -1;
         finalization_timer->fsa_input = I_FINALIZED;
         finalization_timer->callback = crm_timer_popped;
-        finalization_timer->repeat = FALSE;
+        finalization_timer->log_error = FALSE;
         /* for possible enabling... a bug in the join protocol left
          *    a slave in S_PENDING while we think it's in S_NOT_DC
          *
@@ -446,7 +434,7 @@ do_startup(long long action,
         shutdown_escalation_timer->period_ms = -1;
         shutdown_escalation_timer->fsa_input = I_STOP;
         shutdown_escalation_timer->callback = crm_timer_popped;
-        shutdown_escalation_timer->repeat = FALSE;
+        shutdown_escalation_timer->log_error = TRUE;
     } else {
         was_error = TRUE;
     }
@@ -456,7 +444,7 @@ do_startup(long long action,
         wait_timer->period_ms = 2000;
         wait_timer->fsa_input = I_NULL;
         wait_timer->callback = crm_timer_popped;
-        wait_timer->repeat = FALSE;
+        wait_timer->log_error = FALSE;
     } else {
         was_error = TRUE;
     }
@@ -466,7 +454,7 @@ do_startup(long long action,
         recheck_timer->period_ms = -1;
         recheck_timer->fsa_input = I_PE_CALC;
         recheck_timer->callback = crm_timer_popped;
-        recheck_timer->repeat = FALSE;
+        recheck_timer->log_error = FALSE;
     } else {
         was_error = TRUE;
     }

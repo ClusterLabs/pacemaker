@@ -13,11 +13,9 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-
 #include <crm/common/xml.h>
-#include <controld_transition.h>
 
-#include <controld_fsa.h>
+#include <pacemaker-controld.h>
 
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;

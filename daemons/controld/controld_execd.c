@@ -9,23 +9,20 @@
 
 #include <crm_internal.h>
 
+#include <regex.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <regex.h>
 #include <crm/pengine/rules.h>
+
+#include <pacemaker-internal.h>
+#include <pacemaker-controld.h>
 
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
@@ -679,7 +676,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     }
 
     crm_trace("Building %s operation update with originator version: %s", op->rsc_id, caller_version);
-    xml_op = create_operation_update(parent, op, caller_version, target_rc, fsa_our_uname, src, LOG_DEBUG);
+    xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
+                                      fsa_our_uname, src, LOG_DEBUG);
     if (xml_op == NULL) {
         return TRUE;
     }

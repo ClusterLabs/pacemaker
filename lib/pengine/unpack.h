@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -24,9 +26,6 @@ extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 extern gboolean unpack_lrm_resources(node_t * node, xmlNode * lrm_state,
                                      pe_working_set_t * data_set);
-
-extern gboolean add_node_attrs(xmlNode * attrs, node_t * node, gboolean overwrite,
-                               pe_working_set_t * data_set);
 
 extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
                                         pe_working_set_t * data_set);

@@ -1,6 +1,8 @@
 /*
  * Copyright 2004-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -12,16 +14,11 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/crm.h>
+
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_fencing.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_transition.h>
 
 static election_t *fsa_election = NULL;
 
@@ -49,12 +46,6 @@ controld_remove_voter(const char *uname)
          */
         election_clear_dampening(fsa_election);
     }
-}
-
-void
-controld_stop_election_timeout()
-{
-    election_timeout_stop(fsa_election);
 }
 
 void

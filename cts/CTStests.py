@@ -1383,14 +1383,18 @@ class ComponentFail(CTSTest):
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
 
-        if chosen.name == "pacemaker-fenced":
-            # Ignore actions for STONITH resources
+        # @TODO this should be a flag in the Component
+        if chosen.name in [ "corosync", "pacemaker-based", "pacemaker-fenced" ]:
+            # Ignore actions for fence devices if fencer will respawn
+            # (their registration will be lost, and probes will fail)
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
+                        self.okerrpatterns.append(self.templates["Pat:Fencing_active"] % r.id)
+                        self.okerrpatterns.append(self.templates["Pat:Fencing_probe"] % r.id)
 
         # supply a copy so self.patterns doesn't end up empty
         tmpPats = []
@@ -3066,8 +3070,6 @@ class RemoteStonithd(RemoteDriver):
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
-            r"Calculated [Tt]ransition .*pe-error",
-            r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
             r"error: Result of monitor operation for .* on remote-.*: No executor connection",
         ]
 

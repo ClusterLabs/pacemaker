@@ -11,17 +11,12 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
-
-#include <pacemaker-internal.h>
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_alerts.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_alerts_internal.h>
+
+#include <pacemaker-internal.h>
+#include <pacemaker-controld.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;

@@ -17,6 +17,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_free_event()
 #include <crm/cib.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
@@ -157,8 +158,9 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
 static xmlNode *
 inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc,
-                                   NULL, crm_system_name, LOG_TRACE);
+    return pcmk__create_history_xml(cib_resource, op, CRM_FEATURE_SET,
+                                    target_rc, NULL, crm_system_name,
+                                    LOG_TRACE);
 }
 
 static xmlNode *

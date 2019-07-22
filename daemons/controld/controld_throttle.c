@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -18,9 +20,7 @@
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>
 
-#include <controld_fsa.h>
-#include <controld_throttle.h>
-
+#include <pacemaker-controld.h>
 
 enum throttle_state_e {
     throttle_extreme = 0x1000,

@@ -14,12 +14,9 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
-
-#include <controld_transition.h>
-#include <controld_fsa.h>
-#include <controld_fencing.h>
-
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */
+
+#include <pacemaker-controld.h>
 
 void te_update_confirm(const char *event, xmlNode * msg);
 

@@ -38,6 +38,9 @@ CRM_TRACE_INIT_DATA(pe_status);
 gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
+static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
+                           pe_working_set_t *data_set);
+
 
 // Bitmask for warnings we only want to print once
 uint32_t pe_wo = 0;
@@ -3434,8 +3437,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     return TRUE;
 }
 
-gboolean
-add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
+static void
+add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
+               pe_working_set_t *data_set)
 {
     const char *cluster_name = NULL;
 
@@ -3478,7 +3482,6 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
                                 strdup(cluster_name));
         }
     }
-    return TRUE;
 }
 
 static GListPtr

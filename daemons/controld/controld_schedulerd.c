@@ -18,8 +18,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>  /* register_fsa_error_adv */
 
 static mainloop_io_t *pe_subsystem = NULL;
 
@@ -30,12 +28,12 @@ static mainloop_io_t *pe_subsystem = NULL;
 void
 pe_subsystem_free(void)
 {
-    // If we aren't connected to the scheduler, we can't expect a reply
-    controld_expect_sched_reply(NULL);
-
+    clear_bit(fsa_input_register, R_PE_REQUIRED);
     if (pe_subsystem) {
+        controld_expect_sched_reply(NULL);
         mainloop_del_ipc_client(pe_subsystem);
         pe_subsystem = NULL;
+        clear_bit(fsa_input_register, R_PE_CONNECTED);
     }
 }
 
@@ -83,6 +81,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 static void
 pe_ipc_destroy(gpointer user_data)
 {
+    // If we aren't connected to the scheduler, we can't expect a reply
+    controld_expect_sched_reply(NULL);
+
     if (is_set(fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
@@ -137,7 +138,7 @@ pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
 /*!
  * \internal
- * \brief Make new connection to PE
+ * \brief Make new connection to scheduler
  *
  * \return TRUE on success, FALSE otherwise
  */
@@ -149,11 +150,16 @@ pe_subsystem_new()
         .destroy = pe_ipc_destroy
     };
 
+    set_bit(fsa_input_register, R_PE_REQUIRED);
     pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
                                            G_PRIORITY_DEFAULT,
                                            5 * 1024 * 1024 /* 5MB */,
                                            NULL, &pe_callbacks);
-    return (pe_subsystem != NULL);
+    if (pe_subsystem == NULL) {
+        return FALSE;
+    }
+    set_bit(fsa_input_register, R_PE_CONNECTED);
+    return TRUE;
 }
 
 /*!
@@ -192,22 +198,17 @@ do_pe_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_PE_STOP) {
-        clear_bit(fsa_input_register, R_PE_REQUIRED);
         pe_subsystem_free();
-        clear_bit(fsa_input_register, R_PE_CONNECTED);
     }
+    if ((action & A_PE_START)
+        && (is_not_set(fsa_input_register, R_PE_CONNECTED))) {
 
-    if ((action & A_PE_START) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
-        if (cur_state != S_STOPPING) {
-            set_bit(fsa_input_register, R_PE_REQUIRED);
-            if (pe_subsystem_new()) {
-                set_bit(fsa_input_register, R_PE_CONNECTED);
-            } else {
-                crm_warn("Could not connect to scheduler");
-                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-            }
-        } else {
+        if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
+
+        } else if (!pe_subsystem_new()) {
+            crm_warn("Could not connect to scheduler");
+            register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
 }

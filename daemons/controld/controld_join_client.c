@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,8 +14,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <controld_fsa.h>
-#include <controld_messages.h>
+#include <pacemaker-controld.h>
 
 int reannounce_count = 0;
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
