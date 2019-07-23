@@ -932,6 +932,14 @@ pe_cluster_option crmd_opts[] = {
         },
 	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
+    { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
+        "How a cluster node should react if notified of its own fencing",
+        "A cluster node may receive notification of its own fencing if fencing "
+        "is misconfigured, or if fabric fencing is in use that doesn't cut "
+        "cluster communication. Allowed values are \"stop\" to attempt to "
+        "immediately stop pacemaker and stay stopped, or \"panic\" to attempt "
+        "to immediately reboot the local node, falling back to stop on failure."
+    },
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
@@ -1052,6 +1060,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
+
+    set_fence_reaction(crmd_pref(config_hash, XML_CONFIG_ATTR_FENCE_REACTION));
 
     value = crmd_pref(config_hash,"stonith-max-attempts");
     update_stonith_max_attempts(value);

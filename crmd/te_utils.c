@@ -35,6 +35,7 @@ crm_trigger_t *stonith_reconnect = NULL;
 static crm_trigger_t *stonith_history_sync_trigger = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
+static bool fence_reaction_panic = FALSE;
 
 void
 te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
@@ -51,6 +52,21 @@ te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
 
     if (st) {
         st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY_SYNCED);
+    }
+}
+
+void
+set_fence_reaction(const char *reaction_s)
+{
+    if (safe_str_eq(reaction_s, "panic")) {
+        fence_reaction_panic = TRUE;
+
+    } else {
+        if (safe_str_neq(reaction_s, "stop")) {
+            crm_warn("Invalid value '%s' for %s, using 'stop'",
+                     reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
+        }
+        fence_reaction_panic = FALSE;
     }
 }
 
@@ -278,7 +294,11 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         crm_crit("We were allegedly just fenced by %s for %s!",
                  st_event->executioner? st_event->executioner : "the cluster",
                  st_event->origin); /* Dumps blackbox if enabled */
-        pcmk_panic(__FUNCTION__);
+        if (fence_reaction_panic) {
+            pcmk_panic(__FUNCTION__);
+        } else {
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
         return;
     }
 

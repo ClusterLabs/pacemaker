@@ -32,6 +32,9 @@ void remove_stonith_cleanup(const char *target);
 void purge_stonith_cleanup(void);
 void execute_stonith_cleanup(void);
 
+// reaction to notification of local node being fenced
+void set_fence_reaction(const char *reaction_s);
+
 /* tengine */
 extern crm_action_t *match_down_event(const char *target, bool quiet);
 extern crm_action_t *get_cancel_action(const char *id, const char *node);
