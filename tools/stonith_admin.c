@@ -154,7 +154,7 @@ static GOptionEntry fence_entries[] = {
       "Reboot named host. Optional: --timeout, --tolerance.",
       "HOST" },
     { "confirm", 'C', 0, G_OPTION_ARG_STRING, &options.confirm_host,
-      "Tell clusted that named host is now safely down.",
+      "Tell cluster that named host is now safely down.",
       "HOST", },
 
     { NULL }

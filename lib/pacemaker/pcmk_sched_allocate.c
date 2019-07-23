@@ -1530,13 +1530,11 @@ stage6(pe_working_set_t * data_set)
     GListPtr stonith_ops = NULL;
     GList *shutdown_ops = NULL;
 
-    /* Remote ordering constraints need to happen prior to calculate
-     * fencing because it is one more place we will mark the node as
-     * dirty.
+    /* Remote ordering constraints need to happen prior to calculating fencing
+     * because it is one more place we will mark the node as dirty.
      *
-     * A nice side-effect of doing it first is that we can remove a
-     * bunch of special logic from apply_*_ordering() because its
-     * already part of pe_fence_node()
+     * A nice side effect of doing them early is that apply_*_ordering() can be
+     * simpler because pe_fence_node() has already done some of the work.
      */
     crm_trace("Creating remote ordering constraints");
     apply_remote_node_ordering(data_set);
