@@ -29,6 +29,7 @@ struct st_fail_rec {
     int count;
 };
 
+static bool fence_reaction_panic = FALSE;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
@@ -39,6 +40,21 @@ update_stonith_max_attempts(const char *value)
        stonith_max_attempts = CRM_SCORE_INFINITY;
     } else {
        stonith_max_attempts = crm_int_helper(value, NULL);
+    }
+}
+
+void
+set_fence_reaction(const char *reaction_s)
+{
+    if (safe_str_eq(reaction_s, "panic")) {
+        fence_reaction_panic = TRUE;
+
+    } else {
+        if (safe_str_neq(reaction_s, "stop")) {
+            crm_warn("Invalid value '%s' for %s, using 'stop'",
+                     reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
+        }
+        fence_reaction_panic = FALSE;
     }
 }
 
@@ -464,7 +480,11 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
         crm_crit("We were allegedly just fenced by %s for %s!",
                  st_event->executioner? st_event->executioner : "the cluster",
                  st_event->origin); /* Dumps blackbox if enabled */
-        pcmk_panic(__FUNCTION__);
+        if (fence_reaction_panic) {
+            pcmk_panic(__FUNCTION__);
+        } else {
+            crm_exit(CRM_EX_FATAL);
+        }
         return;
     }
 

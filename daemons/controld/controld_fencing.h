@@ -13,6 +13,9 @@
 #include <stdbool.h>                // bool
 #include <pacemaker-internal.h>     // crm_graph_t, crm_action_t
 
+// reaction to notification of local node being fenced
+void set_fence_reaction(const char *reaction_s);
+
 // stonith fail counts
 void st_fail_count_reset(const char * target);
 void update_stonith_max_attempts(const char* value);
