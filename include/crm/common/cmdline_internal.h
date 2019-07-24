@@ -24,10 +24,24 @@ typedef struct {
     unsigned int verbosity;
 
     char *output_ty;
-    char *output_ty_desc;
     char *output_dest;
 } pcmk__common_args_t;
 
+/*!
+ * \internal
+ * \brief Create and return a GOptionContext containing the command line options
+ *        supported by all tools.
+ *
+ * \note Formatted output options will be added unless fmts is NULL.  This allows
+ *       for using this function in tools that have not yet been converted to
+ *       formatted output.  It should not be NULL in any tool that calls
+ *       pcmk__register_formats() as that function adds its own command line
+ *       options.
+ *
+ * \param[in,out] common_args A ::pcmk__common_args_t structure where the
+ *                            results of handling command options will be written.
+ * \param[in]     fmts        The help string for which formats are supported.
+ */
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts);
 
