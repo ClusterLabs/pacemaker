@@ -104,7 +104,7 @@ rpmbuild-with = \
 	eval "$${CMD}"
 
 init:
-	./autogen.sh init
+	./autogen.sh
 
 export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
