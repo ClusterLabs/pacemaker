@@ -633,6 +633,13 @@ static pe_cluster_option crmd_opts[] = {
 	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
           "The messaging stack on which Pacemaker is currently running.",
           "Used for informational and diagnostic purposes." },
+    { "cluster-name", NULL, "string", NULL, NULL, NULL,
+        "An arbitrary name for the cluster",
+        "This optional value is mostly for users' convenience as desired "
+        "in administration, but may also be used in Pacemaker configuration "
+        "rules via the #cluster-name node attribute, and by higher-level tools "
+        "and resource agents."
+    },
 	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "20s", &check_time,
           "How long to wait for a response from other nodes during startup.",
           "The \"correct\" value will depend on the speed/load of your network and the type of switches used."
