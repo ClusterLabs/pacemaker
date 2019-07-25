@@ -224,9 +224,9 @@ class crm_cs_v0(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
-            r"\[[0-9]+\] terminated with signal [0-9]+ \(",
+            r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
             r"Child process .* terminated with signal",
-            r"pengine:.*Recover .*\(.* -\> .*\)",
+            r"pengine.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -435,7 +435,8 @@ class crm_mcp(crm_cs_v0):
             "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated with signal 9",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
@@ -484,7 +485,8 @@ class crm_cman(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated with signal 9",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
