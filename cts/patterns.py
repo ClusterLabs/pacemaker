@@ -289,6 +289,7 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-execd-ignore"] = [
             r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+            r"pacemaker-(attrd|controld).*Could not execute alert",
         ]
 
         self.components["pacemaker-controld"] = [
