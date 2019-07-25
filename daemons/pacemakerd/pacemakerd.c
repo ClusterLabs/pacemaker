@@ -883,19 +883,14 @@ check_active_before_startup_processes(gpointer user_data)
                     case 0:
                     case 2:  /* this very case: it was OK once already */
                         if (pcmk_children[lpc].respawn == TRUE) {
-                            /* presumably after crash, hence critical */
-                            crm_crit("Process %s terminated (pid=%lld)%s", \
-                                     name, (long long)
-                                     PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                     ret ? ", at least per IPC end-point that went AWOL"
-                                         : "");
+                            crm_err("%s[%d] terminated%s", name,
+                                    PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
+                                    ret ? " as IPC server" : "");
                         } else {
                             /* orderly shutdown */
-                            crm_notice("Process %s terminated (pid=%lld)%s", \
-                                       name, (long long)
+                            crm_notice("%s[%d] terminated%s", name,
                                        PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                       ret ? ", at least per IPC end-point that went AWOL"
-                                           : "");
+                                       ret ? " as IPC server" : "");
                         }
                         pcmk_process_exit(&(pcmk_children[lpc]));
                         continue;
