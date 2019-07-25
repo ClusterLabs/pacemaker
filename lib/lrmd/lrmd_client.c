@@ -1664,13 +1664,17 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
     int rc = pcmk_ok;
     stonith_t *stonith_api = stonith_api_new();
 
-    if(stonith_api) {
-        stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
-        stonith_api->cmds->free(stonith_api);
+    if (stonith_api == NULL) {
+        crm_err("Could not get fence agent meta-data: API memory allocation failed");
+        return -ENOMEM;
     }
-    if (*output == NULL) {
+
+    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type,
+                                     provider, output, 0);
+    if ((rc == pcmk_ok) && (*output == NULL)) {
         rc = -EIO;
     }
+    stonith_api->cmds->free(stonith_api);
     return rc;
 }
 
@@ -1820,10 +1824,13 @@ list_stonith_agents(lrmd_list_t ** resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    if(stonith_api) {
-        stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
-        stonith_api->cmds->free(stonith_api);
+    if (stonith_api == NULL) {
+        crm_err("Could not list fence agents: API memory allocation failed");
+        return -ENOMEM;
     }
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
+                                   &stonith_resources, 0);
+    stonith_api->cmds->free(stonith_api);
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
         rc++;
@@ -1841,9 +1848,10 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
                      const char *provider)
 {
     int rc = 0;
+    int stonith_count = 0; // Initially, whether to include stonith devices
 
     if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
-        rc += list_stonith_agents(resources);
+        stonith_count = 1;
 
     } else {
         GListPtr gIter = NULL;
@@ -1856,10 +1864,17 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         g_list_free_full(agents, free);
 
         if (!class) {
-            rc += list_stonith_agents(resources);
+            stonith_count = 1;
         }
     }
 
+    if (stonith_count) {
+        // Now, if stonith devices are included, how many there are
+        stonith_count = list_stonith_agents(resources);
+        if (stonith_count > 0) {
+            rc += stonith_count;
+        }
+    }
     if (rc == 0) {
         crm_notice("No agents found for class %s", class);
         rc = -EPROTONOSUPPORT;

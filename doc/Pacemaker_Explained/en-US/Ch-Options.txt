@@ -281,6 +281,17 @@ indexterm:[concurrent-fencing,Cluster Option]
 indexterm:[Cluster,Option,concurrent-fencing]
 Is the cluster allowed to initiate multiple fence actions concurrently?
 
+| fence-reaction | stop |
+indexterm:[fence-reaction,Cluster Option]
+indexterm:[Cluster,Option,fence-reaction]
+How should a cluster node react if notified of its own fencing? A cluster node
+may receive notification of its own fencing if fencing is misconfigured, or if
+fabric fencing is in use that doesn't cut cluster communication. Allowed values
+are +stop+ to attempt to immediately stop pacemaker and stay stopped, or
++panic+ to attempt to immediately reboot the local node, falling back to stop
+on failure. The default is likely to be changed to +panic+ in a future release.
+'(since 2.0.3)'
+
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
 indexterm:[Cluster,Option,cluster-delay]

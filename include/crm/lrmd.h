@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 the Pacemaker project contributors
+ * Copyright 2012-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -203,7 +203,7 @@ typedef struct lrmd_event_data_s {
     const char *rsc_id;
     /*! The action performed, start, stop, monitor... */
     const char *op_type;
-    /*! The userdata string given do exec() api function */
+    /*! The user data passed by caller of exec() API function */
     const char *user_data;
 
     /*! The client api call id associated with this event */

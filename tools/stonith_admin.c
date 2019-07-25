@@ -154,7 +154,7 @@ static GOptionEntry fence_entries[] = {
       "Reboot named host. Optional: --timeout, --tolerance.",
       "HOST" },
     { "confirm", 'C', 0, G_OPTION_ARG_STRING, &options.confirm_host,
-      "Tell clusted that named host is now safely down.",
+      "Tell cluster that named host is now safely down.",
       "HOST", },
 
     { NULL }
@@ -686,14 +686,15 @@ main(int argc, char **argv)
     }
 
     st = stonith_api_new();
-
-    if (!no_connect) {
+    if (st == NULL) {
+        rc = -ENOMEM;
+    } else if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
-        if (rc < 0) {
-            out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
-            exit_code = CRM_EX_DISCONNECT;
-            goto done;
-        }
+    }
+    if (rc < 0) {
+        out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
+        exit_code = CRM_EX_DISCONNECT;
+        goto done;
     }
 
     switch (action) {

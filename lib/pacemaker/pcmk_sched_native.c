@@ -877,7 +877,8 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
     // @TODO add support
     if (is_set(rsc->flags, pe_rsc_unique) == FALSE) {
-        crm_notice("Ignoring %s (recurring monitors for role=Stopped are not supported for anonyous clones)",
+        crm_notice("Ignoring %s (recurring monitors for Stopped role are "
+                   "not supported for anonymous clones)",
                    ID(operation));
         return;
     }

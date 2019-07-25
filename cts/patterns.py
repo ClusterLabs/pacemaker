@@ -132,7 +132,8 @@ class crm_corosync(BasePatterns):
             "Pat:They_dead"    : "pacemaker-controld.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated with signal 9",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
@@ -176,8 +177,8 @@ class crm_corosync(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
-            r"\[[0-9]+\] terminated with signal [0-9]+ \(",
-            r"schedulerd:.*Recover .*\(.* -\> .*\)",
+            r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
+            r"pacemaker-schedulerd.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -282,13 +283,13 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
-            r"pacemakerd.*pacemaker-execd.* terminated with signal 9",
             r"pacemakerd.*pacemaker-controld\[[0-9]+\] exited with status 1",
             r"pacemakerd.*Respawning failed child process: pacemaker-execd",
             r"pacemakerd.*Respawning failed child process: pacemaker-controld",
         ]
         self.components["pacemaker-execd-ignore"] = [
             r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+            r"pacemaker-(attrd|controld).*Could not execute alert",
         ]
 
         self.components["pacemaker-controld"] = [

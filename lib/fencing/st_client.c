@@ -1517,21 +1517,20 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         } else {
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
-            const char *tmp_ticket = crm_element_value(reply, F_STONITH_CLIENTID);
 
+            native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
                 crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
-            } else if (tmp_ticket == NULL) {
+            } else if (native->token == NULL) {
                 crm_debug("Couldn't register with the fencer: no token in reply");
                 crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else {
-                native->token = strdup(tmp_ticket);
 #if HAVE_MSGFROMIPC_TIMEOUT
                 stonith->call_timeout = MAX_IPC_DELAY;
 #endif
@@ -2094,7 +2093,15 @@ stonith_api_new(void)
     stonith_private_t *private = NULL;
 
     new_stonith = calloc(1, sizeof(stonith_t));
+    if (new_stonith == NULL) {
+        return NULL;
+    }
+
     private = calloc(1, sizeof(stonith_private_t));
+    if (private == NULL) {
+        free(new_stonith);
+        return NULL;
+    }
     new_stonith->st_private = private;
 
     private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
@@ -2107,6 +2114,11 @@ stonith_api_new(void)
     new_stonith->state = stonith_disconnected;
 
     new_stonith->cmds = calloc(1, sizeof(stonith_api_operations_t));
+    if (new_stonith->cmds == NULL) {
+        free(new_stonith->st_private);
+        free(new_stonith);
+        return NULL;
+    }
 
 /* *INDENT-OFF* */
     new_stonith->cmds->free       = stonith_api_free;
@@ -2343,6 +2355,10 @@ stonith_agent_exists(const char *agent, int timeout)
     }
 
     st = stonith_api_new();
+    if (st == NULL) {
+        crm_err("Could not list fence agents: API memory allocation failed");
+        return FALSE;
+    }
     st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
 
     for (dIter = devices; dIter != NULL; dIter = dIter->next) {
