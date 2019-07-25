@@ -67,3 +67,85 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
 
     return context;
 }
+
+char **
+pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
+    char **retval = NULL;
+    GPtrArray *arr = g_ptr_array_new();
+    bool saw_dash_dash = false;
+
+    for (int i = 0; i < argc; i++) {
+        /* If this is the first time we saw "--" in the command line, set
+         * a flag so we know to just copy everything after it over.  We also
+         * want to copy the "--" over so whatever actually parses the command
+         * line when we're done knows where arguments end.
+         */
+        if (saw_dash_dash == false && strcmp(argv[i], "--") == 0) {
+            saw_dash_dash = true;
+        }
+
+        if (saw_dash_dash == true) {
+            g_ptr_array_add(arr, strdup(argv[i]));
+            continue;
+        }
+
+        /* This is a short argument, or perhaps several.  Iterate over it
+         * and explode them out into individual arguments.
+         */
+        if (g_str_has_prefix(argv[i], "-") && !g_str_has_prefix(argv[i], "--")) {
+            /* Skip over leading dash */
+            char *ch = argv[i]+1;
+
+            while (*ch != '\0') {
+                /* This is a special short argument that takes an option.  getopt
+                 * allows values to be interspersed with a list of arguments, but
+                 * glib does not.  Grab both the argument and its value and
+                 * separate them into a new argument.
+                 */
+                if (strchr(special, *ch) != NULL) {
+                    /* The argument does not occur at the end of this string of
+                     * arguments.  Take everything through the end as its value.
+                     */
+                    if (*(ch+1) != '\0') {
+                        g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
+                        g_ptr_array_add(arr, strdup(ch+1));
+                        break;
+
+                    /* The argument occurs at the end of this string.  Hopefully
+                     * whatever comes next in argv is its value.  It may not be,
+                     * but that is not for us to decide.
+                     */
+                    } else {
+                        g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
+                        ch++;
+                    }
+
+                /* This is a regular short argument.  Just copy it over. */
+                } else {
+                    g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
+                    ch++;
+                }
+            }
+
+        /* This is a long argument, or an option, or something else.
+         * Copy it over - everything else is copied, so this keeps it easy for
+         * the caller to know what to do with the memory when it's done.
+         */
+        } else {
+            g_ptr_array_add(arr, strdup(argv[i]));
+        }
+    }
+
+    /* Convert the GPtrArray into a char **, which the command line parsing
+     * code knows how to deal with.  Then we can free the array (but not its
+     * contents).
+     */
+    retval = calloc(arr->len+1, sizeof(char *));
+    for (int i = 0; i < arr->len; i++) {
+        retval [i] = (char *) g_ptr_array_index(arr, i);
+    }
+
+    g_ptr_array_free(arr, FALSE);
+
+    return retval;
+}
