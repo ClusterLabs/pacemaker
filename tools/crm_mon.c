@@ -3005,57 +3005,40 @@ print_failed_actions(FILE *stream, pe_working_set_t *data_set)
 static stonith_history_t *
 reduce_stonith_history(stonith_history_t *history)
 {
-    stonith_history_t *new = NULL, *hp, *np, *tmp;
+    stonith_history_t *new = history, *hp, *np;
 
-    for (hp = history; hp; ) {
-        for (np = new; np; np = np->next) {
-            if ((hp->state == st_done) || (hp->state == st_failed)) {
-                /* action not in progress */
-                if (safe_str_eq(hp->target, np->target) &&
-                    safe_str_eq(hp->action, np->action) &&
-                    (hp->state == np->state)) {
-                    if ((hp->state == st_done) ||
-                        safe_str_eq(hp->delegate, np->delegate)) {
-                        /* replace or purge */
-                        if (hp->completed < np->completed) {
+    if (new) {
+        hp = new->next;
+        new->next = NULL;
+
+        while (hp) {
+            stonith_history_t *hp_next = hp->next;
+
+            hp->next = NULL;
+
+            for (np = new; ; np = np->next) {
+                if ((hp->state == st_done) || (hp->state == st_failed)) {
+                    /* action not in progress */
+                    if (safe_str_eq(hp->target, np->target) &&
+                        safe_str_eq(hp->action, np->action) &&
+                        (hp->state == np->state) &&
+                        ((hp->state == st_done) ||
+                         safe_str_eq(hp->delegate, np->delegate))) {
                             /* purge older hp */
-                            tmp = hp->next;
-                            hp->next = NULL;
                             stonith_history_free(hp);
-                            hp = tmp;
                             break;
-                        }
-                        /* damn single linked list */
-                        free(hp->target);
-                        free(hp->action);
-                        free(np->origin);
-                        np->origin = hp->origin;
-                        free(np->delegate);
-                        np->delegate = hp->delegate;
-                        free(np->client);
-                        np->client = hp->client;
-                        np->completed = hp->completed;
-                        tmp = hp;
-                        hp = hp->next;
-                        free(tmp);
-                        break;
                     }
                 }
-                if (np->next) {
-                    continue;
+
+                if (!np->next) {
+                    np->next = hp;
+                    break;
                 }
             }
-            np = 0; /* let outer loop progress hp */
-            break;
-        }
-        /* simply move hp from history to new */
-        if (np == NULL) {
-            tmp = hp->next;
-            hp->next = new;
-            new = hp;
-            hp = tmp;
+            hp = hp_next;
         }
     }
+
     return new;
 }
 
@@ -4232,10 +4215,10 @@ mon_refresh_display(gpointer user_data)
                 fprintf(stderr, "Critical: Unable to get stonith-history\n");
                 mon_cib_connection_destroy(NULL);
             } else {
+                stonith_history = sort_stonith_history(stonith_history);
                 if ((!fence_full_history) && (output_format != mon_output_xml)) {
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
-                stonith_history = sort_stonith_history(stonith_history);
                 break; /* all other cases are errors */
             }
         } else {
