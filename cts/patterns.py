@@ -357,6 +357,7 @@ class crm_cs_v0(BasePatterns):
                     ]
         self.components["lrmd-ignore"] = [
             r"attrd.*Connection to lrmd (failed|closed)",
+            r"(attrd|controld).*Could not execute alert",
         ]
 
         self.components["crmd"] = [
