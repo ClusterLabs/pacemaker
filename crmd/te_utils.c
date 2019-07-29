@@ -35,6 +35,7 @@ crm_trigger_t *stonith_reconnect = NULL;
 static crm_trigger_t *stonith_history_sync_trigger = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
+static bool fence_reaction_panic = FALSE;
 
 void
 te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
@@ -51,6 +52,21 @@ te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
 
     if (st) {
         st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY_SYNCED);
+    }
+}
+
+void
+set_fence_reaction(const char *reaction_s)
+{
+    if (safe_str_eq(reaction_s, "panic")) {
+        fence_reaction_panic = TRUE;
+
+    } else {
+        if (safe_str_neq(reaction_s, "stop")) {
+            crm_warn("Invalid value '%s' for %s, using 'stop'",
+                     reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
+        }
+        fence_reaction_panic = FALSE;
     }
 }
 
@@ -235,11 +251,6 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 
 char *te_client_id = NULL;
 
-#ifdef HAVE_SYS_REBOOT_H
-#  include <unistd.h>
-#  include <sys/reboot.h>
-#endif
-
 static void
 tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
 
@@ -271,33 +282,23 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
 
     } else if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
+        /* We were notified of our own fencing. Most likely, either fencing was
+         * misconfigured, or fabric fencing that doesn't cut cluster
+         * communication is in use.
+         *
+         * Either way, shutting down the local host is a good idea, to require
+         * administrator intervention. Also, other nodes would otherwise likely
+         * set our status to lost because of the fencing callback and discard
+         * our subsequent election votes as "not part of our cluster".
+         */
         crm_crit("We were allegedly just fenced by %s for %s!",
-                 st_event->executioner ? st_event->executioner : "<anyone>", st_event->origin); /* Dumps blackbox if enabled */
-
-        qb_log_fini(); /* Try to get the above log message to disk - somehow */
-
-        /* Get out ASAP and do not come back up.
-         *
-         * Triggering a reboot is also not the worst idea either since
-         * the rest of the cluster thinks we're safely down
-         */
-
-#ifdef RB_HALT_SYSTEM
-        reboot(RB_HALT_SYSTEM);
-#endif
-
-        /*
-         * If reboot() fails or is not supported, coming back up will
-         * probably lead to a situation where the other nodes set our
-         * status to 'lost' because of the fencing callback and will
-         * discard subsequent election votes with:
-         *
-         * Election 87 (current: 5171, owner: 103): Processed vote from east-03 (Peer is not part of our cluster)
-         *
-         * So just stay dead, something is seriously messed up anyway.
-         *
-         */
-        exit(100); /* None of our wrappers since we already called qb_log_fini() */
+                 st_event->executioner? st_event->executioner : "the cluster",
+                 st_event->origin); /* Dumps blackbox if enabled */
+        if (fence_reaction_panic) {
+            pcmk_panic(__FUNCTION__);
+        } else {
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
         return;
     }
 

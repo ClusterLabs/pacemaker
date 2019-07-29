@@ -59,9 +59,11 @@ class BasePatterns:
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
+            "Pat:Fencing_start"   : r"(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
+            "Pat:Fencing_ok"      : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover" : r"pengine.*: Recover %s",
+            "Pat:Fencing_active"  : r"pengine.*: Resource %s is active on .* nodes",
+            "Pat:Fencing_probe"   : r"crmd.*: Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"crmd.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"crmd.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
@@ -128,7 +130,7 @@ class crm_lha(BasePatterns):
                 r"input=I_INTEGRATED cause=C_TIMER_POPPED",
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
-                r", exiting\.",
+                r"(pacemakerd|lrmd|crmd):.*, exiting",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
                 r"is taking more than 2x its timeout",
@@ -208,7 +210,7 @@ class crm_cs_v0(BasePatterns):
             r"input=I_INTEGRATED cause=C_TIMER_POPPED",
             r"input=I_FINALIZED cause=C_TIMER_POPPED",
             r"input=I_ERROR",
-            r", exiting\.",
+            r"(pacemakerd|lrmd|crmd):.*, exiting",
             r"(WARN|warn).*Ignoring HA message.*vote.*not in our membership list",
             r"pengine.*Attempting recovery of resource",
             r"is taking more than 2x its timeout",
@@ -222,9 +224,9 @@ class crm_cs_v0(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
-            r"The .* process .* terminated with signal",
+            r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
             r"Child process .* terminated with signal",
-            r"pengine:.*Recover .*\(.* -\> .*\)",
+            r"pengine.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -279,13 +281,10 @@ class crm_cs_v0(BasePatterns):
         
         self.components["corosync-ignore"] = [
             r"error:.*Connection to the CPG API failed: Library error",
-            r"The .* process .* exited",
+            r"\[[0-9]+\] exited with status [0-9]+ \(",
             r"pacemakerd.*error:.*Child process .* exited",
             r"cib.*error:.*Corosync connection lost",
             r"stonith-ng.*error:.*Corosync connection terminated",
-            r"The cib process .* exited: Invalid argument",
-            r"The attrd process .* exited: Transport endpoint is not connected",
-            r"The crmd process .* exited: Link has been severed",
             r"error:.*Child process cib .* exited: Invalid argument",
             r"error:.*Child process attrd .* exited: Transport endpoint is not connected",
             r"error:.*Child process crmd .* exited: Link has been severed",
@@ -299,6 +298,12 @@ class crm_cs_v0(BasePatterns):
             r"error:.*STONITH connection failed",
             r"error: Connection to stonith-ng.* (failed|closed)",
             r"crit: Fencing daemon connection failed",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
             ]
 
         self.components["corosync"] = [
@@ -316,6 +321,12 @@ class crm_cs_v0(BasePatterns):
             "lrmd.*Connection to stonith-ng.* closed",
             "lrmd.*LRMD lost STONITH connection",
             "lrmd.*STONITH connection failed, finalizing .* pending operations",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
             ]
 
         self.components["cib"] = [
@@ -326,8 +337,8 @@ class crm_cs_v0(BasePatterns):
                     "Connection to cib_.* closed",
                     r"crmd.*:.*Connection to the CIB terminated...",
                     r"attrd.*:.*(Lost connection to CIB service|Connection to the CIB terminated)",
-                    "(Child process|The) crmd .* exited: Generic Pacemaker error",
-                    "(Child process|The) attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
+                    r"crmd\[[0-9]+\] exited with status 2",
+                    r"attrd\[[0-9]+\] exited with status 1",
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd.*Could not recover from internal error",
@@ -340,11 +351,14 @@ class crm_cs_v0(BasePatterns):
                     "Connection to lrmd failed",
                     "Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
-                    "(Child process|The) crmd .* exited: Generic Pacemaker error",
+                    r"crmd\[[0-9]+\] exited with status 2",
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*Could not recover from internal error",
                     ]
-        self.components["lrmd-ignore"] = []
+        self.components["lrmd-ignore"] = [
+            r"attrd.*Connection to lrmd (failed|closed)",
+            r"(attrd|controld).*Could not execute alert",
+        ]
 
         self.components["crmd"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
@@ -361,7 +375,7 @@ class crm_cs_v0(BasePatterns):
         self.components["pengine"] = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
-                    "(The|Child process) crmd .* exited: Generic Pacemaker error",
+                    r"crmd\[[0-9]+\] exited with status 2",
                     "Connection to pengine failed",
                     "Connection to pengine.* closed",
                     "Connection to the Policy Engine failed",
@@ -376,7 +390,7 @@ class crm_cs_v0(BasePatterns):
             "LRMD lost STONITH connection",
             "Connection to stonith-ng.* closed",
             "Fencing daemon connection failed",
-            r"crmd:.*Fencer successfully connected",
+            r"crmd.*: Fencer successfully connected",
         ]
         self.components["stonith-ignore"] = [
             r"pengine.*: Recover Fencing",
@@ -387,6 +401,12 @@ class crm_cs_v0(BasePatterns):
             r"error:.*Sign-in failed: triggered a retry",
             "STONITH connection failed, finalizing .* pending operations.",
             r"crmd.*:\s+Result of .* operation for Fencing.*Error",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pengine.* Calculated transition .*/pe-error",
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 
@@ -415,8 +435,9 @@ class crm_mcp(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
-            "Pat:ChildExit"    : "The .* process exited",
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
+            "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
@@ -465,7 +486,8 @@ class crm_cman(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",

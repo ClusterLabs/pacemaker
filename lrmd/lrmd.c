@@ -1085,13 +1085,17 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
-            /* This will cause future probes to return PCMK_OCF_UNKNOWN_ERROR
-             * until the resource is stopped or started successfully. This is
-             * especially important if the controller also went away (possibly
-             * due to a cluster layer restart) and won't receive our client
-             * notification of any monitors finalized below.
+            /* If we registered this fence device, we don't know whether the
+             * fencer still has the registration or not. Cause future probes to
+             * return PCMK_OCF_UNKNOWN_ERROR until the resource is stopped or
+             * started successfully. This is especially important if the
+             * controller also went away (possibly due to a cluster layer
+             * restart) and won't receive our client notification of any
+             * monitors finalized below.
              */
-            rsc->st_probe_rc = pcmk_err_generic;
+            if (rsc->st_probe_rc == pcmk_ok) {
+                rsc->st_probe_rc = pcmk_err_generic;
+            }
 
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);

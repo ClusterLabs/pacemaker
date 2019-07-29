@@ -377,9 +377,9 @@ class crm_lha(ClusterManager):
                     "Exiting to recover from CCM connection failure",
                     r"crmd.*: Could not recover from internal error",
                     "crmd.*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
-                    "crmd.*exited with return code 2.",
-                    "attrd.*exited with return code 1.",
-                    "cib.*exited with return code 2.",
+                    "crmd.*exited with status 2",
+                    "attrd.*exited with status 1",
+                    "cib.*exited with status 2",
 
 # Not if it was fenced
 #                    "A new node joined the cluster",
@@ -400,8 +400,8 @@ class crm_lha(ClusterManager):
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     r"crmd.*: Could not recover from internal error",
-                    "crmd.*exited with return code 2.",
-                    "attrd.*exited with return code 1.",
+                    "crmd.*exited with status 2",
+                    "attrd.*exited with status 1",
                     ], badnews_ignore = common_ignore)
 
         lrmd = Process(self, "lrmd", triggersreboot=self.fastfail, pats = [
@@ -411,7 +411,7 @@ class crm_lha(ClusterManager):
                     "State transition S_STARTING -> S_PENDING",
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     r"crmd.*: Could not recover from internal error",
-                    "crmd.*exited with return code 2.",
+                    "crmd.*exited with status 2",
                     ], badnews_ignore = common_ignore)
 
         crmd = Process(self, "crmd", triggersreboot=self.fastfail, pats = [
@@ -425,12 +425,11 @@ class crm_lha(ClusterManager):
 
         pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    "crmd.*exited with return code 2.",
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     r"crmd.*: Could not recover from internal error",
                     r"crmd.*CRIT.*: Connection to the Policy Engine failed",
                     "crmd.*I_ERROR.*save_cib_contents",
-                    "crmd.*exited with return code 2.",
+                    "crmd.*exited with status 2",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
         if self.Env["DoFencing"] == 1 :
@@ -441,21 +440,21 @@ class crm_lha(ClusterManager):
 
         if self.fastfail == 0:
             ccm.pats.extend([
-                "attrd .* exited with return code 1",
+                "attrd .* exited with status 1",
                 "(ERROR|error): Respawning client .*attrd",
-                "cib.* exited with return code 2",
+                "cib.* exited with status 2",
                 "(ERROR|error): Respawning client .*cib",
-                "crmd.* exited with return code 2",
+                "crmd.* exited with status 2",
                 "(ERROR|error): Respawning client .*crmd" 
                 ])
             cib.pats.extend([
-                "attrd.* exited with return code 1",
+                "attrd.* exited with status 1",
                 "(ERROR|error): Respawning client .*attrd",
-                "crmd.* exited with return code 2",
+                "crmd.* exited with status 2",
                 "(ERROR|error): Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
-                "crmd.* exited with return code 2",
+                "crmd.* exited with status 2",
                 "(ERROR|error): Respawning client .*crmd" 
                 ])
             pengine.pats.extend([

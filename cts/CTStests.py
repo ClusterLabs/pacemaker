@@ -1422,14 +1422,18 @@ class ComponentFail(CTSTest):
                 self.okerrpatterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
                 self.okerrpatterns.append(self.templates["Pat:ChildExit"])
 
-        if chosen.name == "stonith":
-            # Ignore actions for STONITH resources
+        # @TODO this should be a flag in the Component
+        if chosen.name in [ "corosync", "cib", "stonith" ]:
+            # Ignore actions for fence devices if fencer will respawn
+            # (their registration will be lost, and probes will fail)
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
+                        self.okerrpatterns.append(self.templates["Pat:Fencing_active"] % r.id)
+                        self.okerrpatterns.append(self.templates["Pat:Fencing_probe"] % r.id)
 
         # supply a copy so self.patterns doesn't end up empty
         tmpPats = []
