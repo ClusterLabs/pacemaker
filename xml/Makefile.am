@@ -52,8 +52,8 @@ API_base		= $(API_request_base) item status
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
 # All static schema files
-API_files		= $(foreach base,$(API_base),$(wildcard api/$(base)*.rng))
-CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(base).rng $(base)-*.rng))
+API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)*.rng))
+CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 MON_files		= crm_mon.rng
 
 # Sorted lists of all numeric schema versions
@@ -112,10 +112,12 @@ api-versions:
 
 # Dynamically generated top-level API schema
 api/api-result.rng: api/api-result-$(API_max).rng
+	$(MKDIR_P) api # might not exist in VPATH build
 	echo "  RNG      $@"
 	cp $(top_builddir)/xml/$< $@
 
 api/api-result-%.rng: $(API_files) best-match.sh Makefile.am
+	$(MKDIR_P) api # might not exist in VPATH build
 	echo "  RNG      $@"
 	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
