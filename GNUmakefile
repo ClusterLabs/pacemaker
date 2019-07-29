@@ -308,6 +308,9 @@ changes: summary
 			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
 		| sort -uf
 
+authors:
+	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
+
 changelog:
 	@make changes > ChangeLog
 	@printf "\n">> ChangeLog
