@@ -10,6 +10,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+noinst_SCRIPTS		= cluster_test		\
+			  OCFIPraTest.py
 
 halibdir	= $(CRM_DAEMON_DIR)
 halib_SCRIPTS	= cts-log-watcher cts-support
