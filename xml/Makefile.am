@@ -44,7 +44,7 @@ CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
 # All static schema files
-CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(base).rng $(base)-*.rng))
+CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 MON_files		= crm_mon.rng
 
 # Sorted lists of all numeric schema versions
