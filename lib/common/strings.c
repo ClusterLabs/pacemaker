@@ -64,6 +64,10 @@ crm_int_helper(const char *text, char **end_text)
 
         } else if (errno != 0) {
             crm_perror(LOG_ERR, "Conversion of %s failed", text);
+
+        } else if (local_end_text == text) {
+            crm_err("Text contained no digits: %s", text);
+            result = -1;
         }
 
         if (local_end_text != NULL && local_end_text[0] != '\0') {
