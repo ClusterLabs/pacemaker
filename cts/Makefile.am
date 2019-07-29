@@ -22,6 +22,8 @@ MAINTAINERCLEANFILES    = Makefile.in
 CLEANFILES      = LSBDummy HBDummy
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+noinst_SCRIPTS		= cluster_test		\
+			  OCFIPraTest.py
 
 ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
 ctslibdir	= $(pyexecdir)/cts
