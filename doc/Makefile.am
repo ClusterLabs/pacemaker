@@ -110,12 +110,14 @@ EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
 EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
 EXTRA_DIST	+= pcs-crmsh-quick-ref.md
 
-%.html: %.txt
 if IS_ASCIIDOC
-	$(AM_V_ASCII)$(ASCIIDOC_CONV) --unsafe --backend=xhtml11 $<
+ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
 else
-	$(AM_V_ASCII)$(ASCIIDOC_CONV) --backend=html5 $<
+ASCIIDOC_HTML_ARGS	= --backend=html5
 endif
+
+%.html: %.txt
+	$(AM_V_ASCII)$(ASCIIDOC_CONV) $(ASCIIDOC_HTML_ARGS) --out-file=$@ $<
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based
