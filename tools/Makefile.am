@@ -12,7 +12,7 @@ if BUILD_SYSTEMD
 systemdunit_DATA = crm_mon.service
 endif
 
-noinst_HEADERS		= crm_resource.h
+noinst_HEADERS		= crm_mon.h crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -81,7 +81,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_mon_SOURCES		= crm_mon.c
+crm_mon_SOURCES		= crm_mon.c crm_mon_print.c crm_mon_runtime.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
