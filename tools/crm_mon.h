@@ -97,6 +97,7 @@ typedef enum mon_output_format_e {
 typedef struct {
     FILE *stream;
     mon_output_format_t output_format;
+    pcmk__output_t *out;
 } mon_state_t;
 
 void print_status(mon_state_t *state, pe_working_set_t *data_set,

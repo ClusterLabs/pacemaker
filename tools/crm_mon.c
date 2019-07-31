@@ -1648,7 +1648,7 @@ mon_refresh_display(gpointer user_data)
     /* stdout for everything except the HTML case, which does a bunch of file
      * renaming.  We'll handle changing stream in print_html_status.
      */
-    mon_state_t state = { .stream = stdout, .output_format = output_format };
+    mon_state_t state = { .stream = stdout, .output_format = output_format, .out = out };
 
     last_refresh = time(NULL);
 
