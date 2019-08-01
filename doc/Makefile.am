@@ -262,14 +262,14 @@ endif
 
 # Update the translation template
 pot:
-	for book in $(docbook); do 				      \
+	@for book in $(docbook); do 				      \
 		echo "Updating translation templates in: $$book";     \
 		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot ); \
 	done
 
 # Update the actual translations
 po: pot
-	for book in $(docbook); do 				      \
+	@for book in $(docbook); do 				      \
 		echo "Updating translations in: $$book";     \
 		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=all );\
 	done
@@ -300,7 +300,7 @@ brand-build: $(BRAND_DEPS)
 	cd publican-clusterlabs && publican build --formats=xml --langs=all --publish
 
 brand: brand-build
-	echo "Installing..."
+	@echo "Installing branded content..."
 	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
 
 brand-rpm-clean:
@@ -315,14 +315,14 @@ brand-rpm-install: brand-rpm-build
 pdf:
 	make DOCBOOK_FORMATS="pdf" all-local
 
-www: clean-local $(generated_docs) $(ascii)
+www: clean-local $(doc_DATA)
 	for book in $(docbook); do 							\
 		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
-	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" all-local
-	echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
+	$(MAKE) DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" all-local
+	@echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
-	for book in $(docbook); do 									\
+	@for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
 		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES).txt;	\
 		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";			\
