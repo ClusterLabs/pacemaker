@@ -295,7 +295,7 @@ brand: brand-build
 	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
 
 brand-rpm-clean:
-	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+	-find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
 
 brand-rpm-build: brand-rpm-clean brand-build
 	cd publican-clusterlabs && $(PUBLICAN) package --binary
@@ -316,6 +316,9 @@ global:
 global-upload: global
 	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
 
+global-clean:
+	-rm -rf HTML
+
 
 # Man pages as HTML
 
@@ -333,6 +336,9 @@ manhtml-upload: manhtml
 	find .. -name "[a-z]*.[78].html" -exec \
 		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/$(PACKAGE)/man/" \;
 
+manhtml-clean:
+	-find .. -name "[a-z]*.[78].html" -exec rm \{\} \;
+
 
 # API documentation as HTML
 
@@ -342,6 +348,9 @@ doxygen: Doxyfile
 doxygen-upload: doxygen
 	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
 
+doxygen-clean:
+	-rm -rf api
+
 
 # ABI compatibility report as HTML
 
@@ -350,6 +359,9 @@ abi: abi-check
 
 abi-www:
 	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
+
+abi-clean:
+	-rm -rf abi_dumps compat_reports
 
 
 # All HTML documentation (except ABI compatibility, which is run separately)
@@ -371,10 +383,20 @@ if BUILD_DOCBOOK
 endif
 	rsync $(RSYNC_OPTS) $(doc_DATA) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
+ALL_GEN	= $(generated_docs)		\
+	  $(docbook_build)		\
+	  $(PNGS_GENERATED)		\
+	  $(SHARED_XML)			\
+	  $(CFS_XML_GEN)		\
+	  $(PA_XML_GEN)			\
+	  $(PD_XML_GEN)			\
+	  $(PE_XML_GEN)			\
+	  $(PR_XML_GEN)			\
+	  publican-catalog-fallback	\
+	  publican-catalog
 
-clean-local:
-	-rm -f $(PNGS_GENERATED)
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build)
-	-rm -rf $(SHARED_XML) $(CFS_XML_GEN) $(PA_XML_GEN) $(PD_XML_GEN) $(PE_XML_GEN) $(PR_XML_GEN)
-	-rm -rf  publican-catalog-fallback publican-catalog
-	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
+clean-local: brand-rpm-clean global-clean manhtml-clean doxygen-clean abi-clean
+	-rm -f $(ALL_GEN)
+	-for book in $(docbook); do			\
+		rm -rf $$book/tmp $$book/publish;	\
+	done
