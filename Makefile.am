@@ -20,6 +20,15 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
 
+# Disable building Publican documentation when doing "make distcheck", because
+# some of our book sources are in the source directory, while others are
+# dynamically generated in the build directory, and publican can't handle that.
+#
+# @TODO To support VPATH builds for Publican, we'd probably have to create
+# a separate subtree of the build directory to use as Publican's source
+# directory, and copy the static sources into it.
+AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
+
 # Only these will get installed with a plain "make install"
 CORE_INSTALL	= replace include lib daemons tools xml
 

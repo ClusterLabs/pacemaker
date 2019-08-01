@@ -114,6 +114,7 @@ endif
 # XXX Sequence of tr/sed commands should be replaced with a single XSLT
 #
 %.xml:  %.txt
+	$(AM_V_at)$(MKDIR_P) $(shell dirname $@)     # might not exist in VPATH build
 	$(AM_V_at)$(ASCIIDOC_CONV) $(ASCIIDOC_DBOOK_ARGS) -o - $< | tr -d '\036\r' >$@-t # Convert, fix line endings
 	$(AM_V_at)sed -i 's/\ lang="en"//' $@-t      # Never specify a language in the chapters
 	$(AM_V_at)sed -i 's/simpara/para/g' $@-t     # publican doesn't correctly render footnotes with simpara
@@ -159,7 +160,7 @@ SHARED_XML=$(SHARED_TXT:%.txt=%.xml)
 if PUBLICAN_INTREE_BRAND
 PUBLICAN_INTREE_DEPS	= publican-catalog
 PUBLICAN_INTREE_ENV	= XML_CATALOG_FILES="$(CURDIR)/publican-catalog"
-PUBLICAN_INTREE_OPT	= --brand_dir=../publican-clusterlabs 
+PUBLICAN_INTREE_OPT	= --brand_dir="$(top_srcdir)/publican-clusterlabs"
 else
 PUBLICAN_INTREE_DEPS	=
 PUBLICAN_INTREE_ENV	=
@@ -173,7 +174,7 @@ CFS_SHARED_TXT	= $(addprefix shared/en-US/,pacemaker-intro.txt)
 CFS_SHARED_XML	= $(CFS_SHARED_TXT:%.txt=%.xml)
 CFS_TXT		= $(wildcard Clusters_from_Scratch/en-US/*.txt)
 CFS_XML_GEN	= $(CFS_TXT:%.txt=%.xml)
-CFS_XML_ONLY	= $(addprefix Clusters_from_Scratch/en-US/,$(COMMON_XML) \
+CFS_XML_ONLY	= $(addprefix $(srcdir)/Clusters_from_Scratch/en-US/,$(COMMON_XML) \
 		  Clusters_from_Scratch.ent \
 		  Clusters_from_Scratch.xml \
 		  Preface.xml)
@@ -185,8 +186,9 @@ Clusters_from_Scratch.build: $(CFS_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
-	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
-	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
+	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
+	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
+	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -195,7 +197,7 @@ Clusters_from_Scratch.build: $(CFS_DEPS) $(PUBLICAN_INTREE_DEPS)
 
 PA_TXT		= $(wildcard Pacemaker_Administration/en-US/*.txt)
 PA_XML_GEN	= $(PA_TXT:%.txt=%.xml)
-PA_XML_ONLY	= $(addprefix Pacemaker_Administration/en-US/,$(COMMON_XML) \
+PA_XML_ONLY	= $(addprefix $(srcdir)/Pacemaker_Administration/en-US/,$(COMMON_XML) \
 		  Pacemaker_Administration.ent \
 		  Pacemaker_Administration.xml \
 		  Preface.xml)
@@ -207,8 +209,9 @@ Pacemaker_Administration.build: $(PA_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
-	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
-	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
+	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
+	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
+	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -217,7 +220,7 @@ Pacemaker_Administration.build: $(PA_DEPS) $(PUBLICAN_INTREE_DEPS)
 
 PD_TXT		= $(wildcard Pacemaker_Development/en-US/*.txt)
 PD_XML_GEN	= $(PD_TXT:%.txt=%.xml)
-PD_XML_ONLY	= $(addprefix Pacemaker_Development/en-US/,$(COMMON_XML) \
+PD_XML_ONLY	= $(addprefix $(srcdir)/Pacemaker_Development/en-US/,$(COMMON_XML) \
 		  Pacemaker_Development.ent \
 		  Pacemaker_Development.xml)
 PD_DEPS		= $(PD_XML_ONLY) $(PD_XML_GEN)
@@ -228,8 +231,9 @@ Pacemaker_Development.build: $(PD_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
-	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
-	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
+	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
+	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
+	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -240,7 +244,7 @@ PE_SHARED_TXT	= $(addprefix shared/en-US/,pacemaker-intro.txt)
 PE_SHARED_XML	= $(PE_SHARED_TXT:%.txt=%.xml)
 PE_TXT		= $(wildcard Pacemaker_Explained/en-US/*.txt)
 PE_XML_GEN	= $(PE_TXT:%.txt=%.xml)
-PE_XML_ONLY	= $(addprefix Pacemaker_Explained/en-US/,$(COMMON_XML) \
+PE_XML_ONLY	= $(addprefix $(srcdir)/Pacemaker_Explained/en-US/,$(COMMON_XML) \
 		  Pacemaker_Explained.ent \
 		  Pacemaker_Explained.xml \
 		  Preface.xml)
@@ -252,8 +256,9 @@ Pacemaker_Explained.build: $(PE_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
-	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
-	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
+	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
+	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
+	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -262,7 +267,7 @@ Pacemaker_Explained.build: $(PE_DEPS) $(PUBLICAN_INTREE_DEPS)
 
 PR_TXT		= $(wildcard Pacemaker_Remote/en-US/*.txt)
 PR_XML_GEN	= $(PR_TXT:%.txt=%.xml)
-PR_XML_ONLY	= $(addprefix Pacemaker_Remote/en-US/,$(COMMON_XML) \
+PR_XML_ONLY	= $(addprefix $(srcdir)/Pacemaker_Remote/en-US/,$(COMMON_XML) \
 		  Pacemaker_Remote.ent \
 		  Pacemaker_Remote.xml)
 PR_DEPS		= $(PR_XML_ONLY) $(PR_XML_GEN)
@@ -273,24 +278,28 @@ Pacemaker_Remote.build: $(PNGS) $(PR_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
-	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
-	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
+	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
+	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
+	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 
 # Update the translation template
 pot:
-	@for book in $(docbook); do 				      \
-		echo "Updating translation templates in: $$book";     \
-		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_pot ); \
+	@for book in $(docbook); do					\
+		echo "Updating translation templates in: $$book";	\
+		( cd $$book && RPM_BUILD_DIR=""				\
+		  $(PUBLICAN) --src_dir="$(srcdir)" update_pot );	\
 	done
 
 # Update the actual translations
 po: pot
-	@for book in $(docbook); do 				      \
-		echo "Updating translations in: $$book";     \
-		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=all );\
+	@for book in $(docbook); do					\
+		echo "Updating translations in: $$book";		\
+		( cd $$book && RPM_BUILD_DIR=""				\
+		  $(PUBLICAN) --src_dir="$(srcdir)" update_po		\
+		  --langs=all );					\
 	done
 
 if BUILD_DOCBOOK
@@ -324,7 +333,8 @@ brand-rpm-clean:
 	-find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
 
 brand-rpm-build: brand-rpm-clean brand-build
-	cd publican-clusterlabs && $(PUBLICAN) package --binary
+	cd publican-clusterlabs && \
+		$(PUBLICAN) --src_dir="$(srcdir)" package --binary
 
 brand-rpm-install: brand-rpm-build
 	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
