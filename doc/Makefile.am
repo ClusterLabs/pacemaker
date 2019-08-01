@@ -103,12 +103,38 @@ graphics: $(PNGS)
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
+ASCIIDOC_DBOOK_ARGS	= -b docbook -d book
 else
 ASCIIDOC_HTML_ARGS	= --backend=html5
+ASCIIDOC_DBOOK_ARGS	= -b docbook45 -d book
 endif
 
 %.html: %.txt
 	$(AM_V_GEN)$(ASCIIDOC_CONV) $(ASCIIDOC_HTML_ARGS) --out-file=$@ $< $(PCMK_quiet)
+
+# 
+# Generate DocBook XML from asciidoc text.
+#
+# Build each chapter as a book (since the numbering isn't right for
+# articles and only books can have appendices) and then strip out the
+# bits we don't want or need.
+#
+# XXX Sequence of tr/sed commands should be replaced with a single XSLT
+#
+%.xml:  %.txt
+	$(AM_V_at)$(ASCIIDOC_CONV) $(ASCIIDOC_DBOOK_ARGS) -o - $< | tr -d '\036\r' >$@-t # Convert, fix line endings
+	$(AM_V_at)sed -i 's/\ lang="en"//' $@-t      # Never specify a language in the chapters
+	$(AM_V_at)sed -i 's/simpara/para/g' $@-t     # publican doesn't correctly render footnotes with simpara
+	$(AM_V_at)sed -i 's/.*<date>.*//g' $@-t      # Remove dangling tag
+	$(AM_V_at)sed -i 's/.*preface>//g' $@-t      # Remove preface elements
+	$(AM_V_at)sed -i 's:<title></title>::g' $@-t # Remove empty title
+	$(AM_V_at)sed -i 's/chapter/section/g' $@-t  # Chapters become sections, so that books can become chapters
+	$(AM_V_at)sed -i 's/<.*bookinfo.*>//g' $@-t  # Strip out bookinfo, we don't need it
+	$(AM_V_at)! grep -q "<appendix" $@-t || sed -i \
+	  's/.*book>//;tb;bf;:b;N;s/.*<title>.*<\/title>.*//;tb;/<appendix/{:i;n;/<\/appendix/{p;d};bi};bb;:f;p;d' \
+	  $@-t  # We just want the appendix tag (asciidoctor adds non-empty book-level title)
+	$(AM_V_at)sed -i 's/book>/chapter>/g' $@-t   # Rename to chapter (won't trigger if previous sed did)
+	$(AM_V_GEN)mv $@-t $@
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based
