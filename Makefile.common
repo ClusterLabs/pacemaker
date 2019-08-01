@@ -1,27 +1,37 @@
-# Not all current distros support AM_V_P
+#
+# Copyright 2014-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+#
+# Some variables to help with silent rules
 # https://www.gnu.org/software/automake/manual/html_node/Automake-silent_002drules-Option.html
+#
+# We require a minimum automake version of 1.11, which includes AM_V_GEN and
+# AM_V_at, but AM_V_P is not available until 1.13.
 
 V ?= $(AM_DEFAULT_VERBOSITY)
 
-PCMK_V = $(pcmk__v_$(V))
-pcmk__v_0 = :
-pcmk__v_1 =
-
+# When a make command is prefixed with one of the AM_V_* macros, it may also be
+# desirable to suffix the command with this, to silence stdout.
 PCMK_quiet = $(pcmk_quiet_$(V))
-pcmk_quiet_0 = >/dev/null 2>&1
+pcmk_quiet_0 = >/dev/null
 pcmk_quiet_1 = 
 
-AM_V_XSL = $(am__v_XSL_$(V))
-am__v_XSL_0 = @echo "  XSL     " $@;
-am__v_XSL_1 = 
-
+# AM_V_GEN is intended to be used in custom pattern rules, and replaces echoing
+# the command used with a more concise line with "GEN" and the name of the file
+# being generated. Our AM_V_* macros are similar but more descriptive.
 AM_V_MAN = $(am__v_MAN_$(V))
-am__v_MAN_0 = @echo "  MAN     " $@;
+am__v_MAN_0 = @echo "  MAN      $@";
 am__v_MAN_1 = 
 
-AM_V_ASCII = $(am__v_ASCII_$(V))
-am__v_ASCII_0 = @echo "  ASCII   " $@;
-am__v_ASCII_1 = 
+AM_V_SCHEMA = $(am__v_SCHEMA_$(V))
+am__v_SCHEMA_0 = @echo "  SCHEMA   $@";
+am__v_SCHEMA_1 = 
 
 AM_V_PUB = $(am__v_PUB_$(V))
 am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
@@ -37,18 +47,18 @@ man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8) $(dist_sbin_SCRIPTS:%=
 endif
 
 %.8:	% $(MAN8DEPS)
-	chmod a+x $(abs_builddir)/$<
+	$(AM_V_at)chmod a+x $(abs_builddir)/$<
 	$(AM_V_MAN)PATH=$(abs_builddir):$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
 
 %.xml:  %
-	$(AM_V_GEN)$(abs_builddir)/$< metadata > $@
+	$(AM_V_at)$(abs_builddir)/$< metadata > $@
 
 %.dbook: %.xml
-	$(AM_V_XSL)$(XSLTPROC) --nonet --novalid --stringparam man.name $* $(DBOOK_OPTS) $(top_srcdir)/xml/ocf-meta2man.xsl $(abs_builddir)/$< > $(abs_builddir)/$@
+	$(AM_V_at)$(XSLTPROC) --nonet --novalid --stringparam man.name $* $(DBOOK_OPTS) $(top_srcdir)/xml/ocf-meta2man.xsl $(abs_builddir)/$< > $(abs_builddir)/$@
 
 %.7:	%.dbook
-	$(AM_V_XSL)$(XSLTPROC) $(MANPAGE_XSLT) $(abs_builddir)/$< $(PCMK_quiet)
-
+	$(AM_V_MAN)$(XSLTPROC) $(MANPAGE_XSLT) $(abs_builddir)/$< $(PCMK_quiet)
+# 
 # Build docbook from asciidoc because XML is a PITA to edit
 #
 # Build each chapter as a book (since the numbering isn't right for
@@ -59,9 +69,9 @@ endif
 #
 %.xml:  %.txt
 if IS_ASCIIDOC
-	$(AM_V_ASCII)$(ASCIIDOC_CONV) -b docbook -d book -o $@-tt $<
+	$(AM_V_GEN)$(ASCIIDOC_CONV) -b docbook -d book -o $@-tt $<
 else
-	$(AM_V_ASCII)$(ASCIIDOC_CONV) -b docbook45 -d book -o $@-tt $<
+	$(AM_V_GEN)$(ASCIIDOC_CONV) -b docbook45 -d book -o $@-tt $<
 endif
 	$(AM_V_at)tr -d '\036\r' <$@-tt >$@-t; rm -f $@-tt  # Fix line endings
 	$(AM_V_at)sed -i 's/\ lang="en"//' $@-t      # Never specify a language in the chapters

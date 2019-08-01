@@ -4,7 +4,8 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+
+include $(top_srcdir)/Makefile.common
 
 # Pacemaker 1.1 has 2 schemas: the CIB schema, and a schema for
 # crm_mon --as-xml.
@@ -86,55 +87,52 @@ cib-versions:
 
 # Dynamically generated top-level CIB schema
 pacemaker.rng: pacemaker-$(CIB_max).rng
-	echo "  RNG      $@"
-	cp $(top_builddir)/xml/$< $@
+	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
 pacemaker-%.rng: $(CIB_files) best-match.sh Makefile.am
-	echo "  RNG      $@"
-	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	echo '  <start>' >> $@
-	echo '    <element name="cib">' >> $@
-	$(srcdir)/best-match.sh cib $(*) $(@) "      "
-	echo '      <element name="configuration">' >> $@
-	echo '        <interleave>' >> $@
-	for rng in $(CIB_cfg_base); do $(srcdir)/best-match.sh $$rng $(*) $(@) "          " || :; done
-	echo '        </interleave>' >> $@
-	echo '      </element>' >> $@
-	echo '      <optional>' >> $@
-	echo '        <element name="status">' >> $@
-	$(srcdir)/best-match.sh status $(*) $(@) "          "
-	echo '        </element>' >> $@
-	echo '      </optional>' >> $@
-	echo '    </element>' >> $@
-	echo '  </start>' >> $@
-	echo '</grammar>' >> $@
+	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	$(AM_V_at)echo '  <start>' >> $@
+	$(AM_V_at)echo '    <element name="cib">' >> $@
+	$(AM_V_at)$(srcdir)/best-match.sh cib $(*) $(@) "      "
+	$(AM_V_at)echo '      <element name="configuration">' >> $@
+	$(AM_V_at)echo '        <interleave>' >> $@
+	$(AM_V_at)for rng in $(CIB_cfg_base); do $(srcdir)/best-match.sh $$rng $(*) $(@) "          " || :; done
+	$(AM_V_at)echo '        </interleave>' >> $@
+	$(AM_V_at)echo '      </element>' >> $@
+	$(AM_V_at)echo '      <optional>' >> $@
+	$(AM_V_at)echo '        <element name="status">' >> $@
+	$(AM_V_at)$(srcdir)/best-match.sh status $(*) $(@) "          "
+	$(AM_V_at)echo '        </element>' >> $@
+	$(AM_V_at)echo '      </optional>' >> $@
+	$(AM_V_at)echo '    </element>' >> $@
+	$(AM_V_at)echo '  </start>' >> $@
+	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 
 # Dynamically generated CIB schema listing all pacemaker versions
 versions.rng: Makefile.am
-	echo "  RNG      $@"
-	echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	echo '  <start>' >> $@
-	echo '   <interleave>' >> $@
-	echo '    <optional>' >> $@
-	echo '      <attribute name="validate-with">' >> $@
-	echo '        <choice>' >> $@
-	echo '          <value>none</value>' >> $@
-	echo '          <value>pacemaker-0.6</value>' >> $@
-	echo '          <value>transitional-0.6</value>' >> $@
-	echo '          <value>pacemaker-0.7</value>' >> $@
-	echo '          <value>pacemaker-1.1</value>' >> $@
-	for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
-	echo '        </choice>' >> $@
-	echo '      </attribute>' >> $@
-	echo '    </optional>' >> $@
-	echo '    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
-	echo '    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
-	echo '    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
-	echo '   </interleave>' >> $@
-	echo '  </start>' >> $@
-	echo '</grammar>' >> $@
+	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	$(AM_V_at)echo '  <start>' >> $@
+	$(AM_V_at)echo '   <interleave>' >> $@
+	$(AM_V_at)echo '    <optional>' >> $@
+	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
+	$(AM_V_at)echo '        <choice>' >> $@
+	$(AM_V_at)echo '          <value>none</value>' >> $@
+	$(AM_V_at)echo '          <value>pacemaker-0.6</value>' >> $@
+	$(AM_V_at)echo '          <value>transitional-0.6</value>' >> $@
+	$(AM_V_at)echo '          <value>pacemaker-0.7</value>' >> $@
+	$(AM_V_at)echo '          <value>pacemaker-1.1</value>' >> $@
+	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
+	$(AM_V_at)echo '        </choice>' >> $@
+	$(AM_V_at)echo '      </attribute>' >> $@
+	$(AM_V_at)echo '    </optional>' >> $@
+	$(AM_V_at)echo '    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '   </interleave>' >> $@
+	$(AM_V_at)echo '  </start>' >> $@
+	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 
 # diff fails with ec=2 if no predecessor is found;
 # this uses '=' GNU extension to sed, if that's not available,
