@@ -909,10 +909,6 @@ main(int argc, char **argv)
     stonith__register_messages(out);
 
     if (args->version) {
-        /* FIXME: For the moment, this won't do anything on XML or HTML formats
-         * because finish is not getting called.  That's commented out in
-         * clean_up.
-         */
         out->version(out, false);
         return clean_up(CRM_EX_OK);
     }
@@ -1821,10 +1817,7 @@ clean_up(crm_exit_t exit_code)
     g_option_context_free(context);
 
     if (out != NULL) {
-        /* FIXME: When we are ready to enable formatted output, uncomment
-         * the following line:
-         */
-        /* out->finish(out, exit_code, true, NULL); */
+        out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
 
