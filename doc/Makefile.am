@@ -281,7 +281,7 @@ brand: brand-build
 	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
 
 brand-rpm-clean:
-	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+	-find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
 
 brand-rpm-build: brand-rpm-clean brand-build
 	cd publican-clusterlabs && $(PUBLICAN) package --binary
@@ -309,10 +309,19 @@ if BUILD_DOCBOOK
 endif
 	rsync $(RSYNC_OPTS) $(doc_DATA) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
+ALL_GEN	= $(generated_docs)		\
+	  $(docbook_build)		\
+	  $(PNGS_GENERATED)		\
+	  $(SHARED_XML)			\
+	  $(CFS_XML_GEN)		\
+	  $(PD_XML_GEN)			\
+	  $(PE_XML_GEN)			\
+	  $(PR_XML_GEN)			\
+	  publican-catalog-fallback	\
+	  publican-catalog
 
-clean-local:
-	-rm -f $(PNGS_GENERATED)
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build)
-	-rm -rf $(SHARED_XML) $(CFS_XML_GEN) $(PD_XML_GEN) $(PE_XML_GEN) $(PR_XML_GEN)
-	-rm -rf  publican-catalog-fallback publican-catalog
-	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
+clean-local: brand-rpm-clean
+	-rm -f $(ALL_GEN)
+	-for book in $(docbook); do			\
+		rm -rf $$book/tmp $$book/publish;	\
+	done
