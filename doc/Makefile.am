@@ -19,14 +19,29 @@
 #
 include $(top_srcdir)/Makefile.common
 
-helpdir		= $(datadir)/$(PACKAGE)
+# Deprecated plaintext documents (also dynamically converted to HTML)
+ascii		= acls.txt			\
+		  crm_fencing.txt
+generated_docs	=
+if BUILD_ASCIIDOC
+generated_docs	+= $(ascii:%.txt=%.html)
+endif
 
-ascii		= crm_fencing.txt acls.txt
-docbook		=	Clusters_from_Scratch		\
-			Pacemaker_Development		\
-			Pacemaker_Explained		\
-			Pacemaker_Remote
-doc_DATA	= $(ascii) $(generated_docs)
+# Current Publican/docbook-based documentation
+docbook		= Clusters_from_Scratch		\
+		  Pacemaker_Development		\
+		  Pacemaker_Explained		\
+		  Pacemaker_Remote
+docbook_build = $(docbook:%=%.build)
+
+doc_DATA		= $(ascii) $(generated_docs)
+
+EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
+EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
+EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
+EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
+EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
+EXTRA_DIST	+= pcs-crmsh-quick-ref.md
 
 # toplevel rsync destination for www targets (without trailing slash)
 RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
@@ -35,20 +50,12 @@ RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 # don't cross filesystems, sparse, show progress
 RSYNC_OPTS      = -rlptvzxS --progress
 
-publican_docs   =
-generated_docs	=
-generated_mans	=
-
-
-# What formats to build: pdf,html,html-single,html-desktop,epub
+# What formats to build by default: pdf,html,html-single,html-desktop,epub
 DOCBOOK_FORMATS := html-desktop
 
-# What languages to build
+# What languages to build and upload to website by default
+# (currently only en-US because translations are out of date)
 DOCBOOK_LANGS   := en-US
-
-# What languages to build for uploading to website
-# (currently only en-US because translations aren't up-to-date)
-UPLOAD_LANGS    = en-US
 
 # @TODO We could simplify this (and .gitignore) by establishing a convention
 # that original image source begins with an uppercase letter and generated
@@ -65,7 +72,7 @@ SVGS =	$(wildcard Clusters_from_Scratch/en-US/images/pcmk-*.svg)	\
 	$(wildcard Pacemaker_Explained/en-US/images/pcmk-*.svg)	\
 	$(DOTS:%.dot=%.svg)
 
-# Final images
+# Final images (some originally in PNG, others generated from SVG)
 PNGS_ORIGINAL =	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png	\
 		Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png	\
 		Clusters_from_Scratch/en-US/images/Console.png		\
@@ -93,22 +100,6 @@ graphics: $(PNGS)
 
 %-large.png: %.svg
 	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@ $(PCMK_quiet)
-
-if BUILD_ASCIIDOC
-generated_docs	+= $(ascii:%.txt=%.html)
-
-if BUILD_DOCBOOK
-publican_docs	+= $(docbook)
-endif
-endif
-
-EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
-EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
-EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
-EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
-EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
-EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
-EXTRA_DIST	+= pcs-crmsh-quick-ref.md
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
@@ -147,118 +138,106 @@ COMMON_XML = Author_Group.xml Book_Info.xml Revision_History.xml
 SHARED_TXT=$(wildcard shared/en-US/*.txt)
 SHARED_XML=$(SHARED_TXT:%.txt=%.xml)
 
-
-CFS_SHARED_TXT=$(addprefix shared/en-US/,pacemaker-intro.txt)
-CFS_SHARED_XML=$(CFS_SHARED_TXT:%.txt=%.xml)
-CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
-CFS_XML=$(CFS_TXT:%.txt=%.xml)
-CFS_XML_ONLY=$(addprefix Clusters_from_Scratch/en-US/,$(COMMON_XML) \
-  Clusters_from_Scratch.ent Clusters_from_Scratch.xml Preface.xml)
-
-$(CFS_XML): $(CFS_SHARED_XML)
-
-PUBLICAN_INTREE_DEPS =
 if PUBLICAN_INTREE_BRAND
-PUBLICAN_INTREE_DEPS += publican-catalog
+PUBLICAN_INTREE_DEPS	= publican-catalog
+PUBLICAN_INTREE_ENV	= XML_CATALOG_FILES="$(CURDIR)/publican-catalog"
+PUBLICAN_INTREE_OPT	= --brand_dir=../publican-clusterlabs 
+else
+PUBLICAN_INTREE_DEPS	=
+PUBLICAN_INTREE_ENV	=
+PUBLICAN_INTREE_OPT	=
 endif
+
+
+# Clusters From Scratch
+
+CFS_SHARED_TXT	= $(addprefix shared/en-US/,pacemaker-intro.txt)
+CFS_SHARED_XML	= $(CFS_SHARED_TXT:%.txt=%.xml)
+CFS_TXT		= $(wildcard Clusters_from_Scratch/en-US/*.txt)
+CFS_XML_GEN	= $(CFS_TXT:%.txt=%.xml)
+CFS_XML_ONLY	= $(addprefix Clusters_from_Scratch/en-US/,$(COMMON_XML) \
+		  Clusters_from_Scratch.ent \
+		  Clusters_from_Scratch.xml \
+		  Preface.xml)
+CFS_DEPS	= $(PNGS) $(CFS_SHARED_XML) $(CFS_XML_ONLY) $(CFS_XML_GEN)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS) $(CFS_XML_ONLY) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+Clusters_from_Scratch.build: $(CFS_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
-if PUBLICAN_INTREE_BRAND
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
-	   $(PCMK_quiet)
-else
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
-	   $(PCMK_quiet)
-endif
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
+	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
+	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 
-PD_TXT=$(wildcard Pacemaker_Development/en-US/*.txt)
-PD_XML=$(PD_TXT:%.txt=%.xml)
-PD_XML_ONLY=$(addprefix Pacemaker_Development/en-US/,$(COMMON_XML) \
-  Pacemaker_Development.ent Pacemaker_Development.xml)
+# Pacemaker Development
+
+PD_TXT		= $(wildcard Pacemaker_Development/en-US/*.txt)
+PD_XML_GEN	= $(PD_TXT:%.txt=%.xml)
+PD_XML_ONLY	= $(addprefix Pacemaker_Development/en-US/,$(COMMON_XML) \
+		  Pacemaker_Development.ent \
+		  Pacemaker_Development.xml)
+PD_DEPS		= $(PD_XML_ONLY) $(PD_XML_GEN)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Development.build: $(PD_XML_ONLY) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Development.build: $(PD_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
-if PUBLICAN_INTREE_BRAND
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
-	   $(PCMK_quiet)
-else
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
-	   $(PCMK_quiet)
-endif
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
+	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
+	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 
-PE_SHARED_TXT=$(addprefix shared/en-US/,pacemaker-intro.txt)
-PE_SHARED_XML=$(PE_SHARED_TXT:%.txt=%.xml)
-PE_TXT=$(wildcard Pacemaker_Explained/en-US/*.txt)
-PE_XML=$(PE_TXT:%.txt=%.xml)
-PE_XML_ONLY=$(addprefix Pacemaker_Explained/en-US/,$(COMMON_XML) \
-  Pacemaker_Explained.ent Pacemaker_Explained.xml Preface.xml)
+# Pacemaker Explained
 
-$(PE_XML): $(PE_SHARED_XML)
+PE_SHARED_TXT	= $(addprefix shared/en-US/,pacemaker-intro.txt)
+PE_SHARED_XML	= $(PE_SHARED_TXT:%.txt=%.xml)
+PE_TXT		= $(wildcard Pacemaker_Explained/en-US/*.txt)
+PE_XML_GEN	= $(PE_TXT:%.txt=%.xml)
+PE_XML_ONLY	= $(addprefix Pacemaker_Explained/en-US/,$(COMMON_XML) \
+		  Pacemaker_Explained.ent \
+		  Pacemaker_Explained.xml \
+		  Preface.xml)
+PE_DEPS		= $(PNGS) $(PE_SHARED_XML) $(PE_XML_ONLY) $(PE_XML_GEN)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Explained.build: $(PNGS) $(PE_XML_ONLY) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Explained.build: $(PE_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
-if PUBLICAN_INTREE_BRAND
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
-	   $(PCMK_quiet)
-else
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
-	   $(PCMK_quiet)
-endif
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
+	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
+	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 
-PR_TXT=$(wildcard Pacemaker_Remote/en-US/*.txt)
-PR_XML=$(PR_TXT:%.txt=%.xml)
-PR_XML_ONLY=$(addprefix Pacemaker_Remote/en-US/,$(COMMON_XML) \
-  Pacemaker_Remote.ent Pacemaker_Remote.xml)
+# Pacemaker Remote
+
+PR_TXT		= $(wildcard Pacemaker_Remote/en-US/*.txt)
+PR_XML_GEN	= $(PR_TXT:%.txt=%.xml)
+PR_XML_ONLY	= $(addprefix Pacemaker_Remote/en-US/,$(COMMON_XML) \
+		  Pacemaker_Remote.ent \
+		  Pacemaker_Remote.xml)
+PR_DEPS		= $(PR_XML_ONLY) $(PR_XML_GEN)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(PR_XML_ONLY) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Remote.build: $(PNGS) $(PR_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
-if PUBLICAN_INTREE_BRAND
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) --brand_dir=../publican-clusterlabs \
-	   $(PCMK_quiet)
-else
-	$(AM_V_PUB)cd $(@:%.build=%) \
-	&& RPM_BUILD_DIR="" \
-	   $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) \
-	   $(PCMK_quiet)
-endif
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
+	  $(PUBLICAN) build --publish --langs="$(DOCBOOK_LANGS)"		\
+	    --formats="$(DOCBOOK_FORMATS)" $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
+
 
 # Update the translation template
 pot:
@@ -275,8 +254,6 @@ po: pot
 	done
 
 if BUILD_DOCBOOK
-docbook_build = $(docbook:%=%.build)
-
 all-local: $(docbook_build) */publican.cfg
 
 install-data-local: all-local
@@ -316,10 +293,12 @@ pdf:
 	make DOCBOOK_FORMATS="pdf" all-local
 
 www: clean-local $(doc_DATA)
+if BUILD_DOCBOOK
 	for book in $(docbook); do 							\
 		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
-	$(MAKE) DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" all-local
+endif
+	$(MAKE) DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(DOCBOOK_LANGS)" all-local
 	@echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
 	@for book in $(docbook); do 									\
@@ -328,11 +307,12 @@ if BUILD_DOCBOOK
 		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";			\
 	done
 endif
-	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
+	rsync $(RSYNC_OPTS) $(doc_DATA) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
+
 
 clean-local:
 	-rm -f $(PNGS_GENERATED)
 	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build)
-	-rm -rf $(SHARED_XML) $(CFS_XML) $(PE_XML) $(PR_XML)
+	-rm -rf $(SHARED_XML) $(CFS_XML_GEN) $(PD_XML_GEN) $(PE_XML_GEN) $(PR_XML_GEN)
 	-rm -rf  publican-catalog-fallback publican-catalog
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
