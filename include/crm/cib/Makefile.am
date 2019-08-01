@@ -22,4 +22,4 @@ MAINTAINERCLEANFILES	= Makefile.in
 headerdir=$(pkgincludedir)/crm/cib
 
 noinst_HEADERS		= internal.h
-header_HEADERS		= util.h
+header_HEADERS		= util.h cib_types.h
