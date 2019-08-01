@@ -91,4 +91,22 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
+/*!
+ * \internal
+ * \brief Derive full path to where the pacemaker's user config is expected
+ *
+ * Priorities:
+ * - $XDG_CONFIG_HOME/pacemaker if $XDG_CONFIG_HOME defined
+ * - $HOME/.config/pacemaker if $HOME defined
+ * - /home/$(id -nu)/.config/pacemaker otherwise
+ *
+ * See also:
+ * https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ *
+ * \param[in] basename  final path segment for the configuration file
+ *                      in question
+ * \return full path (dynamically allocated!) or \c NULL in case of error
+ */
+char *pcmk__user_config(const char *basename);
+
 #endif  // CRMCOMMON_PRIVATE__H
