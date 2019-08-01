@@ -1199,3 +1199,25 @@ pcmk_hostname()
 
     return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
 }
+
+const char *
+pcmk__user_config(const char *basename)
+{
+    struct passwd *pw;
+
+    const char *envstore = getenv("XDG_CONFIG_HOME");
+    if (envstore != NULL) {
+        return crm_strdup_printf("%s/pacemaker/%s", envstore, basename);
+    }
+    envstore = getenv("HOME");
+    if (envstore != NULL) {
+        return crm_strdup_printf("%s/.config/pacemaker/%s", envstore, basename);
+    }
+
+    if ((pw = getpwuid(geteuid())) == NULL || pw->pw_name == NULL
+            || *pw->pw_name == '\0') {
+        return NULL;
+    }
+
+    return crm_strdup_printf("/home/%s/.config/pacemaker/%s", pw->pw_name, basename);
+}
