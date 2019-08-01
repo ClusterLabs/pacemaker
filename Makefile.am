@@ -45,19 +45,24 @@ scratch.c:
 
 core:
 	@echo "Building only core components and tests: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; $(MAKE) -C $$subdir all || exit 1; done
+	@for subdir in $(CORE); do \
+		echo "Building $$subdir"; \
+		$(MAKE) -C $$subdir all || exit 1; \
+	done
 
 core-install:
 	@echo "Installing only core components: $(CORE_INSTALL)"
-	list='$(CORE_INSTALL)'; \
-	for subdir in $$list; do \
+	@for subdir in $(CORE_INSTALL); do \
 	    echo "Installing $$subdir"; \
 	    $(MAKE) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; $(MAKE) -C $$subdir clean || exit 1; done
+	@for subdir in $(CORE); do \
+		echo "Cleaning $$subdir"; \
+		$(MAKE) -C $$subdir clean || exit 1; \
+	done
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)

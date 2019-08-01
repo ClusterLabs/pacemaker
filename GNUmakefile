@@ -192,7 +192,7 @@ srpm-%:	export $(PACKAGE)-%.spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-next:
 	make F=$(shell expr 1 + $(F)) mock
@@ -201,19 +201,19 @@ mock-rawhide:
 	make F=rawhide mock
 
 mock-install-%:
-	echo "Installing packages"
+	@echo "Installing packages"
 	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents psmisc
 
 mock-install: mock-install-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-sh: mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-sh-%:
-	echo "Connecting"
+	@echo "Connecting"
 	mock --root=$* $(MOCK_OPTIONS) --shell
-	echo "Done"
+	@echo "Done"
 
 # eg. make WITH="--with pre_release" rpm
 mock-%:
@@ -223,10 +223,10 @@ mock-%:
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
-	echo "Done"
+	@echo "Done"
 
 mock:   mock-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 rpm-dep: $(PACKAGE)-$(DISTRO).spec
 	if [ x != x`which yum-builddep 2>/dev/null` ]; then			\
