@@ -77,13 +77,13 @@ PNGS = $(PNGS_ORIGINAL) $(PNGS_GENERATED)
 graphics: $(PNGS)
 
 %.png: %.svg
-	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@
+	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@ $(PCMK_quiet)
 
 %-small.png: %.svg
-	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@
+	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@ $(PCMK_quiet)
 
 %-large.png: %.svg
-	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
+	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@ $(PCMK_quiet)
 
 if BUILD_ASCIIDOC
 generated_docs	+= $(ascii:%.txt=%.html)
@@ -108,7 +108,7 @@ ASCIIDOC_HTML_ARGS	= --backend=html5
 endif
 
 %.html: %.txt
-	$(AM_V_ASCII)$(ASCIIDOC_CONV) $(ASCIIDOC_HTML_ARGS) --out-file=$@ $<
+	$(AM_V_GEN)$(ASCIIDOC_CONV) $(ASCIIDOC_HTML_ARGS) --out-file=$@ $< $(PCMK_quiet)
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based
@@ -155,8 +155,8 @@ endif
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Clusters_from_Scratch.build: $(PNGS)  $(CFS_XML_ONLY) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
-	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+Clusters_from_Scratch.build: $(PNGS) $(CFS_XML_ONLY) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
+	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
@@ -181,7 +181,7 @@ PA_XML_ONLY=$(addprefix Pacemaker_Administration/en-US/,$(COMMON_XML) \
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Administration.build: $(PA_XML_ONLY) $(PA_XML) $(PUBLICAN_INTREE_DEPS)
-	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
@@ -206,7 +206,7 @@ PD_XML_ONLY=$(addprefix Pacemaker_Development/en-US/,$(COMMON_XML) \
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Development.build: $(PD_XML_ONLY) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
-	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
@@ -235,7 +235,7 @@ $(PE_XML): $(PE_SHARED_XML)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Explained.build: $(PNGS) $(PE_XML_ONLY) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
-	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
@@ -260,7 +260,7 @@ PR_XML_ONLY=$(addprefix Pacemaker_Remote/en-US/,$(COMMON_XML) \
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Remote.build: $(PNGS) $(PR_XML_ONLY) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
-	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
+	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
