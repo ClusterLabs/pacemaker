@@ -2,7 +2,10 @@
  Configuration for the ACLs visualization (as with cibadmin -L)
  ==============================================================
 
- To be deployed in Pacemaker configuration directory (normally /etc/pacemaker).
+ To be deployed in Pacemaker configuration directory (normally /etc/pacemaker),
+ but per-user configuration in "pacemaker" subdirectory of $XDG_CONFIG_HOME
+ (normally ~/.config) takes a precedence when present.  To use that, just
+ create that subdirectory and copy this file over, then adjust as needed.
 
 
  Minimal Guidance for the Configuration Format

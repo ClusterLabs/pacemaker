@@ -102,6 +102,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
  *                      in question
  * \return full path (dynamically allocated!) or \c NULL in case of error
  */
-const char *pcmk__user_config(const char *basename);
+char *pcmk__user_config(const char *basename);
 
 #endif  // CRMCOMMON_PRIVATE__H

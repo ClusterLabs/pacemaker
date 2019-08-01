@@ -42,6 +42,8 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
+#include "crmcommon_private.h"  /* pcmk__user_config */
+
 #ifndef MAXLINE
 #  define MAXLINE 512
 #endif
@@ -1200,7 +1202,7 @@ pcmk_hostname()
     return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
 }
 
-const char *
+char *
 pcmk__user_config(const char *basename)
 {
     struct passwd *pw;
