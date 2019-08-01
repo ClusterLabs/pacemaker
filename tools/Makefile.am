@@ -63,7 +63,10 @@ endif
 
 ## SOURCES
 
-MAN8DEPS		= crm_attribute crm_node
+# A few tools are just thin wrappers around crm_attribute.
+# This makes their help get updated when crm_attribute changes
+# (see Makefile.common).
+MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
