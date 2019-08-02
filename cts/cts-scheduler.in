@@ -1245,7 +1245,7 @@ class CtsScheduler(object):
             # @TODO Why isn't test_args added here?
             test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ]
         with io.open(summary_output_filename, "wt") as f:
-            subprocess.call(test_cmd_full, stdout=f, stderr=subprocess.STDOUT)
+            subprocess.call(test_cmd_full, stdout=f, stderr=subprocess.STDOUT, env=os.environ)
         if self.args.run:
             cat(summary_output_filename)
 
@@ -1257,7 +1257,7 @@ class CtsScheduler(object):
             '-sSQ' ] + test_args
         with io.open(stderr_output_filename, "wt") as f_stderr, \
              io.open(score_output_filename,  "wt") as f_score:
-            rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr)
+            rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
 
         # Check for test command failure
         if rc != CrmExit.OK:
