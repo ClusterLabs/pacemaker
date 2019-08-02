@@ -1065,6 +1065,9 @@ class CtsScheduler(object):
         parser.add_argument('-i', '--io-dir', metavar='PATH',
                             help='Specify path to regression test data directory')
 
+        parser.add_argument('-o', '--out-dir', metavar='PATH',
+                            help='Specify where intermediate and output files should go')
+
         parser.add_argument('-v', '--valgrind', action='store_true',
                             help='Run all commands under valgrind')
 
@@ -1162,10 +1165,14 @@ class CtsScheduler(object):
         # Where test data resides
         if self.args.io_dir is None:
             self.args.io_dir = os.path.join(self.test_home, "scheduler")
-        os.environ['CIB_shadow_dir'] = self.args.io_dir
 
-        # Where to store results of failed tests
-        self.failed_filename = os.path.join(self.test_home, ".regression.failed.diff")
+        # Where to store generated files
+        if self.args.out_dir is None:
+            self.args.out_dir = self.args.io_dir
+            self.failed_filename = os.path.join(self.test_home, ".regression.failed.diff")
+        else:
+            self.failed_filename = os.path.join(self.args.out_dir, ".regression.failed.diff")
+        os.environ['CIB_shadow_dir'] = self.args.out_dir
         self.failed_file = None
 
         # Single test mode (if requested)
@@ -1212,12 +1219,12 @@ class CtsScheduler(object):
         stderr_expected_filename = "%s/%s.stderr" % (self.args.io_dir, test_name)
 
         # (Intermediate) test outputs
-        output_filename = "%s/%s.out" % (self.args.io_dir, test_name)
-        dot_output_filename = "%s/%s.pe.dot" % (self.args.io_dir, test_name)
-        score_output_filename = "%s/%s.scores.pe" % (self.args.io_dir, test_name)
-        summary_output_filename = "%s/%s.summary.pe" % (self.args.io_dir, test_name)
-        stderr_output_filename = "%s/%s.stderr.pe" % (self.args.io_dir, test_name)
-        valgrind_output_filename = "%s/%s.valgrind" % (self.args.io_dir, test_name)
+        output_filename = "%s/%s.out" % (self.args.out_dir, test_name)
+        dot_output_filename = "%s/%s.pe.dot" % (self.args.out_dir, test_name)
+        score_output_filename = "%s/%s.scores.pe" % (self.args.out_dir, test_name)
+        summary_output_filename = "%s/%s.summary.pe" % (self.args.out_dir, test_name)
+        stderr_output_filename = "%s/%s.stderr.pe" % (self.args.out_dir, test_name)
+        valgrind_output_filename = "%s/%s.valgrind" % (self.args.out_dir, test_name)
 
         # Common arguments for running test
         test_cmd = []
