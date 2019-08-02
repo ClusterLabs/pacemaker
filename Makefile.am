@@ -39,10 +39,17 @@ MAINTAINERCLEANFILES	= Makefile.in		\
 # GNUmakefile sets "core" as the default target. However in a VPATH build,
 # there is no GNUmakefile, so "all" becomes the default target.
 #
+# Also, don't try to install files outside the build directory.
+#
 # @TODO To support VPATH builds for Publican, we could use the same "copy all
 # static inputs into the build tree" trick that xml/Makefile.am uses for
 # static schema files.
-AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
+AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""					\
+				  --prefix="$$dc_install_base/usr"			\
+				  --sysconfdir="$$dc_install_base/etc"			\
+				  --with-initdir="$$dc_install_base/etc/init.d"		\
+				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
+				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get installed with a plain "make install"
 CORE_INSTALL	= replace include lib daemons tools xml
