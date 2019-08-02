@@ -10,6 +10,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import re
 import sys
 import subprocess
 import shlex
@@ -120,7 +121,7 @@ def rng_directory():
     if "PCMK_schema_directory" in os.environ:
         return os.environ["PCMK_schema_directory"]
     elif os.path.exists("%s/cts-fencing.in" % TEST_DIR):
-        return "xml/api"
+        return "xml"
     else:
         return SCHEMA_DIR
 
@@ -386,14 +387,16 @@ class Test(object):
         if test.returncode != args['expected_exitcode']:
             raise ExitCodeError(test.returncode)
 
-        if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
+        if (args['stdout_match'] != "" and
+            re.search(args['stdout_match'], output) is None):
             raise OutputNotFoundError(output)
 
-        if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
+        if (args['stdout_negative_match'] != "" and
+            re.search(args['stdout_negative_match'], output) is not None):
             raise OutputFoundError(output)
 
         if args['validate']:
-            rng_file = rng_directory() + "/api-result.rng"
+            rng_file = rng_directory() + "/api/api-result.rng"
 
             cmd = find_validator(rng_file)
             if not cmd:
@@ -1065,7 +1068,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5 -V")
 
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -H node3", 'status="success" delegate="localhost.localdomain" action="off" target="node3"' "")
+            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -H node3", 'status="success" .* action="off" target="node3"')
 
         # simple test of dynamic list query
         for test_type in test_types:
