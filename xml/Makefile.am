@@ -214,8 +214,4 @@ fulldiff: best-match.sh
 	@echo "#  Comparing all changes across all the subsequent increments"
 	$(call version_diff,${RNG_version_pairs})
 
-sync:
-	git rm -f $(wildcard *-next.rng)
-	make pacemaker-next.rng
-
 CLEANFILES = $(API_generated) $(RNG_generated)
