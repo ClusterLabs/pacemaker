@@ -120,7 +120,7 @@ def rng_directory():
     if "PCMK_schema_directory" in os.environ:
         return os.environ["PCMK_schema_directory"]
     elif os.path.exists("%s/cts-fencing.in" % TEST_DIR):
-        return "xml/api"
+        return "xml"
     else:
         return SCHEMA_DIR
 
@@ -393,7 +393,7 @@ class Test(object):
             raise OutputFoundError(output)
 
         if args['validate']:
-            rng_file = rng_directory() + "/api-result.rng"
+            rng_file = rng_directory() + "/api/api-result.rng"
 
             cmd = find_validator(rng_file)
             if not cmd:
