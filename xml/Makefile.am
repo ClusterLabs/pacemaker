@@ -28,8 +28,6 @@ dist_xslt_DATA		= $(top_srcdir)/xml/upgrade-1.3.xsl \
 			  $(top_srcdir)/xml/upgrade-*enter.xsl \
 			  $(top_srcdir)/xml/upgrade-*leave.xsl
 
-noinst_DATA		= context-of.xsl
-
 # See Readme.md for details on updating schema files
 
 # Sorted list of available numeric RNG versions,
@@ -87,7 +85,20 @@ dist_RNG_DATA		= $(RNG_files) $(RNG_extra)
 nodist_API_DATA 	= $(API_generated)
 nodist_RNG_DATA		= $(RNG_generated)
 
-EXTRA_DIST		= best-match.sh
+EXTRA_DIST		= Readme.md			\
+			  best-match.sh			\
+			  cibtr-2.rng			\
+			  context-of.xsl		\
+			  ocf-meta2man.xsl		\
+			  regression.sh			\
+			  upgrade-2.10-roundtrip.xsl	\
+			  upgrade-detail.xsl		\
+			  xslt_cibtr-2.rng		\
+			  assets			\
+			  test-2			\
+			  test-2-enter			\
+			  test-2-leave			\
+			  test-2-roundtrip
 
 versions:
 	echo "Max: $(RNG_max)"

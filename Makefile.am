@@ -7,7 +7,15 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
+EXTRA_DIST		= CONTRIBUTING.md	\
+			  GNUmakefile		\
+			  INSTALL.md		\
+			  README.markdown	\
+			  autogen.sh		\
+			  pacemaker.spec.in	\
+			  rpmlintrc		\
+			  m4/gnulib-cache.m4	\
+			  m4/gnulib-tool.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
@@ -25,7 +33,7 @@ AM_CPPFLAGS		= -I$(top_srcdir)/include
 doc_DATA = README.markdown COPYING
 
 licensedir              = $(docdir)/licenses/
-license_DATA            = $(wildcard licenses/*)
+dist_license_DATA	= $(wildcard licenses/*)
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch

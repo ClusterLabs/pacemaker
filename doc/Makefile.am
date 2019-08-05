@@ -93,12 +93,13 @@ publican_docs	+= $(docbook)
 endif
 endif
 
-EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(SVGS)
+EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
 EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
 EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
 EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
 EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
+EXTRA_DIST	+= pcs-crmsh-quick-ref.md
 
 %.html: %.txt
 if IS_ASCIIDOC
