@@ -75,7 +75,9 @@ XML_LOG_COMPILER = ./cts-scheduler
 AM_XML_LOG_FLAGS = -V --run
 
 scheduler-list:
-	echo $(shell ls -1 scheduler/*.xml)
+	@for T in "$(srcdir)"/scheduler/*.xml; do       \
+		echo $$(basename $$T .xml);             \
+	done
 
 clean-local:
 	rm -f scheduler/*.pe.*
