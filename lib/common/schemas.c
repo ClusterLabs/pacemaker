@@ -21,6 +21,7 @@
 #if HAVE_LIBXSLT
 #  include <libxslt/xslt.h>
 #  include <libxslt/transform.h>
+#  include <libxslt/security.h>
 #  include <libxslt/xsltutils.h>
 #endif
 
@@ -366,9 +367,46 @@ add_schema_by_version(const schema_version_t *version, int next,
     return rc;
 }
 
+static int
+wrap_libxslt(bool finalize)
+{
+    static xsltSecurityPrefsPtr secprefs;
+    int ret = 0;
+
+    /* security framework preferences */
+    if (!finalize) {
+        CRM_ASSERT(secprefs == NULL);
+        secprefs = xsltNewSecurityPrefs();
+        ret = xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_FILE,
+                                   xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_CREATE_DIRECTORY,
+                                     xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_READ_NETWORK,
+                                     xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_NETWORK,
+                                     xsltSecurityForbid);
+        if (ret != 0) {
+            return -1;
+        }
+    } else {
+        xsltFreeSecurityPrefs(secprefs);
+        secprefs = NULL;
+    }
+
+    /* cleanup only */
+    if (finalize) {
+        xsltCleanupGlobals();
+    }
+
+    return ret;
+}
+
 /*!
  * \internal
  * \brief Load pacemaker schemas into cache
+ *
+ * \note This currently also serves as an entry point for the
+ *       generic initialization of the libxslt library.
  */
 void
 crm_schema_init(void)
@@ -377,6 +415,8 @@ crm_schema_init(void)
     const char *base = get_schema_root();
     struct dirent **namelist = NULL;
     const schema_version_t zero = SCHEMA_ZERO;
+
+    wrap_libxslt(false);
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
     if (max < 0) {
@@ -579,10 +619,7 @@ crm_schema_cleanup(void)
     free(known_schemas);
     known_schemas = NULL;
 
-    xsltCleanupGlobals();  /* XXX proper, explicit reshaking regarding
-                                  init/fini routines is pending (pair
-                                  of facade functions to express the
-                                  intentions in a clean way) */
+    wrap_libxslt(true);
 }
 
 static gboolean
