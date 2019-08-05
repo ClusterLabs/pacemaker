@@ -1,9 +1,0 @@
-<cib admin_epoch="0" epoch="1" num_updates="1" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:04 2012">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>

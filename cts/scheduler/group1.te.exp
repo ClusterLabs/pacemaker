@@ -1,9 +1,0 @@
-Executing pseudo-event (4): start on (null)
-Initiating action 1: start rsc1:child_rsc1 on node1
-Action 1 confirmed
-Initiating action 2: start rsc1:child_rsc2 on node1
-Action 2 confirmed
-Initiating action 3: start rsc1:child_rsc3 on node1
-Action 3 confirmed
-Executing pseudo-event (5): running on (null)
-Transition status: Complete: complete
