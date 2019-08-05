@@ -26,7 +26,7 @@ testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
 
 initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker_remote
+dist_init_SCRIPTS	= pacemaker_remote
 sbin_PROGRAMS		= pacemaker_remoted
 
 if BUILD_SYSTEMD

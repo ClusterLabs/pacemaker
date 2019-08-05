@@ -18,12 +18,11 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 dtddir			= $(CRM_DTD_DIRECTORY)
-dtd_DATA		= crm.dtd crm-transitional.dtd
+dist_dtd_DATA		= crm.dtd crm-transitional.dtd
 
 xsltdir			= $(dtddir)
-xslt_DATA		= $(top_srcdir)/xml/upgrade06.xsl $(top_srcdir)/xml/upgrade-*.xsl
-
-noinst_DATA		= context-of.xsl
+dist_xslt_DATA		= $(top_srcdir)/xml/upgrade06.xsl \
+			  $(top_srcdir)/xml/upgrade-*.xsl
 
 RNGdir			= $(dtddir)
 
@@ -68,7 +67,12 @@ RNG_extra		= crm_mon.rng
 dist_RNG_DATA		= $(RNG_files) $(RNG_extra)
 nodist_RNG_DATA		= $(RNG_generated)
 
-EXTRA_DIST		= best-match.sh
+EXTRA_DIST		= Readme.md			\
+			  best-match.sh			\
+			  context-of.xsl		\
+			  ocf-meta2man.xsl		\
+			  regression.core.sh		\
+			  regression.sh
 
 versions:
 	echo "Max: $(RNG_max)"

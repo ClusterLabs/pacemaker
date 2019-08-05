@@ -18,7 +18,15 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in m4/gnulib-cache.m4
+EXTRA_DIST		= CONTRIBUTING.md	\
+			  GNUmakefile		\
+			  INSTALL.md		\
+			  README.markdown	\
+			  autogen.sh		\
+			  pacemaker.spec.in	\
+			  rpmlintrc		\
+			  m4/gnulib-cache.m4	\
+			  m4/gnulib-tool.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
@@ -33,14 +41,17 @@ doc_DATA = README.markdown COPYING
 ACLOCAL_AMFLAGS  = -I m4
 
 licensedir              = $(docdir)/licenses/
-license_DATA            = $(wildcard licenses/*)
+dist_license_DATA	= $(wildcard licenses/*)
 
 # Test components
 SUBDIRS	+= cts
 
 testdir			= $(datadir)/$(PACKAGE)/tests/
-test_SCRIPTS		= coverage.sh BasicSanity.sh
-test_DATA		= valgrind-pcmk.suppressions
+test_SCRIPTS		= coverage.sh
+dist_test_SCRIPTS	= BasicSanity.sh
+dist_test_DATA		= valgrind-pcmk.suppressions
+
+EXTRA_SCRIPTS		= abi-check bumplibs.sh
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch

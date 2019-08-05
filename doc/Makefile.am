@@ -56,11 +56,13 @@ UPLOAD_LANGS    = en-US
 
 # Scheduler transition graphs
 # @TODO Add original XML, and generate DOTs via crm_simulate
-DOTS = $(wildcard shared/en-US/images/*.dot)
+DOTS	= $(wildcard Clusters_from_Scratch/en-US/images/*.dot)	\
+	  $(wildcard Pacemaker_Explained/en-US/images/*.dot)
 
 # Vector sources for images
 # @TODO Generate transition SVGs from DOTs via dot
-SVGS =	$(wildcard shared/en-US/images/pcmk-*.svg)	\
+SVGS =	$(wildcard Clusters_from_Scratch/en-US/images/pcmk-*.svg)	\
+	$(wildcard Pacemaker_Explained/en-US/images/pcmk-*.svg)	\
 	$(DOTS:%.dot=%.svg)
 
 # Final images
@@ -100,12 +102,13 @@ publican_docs	+= $(docbook)
 endif
 endif
 
-EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(SVGS)
+EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
 EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
 EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
 EXTRA_DIST	+= $(PE_TXT) $(PE_XML_ONLY)
 EXTRA_DIST	+= $(PR_TXT) $(PR_XML_ONLY)
+EXTRA_DIST	+= pcs-crmsh-quick-ref.md
 
 %.html: %.txt
 if IS_ASCIIDOC

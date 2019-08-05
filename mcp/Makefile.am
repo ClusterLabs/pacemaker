@@ -20,12 +20,14 @@ include $(top_srcdir)/Makefile.common
 if BUILD_CS_SUPPORT
 
 initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker
+dist_init_SCRIPTS	= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD
 systemdunit_DATA	= pacemaker.service
 endif
+
+EXTRA_DIST		= pacemaker.sysconfig
 
 ## SOURCES
 

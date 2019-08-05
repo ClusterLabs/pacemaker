@@ -33,7 +33,7 @@ AM_CPPFLAGS		= -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
 if BUILD_HELP
-man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
+man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8) $(dist_sbin_SCRIPTS:%=%.8)
 endif
 
 %.8:	% $(MAN8DEPS)
