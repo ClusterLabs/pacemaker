@@ -1,4 +1,0 @@
-Initiating action 1: stop rsc1 on node1
-Action 1 confirmed
-Executing crm-event (2): do_shutdown on node1
-Transition status: Complete: complete
