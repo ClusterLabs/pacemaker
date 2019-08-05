@@ -45,12 +45,12 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)')
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
 	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
 SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
 WITH    ?= --without doc
