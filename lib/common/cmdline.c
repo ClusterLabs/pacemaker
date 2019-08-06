@@ -7,9 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
+
 #include <config.h>
 #include <glib.h>
 
+#include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/util.h>
 
@@ -153,5 +158,27 @@ pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
 
     g_ptr_array_free(arr, FALSE);
 
+    return retval;
+}
+
+G_GNUC_PRINTF(3, 4)
+gboolean
+pcmk__force_args(GOptionContext *context, GError **error, const char *format, ...) {
+    int len = 0;
+    char *buf = NULL;
+    gchar **extra_args = NULL;
+    va_list ap;
+    gboolean retval = TRUE;
+
+    va_start(ap, format);
+    len = vasprintf(&buf, format, ap);
+    CRM_ASSERT(len > 0);
+    va_end(ap);
+
+    extra_args = g_strsplit(buf, " ", -1);
+    retval = g_option_context_parse_strv(context, &extra_args, error);
+
+    g_strfreev(extra_args);
+    free(buf);
     return retval;
 }
