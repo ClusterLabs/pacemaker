@@ -61,14 +61,9 @@ static void print_neg_locations(mon_state_t *state, pe_working_set_t *data_set,
 static void print_node_attributes(mon_state_t *state, pe_working_set_t *data_set,
                                   unsigned int mon_ops);
 static void print_cluster_summary_header(mon_state_t *state);
-static void print_cluster_summary_footer(mon_state_t *state);
 static void print_cluster_times(mon_state_t *state, pe_working_set_t *data_set);
-static void print_cluster_stack(mon_state_t *state, const char *stack_s);
 static void print_cluster_dc(mon_state_t *state, pe_working_set_t *data_set,
                              unsigned int mon_ops);
-static void print_cluster_counts(mon_state_t *state, pe_working_set_t *data_set,
-                                 const char *stack_s);
-static void print_cluster_options(mon_state_t *state, pe_working_set_t *data_set);
 static void print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
                                   unsigned int mon_ops, unsigned int show);
 static void print_failed_action(mon_state_t *state, xmlNode *xml_op);
@@ -1275,42 +1270,10 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
 static void
 print_cluster_summary_header(mon_state_t *state)
 {
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <h2>Cluster Summary</h2>\n <p>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <summary>\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print footer for cluster summary if needed
- *
- * \param[in] stream     File stream to display output to
- */
-static void
-print_cluster_summary_footer(mon_state_t *state)
-{
-    switch (state->output_format) {
-        case mon_output_cgi:
-        case mon_output_html:
-            fprintf(state->stream, " </p>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    </summary>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "summary");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
     }
 }
 
@@ -1329,91 +1292,7 @@ print_cluster_times(mon_state_t *state, pe_working_set_t *data_set)
     const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
     const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console: {
-            const char *now_str = crm_now_string(NULL);
-
-            print_as(state->output_format, "Last updated: %s", now_str ? now_str : "Could not determine current time");
-            print_as(state->output_format, (user || client || origin)? "\n" : "\t\t");
-            print_as(state->output_format, "Last change: %s", last_written ? last_written : "");
-            if (user) {
-                print_as(state->output_format, " by %s", user);
-            }
-            if (client) {
-                print_as(state->output_format, " via %s", client);
-            }
-            if (origin) {
-                print_as(state->output_format, " on %s", origin);
-            }
-            print_as(state->output_format, "\n");
-            break;
-        }
-
-        case mon_output_html:
-        case mon_output_cgi: {
-            const char *now_str = crm_now_string(NULL);
-
-            fprintf(state->stream, " <b>Last updated:</b> %s<br/>\n",
-                    now_str ? now_str : "Could not determine current time");
-            fprintf(state->stream, " <b>Last change:</b> %s", last_written ? last_written : "");
-            if (user) {
-                fprintf(state->stream, " by %s", user);
-            }
-            if (client) {
-                fprintf(state->stream, " via %s", client);
-            }
-            if (origin) {
-                fprintf(state->stream, " on %s", origin);
-            }
-            fprintf(state->stream, "<br/>\n");
-            break;
-        }
-
-        case mon_output_xml: {
-            const char *now_str = crm_now_string(NULL);
-
-            fprintf(state->stream, "        <last_update time=\"%s\" />\n",
-                    now_str ? now_str : "Could not determine current time");
-            fprintf(state->stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
-                    last_written ? last_written : "", user ? user : "",
-                    client ? client : "", origin ? origin : "");
-            break;
-        }
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print cluster stack
- *
- * \param[in] stream     File stream to display output to
- * \param[in] stack_s    Stack name
- */
-static void
-print_cluster_stack(mon_state_t *state, const char *stack_s)
-{
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "Stack: %s\n", stack_s);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <b>Stack:</b> %s<br/>\n", stack_s);
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "        <stack type=\"%s\" />\n", stack_s);
-            break;
-
-        default:
-            break;
-    }
+    state->out->message(state->out, "cluster-times", last_written, user, client, origin);
 }
 
 /*!
@@ -1435,227 +1314,8 @@ print_cluster_dc(mon_state_t *state, pe_working_set_t *data_set, unsigned int mo
     const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
     char *dc_name = dc? get_node_display_name(dc, mon_ops) : NULL;
 
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "Current DC: ");
-            if (dc) {
-                print_as(state->output_format, "%s (version %s) - partition %s quorum\n",
-                         dc_name, (dc_version_s? dc_version_s : "unknown"),
-                         (crm_is_true(quorum) ? "with" : "WITHOUT"));
-            } else {
-                print_as(state->output_format, "NONE\n");
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <b>Current DC:</b> ");
-            if (dc) {
-                fprintf(state->stream, "%s (version %s) - partition %s quorum",
-                        dc_name, (dc_version_s? dc_version_s : "unknown"),
-                        (crm_is_true(quorum)? "with" : "<font color=\"red\"><b>WITHOUT</b></font>"));
-            } else {
-                fprintf(state->stream, "<font color=\"red\"><b>NONE</b></font>");
-            }
-            fprintf(state->stream, "<br/>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream,  "        <current_dc ");
-            if (dc) {
-                fprintf(state->stream,
-                        "present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\"",
-                        (dc_version_s? dc_version_s : ""), dc->details->uname, dc->details->id,
-                        (crm_is_true(quorum) ? "true" : "false"));
-            } else {
-                fprintf(state->stream, "present=\"false\"");
-            }
-            fprintf(state->stream, " />\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->message(state->out, "cluster-dc", dc, quorum, dc_version_s, dc_name);
     free(dc_name);
-}
-
-/*!
- * \internal
- * \brief Print counts of configured nodes and resources
- *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
- * \param[in] stack_s    Stack name
- */
-static void
-print_cluster_counts(mon_state_t *state, pe_working_set_t *data_set, const char *stack_s)
-{
-    int nnodes = g_list_length(data_set->nodes);
-    int nresources = count_resources(data_set, NULL);
-
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-
-            print_as(state->output_format, "\n%d node%s configured\n", nnodes, s_if_plural(nnodes));
-
-            print_as(state->output_format, "%d resource%s configured",
-                     nresources, s_if_plural(nresources));
-            if(data_set->disabled_resources || data_set->blocked_resources) {
-                print_as(state->output_format, " (");
-                if (data_set->disabled_resources) {
-                    print_as(state->output_format, "%d DISABLED", data_set->disabled_resources);
-                }
-                if (data_set->disabled_resources && data_set->blocked_resources) {
-                    print_as(state->output_format, ", ");
-                }
-                if (data_set->blocked_resources) {
-                    print_as(state->output_format, "%d BLOCKED from starting due to failure",
-                             data_set->blocked_resources);
-                }
-                print_as(state->output_format, ")");
-            }
-            print_as(state->output_format, "\n");
-
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-
-            fprintf(state->stream, " %d node%s configured<br/>\n",
-                    nnodes, s_if_plural(nnodes));
-
-            fprintf(state->stream, " %d resource%s configured",
-                    nresources, s_if_plural(nresources));
-            if (data_set->disabled_resources || data_set->blocked_resources) {
-                fprintf(state->stream, " (");
-                if (data_set->disabled_resources) {
-                    fprintf(state->stream, "%d <strong>DISABLED</strong>",
-                            data_set->disabled_resources);
-                }
-                if (data_set->disabled_resources && data_set->blocked_resources) {
-                    fprintf(state->stream, ", ");
-                }
-                if (data_set->blocked_resources) {
-                    fprintf(state->stream,
-                            "%d <strong>BLOCKED</strong> from starting due to failure",
-                            data_set->blocked_resources);
-                }
-                fprintf(state->stream, ")");
-            }
-            fprintf(state->stream, "<br/>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream,
-                    "        <nodes_configured number=\"%d\" />\n",
-                    g_list_length(data_set->nodes));
-            fprintf(state->stream,
-                    "        <resources_configured number=\"%d\" disabled=\"%d\" blocked=\"%d\" />\n",
-                    count_resources(data_set, NULL),
-                    data_set->disabled_resources, data_set->blocked_resources);
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print cluster-wide options
- *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
- *
- * \note Currently this is only implemented for HTML and XML output, and
- *       prints only a few options. If there is demand, more could be added.
- */
-static void
-print_cluster_options(mon_state_t *state, pe_working_set_t *data_set)
-{
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-                print_as(state->output_format, "\n              *** Resource management is DISABLED ***");
-                print_as(state->output_format, "\n  The cluster will not attempt to start, stop or recover services");
-                print_as(state->output_format, "\n");
-            }
-            break;
-
-        case mon_output_html:
-            fprintf(state->stream, " </p>\n <h3>Config Options</h3>\n");
-            fprintf(state->stream, " <table>\n");
-            fprintf(state->stream, "  <tr><th>STONITH of failed nodes</th><td>%s</td></tr>\n",
-                    is_set(data_set->flags, pe_flag_stonith_enabled)? "enabled" : "disabled");
-
-            fprintf(state->stream, "  <tr><th>Cluster is</th><td>%ssymmetric</td></tr>\n",
-                    is_set(data_set->flags, pe_flag_symmetric_cluster)? "" : "a");
-
-            fprintf(state->stream, "  <tr><th>No Quorum Policy</th><td>");
-            switch (data_set->no_quorum_policy) {
-                case no_quorum_freeze:
-                    fprintf(state->stream, "Freeze resources");
-                    break;
-                case no_quorum_stop:
-                    fprintf(state->stream, "Stop ALL resources");
-                    break;
-                case no_quorum_ignore:
-                    fprintf(state->stream, "Ignore");
-                    break;
-                case no_quorum_suicide:
-                    fprintf(state->stream, "Suicide");
-                    break;
-            }
-            fprintf(state->stream, "</td></tr>\n");
-
-            fprintf(state->stream, "  <tr><th>Resource management</th><td>");
-            if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-                fprintf(state->stream, "<strong>DISABLED</strong> (the cluster will "
-                                "not attempt to start, stop or recover services)");
-            } else {
-                fprintf(state->stream, "enabled");
-            }
-            fprintf(state->stream, "</td></tr>\n");
-
-            fprintf(state->stream, "</table>\n <p>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "        <cluster_options");
-            fprintf(state->stream, " stonith-enabled=\"%s\"",
-                    is_set(data_set->flags, pe_flag_stonith_enabled)?
-                    "true" : "false");
-            fprintf(state->stream, " symmetric-cluster=\"%s\"",
-                    is_set(data_set->flags, pe_flag_symmetric_cluster)?
-                    "true" : "false");
-            fprintf(state->stream, " no-quorum-policy=\"");
-            switch (data_set->no_quorum_policy) {
-                case no_quorum_freeze:
-                    fprintf(state->stream, "freeze");
-                    break;
-                case no_quorum_stop:
-                    fprintf(state->stream, "stop");
-                    break;
-                case no_quorum_ignore:
-                    fprintf(state->stream, "ignore");
-                    break;
-                case no_quorum_suicide:
-                    fprintf(state->stream, "suicide");
-                    break;
-            }
-            fprintf(state->stream, "\"");
-            fprintf(state->stream, " maintenance-mode=\"%s\"",
-                    is_set(data_set->flags, pe_flag_maintenance_mode)?
-                    "true" : "false");
-            fprintf(state->stream, " />\n");
-            break;
-
-        default:
-            break;
-    }
 }
 
 /*!
@@ -1677,7 +1337,7 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
             print_cluster_summary_header(state);
             header_printed = TRUE;
         }
-        print_cluster_stack(state, stack_s);
+        state->out->message(state->out, "cluster-stack", stack_s);
     }
 
     /* Always print DC if none, even if not requested */
@@ -1705,18 +1365,20 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
             print_cluster_summary_header(state);
             header_printed = TRUE;
         }
-        print_cluster_counts(state, data_set, stack_s);
+        state->out->message(state->out, "cluster-counts", g_list_length(data_set->nodes),
+                            count_resources(data_set, NULL), data_set->disabled_resources,
+                            data_set->blocked_resources);
     }
 
     /* There is not a separate option for showing cluster options, so show with
      * stack for now; a separate option could be added if there is demand
      */
     if (show & mon_show_stack) {
-        print_cluster_options(state, data_set);
+        state->out->message(state->out, "cluster-options", data_set);
     }
 
     if (header_printed) {
-        print_cluster_summary_footer(state);
+        state->out->end_list(state->out);
     }
 }
 
@@ -2028,7 +1690,6 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
         blank_screen();
     }
     print_cluster_summary(state, data_set, mon_ops, show);
-    print_as(state->output_format, "\n");
 
     /* Gather node information (and print if in bad state or grouping by node) */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
