@@ -348,6 +348,17 @@ AC_ARG_WITH([configdir],
     [ CONFIGDIR="$withval" ]
 )
 
+dnl This defaults to /usr/lib rather than libdir because it's determined by the
+dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
+dnl /usr/local or such, the OCF agents will be expected in their usual
+dnl location. However, we do give the user the option to override it.
+OCF_ROOT_DIR=""
+AC_ARG_WITH([ocfdir],
+    [AS_HELP_STRING([--with-ocfdir=DIR],
+        [OCF resource agent root directory (advanced option: changing this may break other cluster components unless similarly configured) @<:@/usr/lib/ocf@:>@])],
+    [ OCF_ROOT_DIR="$withval" ]
+)
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
@@ -1257,9 +1268,8 @@ AC_SUBST(HA_VARLIBHBDIR)
 
 AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
 
-OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
-if test "X$OCF_ROOT_DIR" = X; then
-  AC_MSG_ERROR(Could not locate OCF directory)
+if test "x$OCF_ROOT_DIR" = "x"; then
+    OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
