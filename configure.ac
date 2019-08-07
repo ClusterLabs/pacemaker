@@ -272,6 +272,18 @@ AC_ARG_WITH(bundledir,
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
+CRM_DAEMON_USER=""
+AC_ARG_WITH(daemon-user,
+    [  --with-daemon-user=USER  User to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@ ],
+    [ CRM_DAEMON_USER="$withval" ]
+)
+
+CRM_DAEMON_GROUP=""
+AC_ARG_WITH(daemon-group,
+    [  --with-daemon-group=GROUP  Group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@ ],
+    [ CRM_DAEMON_GROUP="$withval" ]
+)
+
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
@@ -1107,11 +1119,15 @@ CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_DAEMON_USER="hacluster"
+if test x"${CRM_DAEMON_USER}" = x""; then
+    CRM_DAEMON_USER="hacluster"
+fi
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP="haclient"
+if test x"${CRM_DAEMON_GROUP}" = x""; then
+    CRM_DAEMON_GROUP="haclient"
+fi
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
