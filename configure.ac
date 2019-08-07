@@ -136,14 +136,6 @@ dnl ===============================================
 dnl Configure Options
 dnl ===============================================
 
-dnl Some systems, like Solaris require a custom package name
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
-    [ PKGNAME="$withval" ],
-    [ PKGNAME="LXHAhb" ],
-  )
-AC_SUBST(PKGNAME)
-
 AC_ARG_ENABLE([ansi],
     [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
 
@@ -282,6 +274,12 @@ CRM_DAEMON_GROUP=""
 AC_ARG_WITH(daemon-group,
     [  --with-daemon-group=GROUP  Group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@ ],
     [ CRM_DAEMON_GROUP="$withval" ]
+)
+
+dnl Deprecated options
+
+AC_ARG_WITH(pkgname,
+    [  --with-pkgname=name    Deprecated and unused (will be removed in a future release) ],
 )
 
 dnl ===============================================
