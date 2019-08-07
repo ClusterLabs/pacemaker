@@ -50,11 +50,8 @@ install:
 
 before_script:
 # some tests (e.g. cts-exec-helper) require actual system-wide credentials
- -   sed -e 's|^\(CRM_DAEMON_USER=\).*$|\1nobody|'
-         -e 's|^\(CRM_DAEMON_GROUP=\).*$|\1nobody|'
-         -i -- configure.ac
  -   ./autogen.sh
- -   ./configure
+ -   ./configure --with-daemon-user=nobody --with-daemon-group=nobody
 
 script: 
 # Create directories needed by commands used by regression tests
