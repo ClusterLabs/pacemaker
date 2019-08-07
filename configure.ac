@@ -52,10 +52,6 @@ dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
-AC_ARG_WITH(version,
-    [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
-    [ PACKAGE_VERSION="$withval" ])
-
 dnl 1.11:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
 dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
@@ -67,15 +63,8 @@ dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
 dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
 
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
-                   [Current pacemaker version])
-
 dnl Versioned attributes implementation is not yet production-ready
 AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, [Enable versioned attributes])
-
-PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
-AC_SUBST(PACKAGE_SERIES)
-AC_SUBST(PACKAGE_VERSION)
 
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
@@ -132,32 +121,46 @@ dnl ===============================================
 dnl Configure Options
 dnl ===============================================
 
+
+dnl --enable-* options
+
 AC_ARG_ENABLE([ansi],
-    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
+    [AS_HELP_STRING([--enable-ansi],
+        [force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([fatal-warnings],
-    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc @<:@yes@:>@])
+    [AS_HELP_STRING([--enable-fatal-warnings],
+        [enable pedantic and fatal warnings for gcc @<:@yes@:>@])],
+)
 
 AC_ARG_ENABLE([quiet],
-    [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
+    [AS_HELP_STRING([--enable-quiet],
+        [suppress make output unless there is an error @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the scheduler and its requirements @<:@no@:>@])
+    [AS_HELP_STRING([--enable-no-stack],
+        [build only the scheduler and its requirements @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
+    [AS_HELP_STRING([--enable-upstart],
+        [enable support for managing resources via Upstart @<:@try@:>@])],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd  Enable support for managing resources via systemd @<:@try@:>@],
+    [AS_HELP_STRING([--enable-systemd],
+        [enable support for managing resources via systemd @<:@try@:>@])],
     [],
     [enable_systemd=try],
 )
 
-AC_ARG_ENABLE(hardening,
-    [  --enable-hardening  Harden the resulting executables/libraries @<:@try@:>@],
+AC_ARG_ENABLE([hardening],
+    [AS_HELP_STRING([--enable-hardening],
+        [harden the resulting executables/libraries @<:@try@:>@])],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
@@ -170,121 +173,166 @@ AC_ARG_ENABLE(hardening,
 # disable this option. Once the above use cases are no longer in wide use, we
 # can disable this option by default, and once we no longer want to support
 # them at all, we can drop the option altogether.
-AC_ARG_ENABLE(legacy-links,
-    [  --enable-legacy-links  Add symlinks for old daemon names @<:@yes@:>@],
+AC_ARG_ENABLE([legacy-links],
+    [AS_HELP_STRING([--enable-legacy-links],
+        [add symlinks for old daemon names @<:@yes@:>@])],
     [ LEGACY_LINKS="${enableval}" ],
     [ LEGACY_LINKS=yes ],
 )
 AM_CONDITIONAL(BUILD_LEGACY_LINKS, test "x${LEGACY_LINKS}" = "xyes")
 
-AC_ARG_WITH(corosync,
-    [  --with-corosync  Support the Corosync messaging and membership layer ],
+
+dnl --with-* options
+
+AC_DEFUN([VERSION_ARG],
+    [AC_ARG_WITH([version],
+        [AS_HELP_STRING([--with-version=VERSION],
+            [override package version @<:@$1@:>@])],
+        [ PACKAGE_VERSION="$withval" ])]
+)
+VERSION_ARG(VERSION_NUMBER)
+
+AC_ARG_WITH([corosync],
+    [AS_HELP_STRING([--with-corosync],
+        [support the Corosync messaging and membership layer])],
     [ SUPPORT_CS=$withval ],
     [ SUPPORT_CS=try ],
 )
 
-AC_ARG_WITH(nagios,
-    [  --with-nagios  Support nagios remote monitoring ],
+AC_ARG_WITH([nagios],
+    [AS_HELP_STRING([--with-nagios],
+        [support nagios remote monitoring])],
     [ SUPPORT_NAGIOS=$withval ],
     [ SUPPORT_NAGIOS=try ],
 )
 
-AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@],
+AC_ARG_WITH([nagios-plugin-dir],
+    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
+        [directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@])],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
-AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@],
+AC_ARG_WITH([nagios-metadata-dir],
+    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
+        [directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@])],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
-AC_ARG_WITH(acl,
-    [  --with-acl  Support CIB ACL ],
+AC_ARG_WITH([acl],
+    [AS_HELP_STRING([--with-acl],
+        [support CIB ACL])],
     [ SUPPORT_ACL=$withval ],
     [ SUPPORT_ACL=yes ],
 )
 
-AC_ARG_WITH(cibsecrets,
-    [  --with-cibsecrets  Support separate file for CIB secrets ],
+AC_ARG_WITH([cibsecrets],
+    [AS_HELP_STRING([--with-cibsecrets],
+        [support separate file for CIB secrets])],
     [ SUPPORT_CIBSECRETS=$withval ],
     [ SUPPORT_CIBSECRETS=no ],
 )
 
 PCMK_GNUTLS_PRIORITIES="NORMAL"
-AC_ARG_WITH(gnutls-priorities,
-    [  --with-gnutls-priorities  Default GnuTLS cipher priorities @<:@NORMAL@:>@ ],
-    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ])
+AC_ARG_WITH([gnutls-priorities],
+    [AS_HELP_STRING([--with-gnutls-priorities],
+        [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
+    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+)
 
 INITDIR=""
-AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR  Directory for init (rc) scripts],
-    [ INITDIR="$withval" ])
+AC_ARG_WITH([initdir],
+    [AS_HELP_STRING([--with-initdir=DIR],
+        [directory for init (rc) scripts])],
+    [ INITDIR="$withval" ]
+)
 
 SUPPORT_PROFILING=0
-AC_ARG_WITH(profiling,
-    [  --with-profiling  Disable optimizations for effective profiling ],
-    [ SUPPORT_PROFILING=$withval ])
+AC_ARG_WITH([profiling],
+    [AS_HELP_STRING([--with-profiling],
+        [disable optimizations for effective profiling])],
+    [ SUPPORT_PROFILING=$withval ]
+)
 
-AC_ARG_WITH(coverage,
-    [  --with-coverage   Disable optimizations for effective profiling ],
-    [ SUPPORT_COVERAGE=$withval ])
+AC_ARG_WITH([coverage],
+    [AS_HELP_STRING([--with-coverage],
+        [disable optimizations for effective profiling])],
+    [ SUPPORT_COVERAGE=$withval ]
+)
 
 PUBLICAN_BRAND="common"
-AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
-    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
+AC_ARG_WITH([brand],
+    [AS_HELP_STRING([--with-brand=brand],
+        [brand to use for generated documentation (set empty for no docs) @<:@common@:>@])],
+    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ]
+)
 AC_SUBST(PUBLICAN_BRAND)
 
 BUG_URL=""
-AC_ARG_WITH(bug-url,
-    [  --with-bug-url=DIR  Address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@],
+AC_ARG_WITH([bug-url],
+    [AS_HELP_STRING([--with-bug-url=DIR],
+        [address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@])],
     [ BUG_URL="$withval" ]
 )
 
 CONFIGDIR=""
-AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
+AC_ARG_WITH([configdir],
+    [AS_HELP_STRING([--with-configdir=DIR],
+        [directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@])],
     [ CONFIGDIR="$withval" ]
 )
 
 CRM_LOG_DIR=""
-AC_ARG_WITH(logdir,
-    [  --with-logdir=DIR  Directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@ ],
+AC_ARG_WITH([logdir],
+    [AS_HELP_STRING([--with-logdir=DIR],
+        [directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@])],
     [ CRM_LOG_DIR="$withval" ]
 )
 
 CRM_BUNDLE_DIR=""
-AC_ARG_WITH(bundledir,
-    [  --with-bundledir=DIR  Directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@ ],
+AC_ARG_WITH([bundledir],
+    [AS_HELP_STRING([--with-bundledir=DIR],
+        [directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@])],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
 CRM_DAEMON_USER=""
-AC_ARG_WITH(daemon-user,
-    [  --with-daemon-user=USER  User to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@ ],
+AC_ARG_WITH([daemon-user],
+    [AS_HELP_STRING([--with-daemon-user=USER],
+        [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
     [ CRM_DAEMON_USER="$withval" ]
 )
 
 CRM_DAEMON_GROUP=""
-AC_ARG_WITH(daemon-group,
-    [  --with-daemon-group=GROUP  Group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@ ],
+AC_ARG_WITH([daemon-group],
+    [AS_HELP_STRING([--with-daemon-group=GROUP],
+        [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
     [ CRM_DAEMON_GROUP="$withval" ]
 )
 
+
 dnl Deprecated options
 
-AC_ARG_WITH(pkg-name,
-    [  --with-pkg-name=name   Deprecated and unused (will be removed in a future release) ],
+AC_ARG_WITH([pkg-name],
+    [AS_HELP_STRING([--with-pkg-name=name],
+        [deprecated and unused (will be removed in a future release)])],
 )
 
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name    Deprecated and unused (will be removed in a future release) ],
+AC_ARG_WITH([pkgname],
+    [AS_HELP_STRING([--with-pkgname=name],
+        [deprecated and unused (will be removed in a future release)])],
 )
+
 
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
+                   [Current pacemaker version])
+
+PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
+AC_SUBST(PACKAGE_SERIES)
+AC_SUBST(PACKAGE_VERSION)
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
