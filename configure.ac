@@ -295,6 +295,18 @@ AC_ARG_WITH([bundledir],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
+dnl This defaults to /usr/lib rather than libdir because it's determined by the
+dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
+dnl /usr/local or such, the OCF agents will be expected in their usual
+dnl location. However, we do give the user the option to override it.
+OCF_ROOT_DIR="/usr/lib/ocf"
+AC_ARG_WITH([ocfdir],
+    [AS_HELP_STRING([--with-ocfdir=DIR],
+        [OCF resource agent root directory (advanced option: changing this may break other cluster components unless similarly configured) @<:@/usr/lib/ocf@:>@])],
+    [ OCF_ROOT_DIR="$withval" ]
+)
+AC_SUBST(OCF_ROOT_DIR)
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
@@ -1216,12 +1228,6 @@ AC_SUBST(CRM_RSCTMP_DIR)
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-OCF_ROOT_DIR="/usr/lib/ocf"
-if test "X$OCF_ROOT_DIR" = X; then
-    AC_MSG_ERROR(Could not locate OCF directory)
-fi
-AC_SUBST(OCF_ROOT_DIR)
 
 OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
