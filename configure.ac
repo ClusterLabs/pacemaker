@@ -56,10 +56,6 @@ AC_ARG_WITH(version,
     [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
     [ PACKAGE_VERSION="$withval" ])
 
-AC_ARG_WITH(pkg-name,
-    [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
-    [ PACKAGE_NAME="$withval" ])
-
 dnl 1.11:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
 dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
@@ -277,6 +273,10 @@ AC_ARG_WITH(daemon-group,
 )
 
 dnl Deprecated options
+
+AC_ARG_WITH(pkg-name,
+    [  --with-pkg-name=name   Deprecated and unused (will be removed in a future release) ],
+)
 
 AC_ARG_WITH(pkgname,
     [  --with-pkgname=name    Deprecated and unused (will be removed in a future release) ],
