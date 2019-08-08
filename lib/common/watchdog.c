@@ -1,6 +1,7 @@
 /*
- * Copyright 2013 Lars Marowsky-Bree <lmb@suse.com>
- *           2014-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -223,7 +224,7 @@ pcmk_locate_sbd(void)
     }
 
     /* Look for the pid file */
-    pidfile = crm_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
+    pidfile = crm_strdup_printf(PCMK_RUN_DIR "/sbd.pid");
     sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */

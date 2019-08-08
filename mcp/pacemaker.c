@@ -46,7 +46,7 @@ static bool global_keep_tracking = false;
 const char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t *shutdown_trigger = NULL;
-const char *pid_file = "/var/run/pacemaker.pid";
+static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
 
 typedef struct pcmk_child_s {
     int pid;

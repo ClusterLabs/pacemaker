@@ -348,6 +348,15 @@ AC_ARG_WITH([configdir],
     [ CONFIGDIR="$withval" ]
 )
 
+dnl The not-yet-released autoconf 2.70 will have a --runstatedir option.
+dnl Until that's available, emulate it with our own --with-runstatedir.
+pcmk_runstatedir=""
+AC_ARG_WITH([runstatedir],
+    [AS_HELP_STRING([--with-runstatedir=DIR],
+        [modifiable per-process data @<:@LOCALSTATEDIR/run@:>@ (ignored if --runstatedir is available)])],
+    [ pcmk_runstatedir="$withval" ]
+)
+
 dnl This defaults to /usr/lib rather than libdir because it's determined by the
 dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
 dnl /usr/local or such, the OCF agents will be expected in their usual
@@ -496,6 +505,19 @@ eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
 
 dnl Home-grown variables
+
+if [ test "x${runstatedir}" = "x" ]; then
+    if [ test "x${pcmk_runstatedir}" = "x" ]; then
+        runstatedir="${localstatedir}/run"
+    else
+        runstatedir="${pcmk_runstatedir}"
+    fi
+fi
+eval runstatedir="$(eval echo ${runstatedir})"
+AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
+		   [Location for modifiable per-process data])
+AC_SUBST(runstatedir)
+
 eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
 if test x"${docdir}" = x""; then
@@ -1211,10 +1233,6 @@ fi
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
-CRM_STATE_DIR=${localstatedir}/run/crm
-AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
-AC_SUBST(CRM_STATE_DIR)
-
 CRM_LOG_DIR="${localstatedir}/log/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Where Pacemaker can store log files)
 AC_SUBST(CRM_LOG_DIR)
@@ -1252,11 +1270,16 @@ AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location Heartbeat expects Pa
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedir}/run`
+HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${runstatedir}`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/resource-agents`
+CRM_STATE_DIR="${runstatedir}/crm"
+AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
+		   [Where to keep state files and sockets])
+AC_SUBST(CRM_STATE_DIR)
+
+CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR ${runstatedir}/resource-agents`
 AC_MSG_CHECKING(Scratch dir for resource agents)
 AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)

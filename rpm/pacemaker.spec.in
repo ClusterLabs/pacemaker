@@ -88,6 +88,14 @@
 %global gnutls_priorities @SYSTEM
 %endif
 
+%if !%{defined _rundir}
+%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?suse_version} >= 1200
+%define _rundir /run
+%else
+%define _rundir /var/run
+%endif
+%endif
+
 ## Different distros name certain packages differently
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
@@ -440,6 +448,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_hardening:  --disable-hardening}  \
         %{?gnutls_priorities: --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}               \
+        --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
 
