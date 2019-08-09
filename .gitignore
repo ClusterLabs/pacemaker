@@ -164,7 +164,8 @@ scratch
 /tools/iso8601
 /tools/stonith_admin
 xml/crm.dtd
-xml/pacemaker*.rng
+pacemaker*.rng
+!/xml/pacemaker-acls-*.rng
 xml/versions.rng
 xml/api/api-result*.rng
 lib/gnu/libgnu.a

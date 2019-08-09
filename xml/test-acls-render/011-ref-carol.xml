@@ -1,0 +1,162 @@
+<pcmk-acl-readable:cib
+  xmlns:pcmk-acl-readable="http://clusterlabs.org/ns/pacemaker/acl-2-readable"
+  xmlns:pcmk-acl-writable="http://clusterlabs.org/ns/pacemaker/acl-2-writable"
+  pcmk-acl-readable:crm_feature_set="3.0.14" pcmk-acl-readable:validate-with="pacemaker-3.0" pcmk-acl-readable:epoch="6815" pcmk-acl-readable:num_updates="15" pcmk-acl-readable:admin_epoch="2" pcmk-acl-readable:cib-last-written="Thu Jun  6 15:41:29 2019" pcmk-acl-readable:update-origin="ha-idg-2" pcmk-acl-readable:update-client="crm_attribute" pcmk-acl-readable:update-user="root" pcmk-acl-readable:have-quorum="1" pcmk-acl-readable:dc-uuid="1084777482" pcmk-acl-readable:execution-date="1559829405">
+  <pcmk-acl-readable:configuration>
+    <pcmk-acl-readable:crm_config>
+      <pcmk-acl-readable:cluster_property_set pcmk-acl-readable:id="cib-bootstrap-options">
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="have-watchdog" pcmk-acl-readable:value="false" pcmk-acl-readable:id="cib-bootstrap-options-have-watchdog"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="dc-version" pcmk-acl-readable:value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" pcmk-acl-readable:id="cib-bootstrap-options-dc-version"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cluster-infrastructure" pcmk-acl-readable:value="corosync" pcmk-acl-readable:id="cib-bootstrap-options-cluster-infrastructure"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="last-lrm-refresh" pcmk-acl-readable:value="1559146053" pcmk-acl-readable:id="cib-bootstrap-options-last-lrm-refresh"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cluster-name" pcmk-acl-readable:value="ha-idg" pcmk-acl-readable:id="cib-bootstrap-options-cluster-name"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="no-quorum-policy" pcmk-acl-readable:value="ignore" pcmk-acl-readable:id="cib-bootstrap-options-no-quorum-policy"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="stonith-enabled" pcmk-acl-readable:value="true" pcmk-acl-readable:id="cib-bootstrap-options-stonith-enabled"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="stonith-action" pcmk-acl-readable:value="Off" pcmk-acl-readable:id="cib-bootstrap-options-stonith-action"/>
+      </pcmk-acl-readable:cluster_property_set>
+    </pcmk-acl-readable:crm_config>
+    <pcmk-acl-readable:nodes>
+      <pcmk-acl-readable:node pcmk-acl-readable:id="1084777492" pcmk-acl-readable:uname="ha-idg-2">
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="nodes-1084777492">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777492-maintenance" pcmk-acl-readable:name="maintenance" pcmk-acl-readable:value="off"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777492-standby" pcmk-acl-readable:name="standby" pcmk-acl-readable:value="on"/>
+        </pcmk-acl-readable:instance_attributes>
+      </pcmk-acl-readable:node>
+      <pcmk-acl-readable:node pcmk-acl-readable:id="1084777482" pcmk-acl-readable:uname="ha-idg-1">
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="nodes-1084777482">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777482-maintenance" pcmk-acl-readable:name="maintenance" pcmk-acl-readable:value="off"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777482-standby" pcmk-acl-readable:name="standby" pcmk-acl-readable:value="off"/>
+        </pcmk-acl-readable:instance_attributes>
+      </pcmk-acl-readable:node>
+    </pcmk-acl-readable:nodes>
+    <pcmk-acl-readable:acls>
+      <pcmk-acl-readable:acl_role pcmk-acl-readable:id="read_all">
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="read_all-cib" pcmk-acl-readable:kind="read" pcmk-acl-readable:xpath="/cib"/>
+      </pcmk-acl-readable:acl_role>
+      <pcmk-acl-readable:acl_role pcmk-acl-readable:id="operator">
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="operator-maintenance" pcmk-acl-readable:kind="write" pcmk-acl-readable:xpath="//crm_config//nvpair[@name='maintenance-mode']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="operator-target-role" pcmk-acl-readable:kind="write" pcmk-acl-readable:xpath="//crm_config//nvpair[@name='target-role']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="operator-is-managed" pcmk-acl-readable:kind="write" pcmk-acl-readable:xpath="//resources//nvpair[@name='is-managed']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="operator-rsc_location" pcmk-acl-readable:kind="write" pcmk-acl-readable:object-type="rsc_location"/>
+      </pcmk-acl-readable:acl_role>
+      <pcmk-acl-readable:acl_role pcmk-acl-readable:id="administrator">
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="administrator-cib" pcmk-acl-readable:kind="write" pcmk-acl-readable:xpath="/cib"/>
+      </pcmk-acl-readable:acl_role>
+      <pcmk-acl-readable:acl_role pcmk-acl-readable:id="minimal">
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-standby" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading standby node attribute (permanent or transient)" pcmk-acl-readable:xpath="//instance_attributes/nvpair[@name='standby']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-maintenance" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading maintenance node attribute (permanent or transient)" pcmk-acl-readable:xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-target-role" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading resource target roles" pcmk-acl-readable:xpath="//meta_attributes/nvpair[@name='target-role']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-is-managed" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading resource managed status" pcmk-acl-readable:xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-instance-attributes" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="//instance_attributes"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-meta-attributes" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="//meta_attributes"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-operations" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="//operations"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-utilization" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="//utilization"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-nodes" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading node names/IDs (attributes are denied separately)" pcmk-acl-readable:xpath="/cib/configuration/nodes"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-resources" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading resource names/agents (parameters are denied separately)" pcmk-acl-readable:xpath="/cib/configuration/resources"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-constraints" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/constraints"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-topology" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/fencing-topology"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-op_defaults" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/op_defaults"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-rsc_defaults" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/rsc_defaults"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-alerts" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/alerts"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-deny-acls" pcmk-acl-readable:kind="deny" pcmk-acl-readable:xpath="/cib/configuration/acls"/>
+        <pcmk-acl-readable:acl_permission pcmk-acl-readable:id="minimal-cib" pcmk-acl-readable:kind="read" pcmk-acl-readable:description="allow reading cib element and crm_config/status sections" pcmk-acl-readable:xpath="/cib"/>
+      </pcmk-acl-readable:acl_role>
+      <pcmk-acl-readable:acl_target pcmk-acl-readable:id="alice">
+        <pcmk-acl-readable:role pcmk-acl-readable:id="minimal"/>
+      </pcmk-acl-readable:acl_target>
+      <pcmk-acl-readable:acl_target pcmk-acl-readable:id="bob">
+        <pcmk-acl-readable:role pcmk-acl-readable:id="read_all"/>
+      </pcmk-acl-readable:acl_target>
+      <pcmk-acl-readable:acl_target pcmk-acl-readable:id="carol">
+        <pcmk-acl-readable:role pcmk-acl-readable:id="read_all"/>
+        <pcmk-acl-readable:role pcmk-acl-readable:id="operator"/>
+      </pcmk-acl-readable:acl_target>
+      <pcmk-acl-readable:acl_target pcmk-acl-readable:id="dave">
+        <pcmk-acl-readable:role pcmk-acl-readable:id="administrator"/>
+      </pcmk-acl-readable:acl_target>
+    </pcmk-acl-readable:acls>
+    <pcmk-acl-readable:resources>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="fence_ilo_ha-idg-2" pcmk-acl-readable:class="stonith" pcmk-acl-readable:type="fence_ilo2" pcmk-acl-readable:description="fenct ha-idg-2 mit ILO">
+        <pcmk-acl-readable:operations>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="monitor" pcmk-acl-readable:interval="30m" pcmk-acl-readable:timeout="120s" pcmk-acl-readable:id="fence_ha-idg-2-monitor-30m"/>
+        </pcmk-acl-readable:operations>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="fence_ilo_ha-idg-1" pcmk-acl-readable:class="stonith" pcmk-acl-readable:type="fence_ilo4" pcmk-acl-readable:description="fenct ha-idg-1 mit ILO">
+        <pcmk-acl-readable:operations>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="monitor" pcmk-acl-readable:interval="30m" pcmk-acl-readable:timeout="120s" pcmk-acl-readable:id="fence_ha-idg-1-monitor-30m"/>
+        </pcmk-acl-readable:operations>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="vm_idcc_devel" pcmk-acl-readable:class="ocf" pcmk-acl-readable:provider="heartbeat" pcmk-acl-readable:type="VirtualDomain">
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_idcc-devel-instance_attributes">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="config" pcmk-acl-readable:value="/mnt/share/idcc_devel.xml" pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-config"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-0">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="hypervisor" pcmk-acl-readable:value="qemu:///system" pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-1">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="migration_transport" pcmk-acl-readable:value="ssh" pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-2">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="migration_network_suffix" pcmk-acl-readable:value="-private" pcmk-acl-readable:id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:operations>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="start" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="120" pcmk-acl-readable:id="vm_idcc-devel-start-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="stop" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="130" pcmk-acl-readable:id="vm_idcc-devel-stop-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="monitor" pcmk-acl-readable:interval="30" pcmk-acl-readable:timeout="25" pcmk-acl-readable:id="vm_idcc-devel-monitor-30"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="migrate_from" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="300" pcmk-acl-readable:id="vm_idcc-devel-migrate_from-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="migrate_to" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="300" pcmk-acl-readable:id="vm_idcc-devel-migrate_to-0"/>
+        </pcmk-acl-readable:operations>
+        <pcmk-acl-readable:meta_attributes pcmk-acl-readable:id="vm_idcc-devel-meta_attributes">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="allow-migrate" pcmk-acl-readable:value="true" pcmk-acl-readable:id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="target-role" pcmk-acl-readable:value="Started" pcmk-acl-readable:id="vm_idcc-devel-meta_attributes-target-role"/>
+          <pcmk-acl-writable:nvpair pcmk-acl-writable:name="is-managed" pcmk-acl-writable:value="true" pcmk-acl-writable:id="vm_idcc-devel-meta_attributes-is-managed"/>
+        </pcmk-acl-readable:meta_attributes>
+        <pcmk-acl-readable:utilization pcmk-acl-readable:id="vm_idcc-devel-utilization">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cpu" pcmk-acl-readable:value="1" pcmk-acl-readable:id="vm_idcc-devel-utilization-cpu"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="hv_memory" pcmk-acl-readable:value="1020" pcmk-acl-readable:id="vm_idcc-devel-utilization-hv_memory"/>
+        </pcmk-acl-readable:utilization>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="vm_severin" pcmk-acl-readable:class="ocf" pcmk-acl-readable:provider="heartbeat" pcmk-acl-readable:type="VirtualDomain">
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_severin-instance_attributes">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="config" pcmk-acl-readable:value="/mnt/share/severin.xml" pcmk-acl-readable:id="vm_severin-instance_attributes-config"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_severin-instance_attributes-0">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="hypervisor" pcmk-acl-readable:value="qemu:///system" pcmk-acl-readable:id="vm_severin-instance_attributes-0-hypervisor"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_severin-instance_attributes-1">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="migration_transport" pcmk-acl-readable:value="ssh" pcmk-acl-readable:id="vm_severin-instance_attributes-1-migration_transport"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:instance_attributes pcmk-acl-readable:id="vm_severin-instance_attributes-2">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="migration_network_suffix" pcmk-acl-readable:value="-private" pcmk-acl-readable:id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-acl-readable:instance_attributes>
+        <pcmk-acl-readable:operations>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="start" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="120" pcmk-acl-readable:id="vm_severin-start-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="stop" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="130" pcmk-acl-readable:id="vm_severin-stop-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="monitor" pcmk-acl-readable:interval="30" pcmk-acl-readable:timeout="25" pcmk-acl-readable:id="vm_severin-monitor-30"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="migrate_from" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="300" pcmk-acl-readable:id="vm_severin-migrate_from-0"/>
+          <pcmk-acl-readable:op pcmk-acl-readable:name="migrate_to" pcmk-acl-readable:interval="0" pcmk-acl-readable:timeout="300" pcmk-acl-readable:id="vm_severin-migrate_to-0"/>
+        </pcmk-acl-readable:operations>
+        <pcmk-acl-readable:meta_attributes pcmk-acl-readable:id="vm_severin-meta_attributes">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="allow-migrate" pcmk-acl-readable:value="true" pcmk-acl-readable:id="vm_severin-meta_attributes-allow-migrate"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="target-role" pcmk-acl-readable:value="Started" pcmk-acl-readable:id="vm_severin-meta_attributes-target-role"/>
+          <pcmk-acl-writable:nvpair pcmk-acl-writable:name="is-managed" pcmk-acl-writable:value="true" pcmk-acl-writable:id="vm_severin-meta_attributes-is-managed"/>
+        </pcmk-acl-readable:meta_attributes>
+        <pcmk-acl-readable:utilization pcmk-acl-readable:id="vm_severin-utilization">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cpu" pcmk-acl-readable:value="2" pcmk-acl-readable:id="vm_severin-utilization-cpu"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="hv_memory" pcmk-acl-readable:value="2176" pcmk-acl-readable:id="vm_severin-utilization-hv_memory"/>
+        </pcmk-acl-readable:utilization>
+      </pcmk-acl-readable:primitive>
+    </pcmk-acl-readable:resources>
+    <pcmk-acl-readable:constraints>
+      <pcmk-acl-writable:rsc_location pcmk-acl-writable:id="loc_fence_ilo_ha-idg-2" pcmk-acl-writable:rsc="fence_ilo_ha-idg-2" pcmk-acl-writable:score="-INFINITY" pcmk-acl-writable:node="ha-idg-2"/>
+      <pcmk-acl-writable:rsc_location pcmk-acl-writable:id="loc_fence_ilo_ha-idg-1" pcmk-acl-writable:rsc="fence_ilo_ha-idg-1" pcmk-acl-writable:score="-INFINITY" pcmk-acl-writable:node="ha-idg-1"/>
+    </pcmk-acl-readable:constraints>
+    <pcmk-acl-readable:rsc_defaults>
+      <pcmk-acl-readable:meta_attributes pcmk-acl-readable:id="rsc-options">
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="resource-stickiness" pcmk-acl-readable:value="200" pcmk-acl-readable:id="rsc-options-resource-stickiness"/>
+      </pcmk-acl-readable:meta_attributes>
+    </pcmk-acl-readable:rsc_defaults>
+    <pcmk-acl-readable:alerts/>
+  </pcmk-acl-readable:configuration>
+  <pcmk-acl-readable:status/>
+</pcmk-acl-readable:cib>
