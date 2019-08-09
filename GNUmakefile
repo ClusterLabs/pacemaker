@@ -13,10 +13,18 @@ default: $(shell test ! -e configure && echo init) $(shell test -e configure && 
 
 PACKAGE		?= pacemaker
 
-# Force 'make dist' to be consistent with 'make export'
-distdir			= $(PACKAGE)-$(TAG)
+# This Makefile can create 2 types of distributions:
+#
+# - "make dist" is automake's native functionality, based on the various
+#   dist/nodist make variables; it always uses the current sources
+#
+# - "make export" is a custom target based on git archive and relevant entries
+#   from .gitattributes; it defaults to current sources but can use any git tag
+#
+# Both types use the TARFILE name for the result, though they generate
+# different contents.
+distdir			= $(PACKAGE)-$(SHORTTAG)
 TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
-DIST_ARCHIVES		= $(TARFILE)
 
 RPM_ROOT	= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -186,7 +194,7 @@ srpm-%:	export $(PACKAGE)-%.spec
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
 	sed -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' \
-	    -e 's/global\ commit\ .*/global\ commit\ $(TAG)/' \
+	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/' \
 	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
 	    -i $(PACKAGE).spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
