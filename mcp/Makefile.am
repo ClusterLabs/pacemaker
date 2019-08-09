@@ -24,7 +24,7 @@ dist_init_SCRIPTS	= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker.service
+systemdsystemunit_DATA	= pacemaker.service
 endif
 
 EXTRA_DIST		= pacemaker.sysconfig

@@ -1383,17 +1383,15 @@ if test "x${enable_systemd}" = xyes; then
 	HAVE_systemd=1
 	PCMK_FEATURES="$PCMK_FEATURES systemd"
 
-	AC_MSG_CHECKING([for systemd path for system unit files])
-	systemdunitdir="${systemdunitdir-}"
-	PKG_CHECK_VAR([systemdunitdir], [systemd],
-		      [systemdsystemunitdir], [],[
-	   systemdunitdir=no
-	])
-	AC_MSG_RESULT([${systemdunitdir}])
-	if test "x${systemdunitdir}" = xno; then
-		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+    AC_MSG_CHECKING([which system unit file directory to use])
+    systemdsystemunitdir="${systemdsystemunitdir-}"
+    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
+    AC_MSG_RESULT([${systemdsystemunitdir}])
+    if test "x${systemdsystemunitdir}" = x""; then
+        AC_MSG_FAILURE([cannot enable systemd when systemdsystemunitdir unresolved])
 	fi
 fi
+AC_SUBST([systemdsystemunitdir])
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)

@@ -30,7 +30,7 @@ dist_init_SCRIPTS	= pacemaker_remote
 sbin_PROGRAMS		= pacemaker_remoted
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker_remote.service
+systemdsystemunit_DATA	= pacemaker_remote.service
 endif
 
 lrmd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
