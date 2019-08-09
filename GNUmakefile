@@ -324,7 +324,7 @@ coverity-clean:
 ## Change log generation
 
 summary:
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
+	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
 	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
