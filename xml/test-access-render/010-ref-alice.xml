@@ -1,0 +1,162 @@
+<pcmk-access-readable:cib
+  xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable"
+  xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied"
+  pcmk-access-readable:crm_feature_set="3.0.14" pcmk-access-readable:validate-with="pacemaker-3.0" pcmk-access-readable:epoch="6815" pcmk-access-readable:num_updates="15" pcmk-access-readable:admin_epoch="2" pcmk-access-readable:cib-last-written="Thu Jun  6 15:41:29 2019" pcmk-access-readable:update-origin="ha-idg-2" pcmk-access-readable:update-client="crm_attribute" pcmk-access-readable:update-user="root" pcmk-access-readable:have-quorum="1" pcmk-access-readable:dc-uuid="1084777482" pcmk-access-readable:execution-date="1559829405">
+  <pcmk-access-readable:configuration>
+    <pcmk-access-readable:crm_config>
+      <pcmk-access-readable:cluster_property_set pcmk-access-readable:id="cib-bootstrap-options">
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="have-watchdog" pcmk-access-readable:value="false" pcmk-access-readable:id="cib-bootstrap-options-have-watchdog"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="dc-version" pcmk-access-readable:value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" pcmk-access-readable:id="cib-bootstrap-options-dc-version"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="cluster-infrastructure" pcmk-access-readable:value="corosync" pcmk-access-readable:id="cib-bootstrap-options-cluster-infrastructure"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="last-lrm-refresh" pcmk-access-readable:value="1559146053" pcmk-access-readable:id="cib-bootstrap-options-last-lrm-refresh"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="cluster-name" pcmk-access-readable:value="ha-idg" pcmk-access-readable:id="cib-bootstrap-options-cluster-name"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="no-quorum-policy" pcmk-access-readable:value="ignore" pcmk-access-readable:id="cib-bootstrap-options-no-quorum-policy"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="stonith-enabled" pcmk-access-readable:value="true" pcmk-access-readable:id="cib-bootstrap-options-stonith-enabled"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="stonith-action" pcmk-access-readable:value="Off" pcmk-access-readable:id="cib-bootstrap-options-stonith-action"/>
+      </pcmk-access-readable:cluster_property_set>
+    </pcmk-access-readable:crm_config>
+    <pcmk-access-readable:nodes>
+      <pcmk-access-readable:node pcmk-access-readable:id="1084777492" pcmk-access-readable:uname="ha-idg-2">
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="nodes-1084777492">
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777492-maintenance" pcmk-access-readable:name="maintenance" pcmk-access-readable:value="off"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777492-standby" pcmk-access-readable:name="standby" pcmk-access-readable:value="on"/>
+        </pcmk-access-denied:instance_attributes>
+      </pcmk-access-readable:node>
+      <pcmk-access-readable:node pcmk-access-readable:id="1084777482" pcmk-access-readable:uname="ha-idg-1">
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="nodes-1084777482">
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777482-maintenance" pcmk-access-readable:name="maintenance" pcmk-access-readable:value="off"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777482-standby" pcmk-access-readable:name="standby" pcmk-access-readable:value="off"/>
+        </pcmk-access-denied:instance_attributes>
+      </pcmk-access-readable:node>
+    </pcmk-access-readable:nodes>
+    <pcmk-access-denied:acls>
+      <pcmk-access-denied:acl_role pcmk-access-denied:id="read_all">
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="read_all-cib" pcmk-access-denied:kind="read" pcmk-access-denied:xpath="/cib"/>
+      </pcmk-access-denied:acl_role>
+      <pcmk-access-denied:acl_role pcmk-access-denied:id="operator">
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="operator-maintenance" pcmk-access-denied:kind="write" pcmk-access-denied:xpath="//crm_config//nvpair[@name='maintenance-mode']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="operator-target-role" pcmk-access-denied:kind="write" pcmk-access-denied:xpath="//crm_config//nvpair[@name='target-role']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="operator-is-managed" pcmk-access-denied:kind="write" pcmk-access-denied:xpath="//resources//nvpair[@name='is-managed']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="operator-rsc_location" pcmk-access-denied:kind="write" pcmk-access-denied:object-type="rsc_location"/>
+      </pcmk-access-denied:acl_role>
+      <pcmk-access-denied:acl_role pcmk-access-denied:id="administrator">
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="administrator-cib" pcmk-access-denied:kind="write" pcmk-access-denied:xpath="/cib"/>
+      </pcmk-access-denied:acl_role>
+      <pcmk-access-denied:acl_role pcmk-access-denied:id="minimal">
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-standby" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading standby node attribute (permanent or transient)" pcmk-access-denied:xpath="//instance_attributes/nvpair[@name='standby']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-maintenance" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading maintenance node attribute (permanent or transient)" pcmk-access-denied:xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-target-role" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading resource target roles" pcmk-access-denied:xpath="//meta_attributes/nvpair[@name='target-role']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-is-managed" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading resource managed status" pcmk-access-denied:xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-instance-attributes" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="//instance_attributes"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-meta-attributes" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="//meta_attributes"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-operations" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="//operations"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-utilization" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="//utilization"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-nodes" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading node names/IDs (attributes are denied separately)" pcmk-access-denied:xpath="/cib/configuration/nodes"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-resources" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading resource names/agents (parameters are denied separately)" pcmk-access-denied:xpath="/cib/configuration/resources"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-constraints" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/constraints"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-topology" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/fencing-topology"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-op_defaults" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/op_defaults"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-rsc_defaults" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/rsc_defaults"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-alerts" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/alerts"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-deny-acls" pcmk-access-denied:kind="deny" pcmk-access-denied:xpath="/cib/configuration/acls"/>
+        <pcmk-access-denied:acl_permission pcmk-access-denied:id="minimal-cib" pcmk-access-denied:kind="read" pcmk-access-denied:description="allow reading cib element and crm_config/status sections" pcmk-access-denied:xpath="/cib"/>
+      </pcmk-access-denied:acl_role>
+      <pcmk-access-denied:acl_target pcmk-access-denied:id="alice">
+        <pcmk-access-denied:role pcmk-access-denied:id="minimal"/>
+      </pcmk-access-denied:acl_target>
+      <pcmk-access-denied:acl_target pcmk-access-denied:id="bob">
+        <pcmk-access-denied:role pcmk-access-denied:id="read_all"/>
+      </pcmk-access-denied:acl_target>
+      <pcmk-access-denied:acl_target pcmk-access-denied:id="carol">
+        <pcmk-access-denied:role pcmk-access-denied:id="read_all"/>
+        <pcmk-access-denied:role pcmk-access-denied:id="operator"/>
+      </pcmk-access-denied:acl_target>
+      <pcmk-access-denied:acl_target pcmk-access-denied:id="dave">
+        <pcmk-access-denied:role pcmk-access-denied:id="administrator"/>
+      </pcmk-access-denied:acl_target>
+    </pcmk-access-denied:acls>
+    <pcmk-access-readable:resources>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="fence_ilo_ha-idg-2" pcmk-access-readable:class="stonith" pcmk-access-readable:type="fence_ilo2" pcmk-access-readable:description="fenct ha-idg-2 mit ILO">
+        <pcmk-access-denied:operations>
+          <pcmk-access-denied:op pcmk-access-denied:name="monitor" pcmk-access-denied:interval="30m" pcmk-access-denied:timeout="120s" pcmk-access-denied:id="fence_ha-idg-2-monitor-30m"/>
+        </pcmk-access-denied:operations>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="fence_ilo_ha-idg-1" pcmk-access-readable:class="stonith" pcmk-access-readable:type="fence_ilo4" pcmk-access-readable:description="fenct ha-idg-1 mit ILO">
+        <pcmk-access-denied:operations>
+          <pcmk-access-denied:op pcmk-access-denied:name="monitor" pcmk-access-denied:interval="30m" pcmk-access-denied:timeout="120s" pcmk-access-denied:id="fence_ha-idg-1-monitor-30m"/>
+        </pcmk-access-denied:operations>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="vm_idcc_devel" pcmk-access-readable:class="ocf" pcmk-access-readable:provider="heartbeat" pcmk-access-readable:type="VirtualDomain">
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_idcc-devel-instance_attributes">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="config" pcmk-access-denied:value="/mnt/share/idcc_devel.xml" pcmk-access-denied:id="vm_idcc-devel-instance_attributes-config"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_idcc-devel-instance_attributes-0">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="hypervisor" pcmk-access-denied:value="qemu:///system" pcmk-access-denied:id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_idcc-devel-instance_attributes-1">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="migration_transport" pcmk-access-denied:value="ssh" pcmk-access-denied:id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_idcc-devel-instance_attributes-2">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="migration_network_suffix" pcmk-access-denied:value="-private" pcmk-access-denied:id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:operations>
+          <pcmk-access-denied:op pcmk-access-denied:name="start" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="120" pcmk-access-denied:id="vm_idcc-devel-start-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="stop" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="130" pcmk-access-denied:id="vm_idcc-devel-stop-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="monitor" pcmk-access-denied:interval="30" pcmk-access-denied:timeout="25" pcmk-access-denied:id="vm_idcc-devel-monitor-30"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="migrate_from" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="300" pcmk-access-denied:id="vm_idcc-devel-migrate_from-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="migrate_to" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="300" pcmk-access-denied:id="vm_idcc-devel-migrate_to-0"/>
+        </pcmk-access-denied:operations>
+        <pcmk-access-denied:meta_attributes pcmk-access-denied:id="vm_idcc-devel-meta_attributes">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="allow-migrate" pcmk-access-denied:value="true" pcmk-access-denied:id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="target-role" pcmk-access-readable:value="Started" pcmk-access-readable:id="vm_idcc-devel-meta_attributes-target-role"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="is-managed" pcmk-access-readable:value="true" pcmk-access-readable:id="vm_idcc-devel-meta_attributes-is-managed"/>
+        </pcmk-access-denied:meta_attributes>
+        <pcmk-access-denied:utilization pcmk-access-denied:id="vm_idcc-devel-utilization">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="cpu" pcmk-access-denied:value="1" pcmk-access-denied:id="vm_idcc-devel-utilization-cpu"/>
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="hv_memory" pcmk-access-denied:value="1020" pcmk-access-denied:id="vm_idcc-devel-utilization-hv_memory"/>
+        </pcmk-access-denied:utilization>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="vm_severin" pcmk-access-readable:class="ocf" pcmk-access-readable:provider="heartbeat" pcmk-access-readable:type="VirtualDomain">
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_severin-instance_attributes">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="config" pcmk-access-denied:value="/mnt/share/severin.xml" pcmk-access-denied:id="vm_severin-instance_attributes-config"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_severin-instance_attributes-0">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="hypervisor" pcmk-access-denied:value="qemu:///system" pcmk-access-denied:id="vm_severin-instance_attributes-0-hypervisor"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_severin-instance_attributes-1">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="migration_transport" pcmk-access-denied:value="ssh" pcmk-access-denied:id="vm_severin-instance_attributes-1-migration_transport"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:instance_attributes pcmk-access-denied:id="vm_severin-instance_attributes-2">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="migration_network_suffix" pcmk-access-denied:value="-private" pcmk-access-denied:id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-access-denied:instance_attributes>
+        <pcmk-access-denied:operations>
+          <pcmk-access-denied:op pcmk-access-denied:name="start" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="120" pcmk-access-denied:id="vm_severin-start-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="stop" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="130" pcmk-access-denied:id="vm_severin-stop-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="monitor" pcmk-access-denied:interval="30" pcmk-access-denied:timeout="25" pcmk-access-denied:id="vm_severin-monitor-30"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="migrate_from" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="300" pcmk-access-denied:id="vm_severin-migrate_from-0"/>
+          <pcmk-access-denied:op pcmk-access-denied:name="migrate_to" pcmk-access-denied:interval="0" pcmk-access-denied:timeout="300" pcmk-access-denied:id="vm_severin-migrate_to-0"/>
+        </pcmk-access-denied:operations>
+        <pcmk-access-denied:meta_attributes pcmk-access-denied:id="vm_severin-meta_attributes">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="allow-migrate" pcmk-access-denied:value="true" pcmk-access-denied:id="vm_severin-meta_attributes-allow-migrate"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="target-role" pcmk-access-readable:value="Started" pcmk-access-readable:id="vm_severin-meta_attributes-target-role"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="is-managed" pcmk-access-readable:value="true" pcmk-access-readable:id="vm_severin-meta_attributes-is-managed"/>
+        </pcmk-access-denied:meta_attributes>
+        <pcmk-access-denied:utilization pcmk-access-denied:id="vm_severin-utilization">
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="cpu" pcmk-access-denied:value="2" pcmk-access-denied:id="vm_severin-utilization-cpu"/>
+          <pcmk-access-denied:nvpair pcmk-access-denied:name="hv_memory" pcmk-access-denied:value="2176" pcmk-access-denied:id="vm_severin-utilization-hv_memory"/>
+        </pcmk-access-denied:utilization>
+      </pcmk-access-readable:primitive>
+    </pcmk-access-readable:resources>
+    <pcmk-access-denied:constraints>
+      <pcmk-access-denied:rsc_location pcmk-access-denied:id="loc_fence_ilo_ha-idg-2" pcmk-access-denied:rsc="fence_ilo_ha-idg-2" pcmk-access-denied:score="-INFINITY" pcmk-access-denied:node="ha-idg-2"/>
+      <pcmk-access-denied:rsc_location pcmk-access-denied:id="loc_fence_ilo_ha-idg-1" pcmk-access-denied:rsc="fence_ilo_ha-idg-1" pcmk-access-denied:score="-INFINITY" pcmk-access-denied:node="ha-idg-1"/>
+    </pcmk-access-denied:constraints>
+    <pcmk-access-denied:rsc_defaults>
+      <pcmk-access-denied:meta_attributes pcmk-access-denied:id="rsc-options">
+        <pcmk-access-denied:nvpair pcmk-access-denied:name="resource-stickiness" pcmk-access-denied:value="200" pcmk-access-denied:id="rsc-options-resource-stickiness"/>
+      </pcmk-access-denied:meta_attributes>
+    </pcmk-access-denied:rsc_defaults>
+    <pcmk-access-denied:alerts/>
+  </pcmk-access-readable:configuration>
+  <pcmk-access-readable:status/>
+</pcmk-access-readable:cib>

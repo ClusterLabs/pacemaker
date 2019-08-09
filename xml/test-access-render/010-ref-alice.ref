@@ -1,0 +1,159 @@
+\x1b[34m<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="6815" num_updates="15" admin_epoch="2" cib-last-written="Thu Jun  6 15:41:29 2019" update-origin="ha-idg-2" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1084777482" execution-date="1559829405">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="have-watchdog" value="false" id="cib-bootstrap-options-have-watchdog"/>
+        <nvpair name="dc-version" value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="last-lrm-refresh" value="1559146053" id="cib-bootstrap-options-last-lrm-refresh"/>
+        <nvpair name="cluster-name" value="ha-idg" id="cib-bootstrap-options-cluster-name"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="stonith-action" value="Off" id="cib-bootstrap-options-stonith-action"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084777492" uname="ha-idg-2">
+        \x1b[31m<instance_attributes id="nodes-1084777492">
+          \x1b[34m<nvpair id="nodes-1084777492-maintenance" name="maintenance" value="off"/>
+          \x1b[34m<nvpair id="nodes-1084777492-standby" name="standby" value="on"/>
+        \x1b[31m</instance_attributes>
+      </node>
+      <node id="1084777482" uname="ha-idg-1">
+        \x1b[31m<instance_attributes id="nodes-1084777482">
+          \x1b[34m<nvpair id="nodes-1084777482-maintenance" name="maintenance" value="off"/>
+          \x1b[34m<nvpair id="nodes-1084777482-standby" name="standby" value="off"/>
+        \x1b[31m</instance_attributes>
+      </node>
+    </nodes>
+    \x1b[31m<acls>
+      <acl_role id="read_all">
+        <acl_permission id="read_all-cib" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="operator">
+        <acl_permission id="operator-maintenance" kind="write" xpath="//crm_config//nvpair[@name='maintenance-mode']"/>
+        <acl_permission id="operator-target-role" kind="write" xpath="//crm_config//nvpair[@name='target-role']"/>
+        <acl_permission id="operator-is-managed" kind="write" xpath="//resources//nvpair[@name='is-managed']"/>
+        <acl_permission id="operator-rsc_location" kind="write" object-type="rsc_location"/>
+      </acl_role>
+      <acl_role id="administrator">
+        <acl_permission id="administrator-cib" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="minimal">
+        <acl_permission id="minimal-standby" kind="read" description="allow reading standby node attribute (permanent or transient)" xpath="//instance_attributes/nvpair[@name='standby']"/>
+        <acl_permission id="minimal-maintenance" kind="read" description="allow reading maintenance node attribute (permanent or transient)" xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+        <acl_permission id="minimal-target-role" kind="read" description="allow reading resource target roles" xpath="//meta_attributes/nvpair[@name='target-role']"/>
+        <acl_permission id="minimal-is-managed" kind="read" description="allow reading resource managed status" xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+        <acl_permission id="minimal-deny-instance-attributes" kind="deny" xpath="//instance_attributes"/>
+        <acl_permission id="minimal-deny-meta-attributes" kind="deny" xpath="//meta_attributes"/>
+        <acl_permission id="minimal-deny-operations" kind="deny" xpath="//operations"/>
+        <acl_permission id="minimal-deny-utilization" kind="deny" xpath="//utilization"/>
+        <acl_permission id="minimal-nodes" kind="read" description="allow reading node names/IDs (attributes are denied separately)" xpath="/cib/configuration/nodes"/>
+        <acl_permission id="minimal-resources" kind="read" description="allow reading resource names/agents (parameters are denied separately)" xpath="/cib/configuration/resources"/>
+        <acl_permission id="minimal-deny-constraints" kind="deny" xpath="/cib/configuration/constraints"/>
+        <acl_permission id="minimal-deny-topology" kind="deny" xpath="/cib/configuration/fencing-topology"/>
+        <acl_permission id="minimal-deny-op_defaults" kind="deny" xpath="/cib/configuration/op_defaults"/>
+        <acl_permission id="minimal-deny-rsc_defaults" kind="deny" xpath="/cib/configuration/rsc_defaults"/>
+        <acl_permission id="minimal-deny-alerts" kind="deny" xpath="/cib/configuration/alerts"/>
+        <acl_permission id="minimal-deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="minimal-cib" kind="read" description="allow reading cib element and crm_config/status sections" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="alice">
+        <role id="minimal"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="read_all"/>
+      </acl_target>
+      <acl_target id="carol">
+        <role id="read_all"/>
+        <role id="operator"/>
+      </acl_target>
+      <acl_target id="dave">
+        <role id="administrator"/>
+      </acl_target>
+    \x1b[31m</acls>
+    <resources>
+      <primitive id="fence_ilo_ha-idg-2" class="stonith" type="fence_ilo2" description="fenct ha-idg-2 mit ILO">
+        \x1b[31m<operations>
+          <op name="monitor" interval="30m" timeout="120s" id="fence_ha-idg-2-monitor-30m"/>
+        \x1b[31m</operations>
+      </primitive>
+      <primitive id="fence_ilo_ha-idg-1" class="stonith" type="fence_ilo4" description="fenct ha-idg-1 mit ILO">
+        \x1b[31m<operations>
+          <op name="monitor" interval="30m" timeout="120s" id="fence_ha-idg-1-monitor-30m"/>
+        \x1b[31m</operations>
+      </primitive>
+      <primitive id="vm_idcc_devel" class="ocf" provider="heartbeat" type="VirtualDomain">
+        \x1b[31m<instance_attributes id="vm_idcc-devel-instance_attributes">
+          <nvpair name="config" value="/mnt/share/idcc_devel.xml" id="vm_idcc-devel-instance_attributes-config"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_idcc-devel-instance_attributes-0">
+          <nvpair name="hypervisor" value="qemu:///system" id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_idcc-devel-instance_attributes-1">
+          <nvpair name="migration_transport" value="ssh" id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_idcc-devel-instance_attributes-2">
+          <nvpair name="migration_network_suffix" value="-private" id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<operations>
+          <op name="start" interval="0" timeout="120" id="vm_idcc-devel-start-0"/>
+          <op name="stop" interval="0" timeout="130" id="vm_idcc-devel-stop-0"/>
+          <op name="monitor" interval="30" timeout="25" id="vm_idcc-devel-monitor-30"/>
+          <op name="migrate_from" interval="0" timeout="300" id="vm_idcc-devel-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="300" id="vm_idcc-devel-migrate_to-0"/>
+        \x1b[31m</operations>
+        \x1b[31m<meta_attributes id="vm_idcc-devel-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          \x1b[34m<nvpair name="target-role" value="Started" id="vm_idcc-devel-meta_attributes-target-role"/>
+          \x1b[34m<nvpair name="is-managed" value="true" id="vm_idcc-devel-meta_attributes-is-managed"/>
+        \x1b[31m</meta_attributes>
+        \x1b[31m<utilization id="vm_idcc-devel-utilization">
+          <nvpair name="cpu" value="1" id="vm_idcc-devel-utilization-cpu"/>
+          <nvpair name="hv_memory" value="1020" id="vm_idcc-devel-utilization-hv_memory"/>
+        \x1b[31m</utilization>
+      </primitive>
+      <primitive id="vm_severin" class="ocf" provider="heartbeat" type="VirtualDomain">
+        \x1b[31m<instance_attributes id="vm_severin-instance_attributes">
+          <nvpair name="config" value="/mnt/share/severin.xml" id="vm_severin-instance_attributes-config"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_severin-instance_attributes-0">
+          <nvpair name="hypervisor" value="qemu:///system" id="vm_severin-instance_attributes-0-hypervisor"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_severin-instance_attributes-1">
+          <nvpair name="migration_transport" value="ssh" id="vm_severin-instance_attributes-1-migration_transport"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<instance_attributes id="vm_severin-instance_attributes-2">
+          <nvpair name="migration_network_suffix" value="-private" id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        \x1b[31m</instance_attributes>
+        \x1b[31m<operations>
+          <op name="start" interval="0" timeout="120" id="vm_severin-start-0"/>
+          <op name="stop" interval="0" timeout="130" id="vm_severin-stop-0"/>
+          <op name="monitor" interval="30" timeout="25" id="vm_severin-monitor-30"/>
+          <op name="migrate_from" interval="0" timeout="300" id="vm_severin-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="300" id="vm_severin-migrate_to-0"/>
+        \x1b[31m</operations>
+        \x1b[31m<meta_attributes id="vm_severin-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="vm_severin-meta_attributes-allow-migrate"/>
+          \x1b[34m<nvpair name="target-role" value="Started" id="vm_severin-meta_attributes-target-role"/>
+          \x1b[34m<nvpair name="is-managed" value="true" id="vm_severin-meta_attributes-is-managed"/>
+        \x1b[31m</meta_attributes>
+        \x1b[31m<utilization id="vm_severin-utilization">
+          <nvpair name="cpu" value="2" id="vm_severin-utilization-cpu"/>
+          <nvpair name="hv_memory" value="2176" id="vm_severin-utilization-hv_memory"/>
+        \x1b[31m</utilization>
+      </primitive>
+    </resources>
+    \x1b[31m<constraints>
+      <rsc_location id="loc_fence_ilo_ha-idg-2" rsc="fence_ilo_ha-idg-2" score="-INFINITY" node="ha-idg-2"/>
+      <rsc_location id="loc_fence_ilo_ha-idg-1" rsc="fence_ilo_ha-idg-1" score="-INFINITY" node="ha-idg-1"/>
+    \x1b[31m</constraints>
+    \x1b[31m<rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="200" id="rsc-options-resource-stickiness"/>
+      </meta_attributes>
+    \x1b[31m</rsc_defaults>
+    \x1b[31m<alerts/>
+  </configuration>
+  <status/>
+\x1b[34m</cib>\x1b[0m
