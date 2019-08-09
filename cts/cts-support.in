@@ -2,7 +2,7 @@
 #
 # Installer for support files needed by Pacemaker's Cluster Test Suite
 #
-# Copyright 2018 the Pacemaker project contributors
+# Copyright 2018-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,7 +22,7 @@ CRM_EX_OK=0
 CRM_EX_ERROR=1
 CRM_EX_USAGE=64
 
-UNIT_DIR="@systemdunitdir@"
+UNIT_DIR="@systemdsystemunitdir@"
 LIBEXEC_DIR="@libexecdir@/pacemaker"
 INIT_DIR="@INITDIR@"
 SBIN_DIR="@sbindir@"

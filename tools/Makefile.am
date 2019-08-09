@@ -9,7 +9,7 @@
 include $(top_srcdir)/Makefile.common
 
 if BUILD_SYSTEMD
-systemdunit_DATA = crm_mon.service
+systemdsystemunit_DATA	= crm_mon.service
 endif
 
 noinst_HEADERS		= crm_mon.h crm_resource.h
