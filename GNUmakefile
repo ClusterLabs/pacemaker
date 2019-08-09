@@ -370,8 +370,10 @@ abi-www:
 www:	manhtml-upload global-upload doxygen-upload
 	make RSYNC_DEST=$(RSYNC_DEST) -C doc www
 
+## Change log generation
+
 summary:
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
+	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
