@@ -11,6 +11,7 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <config.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -20,7 +21,13 @@
 #include <crm/common/xml.h>
 #include <glib.h>
 
+static gboolean legacy_xml = FALSE;
+
 GOptionEntry pcmk__xml_output_entries[] = {
+    { "output-legacy-xml", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
+      NULL,
+      NULL },
+
     { NULL }
 };
 
@@ -28,6 +35,7 @@ typedef struct private_data_s {
     xmlNode *root;
     GQueue *parent_q;
     GSList *errors;
+    bool legacy_xml;
 } private_data_t;
 
 static void
@@ -60,16 +68,27 @@ xml_init(pcmk__output_t *out) {
         priv = out->priv;
     }
 
-    priv->root = create_xml_node(NULL, "pacemaker-result");
-    xmlSetProp(priv->root, (pcmkXmlStr) "api-version", (pcmkXmlStr) PCMK__API_VERSION);
+    if (legacy_xml) {
+        priv->root = create_xml_node(NULL, "crm_mon");
+        xmlSetProp(priv->root, (pcmkXmlStr) "version", (pcmkXmlStr) VERSION);
+    } else {
+        priv->root = create_xml_node(NULL, "pacemaker-result");
+        xmlSetProp(priv->root, (pcmkXmlStr) "api-version", (pcmkXmlStr) PCMK__API_VERSION);
 
-    if (out->request != NULL) {
-        xmlSetProp(priv->root, (pcmkXmlStr) "request", (pcmkXmlStr) out->request);
+        if (out->request != NULL) {
+            xmlSetProp(priv->root, (pcmkXmlStr) "request", (pcmkXmlStr) out->request);
+        }
     }
 
     priv->parent_q = g_queue_new();
     priv->errors = NULL;
     g_queue_push_tail(priv->parent_q, priv->root);
+
+    /* Copy this from the file-level variable.  This means that it is only settable
+     * as a command line option, and that pcmk__output_new must be called after all
+     * command line processing is completed.
+     */
+    priv->legacy_xml = legacy_xml;
 
     return true;
 }
@@ -84,7 +103,6 @@ add_error_node(gpointer data, gpointer user_data) {
 static void
 xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
     xmlNodePtr node;
-    char *rc_as_str = NULL;
     private_data_t *priv = out->priv;
 
     /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
@@ -94,15 +112,19 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         return;
     }
 
-    rc_as_str = crm_itoa(exit_status);
+    if (!legacy_xml) {
+        char *rc_as_str = crm_itoa(exit_status);
 
-    node = create_xml_node(priv->root, "status");
-    xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
-    xmlSetProp(node, (pcmkXmlStr) "message", (pcmkXmlStr) crm_exit_str(exit_status));
+        node = create_xml_node(priv->root, "status");
+        xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
+        xmlSetProp(node, (pcmkXmlStr) "message", (pcmkXmlStr) crm_exit_str(exit_status));
 
-    if (g_slist_length(priv->errors) > 0) {
-        xmlNodePtr errors_node = create_xml_node(node, "errors");
-        g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
+        if (g_slist_length(priv->errors) > 0) {
+            xmlNodePtr errors_node = create_xml_node(node, "errors");
+            g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
+        }
+
+        free(rc_as_str);
     }
 
     if (print) {
@@ -114,8 +136,6 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
     }
-
-    free(rc_as_str);
 }
 
 static void
@@ -211,10 +231,14 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 static void
 xml_begin_list(pcmk__output_t *out, const char *name,
                const char *singular_noun, const char *plural_noun) {
-    xmlNodePtr list_node = NULL;
+    if (legacy_xml) {
+        pcmk__output_xml_create_parent(out, name);
+    } else {
+        xmlNodePtr list_node = NULL;
 
-    list_node = pcmk__output_xml_create_parent(out, "list");
-    xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+        list_node = pcmk__output_xml_create_parent(out, "list");
+        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    }
 }
 
 static void
@@ -230,16 +254,21 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *content) {
 
 static void
 xml_end_list(pcmk__output_t *out) {
-    char *buf = NULL;
     private_data_t *priv = out->priv;
-    xmlNodePtr node;
 
     CRM_ASSERT(priv != NULL);
 
-    node = g_queue_pop_tail(priv->parent_q);
-    buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
-    xmlSetProp(node, (pcmkXmlStr) "count", (pcmkXmlStr) buf);
-    free(buf);
+    if (priv->legacy_xml) {
+        g_queue_pop_tail(priv->parent_q);
+    } else {
+        char *buf = NULL;
+        xmlNodePtr node;
+
+        node = g_queue_pop_tail(priv->parent_q);
+        buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
+        xmlSetProp(node, (pcmkXmlStr) "count", (pcmkXmlStr) buf);
+        free(buf);
+    }
 }
 
 pcmk__output_t *

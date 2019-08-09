@@ -174,7 +174,7 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     }
 
     args->output_ty = strdup("xml");
-    output_format = mon_output_xml;
+    output_format = mon_output_legacy_xml;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -858,7 +858,13 @@ main(int argc, char **argv)
         } else if (safe_str_eq(args->output_ty, "text")) {
             retval = no_curses_cb("N", NULL, NULL, &error);
         } else if (safe_str_eq(args->output_ty, "xml")) {
-            as_xml_cb("X", args->output_dest, NULL, &error);
+            if (args->output_ty != NULL) {
+                free(args->output_ty);
+            }
+
+            args->output_ty = strdup("xml");
+            output_format = mon_output_xml;
+            options.mon_ops |= mon_op_one_shot;
         } else {
             /* Neither old nor new arguments were given, so set the default. */
             if (args->output_ty != NULL) {
@@ -894,6 +900,12 @@ main(int argc, char **argv)
         }
     } else if (output_format == mon_output_cgi) {
         if (!pcmk__force_args(context, &error, "%s --output-cgi", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
@@ -1722,6 +1734,7 @@ mon_refresh_display(gpointer user_data)
             }
             break;
 
+        case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(&state, mon_data_set, stonith_history,
                              options.mon_ops, show, print_neg_location_prefix);

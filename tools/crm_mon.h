@@ -53,6 +53,7 @@ typedef enum mon_output_format_e {
     mon_output_plain,
     mon_output_console,
     mon_output_xml,
+    mon_output_legacy_xml,
     mon_output_html,
     mon_output_cgi
 } mon_output_format_t;
