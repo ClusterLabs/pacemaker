@@ -2450,7 +2450,6 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
 
     fprintf(state->stream, "</crm_mon>\n");
     fflush(state->stream);
-    fclose(state->stream);
 }
 
 int
@@ -2583,7 +2582,6 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
     fprintf(state->stream, "</body>\n");
     fprintf(state->stream, "</html>\n");
     fflush(state->stream);
-    fclose(state->stream);
 
     if (state->output_format != mon_output_cgi) {
         if (rename(filename_tmp, filename) != 0) {
