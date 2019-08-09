@@ -75,7 +75,7 @@ static void print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set
 static void print_failed_action(mon_state_t *state, xmlNode *xml_op);
 static void print_failed_actions(mon_state_t *state, pe_working_set_t *data_set);
 static void print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops);
-static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
+static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops, gboolean create_completed_failure_section);
 static void print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 
@@ -1991,19 +1991,40 @@ print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int 
  *
  * \param[in] stream     File stream to display output to
  * \param[in] history    List of stonith actions
+ * \param[in] create_completed_failure_section  Failure section creation flag
  *
  */
 static void
-print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops)
+print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops, gboolean create_completed_failure_section)
 {
-    stonith_history_t *hp;
+    GListPtr disp_failed_list = NULL;
 
-    for (hp = history; hp; hp = hp->next) {
+    for (stonith_history_t *hp = history; hp; hp = hp->next) {
+        gboolean list_set = !create_completed_failure_section;
+
         if (hp->state == st_failed) {
-            break;
+            for (stonith_history_t *prev_hp = history; prev_hp; prev_hp = prev_hp->next) {
+                if (prev_hp == hp) {
+                     break;
+                }
+
+                if ((prev_hp->state == st_done) &&
+                    safe_str_eq(hp->target, prev_hp->target) &&
+                    safe_str_eq(hp->action, prev_hp->action) &&
+                    safe_str_eq(hp->delegate, prev_hp->delegate) &&
+                    (hp->completed < prev_hp->completed)) {
+                    list_set = create_completed_failure_section;
+                    break;
+                }
+            }
+
+            if (list_set) {
+                disp_failed_list = g_list_append(disp_failed_list, hp);
+            }
         }
     }
-    if (!hp) {
+
+    if (!disp_failed_list) {
         return;
     }
 
@@ -2014,12 +2035,20 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
          */
         case mon_output_plain:
         case mon_output_console:
-            print_as(state->output_format, "\nFailed Fencing Actions:\n");
+            if (create_completed_failure_section) {
+                print_as(state->output_format, "\nPreviously Failed Fencing Actions No Longer Needed:\n");
+            } else {
+                print_as(state->output_format, "\nFailed Fencing Actions:\n");
+            }
             break;
 
         case mon_output_html:
         case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Failed Fencing Actions</h2>\n <ul>\n");
+            if (create_completed_failure_section) {
+                fprintf(state->stream, " <hr />\n <h2>Previously Failed Fencing Actions No Longer Needed</h2>\n <ul>\n");
+            } else {
+                fprintf(state->stream, " <hr />\n <h2>Failed Fencing Actions</h2>\n <ul>\n");
+            }
             break;
 
         default:
@@ -2027,10 +2056,9 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
     }
 
     /* Print each failed stonith action */
-    for (hp = history; hp; hp = hp->next) {
-        if (hp->state == st_failed) {
-            print_stonith_action(state, hp, mon_ops);
-        }
+    for (GList *iter = g_list_first(disp_failed_list); iter; iter = g_list_next(iter)) {
+        stonith_history_t *entry = (stonith_history_t *)(iter->data);
+        print_stonith_action(state, entry, mon_ops);
     }
 
     /* End section */
@@ -2043,6 +2071,8 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
         default:
             break;
     }
+
+    g_list_free(disp_failed_list);
 }
 
 /*!
@@ -2319,7 +2349,8 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        print_failed_stonith_actions(state, stonith_history, mon_ops);
+        print_failed_stonith_actions(state, stonith_history, mon_ops, FALSE);
+        print_failed_stonith_actions(state, stonith_history, mon_ops, TRUE);
     }
 
     /* Print tickets if requested */
@@ -2558,7 +2589,8 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        print_failed_stonith_actions(state, stonith_history, mon_ops);
+        print_failed_stonith_actions(state, stonith_history, mon_ops, FALSE);
+        print_failed_stonith_actions(state, stonith_history, mon_ops, TRUE);
     }
 
     /* Print stonith history */
