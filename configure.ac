@@ -306,6 +306,13 @@ AC_ARG_WITH([initdir],
     [ INITDIR="$withval" ]
 )
 
+systemdsystemunitdir="${systemdsystemunitdir-}"
+AC_ARG_WITH([systemdsystemunitdir],
+    [AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
+        [directory for systemd unit files (advanced option: must match what systemd uses)])],
+    [ systemdsystemunitdir="$withval" ]
+)
+
 SUPPORT_PROFILING=0
 AC_ARG_WITH([profiling],
     [AS_HELP_STRING([--with-profiling],
@@ -1384,7 +1391,6 @@ if test "x${enable_systemd}" = xyes; then
 	PCMK_FEATURES="$PCMK_FEATURES systemd"
 
     AC_MSG_CHECKING([which system unit file directory to use])
-    systemdsystemunitdir="${systemdsystemunitdir-}"
     PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
     AC_MSG_RESULT([${systemdsystemunitdir}])
     if test "x${systemdsystemunitdir}" = x""; then
