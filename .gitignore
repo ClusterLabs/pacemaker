@@ -15,7 +15,6 @@ Makefile.in
 *.bz2
 *.tar.gz
 *.tgz
-*.rpm
 *.la
 *.lo
 *.o
@@ -32,11 +31,13 @@ autom4te.cache/
 automake
 build.counter
 compile
+/confdefs.h
 config.guess
 config.log
 config.status
 config.sub
 configure
+/conftest*
 depcomp
 install-sh
 include/stamp-*
@@ -116,6 +117,7 @@ fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
+/lib/common/md5.c
 lrmd/lrmd
 lrmd/lrmd_internal_ctl
 lrmd/lrmd_test
@@ -157,6 +159,15 @@ lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
 
+# Packager artifacts
+*.rpm
+/mock
+/pacemaker.spec
+/rpm/[A-Z]*
+
+# make dist/export working directory
+pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
+
 # Built or present only in 2.0 branch (makes switching branches easier)
 /cts/cts-cli
 /cts/cts-coverage
@@ -175,7 +186,6 @@ lib/gnu/stdalign.h
 /tools/stonith_admin
 
 #Other 
-mock
 HTML
 pacemaker*.spec
 pengine/.regression.failed.diff
