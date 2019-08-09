@@ -302,9 +302,10 @@ EOF
 	fi
 
 	# only respond with the flags except for "-B", i.e., when both:
-	# - _tru_mode non-zero
+	# - _tru_mode non-zero (drop internal-only ~ higher bits first)
 	# - "-B" in _tru_mode is zero (hence non-zero when flipped with XOR)
-	if test "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0; then
+	if test "$(((_tru_mode & ((1 << 3) - 1))
+			* ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0; then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
 			cp -a "${_tru_target}" "${_tru_ref}"
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
@@ -356,6 +357,14 @@ EOF
 		return 1
 	fi
 
+	if test $((_tru_mode & (1 << 3))) -ne 0; then
+		# remove ANSI marks (assume no other customization)
+		_tru_ref_err=$(mktemp)
+		mv "${_tru_target}" "${_tru_ref_err}"
+		sed 's/\\x1b[[0-9;]*m//g' "${_tru_ref_err}" > "${_tru_target}"
+		rm -f "${_tru_ref_err}"
+	fi
+
 	echo "${_tru_target}"
 }
 
@@ -394,10 +403,11 @@ test_runner() {
 		-G) _tr_mode=$((_tr_mode | (1 << 0)));;
 		-D) _tr_mode=$((_tr_mode | (1 << 1)));;
 		-B) _tr_mode=$((_tr_mode | (1 << 2)));;
+		-@=*) _tr_mode=$((_tr_mode | ${1#-@=}));;
 		esac
 		shift
 	done
-	_tr_template="upgrade-${_tr_action:-${_tr_template:?}}.xsl"
+	_tr_template="${_tr_action:-upgrade-${_tr_template:?}}.xsl"
 
 	if ! test -f "${_tr_schema_o:?}" || ! test -f "${_tr_schema_t:?}"; then
 		emit_error "Origin and/or target schema missing, rerun make"
@@ -486,7 +496,8 @@ test2to3enter() {
 	      *\ -S\ *) test_selfcheck -a=enter -o=2.10 ${_t23e_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
-	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
+	      *) test_runner -a=upgrade-2.10-enter -o=2.10 -t=2.10 "$@" \
+	          || return $?;;
 	      esac; }
 }
 tests="${tests} test2to3enter"
@@ -510,7 +521,8 @@ test2to3leave() {
 	      *\ -S\ *) test_selfcheck -a=leave -o=2.10 ${_t23l_cleanopt};;
 	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
-	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
+	      *) test_runner -a=upgrade-2.10-leave -o=3.0 -t=3.0 "$@" \
+	          || return $?;;
 	      esac; }
 }
 tests="${tests} test2to3leave"
@@ -534,10 +546,76 @@ test2to3roundtrip() {
 	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10 ${_t23rt_cleanopt};;
 	      *\ -W\ *) test_browser ${_t23rt_cleanopt};;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
-	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
+	      *) test_runner -a=upgrade-2.10-roundtrip -o=2.10 -t=3.0 "$@" \
+	          || return $?;;
 	      esac; }
 }
 tests="${tests} test2to3roundtrip"
+
+# just generated the singular + ACLs annotations aware schema clone
+access_render_prep() {
+	test -s pacemaker-access-3.0.rng || {
+	    (
+	    export OUTPUTDIR=test-access-render \
+	        SKIPSCHEMAS=".*/test-2-render/.*|.*/pacemaker-(3\.[^0]|[^3].*)\.rng"
+	    helpers/schema-singularize.sh --clobber
+	    )
+	    xsltproc helpers/access-render-convert-rng.xsl \
+	      test-access-render/pacemaker-3.0.rng > pacemaker-access-3.0.rng
+	}
+
+	rm -f test-access-render/pacemaker-3.0.rng
+}
+
+# XXX only run with RNGVALIDATOR="jing -i" or xmllint with this patchset:
+#     https://gitlab.gnome.org/GNOME/libxml2/merge_requests/31
+# XXX also, only XML_CATALOG_FILES env. var. compatible XSLTPROCESSOR will work
+access_render() {
+	_ar_cleanopt=
+	_ar_pattern=
+	_ar_catalog=
+	_ar_prev_catalog=
+	_ar_ret=
+
+	while read _ar_spec; do
+		_ar_spec=${_ar_spec%.xml}
+		_ar_spec=${_ar_spec%\*}
+		_ar_pattern="${_ar_pattern} -name ${_ar_spec}*.xml -o"
+	done
+	test -z "${_ar_pattern}" || _ar_pattern="( ${_ar_pattern%-o} )"
+	case " $* " in *\ -r\ *) _ar_cleanopt=-r; esac
+
+	find test-access-render -name test-access-render -o -type d -prune \
+	  -o -name '*.xml' ${_ar_pattern} -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner;;
+	      *\ -S\ *) emit_result "not implemented" "option -S";;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *)
+		access_render_prep
+		_ar_catalog=$(mktemp)
+	>${_ar_catalog} printf "%s\n%s%s\n%s\n%s\n" \
+    "<catalog xmlns='urn:oasis:names:tc:entity:xmlns:xml:catalog'>" \
+    "  <rewriteURI uriStartString='http://clusterlabs.org/nsredir/pacemaker/cfg'" \
+         " rewritePrefix='file://$PWD/base'/>" \
+      "'<nextCatalog catalog='file:///etc/xml/catalog'/>" \
+    "</catalog>"
+		_ar_prev_catalog="${XML_CATALOG_FILES-no}"
+		export XML_CATALOG_FILES=${_ar_catalog}
+		test_runner -a=base/access-render-2 -o=access-3.0 -t=3.0 \
+		            -@=$((1 << 3)) "$@"
+		_ar_ret=$?
+		if test "${_ar_prev_catalog}" = no; then
+			unset XML_CATALOG_FILES
+		else
+			export XML_CATALOG_FILES="${_ar_prev_catalog}"
+		fi
+		rm -f "${_ar_catalog}"
+		return ${_ar_ret};;
+	      esac; }
+}
+tests="${tests} access_render"
 
 # -B
 # -D
