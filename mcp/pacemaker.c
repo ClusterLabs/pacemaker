@@ -1346,8 +1346,12 @@ main(int argc, char **argv)
         crm_exit(ENOKEY);
     }
 
-    mkdir(CRM_STATE_DIR, 0750);
-    mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    // Used by some resource agents
+    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
+        crm_warn("Could not create " CRM_STATE_DIR ": %s", pcmk_strerror(errno));
+    } else {
+        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    }
 
     /* Used to store core/blackbox/pengine/cib files in */
     crm_build_path(CRM_PACEMAKER_DIR, 0750);
