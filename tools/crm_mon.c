@@ -62,8 +62,6 @@ static unsigned int show = mon_show_default;
 
 static mon_output_format_t output_format = mon_output_unset;
 
-static char *output_filename = NULL;   /* if sending output to a file, its name */
-
 /* other globals */
 static GMainLoop *mainloop = NULL;
 static guint timer_id = 0;
@@ -147,7 +145,6 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
     args->output_ty = strdup("html");
     output_format = mon_output_html;
-    output_filename = strdup(optarg);
     umask(S_IWGRP | S_IWOTH);
     return TRUE;
 }
@@ -987,10 +984,7 @@ main(int argc, char **argv)
 
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
-        if (output_filename != NULL) {
-            fprintf(stderr, "CGI mode cannot be used with -h\n");
-            return clean_up(CRM_EX_USAGE);
-        } else if (cib && cib->variant == cib_file) {
+        if (cib && cib->variant == cib_file) {
             fprintf(stderr, "CGI mode used with CIB file\n");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
@@ -1079,8 +1073,8 @@ main(int argc, char **argv)
                 }
 #endif
             } else {
-                if (output_format == mon_output_html) {
-                    print_as(output_format, "Writing html to %s ...\n", output_filename);
+                if (output_format == mon_output_html && out->dest != stdout) {
+                    printf("Writing html to %s ...\n", args->output_dest);
                 }
             }
 
@@ -1667,9 +1661,9 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(&state, mon_data_set, output_filename,
-                                  stonith_history, options.mon_ops, show,
-                                  print_neg_location_prefix, options.reconnect_msec) != 0) {
+            if (print_html_status(&state, mon_data_set, stonith_history,
+                                  options.mon_ops, show, print_neg_location_prefix,
+                                  options.reconnect_msec) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1810,7 +1804,6 @@ clean_up(crm_exit_t exit_code)
 #endif
 
     clean_up_connections();
-    free(output_filename);
     free(options.pid_file);
 
     pe_free_working_set(mon_data_set);

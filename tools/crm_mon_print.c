@@ -1680,25 +1680,15 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
 
 int
 print_html_status(mon_state_t *state, pe_working_set_t *data_set,
-                  const char *filename, stonith_history_t *stonith_history,
-                  unsigned int mon_ops, unsigned int show, const char *prefix,
+                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int show, const char *prefix,
                   unsigned int reconnect_msec)
 {
     GListPtr gIter = NULL;
-    char *filename_tmp = NULL;
     int print_opts = get_resource_display_options(mon_ops, state->output_format);
 
     if (state->output_format == mon_output_cgi) {
         fprintf(state->stream, "Content-Type: text/html\n\n");
-
-    } else {
-        filename_tmp = crm_concat(filename, "tmp", '.');
-        state->stream = fopen(filename_tmp, "w");
-        if (state->stream == NULL) {
-            crm_perror(LOG_ERR, "Cannot open %s for writing", filename_tmp);
-            free(filename_tmp);
-            return -1;
-        }
     }
 
     fprintf(state->stream, "<html>\n");
@@ -1807,13 +1797,5 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
 
     fprintf(state->stream, "</body>\n");
     fprintf(state->stream, "</html>\n");
-    fflush(state->stream);
-
-    if (state->output_format != mon_output_cgi) {
-        if (rename(filename_tmp, filename) != 0) {
-            crm_perror(LOG_ERR, "Unable to rename %s->%s", filename_tmp, filename);
-        }
-        free(filename_tmp);
-    }
     return 0;
 }
