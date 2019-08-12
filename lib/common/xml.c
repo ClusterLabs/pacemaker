@@ -3449,119 +3449,261 @@ apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Set a flag on all attributes of an XML element
+ *
+ * \param[in,out] xml   XML node to set flags on
+ * \param[in]     flag  XML private flag to set
+ */
+static void
+set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
+{
+    for (xmlAttr *attr = pcmk__first_xml_attr(xml); attr; attr = attr->next) {
+        ((xml_private_t *) (attr->_private))->flags |= flag;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an XML attribute to a node, marked as deleted
+ *
+ * When calculating XML changes, we need to know when an attribute has been
+ * deleted. Add the attribute back to the new XML, so that we can check the
+ * removal against ACLs, and mark it as deleted for later removal after
+ * differences have been calculated.
+ */
+static void
+mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
+                  const char *old_value)
+{
+    xml_private_t *p = new_xml->doc->_private;
+    xmlAttr *attr = NULL;
+
+    // Prevent the dirty flag being set recursively upwards
+    clear_bit(p->flags, xpf_tracking);
+
+    // Restore the old value (and the tracking flag)
+    attr = xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+    set_bit(p->flags, xpf_tracking);
+
+    // Reset flags (so the attribute doesn't appear as newly created)
+    p = attr->_private;
+    p->flags = 0;
+
+    // Check ACLs and mark restored value for later removal
+    xml_remove_prop(new_xml, attr_name);
+
+    crm_trace("XML attribute %s=%s was removed from %s",
+              attr_name, old_value, element);
+}
+
+/*
+ * \internal
+ * \brief Check ACLs for a changed XML attribute
+ */
+static void
+mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
+                  const char *old_value)
+{
+    char *vcopy = crm_element_value_copy(new_xml, attr_name);
+
+    crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
+              attr_name, old_value, vcopy, element);
+
+    // Restore the original value
+    xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+
+    // Change it back to the new value, to check ACLs
+    crm_xml_add(new_xml, attr_name, vcopy);
+    free(vcopy);
+}
+
+/*!
+ * \internal
+ * \brief Mark an XML attribute as having changed position
+ */
+static void
+mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
+                xmlAttr *new_attr, int p_old, int p_new)
+{
+    xml_private_t *p = new_attr->_private;
+
+    crm_trace("XML attribute %s moved from position %d to %d in %s",
+              old_attr->name, p_old, p_new, element);
+
+    // Mark document, element, and all element's parents as changed
+    __xml_node_dirty(new_xml);
+
+    // Mark attribute as changed
+    p->flags |= xpf_dirty|xpf_moved;
+
+    p = (p_old > p_new)? old_attr->_private : new_attr->_private;
+    p->flags |= xpf_skip;
+}
+
+/*!
+ * \internal
+ * \brief Calculate differences in all previously existing XML attributes
+ */
+static void
+xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
+{
+    xmlAttr *attr_iter = pcmk__first_xml_attr(old_xml);
+
+    while (attr_iter != NULL) {
+        xmlAttr *old_attr = attr_iter;
+        xmlAttr *new_attr = xmlHasProp(new_xml, attr_iter->name);
+        const char *name = (const char *) attr_iter->name;
+        const char *old_value = crm_element_value(old_xml, name);
+
+        attr_iter = attr_iter->next;
+        if (new_attr == NULL) {
+            mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
+                              old_value);
+
+        } else {
+            xml_private_t *p = new_attr->_private;
+            int new_pos = __xml_offset((xmlNode*) new_attr);
+            int old_pos = __xml_offset((xmlNode*) old_attr);
+            const char *new_value = crm_element_value(new_xml, name);
+
+            // This attribute isn't new
+            p->flags = (p->flags & ~xpf_created);
+
+            if (strcmp(new_value, old_value) != 0) {
+                mark_attr_changed(new_xml, (const char *) old_xml->name, name,
+                                  old_value);
+
+            } else if ((old_pos != new_pos)
+                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
+                mark_attr_moved(new_xml, (const char *) old_xml->name,
+                                old_attr, new_attr, old_pos, new_pos);
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check all attributes in new XML for creation
+ */
+static void
+mark_created_attrs(xmlNode *new_xml)
+{
+    xmlAttr *attr_iter = pcmk__first_xml_attr(new_xml);
+
+    while (attr_iter != NULL) {
+        xmlAttr *new_attr = attr_iter;
+        xml_private_t *p = attr_iter->_private;
+
+        attr_iter = attr_iter->next;
+        if (is_set(p->flags, xpf_created)) {
+            const char *attr_name = (const char *) new_attr->name;
+
+            crm_trace("Created new attribute %s=%s in %s",
+                      attr_name, crm_element_value(new_xml, attr_name),
+                      new_xml->name);
+
+            /* Check ACLs (we can't use the remove-then-create trick because it
+             * would modify the attribute position).
+             */
+            if (pcmk__check_acl(new_xml, attr_name, xpf_acl_write)) {
+                pcmk__mark_xml_attr_dirty(new_attr);
+            } else {
+                // Creation was not allowed, so remove the attribute
+                xmlUnsetProp(new_xml, new_attr->name);
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Calculate differences in attributes between two XML nodes
+ */
+static void
+xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
+{
+    set_attrs_flag(new_xml, xpf_created); // cleared later if not really new
+    xml_diff_old_attrs(old_xml, new_xml);
+    mark_created_attrs(new_xml);
+}
+
+/*!
+ * \internal
+ * \brief Add an XML child element to a node, marked as deleted
+ *
+ * When calculating XML changes, we need to know when a child element has been
+ * deleted. Add the child back to the new XML, so that we can check the removal
+ * against ACLs, and mark it as deleted for later removal after differences have
+ * been calculated.
+ */
+static void
+mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
+{
+    // Re-create the child element so we can check ACLs
+    xmlNode *candidate = add_node_copy(new_parent, old_child);
+
+    // Clear flags on new child and its children
+    __xml_node_clean(candidate);
+
+    // Check whether ACLs allow the deletion
+    pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
+
+    // Remove the child again (which will track it in document's deleted_objs)
+    free_xml_with_position(candidate, __xml_offset(old_child));
+
+    if (find_element(new_parent, old_child, TRUE) == NULL) {
+        ((xml_private_t *) (old_child->_private))->flags |= xpf_skip;
+    }
+}
+
+static void
+mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
+                 int p_old, int p_new)
+{
+    xml_private_t *p = new_child->_private;
+
+    crm_trace("Child element %s with id='%s' moved from position %d to %d under %s",
+              new_child->name, (ID(new_child)? ID(new_child) : "<no id>"),
+              p_old, p_new, new_parent->name);
+    __xml_node_dirty(new_parent);
+    p->flags |= xpf_moved;
+
+    if (p_old > p_new) {
+        p = old_child->_private;
+    } else {
+        p = new_child->_private;
+    }
+    p->flags |= xpf_skip;
+}
+
 static void
 __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
     xmlNode *cIter = NULL;
-    xmlAttr *pIter = NULL;
+    xml_private_t *p = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
         crm_node_created(new_xml);
         pcmk__apply_creation_acl(new_xml, check_top);
         return;
-
-    } else {
-        xml_private_t *p = new_xml->_private;
-
-        if(p->flags & xpf_processed) {
-            /* Avoid re-comparing nodes */
-            return;
-        }
-        p->flags |= xpf_processed;
     }
 
-    for (pIter = pcmk__first_xml_attr(new_xml); pIter != NULL; pIter = pIter->next) {
-        xml_private_t *p = pIter->_private;
+    p = new_xml->_private;
+    CRM_CHECK(p != NULL, return);
 
-        /* Assume everything was just created and take it from there */
-        p->flags |= xpf_created;
+    if(p->flags & xpf_processed) {
+        /* Avoid re-comparing nodes */
+        return;
     }
+    p->flags |= xpf_processed;
 
-    for (pIter = pcmk__first_xml_attr(old_xml); pIter != NULL; ) {
-        xmlAttr *prop = pIter;
-        xml_private_t *p = NULL;
-        const char *name = (const char *)pIter->name;
-        const char *old_value = crm_element_value(old_xml, name);
-        xmlAttr *exists = xmlHasProp(new_xml, pIter->name);
+    xml_diff_attrs(old_xml, new_xml);
 
-        pIter = pIter->next;
-        if(exists == NULL) {
-            p = new_xml->doc->_private;
-
-            /* Prevent the dirty flag being set recursively upwards */
-            clear_bit(p->flags, xpf_tracking);
-            exists = xmlSetProp(new_xml, (pcmkXmlStr) name,
-                                (pcmkXmlStr) old_value);
-            set_bit(p->flags, xpf_tracking);
-
-            p = exists->_private;
-            p->flags = 0;
-
-            crm_trace("Lost %s@%s=%s", old_xml->name, name, old_value);
-            xml_remove_prop(new_xml, name);
-
-        } else {
-            int p_new = __xml_offset((xmlNode*)exists);
-            int p_old = __xml_offset((xmlNode*)prop);
-            const char *value = crm_element_value(new_xml, name);
-
-            p = exists->_private;
-            p->flags = (p->flags & ~xpf_created);
-
-            if(strcmp(value, old_value) != 0) {
-                /* Restore the original value, so we can call crm_xml_add(),
-                 * which checks ACLs
-                 */
-                char *vcopy = crm_element_value_copy(new_xml, name);
-
-                crm_trace("Modified %s@%s %s->%s",
-                          old_xml->name, name, old_value, vcopy);
-                xmlSetProp(new_xml, prop->name, (pcmkXmlStr) old_value);
-                crm_xml_add(new_xml, name, vcopy);
-                free(vcopy);
-
-            } else if ((p_old != p_new)
-                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
-                crm_info("Moved %s@%s (%d -> %d)",
-                         old_xml->name, name, p_old, p_new);
-                __xml_node_dirty(new_xml);
-                p->flags |= xpf_dirty|xpf_moved;
-
-                if(p_old > p_new) {
-                    p = prop->_private;
-                    p->flags |= xpf_skip;
-
-                } else {
-                    p = exists->_private;
-                    p->flags |= xpf_skip;
-                }
-            }
-        }
-    }
-
-    for (pIter = pcmk__first_xml_attr(new_xml); pIter != NULL; ) {
-        xmlAttr *prop = pIter;
-        xml_private_t *p = pIter->_private;
-
-        pIter = pIter->next;
-        if(is_set(p->flags, xpf_created)) {
-            char *name = strdup((const char *)prop->name);
-            char *value = crm_element_value_copy(new_xml, name);
-
-            crm_trace("Created %s@%s=%s", new_xml->name, name, value);
-            /* Remove plus create won't work as it will modify the relative attribute ordering */
-            if (pcmk__check_acl(new_xml, name, xpf_acl_write)) {
-                pcmk__mark_xml_attr_dirty(prop);
-            } else {
-                xmlUnsetProp(new_xml, prop->name); /* Remove - change not allowed */
-            }
-
-            free(value);
-            free(name);
-        }
-    }
-
+    // Check for differences in the original children
     for (cIter = __xml_first_child(old_xml); cIter != NULL; ) {
         xmlNode *old_child = cIter;
         xmlNode *new_child = find_element(new_xml, cIter, TRUE);
@@ -3571,30 +3713,19 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
             __xml_diff_object(old_child, new_child, TRUE);
 
         } else {
-            /* Create then free (which will check the acls if necessary) */
-            xmlNode *candidate = add_node_copy(new_xml, old_child);
-            xmlNode *top = xmlDocGetRootElement(candidate->doc);
-
-            __xml_node_clean(candidate);
-            pcmk__apply_acl(top); /* Make sure any ACLs are applied to 'candidate' */
-            /* Record the old position */
-            free_xml_with_position(candidate, __xml_offset(old_child));
-
-            if (find_element(new_xml, old_child, TRUE) == NULL) {
-                xml_private_t *p = old_child->_private;
-
-                p->flags |= xpf_skip;
-            }
+            mark_child_deleted(old_child, new_xml);
         }
     }
 
+    // Check for moved or created children
     for (cIter = __xml_first_child(new_xml); cIter != NULL; ) {
         xmlNode *new_child = cIter;
         xmlNode *old_child = find_element(old_xml, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
-            xml_private_t *p = new_child->_private;
+            // This is a newly created child
+            p = new_child->_private;
             p->flags |= xpf_skip;
             __xml_diff_object(old_child, new_child, TRUE);
 
@@ -3604,19 +3735,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
             int p_old = __xml_offset(old_child);
 
             if(p_old != p_new) {
-                xml_private_t *p = new_child->_private;
-
-                crm_info("%s.%s moved from %d to %d",
-                         new_child->name, ID(new_child), p_old, p_new);
-                __xml_node_dirty(new_xml);
-                p->flags |= xpf_moved;
-
-                if(p_old > p_new) {
-                    p = old_child->_private;
-                } else {
-                    p = new_child->_private;
-                }
-                p->flags |= xpf_skip;
+                mark_child_moved(old_child, new_xml, new_child, p_old, p_new);
             }
         }
     }
