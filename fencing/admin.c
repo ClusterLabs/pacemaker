@@ -312,9 +312,15 @@ handle_level(stonith_t *st, char *target, int fence_level,
     char *node = NULL;
     char *pattern = NULL;
     char *name = NULL;
-    char *value = strchr(target, '=');
+    char *value = NULL;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return -EINVAL;
+    }
 
     /* Determine if targeting by attribute, node name pattern or node name */
+    value = strchr(target, '=');
     if (value != NULL)  {
         name = target;
         *value++ = '\0';
@@ -451,6 +457,28 @@ validate(stonith_t *st, const char *agent, const char *id,
         }
     }
     return rc;
+}
+
+static void
+show_last_fenced(int as_nodeid, const char *target)
+{
+    time_t when = 0;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return;
+    }
+    if (as_nodeid) {
+        uint32_t nodeid = atol(target);
+        when = stonith_api_time(nodeid, NULL, FALSE);
+    } else {
+        when = stonith_api_time(0, target, FALSE);
+    }
+    if(when) {
+        printf("Node %s last kicked at: %s\n", target, ctime(&when));
+    } else {
+        printf("Node %s has never been kicked\n", target);
+    }
 }
 
 int
@@ -741,21 +769,7 @@ main(int argc, char **argv)
             rc = mainloop_fencing(st, target, "on", timeout, tolerance);
             break;
         case 'h':
-            {
-                time_t when = 0;
-
-                if(as_nodeid) {
-                    uint32_t nodeid = atol(target);
-                    when = stonith_api_time(nodeid, NULL, FALSE);
-                } else {
-                    when = stonith_api_time(0, target, FALSE);
-                }
-                if(when) {
-                    printf("Node %s last kicked at: %s\n", target, ctime(&when));
-                } else {
-                    printf("Node %s has never been kicked\n", target);
-                }
-            }
+            show_last_fenced(as_nodeid, target);
             break;
         case 'H':
             rc = handle_history(st, target, timeout, quiet,
