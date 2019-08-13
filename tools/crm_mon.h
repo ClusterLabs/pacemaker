@@ -47,11 +47,13 @@
 #endif
 
 typedef enum mon_output_format_e {
+    mon_output_unset,
     mon_output_none,
     mon_output_monitor,
     mon_output_plain,
     mon_output_console,
     mon_output_xml,
+    mon_output_legacy_xml,
     mon_output_html,
     mon_output_cgi
 } mon_output_format_t;
@@ -96,6 +98,7 @@ typedef enum mon_output_format_e {
 typedef struct {
     FILE *stream;
     mon_output_format_t output_format;
+    pcmk__output_t *out;
 } mon_state_t;
 
 void print_status(mon_state_t *state, pe_working_set_t *data_set,
@@ -117,3 +120,11 @@ const char *get_cluster_stack(pe_working_set_t *data_set);
 char *get_node_display_name(node_t *node, unsigned int mon_ops);
 int get_resource_display_options(unsigned int mon_ops,
                                  mon_output_format_t output_format);
+
+pcmk__output_t *crm_mon_mk_curses_output(char **argv);
+void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+#if CURSES_ENABLED
+extern GOptionEntry crm_mon_curses_output_entries[];
+#define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
+#endif

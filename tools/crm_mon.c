@@ -34,6 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 
@@ -42,6 +43,7 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 
 #include "crm_mon.h"
 
@@ -55,7 +57,7 @@ static unsigned int show = mon_show_default;
  * Definitions indicating how to output
  */
 
-static mon_output_format_t output_format = mon_output_console;
+static mon_output_format_t output_format = mon_output_unset;
 
 static char *output_filename = NULL;   /* if sending output to a file, its name */
 
@@ -69,17 +71,26 @@ static cib_t *cib = NULL;
 static stonith_t *st = NULL;
 static xmlNode *current_cib = NULL;
 
+static pcmk__common_args_t *args = NULL;
+static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
-
-#if CURSES_ENABLED
-static gboolean curses_console_initialized = FALSE;
-#endif
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
+
+static pcmk__supported_format_t formats[] = {
+#if CURSES_ENABLED
+    CRM_MON_SUPPORTED_FORMAT_CURSES,
+#endif
+    PCMK__SUPPORTED_FORMAT_HTML,
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 /* Define exit codes for monitoring-compatible output
  * For nagios plugins, the possibilities are
@@ -116,6 +127,11 @@ static void kick_refresh(gboolean data_updated);
 
 static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("html");
     output_format = mon_output_cgi;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
@@ -128,6 +144,11 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
         return FALSE;
     }
 
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("html");
     output_format = mon_output_html;
     output_filename = strdup(optarg);
     umask(S_IWGRP | S_IWOTH);
@@ -136,6 +157,11 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("text");
     output_format = mon_output_monitor;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
@@ -143,7 +169,12 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    output_format = mon_output_xml;
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("xml");
+    output_format = mon_output_legacy_xml;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -182,15 +213,18 @@ inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer da
 
 static gboolean
 no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (output_format == mon_output_console) {
-        output_format = mon_output_plain;
-    }
-
+    output_format = mon_output_plain;
     return TRUE;
 }
 
 static gboolean
 one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (args->output_ty != NULL) {
+        free(args->output_ty);
+    }
+
+    args->output_ty = strdup("text");
+    output_format = mon_output_plain;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -738,7 +772,7 @@ build_arg_context(pcmk__common_args_t *args) {
                            "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                            "\tcrm_mon --as-xml\n";
 
-    context = pcmk__build_arg_context(args, NULL);
+    context = pcmk__build_arg_context(args, "console (default), html, text, xml");
     g_option_context_set_description(context, examples);
 
     /* Add the -Q option, which cannot be part of the globally supported options
@@ -768,10 +802,9 @@ main(int argc, char **argv)
     int rc = pcmk_ok;
     char **processed_args = NULL;
 
-    pcmk__common_args_t *args = calloc(1, sizeof(pcmk__common_args_t));
-
     GError *error = NULL;
 
+    args = calloc(1, sizeof(pcmk__common_args_t));
     if (args == NULL) {
         crm_exit(crm_errno2exit(-ENOMEM));
     }
@@ -779,6 +812,7 @@ main(int argc, char **argv)
     args->summary = strdup("Provides a summary of cluster's current state.\n\n"
                            "Outputs varying levels of detail in a number of different formats.");
     context = build_arg_context(args);
+    pcmk__register_formats(context, formats);
 
     options.pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
@@ -802,8 +836,96 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
+    /* Which output format to use could come from two places:  The --as-xml
+     * style arguments we gave in mode_entries above, or the formatted output
+     * arguments added by pcmk__register_formats.  If the latter were used,
+     * output_format will be mon_output_unset.
+     *
+     * Call the callbacks as if those older style arguments were provided so
+     * the various things they do get done.
+     */
+    if (output_format == mon_output_unset) {
+        gboolean retval = TRUE;
+
+        g_clear_error(&error);
+
+        /* NOTE:  There is no way to specify CGI mode or simple mode with --output-as.
+         * Those will need to get handled eventually, at which point something else
+         * will need to be added to this block.
+         */
+        if (safe_str_eq(args->output_ty, "html")) {
+            retval = as_html_cb("h", args->output_dest, NULL, &error);
+        } else if (safe_str_eq(args->output_ty, "text")) {
+            retval = no_curses_cb("N", NULL, NULL, &error);
+        } else if (safe_str_eq(args->output_ty, "xml")) {
+            if (args->output_ty != NULL) {
+                free(args->output_ty);
+            }
+
+            args->output_ty = strdup("xml");
+            output_format = mon_output_xml;
+            options.mon_ops |= mon_op_one_shot;
+        } else {
+            /* Neither old nor new arguments were given, so set the default. */
+            if (args->output_ty != NULL) {
+                free(args->output_ty);
+            }
+
+            args->output_ty = strdup("console");
+            output_format = mon_output_console;
+        }
+
+        if (!retval) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    }
+
+    /* If certain format options were specified, we want to set some extra
+     * options.  We can just process these like they were given on the
+     * command line.
+     */
+    g_clear_error(&error);
+
+    if (output_format == mon_output_plain) {
+        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_html) {
+        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d",
+                              g_get_prgname(), options.reconnect_msec/1000)) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_cgi) {
+        if (!pcmk__force_args(context, &error, "%s --output-cgi", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
+    }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != 0) {
+        fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
+        return clean_up(CRM_EX_ERROR);
+    }
+
+    stonith__register_messages(out);
+
     if (args->version) {
-        crm_help('$', CRM_EX_OK);
+        /* FIXME: For the moment, this won't do anything on XML or HTML formats
+         * because finish is not getting called.  That's commented out in
+         * clean_up.
+         */
+        out->version(out, false);
+        return clean_up(CRM_EX_OK);
     }
 
     if (args->quiet) {
@@ -935,7 +1057,6 @@ main(int argc, char **argv)
         cbreak();
         noecho();
         crm_enable_stderr(FALSE);
-        curses_console_initialized = TRUE;
 #else
         options.mon_ops |= mon_op_one_shot;
         output_format = mon_output_plain;
@@ -1543,7 +1664,7 @@ mon_refresh_display(gpointer user_data)
     /* stdout for everything except the HTML case, which does a bunch of file
      * renaming.  We'll handle changing stream in print_html_status.
      */
-    mon_state_t state = { .stream = stdout, .output_format = output_format };
+    mon_state_t state = { .stream = stdout, .output_format = output_format, .out = out };
 
     last_refresh = time(NULL);
 
@@ -1613,6 +1734,7 @@ mon_refresh_display(gpointer user_data)
             }
             break;
 
+        case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(&state, mon_data_set, stonith_history,
                              options.mon_ops, show, print_neg_location_prefix);
@@ -1632,6 +1754,7 @@ mon_refresh_display(gpointer user_data)
                          show, print_neg_location_prefix);
             break;
 
+        case mon_output_unset:
         case mon_output_none:
             break;
     }
@@ -1736,12 +1859,11 @@ static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
-    if (curses_console_initialized) {
+    if (output_format == mon_output_console) {
         output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
-        curses_console_initialized = FALSE;
     }
 #endif
 
@@ -1760,5 +1882,16 @@ clean_up(crm_exit_t exit_code)
             fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
         }
     }
+
+    g_option_context_free(context);
+
+    if (out != NULL) {
+        /* FIXME: When we are ready to enable formatted output, uncomment
+         * the following line:
+         */
+        /* out->finish(out, exit_code, true, NULL); */
+        pcmk__output_free(out);
+    }
+
     crm_exit(exit_code);
 }

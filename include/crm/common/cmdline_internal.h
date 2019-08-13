@@ -84,6 +84,28 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts);
 char **
 pcmk__cmdline_preproc(int argc, char **argv, const char *special);
 
+/*!
+ * \internal
+ * \brief Process extra arguments as if they were provided by the user on the
+ *        command line.
+ *
+ * \param[in,out] context The command line option processing context.
+ * \param[out]    error   A place for errors to be collected.
+ * \param[in]     format  The command line to be processed, potentially with
+ *                        format specifiers.
+ * \param[in]     ...     Arguments to be formatted.
+ *
+ * \note The first item in the list of arguments must be the name of the
+ *       program, exactly as if the format string were coming from the
+ *       command line.  Otherwise, the first argument will be ignored.
+ *
+ * \return TRUE if processing succeeded, or FALSE otherwise.  If FALSE, error
+ *         should be checked and displayed to the user.
+ */
+G_GNUC_PRINTF(3, 4)
+gboolean
+pcmk__force_args(GOptionContext *context, GError **error, const char *format, ...);
+
 #ifdef __cplusplus
 }
 #endif

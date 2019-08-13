@@ -30,19 +30,19 @@ static char *stylesheet_link = NULL;
 static char *title = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
-    { "cgi-output", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
+    { "output-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
       "Add text needed to use output in a CGI program",
       NULL },
 
-    { "meta-refresh", 0, 0, G_OPTION_ARG_INT, &meta_refresh,
+    { "output-meta-refresh", 0, 0, G_OPTION_ARG_INT, &meta_refresh,
       "How often to refresh",
       "SECONDS" },
 
-    { "stylesheet-link", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
+    { "output-stylesheet-link", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
       "Link to an external CSS stylesheet",
       "URI" },
 
-    { "title", 0, 0, G_OPTION_ARG_STRING, &title,
+    { "output-title", 0, 0, G_OPTION_ARG_STRING, &title,
       "Page title (defaults to command line)",
       "TITLE" },
 
