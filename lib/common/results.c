@@ -191,7 +191,9 @@ pcmk_strerror(int rc)
 
     if (error == 0) {
         return "OK";
-    } else if (error < PCMK_ERROR_OFFSET) {
+
+    // Of course error > 0 ... unless someone passed INT_MIN as rc
+    } else if ((error > 0) && (error < PCMK_ERROR_OFFSET)) {
         return strerror(error);
     }
 
