@@ -386,9 +386,15 @@ handle_level(stonith_t *st, char *target, int fence_level,
     char *node = NULL;
     char *pattern = NULL;
     char *name = NULL;
-    char *value = strchr(target, '=');
+    char *value = NULL;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return -EINVAL;
+    }
 
     /* Determine if targeting by attribute, node name pattern or node name */
+    value = strchr(target, '=');
     if (value != NULL)  {
         name = target;
         *value++ = '\0';
@@ -476,6 +482,24 @@ validate(stonith_t *st, const char *agent, const char *id,
 
     out->message(out, "validate", agent, id, output, error_output, rc); 
     return rc;
+}
+
+static void
+show_last_fenced(pcmk__output_t *out, const char *target)
+{
+    time_t when = 0;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return;
+    }
+    if (options.as_nodeid) {
+        uint32_t nodeid = atol(target);
+        when = stonith_api_time(nodeid, NULL, FALSE);
+    } else {
+        when = stonith_api_time(0, target, FALSE);
+    }
+    out->message(out, "last-fenced", target, when);
 }
 
 static GOptionContext *
@@ -793,19 +817,7 @@ main(int argc, char **argv)
             rc = mainloop_fencing(st, target, "on", options.timeout, options.tolerance);
             break;
         case 'h':
-            {
-                time_t when = 0;
-
-                if(options.as_nodeid) {
-                    uint32_t nodeid = atol(target);
-                    when = stonith_api_time(nodeid, NULL, FALSE);
-                } else {
-                    when = stonith_api_time(0, target, FALSE);
-                }
-
-                out->message(out, "last-fenced", target, when);
-            }
-
+            show_last_fenced(out, target);
             break;
         case 'H':
             rc = handle_history(st, target, options.timeout, args->quiet,
