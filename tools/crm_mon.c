@@ -606,17 +606,15 @@ cib_connect(gboolean full)
 static const char *
 get_option_desc(char c)
 {
-    GOptionEntry *entry;
+    const char *desc = "No help available";
 
-    for (entry = display_entries; entry != NULL; entry++) {
-        if (entry->short_name != c) {
-            continue;
+    for (GOptionEntry *entry = display_entries; entry != NULL; entry++) {
+        if (entry->short_name == c) {
+            desc = entry->description;
+            break;
         }
-
-        return strdup(entry->description);
     }
-
-    return NULL;
+    return desc;
 }
 
 #define print_option_help(output_format, option, condition) \
