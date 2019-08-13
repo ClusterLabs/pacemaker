@@ -109,7 +109,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
 
     child_text = crm_concat(pre_text, "   ", ' ');
 
-    fprintf(out->dest, "%sResource Group: %s", pre_text ? pre_text : "", rsc->id);
+    fprintf(out->dest, "%sResource Group: %s", pre_text, rsc->id);
     if (options & pe_print_brief) {
         pe__rscs_brief_output_text(out, rsc->children, child_text, options, TRUE);
 

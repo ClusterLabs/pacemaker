@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -839,7 +841,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     child_text = crm_concat(pre_text, "   ", ' ');
 
     fprintf(out->dest, "%sClone Set: %s [%s]%s%s%s",
-            pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),
+            pre_text, rsc->id, ID(clone_data->xml_obj_child),
             is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
             is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
             is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
