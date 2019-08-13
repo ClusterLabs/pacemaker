@@ -31,6 +31,17 @@
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 
+/* @TODO XML_PARSE_RECOVER allows some XML errors to be silently worked around
+ * by libxml2, which is potentially ambiguous and dangerous. We should drop it
+ * when we can break backward compatibility with configurations that might be
+ * relying on it (i.e. pacemaker 3.0.0).
+ *
+ * It might be a good idea to have a transitional period where we first try
+ * parsing without XML_PARSE_RECOVER, and if that fails, try parsing again with
+ * it, logging a warning if it succeeds.
+ */
+#define PCMK__XML_PARSE_OPTS    (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
+
 typedef struct {
     int found;
     const char *string;
@@ -2175,14 +2186,10 @@ string2xml(const char *input)
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
-    /* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
-
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
-    /* initGenericErrorDefaultFunc(crm_xml_err); */
-    output =
-        xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                       XML_PARSE_NOBLANKS | XML_PARSE_RECOVER);
+    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+                            PCMK__XML_PARSE_OPTS);
     if (output) {
         xml = xmlDocGetRootElement(output);
     }
@@ -2344,17 +2351,13 @@ filename2xml(const char *filename)
     gboolean uncompressed = TRUE;
     xmlParserCtxtPtr ctxt = NULL;
     xmlErrorPtr last_error = NULL;
-    static int xml_options = XML_PARSE_NOBLANKS | XML_PARSE_RECOVER;
 
     /* create a parser context */
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
-    /* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
-
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
-    /* initGenericErrorDefaultFunc(crm_xml_err); */
 
     if (filename) {
         uncompressed = !crm_ends_with_ext(filename, ".bz2");
@@ -2362,16 +2365,17 @@ filename2xml(const char *filename)
 
     if (filename == NULL) {
         /* STDIN_FILENO == fileno(stdin) */
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL, xml_options);
+        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
+                               PCMK__XML_PARSE_OPTS);
 
     } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL, xml_options);
+        output = xmlCtxtReadFile(ctxt, filename, NULL, PCMK__XML_PARSE_OPTS);
 
     } else {
         char *input = decompress_file(filename);
 
         output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                xml_options);
+                                PCMK__XML_PARSE_OPTS);
         free(input);
     }
 
