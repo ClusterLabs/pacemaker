@@ -48,23 +48,22 @@ compare_attribute(gconstpointer a, gconstpointer b)
     return rc;
 }
 
-void
-append_attr_list(gpointer name, gpointer value, gpointer user_data)
+GList *
+append_attr_list(GList *attr_list, char *name)
 {
     int i;
     const char *filt_str[] = FILTER_STR;
-    GList *attr_list = (GList *) user_data;
 
-    CRM_CHECK(name != NULL, return);
+    CRM_CHECK(name != NULL, return attr_list);
 
     /* filtering automatic attributes */
     for (i = 0; filt_str[i] != NULL; i++) {
         if (g_str_has_prefix(name, filt_str[i])) {
-            return;
+            return attr_list;
         }
     }
 
-    attr_list = g_list_insert_sorted(attr_list, name, compare_attribute);
+    return g_list_insert_sorted(attr_list, name, compare_attribute);
 }
 
 int

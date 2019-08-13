@@ -1221,9 +1221,15 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
 
         if (data.node && data.node->details && data.node->details->online) {
             GList *attr_list = NULL;
+            GHashTableIter iter;
+            gpointer key, value;
 
             print_node_start(state, data.node, mon_ops);
-            g_hash_table_foreach(data.node->details->attrs, append_attr_list, attr_list);
+
+            g_hash_table_iter_init(&iter, data.node->details->attrs);
+            while (g_hash_table_iter_next (&iter, &key, &value)) {
+                attr_list = append_attr_list(attr_list, key);
+            }
 
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);

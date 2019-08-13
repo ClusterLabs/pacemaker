@@ -112,7 +112,7 @@ int print_html_status(mon_state_t *state, pe_working_set_t *data_set,
                       unsigned int mon_ops, unsigned int show, const char *prefix,
                       unsigned int reconnect_msec);
 
-void append_attr_list(gpointer name, gpointer value, gpointer user_data);
+GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
 int count_resources(pe_working_set_t *data_set, resource_t *rsc);
 void crm_mon_get_parameters(resource_t *rsc, pe_working_set_t *data_set);
