@@ -55,9 +55,14 @@ cts_SCRIPTS	=	cts			\
 			pacemaker-cts-dummyd
 
 clidir		= $(testdir)/cli
-cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
-		  cli/regression.acls.exp cli/regression.validity.exp \
-		  cli/regression.upgrade.exp cli/regression.rules.exp
+cli_DATA	= cli/regression.dates.exp	\
+		  cli/regression.tools.exp	\
+		  cli/regression.acls.exp	\
+		  cli/regression.validity.exp	\
+		  cli/regression.upgrade.exp	\
+		  cli/regression.rules.exp	\
+		  cli/crm_diff_new.xml		\
+		  cli/crm_diff_old.xml
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler
