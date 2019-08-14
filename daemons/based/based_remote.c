@@ -636,7 +636,7 @@ authenticate_user(const char *user, const char *passwd)
         pam_name = getenv("CIB_pam_service");
     }
     if (pam_name == NULL) {
-        pam_name = "login";
+        pam_name = "pacemaker-base";
     }
 
     p_conv.conv = construct_pam_passwd;

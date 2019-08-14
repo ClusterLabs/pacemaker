@@ -693,6 +693,8 @@ exit 0
 %config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
 %endif
 
+%config(noreplace) %{_sysconfdir}/pam.d/pacemaker-base
+
 %files cli
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
