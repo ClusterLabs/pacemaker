@@ -160,7 +160,9 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
     op->t_rcchange = op->t_run;
 
     op->call_id = 0;
-    for (xop = __xml_first_child(cib_resource); xop != NULL; xop = __xml_next(xop)) {
+    for (xop = __xml_first_child_element(cib_resource); xop != NULL;
+         xop = __xml_next_element(xop)) {
+
         int tmp = 0;
 
         crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);

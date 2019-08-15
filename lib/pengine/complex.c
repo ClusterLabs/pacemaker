@@ -282,7 +282,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
-    for (child_xml = __xml_first_child(xml_obj); child_xml != NULL;
+    for (child_xml = __xml_first_child_element(xml_obj); child_xml != NULL;
          child_xml = __xml_next_element(child_xml)) {
         xmlNode *new_child = NULL;
 
@@ -298,13 +298,17 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         GHashTable *rsc_ops_hash =
             g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, NULL);
 
-        for (op = __xml_first_child(rsc_ops); op != NULL; op = __xml_next_element(op)) {
+        for (op = __xml_first_child_element(rsc_ops); op != NULL;
+             op = __xml_next_element(op)) {
+
             char *key = template_op_key(op);
 
             g_hash_table_insert(rsc_ops_hash, key, op);
         }
 
-        for (op = __xml_first_child(template_ops); op != NULL; op = __xml_next_element(op)) {
+        for (op = __xml_first_child_element(template_ops); op != NULL;
+             op = __xml_next_element(op)) {
+
             char *key = template_op_key(op);
 
             if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {

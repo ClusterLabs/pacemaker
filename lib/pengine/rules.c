@@ -1,19 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -46,7 +37,9 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
     gboolean ruleset_default = TRUE;
     xmlNode *rule = NULL;
 
-    for (rule = __xml_first_child(ruleset); rule != NULL; rule = __xml_next_element(rule)) {
+    for (rule = __xml_first_child_element(ruleset); rule != NULL;
+         rule = __xml_next_element(rule)) {
+
         if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
             ruleset_default = FALSE;
             if (test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now)) {
@@ -93,7 +86,9 @@ pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, 
     }
 
     crm_trace("Testing rule %s", ID(rule));
-    for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
+    for (expr = __xml_first_child_element(rule); expr != NULL;
+         expr = __xml_next_element(expr)) {
+
         test = pe_test_expression_full(expr, node_hash, role, now, match_data);
         empty = FALSE;
 
@@ -722,7 +717,9 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         list = list->children;
     }
 
-    for (an_attr = __xml_first_child(list); an_attr != NULL; an_attr = __xml_next_element(an_attr)) {
+    for (an_attr = __xml_first_child_element(list); an_attr != NULL;
+         an_attr = __xml_next_element(an_attr)) {
+
         if (crm_str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, TRUE)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
@@ -769,9 +766,13 @@ get_versioned_rule(xmlNode * attr_set)
     xmlNode * rule = NULL;
     xmlNode * expr = NULL;
 
-    for (rule = __xml_first_child(attr_set); rule != NULL; rule = __xml_next_element(rule)) {
+    for (rule = __xml_first_child_element(attr_set); rule != NULL;
+         rule = __xml_next_element(rule)) {
+
         if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
-            for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
+            for (expr = __xml_first_child_element(rule); expr != NULL;
+                 expr = __xml_next_element(expr)) {
+
                 if (find_expression_type(expr) == version_expr) {
                     return rule;
                 }
@@ -801,7 +802,7 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
         return;
     }
 
-    expr = __xml_first_child(rule);
+    expr = __xml_first_child_element(rule);
     while (expr != NULL) {
         if (find_expression_type(expr) != version_expr) {
             xmlNode *node = expr;
@@ -879,7 +880,9 @@ make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_n
     }
 
     crm_trace("Checking for attributes");
-    for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
+    for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
+         attr_set = __xml_next_element(attr_set)) {
+
         /* Uncertain if set_name == NULL check is strictly necessary here */
         if (set_name == NULL || crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
             pair = NULL;
@@ -1011,7 +1014,7 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
 
     if (versioned_params && ra_version) {
         GHashTable *node_hash = crm_str_table_new();
-        xmlNode *attr_set = __xml_first_child(versioned_params);
+        xmlNode *attr_set = __xml_first_child_element(versioned_params);
 
         if (attr_set) {
             g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),

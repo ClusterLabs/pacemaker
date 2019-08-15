@@ -131,8 +131,8 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
 {
     xmlNode *child = NULL;
 
-    for (child = __xml_first_child(acl_entry); child;
-         child = __xml_next(child)) {
+    for (child = __xml_first_child_element(acl_entry); child;
+         child = __xml_next_element(child)) {
         const char *tag = crm_element_name(child);
         const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
 
@@ -151,8 +151,8 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
             if (ref_role) {
                 xmlNode *role = NULL;
 
-                for (role = __xml_first_child(acl_top); role;
-                     role = __xml_next(role)) {
+                for (role = __xml_first_child_element(acl_top); role;
+                     role = __xml_next_element(role)) {
                     if (!strcmp(XML_ACL_TAG_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
                                                                 XML_ATTR_ID);
@@ -306,8 +306,8 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         if (acls) {
             xmlNode *child = NULL;
 
-            for (child = __xml_first_child(acls); child;
-                 child = __xml_next(child)) {
+            for (child = __xml_first_child_element(acls); child;
+                 child = __xml_next_element(child)) {
                 const char *tag = crm_element_name(child);
 
                 if (!strcmp(tag, XML_ACL_TAG_USER)

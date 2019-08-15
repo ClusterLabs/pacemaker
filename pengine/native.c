@@ -606,8 +606,9 @@ is_op_dup(resource_t * rsc, const char *name, const char *interval)
     xmlNode *operation = NULL;
 
     CRM_ASSERT(rsc);
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
+
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             value = crm_element_value(operation, "name");
             if (safe_str_neq(value, name)) {
@@ -840,8 +841,10 @@ Recurring(resource_t * rsc, action_t * start, node_t * node, pe_working_set_t * 
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+        for (operation = __xml_first_child_element(rsc->ops_xml);
+             operation != NULL;
              operation = __xml_next_element(operation)) {
+
             if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 RecurringOp(rsc, start, node, operation, data_set);
             }
@@ -1064,8 +1067,10 @@ Recurring_Stopped(resource_t * rsc, action_t * start, node_t * node, pe_working_
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+        for (operation = __xml_first_child_element(rsc->ops_xml);
+             operation != NULL;
              operation = __xml_next_element(operation)) {
+
             if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 RecurringOp_Stopped(rsc, start, node, operation, data_set);
             }
