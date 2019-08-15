@@ -1,6 +1,8 @@
 /*
  * Copyright 2009-2019 the Pacemaker project contributors
  *
+ * The version control history for this file may have further details.
+ *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
@@ -142,7 +144,9 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     op->t_rcchange = op->t_run;
 
     op->call_id = 0;
-    for (xop = __xml_first_child(cib_resource); xop != NULL; xop = __xml_next(xop)) {
+    for (xop = __xml_first_child_element(cib_resource); xop != NULL;
+         xop = __xml_next_element(xop)) {
+
         int tmp = 0;
 
         crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);

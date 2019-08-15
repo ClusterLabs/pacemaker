@@ -660,7 +660,7 @@ unpack_operation_on_fail(action_t * action)
 
         CRM_CHECK(action->rsc != NULL, return NULL);
 
-        for (operation = __xml_first_child(action->rsc->ops_xml);
+        for (operation = __xml_first_child_element(action->rsc->ops_xml);
              operation && !value; operation = __xml_next_element(operation)) {
 
             if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
@@ -699,7 +699,7 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
 
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
 
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
@@ -862,8 +862,12 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
     xmlNode *attrs = NULL;
     xmlNode *attr = NULL;
 
-    for (attrs = __xml_first_child(versioned_meta); attrs != NULL; attrs = __xml_next_element(attrs)) {
-        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
+    for (attrs = __xml_first_child_element(versioned_meta); attrs != NULL;
+         attrs = __xml_next_element(attrs)) {
+
+        for (attr = __xml_first_child_element(attrs); attr != NULL;
+             attr = __xml_next_element(attr)) {
+
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
 
@@ -1191,7 +1195,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
     xmlNode *operation = NULL;
 
   retry:
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");

@@ -1522,7 +1522,9 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             xmlNode *state = NULL;
             xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
 
-            for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+            for (state = __xml_first_child_element(status); state != NULL;
+                 state = __xml_next_element(state)) {
+
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
                     node = ID(state);
@@ -1533,7 +1535,9 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
             xmlNode *state = NULL;
 
-            for (state = __xml_first_child(match); state != NULL; state = __xml_next(state)) {
+            for (state = __xml_first_child_element(match); state != NULL;
+                 state = __xml_next_element(state)) {
+
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
                     node = ID(state);
