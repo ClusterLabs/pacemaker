@@ -47,8 +47,8 @@ static void print_rsc_history(mon_state_t *state, pe_working_set_t *data_set,
 static void print_node_history(mon_state_t *state, pe_working_set_t *data_set,
                                xmlNode *node_state, gboolean operations,
                                unsigned int mon_ops);
-static gboolean print_attr_msg(mon_state_t *state, node_t * node, GListPtr rsc_list,
-                               const char *attrname, const char *attrvalue);
+static gboolean add_extra_info(mon_state_t *state, node_t * node, GListPtr rsc_list,
+                               const char *attrname, const char *attrvalue, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static void print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
                                gboolean operations, unsigned int mon_ops);
@@ -786,84 +786,59 @@ print_node_history(mon_state_t *state, pe_working_set_t *data_set,
 
 /*!
  * \internal
- * \brief Print extended information about an attribute if appropriate
+ * \brief Determine whether extended information about an attribute should be added.
  *
  * \param[in] data_set  Working set of CIB state
  *
- * \return TRUE if extended information was printed, FALSE otherwise
+ * \return TRUE if extended information should be printed, FALSE otherwise
  * \note Currently, extended information is only supported for ping/pingd
  *       resources, for which a message will be printed if connectivity is lost
  *       or degraded.
  */
 static gboolean
-print_attr_msg(mon_state_t *state, node_t * node, GListPtr rsc_list,
-               const char *attrname, const char *attrvalue)
+add_extra_info(mon_state_t *state, node_t *node, GListPtr rsc_list,
+               const char *attrname, const char *attrvalue, int *expected_score)
 {
     GListPtr gIter = NULL;
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
         const char *type = g_hash_table_lookup(rsc->meta, "type");
+        const char *name = NULL;
 
         if (rsc->children != NULL) {
-            if (print_attr_msg(state, node, rsc->children, attrname, attrvalue)) {
+            if (add_extra_info(state, node, rsc->children, attrname, attrvalue, expected_score)) {
                 return TRUE;
             }
         }
 
-        if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
-            const char *name = g_hash_table_lookup(rsc->parameters, "name");
+        if (safe_str_neq(type, "ping") && safe_str_neq(type, "pingd")) {
+            return FALSE;
+        }
 
-            if (name == NULL) {
-                name = "pingd";
+        name = g_hash_table_lookup(rsc->parameters, "name");
+
+        if (name == NULL) {
+            name = "pingd";
+        }
+
+        /* To identify the resource with the attribute name. */
+        if (safe_str_eq(name, attrname)) {
+            int host_list_num = 0;
+            /* int value = crm_parse_int(attrvalue, "0"); */
+            const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
+            const char *multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
+
+            if (hosts) {
+                char **host_list = g_strsplit(hosts, " ", 0);
+                host_list_num = g_strv_length(host_list);
+                g_strfreev(host_list);
             }
 
-            /* To identify the resource with the attribute name. */
-            if (safe_str_eq(name, attrname)) {
-                int host_list_num = 0;
-                int expected_score = 0;
-                int value = crm_parse_int(attrvalue, "0");
-                const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
-                const char *multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
+            /* pingd multiplier is the same as the default value. */
+            *expected_score = host_list_num * crm_parse_int(multiplier, "1");
 
-                if(hosts) {
-                    char **host_list = g_strsplit(hosts, " ", 0);
-                    host_list_num = g_strv_length(host_list);
-                    g_strfreev(host_list);
-                }
-
-                /* pingd multiplier is the same as the default value. */
-                expected_score = host_list_num * crm_parse_int(multiplier, "1");
-
-                switch (state->output_format) {
-                    case mon_output_plain:
-                    case mon_output_console:
-                        if (value <= 0) {
-                            print_as(state->output_format, "\t: Connectivity is lost");
-                        } else if (value < expected_score) {
-                            print_as(state->output_format, "\t: Connectivity is degraded (Expected=%d)", expected_score);
-                        }
-                        break;
-
-                    case mon_output_html:
-                    case mon_output_cgi:
-                        if (value <= 0) {
-                            fprintf(state->stream, " <b>(connectivity is lost)</b>");
-                        } else if (value < expected_score) {
-                            fprintf(state->stream, " <b>(connectivity is degraded -- expected %d)</b>",
-                                    expected_score);
-                        }
-                        break;
-
-                    case mon_output_xml:
-                        fprintf(state->stream, " expected=\"%d\"", expected_score);
-                        break;
-
-                    default:
-                        break;
-                }
-                return TRUE;
-            }
+            return TRUE;
         }
     }
     return FALSE;
@@ -879,56 +854,18 @@ static void
 print_node_attribute(gpointer name, gpointer user_data)
 {
     const char *value = NULL;
+    int expected_score = 0;
+    gboolean add_extra = FALSE;
     struct mon_attr_data *data = (struct mon_attr_data *) user_data;
 
     value = pe_node_attribute_raw(data->node, name);
 
+    add_extra = add_extra_info(data->state, data->node, data->node->details->running_rsc,
+                               name, value, &expected_score);
+
     /* Print attribute name and value */
-    switch (data->state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(data->state->output_format, "    + %-32s\t: %-10s", (char *)name, value);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(data->state->stream, "   <li>%s: %s",
-                    (char *)name, value);
-            break;
-
-        case mon_output_xml:
-            fprintf(data->state->stream,
-                    "            <attribute name=\"%s\" value=\"%s\"",
-                    (char *)name, value);
-            break;
-
-        default:
-            break;
-    }
-
-    /* Print extended information if appropriate */
-    print_attr_msg(data->state, data->node, data->node->details->running_rsc,
-                   name, value);
-
-    /* Close out the attribute */
-    switch (data->state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(data->state->output_format, "\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(data->state->stream, "</li>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(data->state->stream, " />\n");
-            break;
-
-        default:
-            break;
-    }
+    data->state->out->message(data->state->out, "node-attribute", name, value, add_extra,
+                              expected_score);
 }
 
 static void
@@ -1060,27 +997,14 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
     GListPtr gIter = NULL;
 
     /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nNode Attributes:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Node Attributes</h2>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <node_attributes>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "node_attributes");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Node Attributes");
     }
 
     /* Unpack all resource parameters (it would be more efficient to do this
-     * only when needed for the first time in print_attr_msg())
+     * only when needed for the first time in add_extra_info())
      */
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         crm_mon_get_parameters(gIter->data, data_set);
@@ -1098,28 +1022,25 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
             GHashTableIter iter;
             gpointer key, value;
 
-            print_node_start(state, data.node, mon_ops);
-
             g_hash_table_iter_init(&iter, data.node->details->attrs);
             while (g_hash_table_iter_next (&iter, &key, &value)) {
                 attr_list = append_attr_list(attr_list, key);
             }
 
+            if (g_list_length(attr_list) == 0) {
+                g_list_free(attr_list);
+                continue;
+            }
+
+            state->out->message(state->out, "node", data.node, mon_ops);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
-            print_node_end(state);
+            state->out->end_list(state->out);
         }
     }
 
     /* Print section footer */
-    switch (state->output_format) {
-        case mon_output_xml:
-            fprintf(state->stream, "    </node_attributes>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->end_list(state->out);
 }
 
 /*!

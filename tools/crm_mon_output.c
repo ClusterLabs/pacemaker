@@ -582,6 +582,117 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 }
 
 static int
+node_html(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+    unsigned int mon_ops = va_arg(args, unsigned int);
+    char *node_name = get_node_display_name(node, mon_ops);
+    char *buf = crm_strdup_printf("Node: %s", node_name);
+
+    out->message(out, "header", 3, buf);
+    out->begin_list(out, NULL, NULL, NULL);
+
+    free(buf);
+    free(node_name);
+    return 0;
+}
+
+static int
+node_text(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+    unsigned int mon_ops = va_arg(args, unsigned int);
+    char *node_name = get_node_display_name(node, mon_ops);
+
+    out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+
+    free(node_name);
+    return 0;
+}
+
+static int
+node_xml(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+
+    xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
+    xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+
+    return 0;
+}
+
+static int
+node_attribute_text(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+
+    if (add_extra) {
+        int v = crm_parse_int(value, "0");
+
+        if (v <= 0) {
+            out->list_item(out, NULL, "%-32s\t: %-10s\t: Connectivity is lost", name, value);
+        } else if (v < expected_score) {
+            out->list_item(out, NULL, "%-32s\t: %-10s\t: Connectivity is degraded (Expected=%d)", name, value, expected_score);
+        } else {
+            out->list_item(out, NULL, "%-32s\t: %-10s", name, value);
+        }
+    } else {
+        out->list_item(out, NULL, "%-32s\t: %-10s", name, value);
+    }
+
+    return 0;
+}
+
+static int
+node_attribute_html(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+    if (add_extra) {
+        int v = crm_parse_int(value, "0");
+        char *s = crm_strdup_printf("%s: %s", name, value);
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+
+        pcmk_create_html_node(item_node, "span", NULL, NULL, s);
+        free(s);
+
+        if (v <= 0) {
+            pcmk_create_html_node(item_node, "span", NULL, "bold", "(connectivity is lost)");
+        } else if (v < expected_score) {
+            char *buf = crm_strdup_printf("(connectivity is degraded -- expected %d", expected_score);
+            pcmk_create_html_node(item_node, "span", NULL, "bold", buf);
+            free(buf);
+        }
+    } else {
+        out->list_item(out, NULL, "%s: %s", name, value);
+    }
+
+    return 0;
+}
+
+static int
+node_attribute_xml(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute");
+    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    xmlSetProp(node, (pcmkXmlStr) "value", (pcmkXmlStr) value);
+
+    if (add_extra) {
+        char *buf = crm_itoa(expected_score);
+        xmlSetProp(node, (pcmkXmlStr) "expected", (pcmkXmlStr) buf);
+        free(buf);
+    }
+
+    return 0;
+}
+
+static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     int full_history = va_arg(args, int);
@@ -669,6 +780,14 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "failed-action", "html", failed_action_html },
     { "failed-action", "text", failed_action_text },
     { "failed-action", "xml", failed_action_xml },
+    { "node", "console", node_text },
+    { "node", "html", node_html },
+    { "node", "text", node_text },
+    { "node", "xml", node_xml },
+    { "node-attribute", "console", node_attribute_text },
+    { "node-attribute", "html", node_attribute_html },
+    { "node-attribute", "text", node_attribute_text },
+    { "node-attribute", "xml", node_attribute_xml },
     { "stonith-event", "console", stonith_event_console },
     { "ticket", "console", ticket_console },
 
