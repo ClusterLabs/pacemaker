@@ -3372,22 +3372,23 @@ __xml_diff_object(xmlNode * old, xmlNode * new, bool check_top)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
+    xml_private_t *p = NULL;
 
     CRM_CHECK(new != NULL, return);
     if(old == NULL) {
         crm_node_created(new);
         pcmk__post_process_acl(new, check_top); // Check creation is allowed
         return;
-
-    } else {
-        xml_private_t *p = new->_private;
-
-        if(p->flags & xpf_processed) {
-            /* Avoid re-comparing nodes */
-            return;
-        }
-        p->flags |= xpf_processed;
     }
+
+    p = new->_private;
+    CRM_CHECK(p != NULL, return);
+
+    if(p->flags & xpf_processed) {
+        /* Avoid re-comparing nodes */
+        return;
+    }
+    p->flags |= xpf_processed;
 
     for (pIter = pcmk__first_xml_attr(new); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
