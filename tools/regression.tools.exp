@@ -3074,8 +3074,8 @@ Migration will take effect until:
 * Passed: crm_resource   - Try to move a resource previously moved with a lifetime
 =#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-       This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
-       This will be the case even if node1 is the last node in the cluster
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
+	This will be the case even if node1 is the last node in the cluster
 Migration will take effect until:
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
 <cib epoch="46" num_updates="0" admin_epoch="1">
@@ -3174,3 +3174,66 @@ Migration will take effect until:
 </cib>
 =#=#=#= End test: Remove expired constraints - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove expired constraints
+=#=#=#= Begin test: Create an XML patchset =#=#=#=
+<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="1" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-start-0&apos;]"/>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id=&apos;cib-bootstrap-options&apos;]/nvpair[@id=&apos;cib-bootstrap-options-cluster-name&apos;]">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/instance_attributes[@id=&apos;Fencing-params&apos;]/nvpair[@id=&apos;Fencing-pcmk_host_list&apos;]">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-monitor-120s&apos;]">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-op_sleep&apos;]" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-fake&apos;]" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/operations/op[@id=&apos;dummy-monitor-5s&apos;]">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+
+=#=#=#= End test: Create an XML patchset - Operation not permitted (1) =#=#=#=
+* Passed: crm_diff       - Create an XML patchset
