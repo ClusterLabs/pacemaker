@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -1523,13 +1525,13 @@ pe__rscs_brief_output_text(pcmk__output_t *out, GListPtr rsc_list, const char *p
 
             if (print_all) {
                 fprintf(out->dest, "%s%d/%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
-                             active_counter ? *active_counter : 0,
+                             *active_counter,
                              rsc_counter ? *rsc_counter : 0, type,
-                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+                             (*active_counter > 0) && node_name ? node_name : "");
             } else {
                 fprintf(out->dest, "%s%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
-                             active_counter ? *active_counter : 0, type,
-                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+                             *active_counter, type,
+                             (*active_counter > 0) && node_name ? node_name : "");
             }
         }
 
@@ -1587,13 +1589,13 @@ pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list, long options,
 
             if (print_all) {
                 snprintf(buffer, LINE_MAX, " %d/%d\t(%s):\tActive %s\n",
-                             active_counter ? *active_counter : 0,
+                             *active_counter,
                              rsc_counter ? *rsc_counter : 0, type,
-                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+                             (*active_counter > 0) && node_name ? node_name : "");
             } else {
                 snprintf(buffer, LINE_MAX, " %d\t(%s):\tActive %s\n",
-                             active_counter ? *active_counter : 0, type,
-                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+                             *active_counter, type,
+                             (*active_counter > 0) && node_name ? node_name : "");
             }
             out->list_item(out, NULL, buffer);
         }

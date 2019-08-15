@@ -417,6 +417,10 @@ function test_tools() {
 
     unset CIB_shadow_dir
     rm -f "$TMPXML" "$TMPORIG"
+
+    desc="Create an XML patchset"
+    cmd="crm_diff -o $test_home/cli/crm_diff_old.xml -n $test_home/cli/crm_diff_new.xml"
+    test_assert $CRM_EX_ERROR 0
 }
 
 function test_dates() {

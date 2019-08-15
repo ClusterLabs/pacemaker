@@ -1245,12 +1245,12 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
-    crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
+    crm_debug("Checking for existing Pacemaker instance");
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
-    crm_ipc_connect(old_instance);
+    (void) crm_ipc_connect(old_instance);
 
     if (shutdown) {
-        crm_debug("Terminating previous instance");
+        crm_debug("Shutting down existing Pacemaker instance by request");
         while (crm_ipc_connected(old_instance)) {
             xmlNode *cmd =
                 create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
@@ -1268,7 +1268,7 @@ main(int argc, char **argv)
     } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("Pacemaker is already active, aborting startup");
+        crm_err("Aborting start-up because active Pacemaker instance found");
         crm_exit(CRM_EX_FATAL);
     }
 
@@ -1318,8 +1318,12 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_NOUSER);
     }
 
-    mkdir(CRM_STATE_DIR, 0750);
-    mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    // Used by some resource agents
+    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
+        crm_warn("Could not create " CRM_STATE_DIR ": %s", pcmk_strerror(errno));
+    } else {
+        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    }
 
     /* Used to store core/blackbox/scheduler/cib files in */
     crm_build_path(CRM_PACEMAKER_DIR, 0750);
