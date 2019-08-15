@@ -122,6 +122,11 @@ rpmbuild-with = \
 init:
 	./autogen.sh init
 
+.PHONY: init-if-needed
+init-if-needed:
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
+
 export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
@@ -265,37 +270,67 @@ rc:
 dirty:
 	make TAG=dirty mock
 
-COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
-COVFILE          = $(PACKAGE)-coverity-$(TAG).tgz
-COVHOST		?= scan5.coverity.com
-COVPASS		?= password
 
-# Public coverity
-coverity:
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
-	make core-clean
-	rm -rf $(COVERITY_DIR)
-	cov-build --dir $(COVERITY_DIR) make core
-	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
-	@echo "Uploading to public Coverity instance..."
-	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
-	rm -rf $(COVFILE) $(COVERITY_DIR)
+## Static analysis via coverity
 
-coverity-corp:
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
-	make core-clean
-	rm -rf $(COVERITY_DIR)
-	cov-build --dir $(COVERITY_DIR) make core
-	@echo "Waiting for a corporate Coverity license..."
-	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
-	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
-	cov-format-errors --dir $(COVERITY_DIR)
-	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/coverity/$(PACKAGE)/$(TAG)"
-	make core-clean
-#	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
-	rm -rf $(COVERITY_DIR)
+# Aggressiveness (low, medium, or high)
+COVLEVEL	?= low
+
+# Generated outputs
+COVERITY_DIR	= $(builddir)/coverity-$(TAG)
+COVTAR		= $(builddir)/$(PACKAGE)-coverity-$(TAG).tgz
+COVEMACS	= $(builddir)/$(TAG).coverity
+COVHTML		= $(COVERITY_DIR)/output/errors
+
+# Coverity outputs are phony so they get rebuilt every invocation
+
+.PHONY: $(COVERITY_DIR)
+$(COVERITY_DIR): init-if-needed core-clean coverity-clean
+	$(AM_V_GEN)cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
+
+.PHONY: $(COVTAR)
+$(COVTAR): $(COVERITY_DIR)
+	$(AM_V_GEN)tar czf "$@" --transform="s@.*$(TAG)@cov-int@" "$<"
+
+# emacs/html output assume $(COVERITY_DIR) has been built (don't want rebuild)
+
+.PHONY: $(COVEMACS)
+$(COVEMACS):
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --emacs-style > "$@"
+
+.PHONY: $(COVHTML)
+$(COVHTML):
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --html-output "$@"
+
+# Public coverity instance
+.PHONY: coverity
+coverity: $(COVTAR)
+	@echo "Now go to https://scan.coverity.com/users/sign_in and upload:"
+	@echo "  $(COVTAR)"
+	@echo "then make core-clean coverity-clean"
+
+# Licensed coverity instance
+
+.PHONY: coverity-analyze
+coverity-analyze: $(COVERITY_DIR)
+	@echo ""
+	@echo "Analyzing (waiting for coverity license if necessary) ..."
+	cov-analyze --dir "$<" --wait-for-license --security		\
+		--aggressiveness-level "$(COVLEVEL)"
+
+.PHONY: coverity-corp
+coverity-corp: coverity-analyze $(COVEMACS) $(COVHTML) core-clean
+	@echo "Done. See:"
+	@echo "  file://$(abs_builddir)/$(COVERITY_DIR)/output/errors/index.html"
+	@echo "When no longer needed, make coverity-clean"
+
+# Remove all outputs regardless of tag
+.PHONY: coverity-clean
+coverity-clean:
+	-rm -rf "$(builddir)"/coverity-*			\
+		"$(builddir)"/$(PACKAGE)-coverity-*.tgz		\
+		"$(builddir)"/*.coverity
+
 
 global: clean-generic
 	gtags -q
