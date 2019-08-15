@@ -288,21 +288,12 @@ COVHTML		= $(COVERITY_DIR)/output/errors
 $(COVERITY_DIR): init-if-needed core-clean coverity-clean
 	$(AM_V_GEN)cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
 
+# Public coverity instance
+
 .PHONY: $(COVTAR)
 $(COVTAR): $(COVERITY_DIR)
 	$(AM_V_GEN)tar czf "$@" --transform="s@.*$(TAG)@cov-int@" "$<"
 
-# emacs/html output assume $(COVERITY_DIR) has been built (don't want rebuild)
-
-.PHONY: $(COVEMACS)
-$(COVEMACS):
-	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --emacs-style > "$@"
-
-.PHONY: $(COVHTML)
-$(COVHTML):
-	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --html-output "$@"
-
-# Public coverity instance
 .PHONY: coverity
 coverity: $(COVTAR)
 	@echo "Now go to https://scan.coverity.com/users/sign_in and upload:"
@@ -310,6 +301,10 @@ coverity: $(COVTAR)
 	@echo "then make core-clean coverity-clean"
 
 # Licensed coverity instance
+#
+# The prerequisites are a little hacky; rather than actually required, some
+# of them are designed so that things execute in the proper order (which is
+# not the same as GNU make's order-only prerequisites).
 
 .PHONY: coverity-analyze
 coverity-analyze: $(COVERITY_DIR)
@@ -318,10 +313,19 @@ coverity-analyze: $(COVERITY_DIR)
 	cov-analyze --dir "$<" --wait-for-license --security		\
 		--aggressiveness-level "$(COVLEVEL)"
 
+.PHONY: $(COVEMACS)
+$(COVEMACS): coverity-analyze
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --emacs-style > "$@"
+
+.PHONY: $(COVHTML)
+$(COVHTML): $(COVEMACS)
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --html-output "$@"
+
 .PHONY: coverity-corp
-coverity-corp: coverity-analyze $(COVEMACS) $(COVHTML) core-clean
+coverity-corp: $(COVHTML)
+	$(MAKE) $(AM_MAKEFLAGS) core-clean
 	@echo "Done. See:"
-	@echo "  file://$(abs_builddir)/$(COVERITY_DIR)/output/errors/index.html"
+	@echo "  file://$(abs_builddir)/$(COVHTML)/index.html"
 	@echo "When no longer needed, make coverity-clean"
 
 # Remove all outputs regardless of tag
