@@ -156,9 +156,9 @@ curses_list_item(pcmk__output_t *out, const char *id, const char *content) {
     CRM_ASSERT(priv != NULL);
 
     if (id != NULL) {
-        curses_indented_printf(out, "* %s: %s\n", id, content);
+        curses_indented_printf(out, "%s: %s\n", id, content);
     } else {
-        curses_indented_printf(out, "* %s\n", content);
+        curses_indented_printf(out, "%s\n", content);
     }
 
     ((curses_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
