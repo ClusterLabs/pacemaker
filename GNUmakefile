@@ -20,6 +20,16 @@ default: $(shell test ! -e configure && echo init) $(shell test -e configure && 
 
 -include Makefile
 
+# The main purpose of this GNUmakefile is that its targets can be invoked
+# without having to call autogen.sh and configure first. That means automake
+# variables may or may not be defined. Here, we use the current working
+# directory if a relevant variable hasn't been defined.
+#
+# The idea is to keep generated artifacts in the build tree, in case a VPATH
+# build is in use, but in practice it would be difficult to make the targets
+# here usable from a different location than the source tree.
+abs_builddir	?= $(shell pwd)
+
 PACKAGE		?= pacemaker
 
 # This Makefile can create 2 types of distributions:
@@ -224,9 +234,9 @@ dirty:
 COVLEVEL	?= low
 
 # Generated outputs
-COVERITY_DIR	= $(builddir)/coverity-$(TAG)
-COVTAR		= $(builddir)/$(PACKAGE)-coverity-$(TAG).tgz
-COVEMACS	= $(builddir)/$(TAG).coverity
+COVERITY_DIR	= $(abs_builddir)/coverity-$(TAG)
+COVTAR		= $(abs_builddir)/$(PACKAGE)-coverity-$(TAG).tgz
+COVEMACS	= $(abs_builddir)/$(TAG).coverity
 COVHTML		= $(COVERITY_DIR)/output/errors
 
 # Coverity outputs are phony so they get rebuilt every invocation
@@ -278,9 +288,9 @@ coverity-corp: $(COVHTML)
 # Remove all outputs regardless of tag
 .PHONY: coverity-clean
 coverity-clean:
-	-rm -rf "$(builddir)"/coverity-*			\
-		"$(builddir)"/$(PACKAGE)-coverity-*.tgz		\
-		"$(builddir)"/*.coverity
+	-rm -rf "$(abs_builddir)"/coverity-*			\
+		"$(abs_builddir)"/$(PACKAGE)-coverity-*.tgz	\
+		"$(abs_builddir)"/*.coverity
 
 
 global: clean-generic
