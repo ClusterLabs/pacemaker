@@ -97,8 +97,8 @@ unpack_alert_filter(xmlNode *basenode, crm_alert_entry_t *entry)
     xmlNode *event_type = NULL;
     uint32_t flags = crm_alert_none;
 
-    for (event_type = __xml_first_child(select); event_type != NULL;
-         event_type = __xml_next(event_type)) {
+    for (event_type = __xml_first_child_element(select); event_type != NULL;
+         event_type = __xml_next_element(event_type)) {
 
         const char *tagname = crm_element_name(event_type);
 

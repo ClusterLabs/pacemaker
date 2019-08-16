@@ -4380,7 +4380,8 @@ first_named_child(const xmlNode *parent, const char *name)
 {
     xmlNode *match = NULL;
 
-    for (match = __xml_first_child(parent); match != NULL; match = __xml_next(match)) {
+    for (match = __xml_first_child_element(parent); match != NULL;
+         match = __xml_next_element(match)) {
         /*
          * name == NULL gives first child regardless of name; this is
          * semantically incorrect in this function, but may be necessary
@@ -4403,14 +4404,14 @@ first_named_child(const xmlNode *parent, const char *name)
 xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
-    xmlNode *match = __xml_next(sibling);
+    xmlNode *match = __xml_next_element(sibling);
     const char *name = crm_element_name(sibling);
 
     while (match != NULL) {
         if (!strcmp(crm_element_name(match), name)) {
             return match;
         }
-        match = __xml_next(match);
+        match = __xml_next_element(match);
     }
     return NULL;
 }

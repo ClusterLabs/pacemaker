@@ -181,7 +181,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
                  is_set(rsc->flags, pe_rsc_promotable) ? "true" : "false");
 
     // Clones may contain a single group or primitive
-    for (a_child = __xml_first_child(xml_obj); a_child != NULL;
+    for (a_child = __xml_first_child_element(xml_obj); a_child != NULL;
          a_child = __xml_next_element(a_child)) {
 
         if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)

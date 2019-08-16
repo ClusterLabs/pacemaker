@@ -685,7 +685,8 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
     }
 
     /* Create a list of this resource's operations */
-    for (rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
+    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
+         rsc_op = __xml_next_element(rsc_op)) {
         if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_append(op_list, rsc_op);
         }
@@ -756,8 +757,8 @@ print_node_history(mon_state_t *state, pe_working_set_t *data_set,
         lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
         /* Print history of each of the node's resources */
-        for (rsc_entry = __xml_first_child(lrm_rsc); rsc_entry != NULL;
-             rsc_entry = __xml_next(rsc_entry)) {
+        for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
+             rsc_entry = __xml_next_element(rsc_entry)) {
 
             if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
                 print_rsc_history(state, data_set, node, rsc_entry, operations, mon_ops);
@@ -951,8 +952,8 @@ print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
     }
 
     /* Print each node in the CIB status */
-    for (node_state = __xml_first_child(cib_status); node_state != NULL;
-         node_state = __xml_next(node_state)) {
+    for (node_state = __xml_first_child_element(cib_status); node_state != NULL;
+         node_state = __xml_next_element(node_state)) {
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
             print_node_history(state, data_set, node_state, operations, mon_ops);
         }
