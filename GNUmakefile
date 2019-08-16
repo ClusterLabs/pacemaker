@@ -37,13 +37,32 @@ PACKAGE		?= pacemaker
 distdir			= $(PACKAGE)-$(SHORTTAG)
 TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
 
-RPM_ROOT	= $(abs_builddir)
-RPM_SPEC_DIR	= $(abs_builddir)
-RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
-		  --define "_specdir   $(RPM_SPEC_DIR)"	\
-		  --define "_srcrpmdir $(RPM_ROOT)" 	\
+# Where to put RPM artifacts; possible values:
+#
+# - toplevel (default): RPM sources, spec, and source rpm in top-level build
+#   directory (everything else uses the usual defaults)
+#
+# - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
+#   everything else in dedicated "rpmbuild" subdirectory of build tree
+RPMDEST         	?= toplevel
 
-MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
+RPM_SPEC_DIR_toplevel	= $(abs_builddir)
+RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)
+RPM_OPTS_toplevel	= --define "_sourcedir $(abs_builddir)" 		\
+			  --define "_specdir   $(RPM_SPEC_DIR_toplevel)"	\
+			  --define "_srcrpmdir $(RPM_SRCRPM_DIR_toplevel)"
+
+RPM_SPEC_DIR_subtree	= $(abs_builddir)/rpm/SPECS
+RPM_SRCRPM_DIR_subtree	= $(abs_builddir)/rpm/SRPMS
+RPM_OPTS_subtree	= --define "_sourcedir $(abs_builddir)" 		\
+			  --define "_topdir $(abs_builddir)/rpm"
+
+RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMDEST))
+RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMDEST))
+RPM_OPTS	= $(RPM_OPTS_$(RPMDEST))
+
+MOCK_DIR	= $(abs_builddir)/mock
+MOCK_OPTIONS	?= --resultdir=$(MOCK_DIR) --no-cleanup-after
 
 F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
 ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
@@ -169,7 +188,7 @@ srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(RPM_SPEC_DIR)/$(PACKAGE).spec)
 
 srpm-clean:
-	-rm -f $(RPM_ROOT)/*.src.rpm
+	-rm -f $(RPM_SRCRPM_DIR)/*.src.rpm
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	@echo "Done"
@@ -182,7 +201,8 @@ mock-rawhide:
 
 mock-install-%:
 	@echo "Installing packages"
-	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents psmisc
+	mock --root=$* $(MOCK_OPTIONS) --install $(MOCK_DIR)/*.rpm \
+		vi sudo valgrind lcov gdb fence-agents psmisc
 
 mock-install: mock-install-$(MOCK_CFG)
 	@echo "Done"
@@ -196,9 +216,9 @@ mock-sh-%:
 	@echo "Done"
 
 mock-%: srpm
-	-rm -rf $(RPM_ROOT)/mock
-	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
-	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
+	-rm -rf $(MOCK_DIR)
+	mock $(MOCK_OPTIONS) --root=$* --no-cleanup-after --rebuild	\
+		$(WITH) $(RPM_SRCRPM_DIR)/*.src.rpm
 
 mock:   mock-$(MOCK_CFG)
 	@echo "Done"
@@ -209,7 +229,7 @@ rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 # e.g. make WITH="--with pre_release" rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
-	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_ROOT)/*.src.rpm)
+	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
 
 release:
 	make TAG=$(LAST_RELEASE) rpm
