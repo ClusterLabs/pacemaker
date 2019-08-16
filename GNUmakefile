@@ -231,6 +231,10 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
 
+.PHONY: rpmlint
+rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+	rpmlint -f rpm/rpmlintrc "$<"
+
 release:
 	make TAG=$(LAST_RELEASE) rpm
 
