@@ -28,6 +28,7 @@ default: $(shell test ! -e configure && echo init) $(shell test -e configure && 
 # The idea is to keep generated artifacts in the build tree, in case a VPATH
 # build is in use, but in practice it would be difficult to make the targets
 # here usable from a different location than the source tree.
+abs_srcdir	?= $(shell pwd)
 abs_builddir	?= $(shell pwd)
 
 PACKAGE		?= pacemaker
@@ -45,9 +46,10 @@ PACKAGE		?= pacemaker
 distdir			= $(PACKAGE)-$(SHORTTAG)
 TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
 
-RPM_ROOT	= $(shell pwd)
+RPM_ROOT	= $(abs_builddir)
+RPM_SPEC_DIR	= $(abs_builddir)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
-		  --define "_specdir   $(RPM_ROOT)" 	\
+		  --define "_specdir   $(RPM_SPEC_DIR)"	\
 		  --define "_srcrpmdir $(RPM_ROOT)" 	\
 
 MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
@@ -154,31 +156,35 @@ export:
 	    echo `date`: Using existing tarball: $(TARFILE);			\
 	fi
 
-$(PACKAGE).spec: rpm/pacemaker.spec.in
+$(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
+	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
 	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep rpm/pacemaker.spec.in`" ]; then	\
-	    cat rpm/pacemaker.spec.in;							\
+	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
 	elif [ x != x"`git show $(TAG):rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
 	    git show $(TAG):rpm/pacemaker.spec.in;					\
 	elif [ x != x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then		\
 	    git show $(TAG):pacemaker.spec.in;						\
 	else 										\
-	    cat rpm/pacemaker.spec.in;							\
+	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
 	fi | sed									\
 	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
 	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
 	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
 	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
 	    -e "s/PACKAGE_VERSION/$$(git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/"	\
-	    > "$(PACKAGE).spec"
+	    > "$@"
 
-srpm:	export srpm-clean $(PACKAGE).spec
+.PHONY: $(PACKAGE).spec
+$(PACKAGE).spec: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+
+srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(PACKAGE).spec)
+	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(RPM_SPEC_DIR)/$(PACKAGE).spec)
 
 srpm-clean:
-	-rm -f *.src.rpm
+	-rm -f $(RPM_ROOT)/*.src.rpm
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	@echo "Done"
@@ -212,8 +218,8 @@ mock-%: srpm
 mock:   mock-$(MOCK_CFG)
 	@echo "Done"
 
-rpm-dep: $(PACKAGE).spec
-	sudo yum-builddep $(PACKAGE).spec
+rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+	sudo yum-builddep "$<"
 
 # e.g. make WITH="--with pre_release" rpm
 rpm:	srpm
