@@ -252,18 +252,7 @@ mock:   mock-$(MOCK_CFG)
 	@echo "Done"
 
 rpm-dep: $(PACKAGE)-$(DISTRO).spec
-	if [ x != x`which yum-builddep 2>/dev/null` ]; then			\
-	    echo "Installing with yum-builddep";		\
-	    sudo yum-builddep $(PACKAGE)-$(DISTRO).spec;	\
-	elif [ x != x`which yum 2>/dev/null` ]; then				\
-	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
-	    sudo yum install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');	\
-	elif [ x != x`which zypper` ]; then			\
-	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
-	    sudo zypper install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');\
-	else							\
-	    echo "I don't know how to install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')";\
-	fi
+	sudo yum-builddep $(PACKAGE)-$(DISTRO).spec
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
