@@ -42,16 +42,9 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 
 MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
 
-# Default to building Fedora-compliant spec files
-# SLES:     /etc/SuSE-release
-# openSUSE: /etc/SuSE-release
-# RHEL:     /etc/redhat-release, /etc/system-release
-# Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
-# CentOS:   /etc/centos-release, /etc/redhat-release, /etc/system-release
 F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
 ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
-DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
 TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
@@ -151,68 +144,29 @@ export:
 	    echo `date`: Using existing tarball: $(TARFILE);			\
 	fi
 
-$(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
-	cp $^ $@
-	@echo Rebuilt $@
+$(PACKAGE).spec: pacemaker.spec.in
+	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then	\
+	    cat pacemaker.spec.in;							\
+	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then		\
+	    cat pacemaker.spec.in;							\
+	else 										\
+	    git show $(TAG):pacemaker.spec.in;						\
+	fi | sed									\
+	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
+	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
+	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
+	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
+	    -e "s/PACKAGE_VERSION/$$(git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/"	\
+	    > "$(PACKAGE).spec"
 
-$(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
-	rm -f $@
-	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
-	    cp $(PACKAGE).spec.in $@;						\
-	    echo "Rebuilt $@ (local modifications)";				\
-	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
-	    cp $(PACKAGE).spec.in $@;						\
-	    echo "Rebuilt $@";							\
-	else 									\
-	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
-	    echo "Rebuilt $@ from $(TAG)";					\
-	fi
-	sed -i									\
-	    -e 's:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g'		\
-	    -e 's:%{name}-libs:lib%{name}3:g'					\
-	    -e 's@Requires:      python@Requires:      python-curses python-xml python@' \
-	    -e 's:libtool-ltdl-devel::g $@'					\
-	    -e 's:bzip2-devel:libbz2-devel:g'					\
-	    -e 's:docbook-style-xsl:docbook-xsl-stylesheets:g'			\
-	    -e 's: byacc::g'							\
-	    -e 's:gnutls-devel:libgnutls-devel:g'				\
-	    -e 's:corosynclib:libcorosync:g'					\
-	    -e 's:cluster-glue-libs:libglue:g'					\
-	    -e 's:shadow-utils:shadow:g'					\
-	    -e 's: publican::g'							\
-	    -e 's: 189: 90:g'							\
-	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
-	    $@
-	@echo "Applied SUSE-specific modifications"
-
-
-# Works for all fedora based distros
-$(PACKAGE)-%.spec: $(PACKAGE).spec.in
-	rm -f $@
-	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
-	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
-	    echo "Rebuilt $@ (local modifications)";				\
-	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
-	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
-	    echo "Rebuilt $@";							\
-	else 									\
-	    git show $(TAG):$(PACKAGE).spec.in >> $(PACKAGE)-$*.spec;		\
-	    echo "Rebuilt $@ from $(TAG)";					\
-	fi
-
-srpm-%:	export $(PACKAGE)-%.spec
-	rm -f *.src.rpm
-	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
-	echo "* $(shell date +"%a %b %d %Y") Andrew Beekhof <andrew@beekhof.net> $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)-1" >> $(PACKAGE).spec
-	echo " - See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details" >> $(PACKAGE).spec
+srpm:	export srpm-clean $(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' \
-	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/' \
-	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
-	    -i $(PACKAGE).spec
-	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
+	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(PACKAGE).spec)
+
+srpm-clean:
+	-rm -f *.src.rpm
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	@echo "Done"
@@ -238,22 +192,18 @@ mock-sh-%:
 	mock --root=$* $(MOCK_OPTIONS) --shell
 	@echo "Done"
 
-# eg. WITH="--with cman" make rpm
-mock-%:
-	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
+mock-%: srpm
 	-rm -rf $(RPM_ROOT)/mock
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
-srpm:	srpm-$(DISTRO)
-	@echo "Done"
-
 mock:   mock-$(MOCK_CFG)
 	@echo "Done"
 
-rpm-dep: $(PACKAGE)-$(DISTRO).spec
-	sudo yum-builddep $(PACKAGE)-$(DISTRO).spec
+rpm-dep: $(PACKAGE).spec
+	sudo yum-builddep $(PACKAGE).spec
 
+# e.g. make WITH="--with pre_release" rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_ROOT)/*.src.rpm)
