@@ -9,6 +9,7 @@ verbose=0
 tests="dates tools acls validity"
 
 CRM_EX_OK=0
+CRM_EX_ERROR=1
 
 function test_assert() {
     target=$1; shift
@@ -388,6 +389,10 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     rm -f /tmp/$$.existing.xml /tmp/$$.resources.xml
+
+    desc="Create an XML patchset"
+    cmd="crm_diff -o $test_home/crm_diff_old.xml -n $test_home/crm_diff_new.xml"
+    test_assert $CRM_EX_ERROR 0
 }
 
 function test_dates() {

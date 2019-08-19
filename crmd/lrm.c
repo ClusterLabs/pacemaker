@@ -2480,7 +2480,11 @@ unescape_newlines(const char *string)
     ret = strdup(string);
     pch = strstr(ret, escaped_newline);
     while (pch != NULL) {
-        memcpy(pch, "\n ", 2);
+        /* Replace newline escape pattern with actual newline (and a space so we
+         * don't have to shuffle the rest of the buffer)
+         */
+        pch[0] = '\n';
+        pch[1] = ' ';
         pch = strstr(pch, escaped_newline);
     }
 

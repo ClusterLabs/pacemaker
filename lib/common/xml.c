@@ -44,6 +44,17 @@
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 
+/* @TODO XML_PARSE_RECOVER allows some XML errors to be silently worked around
+ * by libxml2, which is potentially ambiguous and dangerous. We should drop it
+ * when we can break backward compatibility with configurations that might be
+ * relying on it (i.e. pacemaker 3.0.0).
+ *
+ * It might be a good idea to have a transitional period where we first try
+ * parsing without XML_PARSE_RECOVER, and if that fails, try parsing again with
+ * it, logging a warning if it succeeds.
+ */
+#define PCMK__XML_PARSE_OPTS    (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
+
 typedef struct {
     int found;
     const char *string;
@@ -2021,6 +2032,18 @@ xml_get_path(xmlNode *xml)
     return NULL;
 }
 
+/*!
+ * Free an XML element and all of its children, removing it from its parent
+ *
+ * \param[in] xml  XML element to free
+ */
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
+
 static void
 free_xml_with_position(xmlNode * child, int position)
 {
@@ -2075,12 +2098,7 @@ free_xml_with_position(xmlNode * child, int position)
                     pcmk__set_xml_flag(child, xpf_dirty);
                 }
             }
-
-            /* Free this particular subtree
-             * Make sure to unlink it from the parent first
-             */
-            xmlUnlinkNode(child);
-            xmlFreeNode(child);
+            pcmk_free_xml_subtree(child);
         }
     }
 }
@@ -2147,14 +2165,10 @@ string2xml(const char *input)
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
-    /* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
-
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
-    /* initGenericErrorDefaultFunc(crm_xml_err); */
-    output =
-        xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL,
-                       XML_PARSE_NOBLANKS | XML_PARSE_RECOVER);
+    output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
+                            PCMK__XML_PARSE_OPTS);
     if (output) {
         xml = xmlDocGetRootElement(output);
     }
@@ -2296,8 +2310,7 @@ strip_text_nodes(xmlNode * xml)
         switch (iter->type) {
             case XML_TEXT_NODE:
                 /* Remove it */
-                xmlUnlinkNode(iter);
-                xmlFreeNode(iter);
+                pcmk_free_xml_subtree(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -2322,17 +2335,13 @@ filename2xml(const char *filename)
     gboolean uncompressed = TRUE;
     xmlParserCtxtPtr ctxt = NULL;
     xmlErrorPtr last_error = NULL;
-    static int xml_options = XML_PARSE_NOBLANKS | XML_PARSE_RECOVER;
 
     /* create a parser context */
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
-    /* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
-
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
-    /* initGenericErrorDefaultFunc(crm_xml_err); */
 
     if (filename) {
         uncompressed = !crm_ends_with_ext(filename, ".bz2");
@@ -2340,15 +2349,17 @@ filename2xml(const char *filename)
 
     if (filename == NULL) {
         /* STDIN_FILENO == fileno(stdin) */
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL, xml_options);
+        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
+                               PCMK__XML_PARSE_OPTS);
 
     } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL, xml_options);
+        output = xmlCtxtReadFile(ctxt, filename, NULL, PCMK__XML_PARSE_OPTS);
 
     } else {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL, xml_options);
+        output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
+                                PCMK__XML_PARSE_OPTS);
         free(input);
     }
 
@@ -3362,26 +3373,27 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
 }
 
 static void
-__xml_diff_object(xmlNode * old, xmlNode * new)
+__xml_diff_object(xmlNode * old, xmlNode * new, bool check_top)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
+    xml_private_t *p = NULL;
 
     CRM_CHECK(new != NULL, return);
     if(old == NULL) {
         crm_node_created(new);
-        pcmk__post_process_acl(new); // Check creation is allowed
+        pcmk__post_process_acl(new, check_top); // Check creation is allowed
         return;
-
-    } else {
-        xml_private_t *p = new->_private;
-
-        if(p->flags & xpf_processed) {
-            /* Avoid re-comparing nodes */
-            return;
-        }
-        p->flags |= xpf_processed;
     }
+
+    p = new->_private;
+    CRM_CHECK(p != NULL, return);
+
+    if(p->flags & xpf_processed) {
+        /* Avoid re-comparing nodes */
+        return;
+    }
+    p->flags |= xpf_processed;
 
     for (pIter = pcmk__first_xml_attr(new); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
@@ -3477,7 +3489,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
         cIter = __xml_next(cIter);
         if(new_child) {
-            __xml_diff_object(old_child, new_child);
+            __xml_diff_object(old_child, new_child, TRUE);
 
         } else {
             /* Create then free (which will check the acls if necessary) */
@@ -3505,7 +3517,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         if(old_child == NULL) {
             xml_private_t *p = new_child->_private;
             p->flags |= xpf_skip;
-            __xml_diff_object(old_child, new_child);
+            __xml_diff_object(old_child, new_child, TRUE);
 
         } else {
             /* Check for movement, we already checked for differences */
@@ -3548,7 +3560,7 @@ xml_calculate_changes(xmlNode * old, xmlNode * new)
         xml_track_changes(new, NULL, NULL, FALSE);
     }
 
-    __xml_diff_object(old, new);
+    __xml_diff_object(old, new, FALSE);
 }
 
 xmlNode *
@@ -4230,7 +4242,8 @@ first_named_child(xmlNode * parent, const char *name)
 {
     xmlNode *match = NULL;
 
-    for (match = __xml_first_child(parent); match != NULL; match = __xml_next(match)) {
+    for (match = __xml_first_child_element(parent); match != NULL;
+         match = __xml_next_element(match)) {
         /*
          * name == NULL gives first child regardless of name; this is
          * semantically incorrect in this function, but may be necessary
@@ -4253,14 +4266,14 @@ first_named_child(xmlNode * parent, const char *name)
 xmlNode *
 crm_next_same_xml(xmlNode *sibling)
 {
-    xmlNode *match = __xml_next(sibling);
+    xmlNode *match = __xml_next_element(sibling);
     const char *name = crm_element_name(sibling);
 
     while (match != NULL) {
         if (!strcmp(crm_element_name(match), name)) {
             return match;
         }
-        match = __xml_next(match);
+        match = __xml_next_element(match);
     }
     return NULL;
 }
