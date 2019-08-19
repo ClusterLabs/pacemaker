@@ -585,7 +585,18 @@ AC_PATH_PROG([XSLTPROC], [xsltproc])
 AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
+
 PKG_PROG_PKG_CONFIG
+# PKG_NOARCH_INSTALLDIR not available prior to pkg-config 0.27 and
+# pkgconf 0.8.10, respectively (next line is to mimic that scenario)
+dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
+m4_ifndef([PKG_NOARCH_INSTALLDIR], [
+    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
+        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
+    ])
+])
+PKG_NOARCH_INSTALLDIR
+
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
@@ -1883,6 +1894,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
+                xml/pacemaker-schemas.pc                            \
 )
 
 dnl Now process the entire list of files added by previous

@@ -834,6 +834,7 @@ exit 0
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
 %{_datadir}/pacemaker/api
+%{_datadir}/pkgconfig/pacemaker-schemas.pc
 
 %changelog
 

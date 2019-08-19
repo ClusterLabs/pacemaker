@@ -9,6 +9,8 @@
 
 include $(top_srcdir)/Makefile.common
 
+noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
+
 # Pacemaker has 3 schemas: the CIB schema, the API schema (for command-line
 # tool XML output), and a legacy schema for crm_mon --as-xml.
 #
