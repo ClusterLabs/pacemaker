@@ -24,6 +24,28 @@ abs_builddir	?= $(shell pwd)
 
 PACKAGE		?= pacemaker
 
+
+# Definitions that specify what various targets will apply to
+
+COMMIT  ?= HEAD
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
+	     test -n "$${T}" && echo "$${T}" \
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
+lparen = (
+rparen = )
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
+	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
+SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
+
+LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
+ifneq ($(origin VERSION), undefined)
+LAST_RELEASE	?= Pacemaker-$(VERSION)
+else
+LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
+endif
+NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
+
+
 # This Makefile can create 2 types of distributions:
 #
 # - "make dist" is automake's native functionality, based on the various
@@ -36,6 +58,34 @@ PACKAGE		?= pacemaker
 # different contents.
 distdir			= $(PACKAGE)-$(SHORTTAG)
 TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
+
+init:
+	./autogen.sh
+
+# @TODO This should probably be what init does
+.PHONY: init-if-needed
+init-if-needed:
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
+
+export:
+	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
+	if [ ! -f $(TARFILE) ]; then						\
+	    rm -f $(PACKAGE).tar.*;						\
+	    if [ $(TAG) = dirty ]; then 					\
+		git commit -m "DO-NOT-PUSH" -a;					\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
+		git reset --mixed HEAD^; 					\
+	    else								\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
+	    fi;									\
+	    echo `date`: Rebuilt $(TARFILE);					\
+	else									\
+	    echo `date`: Using existing tarball: $(TARFILE);			\
+	fi
+
+
+## RPM-related targets
 
 # Where to put RPM artifacts; possible values:
 #
@@ -61,37 +111,18 @@ RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMDEST))
 RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMDEST))
 RPM_OPTS	= $(RPM_OPTS_$(RPMDEST))
 
-MOCK_DIR	= $(abs_builddir)/mock
-MOCK_OPTIONS	?= --resultdir=$(MOCK_DIR) --no-cleanup-after
-
-F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
-ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
-MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
-COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
-	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
-lparen = (
-rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
-	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
-SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
-WITH    ?= --without doc
-#WITH    ?= --without=doc --with=gcov
-
-LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
-ifneq ($(origin VERSION), undefined)
-LAST_RELEASE	?= Pacemaker-$(VERSION)
-else
-LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
-endif
-NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
-
+WITH		?= --without doc
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
 COUNT           = $(shell expr 1 + $(LAST_COUNT))
-
 SPECVERSION	?= $(COUNT)
+
+MOCK_DIR	= $(abs_builddir)/mock
+MOCK_OPTIONS	?= --resultdir=$(MOCK_DIR) --no-cleanup-after
+
+F	?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
+ARCH		?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
+MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
@@ -135,31 +166,6 @@ rpmbuild-with = \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"
 
-init:
-	./autogen.sh
-
-# @TODO This should probably be what init does
-.PHONY: init-if-needed
-init-if-needed:
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
-
-export:
-	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
-	if [ ! -f $(TARFILE) ]; then						\
-	    rm -f $(PACKAGE).tar.*;						\
-	    if [ $(TAG) = dirty ]; then 					\
-		git commit -m "DO-NOT-PUSH" -a;					\
-		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-		git reset --mixed HEAD^; 					\
-	    else								\
-		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
-	    fi;									\
-	    echo `date`: Rebuilt $(TARFILE);					\
-	else									\
-	    echo `date`: Using existing tarball: $(TARFILE);			\
-	fi
-
 $(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
 	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep rpm/pacemaker.spec.in`" ]; then	\
@@ -181,32 +187,39 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
 .PHONY: $(PACKAGE).spec
 $(PACKAGE).spec: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 
+.PHONY: srpm
 srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
 	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(RPM_SPEC_DIR)/$(PACKAGE).spec)
 
+.PHONY: srpm-clean
 srpm-clean:
 	-rm -f $(RPM_SRCRPM_DIR)/*.src.rpm
 
+.PHONY: chroot
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	@echo "Done"
 
+.PHONY: mock-next
 mock-next:
-	make F=$(shell expr 1 + $(F)) mock
+	$(MAKE) $(AM_MAKEFLAGS) F=$(shell expr 1 + $(F)) mock
 
+.PHONY: mock-rawhide
 mock-rawhide:
-	make F=rawhide mock
+	$(MAKE) $(AM_MAKEFLAGS) F=rawhide mock
 
 mock-install-%:
 	@echo "Installing packages"
 	mock --root=$* $(MOCK_OPTIONS) --install $(MOCK_DIR)/*.rpm \
 		vi sudo valgrind lcov gdb fence-agents psmisc
 
+.PHONY: mock-install
 mock-install: mock-install-$(MOCK_CFG)
 	@echo "Done"
 
+.PHONY: mock-sh
 mock-sh: mock-sh-$(MOCK_CFG)
 	@echo "Done"
 
@@ -215,18 +228,28 @@ mock-sh-%:
 	mock --root=$* $(MOCK_OPTIONS) --shell
 	@echo "Done"
 
-mock-%: srpm
-	-rm -rf $(MOCK_DIR)
+mock-%: srpm mock-clean
 	mock $(MOCK_OPTIONS) --root=$* --no-cleanup-after --rebuild	\
 		$(WITH) $(RPM_SRCRPM_DIR)/*.src.rpm
 
+.PHONY: mock
 mock:   mock-$(MOCK_CFG)
 	@echo "Done"
 
+.PHONY: dirty
+dirty:
+	$(MAKE) $(AM_MAKEFLAGS) TAG=dirty mock
+
+.PHONY: mock-clean
+mock-clean:
+	-rm -rf $(MOCK_DIR)
+
+.PHONY: rpm-dep
 rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
-	sudo yum-builddep "$<"
+	sudo yum-builddep $(PACKAGE).spec
 
 # e.g. make WITH="--with pre_release" rpm
+.PHONY: rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
@@ -235,14 +258,13 @@ rpm:	srpm
 rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	rpmlint -f rpm/rpmlintrc "$<"
 
+.PHONY: release
 release:
-	make TAG=$(LAST_RELEASE) rpm
+	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RELEASE) rpm
 
+.PHONY: rc
 rc:
-	make TAG=$(LAST_RC) rpm
-
-dirty:
-	make TAG=dirty mock
+	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RC) rpm
 
 
 ## Static analysis via coverity
@@ -319,7 +341,7 @@ summary:
 	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
 
 rc-changes:
-	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
+	@$(MAKE) $(AM_MAKEFLAGS) NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
 
 changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
@@ -339,7 +361,7 @@ authors:
 	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
 
 changelog:
-	@make changes > ChangeLog
+	@$(MAKE) $(AM_MAKEFLAGS) changes > ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 
@@ -364,7 +386,7 @@ cppcheck:
 
 clang:
 	test -e $(CLANG_analyzer)
-	scan-build $(CLANG_checkers:%=-enable-checker %) make clean all
+	scan-build $(CLANG_checkers:%=-enable-checker %) $(MAKE) $(AM_MAKEFLAGS) clean all
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
