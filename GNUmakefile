@@ -66,7 +66,7 @@ NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".
 # Both types use the TARFILE name for the result, though they generate
 # different contents.
 distdir			= $(PACKAGE)-$(SHORTTAG)
-TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
+TARFILE			= $(abs_builddir)/$(PACKAGE)-$(SHORTTAG).tar.gz
 
 init:
 	./autogen.sh init
@@ -78,9 +78,7 @@ init-if-needed:
 	test -e Makefile || ./configure
 
 export:
-	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
-	if [ ! -f $(TARFILE) ]; then						\
-	    rm -f $(PACKAGE).tar.*;						\
+	if [ ! -f "$(TARFILE)" ]; then						\
 	    if [ $(TAG) = dirty ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
@@ -88,9 +86,9 @@ export:
 	    else								\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
 	    fi;									\
-	    echo `date`: Rebuilt $(TARFILE);					\
+	    echo "`date`: Rebuilt $(TARFILE)";					\
 	else									\
-	    echo `date`: Using existing tarball: $(TARFILE);			\
+	    echo "`date`: Using existing tarball: $(TARFILE)";			\
 	fi
 
 
