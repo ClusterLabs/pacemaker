@@ -90,7 +90,10 @@ install-exec-local:
 # Use chown because the user/group may not exist
 
 clean-generic:
-	rm -f $(TARFILE) *.tar.bz2 *.sed
+	-rm -f *.tar.bz2 *.sed
+
+clean-local:
+	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
 
 dist-clean-local:
 	rm -f autoconf automake autoheader
