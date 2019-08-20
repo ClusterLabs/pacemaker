@@ -91,6 +91,8 @@ export:
 	    echo "`date`: Using existing tarball: $(TARFILE)";			\
 	fi
 
+export-clean:
+	-rm -f $(abs_builddir)/$(PACKAGE)-*.tar.gz
 
 ## RPM-related targets
 
@@ -200,6 +202,10 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
 
 .PHONY: $(PACKAGE).spec
 $(PACKAGE).spec: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+
+.PHONY: spec-clean
+spec-clean:
+	-rm -f $(RPM_SPEC_DIR)/$(PACKAGE).spec
 
 .PHONY: srpm
 srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
@@ -430,3 +436,9 @@ gnulib-update:
 	-test ! -e gnulib && git clone git://git.savannah.gnu.org/gnulib.git
 	cd gnulib && git pull
 	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)
+
+# The toplevel "clean" targets are generated from Makefile.am, not this file.
+# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
+# define this target, which Makefile.am can call from clean-local.
+ancillary-clean: export-clean spec-clean srpm-clean mock-clean coverity-clean
+	-rm -f $(TARFILE)
