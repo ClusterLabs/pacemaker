@@ -7,7 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
+default: build
+.PHONY: default
 
 -include Makefile
 
@@ -59,14 +60,14 @@ NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".
 distdir			= $(PACKAGE)-$(SHORTTAG)
 TARFILE			= $(abs_builddir)/$(PACKAGE)-$(SHORTTAG).tar.gz
 
+.PHONY: init
 init:
-	./autogen.sh
+	test -e $(top_srcdir)/configure || ./autogen.sh
+	test -e $(abs_builddir)/Makefile || $(abs_builddir)/configure
 
-# @TODO This should probably be what init does
-.PHONY: init-if-needed
-init-if-needed:
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
+.PHONY: build
+build: init
+	$(MAKE) $(AM_MAKEFLAGS) core
 
 export:
 	if [ ! -f "$(TARFILE)" ]; then						\
@@ -279,7 +280,7 @@ COVHTML		= $(COVERITY_DIR)/output/errors
 # Coverity outputs are phony so they get rebuilt every invocation
 
 .PHONY: $(COVERITY_DIR)
-$(COVERITY_DIR): init-if-needed core-clean coverity-clean
+$(COVERITY_DIR): init core-clean coverity-clean
 	$(AM_V_GEN)cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
 
 # Public coverity instance

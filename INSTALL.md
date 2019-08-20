@@ -16,7 +16,7 @@
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 |                 | libqb-devel        | libqb-devel        | libqb-dev      |
 
-Also: Python 2.7 or Python 3.2 or later
+Also: GNU make, and Python 2.7 or Python 3.2 or later
 
 ### Cluster Stack Dependencies
 
@@ -55,15 +55,18 @@ Also: Python 2.7 or Python 3.2 or later
 * libvirt-daemon-lxc (if running CTS container tests)
 * libvirt-login-shell (if running CTS container tests)
 
-## Source Control (GIT)
+## Simple install
 
-    git clone git://github.com/ClusterLabs/pacemaker.git
+    $ make && sudo make install
 
-[See Github](https://github.com/ClusterLabs/pacemaker)
+If GNU make is not your default make, use "gmake" instead.
 
-## Installing from source
+## Detailed install
+
+First, browse the build options that are available:
 
     $ ./autogen.sh
-    $ ./configure
-    $ make
-    $ sudo make install
+    $ ./configure --help
+
+Re-run ./configure with any options you want, then proceed with the simple
+method.
