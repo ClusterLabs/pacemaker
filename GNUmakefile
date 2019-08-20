@@ -139,13 +139,15 @@ export:
 	    echo `date`: Using existing tarball: $(TARFILE);			\
 	fi
 
-$(PACKAGE).spec: pacemaker.spec.in
-	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then	\
-	    cat pacemaker.spec.in;							\
-	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then		\
-	    cat pacemaker.spec.in;							\
-	else 										\
+$(PACKAGE).spec: rpm/pacemaker.spec.in
+	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep rpm/pacemaker.spec.in`" ]; then	\
+	    cat rpm/pacemaker.spec.in;							\
+	elif [ x != x"`git show $(TAG):rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
+	    git show $(TAG):rpm/pacemaker.spec.in;					\
+	elif [ x != x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then		\
 	    git show $(TAG):pacemaker.spec.in;						\
+	else 										\
+	    cat rpm/pacemaker.spec.in;							\
 	fi | sed									\
 	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
 	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
