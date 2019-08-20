@@ -17,8 +17,19 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  rpm/rpmlintrc		\
 			  rpm/pacemaker.spec.in
 
-MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4
+DISTCLEANFILES		= config.status
+
+MAINTAINERCLEANFILES	= Makefile.in		\
+			  aclocal.m4		\
+			  config.guess		\
+			  config.sub		\
+			  configure		\
+			  depcomp		\
+			  install-sh		\
+			  ltmain.sh		\
+			  missing		\
+			  py-compile		\
+			  test-driver
 
 # Disable building Publican documentation when doing "make distcheck", because
 # some of our book sources are in the source directory, while others are
@@ -95,5 +106,5 @@ clean-generic:
 clean-local:
 	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
 
-dist-clean-local:
-	rm -f autoconf automake autoheader
+distclean-local:
+	-rm -rf libltdl autom4te.cache
