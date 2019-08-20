@@ -168,11 +168,11 @@ rpmbuild-with = \
 
 $(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
-	$(AM_V_GEN)if [ x != x"`git ls-files -m | grep rpm/pacemaker.spec.in`" ]; then	\
+	$(AM_V_GEN)if [ x != x"`git ls-files -m rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
-	elif [ x != x"`git show $(TAG):rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
+	elif git cat-file -e $(TAG):rpm/pacemaker.spec.in 2>/dev/null; then		\
 	    git show $(TAG):rpm/pacemaker.spec.in;					\
-	elif [ x != x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then		\
+	elif git cat-file -e $(TAG):pacemaker.spec.in 2>/dev/null; then			\
 	    git show $(TAG):pacemaker.spec.in;						\
 	else 										\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
