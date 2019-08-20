@@ -21,7 +21,10 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-EXTRA_DIST		= $(sbin_SCRIPTS) stonith_admin.8.inc
+
+EXTRA_DIST		= crm_mon.sysconfig		\
+			  crm_mon.8.inc			\
+			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
 			  cibadmin \
@@ -49,7 +52,10 @@ endif
 
 ## SOURCES
 
-MAN8DEPS		= crm_attribute crm_node
+# A few tools are just thin wrappers around crm_attribute.
+# This makes their help get updated when crm_attribute changes
+# (see Makefile.common).
+MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
@@ -89,7 +95,6 @@ crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(CURSESLIBS)
 
-# Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\

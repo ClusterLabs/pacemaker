@@ -19,6 +19,8 @@ if BUILD_SYSTEMD
 systemdunit_DATA	= pacemaker.service
 endif
 
+EXTRA_DIST		= pacemaker.sysconfig
+
 ## SOURCES
 
 noinst_HEADERS		= pacemakerd.h

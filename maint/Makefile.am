@@ -12,5 +12,6 @@ CLEANFILES		= testcc
 EXTRA_SCRIPTS		= bumplibs.sh				\
 			  travisci_build_coverity_scan.sh
 EXTRA_PROGRAMS		= testcc
+EXTRA_DIST		= README
 
 nodist_testcc_SOURCES	= testcc.cc

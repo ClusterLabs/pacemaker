@@ -9,64 +9,68 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+noinst_SCRIPTS		= cluster_test		\
+			  OCFIPraTest.py
 
-halibdir	= $(CRM_DAEMON_DIR)
-halib_SCRIPTS	= cts-log-watcher cts-support
+# Commands intended to be run only via other commands
+halibdir		= $(CRM_DAEMON_DIR)
+dist_halib_SCRIPTS	= cts-log-watcher \
+			  cts-support
 
-#
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.
-#
-testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-exec cts-scheduler \
-		  cts-fencing
-test_DATA	= README.md valgrind-pcmk.suppressions
+testdir			= $(datadir)/$(PACKAGE)/tests
+test_SCRIPTS		= cts-cli		\
+			  cts-coverage		\
+			  cts-exec		\
+			  cts-fencing		\
+			  cts-regression	\
+			  cts-scheduler
+dist_test_DATA		= README.md			\
+			  valgrind-pcmk.suppressions
 
-ctslibdir	= $(pythondir)/cts
-ctslib_PYTHON	=	__init__.py		\
-			CTSvars.py		\
-			CM_common.py		\
-			CM_corosync.py		\
-			CTS.py			\
-			CTSaudits.py		\
-			CTStests.py		\
-			CTSscenarios.py		\
-			CIB.py			\
-			cib_xml.py		\
-			environment.py		\
-			logging.py		\
-			patterns.py		\
-			remote.py		\
-			watcher.py
+ctslibdir		= $(pythondir)/cts
+ctslib_PYTHON		= __init__.py		\
+			  CIB.py		\
+			  cib_xml.py		\
+			  CM_common.py		\
+			  CM_corosync.py	\
+			  CTSaudits.py		\
+			  CTSscenarios.py	\
+			  CTStests.py		\
+			  environment.py	\
+			  logging.py		\
+			  patterns.py		\
+			  remote.py		\
+			  watcher.py
+nodist_ctslib_PYTHON	= CTS.py		\
+			  CTSvars.py
 
 ctsdir		= 	$(testdir)/cts
 cts_DATA	=	pacemaker-cts-dummyd@.service
-
 if BUILD_UPSTART
-cts_DATA	+=	pacemaker-cts-dummyd.conf
+dist_cts_DATA	=	pacemaker-cts-dummyd.conf
 endif
-
-cts_SCRIPTS	=	cts			\
-			CTSlab.py		\
-			lxc_autogen.sh		\
-			LSBDummy		\
-			fence_dummy		\
-			pacemaker-cts-dummyd
+dist_cts_SCRIPTS	= cts
+cts_SCRIPTS		= CTSlab.py		\
+			  fence_dummy		\
+			  LSBDummy		\
+			  lxc_autogen.sh	\
+			  pacemaker-cts-dummyd
 
 clidir		= $(testdir)/cli
-cli_DATA	= cli/regression.dates.exp	\
-		  cli/regression.tools.exp	\
+dist_cli_DATA	= cli/crm_diff_new.xml		\
+		  cli/crm_diff_old.xml		\
 		  cli/regression.acls.exp	\
-		  cli/regression.validity.exp	\
-		  cli/regression.upgrade.exp	\
+		  cli/regression.dates.exp	\
 		  cli/regression.rules.exp	\
-		  cli/crm_diff_new.xml		\
-		  cli/crm_diff_old.xml
+		  cli/regression.tools.exp	\
+		  cli/regression.upgrade.exp	\
+		  cli/regression.validity.exp
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler
-pe_DATA		= $(PE_TESTS) \
+dist_pe_DATA	= $(PE_TESTS) \
 		  $(PE_TESTS:%.scores=%.xml) \
 		  $(PE_TESTS:%.scores=%.exp) \
 		  $(PE_TESTS:%.scores=%.dot) \
