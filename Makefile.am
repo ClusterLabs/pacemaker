@@ -23,10 +23,10 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  INSTALL.md		\
 			  README.markdown	\
 			  autogen.sh		\
-			  pacemaker.spec.in	\
-			  rpmlintrc		\
 			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4
+			  m4/gnulib-tool.m4	\
+			  rpm/rpmlintrc		\
+			  rpm/pacemaker.spec.in
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
