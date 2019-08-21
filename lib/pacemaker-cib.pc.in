@@ -3,6 +3,7 @@ libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
 configdir=@CRM_CONFIG_DIR@
+# for this and related variables, you may rather query pacemaker-schemas.pc
 schemadir=@CRM_SCHEMA_DIRECTORY@
 
 Name:             lib${sub}
