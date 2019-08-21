@@ -178,8 +178,6 @@ curses_end_list(pcmk__output_t *out) {
         } else {
             curses_indented_printf(out, "%d %s found\n", node->len, node->plural_noun);
         }
-    } else {
-        putc('\n', out->dest);
     }
 
     free(node);
