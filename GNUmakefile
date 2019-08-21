@@ -122,7 +122,7 @@ MOCK_DIR	= $(abs_builddir)/mock
 MOCK_OPTIONS	?= --resultdir=$(MOCK_DIR) --no-cleanup-after
 
 F	?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
-ARCH		?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
+ARCH	?= $(shell test ! -e /etc/fedora-release && uname -m; test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
