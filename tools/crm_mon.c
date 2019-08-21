@@ -248,6 +248,13 @@ print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 static gboolean
+print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_print_timing;
+    show |= mon_show_operations;
+    return TRUE;
+}
+
+static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     int rc = crm_get_msec(optarg);
 
@@ -365,7 +372,7 @@ static GOptionEntry display_entries[] = {
       "Display resource operation history",
       NULL },
 
-    { "timing-details", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_operations_cb,
+    { "timing-details", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_timing_cb,
       "Display resource operation history with timing details",
       NULL },
 
