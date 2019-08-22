@@ -17,26 +17,25 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST		= pacemaker.pc.in $(target_LIBS:%=%.in)
-
 LIBS			= cib lrmd service pengine fencing cluster
 
-target_LIBS		= $(LIBS:%=pacemaker-%.pc)
+PC_FILES		= $(LIBS:%=pacemaker-%.pc)	\
+			  pacemaker.pc
 
-target_PACKAGE		= pacemaker.pc
+EXTRA_DIST		= $(PC_FILES:%=%.in)
 
-all-local: $(target_LIBS) $(target_PACKAGE) pacemaker-pe_rules.pc pacemaker-pe_status.pc
+all-local: $(PC_FILES)
 
-install-exec-local: $(target_LIBS) $(target_PACKAGE) pacemaker-pe_rules.pc pacemaker-pe_status.pc
+install-exec-local: $(PC_FILES)
 	$(INSTALL) -d $(DESTDIR)/$(libdir)/pkgconfig
-	$(INSTALL) -m 644 $(target_LIBS) $(target_PACKAGE) $(DESTDIR)/$(libdir)/pkgconfig
+	$(INSTALL) -m 644 $(PC_FILES) $(DESTDIR)/$(libdir)/pkgconfig
 
 uninstall-local:
-	cd $(DESTDIR)/$(libdir)/pkgconfig && rm -f $(target_LIBS) $(target_PACKAGE)
-	rmdir $(DESTDIR)/$(libdir)/pkgconfig 2> /dev/null || :
+	-cd $(DESTDIR)/$(libdir)/pkgconfig && rm -f $(PC_FILES)
+	-rmdir $(DESTDIR)/$(libdir)/pkgconfig 2> /dev/null
 
 clean-local:
-	rm -f *.pc
+	rm -f $(PC_FILES)
 
 ## Subdirectories...
 SUBDIRS	= gnu common pengine transition cib services fencing lrmd cluster
