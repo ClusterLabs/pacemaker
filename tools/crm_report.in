@@ -20,7 +20,7 @@
 
 TEMP=`getopt				\
     -o hv?xl:f:t:n:T:L:p:c:dSACHu:D:MVse:	\
-    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
+    --long help,corosync,cts:,cts-log:,dest:,heartbeat,node:,nodes:,--openais,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
 # The quotes around $TEMP are essential
 eval set -- "$TEMP"
@@ -54,6 +54,7 @@ Required option:
 
 Options:
   -V                    increase verbosity (may be specified multiple times)
+  -h, --help            display this message
   -v, --version         display software version
   --features            display software features
   -t, --to TIME         time at which all problems were resolved
@@ -77,9 +78,10 @@ Options:
   -H, --heartbeat       force the cluster type to be heartbeat
   -u, --user USER       username to use when collecting data from other nodes
                         (default root)
-  -D, --depth           search depth to use when attempting to locate files
+  -D, --max-depth       search depth to use when attempting to locate files
   -e, --rsh             command to use to run commands on other nodes
                         (default ssh -T)
+  -d, --as-directory    leave result as a directory tree instead of archiving
   --sos-mode            use defaults suitable for being called by sosreport tool
                         (behavior subject to change and not useful to end users)
   DEST, --dest DEST     custom destination directory or file name
@@ -119,13 +121,13 @@ while true; do
     case "$1" in
 	-x) set -x; shift;;
 	-V) verbose=`expr $verbose + 1`; shift;;
-	-T|--cts-test) tests="$tests $2"; shift; shift;;
+	-T|--cts) tests="$tests $2"; shift; shift;;
 	   --cts-log) ctslog="$2"; shift; shift;;
 	-f|--from) start_time=`get_time "$2"`; shift; shift;;
 	-t|--to) end_time=`get_time "$2"`; shift; shift;;
 	-n|--node|--nodes) nodes="$nodes $2"; shift; shift;;
 	-S|--single-node) nodes="$host"; shift;;
-	-E|-l|--logfile) extra_logs="$extra_logs $2"; shift; shift;;
+	-l|--logfile) extra_logs="$extra_logs $2"; shift; shift;;
 	-p) sanitize_patterns="$sanitize_patterns $2"; shift; shift;;
 	-L) log_patterns="$log_patterns `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
 	-d|--as-directory) compress=0; shift;;
