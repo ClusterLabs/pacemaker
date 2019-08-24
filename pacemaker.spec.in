@@ -279,6 +279,9 @@ Group:         System Environment/Daemons
 Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
+# For crm_report
+Recommends:    tar
+Recommends:    bzip2
 %endif
 Requires:      perl-TimeDate
 Requires:      procps-ng
