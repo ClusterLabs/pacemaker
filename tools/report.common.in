@@ -114,6 +114,13 @@ fatal() {
     exit 1
 }
 
+require_tar() {
+    which tar >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        fatal "Required program 'tar' not found, please install and re-run"
+    fi
+}
+
 # check if process of given substring in its name does exist;
 # only look for processes originated by user 0 (by UID), "@CRM_DAEMON_USER@"
 # or effective user running this script, and/or group 0 (by GID),
@@ -525,6 +532,9 @@ shrink() {
 
     cd $dir  >/dev/null 2>&1
     tar $tar_options $target $base >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        fatal "Could not archive $base, please investigate and collect manually"
+    fi
     cd $olddir  >/dev/null 2>&1
 
     echo $target

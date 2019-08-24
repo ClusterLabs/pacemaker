@@ -419,6 +419,10 @@ getnodes() {
     # TODO: Look for something like crm_update_peer
 }
 
+if [ $compress -eq 1 ]; then
+    require_tar
+fi
+
 if [ "x$tests" != "x" ]; then
     do_cts
 
