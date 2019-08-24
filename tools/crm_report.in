@@ -475,6 +475,10 @@ getnodes() {
     fi
 }
 
+if [ $compress -eq 1 ]; then
+    require_tar
+fi
+
 if [ "x$tests" != "x" ]; then
     do_cts
 

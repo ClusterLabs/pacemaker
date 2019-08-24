@@ -821,6 +821,8 @@ collect_logs() {
     trap "" 0
 }
 
+require_tar
+
 debug "Initializing $REPORT_TARGET subdir"
 if [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
   if [ -e $REPORT_HOME/$REPORT_TARGET ]; then
