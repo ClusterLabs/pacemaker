@@ -37,6 +37,8 @@
 
 #include <crm/common/xml.h>
 
+#define SUMMARY "stonith_admin - Access the Pacemaker fencing API"
+
 char action = 0;
 
 struct {
@@ -560,17 +562,12 @@ main(int argc, char **argv)
     stonith_key_value_t *dIter = NULL;
 
     pcmk__output_t *out = NULL;
-    pcmk__common_args_t *args = calloc(1, sizeof(pcmk__common_args_t));
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
 
     GError *error = NULL;
     GOptionContext *context = NULL;
     gchar **processed_args = NULL;
 
-    if (args == NULL) {
-        crm_exit(crm_errno2exit(-ENOMEM));
-    }
-
-    args->summary = strdup("stonith_admin - Access the Pacemaker fencing API");
     context = build_arg_context(args);
     pcmk__register_formats(context, formats);
 

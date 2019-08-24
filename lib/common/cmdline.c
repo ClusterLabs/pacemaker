@@ -25,6 +25,24 @@ bump_verbosity(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     return TRUE;
 }
 
+pcmk__common_args_t *
+pcmk__new_common_args(const char *summary)
+{
+    pcmk__common_args_t *args = NULL;
+
+    args = calloc(1, sizeof(pcmk__common_args_t));
+    if (args == NULL) {
+        crm_exit(crm_errno2exit(-ENOMEM));
+    }
+
+    args->summary = strdup(summary);
+    if (args->summary == NULL) {
+        crm_exit(crm_errno2exit(-ENOMEM));
+    }
+
+    return args;
+}
+
 static void
 free_common_args(gpointer data) {
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;

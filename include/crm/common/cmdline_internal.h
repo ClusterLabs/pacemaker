@@ -29,6 +29,20 @@ typedef struct {
 
 /*!
  * \internal
+ * \brief Allocate a new common args object
+ *
+ * \param[in] summary  Summary description of tool for man page
+ *
+ * \return Newly allocated common args object
+ * \note This function will immediately exit the program if memory allocation
+ *       fails, since the intent is to call it at the very beginning of a
+ *       program, before logging has been set up.
+ */
+pcmk__common_args_t *
+pcmk__new_common_args(const char *summary);
+
+/*!
+ * \internal
  * \brief Create and return a GOptionContext containing the command line options
  *        supported by all tools.
  *
