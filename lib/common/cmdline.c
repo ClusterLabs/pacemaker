@@ -97,6 +97,26 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
     return context;
 }
 
+void
+pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[])
+{
+    GOptionGroup *main_group = g_option_context_get_main_group(context);
+
+    g_option_group_add_entries(main_group, entries);
+}
+
+void
+pcmk__add_arg_group(GOptionContext *context, const char *name,
+                    const char *header, const char *desc,
+                    GOptionEntry entries[])
+{
+    GOptionGroup *group = NULL;
+
+    group = g_option_group_new(name, header, desc, NULL, NULL);
+    g_option_group_add_entries(group, entries);
+    g_option_context_add_group(context, group);
+}
+
 char **
 pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
     char **retval = NULL;

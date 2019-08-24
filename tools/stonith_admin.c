@@ -507,8 +507,6 @@ show_last_fenced(pcmk__output_t *out, const char *target)
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
-    GOptionGroup *defn_group, *query_group, *fence_group, *addl_group;
-    GOptionGroup *main_group;
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
@@ -523,26 +521,16 @@ build_arg_context(pcmk__common_args_t *args) {
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.
      */
-    main_group = g_option_context_get_main_group(context);
-    g_option_group_add_entries(main_group, extra_prog_entries);
+    pcmk__add_main_args(context, extra_prog_entries);
 
-    defn_group = g_option_group_new("definition", "Device Definition Commands:",
-                                    "Show device definition help", NULL, NULL);
-    g_option_group_add_entries(defn_group, defn_entries);
-    g_option_context_add_group(context, defn_group);
-
-    query_group = g_option_group_new("queries", "Queries:", "Show query help", NULL, NULL);
-    g_option_group_add_entries(query_group, query_entries);
-    g_option_context_add_group(context, query_group);
-
-    fence_group = g_option_group_new("fence", "Fencing Commands:", "Show fence help", NULL, NULL);
-    g_option_group_add_entries(fence_group, fence_entries);
-    g_option_context_add_group(context, fence_group);
-
-    addl_group = g_option_group_new("additional", "Additional Options:", "Show additional options", NULL, NULL);
-    g_option_group_add_entries(addl_group, addl_entries);
-    g_option_context_add_group(context, addl_group);
-
+    pcmk__add_arg_group(context, "definition", "Device Definition Commands:",
+                        "Show device definition help", defn_entries);
+    pcmk__add_arg_group(context, "queries", "Queries:",
+                        "Show query help", query_entries);
+    pcmk__add_arg_group(context, "fence", "Fencing Commands:",
+                        "Show fence help", fence_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
     return context;
 }
 

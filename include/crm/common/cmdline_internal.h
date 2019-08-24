@@ -61,6 +61,33 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts);
 
 /*!
  * \internal
+ * \brief Add options to the main application options
+ *
+ * \param[in,out] context  Argument context to add options to
+ * \param[in]     entries  Option entries to add
+ *
+ * \note This is simply a convenience wrapper to reduce duplication
+ */
+void pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[]);
+
+/*!
+ * \internal
+ * \brief Add an option group to an argument context
+ *
+ * \param[in,out] context  Argument context to add group to
+ * \param[in]     name     Option group name (to be used in --help-NAME)
+ * \param[in]     header   Header for --help-NAME output
+ * \param[in]     desc     Short description for --help-NAME option
+ * \param[in]     entries  Array of options in group
+ *
+ * \note This is simply a convenience wrapper to reduce duplication
+ */
+void pcmk__add_arg_group(GOptionContext *context, const char *name,
+                         const char *header, const char *desc,
+                         GOptionEntry entries[]);
+
+/*!
+ * \internal
  * \brief Pre-process command line arguments to preserve compatibility with
  *        getopt behavior.
  *
