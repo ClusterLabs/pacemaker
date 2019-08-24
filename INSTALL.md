@@ -29,7 +29,7 @@
 * libesmtp-devel (crm_mon --mail-to option)
 * lm_sensors-devel (crm_mon --snmp-traps option)
 * net-snmp-devel (crm_mon --snmp-traps option)
-* asciidoc (documentation)
+* asciidoc or asciidoctor (documentation)
 * help2man (documentation)
 * publican (documentation)
 * inkscape (documentation)

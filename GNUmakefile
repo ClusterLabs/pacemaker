@@ -45,12 +45,12 @@ ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)')
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
 	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
 SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
 WITH    ?= --without doc
@@ -207,7 +207,7 @@ srpm-%:	export $(PACKAGE)-%.spec
 	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
 
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-next:
 	make F=$(shell expr 1 + $(F)) mock
@@ -216,19 +216,19 @@ mock-rawhide:
 	make F=rawhide mock
 
 mock-install-%:
-	echo "Installing packages"
+	@echo "Installing packages"
 	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents psmisc
 
 mock-install: mock-install-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-sh: mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-sh-%:
-	echo "Connecting"
+	@echo "Connecting"
 	mock --root=$* $(MOCK_OPTIONS) --shell
-	echo "Done"
+	@echo "Done"
 
 # eg. WITH="--with cman" make rpm
 mock-%:
@@ -238,10 +238,10 @@ mock-%:
 	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
-	echo "Done"
+	@echo "Done"
 
 mock:   mock-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 rpm-dep: $(PACKAGE)-$(DISTRO).spec
 	if [ x != x`which yum-builddep 2>/dev/null` ]; then			\
@@ -341,17 +341,17 @@ global: clean-generic
 
 global-upload: global
 	htags -sanhIT
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/global/$(PACKAGE)/$(TAG)"
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
 
 %.8.html: %.8
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
+	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
 
 %.7.html: %.7
 	echo groff -mandoc `man -w ./$<` -T html > $@
 	groff -mandoc `man -w ./$<` -T html > $@
-	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/man/$(PACKAGE)/"
+	rsync $(RSYNC_OPTS) "$@" "$(RSYNC_DEST)/$(PACKAGE)/man/"
 
 manhtml-upload: all
 	find . -name "[a-z]*.[78]" -exec make \{\}.html \;
@@ -360,12 +360,12 @@ doxygen: Doxyfile
 	doxygen Doxyfile
 
 doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/doxygen/$(PACKAGE)/$(TAG)"
+	rsync $(RSYNC_OPTS) doc/api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
 
 abi:
 	./abi-check pacemaker $(LAST_RELEASE) $(TAG)
 abi-www:
-	./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
+	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
 
 www:	manhtml-upload global-upload doxygen-upload
 	make RSYNC_DEST=$(RSYNC_DEST) -C doc www

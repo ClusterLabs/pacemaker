@@ -18,10 +18,27 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in m4/gnulib-cache.m4
+EXTRA_DIST		= CONTRIBUTING.md	\
+			  GNUmakefile		\
+			  INSTALL.md		\
+			  README.markdown	\
+			  autogen.sh		\
+			  pacemaker.spec.in	\
+			  rpmlintrc		\
+			  m4/gnulib-cache.m4	\
+			  m4/gnulib-tool.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
+
+# Disable building Publican documentation when doing "make distcheck", because
+# some of our book sources are in the source directory, while others are
+# dynamically generated in the build directory, and publican can't handle that.
+#
+# @TODO To support VPATH builds for Publican, we'd probably have to create
+# a separate subtree of the build directory to use as Publican's source
+# directory, and copy the static sources into it.
+AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
 
 CORE	= replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
 SUBDIRS	= $(CORE) extra doc
@@ -33,14 +50,17 @@ doc_DATA = README.markdown COPYING
 ACLOCAL_AMFLAGS  = -I m4
 
 licensedir              = $(docdir)/licenses/
-license_DATA            = $(wildcard licenses/*)
+dist_license_DATA	= $(wildcard licenses/*)
 
 # Test components
 SUBDIRS	+= cts
 
 testdir			= $(datadir)/$(PACKAGE)/tests/
-test_SCRIPTS		= coverage.sh BasicSanity.sh
-test_DATA		= valgrind-pcmk.suppressions
+test_SCRIPTS		= coverage.sh
+dist_test_SCRIPTS	= BasicSanity.sh
+dist_test_DATA		= valgrind-pcmk.suppressions
+
+EXTRA_SCRIPTS		= abi-check bumplibs.sh
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch
@@ -52,15 +72,24 @@ scratch.c:
 
 core:
 	@echo "Building only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; $(MAKE) -C $$subdir all || exit 1; done
+	@for subdir in $(CORE); do \
+		echo "Building $$subdir"; \
+		$(MAKE) -C $$subdir all || exit 1; \
+	done
 
 core-install:
 	@echo "Installing only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Installing $$subdir"; $(MAKE) -C $$subdir install || exit 1; done
+	@for subdir in $(CORE); do \
+	    echo "Installing $$subdir"; \
+	    $(MAKE) -C $$subdir install || exit 1; \
+	done
 
 core-clean:
 	@echo "Cleaning only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; $(MAKE) -C $$subdir clean || exit 1; done
+	@for subdir in $(CORE); do \
+		echo "Cleaning $$subdir"; \
+		$(MAKE) -C $$subdir clean || exit 1; \
+	done
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)

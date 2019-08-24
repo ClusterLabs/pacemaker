@@ -21,35 +21,37 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 CLEANFILES      = LSBDummy HBDummy
 
-EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+EXTRA_SCRIPTS		= cluster_test		\
+			  OCFIPraTest.py
 
-ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
-ctslibdir	= $(pyexecdir)/cts
+testdir		= $(datadir)/$(PACKAGE)/tests
 
-ctslib_PYTHON	=	__init__.py		\
-			CTSvars.py		\
-			CM_lha.py		\
-			CM_ais.py		\
-			CTS.py			\
-			CTSaudits.py		\
-			CTStests.py		\
-			CTSscenarios.py		\
-			CIB.py			\
-			cib_xml.py		\
-			environment.py		\
-			logging.py		\
-			patterns.py		\
-			remote.py		\
-			watcher.py
+ctslibdir		= $(pyexecdir)/cts
+ctslib_PYTHON		= __init__.py		\
+			  CIB.py		\
+			  cib_xml.py		\
+			  CM_lha.py		\
+			  CM_ais.py		\
+			  CTS.py		\
+			  CTSaudits.py		\
+			  CTSscenarios.py	\
+			  CTStests.py		\
+			  environment.py	\
+			  logging.py		\
+			  patterns.py		\
+			  remote.py		\
+			  watcher.py
+nodist_ctslib_PYTHON	= CTSvars.py
 
-cts_DATA	=	README.md cts.supp pacemaker-cts-dummyd.service
-
-cts_SCRIPTS	=	cts		\
-			CTSlab.py		\
-			lxc_autogen.sh	\
-			LSBDummy		\
-			HBDummy		\
-			pacemaker-cts-dummyd	\
-			$(top_srcdir)/fencing/fence_dummy
+ctsdir		= 	$(testdir)/cts
+cts_DATA	=	pacemaker-cts-dummyd.service
+dist_cts_DATA	=	README.md cts.supp
+dist_cts_SCRIPTS	= cts			\
+			  CTSlab.py		\
+			  $(top_srcdir)/fencing/fence_dummy
+cts_SCRIPTS		= HBDummy		\
+			  LSBDummy		\
+			  lxc_autogen.sh	\
+			  pacemaker-cts-dummyd
 
 SUBDIRS	= benchmark

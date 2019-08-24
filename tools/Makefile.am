@@ -31,18 +31,20 @@ noinst_HEADERS		= crm_resource.h fake_transition.h
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
-sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
+sbin_SCRIPTS		= crm_report
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-EXTRA_DIST		= $(sbin_SCRIPTS)
+dist_sbin_SCRIPTS	= crm_standby crm_master crm_failcount
+
+EXTRA_DIST		= crm_mon.sysconfig
 
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
 testdir			= $(datadir)/$(PACKAGE)/tests/cli
-test_SCRIPTS		= regression.sh
-test_DATA		= regression.dates.exp		\
+dist_test_SCRIPTS	= regression.sh
+dist_test_DATA		= regression.dates.exp		\
 			  regression.tools.exp		\
 			  regression.acls.exp		\
 			  regression.validity.exp	\
@@ -61,7 +63,10 @@ endif
 
 ## SOURCES
 
-MAN8DEPS		= crm_attribute crm_node
+# A few tools are just thin wrappers around crm_attribute.
+# This makes their help get updated when crm_attribute changes
+# (see Makefile.common).
+MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
@@ -102,7 +107,6 @@ crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
 			  $(top_builddir)/pengine/libpengine.la \
 			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS)
 
-# Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			$(top_builddir)/pengine/libpengine.la		\
