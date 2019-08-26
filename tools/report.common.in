@@ -114,6 +114,13 @@ fatal() {
     exit 1
 }
 
+require_tar() {
+    which tar >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        fatal "Required program 'tar' not found, please install and re-run"
+    fi
+}
+
 # check if process of given substring in its name does exist;
 # only look for processes originated by user 0 (by UID), "@CRM_DAEMON_USER@"
 # or effective user running this script, and/or group 0 (by GID),
@@ -525,6 +532,9 @@ shrink() {
 
     cd $dir  >/dev/null 2>&1
     tar $tar_options $target $base >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        fatal "Could not archive $base, please investigate and collect manually"
+    fi
     cd $olddir  >/dev/null 2>&1
 
     echo $target
@@ -538,7 +548,7 @@ findln_by_time() {
     # Some logs can be massive (over 1,500,000,000 lines have been seen in the wild) 
     # Even just 'wc -l' on these files can take 10+ minutes 
 
-    local fileSize=`ls -lh | awk '{ print $5 }' | grep -ie G`
+    local fileSize=`ls -lh "$logf" | awk '{ print $5 }' | grep -ie G`
     if [ x$fileSize != x ]; then
         warning "$logf is ${fileSize} in size and could take many hours to process. Skipping."
         return
@@ -614,7 +624,7 @@ is_our_log() {
 	local cat=`find_decompressor $logf`
 	local format=`$cat $logf | get_time_format`
 	local first_time=`$cat $logf | head -10 | get_first_time $format`
-	local last_time=`$cat $logf | tail -10 | get_last_time $format`
+	local last_time=`$cat $logf | tail -1 | get_last_time $format`
 
 	if [ x = "x$first_time" -o x = "x$last_time" ]; then
 	    warning "Skipping bad logfile '$1': Could not determine log dates"
