@@ -74,7 +74,7 @@ static void print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set
                                   unsigned int mon_ops, unsigned int show);
 static void print_failed_action(mon_state_t *state, xmlNode *xml_op);
 static void print_failed_actions(mon_state_t *state, pe_working_set_t *data_set);
-static void print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops);
+static void print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops, stonith_history_t *top_history);
 static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
@@ -1889,8 +1889,32 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
  * \param[in] stream     File stream to display output to
  * \param[in] event      stonith event
  */
+static gboolean 
+is_later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
+{
+    
+    gboolean ret = FALSE;
+
+    for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
+        if (prev_hp == event) {
+            break;
+        }
+
+        if ((prev_hp->state == st_done) &&
+            safe_str_eq(event->target, prev_hp->target) &&
+            safe_str_eq(event->action, prev_hp->action) &&
+            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            (event->completed < prev_hp->completed)) {
+            ret = TRUE;
+            break;
+        }
+    }
+
+    return ret;
+} 
+
 static void
-print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops)
+print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops, stonith_history_t *top_history)
 {
     const char *action_s = stonith_action_str(event->action);
     char *run_at_s = ctime(&event->completed);
@@ -1942,9 +1966,10 @@ print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int 
                              run_at_s?run_at_s:"");
                     break;
                 case st_failed:
-                    print_as(state->output_format, "* %s of %s failed: delegate=%s, client=%s, origin=%s,\n"
+                    print_as(state->output_format, "* %s of %s %s: delegate=%s, client=%s, origin=%s,\n"
                              "    %s='%s'\n",
                              action_s, event->target,
+                             is_later_succeeded(event, top_history) ? "failed but later succeeded" : "failed",
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
                              is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
@@ -1970,9 +1995,10 @@ print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int 
                                     run_at_s?run_at_s:"");
                     break;
                 case st_failed:
-                    fprintf(state->stream, "  <li>%s of %s failed: delegate=%s, "
+                    fprintf(state->stream, "  <li>%s of %s %s: delegate=%s, "
                                     "client=%s, origin=%s, %s='%s'</li>\n",
                                     action_s, event->target,
+                                    is_later_succeeded(event, top_history) ? "failed but later succeeded" : "failed",
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
                                     is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
@@ -2036,7 +2062,7 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            print_stonith_action(state, hp, mon_ops);
+            print_stonith_action(state, hp, mon_ops, history);
         }
     }
 
@@ -2091,7 +2117,7 @@ print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned i
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            print_stonith_action(state, hp, mon_ops);
+            print_stonith_action(state, hp, mon_ops, NULL);
         }
 
         /* End section */
@@ -2142,7 +2168,7 @@ print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned i
 
     for (hp = history; hp; hp = hp->next) {
         if ((hp->state != st_failed) || (state->output_format == mon_output_xml)) {
-            print_stonith_action(state, hp, mon_ops);
+            print_stonith_action(state, hp, mon_ops, NULL);
         }
     }
 
