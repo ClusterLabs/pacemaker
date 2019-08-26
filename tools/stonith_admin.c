@@ -54,7 +54,6 @@ struct {
     int fence_level;
     int timeout ;
     int tolerance;
-    int verbose;
     char *agent;
     char *confirm_host;
     char *fence_host;
@@ -569,7 +568,7 @@ main(int argc, char **argv)
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
     }
 
-    for (int i = 0; i < options.verbose; i++) {
+    for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
 
@@ -806,7 +805,7 @@ main(int argc, char **argv)
             break;
         case 'H':
             rc = handle_history(st, target, options.timeout, args->quiet,
-                                options.verbose, options.cleanup,
+                                args->verbosity, options.cleanup,
                                 options.broadcast, out);
             break;
         case 'K':
