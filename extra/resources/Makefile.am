@@ -9,9 +9,6 @@
 
 include $(top_srcdir)/Makefile.common
 
-EXTRA_DIST		= $(ocf_SCRIPTS)
-
-
 ocfdir			= @OCF_RA_DIR@/pacemaker
 dist_ocf_SCRIPTS	= attribute	\
 			  controld	\
