@@ -51,8 +51,8 @@ cts_DATA	=	pacemaker-cts-dummyd@.service
 if BUILD_UPSTART
 dist_cts_DATA	=	pacemaker-cts-dummyd.conf
 endif
-dist_cts_SCRIPTS	= cts
 cts_SCRIPTS		= CTSlab.py		\
+			  cts			\
 			  fence_dummy		\
 			  LSBDummy		\
 			  lxc_autogen.sh	\
