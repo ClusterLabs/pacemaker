@@ -67,21 +67,21 @@ core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
 		echo "Building $$subdir"; \
-		$(MAKE) -C $$subdir all || exit 1; \
+		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
 	done
 
 core-install:
 	@echo "Installing only core components: $(CORE_INSTALL)"
 	@for subdir in $(CORE_INSTALL); do \
 	    echo "Installing $$subdir"; \
-	    $(MAKE) -C $$subdir install || exit 1; \
+	    $(MAKE) $(AM_MAKEFLAGS) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
 		echo "Cleaning $$subdir"; \
-		$(MAKE) -C $$subdir clean || exit 1; \
+		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir clean || exit 1; \
 	done
 
 install-exec-local:
