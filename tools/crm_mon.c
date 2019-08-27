@@ -106,7 +106,6 @@ static pcmk__supported_format_t formats[] = {
 struct {
     int reconnect_msec;
     int fence_history_level;
-    int verbose;
     gboolean daemonize;
     gboolean show_bans;
     char *pid_file;
@@ -822,7 +821,7 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_USAGE);
     }
 
-    for (int i = 0; i < options.verbose; i++) {
+    for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
 
