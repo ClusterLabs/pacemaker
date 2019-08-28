@@ -16,11 +16,20 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xpath.h>
+#if HAVE_LIBXSLT
+#  include <libxslt/transform.h>
+#  include <libxslt/variables.h>
+#  include <libxslt/xsltutils.h>
+#endif
 
+#include <crm/compatibility.h>  /* PCMK_COMPAT_ACL_2_* */
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
@@ -780,4 +789,364 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     }
 
     return requested_user;
+}
+
+#define ACL_NS_PREFIX "http://clusterlabs.org/ns/pacemaker/access/"
+#define ACL_NS_Q_PREFIX  "pcmk-access-"
+#define ACL_NS_Q_WRITABLE (const xmlChar *) ACL_NS_Q_PREFIX   "writable"
+#define ACL_NS_Q_READABLE (const xmlChar *) ACL_NS_Q_PREFIX   "readable"
+#define ACL_NS_Q_DENIED   (const xmlChar *) ACL_NS_Q_PREFIX   "denied"
+
+static const xmlChar *NS_WRITABLE = (xmlChar *) ACL_NS_PREFIX "writable";
+static const xmlChar *NS_READABLE = (xmlChar *) ACL_NS_PREFIX "readable";
+static const xmlChar *NS_DENIED =   (xmlChar *) ACL_NS_PREFIX "denied";
+
+static int
+pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
+{
+
+    static xmlNs *ns_recycle_writable = NULL,
+                 *ns_recycle_readable = NULL,
+                 *ns_recycle_denied = NULL;
+    static const xmlDoc *prev_doc = NULL;
+
+    xmlNode *i_node = NULL;
+    const xmlChar *ns;
+    int ret = 0;
+
+    if (prev_doc == NULL || prev_doc != xml_modify->doc) {
+        prev_doc = xml_modify->doc;
+        ns_recycle_writable = ns_recycle_readable = ns_recycle_denied = NULL;
+    }
+
+    for (i_node = xml_modify; i_node != NULL; i_node = i_node->next) {
+        switch (i_node->type) {
+        case XML_ELEMENT_NODE:
+            pcmk__set_xml_flag(i_node, xpf_tracking);
+            ns = !pcmk__check_acl(i_node, NULL, xpf_acl_read)
+                 ? NS_DENIED
+                 : !pcmk__check_acl(i_node, NULL, xpf_acl_write)
+                   ? NS_READABLE
+                   : NS_WRITABLE;
+            if (ns == NS_WRITABLE) {
+                if (ns_recycle_writable == NULL) {
+                    ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                   NS_WRITABLE, ACL_NS_Q_WRITABLE);
+                    ret |= PCMK_ACL_VERDICT_WRITABLE;
+                }
+                xmlSetNs(i_node, ns_recycle_writable);
+            } else if (ns == NS_READABLE) {
+                if (ns_recycle_readable == NULL) {
+                    ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                   NS_READABLE, ACL_NS_Q_READABLE);
+                    ret |= PCMK_ACL_VERDICT_READABLE;
+                }
+                xmlSetNs(i_node, ns_recycle_readable);
+            } else if (ns == NS_DENIED) {
+                if (ns_recycle_denied == NULL) {
+                    ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                 NS_DENIED, ACL_NS_Q_DENIED);
+                    ret |= PCMK_ACL_VERDICT_DENIED;
+                };
+                xmlSetNs(i_node, ns_recycle_denied);
+            }
+            /* XXX recursion can be turned into plain iteration to save stack */
+            if (i_node->properties != NULL) {
+                /* this is not entirely clear, but relies on the very same
+                   class-hierarchy emulation that libxml2 has firmly baked in
+                   its API/ABI */
+                ret |= pcmk__eval_acl_as_namespaces_2((xmlNodePtr) i_node->properties);
+            }
+            if (i_node->children != NULL) {
+                ret |= pcmk__eval_acl_as_namespaces_2(i_node->children);
+            }
+            break;
+        case XML_ATTRIBUTE_NODE:
+            /* we can utilize that parent has already been assigned the ns */
+            ns = !pcmk__check_acl(i_node->parent,
+                                 (const char *) i_node->name,
+                                 xpf_acl_read)
+                 ? NS_DENIED
+                 : !pcmk__check_acl(i_node,
+                                   (const char *) i_node->name,
+                                   xpf_acl_write)
+                   ? NS_READABLE
+                   : NS_WRITABLE;
+            if (ns == NS_WRITABLE) {
+                if (ns_recycle_writable == NULL) {
+                    ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                   NS_WRITABLE, ACL_NS_Q_WRITABLE);
+                    ret |= PCMK_ACL_VERDICT_WRITABLE;
+                }
+                xmlSetNs(i_node, ns_recycle_writable);
+            } else if (ns == NS_READABLE) {
+                if (ns_recycle_readable == NULL) {
+                    ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                   NS_READABLE, ACL_NS_Q_READABLE);
+                    ret |= PCMK_ACL_VERDICT_READABLE;
+                }
+                xmlSetNs(i_node, ns_recycle_readable);
+            } else if (ns == NS_DENIED) {
+                if (ns_recycle_denied == NULL) {
+                    ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                                 NS_DENIED, ACL_NS_Q_DENIED);
+                    ret |= PCMK_ACL_VERDICT_DENIED;
+                }
+                xmlSetNs(i_node, ns_recycle_denied);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    return ret;
+}
+
+int
+pcmk_acl_evaled_as_namespaces(enum pcmk_acl_cred_type cred_type,
+                              const char *cred, xmlDoc *cib_doc,
+                              xmlDoc **acl_evaled_doc)
+{
+    /* XXX requires prior crm_xml_init */
+
+    int ret, version;
+    xmlNode *target, *comment;
+    char comment_buf[256] = "access as evaluated for user ";
+    const char *validation;
+
+    CRM_CHECK(cred != NULL, return -1);
+    CRM_CHECK(cib_doc != NULL, return -1);
+    CRM_CHECK(acl_evaled_doc != NULL, return -1);
+    /* XXX no proper support for groups yet */
+    CRM_CHECK(cred_type == PCMK_ACL_CRED_USER, return -2);
+
+    if (!pcmk_acl_required(cred)) {
+        /* nothing to evaluate */
+        return 0;
+    }
+
+    /* XXX see the comment for this function, pacemaker-4.0 may need
+           updating respectively in the future */
+    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
+                                   XML_ATTR_VALIDATION);
+    version = get_schema_version(validation);
+    if (get_schema_version(PCMK_COMPAT_ACL_2_MIN_INCL) > version
+            || (-1 != get_schema_version(PCMK_COMPAT_ACL_2_MAX_EXCL)
+                    && get_schema_version(PCMK_COMPAT_ACL_2_MAX_EXCL)
+                        <= version)) {
+        return -3;
+    }
+
+    target = copy_xml(xmlDocGetRootElement(cib_doc));
+    if (target == NULL) {
+        return -1;
+    }
+
+    pcmk__unpack_acl(target, target, cred);
+    pcmk__set_xml_flag(target, xpf_acl_enabled);
+    pcmk__apply_acl(target);
+    ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
+
+    if (ret > 0) {
+        /* avoid trivial accidental XML injection */
+        if (strpbrk(cred, "<>&") == NULL) {
+            snprintf(comment_buf + strlen(comment_buf),
+                     sizeof(comment_buf) - strlen(comment_buf), "%s", cred);
+            comment = xmlNewDocComment(target->doc, (pcmkXmlStr) comment_buf);
+            if (comment == NULL) {
+                xmlFreeNode(target);
+                return -1;
+            }
+            xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
+        }
+        *acl_evaled_doc = target->doc;
+    } else {
+        xmlFreeNode(target);
+    }
+    return ret;
+}
+
+/* this is used to dynamically adapt to user-modified stylesheet */
+static const char **
+parse_params(xmlDoc *doc, const char **fallback)
+{
+    xmlXPathContext *xpath_ctxt;
+    xmlXPathObject *xpath_obj;
+    const char **ret = NULL;
+    size_t ret_cnt = 0, ret_iter = 0;
+
+    if (doc == NULL) {
+        return fallback;
+    }
+
+    xpath_ctxt = xmlXPathNewContext(doc);
+    CRM_ASSERT(xpath_ctxt != NULL);
+
+    if (xmlXPathRegisterNs(xpath_ctxt, (pcmkXmlStr) "xsl",
+                           (pcmkXmlStr) "http://www.w3.org/1999/XSL/Transform") != 0) {
+        return fallback;
+    }
+
+    while (*fallback != NULL) {
+        char xpath_query[1024];
+        const char *key = *fallback++;
+        const char *value = *fallback++;
+        CRM_ASSERT(value != NULL);
+
+        if (ret_iter + 1 >= ret_cnt) {
+            ret_cnt = ret_cnt ? ret_cnt : 1;
+            ret_cnt *= 2;
+            ret_cnt += 1;
+            ret = realloc(ret, ret_cnt * sizeof(*ret));
+            CRM_ASSERT(ret != NULL);
+        }
+
+        key = strdup(key);
+        CRM_ASSERT(key != NULL);
+        ret[ret_iter++] = key;
+
+        snprintf(xpath_query, sizeof(xpath_query),
+                 "substring("
+                   "/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select,"
+                   "2,"
+                   "string-length(/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select) - 2"
+                 ")",
+                 key, key);
+        xpath_obj = xmlXPathEvalExpression((pcmkXmlStr) xpath_query, xpath_ctxt);
+        if (xpath_obj != NULL && xpath_obj->type == XPATH_STRING
+                && *xpath_obj->stringval != '\0') {
+            /* XXX convert first! */
+            char *origval = strdup((const char *) xpath_obj->stringval);
+            size_t reminder = strlen(origval) + 1;
+            xmlXPathFreeObject(xpath_obj);
+            value = origval;
+            /* reconcile "\x1b" (3 chars) -> '\x1b' (single char) */
+            while ((origval = strstr(origval, "\\x1b")) != NULL) {
+                origval[0] = '\x1b';
+                memmove(origval + 1, origval + (sizeof("\\x1b") - 1),
+                        (reminder -= (sizeof("\\x1b") - 1)));
+            }
+        } else {
+            value = strdup(value);
+        }
+        CRM_ASSERT(value != NULL);
+        ret[ret_iter++] = value;
+    }
+    ret[ret_iter] = NULL;
+
+    return ret;
+}
+
+int
+pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
+                        xmlChar **doc_txt_ptr, int *doc_txt_len)
+{
+#if HAVE_LIBXSLT
+    xmlDoc *xslt_doc;
+    xsltStylesheet *xslt;
+    xsltTransformContext *xslt_ctxt;
+    xmlDoc *res;
+    char *sfile;
+    static const char *params_ns_simple[] = {
+        "accessrendercfg:c-writable",           ACL_NS_Q_PREFIX "writable:",
+        "accessrendercfg:c-readable",           ACL_NS_Q_PREFIX "readable:",
+        "accessrendercfg:c-denied",             ACL_NS_Q_PREFIX "denied:",
+        "accessrendercfg:c-reset",              "",
+        "accessrender:extra-spacing",           "no",
+        "accessrender:self-reproducing-prefix", ACL_NS_Q_PREFIX,
+        NULL
+    }, *params_useansi[] = {
+        /* start with hard-coded defaults, then adapt per the template ones */
+        "accessrendercfg:c-writable",           "\x1b[32m",
+        "accessrendercfg:c-readable",           "\x1b[34m",
+        "accessrendercfg:c-denied",             "\x1b[31m",
+        "accessrendercfg:c-reset",              "\x1b[0m",
+        "accessrender:extra-spacing",           "no",
+        "accessrender:self-reproducing-prefix", ACL_NS_Q_PREFIX,
+        NULL
+    }, *params_noansi[] = {
+        "accessrendercfg:c-writable",           "vvv---[ WRITABLE ]---vvv",
+        "accessrendercfg:c-readable",           "vvv---[ READABLE ]---vvv",
+        "accessrendercfg:c-denied",             "vvv---[ ~DENIED~ ]---vvv",
+        "accessrendercfg:c-reset",              "",
+        "accessrender:extra-spacing",           "yes",
+        "accessrender:self-reproducing-prefix", "",
+        NULL
+    };
+    const char **params;
+    int ret;
+    xmlParserCtxtPtr parser_ctxt;
+
+    /* unfortunately, the input (coming from CIB originally) was parsed with
+       blanks ignored, and since the output is a conversion of XML to text
+       format (we would be covered otherwise thanks to implicit
+       pretty-printing), we need to dump the tree to string output first,
+       only to subsequently reparse it -- this time with blanks honoured */
+    xmlChar *annotated_dump;
+    int dump_size;
+    xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
+    res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
+                     XML_PARSE_NONET);
+    CRM_ASSERT(res != NULL);
+    xmlFree(annotated_dump);
+    xmlFreeDoc(annotated_doc);
+    annotated_doc = res;
+
+    sfile = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_base_xslt,
+                                    "access-render-2");
+    parser_ctxt = xmlNewParserCtxt();
+
+    CRM_ASSERT(sfile != NULL);
+    CRM_ASSERT(parser_ctxt != NULL);
+
+    xslt_doc = xmlCtxtReadFile(parser_ctxt, sfile, NULL, XML_PARSE_NONET);
+
+    xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
+    if (xslt == NULL) {
+        crm_crit("Problem in parsing %s", sfile);
+        return -1;
+    }
+    free(sfile);
+    sfile = NULL;
+    xmlFreeParserCtxt(parser_ctxt);
+
+    xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
+    CRM_ASSERT(xslt_ctxt != NULL);
+
+    params = (how == pcmk__acl_render_ns_simple)
+             ? params_ns_simple
+             : (how == pcmk__acl_render_text)
+             ? params_noansi
+             : parse_params(xslt_doc, params_useansi);
+
+    xsltQuoteUserParams(xslt_ctxt, params);
+
+    res = xsltApplyStylesheetUser(xslt, annotated_doc, NULL,
+                                  NULL, NULL, xslt_ctxt);
+
+    xmlFreeDoc(annotated_doc);
+    annotated_doc = NULL;
+    xsltFreeTransformContext(xslt_ctxt);
+    xslt_ctxt = NULL;
+
+    if (how == pcmk__acl_render_color && params != params_useansi) {
+        char **param_i = (char **) params;
+        do {
+            free(*param_i);
+        } while (*param_i++ != NULL);
+        free(params);
+    }
+
+    if (res == NULL) {
+        ret = -1;
+    } else {
+        ret = xsltSaveResultToString(doc_txt_ptr, doc_txt_len, res, xslt);
+        xmlFreeDoc(res);
+    }
+    xsltFreeStylesheet(xslt);
+    return ret;
+#else
+    return -1;
+#endif
 }
