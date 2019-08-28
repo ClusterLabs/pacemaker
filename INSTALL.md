@@ -1,19 +1,25 @@
 # How to Install Pacemaker
 
 ## Build Dependencies
-* automake 1.11 or later
-* autoconf 2.64 or later
-* bash
-* libtool
-* libtool-ltdl-devel
-* libuuid-devel
-* pkgconfig
-* python (or python-devel if that's preferred as a build dependency)
-* glib2-devel 2.16.0 or later
-* libxml2-devel
-* libxslt-devel 
-* bzip2-devel
-* libqb-devel
+
+| Version         | Fedora-based       | Suse-based         | Debian-based   |
+|:---------------:|:------------------:|:------------------:|:--------------:|
+| 1.11 or later   | automake           | automake           | automake       |
+| 2.64 or later   | autoconf           | autoconf           | autoconf       |
+|                 | libtool            | libtool            | libtool        |
+|                 | libtool-ltdl-devel | libtool-ltdl-devel | libltdl-dev    |
+|                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
+|                 | pkgconfig          | pkgconfig          | pkg-config     |
+| 2.7    or later | python             | python             | python3        |
+| 2.16.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
+|                 | libxml2-devel      | libxml2-devel      | libxml2-dev    |
+|                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
+|                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
+|                 | libqb-devel        | libqb-devel        | libqb-dev      |
+|                 |                    |                    | libcfg-dev     |
+|                 |                    |                    | libcpg-dev     |
+|                 |                    |                    | libcmap-dev    |
+|                 |                    |                    | libquorum-dev  |
 
 ## Cluster Stack Dependencies (Pick at least one)
 * Corosync: corosynclib-devel
