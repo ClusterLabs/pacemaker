@@ -18,7 +18,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade rules')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade rules acls_render')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -943,6 +943,52 @@ EOF
     unset CIB_shadow_dir
 }
 
+test_acls_render() {
+    local TMPXML
+
+    if test -x "$SRCDIR/tools/cibadmin" && test -x "$SRCDIR/xml"; then
+        export PCMK_config_directory="$SRCDIR/xml/base"
+        echo "Using local configuration from: $PCMK_config_directory"
+    fi
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
+    export CIB_shadow=$shadow
+
+    cat <<EOF > "$TMPXML"
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+EOF
+
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert $CRM_EX_OK
+
+    desc="An instance of ACLs render (into color)"
+    cmd="cibadmin --force --acls-render=color --user tony"
+    test_assert $CRM_EX_OK
+
+    desc="An instance of ACLs render (into full namespacing)"
+    cmd="cibadmin --force --acls-render=ns-full --user tony"
+    test_assert $CRM_EX_OK
+
+    unset CIB_shadow_dir
+    unset PCMK_config_directory
+}
+
 # Process command-line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -988,6 +1034,7 @@ for t in $tests; do
         validity) ;;
         upgrade) ;;
         rules) ;;
+        acls_render) ;;
         *)
             echo "error: unknown test $t"
             echo
@@ -1032,6 +1079,7 @@ for t in $tests; do
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
+        -e 's/\x1b/\\x1b/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
