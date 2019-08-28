@@ -363,6 +363,7 @@ lrmd_init_remote_tls_server()
      * and create a socket for each result (set IPV6_V6ONLY on IPv6 sockets
      * since IPv4 listeners will have their own sockets).
      */
+    rc = -1;
     iter = res;
     filter = AF_INET6;
     while (iter) {
