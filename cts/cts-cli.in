@@ -22,7 +22,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules access_render')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -40,7 +40,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools crm_mon acls validity upgrade rules"
+tests="dates tools crm_mon acls validity upgrade rules access_render"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -1788,6 +1788,54 @@ EOF
 
 # Ensure all command output is in portable locale for comparison
 export LC_ALL="C"
+test_access_render() {
+    local TMPXML
+
+    # while the in-tree config would get picked normally by default,
+    # there's still a risk of artificial influence (pre-existing
+    # $PCMK_config_directory, user's local config), so eforce it here
+    if test -x "$SRCDIR/tools/cibadmin" && test -x "$SRCDIR/xml"; then
+        export PCMK_config_directory="$SRCDIR/xml/base"
+        echo "Using local configuration from: $PCMK_config_directory" >&2
+    fi
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
+    export CIB_shadow=$shadow
+
+    cat <<EOF > "$TMPXML"
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+EOF
+
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert $CRM_EX_OK
+
+    desc="An instance of ACLs render (into color)"
+    cmd="cibadmin --force --access-render=color --user tony"
+    test_assert $CRM_EX_OK
+
+    desc="An instance of ACLs render (into full namespacing)"
+    cmd="cibadmin --force --access-render=ns-full --user tony"
+    test_assert $CRM_EX_OK
+
+    unset CIB_shadow_dir
+    unset PCMK_config_directory
+}
 
 # Process command-line arguments
 while [ $# -gt 0 ]; do
@@ -1835,6 +1883,7 @@ for t in $tests; do
         upgrade) ;;
         rules) ;;
         crm_mon) ;;
+        access_render) ;;
         *)
             echo "error: unknown test $t"
             echo
@@ -1905,6 +1954,7 @@ for t in $tests; do
         -e 's/Slaves:/Unpromoted:/' \
         -e 's/Master/Promoted/' \
         -e 's/Slave/Unpromoted/' \
+        -e 's/\x1b/\\x1b/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
