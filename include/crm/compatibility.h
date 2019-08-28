@@ -236,6 +236,18 @@ get_resource_typename(enum pe_obj_types type)
     return "<unknown>";
 }
 
+
+/*
+ * Version compatibility tracking incl. open-ended intervals for occasional
+ * bumps (to avoid hard to follow open-coding throughout).  Grouped by context.
+ */
+
+/* Schema version vs. evaluate-as-namespace-annotations-per-credentials */
+
+#define PCMK_COMPAT_ACL_2_MIN_INCL "pacemaker-2.0"
+#define PCMK_COMPAT_ACL_2_MAX_EXCL "pacemaker-4.0"  /* bump if remains OK */
+
+
 #ifdef __cplusplus
 }
 #endif

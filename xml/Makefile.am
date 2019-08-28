@@ -22,6 +22,9 @@ APIdir	= $(CRM_SCHEMA_DIRECTORY)/api
 CIBdir	= $(CRM_SCHEMA_DIRECTORY)
 MONdir	= $(CRM_SCHEMA_DIRECTORY)
 
+basexsltdir		= $(CRM_SCHEMA_DIRECTORY)/base
+dist_basexslt_DATA	= $(srcdir)/base/access-render-2.xsl
+
 # Extract a sorted list of available numeric schema versions
 # from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
 numeric_versions = $(shell ls -1 $(1) \
