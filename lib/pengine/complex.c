@@ -579,6 +579,16 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
     if (value != NULL && safe_str_neq("default", value)) {
         (*rsc)->migration_threshold = char2score(value);
+        if ((*rsc)->migration_threshold < 0) {
+            /* @TODO We use 1 here to preserve previous behavior, but this
+             * should probably use the default (INFINITY) or 0 (to disable)
+             * instead.
+             */
+            pe_warn_once(pe_wo_neg_threshold,
+                         XML_RSC_ATTR_FAIL_STICKINESS
+                         " must be non-negative, using 1 instead");
+            (*rsc)->migration_threshold = 1;
+        }
     }
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {

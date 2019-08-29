@@ -39,6 +39,7 @@ enum pe_warn_once_e {
     pe_wo_poweroff      = 0x0008,
     pe_wo_require_all   = 0x0010,
     pe_wo_order_score   = 0x0020,
+    pe_wo_neg_threshold = 0x0040,
 };
 
 extern uint32_t pe_wo;
