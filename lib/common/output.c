@@ -83,7 +83,7 @@ pcmk__register_format(GOptionContext *context, const char *name,
 
     if (options != NULL && context != NULL) {
         char *group_name = crm_strdup_printf("output-%s", name);
-        char *group_desc = crm_strdup_printf("%s Output Options:", name);
+        char *group_desc = crm_strdup_printf("Output Options (%s):", name);
         char *group_help = crm_strdup_printf("Show %s output help", name);
 
         GOptionGroup *group = g_option_group_new(group_name, group_desc,

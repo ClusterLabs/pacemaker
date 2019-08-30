@@ -24,6 +24,9 @@ NotifyAccess=none
 EnvironmentFile=-@CONFIGDIR@/pacemaker
 EnvironmentFile=-@CONFIGDIR@/sbd
 
+# Not actually success, but fatal failure -- this ensures no respawn
+SuccessExitStatus=100
+
 ExecStart=@sbindir@/pacemaker-remoted
 
 # Systemd v227 and above can limit the number of processes spawned by a

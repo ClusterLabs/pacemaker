@@ -624,7 +624,7 @@ is_our_log() {
 	local cat=`find_decompressor $logf`
 	local format=`$cat $logf | get_time_format`
 	local first_time=`$cat $logf | head -10 | get_first_time $format`
-	local last_time=`$cat $logf | tail -1 | get_last_time $format`
+	local last_time=`$cat $logf | tail -10 | get_last_time $format`
 
 	if [ x = "x$first_time" -o x = "x$last_time" ]; then
 	    warning "Skipping bad logfile '$1': Could not determine log dates"
