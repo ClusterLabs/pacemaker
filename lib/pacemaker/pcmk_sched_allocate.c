@@ -2839,6 +2839,15 @@ stage8(pe_working_set_t * data_set)
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 
+    if (data_set->recheck_by > 0) {
+        char *recheck_epoch = NULL;
+
+        recheck_epoch = crm_strdup_printf("%llu",
+                                          (long long) data_set->recheck_by);
+        crm_xml_add(data_set->graph, "recheck-by", recheck_epoch);
+        free(recheck_epoch);
+    }
+
 /* errors...
    slist_iter(action, action_t, action_list, lpc,
    if(action->optional == FALSE && action->runnable == FALSE) {
