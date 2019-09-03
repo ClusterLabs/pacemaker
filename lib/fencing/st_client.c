@@ -523,7 +523,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         value = g_hash_table_lookup(device_args, buffer);
     }
     if (value) {
-        crm_info("Substituting action '%s' for requested operation '%s'", value, action);
+        crm_debug("Substituting action '%s' for requested operation '%s'", value, action);
         action = value;
     }
 
