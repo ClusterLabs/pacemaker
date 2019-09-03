@@ -12,13 +12,24 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  INSTALL.md		\
 			  README.markdown	\
 			  autogen.sh		\
-			  pacemaker.spec.in	\
-			  rpmlintrc		\
 			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4
+			  m4/gnulib-tool.m4	\
+			  rpm/rpmlintrc		\
+			  rpm/pacemaker.spec.in
 
-MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4
+DISTCLEANFILES		= config.status
+
+MAINTAINERCLEANFILES	= Makefile.in		\
+			  aclocal.m4		\
+			  config.guess		\
+			  config.sub		\
+			  configure		\
+			  depcomp		\
+			  install-sh		\
+			  ltmain.sh		\
+			  missing		\
+			  py-compile		\
+			  test-driver
 
 # Disable building Publican documentation when doing "make distcheck", because
 # some of our book sources are in the source directory, while others are
@@ -56,21 +67,21 @@ core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
 		echo "Building $$subdir"; \
-		$(MAKE) -C $$subdir all || exit 1; \
+		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
 	done
 
 core-install:
 	@echo "Installing only core components: $(CORE_INSTALL)"
 	@for subdir in $(CORE_INSTALL); do \
 	    echo "Installing $$subdir"; \
-	    $(MAKE) -C $$subdir install || exit 1; \
+	    $(MAKE) $(AM_MAKEFLAGS) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
 		echo "Cleaning $$subdir"; \
-		$(MAKE) -C $$subdir clean || exit 1; \
+		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir clean || exit 1; \
 	done
 
 install-exec-local:
@@ -90,7 +101,10 @@ install-exec-local:
 # Use chown because the user/group may not exist
 
 clean-generic:
-	rm -f $(TARFILE) *.tar.bz2 *.sed
+	-rm -f *.tar.bz2 *.sed
 
-dist-clean-local:
-	rm -f autoconf automake autoheader
+clean-local:
+	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
+
+distclean-local:
+	-rm -rf libltdl autom4te.cache

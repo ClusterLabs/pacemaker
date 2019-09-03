@@ -340,13 +340,13 @@ brand-rpm-install: brand-rpm-build
 	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 pdf:
-	$(MAKE) DOCBOOK_FORMATS="pdf" all-local
+	$(MAKE) $(AM_MAKEFLAGS) DOCBOOK_FORMATS="pdf" all-local
 
 
 # Annotated source code as HTML
 
 global:
-	$(MAKE) -C .. clean-generic
+	$(MAKE) $(AM_MAKEFLAGS) -C .. clean-generic
 	cd .. && gtags -q && htags -sanhIT doc
 
 global-upload: global
@@ -365,8 +365,8 @@ global-clean:
 	groff -mandoc `man -w ./$<` -T html > $@
 
 manhtml:
-	$(MAKE) -C .. all
-	find .. -name "[a-z]*.[78]" -exec $(MAKE) \{\}.html \;
+	$(MAKE) $(AM_MAKEFLAGS) -C .. all
+	find .. -name "[a-z]*.[78]" -exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 manhtml-upload: manhtml
 	find .. -name "[a-z]*.[78].html" -exec \
@@ -408,7 +408,8 @@ if BUILD_DOCBOOK
 		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
 endif
-	$(MAKE) DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(DOCBOOK_LANGS)" all-local
+	$(MAKE) $(AM_MAKEFLAGS) DOCBOOK_FORMATS="pdf,html,html-single,epub"		\
+		DOCBOOK_LANGS="$(DOCBOOK_LANGS)" all-local
 	@echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
 	@for book in $(docbook); do 									\
