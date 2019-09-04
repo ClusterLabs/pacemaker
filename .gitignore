@@ -113,10 +113,13 @@ doc/acls.html
 doc/crm_fencing.html
 doc/publican-catalog*
 /maint/mocked/based
+/fencing/config.c
 fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
+fencing/stonithd-config.c
+fencing/stonithd-config.h
 /lib/common/md5.c
 lrmd/lrmd
 lrmd/lrmd_internal_ctl
