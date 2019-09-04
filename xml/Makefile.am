@@ -44,9 +44,19 @@ CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 # Names of all schemas (including top level and those included by others)
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
-# All static schema files
+# Static schema files and transforms (only CIB has transforms)
+#
+# This is more complicated than it should be due to the need to support
+# VPATH builds and "make distcheck". We need the absolute paths for reliable
+# substitution back and forth, and relative paths for distributed files.
+CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
+CIB_abs_xsl		= $(abs_srcdir)/upgrade06.xsl			\
+			  $(abs_srcdir)/upgrade-1.3.xsl
+MON_abs_files		= $(abs_srcdir)/crm_mon.rng
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
-MON_files		= crm_mon.rng
+CIB_xsl			= $(srcdir)/upgrade06.xsl			\
+			  $(srcdir)/upgrade-1.3.xsl
+MON_files		= $(srcdir)/crm_mon.rng
 
 # Sorted lists of all numeric schema versions
 CIB_numeric_versions	= $(call numeric_versions,${CIB_files})
@@ -57,6 +67,10 @@ CIB_max			?= $(lastword $(CIB_numeric_versions))
 # Sorted lists of all schema versions (including "next")
 CIB_versions		= next $(CIB_numeric_versions)
 
+# Build tree locations of static schema files and transforms (for VPATH builds)
+CIB_build_copies	= $(foreach f,$(CIB_abs_files) $(CIB_abs_xsl),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
+MON_build_copies	= $(foreach f,$(MON_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
+
 # Dynamically generated schema files
 CIB_generated		= pacemaker.rng $(foreach base,$(CIB_versions),pacemaker-$(base).rng) versions.rng
 
@@ -64,9 +78,7 @@ CIB_version_pairs	= $(call version_pairs,${CIB_numeric_versions})
 CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
 CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${CIB_version_pairs})
 
-dist_CIB_DATA		= $(CIB_files)					\
-			  upgrade06.xsl					\
-			  upgrade-1.3.xsl				\
+dist_CIB_DATA		= $(CIB_files) $(CIB_xsl)			\
 			  crm.dtd					\
 			  crm-transitional.dtd
 dist_MON_DATA		= $(MON_files)
@@ -89,7 +101,7 @@ cib-versions:
 pacemaker.rng: pacemaker-$(CIB_max).rng
 	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
-pacemaker-%.rng: $(CIB_files) best-match.sh Makefile.am
+pacemaker-%.rng: $(CIB_build_copies) best-match.sh Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
 	$(AM_V_at)echo '  <start>' >> $@
@@ -180,3 +192,13 @@ fulldiff: best-match.sh
 	$(call version_diff,${CIB_version_pairs})
 
 CLEANFILES = $(CIB_generated)
+
+# Enable ability to use $@ in prerequisite
+.SECONDEXPANSION:
+
+# For VPATH builds, copy the static schema files into the build tree
+$(CIB_build_copies) $(MON_build_copies): $$(subst $(abs_builddir),$(srcdir),$$(@))
+	$(AM_V_GEN)if [ "x$(srcdir)" != "x$(builddir)" ]; then	\
+		$(MKDIR_P) "$(dir $(@))";			\
+		cp "$(<)" "$(@)";				\
+	fi
