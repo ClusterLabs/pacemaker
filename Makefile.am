@@ -85,7 +85,6 @@ core-clean:
 	done
 
 install-exec-local:
-	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(PACEMAKER_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CORE_DIR)

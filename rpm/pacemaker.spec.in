@@ -78,14 +78,11 @@
 
 ## Different distros name certain packages differently
 %if 0%{?suse_version} > 0
-%global pkgname_libtool_devel
-%global pkgname_libtool_devel_arch
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
 %global pkgname_gnutls_devel libgnutls-devel
 %global pkgname_shadow_utils shadow
 %global pkgname_procps procps
-%global pkgname_publican
 %global pkgname_corosync_lib libcorosync
 %global pkgname_glue_libs libglue
 %global pkgname_pcmk_libs lib%{name}3
@@ -254,7 +251,7 @@ BuildRequires: libqb-devel >= 0.13.0
 BuildRequires: coreutils findutils grep sed
 
 # Required for core functionality
-BuildRequires: automake autoconf gcc libtool pkgconfig %{pkgname_libtool_devel}
+BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
@@ -277,7 +274,7 @@ BuildRequires: %{pkgname_glue_libs}-devel
 ## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{pkgname_publican}
+BuildRequires: inkscape asciidoc %{?pkgname_publican}
 %endif
 %endif
 
@@ -338,7 +335,7 @@ Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
 Conflicts:     sbd < 1.4.0
 
-%description libs
+%description -n %{pkgname_pcmk_libs}
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -392,13 +389,13 @@ Summary:       Pacemaker development package
 Group:         Development/Libraries
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      libuuid-devel%{?_isa} %{pkgname_libtool_devel_arch}
+Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
 Requires:      %{pkgname_corosync_lib}-devel%{?_isa} >= 2.0.0
 
-%description libs-devel
+%description -n %{pkgname_pcmk_libs}-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -662,7 +659,7 @@ fi
 %systemd_postun_with_restart crm_mon.service
 %endif
 
-%pre libs
+%pre -n %{pkgname_pcmk_libs}
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g %{hacluster_id}
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u %{hacluster_id} -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
@@ -671,8 +668,8 @@ exit 0
 %ldconfig_scriptlets libs
 %ldconfig_scriptlets cluster-libs
 %else
-%post libs -p /sbin/ldconfig
-%postun libs -p /sbin/ldconfig
+%post -n %{pkgname_pcmk_libs} -p /sbin/ldconfig
+%postun -n %{pkgname_pcmk_libs} -p /sbin/ldconfig
 
 %post cluster-libs -p /sbin/ldconfig
 %postun cluster-libs -p /sbin/ldconfig
@@ -798,7 +795,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files libs
+%files -n %{pkgname_pcmk_libs}
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
@@ -853,7 +850,7 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
-%files libs-devel
+%files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with coverage}
