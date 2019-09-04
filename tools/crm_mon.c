@@ -3190,8 +3190,31 @@ fence_action_str(const char *action)
  * \param[in] stream     File stream to display output to
  * \param[in] event      stonith event
  */
+static gboolean 
+is_later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
+{
+
+     gboolean ret = FALSE;
+
+     for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
+        if (prev_hp == event) {
+            break;
+        }
+
+         if ((prev_hp->state == st_done) &&
+            safe_str_eq(event->target, prev_hp->target) &&
+            safe_str_eq(event->action, prev_hp->action) &&
+            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            (event->completed < prev_hp->completed)) {
+            ret = TRUE;
+            break;
+        }
+    }
+    return ret;
+}
+
 static void
-print_stonith_action(FILE *stream, stonith_history_t *event)
+print_stonith_action(FILE *stream, stonith_history_t *event, stonith_history_t *top_history)
 {
     char *action_s = fence_action_str(event->action);
     time_t completed = event->completed;
@@ -3245,12 +3268,13 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                     break;
                 case st_failed:
                     print_as("* %s of %s failed: delegate=%s, client=%s, origin=%s,\n"
-                             "    %s='%s'\n",
+                             "    %s='%s' %s\n",
                              action_s, event->target,
                              event->delegate ? event->delegate : "",
                              event->client, event->origin,
                              fence_full_history?"completed":"last-failed",
-                             run_at_s?run_at_s:"");
+                             run_at_s?run_at_s:"",
+                             is_later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
                     break;
                 default:
                     print_as("* %s of %s pending: client=%s, origin=%s\n",
@@ -3273,12 +3297,13 @@ print_stonith_action(FILE *stream, stonith_history_t *event)
                     break;
                 case st_failed:
                     fprintf(stream, "  <li>%s of %s failed: delegate=%s, "
-                                    "client=%s, origin=%s, %s='%s'</li>\n",
+                                    "client=%s, origin=%s, %s='%s' %s</li>\n",
                                     action_s, event->target,
                                     event->delegate ? event->delegate : "",
                                     event->client, event->origin,
                                     fence_full_history?"completed":"last-failed",
-                                    run_at_s?run_at_s:"");
+                                    run_at_s?run_at_s:"",
+                                    is_later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
                     break;
                 default:
                     fprintf(stream, "  <li>%s of %s pending: client=%s, "
@@ -3340,7 +3365,7 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, history);
         }
     }
 
@@ -3395,7 +3420,7 @@ print_stonith_pending(FILE *stream, stonith_history_t *history)
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, NULL);
         }
 
         /* End section */
@@ -3446,7 +3471,7 @@ print_stonith_history(FILE *stream, stonith_history_t *history)
 
     for (hp = history; hp; hp = hp->next) {
         if ((hp->state != st_failed) || (output_format == mon_output_xml)) {
-            print_stonith_action(stream, hp);
+            print_stonith_action(stream, hp, NULL);
         }
     }
 
