@@ -448,14 +448,14 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             continue;
         }
 
-        out->message(out, "stonith-event", hp, 1);
+        out->message(out, "stonith-event", hp, 1, history);
     }
 
     if (latest) {
         if (quiet && out->supports_quiet) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest, 0);
+            out->message(out, "stonith-event", latest, 0, NULL);
         }
     }
 

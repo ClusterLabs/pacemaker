@@ -2513,3 +2513,29 @@ stonith__parse_targets(const char *target_spec)
     }
     return targets;
 }
+
+/*!
+ * \internal
+ * \brief Determine if a later stonith event succeeded.
+ */
+gboolean
+stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
+{
+     gboolean ret = FALSE;
+
+     for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
+        if (prev_hp == event) {
+            break;
+        }
+
+         if ((prev_hp->state == st_done) &&
+            safe_str_eq(event->target, prev_hp->target) &&
+            safe_str_eq(event->action, prev_hp->action) &&
+            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            (event->completed < prev_hp->completed)) {
+            ret = TRUE;
+            break;
+        }
+    }
+    return ret;
+}
