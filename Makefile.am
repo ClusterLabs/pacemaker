@@ -23,13 +23,24 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  INSTALL.md		\
 			  README.markdown	\
 			  autogen.sh		\
-			  pacemaker.spec.in	\
-			  rpmlintrc		\
 			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4
+			  m4/gnulib-tool.m4	\
+			  rpm/rpmlintrc		\
+			  rpm/pacemaker.spec.in
 
-MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4
+DISTCLEANFILES		= config.status
+
+MAINTAINERCLEANFILES	= Makefile.in		\
+			  aclocal.m4		\
+			  config.guess		\
+			  config.sub		\
+			  configure		\
+			  depcomp		\
+			  install-sh		\
+			  ltmain.sh		\
+			  missing		\
+			  py-compile		\
+			  test-driver
 
 # Disable building Publican documentation when doing "make distcheck", because
 # some of our book sources are in the source directory, while others are
@@ -106,7 +117,10 @@ endif
 # Use chown because the user/group may not exist
 
 clean-generic:
-	rm -f $(TARFILE) *.tar.bz2 *.sed
+	-rm -f *.tar.bz2 *.sed
 
-dist-clean-local:
-	rm -f autoconf automake autoheader
+clean-local:
+	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
+
+distclean-local:
+	-rm -rf libltdl autom4te.cache

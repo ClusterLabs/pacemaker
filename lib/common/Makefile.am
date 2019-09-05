@@ -19,6 +19,8 @@ include $(top_srcdir)/Makefile.common
 
 AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
 
+MOSTLYCLEANFILES	= md5.c
+
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
 
@@ -65,7 +67,14 @@ libcrmcommon_la_SOURCES        += utils.c
 libcrmcommon_la_SOURCES        += watchdog.c
 libcrmcommon_la_SOURCES        += xml.c
 libcrmcommon_la_SOURCES        += xpath.c
-libcrmcommon_la_SOURCES        += ../gnu/md5.c
+
+# It's possible to build the library adding ../gnu/md5.c directly to SOURCES,
+# but distclean chokes on that because it tries to include the source's .Plo
+# file, which may have already been cleaned.
+nodist_libcrmcommon_la_SOURCES	= md5.c
+
+md5.c: ../gnu/md5.c
+	cp "$<" "$@"
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

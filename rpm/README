@@ -1,0 +1,2 @@
+This directory contains files useful for building rpm packages for pacemaker.
+Anyone not building RPMs can safely ignore it.

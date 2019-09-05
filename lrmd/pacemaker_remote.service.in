@@ -23,6 +23,9 @@ NotifyAccess=none
 EnvironmentFile=-@CONFIGDIR@/pacemaker
 EnvironmentFile=-@CONFIGDIR@/sbd
 
+# Not actually success, but fatal failure -- this ensures no respawn
+SuccessExitStatus=100
+
 ExecStart=@sbindir@/pacemaker_remoted
 
 # Uncomment TasksMax if your systemd version supports it.
