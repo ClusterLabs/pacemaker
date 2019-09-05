@@ -14,7 +14,7 @@ Makefile.in
 *.pyc
 *.bz2
 *.tar.gz
-*.rpm
+*.tgz
 *.la
 *.lo
 *.o
@@ -31,11 +31,13 @@ autom4te.cache/
 automake
 build.counter
 compile
+/confdefs.h
 config.guess
 config.log
 config.status
 config.sub
 configure
+/conftest*
 depcomp
 install-sh
 include/stamp-*
@@ -143,7 +145,9 @@ publican.cfg
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
+/lib/common/md5.c
 /maint/testcc
+/maint/mocked/based
 scratch
 /tools/attrd_updater
 /tools/cibadmin
@@ -166,6 +170,15 @@ xml/api/api-result*.rng
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
+
+# Packager artifacts
+*.rpm
+/mock
+/pacemaker.spec
+/rpm/[A-Z]*
+
+# make dist/export working directory
+pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 
 # Test detritus
 /cts/.regression.failed.diff
@@ -202,11 +215,10 @@ lib/gnu/stdalign.h
 /fencing
 /lrmd
 /mcp
+/pacemaker-*.spec
 /pengine
 
 #Other 
-mock
-pacemaker*.spec
 coverity-*
 logs
 *.patch
