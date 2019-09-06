@@ -78,10 +78,12 @@ dist_pe_DATA	= $(PE_TESTS) \
 		  $(wildcard scheduler/*.stderr)
 
 # For "make check", run a single scheduler test
-TESTS = scheduler/bug-rh-1097457.xml
-TEST_EXTENSIONS = .xml
-XML_LOG_COMPILER = ./cts-scheduler
-AM_XML_LOG_FLAGS = -V --run
+TESTS			= scheduler/bug-rh-1097457.xml
+TEST_EXTENSIONS		= .xml
+XML_LOG_COMPILER	= ./cts-scheduler
+AM_XML_LOG_FLAGS	= --io-dir="$(srcdir)/scheduler"	\
+			  --out-dir="$(builddir)"		\
+			  -V --run
 
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/*.xml; do       \

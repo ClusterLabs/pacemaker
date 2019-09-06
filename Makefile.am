@@ -35,9 +35,13 @@ MAINTAINERCLEANFILES	= Makefile.in		\
 # some of our book sources are in the source directory, while others are
 # dynamically generated in the build directory, and publican can't handle that.
 #
-# @TODO To support VPATH builds for Publican, we'd probably have to create
-# a separate subtree of the build directory to use as Publican's source
-# directory, and copy the static sources into it.
+# In a non-VPATH build, doc isn't entered with a plain "make" because the
+# GNUmakefile sets "core" as the default target. However in a VPATH build,
+# there is no GNUmakefile, so "all" becomes the default target.
+#
+# @TODO To support VPATH builds for Publican, we could use the same "copy all
+# static inputs into the build tree" trick that xml/Makefile.am uses for
+# static schema files.
 AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
 
 # Only these will get installed with a plain "make install"
