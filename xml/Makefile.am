@@ -247,6 +247,11 @@ fulldiff: best-match.sh
 
 CLEANFILES = $(API_generated) $(CIB_generated)
 
+clean-local:
+	if [ "x$(srcdir)" != "x$(builddir)" ]; then					\
+		rm -f $(API_build_copies) $(CIB_build_copies) $(MON_build_copies);	\
+	fi
+
 # Enable ability to use $@ in prerequisite
 .SECONDEXPANSION:
 
