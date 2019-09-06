@@ -85,5 +85,7 @@ install-exec-local:
 
 uninstall-local:
 
+CLEANFILES	= $(builddir)/.regression.failed.diff
+
 clean-local:
 	rm -f test10/*.pe.* $(man7_MANS)
