@@ -106,8 +106,13 @@ install-exec-local:
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
 
-clean-local:
-	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
+# In a normal build, this file is included by GNUmakefile, which serves as the
+# "real" makefile. But in a VPATH build, GNUmakefile won't exist in the build
+# tree, and this file will be the "real" makefile. EXTRA_CLEAN_TARGETS handles
+# both cases: GNUmakefile defines it before including this file, so the
+# clean-local target can clean up files created by GNUmakefile targets.
+# If this file is used alone, the variable will be undefined.
+clean-local: $(EXTRA_CLEAN_TARGETS)
 
 distclean-local:
 	-rm -rf libltdl autom4te.cache
