@@ -33,13 +33,12 @@ dist_test10_DATA	= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.
 beekhof:
 	echo $(shell ls -1 test10/*.xml)
 
-#TESTS = test10/*.xml
-TESTS = test10/bug-rh-1097457.xml
-TEST_EXTENSIONS = .xml
-XML_LOG_COMPILER = ./regression.sh
-AM_XML_LOG_FLAGS = -V --run 
-#LOG_COMPILER = 
-#AM_LOG_FLAGS = -V
+# Don't do anything for "make check". This won't work with "make distcheck"
+# unless we backport the equivalent of 3d6906e, which isn't worth the effort.
+#TESTS = test10/bug-rh-1097457.xml
+#TEST_EXTENSIONS = .xml
+#XML_LOG_COMPILER = ./regression.sh
+#AM_XML_LOG_FLAGS = -V --run 
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la	\
