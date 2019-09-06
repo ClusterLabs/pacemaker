@@ -18,6 +18,11 @@
 
 default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
 
+# The toplevel "clean" targets are generated from Makefile.am, not this file.
+# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
+# define this target, which Makefile.am can use as a dependency of clean-local.
+EXTRA_CLEAN_TARGETS	= ancillary-clean
+
 -include Makefile
 
 # The main purpose of this GNUmakefile is that its targets can be invoked
@@ -437,8 +442,5 @@ gnulib-update:
 	cd gnulib && git pull
 	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)
 
-# The toplevel "clean" targets are generated from Makefile.am, not this file.
-# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
-# define this target, which Makefile.am can call from clean-local.
 ancillary-clean: export-clean spec-clean srpm-clean mock-clean coverity-clean
 	-rm -f $(TARFILE)
