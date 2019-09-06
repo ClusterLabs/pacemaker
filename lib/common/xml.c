@@ -531,6 +531,10 @@ copy_in_properties(xmlNode * target, xmlNode * src)
             const char *p_value = pcmk__xml_attr_value(a);
 
             expand_plus_plus(target, p_name, p_value);
+            if (xml_acl_denied(target)) {
+                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
+                return;
+            }
         }
     }
 

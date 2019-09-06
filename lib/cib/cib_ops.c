@@ -455,6 +455,11 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     copy_in_properties(target, update);
 
+    if (xml_acl_denied(target)) {
+        crm_notice("Cannot update <%s id=%s>", pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
+        return -EACCES;
+    }
+
     crm_trace("Processing children of <%s%s%s%s>", object_name,
               ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));

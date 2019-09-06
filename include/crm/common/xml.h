@@ -58,6 +58,11 @@ xmlDoc *getDocPtr(xmlNode * node);
  * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
  * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
+ * The function exits prematurely when any attribute cannot be copied for
+ * ACLs violation.  Even without bailing out, the result can possibly be
+ * incosistent with expectations in that case, hence the caller shall,
+ * aposteriori, verify that no document-level-tracked denial was indicated
+ * with \c{xml_acl_denied(target)} and drop whole such intermediate object.
  *
  * \param[in,out] target  Element to receive attributes from #src element
  * \param[in]     src     Element carrying attributes to copy over to #target

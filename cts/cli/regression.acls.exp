@@ -374,11 +374,13 @@ crm_attribute: Error performing operation: Permission denied
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@id]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@class]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@provider]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@type]
 pcmk__apply_creation_acl 	trace: Creation of <primitive> scaffolding with id="<unset>" is implicitly allowed
 Call failed: Permission denied
+<failed>
+  <failed_update id="dummy" object_type="primitive" operation="cib_create" reason="Permission denied">
+    <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+  </failed_update>
+</failed>
 =#=#=#= End test: unknownguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - unknownguy: Create a resource
 =#=#=#= Begin test: l33t-haxor: Query configuration =#=#=#=
@@ -2356,11 +2358,13 @@ crm_attribute: Error performing operation: Permission denied
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@id]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@class]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@provider]
-pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@type]
 pcmk__apply_creation_acl 	trace: Creation of <primitive> scaffolding with id="<unset>" is implicitly allowed
 Call failed: Permission denied
+<failed>
+  <failed_update id="dummy" object_type="primitive" operation="cib_create" reason="Permission denied">
+    <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+  </failed_update>
+</failed>
 =#=#=#= End test: unknownguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - unknownguy: Create a resource
 =#=#=#= Begin test: l33t-haxor: Query configuration =#=#=#=
