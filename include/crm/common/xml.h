@@ -55,15 +55,20 @@ xmlNode *get_message_xml(xmlNode * msg, const char *field);
 xmlDoc *getDocPtr(xmlNode * node);
 
 /*
- * Replacement function for xmlCopyPropList which at the very least,
- * doesn't work the way *I* would expect it to.
+ * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
- * Copy all the attributes/properties from src into target.
+ * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
  *
- * Not recursive, does not return anything.
+ * \param[in,out] target  Element to receive attributes from #src element
+ * \param[in]     src     Element carrying attributes to copy over to #target
  *
+ * \note Original commit 1c632c506 sadly haven't stated which otherwise
+ *       assumed behaviours of xmlCopyPropList were missing beyond otherwise
+ *       custom extensions like said ACLs and "atomic increment" (that landed
+ *       later on, anyway).
  */
-void copy_in_properties(xmlNode * target, xmlNode * src);
+void copy_in_properties(xmlNode *target, xmlNode *src);
+
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
