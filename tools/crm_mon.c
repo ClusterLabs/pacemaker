@@ -221,12 +221,6 @@ no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    args->output_ty = strdup("text");
-    output_format = mon_output_plain;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -854,6 +848,13 @@ main(int argc, char **argv)
             args->output_ty = strdup("xml");
             output_format = mon_output_xml;
             options.mon_ops |= mon_op_one_shot;
+        } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (args->output_ty != NULL) {
+                free(args->output_ty);
+            }
+
+            args->output_ty = strdup("text");
+            output_format = mon_output_plain;
         } else {
             /* Neither old nor new arguments were given, so set the default. */
             if (args->output_ty != NULL) {
