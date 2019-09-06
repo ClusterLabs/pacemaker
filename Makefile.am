@@ -67,12 +67,9 @@ licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)
 
 # Scratch file for ad-hoc testing
-noinst_PROGRAMS = scratch
+EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
-scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
-
-scratch.c:
-	echo 'int main(void){}' >$@
+scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 core:
 	@echo "Building only core components and tests: $(CORE)"
@@ -120,6 +117,7 @@ clean-generic:
 # clean-local target can clean up files created by GNUmakefile targets.
 # If this file is used alone, the variable will be undefined.
 clean-local: $(EXTRA_CLEAN_TARGETS)
+	-rm -f scratch
 
 distclean-local:
 	-rm -rf libltdl autom4te.cache
