@@ -1004,9 +1004,6 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
     GListPtr gIter = NULL;
     int print_opts = get_resource_display_options(mon_ops, state->output_format);
 
-    fprintf(state->stream, "<?xml version=\"1.0\"?>\n");
-    fprintf(state->stream, "<crm_mon version=\"%s\">\n", VERSION);
-
     print_cluster_summary(state, data_set, mon_ops, show);
 
     /*** NODES ***/
@@ -1052,9 +1049,6 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
     if (show & mon_show_bans) {
         print_neg_locations(state, data_set, mon_ops, prefix);
     }
-
-    fprintf(state->stream, "</crm_mon>\n");
-    fflush(state->stream);
 }
 
 int
@@ -1065,17 +1059,6 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
 {
     GListPtr gIter = NULL;
     int print_opts = get_resource_display_options(mon_ops, state->output_format);
-
-    if (state->output_format == mon_output_cgi) {
-        fprintf(state->stream, "Content-Type: text/html\n\n");
-    }
-
-    fprintf(state->stream, "<html>\n");
-    fprintf(state->stream, " <head>\n");
-    fprintf(state->stream, "  <title>Cluster status</title>\n");
-    fprintf(state->stream, "  <meta http-equiv=\"refresh\" content=\"%d\">\n", reconnect_msec / 1000);
-    fprintf(state->stream, " </head>\n");
-    fprintf(state->stream, "<body>\n");
 
     print_cluster_summary(state, data_set, mon_ops, show);
 
@@ -1132,7 +1115,5 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
         print_neg_locations(state, data_set, mon_ops, prefix);
     }
 
-    fprintf(state->stream, "</body>\n");
-    fprintf(state->stream, "</html>\n");
     return 0;
 }
