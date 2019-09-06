@@ -110,6 +110,8 @@ install-exec-local:
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
 
+PACKAGE         ?= pacemaker
+
 # In a normal build, this file is included by GNUmakefile, which serves as the
 # "real" makefile. But in a VPATH build, GNUmakefile won't exist in the build
 # tree, and this file will be the "real" makefile. EXTRA_CLEAN_TARGETS handles
@@ -117,7 +119,7 @@ clean-generic:
 # clean-local target can clean up files created by GNUmakefile targets.
 # If this file is used alone, the variable will be undefined.
 clean-local: $(EXTRA_CLEAN_TARGETS)
-	-rm -f scratch
+	-rm -f scratch $(builddir)/$(PACKAGE)-*.tar.gz
 
 distclean-local:
 	-rm -rf libltdl autom4te.cache
