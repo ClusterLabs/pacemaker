@@ -96,9 +96,6 @@ export:
 	    echo "`date`: Using existing tarball: $(TARFILE)";			\
 	fi
 
-export-clean:
-	-rm -f $(abs_builddir)/$(PACKAGE)-*.tar.gz
-
 ## RPM-related targets
 
 # Where to put RPM artifacts; possible values:
@@ -442,5 +439,5 @@ gnulib-update:
 	cd gnulib && git pull
 	gnulib/gnulib-tool --source-base=lib/gnu --lgpl=2 --no-vc-files --import $(GNU_MODS)
 
-ancillary-clean: export-clean spec-clean srpm-clean mock-clean coverity-clean
+ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean
 	-rm -f $(TARFILE)
