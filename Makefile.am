@@ -39,10 +39,17 @@ MAINTAINERCLEANFILES	= Makefile.in		\
 # GNUmakefile sets "core" as the default target. However in a VPATH build,
 # there is no GNUmakefile, so "all" becomes the default target.
 #
+# Also, don't try to install files outside the build directory.
+#
 # @TODO To support VPATH builds for Publican, we could use the same "copy all
 # static inputs into the build tree" trick that xml/Makefile.am uses for
 # static schema files.
-AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
+AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""					\
+				  --prefix="$$dc_install_base/usr"			\
+				  --sysconfdir="$$dc_install_base/etc"			\
+				  --with-initdir="$$dc_install_base/etc/init.d"		\
+				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
+				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get installed with a plain "make install"
 CORE_INSTALL	= replace include lib daemons tools xml
@@ -60,12 +67,9 @@ licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)
 
 # Scratch file for ad-hoc testing
-noinst_PROGRAMS = scratch
+EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
-scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
-
-scratch.c:
-	echo 'int main(void){}' >$@
+scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 core:
 	@echo "Building only core components and tests: $(CORE)"
@@ -106,8 +110,16 @@ install-exec-local:
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
 
-clean-local:
-	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
+PACKAGE         ?= pacemaker
+
+# In a normal build, this file is included by GNUmakefile, which serves as the
+# "real" makefile. But in a VPATH build, GNUmakefile won't exist in the build
+# tree, and this file will be the "real" makefile. EXTRA_CLEAN_TARGETS handles
+# both cases: GNUmakefile defines it before including this file, so the
+# clean-local target can clean up files created by GNUmakefile targets.
+# If this file is used alone, the variable will be undefined.
+clean-local: $(EXTRA_CLEAN_TARGETS)
+	-rm -f scratch $(builddir)/$(PACKAGE)-*.tar.gz
 
 distclean-local:
 	-rm -rf libltdl autom4te.cache

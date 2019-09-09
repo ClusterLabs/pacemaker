@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,7 +16,7 @@ init_SCRIPTS		= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker.service
+systemdsystemunit_DATA	= pacemaker.service
 endif
 
 EXTRA_DIST		= pacemaker.sysconfig

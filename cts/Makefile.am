@@ -90,6 +90,8 @@ scheduler-list:
 		echo $$(basename $$T .xml);             \
 	done
 
+CLEANFILES	= $(builddir)/.regression.failed.diff
+
 clean-local:
 	rm -f scheduler/*.pe.*
 
