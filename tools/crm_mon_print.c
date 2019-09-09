@@ -23,6 +23,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/common/internal.h>
 #include <crm/common/util.h>
+#include <crm/fencing/internal.h>
 
 #include "crm_mon.h"
 
@@ -1889,29 +1890,6 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
  * \param[in] stream     File stream to display output to
  * \param[in] event      stonith event
  */
-static gboolean 
-is_later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
-{
-
-     gboolean ret = FALSE;
-
-     for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
-        if (prev_hp == event) {
-            break;
-        }
-
-         if ((prev_hp->state == st_done) &&
-            safe_str_eq(event->target, prev_hp->target) &&
-            safe_str_eq(event->action, prev_hp->action) &&
-            safe_str_eq(event->delegate, prev_hp->delegate) &&
-            (event->completed < prev_hp->completed)) {
-            ret = TRUE;
-            break;
-        }
-    }
-    return ret;
-}
-
 static void
 print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops, stonith_history_t *top_history)
 {
@@ -1972,7 +1950,7 @@ print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int 
                              event->client, event->origin,
                              is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
                              run_at_s?run_at_s:"",
-                             is_later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
+                             stonith__later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
                     break;
                 default:
                     print_as(state->output_format, "* %s of %s pending: client=%s, origin=%s\n",
@@ -2001,7 +1979,7 @@ print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int 
                                     event->client, event->origin,
                                     is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
                                     run_at_s?run_at_s:"",
-                                    is_later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
+                                    stonith__later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
                     break;
                 default:
                     fprintf(state->stream, "  <li>%s of %s pending: client=%s, "

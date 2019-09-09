@@ -52,6 +52,8 @@ void stonith__register_messages(pcmk__output_t *out);
 
 GList *stonith__parse_targets(const char *hosts);
 
+gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
+
 #  define ST_LEVEL_MAX 10
 
 #  define F_STONITH_CLIENTID      "st_clientid"

@@ -173,9 +173,9 @@ text_list_item(pcmk__output_t *out, const char *id, const char *content) {
 
     if (fancy) {
         if (id != NULL) {
-            pcmk__indented_printf(out, "* %s: %s\n", id, content);
+            pcmk__indented_printf(out, "%s: %s\n", id, content);
         } else {
-            pcmk__indented_printf(out, "* %s\n", content);
+            pcmk__indented_printf(out, "%s\n", content);
         }
     } else {
         fprintf(out->dest, "%s\n", content);

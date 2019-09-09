@@ -831,7 +831,11 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *pre_te
     }
 
     if ((options & pe_print_rsconly)) {
-        /* nothing */
+        if (options & pe_print_suppres_nl) {
+            /* nothing */
+        } else {
+            fprintf(out->dest, "\n");
+        }
     } else if (g_list_length(rsc->running_on) > 1) {
         GListPtr gIter = rsc->running_on;
 

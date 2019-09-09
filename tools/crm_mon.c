@@ -47,6 +47,9 @@
 
 #include "crm_mon.h"
 
+#define SUMMARY "Provides a summary of cluster's current state.\n\n" \
+                "Outputs varying levels of detail in a number of different formats."
+
 /*
  * Definitions indicating which items to print
  */
@@ -103,7 +106,6 @@ static pcmk__supported_format_t formats[] = {
 struct {
     int reconnect_msec;
     int fence_history_level;
-    int verbose;
     gboolean daemonize;
     gboolean show_bans;
     char *pid_file;
@@ -219,12 +221,6 @@ no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    args->output_ty = strdup("text");
-    output_format = mon_output_plain;
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
@@ -244,6 +240,13 @@ print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer da
 static gboolean
 print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.mon_ops |= mon_op_print_pending;
+    return TRUE;
+}
+
+static gboolean
+print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.mon_ops |= mon_op_print_timing;
+    show |= mon_show_operations;
     return TRUE;
 }
 
@@ -365,7 +368,7 @@ static GOptionEntry display_entries[] = {
       "Display resource operation history",
       NULL },
 
-    { "timing-details", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_operations_cb,
+    { "timing-details", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_timing_cb,
       "Display resource operation history with timing details",
       NULL },
 
@@ -747,8 +750,6 @@ avoid_zombies()
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
-    GOptionGroup *mode_group, *display_group, *addl_group;
-    GOptionGroup *main_group;
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &(args->quiet),
@@ -771,25 +772,15 @@ build_arg_context(pcmk__common_args_t *args) {
                            "\tcrm_mon --as-xml\n";
 
     context = pcmk__build_arg_context(args, "console (default), html, text, xml");
+    pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, examples);
 
-    /* Add the -Q option, which cannot be part of the globally supported options
-     * because some tools use that flag for something else.
-     */
-    main_group = g_option_context_get_main_group(context);
-    g_option_group_add_entries(main_group, extra_prog_entries);
-
-    mode_group = g_option_group_new("mode", "Mode Options (mutually exclusive):", "Show mode options", NULL, NULL);
-    g_option_group_add_entries(mode_group, mode_entries);
-    g_option_context_add_group(context, mode_group);
-
-    display_group = g_option_group_new("display", "Display Options:", "Show display options", NULL, NULL);
-    g_option_group_add_entries(display_group, display_entries);
-    g_option_context_add_group(context, display_group);
-
-    addl_group = g_option_group_new("additional", "Additional Options:", "Show additional options", NULL, NULL);
-    g_option_group_add_entries(addl_group, addl_entries);
-    g_option_context_add_group(context, addl_group);
+    pcmk__add_arg_group(context, "mode", "Mode Options (mutually exclusive):",
+                        "Show mode options", mode_entries);
+    pcmk__add_arg_group(context, "display", "Display Options:",
+                        "Show display options", display_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
 
     return context;
 }
@@ -802,13 +793,7 @@ main(int argc, char **argv)
 
     GError *error = NULL;
 
-    args = calloc(1, sizeof(pcmk__common_args_t));
-    if (args == NULL) {
-        crm_exit(crm_errno2exit(-ENOMEM));
-    }
-
-    args->summary = strdup("Provides a summary of cluster's current state.\n\n"
-                           "Outputs varying levels of detail in a number of different formats.");
+    args = pcmk__new_common_args(SUMMARY);
     context = build_arg_context(args);
     pcmk__register_formats(context, formats);
 
@@ -830,7 +815,7 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_USAGE);
     }
 
-    for (int i = 0; i < options.verbose; i++) {
+    for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
 
@@ -863,6 +848,13 @@ main(int argc, char **argv)
             args->output_ty = strdup("xml");
             output_format = mon_output_xml;
             options.mon_ops |= mon_op_one_shot;
+        } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (args->output_ty != NULL) {
+                free(args->output_ty);
+            }
+
+            args->output_ty = strdup("text");
+            output_format = mon_output_plain;
         } else {
             /* Neither old nor new arguments were given, so set the default. */
             if (args->output_ty != NULL) {
