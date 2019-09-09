@@ -270,7 +270,7 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
         level = g_queue_get_length(priv->parent_q);
 
         for (int i = 0; i < level; i++) {
-            putc('\t', out->dest);
+            fprintf(out->dest, "  ");
         }
 
         if (level > 0) {
