@@ -54,10 +54,6 @@ AC_ARG_WITH(version,
     [  --with-version=version   Override package version (if you're a packager needing to pretend) ],
     [ PACKAGE_VERSION="$withval" ])
 
-AC_ARG_WITH(pkg-name,
-    [  --with-pkg-name=name     Override package name (if you're a packager needing to pretend) ],
-    [ PACKAGE_NAME="$withval" ])
-
 dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
 AM_INIT_AUTOMAKE([foreign tar-ustar])
@@ -161,14 +157,6 @@ extract_header_define() {
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
-
-dnl Some systems, like Solaris require a custom package name
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
-    [ PKGNAME="$withval" ],
-    [ PKGNAME="LXHAhb" ],
-  )
-AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
 [  --enable-ansi force GCC to compile to ANSI/ANSI standard for older compilers.
@@ -355,6 +343,20 @@ AC_ARG_WITH(daemon-group,
     [  --with-daemon-group=GROUP  Group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@ ],
     [ CRM_DAEMON_GROUP="$withval" ]
 )
+
+dnl Options deprecated in 2.0 series
+
+AC_ARG_WITH(pkg-name,
+    [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
+    [ PACKAGE_NAME="$withval" ]
+)
+
+AC_ARG_WITH(pkgname,
+    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
+    [ PKGNAME="$withval" ],
+    [ PKGNAME="LXHAhb" ],
+)
+AC_SUBST(PKGNAME)
 
 dnl ===============================================
 dnl General Processing
