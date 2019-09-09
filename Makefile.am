@@ -111,7 +111,9 @@ core-clean:
 	done
 
 install-exec-local:
+if BUILD_CS_PLUGIN
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
+endif
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CORE_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_BLACKBOX_DIR)
