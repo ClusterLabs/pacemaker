@@ -18,7 +18,7 @@
 include $(top_srcdir)/Makefile.common
 
 if BUILD_SYSTEMD
-systemdunit_DATA = crm_mon.service
+systemdsystemunit_DATA	= crm_mon.service
 endif
 
 COMMONLIBS	= 							\
