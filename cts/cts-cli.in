@@ -398,6 +398,21 @@ function test_tools() {
     cmd="crm_resource -r test-primitive --meta -d is-managed"
     test_assert $CRM_EX_OK
 
+    cibadmin -C -o resources --xml-text '<group id="dummy-group"> \
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"\/> \
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"\/> \
+      </group>'
+
+    desc="Create a resource meta attribute in dummy1"
+    cmd="crm_resource -r dummy1 --meta -p is-managed -v true"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource meta attribute in dummy-group"
+    cmd="crm_resource -r dummy-group --meta -p is-managed -v false"
+    test_assert $CRM_EX_OK
+
+    cibadmin -D -o resource --xml-text '<group id="dummy-group">'
+
     desc="Specify a lifetime when moving a resource"
     cmd="crm_resource -r dummy --move --node node2 --lifetime=PT1H"
     test_assert $CRM_EX_OK
