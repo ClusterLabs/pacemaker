@@ -2964,6 +2964,7 @@ determine_op_status(
 static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, pe_working_set_t * data_set)
 {
     bool expired = FALSE;
+    bool is_last_failure = crm_ends_with(ID(xml_op), "_last_failure_0");
     time_t last_failure = 0;
     guint interval_ms = 0;
     int failure_timeout = rsc->failure_timeout;
@@ -2991,7 +2992,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
             node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
             if (remote_node && remote_node->details->remote_was_fenced == 0) {
-                if (strstr(ID(xml_op), "last_failure")) {
+                if (is_last_failure) {
                     crm_info("Waiting to clear monitor failure for remote node %s until fencing has occurred", rsc->id); 
                 }
                 /* disabling failure timeout for this operation because we believe
@@ -3029,13 +3030,12 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                 expired = FALSE;
             }
 
-        } else if (rsc->remote_reconnect_ms
-                   && strstr(ID(xml_op), "last_failure")) {
+        } else if (is_last_failure && rsc->remote_reconnect_ms) {
             // Always clear last failure when reconnect interval is set
             clear_reason = "reconnect interval is set";
         }
 
-    } else if (strstr(ID(xml_op), "last_failure") &&
+    } else if (is_last_failure &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
         if (pe__bundle_needs_remote_name(rsc)) {
