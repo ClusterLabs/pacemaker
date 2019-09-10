@@ -361,7 +361,7 @@ Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
-Requires:      %{pkgname_corosync_lib}-devel%{?_isa} >= 2.0.0
+Requires:      %{pkgname_corosync_lib}-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
