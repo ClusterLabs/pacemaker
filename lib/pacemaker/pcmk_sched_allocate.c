@@ -1265,19 +1265,11 @@ order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
     }
 }
 
+// Clear fail counts for orphaned rsc on all online nodes
 static void
 cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-
-    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
-        return;
-    }
-
-    /* Don't recurse into ->children, those are just unallocated clone instances */
-    if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-        return;
-    }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -1379,10 +1371,17 @@ stage5(pe_working_set_t * data_set)
     }
 
     crm_trace("Handle orphans");
+    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
-        cleanup_orphans(rsc, data_set);
+            /* There's no need to recurse into rsc->children because those
+             * should just be unallocated clone instances.
+             */
+            if (is_set(rsc->flags, pe_rsc_orphan)) {
+                cleanup_orphans(rsc, data_set);
+            }
+        }
     }
 
     crm_trace("Creating actions");
