@@ -45,7 +45,7 @@ version_pairs_last = $(wordlist \
 			  )
 
 # Names of API schemas that form the choices for pacemaker-result content
-API_request_base	= command-output stonith_admin version
+API_request_base	= command-output crm_mon stonith_admin version
 
 # Names of CIB schemas that form the choices for cib/configuration content
 CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
