@@ -35,8 +35,10 @@ CRM_TRACE_INIT_DATA(pe_status);
 	}								\
     } while(0)
 
-gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
-                       enum action_fail_response *failed, pe_working_set_t * data_set);
+static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                          xmlNode **last_failure,
+                          enum action_fail_response *failed,
+                          pe_working_set_t *data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
@@ -3225,9 +3227,10 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
 }
 
 
-gboolean
-unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
-              enum action_fail_response * on_fail, pe_working_set_t * data_set)
+static void
+unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+              xmlNode **last_failure, enum action_fail_response *on_fail,
+              pe_working_set_t *data_set)
 {
     int task_id = 0;
 
@@ -3244,9 +3247,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
 
-    CRM_CHECK(rsc != NULL, return FALSE);
-    CRM_CHECK(node != NULL, return FALSE);
-    CRM_CHECK(xml_op != NULL, return FALSE);
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(node != NULL, return);
+    CRM_CHECK(xml_op != NULL, return);
 
     task_key = get_op_key(xml_op);
 
@@ -3258,14 +3261,14 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
-    CRM_CHECK(task != NULL, return FALSE);
-    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return FALSE);
-    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
+    CRM_CHECK(task != NULL, return);
+    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return);
+    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return);
 
     if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
         safe_str_eq(task, CRMD_ACTION_METADATA)) {
         /* safe to ignore these */
-        return TRUE;
+        return;
     }
 
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
@@ -3457,7 +3460,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
 
   done:
     pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s", rsc->id, task, role2text(rsc->role), role2text(rsc->next_role));
-    return TRUE;
 }
 
 static void
