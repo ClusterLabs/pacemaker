@@ -893,6 +893,11 @@ main(int argc, char **argv)
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
+    } else if (output_format == mon_output_xml) {
+        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
         if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
