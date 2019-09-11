@@ -1173,17 +1173,17 @@ print_simple_status(pe_working_set_t * data_set, stonith_history_t *history,
     if (is_not_set(mon_ops, mon_op_has_warnings)) {
         int nresources = count_resources(data_set, NULL);
 
-        print_as(output_format, "CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
+        printf("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
         if (nodes_standby > 0) {
-            print_as(output_format, ", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
+            printf(", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
         }
         if (nodes_maintenance > 0) {
-            print_as(output_format, ", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
+            printf(", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
         }
-        print_as(output_format, ", %d resource%s configured", nresources, s_if_plural(nresources));
+        printf(", %d resource%s configured", nresources, s_if_plural(nresources));
     }
 
-    print_as(output_format, "\n");
+    printf("\n");
 }
 
 /*!
