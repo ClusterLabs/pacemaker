@@ -153,6 +153,7 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
  *
  * \return New head of (possibly modified) acls
  */
+PCMK__XML_DIRECTLY_RECURSIVE
 static GList *
 __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
 {
@@ -395,6 +396,7 @@ __xml_acl_mode_test(enum xml_private_flags allowed,
 /* rc = TRUE if orig_cib has been filtered
  * That means '*result' rather than 'xml' should be exploited afterwards
  */
+PCMK__XML_DIRECTLY_RECURSIVE
 static bool
 __xml_purge_attributes(xmlNode *xml)
 {
@@ -574,6 +576,7 @@ implicitly_allowed(xmlNode *xml)
  * \param[in]     check_top  Whether to apply checks to argument itself
  *                           (if TRUE, xml might get freed)
  */
+PCMK__XML_DIRECTLY_RECURSIVE
 void
 pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
@@ -826,6 +829,7 @@ static const xmlChar *NS_WRITABLE = (xmlChar *) ACL_NS_PREFIX "writable";
 static const xmlChar *NS_READABLE = (xmlChar *) ACL_NS_PREFIX "readable";
 static const xmlChar *NS_DENIED =   (xmlChar *) ACL_NS_PREFIX "denied";
 
+PCMK__XML_DIRECTLY_RECURSIVE
 static int
 pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
 {

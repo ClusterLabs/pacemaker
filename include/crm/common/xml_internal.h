@@ -30,6 +30,20 @@
 
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 
+/*!
+ * \internal
+ * \brief Dummy marker to indicate the "calls itself directly".
+ *
+ * \note Having such a marker consistently used for what's inherently
+ *       a tree algoritm (and commonly, in-depth XML processing is of
+ *       this kind) is indispensable for a general reasoning in the
+ *       context of the tree (is this function meant to only be applied
+ *       to root/leave/complement of those two? etc.).
+ *
+ * \note Currently only applied in \c{acl.c}.
+ */
+#define PCMK__XML_DIRECTLY_RECURSIVE
+
 
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend
