@@ -1526,10 +1526,19 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         free(id);
         CRM_ASSERT(rc == 0);
 
-        out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
-        out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+        if (replica->ip != NULL) {
+            out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+        }
+
+        if (replica->child != NULL) {
+            out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+        }
+
         out->message(out, crm_element_name(replica->container->xml), options, replica->container);
-        out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+
+        if (replica->remote != NULL) {
+            out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+        }
 
         pcmk__output_xml_pop_parent(out); // replica
     }
@@ -1603,10 +1612,19 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             pcmk__output_create_xml_node(out, "br");
             out->begin_list(out, NULL, NULL, NULL);
 
-            out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
-            out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+            if (replica->ip != NULL) {
+                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+            }
+
+            if (replica->child != NULL) {
+                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+            }
+
             out->message(out, crm_element_name(replica->container->xml), options, replica->container);
-            out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+
+            if (replica->remote != NULL) {
+                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+            }
 
             out->end_list(out);
         } else {
@@ -1686,10 +1704,19 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                 fprintf(out->dest, "  %sReplica[%d]\n", pre_text, replica->offset);
             }
 
-            out->message(out, crm_element_name(replica->ip->xml), options, replica->ip, child_text);
-            out->message(out, crm_element_name(replica->child->xml), options, replica->child, child_text);
+            if (replica->ip != NULL) {
+                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip, child_text);
+            }
+
+            if (replica->child != NULL) {
+                out->message(out, crm_element_name(replica->child->xml), options, replica->child, child_text);
+            }
+
             out->message(out, crm_element_name(replica->container->xml), options, replica->container, child_text);
-            out->message(out, crm_element_name(replica->remote->xml), options, replica->remote, child_text);
+
+            if (replica->remote != NULL) {
+                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote, child_text);
+            }
         } else {
             child_text = crm_strdup_printf("%s  ", pre_text);
             pe__bundle_replica_output_text(out, replica, child_text, options);
