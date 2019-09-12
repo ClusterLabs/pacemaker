@@ -3029,6 +3029,12 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                 clear_reason = "it expired";
 
             } else {
+                /* This operation is old, but there is an unexpired fail count.
+                 * In a properly functioning cluster, this should only be
+                 * possible if this operation is not a failure (otherwise the
+                 * fail count should be expired too), so this is really just a
+                 * failsafe.
+                 */
                 expired = FALSE;
             }
 
@@ -3036,9 +3042,10 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             // Always clear last failure when reconnect interval is set
             clear_reason = "reconnect interval is set";
         }
+    }
 
-    } else if (is_last_failure &&
-               ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
+    if (!expired && is_last_failure &&
+        ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
         if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
