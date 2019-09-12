@@ -3350,7 +3350,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 {
     int task_id = 0;
 
-    const char *key = NULL;
     const char *task = NULL;
     const char *task_key = NULL;
 
@@ -3370,7 +3369,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     task_key = get_op_key(xml_op);
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
@@ -3424,20 +3422,26 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     if (expired && (rc != target_rc)) {
         const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
-        pe_rsc_debug(rsc, "Expired operation '%s' on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
-                     key, node->details->uname,
-                     services_ocf_exitcode_str(rc), rc,
-                     services_ocf_exitcode_str(target_rc), target_rc);
-
         if (interval_ms == 0) {
-            crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
-                       task_key, rc, magic, node->details->uname);
+            crm_notice("Ignoring expired %s failure on %s "
+                       CRM_XS " actual=%d expected=%d magic=%s",
+                       task_key, node->details->uname, rc, target_rc, magic);
             goto done;
 
         } else if(node->details->online && node->details->unclean == FALSE) {
-            crm_notice("Re-initiated expired calculated failure %s (rc=%d, magic=%s) on %s",
-                       task_key, rc, magic, node->details->uname);
-            /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
+            /* Reschedule the recurring monitor. CancelXmlOp() won't work at
+             * this stage, so as a hacky workaround, forcibly change the restart
+             * digest so check_action_definition() does what we want later.
+             *
+             * @TODO We should skip this if there is a newer successful monitor.
+             *       Also, this causes rescheduling only if the history entry
+             *       has an op-digest (which the expire-non-blocked-failure
+             *       scheduler regression test doesn't, but that may not be a
+             *       realistic scenario in production).
+             */
+            crm_notice("Rescheduling %s after failure expired on %s "
+                       CRM_XS " actual=%d expected=%d magic=%s",
+                       task_key, node->details->uname, rc, target_rc, magic);
             crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
             goto done;
         }
