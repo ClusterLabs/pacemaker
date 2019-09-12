@@ -241,12 +241,17 @@ SysInfoStats() {
 SysInfo_megabytes() {
     # Size in megabytes
     echo $1 | awk '{ n = $0;
-                     sub(/[0-9]+(.[0-9]+)?/, "");
-                     split(n, a, $0);
-                     n=a[1];
-                     if ($0 == "G" || $0 == "") { n *= 1024 };
-                     if (/^kB?/) { n /= 1024 };
-                     printf "%d\n", n }' # Intentionally round to an integer
+        sub( /[0-9]+(.[0-9]+)?/, "" );
+        if ( $0 == "" ) { $0 = "G" }; # Do not change previous behavior `if ($0 == "G" || $0 == "") { n *= 1024 };`
+        split( n, a, $0 );
+        n = a[1];
+        if ( /^[pP]i?[bB]?/ ) { n *= 1024 * 1024 * 1024 };
+        if ( /^[tT]i?[bB]?/ ) { n *= 1024 * 1024 };
+        if ( /^[gG]i?[bB]?/ ) { n *= 1024 };
+        if ( /^[mM]i?[bB]?/ ) { n *= 1 };
+        if ( /^[kK]i?[bB]?/ ) { n /= 1024 };
+        if ( /^[bB]i?/ )      { n /= 1024 * 1024 };
+        printf "%d\n", n }' # Intentionally round to an integer
 }
 
 SysInfo_mem_units() {
