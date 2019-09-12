@@ -387,7 +387,7 @@ static GOptionEntry display_entries[] = {
       INDENT "3=show full history without reduction to most recent of each flavor",
       "LEVEL" },
 
-    { "neg-locations", 'L', 0, G_OPTION_ARG_CALLBACK, show_bans_cb,
+    { "neg-locations", 'L', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, show_bans_cb,
       "Display negative location constraints [optionally filtered by id prefix]",
       NULL },
 
