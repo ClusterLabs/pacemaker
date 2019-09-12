@@ -1677,6 +1677,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char *child_text = NULL;
+    char *buf = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -1686,11 +1687,12 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         pre_text = " ";
     }
 
-    fprintf(out->dest, "%sContainer bundle%s: %s [%s]%s%s\n",
-            pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
-            rsc->id, bundle_data->image,
-            is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-            is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    buf = crm_strdup_printf("%sContainer bundle%s: %s [%s]%s%s",
+                            pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
+                            rsc->id, bundle_data->image,
+                            is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                            is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    out->begin_list(out, buf, NULL, NULL);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1701,8 +1703,12 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         if (is_set(options, pe_print_implicit)) {
             child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(bundle_data->replicas) > 1) {
-                fprintf(out->dest, "  %sReplica[%d]\n", pre_text, replica->offset);
+                char *s = crm_strdup_printf("%sReplica[%d]", pre_text, replica->offset);
+                out->list_item(out, NULL, s);
+                free(s);
             }
+
+            out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
                 out->message(out, crm_element_name(replica->ip->xml), options, replica->ip, child_text);
@@ -1717,12 +1723,17 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             if (replica->remote != NULL) {
                 out->message(out, crm_element_name(replica->remote->xml), options, replica->remote, child_text);
             }
+
+            out->end_list(out);
         } else {
             child_text = crm_strdup_printf("%s  ", pre_text);
             pe__bundle_replica_output_text(out, replica, child_text, options);
         }
         free(child_text);
     }
+
+    free(buf);
+    out->end_list(out);
     return 0;
 }
 
