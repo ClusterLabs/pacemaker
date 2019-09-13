@@ -479,6 +479,35 @@ crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
 }
 
 /*!
+ * \brief Create XML attributes for seconds and microseconds
+ *
+ * This is like \c crm_xml_add() but taking a struct timeval.
+ *
+ * \param[in,out] xml        XML node to modify
+ * \param[in]     name_sec   Name of XML attribute for seconds
+ * \param[in]     name_usec  Name of XML attribute for microseconds (or NULL)
+ * \param[in]     value      Time value to set
+ *
+ * \return New seconds value as string on success, \c NULL otherwise
+ * \note This does nothing if xml, name_sec, or value is \c NULL.
+ */
+const char *
+crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
+                    const struct timeval *value)
+{
+    const char *added = NULL;
+
+    if (xml && name_sec && value) {
+        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
+        if (added && name_usec) {
+            // Any error is ignored (we successfully added seconds)
+            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
+        }
+    }
+    return added;
+}
+
+/*!
  * \brief Retrieve the value of an XML attribute
  *
  * \param[in] data   XML node to check
@@ -606,7 +635,6 @@ int
 crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
                           const char *name_usec, struct timeval *dest)
 {
-    const char *value_s = NULL;
     long long value_i = 0;
 
     CRM_CHECK(dest != NULL, return -EINVAL);
@@ -614,29 +642,29 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
     dest->tv_usec = 0;
 
     if (xml == NULL) {
-        return 0;
+        return pcmk_ok;
     }
+
+    /* Unfortunately, we can't do any bounds checking, since there are no
+     * constants provided for the bounds of time_t and suseconds_t, and
+     * calculating them isn't worth the effort. If there are XML values
+     * beyond the native sizes, there will probably be worse problems anyway.
+     */
 
     // Parse seconds
-    value_s = crm_element_value(xml, name_sec);
-    if (value_s) {
-        value_i = crm_parse_ll(value_s, NULL);
-        if (errno) {
-            return -errno;
-        }
-        dest->tv_sec = (time_t) value_i;
+    errno = 0;
+    if (crm_element_value_ll(xml, name_sec, &value_i) < 0) {
+        return -errno;
     }
+    dest->tv_sec = (time_t) value_i;
 
     // Parse microseconds
-    value_s = crm_element_value(xml, name_usec);
-    if (value_s) {
-        value_i = crm_parse_ll(value_s, NULL);
-        if (errno) {
-            return -errno;
-        }
-        dest->tv_usec = (suseconds_t) value_i;
+    if (crm_element_value_ll(xml, name_usec, &value_i) < 0) {
+        return -errno;
     }
-    return 0;
+    dest->tv_usec = (suseconds_t) value_i;
+
+    return pcmk_ok;
 }
 
 /*!

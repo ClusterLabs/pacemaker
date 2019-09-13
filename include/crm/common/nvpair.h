@@ -49,6 +49,9 @@ const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 const char *crm_xml_add_int(xmlNode *node, const char *name, int value);
 const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);
 const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
+const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
+                                const char *name_usec,
+                                const struct timeval *value);
 
 const char *crm_element_value(const xmlNode *data, const char *name);
 int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
