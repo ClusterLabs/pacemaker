@@ -449,6 +449,35 @@ crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
     return added;
 }
 
+// Maximum size of null-terminated string representation of 64-bit integer
+// -9223372036854775808
+#define LLSTRSIZE 21
+
+/*!
+ * \brief Create an XML attribute with specified name and long long int value
+ *
+ * This is like \c crm_xml_add() but taking a long long int value. It is a
+ * useful equivalent for defined types like time_t, etc.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     name   Attribute name to set
+ * \param[in]     value  Attribute value to set
+ *
+ * \return New value as string on success, \c NULL otherwise
+ * \note This does nothing if xml or name are \c NULL or empty.
+ *       This does not support greater than 64-bit values.
+ */
+const char *
+crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
+{
+    char s[LLSTRSIZE] = { '\0', };
+
+    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
+        return NULL;
+    }
+    return crm_xml_add(xml, name, s);
+}
+
 /*!
  * \brief Retrieve the value of an XML attribute
  *
@@ -503,6 +532,34 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     if (value) {
         errno = 0;
         *dest = crm_parse_int(value, NULL);
+        if (errno == 0) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/*!
+ * \brief Retrieve the long long integer value of an XML attribute
+ *
+ * This is like \c crm_element_value() but getting the value as a long long int.
+ *
+ * \param[in] data   XML node to check
+ * \param[in] name   Attribute name to check
+ * \param[in] dest   Where to store element value
+ *
+ * \return 0 on success, -1 otherwise
+ */
+int
+crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
+{
+    const char *value = NULL;
+
+    CRM_CHECK(dest != NULL, return -1);
+    value = crm_element_value(data, name);
+    if (value) {
+        errno = 0;
+        *dest = crm_int_helper(value, NULL);
         if (errno == 0) {
             return 0;
         }
