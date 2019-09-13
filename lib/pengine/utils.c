@@ -2535,3 +2535,20 @@ pe__shutdown_requested(pe_node_t *node)
 
     return shutdown && strcmp(shutdown, "0");
 }
+
+/*!
+ * \internal
+ * \brief Update a data set's "recheck by" time
+ *
+ * \param[in]     recheck   Epoch time when recheck should happen
+ * \param[in,out] data_set  Current working set
+ */
+void
+pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
+{
+    if ((recheck > get_effective_time(data_set))
+        && ((data_set->recheck_by == 0)
+            || (data_set->recheck_by > recheck))) {
+        data_set->recheck_by = recheck;
+    }
+}

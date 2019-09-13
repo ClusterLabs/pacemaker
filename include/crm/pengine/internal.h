@@ -384,6 +384,7 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
 void pe__free_param_checks(pe_working_set_t *data_set);
 
 bool pe__shutdown_requested(pe_node_t *node);
+void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 
 #define BOOL2STR(x) ((x) ? "true" : "false")
 /*!
