@@ -246,6 +246,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     } else if (crm_str_eq(type, LRMD_OP_RSC_UNREG, TRUE)) {
         event.type = lrmd_event_unregister;
     } else if (crm_str_eq(type, LRMD_OP_RSC_EXEC, TRUE)) {
+        time_t epoch = 0;
+
         crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
         crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
@@ -253,8 +255,12 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         crm_element_value_int(msg, F_LRMD_OP_STATUS, &event.op_status);
         crm_element_value_int(msg, F_LRMD_RSC_DELETED, &event.rsc_deleted);
 
-        crm_element_value_int(msg, F_LRMD_RSC_RUN_TIME, (int *)&event.t_run);
-        crm_element_value_int(msg, F_LRMD_RSC_RCCHANGE_TIME, (int *)&event.t_rcchange);
+        crm_element_value_epoch(msg, F_LRMD_RSC_RUN_TIME, &epoch);
+        event.t_run = (unsigned int) epoch;
+
+        crm_element_value_epoch(msg, F_LRMD_RSC_RCCHANGE_TIME, &epoch);
+        event.t_rcchange = (unsigned int) epoch;
+
         crm_element_value_int(msg, F_LRMD_RSC_EXEC_TIME, (int *)&event.exec_time);
         crm_element_value_int(msg, F_LRMD_RSC_QUEUE_TIME, (int *)&event.queue_time);
 

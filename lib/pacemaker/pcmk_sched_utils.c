@@ -635,18 +635,22 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
             if (op->interval_ms == 0) {
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
+                               (long long) op->t_run);
 
                 // @COMPAT last-run is deprecated
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_RUN, op->t_run);
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_RUN,
+                               (long long) op->t_run);
 
             } else if(op->t_rcchange) {
                 /* last-run is not accurate for recurring ops */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_rcchange);
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
+                               (long long) op->t_rcchange);
 
             } else {
                 /* ...but is better than nothing otherwise */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
+                               (long long) op->t_run);
             }
 
             crm_xml_add_int(xml_op, XML_RSC_OP_T_EXEC, op->exec_time);

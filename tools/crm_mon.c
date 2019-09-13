@@ -81,7 +81,7 @@ static GOptionContext *context = NULL;
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
 
-long last_refresh = 0;
+static time_t last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
 static pcmk__supported_format_t formats[] = {
@@ -1778,7 +1778,7 @@ static void
 kick_refresh(gboolean data_updated)
 {
     static int updates = 0;
-    long now = time(NULL);
+    time_t now = time(NULL);
 
     if (data_updated) {
         updates++;
