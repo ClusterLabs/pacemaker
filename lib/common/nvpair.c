@@ -501,8 +501,11 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
     if (value) {
-        *dest = crm_int_helper(value, NULL);
-        return 0;
+        errno = 0;
+        *dest = crm_parse_int(value, NULL);
+        if (errno == 0) {
+            return 0;
+        }
     }
     return -1;
 }
