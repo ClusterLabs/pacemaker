@@ -635,9 +635,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
             if (op->interval_ms == 0) {
-                /* The values are the same for non-recurring ops */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_RUN, op->t_run);
                 crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);
+
+                // @COMPAT last-run is deprecated
+                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_RUN, op->t_run);
 
             } else if(op->t_rcchange) {
                 /* last-run is not accurate for recurring ops */

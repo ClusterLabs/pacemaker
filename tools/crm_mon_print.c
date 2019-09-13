@@ -614,6 +614,7 @@ print_op_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
             }
         }
 
+        // last-run is deprecated
         attr = XML_RSC_OP_LAST_RUN;
         value = crm_element_value(xml_op, attr);
         if (value) {
