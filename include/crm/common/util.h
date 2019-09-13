@@ -20,10 +20,10 @@ extern "C" {
  * \ingroup core
  */
 
-#  include <sys/types.h>
+#  include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
 #  include <stdlib.h>
 #  include <stdbool.h>
-#  include <stdint.h> // uint32_t
+#  include <stdint.h>       // uint32_t
 #  include <limits.h>
 #  include <signal.h>
 #  include <glib.h>
@@ -71,6 +71,12 @@ static inline char *
 crm_ftoa(double a_float)
 {
     return crm_strdup_printf("%f", a_float);
+}
+
+static inline char *
+crm_ttoa(time_t epoch_time)
+{
+    return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
 /*!
