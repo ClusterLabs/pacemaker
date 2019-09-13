@@ -2085,11 +2085,12 @@ print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned i
                 break;
         }
 
+        history = stonith__sort_history(history);
         for (hp = history; hp; hp = hp->next) {
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            print_stonith_action(state, hp, mon_ops, NULL);
+            print_stonith_action(state, hp, mon_ops, history);
         }
 
         /* End section */
@@ -2138,9 +2139,10 @@ print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned i
             break;
     }
 
+    stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
         if ((hp->state != st_failed) || (state->output_format == mon_output_xml)) {
-            print_stonith_action(state, hp, mon_ops, NULL);
+            print_stonith_action(state, hp, mon_ops, history);
         }
     }
 

@@ -2517,6 +2517,9 @@ stonith__parse_targets(const char *target_spec)
 /*!
  * \internal
  * \brief Determine if a later stonith event succeeded.
+ *
+ * \note Before calling this function, use stonith__sort_history() to sort the
+ *       top_history argument.
  */
 gboolean
 stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
@@ -2538,4 +2541,58 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
         }
     }
     return ret;
+}
+
+/*!
+ * \internal
+ * \brief Sort the stonith-history
+ *        sort by competed most current on the top
+ *        pending actions lacking a completed-stamp are gathered at the top
+ *
+ * \param[in] history    List of stonith actions
+ *
+ */
+stonith_history_t *
+stonith__sort_history(stonith_history_t *history)
+{
+    stonith_history_t *new = NULL, *pending = NULL, *hp, *np, *tmp;
+
+    for (hp = history; hp; ) {
+        tmp = hp->next;
+        if ((hp->state == st_done) || (hp->state == st_failed)) {
+            /* sort into new */
+            if ((!new) || (hp->completed > new->completed)) {
+                hp->next = new;
+                new = hp;
+            } else {
+                np = new;
+                do {
+                    if ((!np->next) || (hp->completed > np->next->completed)) {
+                        hp->next = np->next;
+                        np->next = hp;
+                        break;
+                    }
+                    np = np->next;
+                } while (1);
+            }
+        } else {
+            /* put into pending */
+            hp->next = pending;
+            pending = hp;
+        }
+        hp = tmp;
+    }
+
+    /* pending actions don't have a completed-stamp so make them go front */
+    if (pending) {
+        stonith_history_t *last_pending = pending;
+
+        while (last_pending->next) {
+            last_pending = last_pending->next;
+        }
+
+        last_pending->next = new;
+        new = pending;
+    }
+    return new;
 }
