@@ -619,6 +619,33 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 }
 
 /*!
+ * \brief Retrieve the seconds-since-epoch value of an XML attribute
+ *
+ * This is like \c crm_element_value() but returning the value as a time_t.
+ *
+ * \param[in]  xml    XML node to check
+ * \param[in]  name   Attribute name to check
+ * \param[out] dest   Where to store attribute value
+ *
+ * \return \c pcmk_ok on success, -1 otherwise
+ */
+int
+crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
+{
+    long long value_ll = 0;
+
+    if (crm_element_value_ll(xml, name, &value_ll) < 0) {
+        return -1;
+    }
+
+    /* Unfortunately, we can't do any bounds checking, since time_t has neither
+     * standardized bounds nor constants defined for them.
+     */
+    *dest = (time_t) value_ll;
+    return pcmk_ok;
+}
+
+/*!
  * \brief Retrieve the value of XML second/microsecond attributes as time
  *
  * This is like \c crm_element_value() but returning value as a struct timeval.
