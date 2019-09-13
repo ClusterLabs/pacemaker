@@ -3085,9 +3085,9 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
 {
     bool expired = FALSE;
     bool is_last_failure = crm_ends_with(ID(xml_op), "_last_failure_0");
-    time_t last_failure = 0;
     time_t last_run = 0;
     guint interval_ms = 0;
+    int unexpired_fail_count = 0;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *clear_reason = NULL;
 
@@ -3100,23 +3100,38 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         // Resource has a failure-timeout, and history entry has a timestamp
 
         time_t now = get_effective_time(data_set);
-        time_t expiration = last_run + rsc->failure_timeout;
+        time_t last_failure = 0;
 
-        if ((now >= expiration)
+        // Is this particular operation history older than the failure timeout?
+        if ((now >= (last_run + rsc->failure_timeout))
             && !should_ignore_failure_timeout(rsc, xml_op, task, interval_ms,
                                               is_last_failure, data_set)) {
             expired = TRUE;
         }
+
+        // Does the resource as a whole have an unexpired fail count?
+        unexpired_fail_count = pe_get_failcount(node, rsc, &last_failure,
+                                                pe_fc_effective, xml_op,
+                                                data_set);
+
+        // Update scheduler recheck time according to *last* failure
+        crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d timeout=%ds"
+                  " last-failure@%lld",
+                  ID(xml_op), (long long) last_run, (expired? "" : "not "),
+                  (long long) now, unexpired_fail_count, rsc->failure_timeout,
+                  (long long) last_failure);
+        last_failure += rsc->failure_timeout + 1;
+        if (unexpired_fail_count && (now < last_failure)) {
+            pe__update_recheck_time(last_failure, data_set);
+        }
     }
 
     if (expired) {
-        if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default, xml_op,
-                             data_set)) {
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op, data_set)) {
 
             // There is a fail count ignoring timeout
 
-            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
-                                 xml_op, data_set) == 0) {
+            if (unexpired_fail_count == 0) {
                 // There is no fail count considering timeout
                 clear_reason = "it expired";
 
