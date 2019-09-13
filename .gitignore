@@ -6,6 +6,7 @@ GRTAGS
 GTAGS
 TAGS
 Makefile
+!/doc/design/Makefile
 Makefile.in
 .deps
 .dirstamp
