@@ -111,7 +111,7 @@ text_err(pcmk__output_t *out, const char *format, ...) {
      * potentially indented list output.
      */
     len = vfprintf(stderr, format, ap);
-    CRM_ASSERT(len > 0);
+    CRM_ASSERT(len >= 0);
     va_end(ap);
 
     /* Add a newline. */
@@ -130,7 +130,7 @@ text_info(pcmk__output_t *out, const char *format, ...) {
      * potentially indented list output.
      */
     len = vfprintf(out->dest, format, ap);
-    CRM_ASSERT(len > 0);
+    CRM_ASSERT(len >= 0);
     va_end(ap);
 
     /* Add a newline. */
@@ -261,6 +261,6 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
 
     va_start(ap, format);
     len = vfprintf(out->dest, format, ap);
-    CRM_ASSERT(len > 0);
+    CRM_ASSERT(len >= 0);
     va_end(ap);
 }

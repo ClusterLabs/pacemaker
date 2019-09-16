@@ -235,7 +235,7 @@ html_err(pcmk__output_t *out, const char *format, ...) {
     CRM_ASSERT(priv != NULL);
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len > 0);
+    CRM_ASSERT(len >= 0);
     va_end(ap);
 
     priv->errors = g_slist_append(priv->errors, buf);
