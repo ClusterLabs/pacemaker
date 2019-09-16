@@ -1,0 +1,144 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="29" operation="stop" operation_key="overcloud-novacompute-1_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="overcloud-novacompute-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="overcloud-novacompute-1"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <crm_event id="26" operation="clear_failcount" operation_key="overcloud-novacompute-1_clear_failcount_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="overcloud-novacompute-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  reconnect_interval="60"/>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="198" operation="monitor" operation_key="ip-10.0.0.110_monitor_10000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-10.0.0.110" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.0.0.110"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="197" operation="start" operation_key="ip-10.0.0.110_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="197" operation="start" operation_key="ip-10.0.0.110_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-10.0.0.110" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.0.0.110"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="217" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="stonith-fence_compute-fence-nova_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="23" operation="stop" operation_key="stonith-fence_compute-fence-nova_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="stonith-fence_compute-fence-nova_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="217" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="220" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0">
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="223" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="224" operation="stopped" operation_key="compute-unfence-trigger-clone_stopped_0">
+        <attributes CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="220" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="223" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="223" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0">
+        <attributes CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1">
+        <attributes CRM_meta_compute_instanceha_role="true" CRM_meta_digests_all="stonith-fence_compute-fence-nova:fence_compute:ad312d85623cdb0a792e6fbd5e91a820," CRM_meta_digests_secure="stonith-fence_compute-fence-nova:fence_compute:caf046d0a0953a2e7d15bbbde1371880," CRM_meta_on_node="overcloud-novacompute-1" CRM_meta_on_node_uuid="overcloud-novacompute-1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="overcloud-novacompute-1"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
