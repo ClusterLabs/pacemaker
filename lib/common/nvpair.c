@@ -449,6 +449,64 @@ crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
     return added;
 }
 
+// Maximum size of null-terminated string representation of 64-bit integer
+// -9223372036854775808
+#define LLSTRSIZE 21
+
+/*!
+ * \brief Create an XML attribute with specified name and long long int value
+ *
+ * This is like \c crm_xml_add() but taking a long long int value. It is a
+ * useful equivalent for defined types like time_t, etc.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     name   Attribute name to set
+ * \param[in]     value  Attribute value to set
+ *
+ * \return New value as string on success, \c NULL otherwise
+ * \note This does nothing if xml or name are \c NULL or empty.
+ *       This does not support greater than 64-bit values.
+ */
+const char *
+crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
+{
+    char s[LLSTRSIZE] = { '\0', };
+
+    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
+        return NULL;
+    }
+    return crm_xml_add(xml, name, s);
+}
+
+/*!
+ * \brief Create XML attributes for seconds and microseconds
+ *
+ * This is like \c crm_xml_add() but taking a struct timeval.
+ *
+ * \param[in,out] xml        XML node to modify
+ * \param[in]     name_sec   Name of XML attribute for seconds
+ * \param[in]     name_usec  Name of XML attribute for microseconds (or NULL)
+ * \param[in]     value      Time value to set
+ *
+ * \return New seconds value as string on success, \c NULL otherwise
+ * \note This does nothing if xml, name_sec, or value is \c NULL.
+ */
+const char *
+crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
+                    const struct timeval *value)
+{
+    const char *added = NULL;
+
+    if (xml && name_sec && value) {
+        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
+        if (added && name_usec) {
+            // Any error is ignored (we successfully added seconds)
+            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
+        }
+    }
+    return added;
+}
+
 /*!
  * \brief Retrieve the value of an XML attribute
  *
@@ -501,8 +559,39 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
     if (value) {
+        errno = 0;
+        *dest = crm_parse_int(value, NULL);
+        if (errno == 0) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/*!
+ * \brief Retrieve the long long integer value of an XML attribute
+ *
+ * This is like \c crm_element_value() but getting the value as a long long int.
+ *
+ * \param[in] data   XML node to check
+ * \param[in] name   Attribute name to check
+ * \param[in] dest   Where to store element value
+ *
+ * \return 0 on success, -1 otherwise
+ */
+int
+crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
+{
+    const char *value = NULL;
+
+    CRM_CHECK(dest != NULL, return -1);
+    value = crm_element_value(data, name);
+    if (value) {
+        errno = 0;
         *dest = crm_int_helper(value, NULL);
-        return 0;
+        if (errno == 0) {
+            return 0;
+        }
     }
     return -1;
 }
@@ -530,6 +619,33 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 }
 
 /*!
+ * \brief Retrieve the seconds-since-epoch value of an XML attribute
+ *
+ * This is like \c crm_element_value() but returning the value as a time_t.
+ *
+ * \param[in]  xml    XML node to check
+ * \param[in]  name   Attribute name to check
+ * \param[out] dest   Where to store attribute value
+ *
+ * \return \c pcmk_ok on success, -1 otherwise
+ */
+int
+crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
+{
+    long long value_ll = 0;
+
+    if (crm_element_value_ll(xml, name, &value_ll) < 0) {
+        return -1;
+    }
+
+    /* Unfortunately, we can't do any bounds checking, since time_t has neither
+     * standardized bounds nor constants defined for them.
+     */
+    *dest = (time_t) value_ll;
+    return pcmk_ok;
+}
+
+/*!
  * \brief Retrieve the value of XML second/microsecond attributes as time
  *
  * This is like \c crm_element_value() but returning value as a struct timeval.
@@ -546,7 +662,6 @@ int
 crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
                           const char *name_usec, struct timeval *dest)
 {
-    const char *value_s = NULL;
     long long value_i = 0;
 
     CRM_CHECK(dest != NULL, return -EINVAL);
@@ -554,29 +669,29 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
     dest->tv_usec = 0;
 
     if (xml == NULL) {
-        return 0;
+        return pcmk_ok;
     }
+
+    /* Unfortunately, we can't do any bounds checking, since there are no
+     * constants provided for the bounds of time_t and suseconds_t, and
+     * calculating them isn't worth the effort. If there are XML values
+     * beyond the native sizes, there will probably be worse problems anyway.
+     */
 
     // Parse seconds
-    value_s = crm_element_value(xml, name_sec);
-    if (value_s) {
-        value_i = crm_parse_ll(value_s, NULL);
-        if (errno) {
-            return -errno;
-        }
-        dest->tv_sec = (time_t) value_i;
+    errno = 0;
+    if (crm_element_value_ll(xml, name_sec, &value_i) < 0) {
+        return -errno;
     }
+    dest->tv_sec = (time_t) value_i;
 
     // Parse microseconds
-    value_s = crm_element_value(xml, name_usec);
-    if (value_s) {
-        value_i = crm_parse_ll(value_s, NULL);
-        if (errno) {
-            return -errno;
-        }
-        dest->tv_usec = (suseconds_t) value_i;
+    if (crm_element_value_ll(xml, name_usec, &value_i) < 0) {
+        return -errno;
     }
-    return 0;
+    dest->tv_usec = (suseconds_t) value_i;
+
+    return pcmk_ok;
 }
 
 /*!

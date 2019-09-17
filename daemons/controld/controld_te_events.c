@@ -161,7 +161,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     if (do_update) {
-        char *now = crm_itoa(time(NULL));
+        char *now = crm_ttoa(time(NULL));
         char *attr_name = NULL;
         gboolean is_remote_node = FALSE;
 

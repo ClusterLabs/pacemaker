@@ -139,10 +139,10 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
         xmlNode *xml_op = (xmlNode *) lpc->data;
 
         const char *op_rsc = crm_element_value(xml_op, "resource");
-        const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
         const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
         const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
         int status = crm_parse_int(status_s, "0");
+        time_t last_change = 0;
 
         rsc = pe_find_resource(data_set->resources, op_rsc);
         if(rsc) {
@@ -156,11 +156,12 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
                 crm_element_value(xml_op, XML_ATTR_UNAME),
                 crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                 crm_element_value(xml_op, XML_LRM_ATTR_RC));
-        if (last) {
-            time_t run_at = crm_parse_int(last, "0");
 
+        if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                    &last_change) == pcmk_ok) {
             fprintf(stdout, ", last-rc-change=%s, exec=%sms",
-                    crm_strip_trailing_newline(ctime(&run_at)), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                    crm_strip_trailing_newline(ctime(&last_change)),
+                    crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }

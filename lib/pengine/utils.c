@@ -1654,13 +1654,14 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          * The op and last_failed_op are the same
          * Order on last-rc-change
          */
-        int last_a = -1;
-        int last_b = -1;
+        time_t last_a = -1;
+        time_t last_b = -1;
 
-        crm_element_value_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_epoch(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
+        crm_element_value_epoch(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
 
-        crm_trace("rc-change: %d vs %d", last_a, last_b);
+        crm_trace("rc-change: %lld vs %lld",
+                  (long long) last_a, (long long) last_b);
         if (last_a >= 0 && last_a < last_b) {
             sort_return(-1, "rc-change");
 

@@ -3002,9 +3002,10 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (failure_timeout > 0) {
-        int last_run = 0;
+        time_t last_run = 0;
 
-        if (crm_element_value_int(xml_op, XML_RSC_OP_LAST_CHANGE, &last_run) == 0) {
+        if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                    &last_run) == 0) {
             time_t now = get_effective_time(data_set);
 
             if (now > (last_run + failure_timeout)) {

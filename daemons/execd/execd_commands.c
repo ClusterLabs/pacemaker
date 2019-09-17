@@ -520,8 +520,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
 #ifdef HAVE_SYS_TIMEB_H
-    crm_xml_add_int(notify, F_LRMD_RSC_RUN_TIME, cmd->t_run.time);
-    crm_xml_add_int(notify, F_LRMD_RSC_RCCHANGE_TIME, cmd->t_rcchange.time);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.time);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.time);
     crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif

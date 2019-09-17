@@ -602,25 +602,20 @@ print_op_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
         print_nvpair(state, "interval", interval_ms_s, "ms", 0);
     }
     if (is_set(mon_ops, mon_op_print_timing)) {
-        int int_value;
+        time_t epoch = 0;
         const char *attr;
 
         attr = XML_RSC_OP_LAST_CHANGE;
-        value = crm_element_value(xml_op, attr);
-        if (value) {
-            int_value = crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                print_nvpair(state, attr, NULL, NULL, int_value);
-            }
+        if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
+            && (epoch > 0)) {
+            print_nvpair(state, attr, NULL, NULL, epoch);
         }
 
+        // last-run is deprecated
         attr = XML_RSC_OP_LAST_RUN;
-        value = crm_element_value(xml_op, attr);
-        if (value) {
-            int_value = crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                print_nvpair(state, attr, NULL, NULL, int_value);
-            }
+        if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
+            && (epoch > 0)) {
+            print_nvpair(state, attr, NULL, NULL, epoch);
         }
 
         attr = XML_RSC_OP_T_EXEC;
@@ -1716,12 +1711,12 @@ print_failed_action(mon_state_t *state, xmlNode *xml_op)
 {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     const char *op_key_attr = "op_key";
-    const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
     const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
     const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
     int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
     int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
+    time_t last_change = 0;
     char *exit_reason_cleaned;
 
     /* If no op_key was given, use id instead */
@@ -1767,9 +1762,9 @@ print_failed_action(mon_state_t *state, xmlNode *xml_op)
     }
 
     /* If last change was given, print timing information as well */
-    if (last) {
-        time_t run_at = crm_parse_int(last, "0");
-        char *run_at_s = ctime(&run_at);
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change) == pcmk_ok) {
+        char *run_at_s = ctime(&last_change);
 
         if (run_at_s) {
             run_at_s[24] = 0; /* Overwrite the newline */
