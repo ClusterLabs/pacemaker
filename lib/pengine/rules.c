@@ -35,7 +35,7 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 
         if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
             ruleset_default = FALSE;
-            if (test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now)) {
+            if (pe_test_rule_full(rule, node_hash, RSC_ROLE_UNKNOWN, now, NULL)) {
                 return TRUE;
             }
         }
@@ -136,7 +136,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
              * no node to compare with
              */
             if (node_hash != NULL) {
-                accept = pe_test_attr_expression_full(expr, node_hash, now, match_data);
+                accept = pe_test_attr_expression(expr, node_hash, now, match_data);
             }
             break;
 
@@ -153,7 +153,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             if (node_hash && g_hash_table_lookup_extended(node_hash,
                                                           CRM_ATTR_RA_VERSION,
                                                           NULL, NULL)) {
-                accept = pe_test_attr_expression(expr, node_hash, now);
+                accept = pe_test_attr_expression(expr, node_hash, now, NULL);
             } else {
                 // we are going to test it when we have ra-version
                 accept = TRUE;
@@ -251,13 +251,8 @@ pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 }
 
 gboolean
-pe_test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
-{
-    return pe_test_attr_expression_full(expr, hash, now, NULL);
-}
-
-gboolean
-pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
+                        pe_match_data_t *match_data)
 {
     gboolean accept = FALSE;
     gboolean attr_allocated = FALSE;
