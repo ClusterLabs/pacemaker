@@ -25,6 +25,58 @@ MONdir	= $(CRM_SCHEMA_DIRECTORY)
 basexsltdir		= $(CRM_SCHEMA_DIRECTORY)/base
 dist_basexslt_DATA	= $(srcdir)/base/acls-2-render.xsl
 
+cfgdir			= $(PACEMAKER_CONFIG_DIR)
+dist_cfg_DATA		= $(srcdir)/base/acls-render-cfg.xsl
+
+# note: second step needs to be performed separately in a staged
+#       installation (like, in %post in RPM spec file), so we mark it as
+#       non-critical -- do NOT forget to rerun it at later stage, then
+# note: $(PCMK_XML_CATALOG_DIR)/pacemaker.xml cannot contain rewriteURI
+#       target constructed as file://$(DESTDIR)/$(PACEMAKER_CONFIG_DIR),
+#       since rpmbuild (check-buildroot helper in particular) would
+#       explode, complaining about the occurrence of dist $(DESTDIR)
+#       resolved string
+install-data-hook:
+	mkdir -p $(DESTDIR)/$(PCMK_XML_CATALOG_DIR)
+if HAVE_xmlcatalog
+	$(XMLCATALOG) --noout --create --add rewriteURI \
+	  http://clusterlabs.org/nsredir/pacemaker/cfg \
+	  file://$(PACEMAKER_CONFIG_DIR) \
+	  $(DESTDIR)/$(PCMK_XML_CATALOG_DIR)/pacemaker.xml
+else
+	>$(DESTDIR)/$(PCMK_XML_CATALOG_DIR)/pacemaker.xml cat <<-EOF \
+	<catalog xmlns='urn:oasis:names:tc:entity:xmlns:xml:catalog'>
+	  <rewriteURI uriStartString='http://clusterlabs.org/nsredir/pacemaker/cfg' rewritePrefix='$(PACEMAKER_CONFIG_DIR)'/>
+	</catalog>
+	EOF
+endif
+	-test "x$(XMLCATALOG)" != x \
+	  && test -w $(DESTDIR)/$(sysconfdir)/xml/catalog \
+	  && $(XMLCATALOG) --noout --add delegateURI \
+	    http://clusterlabs.org/nsredir/pacemaker/ \
+	    file://$(DESTDIR)/$(PCMK_XML_CATALOG_DIR)/pacemaker.xml \
+	    $(DESTDIR)/$(sysconfdir)/xml/catalog \
+	  || \
+	    printf "%s\n%s %s %s %s\n" "do not forget to run (with privs):" \
+	    "$(XMLCATALOG) --noout --add delegateURI" \
+	    http://clusterlabs.org/nsredir/pacemaker/ \
+	    file://$(PCMK_XML_CATALOG_DIR)/pacemaker.xml \
+	    $(sysconfdir)/xml/catalog >&2
+
+# see above wrt. two-staged install, uninstall will likely be totally separate
+uninstall-hook:
+	-test "x$(XMLCATALOG)" != x \
+	  && test -w $(DESTDIR)/$(sysconfdir)/xml/catalog \
+	  && $(XMLCATALOG) --noout --del \
+	    http://clusterlabs.org/nsredir/pacemaker/ \
+	    $(DESTDIR)/$(sysconfdir)/xml/catalog \
+	  || \
+	    printf "%s\n%s %s %s\n" "do not forget to run (with privs):" \
+	    "$(XMLCATALOG) --noout --del" \
+	    http://clusterlabs.org/nsredir/pacemaker/ \
+	    $(sysconfdir)/xml/catalog >&2
+	-rm $(DESTDIR)/$(PCMK_XML_CATALOG_DIR)/pacemaker.xml
+
 # Extract a sorted list of available numeric schema versions
 # from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
 numeric_versions = $(shell ls -1 $(1) \
