@@ -27,8 +27,6 @@
 
 #include "crm_mon.h"
 
-static void print_nvpair(mon_state_t *state, const char *name, const char *value,
-                         const char *units, time_t epoch_time);
 static void print_node_start(mon_state_t *state, node_t *node, unsigned int mon_ops);
 static void print_node_end(mon_state_t *state);
 static void print_resources_heading(mon_state_t *state, unsigned int mon_ops);
@@ -79,87 +77,6 @@ static void print_stonith_action(mon_state_t *state, stonith_history_t *event, u
 static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
-
-/*!
- * \internal
- * \brief Print a [name]=[value][units] pair, optionally using time string
- *
- * \param[in] stream      File stream to display output to
- * \param[in] name        Name to display
- * \param[in] value       Value to display (or NULL to convert time instead)
- * \param[in] units       Units to display (or NULL for no units)
- * \param[in] epoch_time  Epoch time to convert if value is NULL
- */
-static void
-print_nvpair(mon_state_t *state, const char *name, const char *value,
-             const char *units, time_t epoch_time)
-{
-    /* print name= */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, " %s=", name);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-        case mon_output_xml:
-            fprintf(state->stream, " %s=", name);
-            break;
-
-        default:
-            break;
-    }
-
-    /* If we have a value (and optionally units), print it */
-    if (value) {
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, "%s%s", value, (units? units : ""));
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, "%s%s", value, (units? units : ""));
-                break;
-
-            case mon_output_xml:
-                fprintf(state->stream, "\"%s%s\"", value, (units? units : ""));
-                break;
-
-            default:
-                break;
-        }
-
-    /* Otherwise print user-friendly time string */
-    } else {
-        static char empty_str[] = "";
-        char *c, *date_str = asctime(localtime(&epoch_time));
-
-        for (c = (date_str != NULL) ? date_str : empty_str; *c != '\0'; ++c) {
-            if (*c == '\n') {
-                *c = '\0';
-                break;
-            }
-        }
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, "'%s'", date_str);
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-            case mon_output_xml:
-                fprintf(state->stream, "\"%s\"", date_str);
-                break;
-
-            default:
-                break;
-        }
-    }
-}
 
 /*!
  * \internal
@@ -507,7 +424,27 @@ print_rsc_history_start(mon_state_t *state, pe_working_set_t *data_set,
 
         /* Print last failure time if any */
         if (last_failure > 0) {
-            print_nvpair(state, CRM_LAST_FAILURE_PREFIX, NULL, NULL, last_failure);
+            switch (state->output_format) {
+                case mon_output_console:
+                case mon_output_plain: {
+                    char *time = pcmk_format_named_time(CRM_LAST_FAILURE_PREFIX, last_failure);
+                    print_as(state->output_format, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                case mon_output_cgi:
+                case mon_output_html:
+                case mon_output_xml: {
+                    char *time = pcmk_format_named_time(CRM_LAST_FAILURE_PREFIX, last_failure);
+                    fprintf(state->stream, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -581,26 +518,37 @@ print_op_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
         case mon_output_plain:
         case mon_output_console:
             print_as(state->output_format, "    + (%s) %s:", call, task);
+            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
+                print_as(state->output_format, " %s", pair);
+                free(pair);
+            }
             break;
 
         case mon_output_html:
         case mon_output_cgi:
             fprintf(state->stream, "     <li>(%s) %s:", call, task);
+            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
+                fprintf(state->stream, " %s", pair);
+                free(pair);
+            }
             break;
 
         case mon_output_xml:
             fprintf(state->stream, "                <operation_history call=\"%s\" task=\"%s\"",
                     call, task);
+            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
+                fprintf(state->stream, " %s", pair);
+                free(pair);
+            }
             break;
 
         default:
             break;
     }
 
-    /* Add name=value pairs as appropriate */
-    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-        print_nvpair(state, "interval", interval_ms_s, "ms", 0);
-    }
     if (is_set(mon_ops, mon_op_print_timing)) {
         time_t epoch = 0;
         const char *attr;
@@ -608,26 +556,106 @@ print_op_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
         attr = XML_RSC_OP_LAST_CHANGE;
         if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
             && (epoch > 0)) {
-            print_nvpair(state, attr, NULL, NULL, epoch);
+            switch (state->output_format) {
+                case mon_output_console:
+                case mon_output_plain: {
+                    char *time = pcmk_format_named_time(attr, epoch);
+                    print_as(state->output_format, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                case mon_output_cgi:
+                case mon_output_html:
+                case mon_output_xml: {
+                    char *time = pcmk_format_named_time(attr, epoch);
+                    fprintf(state->stream, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
 
         // last-run is deprecated
         attr = XML_RSC_OP_LAST_RUN;
         if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
             && (epoch > 0)) {
-            print_nvpair(state, attr, NULL, NULL, epoch);
+            switch (state->output_format) {
+                case mon_output_console:
+                case mon_output_plain: {
+                    char *time = pcmk_format_named_time(attr, epoch);
+                    print_as(state->output_format, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                case mon_output_cgi:
+                case mon_output_html:
+                case mon_output_xml: {
+                    char *time = pcmk_format_named_time(attr, epoch);
+                    fprintf(state->stream, " %s", time);
+                    free(time);
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
 
         attr = XML_RSC_OP_T_EXEC;
         value = crm_element_value(xml_op, attr);
         if (value) {
-            print_nvpair(state, attr, value, "ms", 0);
+            switch (state->output_format) {
+                case mon_output_console:
+                case mon_output_plain: {
+                    char *pair = pcmk_format_nvpair(attr, value, "ms");
+                    print_as(state->output_format, " %s", pair);
+                    free(pair);
+                    break;
+                }
+
+                case mon_output_cgi:
+                case mon_output_html:
+                case mon_output_xml: {
+                    char *pair = pcmk_format_nvpair(attr, value, "ms");
+                    fprintf(state->stream, " %s", pair);
+                    free(pair);
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
 
         attr = XML_RSC_OP_T_QUEUE;
         value = crm_element_value(xml_op, attr);
         if (value) {
-            print_nvpair(state, attr, value, "ms", 0);
+            switch (state->output_format) {
+                case mon_output_console:
+                case mon_output_plain: {
+                    char *pair = pcmk_format_nvpair(attr, value, "ms");
+                    print_as(state->output_format, " %s", pair);
+                    free(pair);
+                    break;
+                }
+
+                case mon_output_cgi:
+                case mon_output_html:
+                case mon_output_xml: {
+                    char *pair = pcmk_format_nvpair(attr, value, "ms");
+                    fprintf(state->stream, " %s", pair);
+                    free(pair);
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -978,6 +1006,11 @@ print_ticket(gpointer name, gpointer value, gpointer user_data)
             print_as(data->output_format, "* %s:\t%s%s", ticket->id,
                      (ticket->granted? "granted" : "revoked"),
                      (ticket->standby? " [standby]" : ""));
+            if (ticket->last_granted > -1) {
+                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+                print_as(data->output_format, " %s\n", time);
+                free(time);
+            }
             break;
 
         case mon_output_html:
@@ -985,33 +1018,22 @@ print_ticket(gpointer name, gpointer value, gpointer user_data)
             fprintf(data->stream, "  <li>%s: %s%s", ticket->id,
                     (ticket->granted? "granted" : "revoked"),
                     (ticket->standby? " [standby]" : ""));
+            if (ticket->last_granted > -1) {
+                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+                fprintf(data->stream, " %s</li>\n", time);
+                free(time);
+            }
             break;
 
         case mon_output_xml:
             fprintf(data->stream, "        <ticket id=\"%s\" status=\"%s\" standby=\"%s\"",
                     ticket->id, (ticket->granted? "granted" : "revoked"),
                     (ticket->standby? "true" : "false"));
-            break;
-
-        default:
-            break;
-    }
-    if (ticket->last_granted > -1) {
-        print_nvpair(data, "last-granted", NULL, NULL, ticket->last_granted);
-    }
-    switch (data->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(data->output_format, "\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(data->stream, "</li>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(data->stream, " />\n");
+            if (ticket->last_granted > -1) {
+                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+                fprintf(data->stream, " %s />\n", time);
+                free(time);
+            }
             break;
 
         default:
