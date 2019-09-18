@@ -562,22 +562,13 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 gboolean
 pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
 {
-    pe_eval_date_result_t result = pe_eval_date_expression(time_expr, now);
-    const char *op = crm_element_value(time_expr, "operation");
+    switch (pe_eval_date_expression(time_expr, now)) {
+        case pe_date_within_range:
+        case pe_date_op_satisfied:
+            return TRUE;
 
-    if (result == pe_date_within_range) {
-        return TRUE;
-
-    } else if ((safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range") || op == NULL) &&
-               result == pe_date_op_satisfied) {
-        return TRUE;
-
-    } else if ((safe_str_eq(op, "eq") || safe_str_eq(op, "neq")) &&
-               result == pe_date_op_satisfied) {
-        return TRUE;
-
-    } else {
-        return FALSE;
+        default:
+            return FALSE;
     }
 }
 
@@ -611,35 +602,33 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     if (start != NULL && end == NULL && duration_spec != NULL) {
         end = pe_parse_xml_duration(start, duration_spec);
     }
-    if (op == NULL) {
-        op = "in_range";
-    }
 
-    if (safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
-        if (start != NULL && crm_time_compare(start, now) > 0) {
+    if ((op == NULL) || safe_str_eq(op, "in_range")) {
+        if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pe_date_before_range;
-        } else if (end != NULL && crm_time_compare(end, now) < 0) {
+        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pe_date_after_range;
-        } else if (safe_str_eq(op, "in_range")) {
-            rc = pe_date_within_range;
         } else {
-            rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
-                                                         : pe_date_op_unsatisfied;
+            rc = pe_date_within_range;
         }
 
+    } else if (safe_str_eq(op, "date_spec")) {
+        rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
+                                                     : pe_date_op_unsatisfied;
+
     } else if (safe_str_eq(op, "gt")) {
-        rc = crm_time_compare(start, now) < 0 ? pe_date_within_range : pe_date_before_range;
+        if (crm_time_compare(now, start) > 0) {
+            rc = pe_date_within_range;
+        } else {
+            rc = pe_date_before_range;
+        }
 
     } else if (safe_str_eq(op, "lt")) {
-        rc = crm_time_compare(end, now) > 0 ? pe_date_within_range : pe_date_after_range;
-
-    } else if (safe_str_eq(op, "eq")) {
-        rc = crm_time_compare(start, now) == 0 ? pe_date_op_satisfied
-                                               : pe_date_op_unsatisfied;
-
-    } else if (safe_str_eq(op, "neq")) {
-        rc = crm_time_compare(start, now) != 0 ? pe_date_op_satisfied
-                                               : pe_date_op_unsatisfied;
+        if (crm_time_compare(now, end) < 0) {
+            rc = pe_date_within_range;
+        } else {
+            rc = pe_date_after_range;
+        }
     }
 
     crm_time_free(start);
