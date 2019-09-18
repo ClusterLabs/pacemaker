@@ -17,6 +17,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/iso8601.h>
 
 #include <glib.h>
 
@@ -46,8 +47,25 @@ enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
 static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               xmlNode *rule_xml,
                                               const char *discovery,
+                                              crm_time_t *next_change,
                                               pe_working_set_t *data_set,
                                               pe_match_data_t *match_data);
+
+static bool
+evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
+{
+    bool result = FALSE;
+    crm_time_t *next_change = crm_time_new_undefined();
+
+    result = pe_evaluate_rules(lifetime, NULL, data_set->now, next_change);
+    if (crm_time_is_defined(next_change)) {
+        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+        pe__update_recheck_time(recheck, data_set);
+    }
+    crm_time_free(next_change);
+    return result;
+}
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -74,7 +92,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
                             id);
         }
 
-        if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
+        if (lifetime && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (safe_str_eq(XML_CONS_TAG_RSC_ORDER, tag)) {
@@ -769,7 +787,6 @@ static gboolean
 unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
                     const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
 {
-    gboolean empty = TRUE;
     pe__location_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -796,21 +813,36 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
         location = rsc2node_new(id, rsc_lh, score_i, discovery, match, data_set);
 
     } else {
-        xmlNode *rule_xml = NULL;
+        bool empty = TRUE;
+        crm_time_t *next_change = crm_time_new_undefined();
 
-        for (rule_xml = __xml_first_child_element(xml_obj); rule_xml != NULL;
-             rule_xml = __xml_next_element(rule_xml)) {
-            if (crm_str_eq((const char *)rule_xml->name, XML_TAG_RULE, TRUE)) {
-                empty = FALSE;
-                crm_trace("Unpacking %s/%s", id, ID(rule_xml));
-                generate_location_rule(rsc_lh, rule_xml, discovery, data_set, match_data);
-            }
+        /* This loop is logically parallel to pe_evaluate_rules(), except
+         * instead of checking whether any rule is active, we set up location
+         * constraints for each active rule.
+         */
+        for (xmlNode *rule_xml = first_named_child(xml_obj, XML_TAG_RULE);
+             rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
+            empty = FALSE;
+            crm_trace("Unpacking %s/%s", id, ID(rule_xml));
+            generate_location_rule(rsc_lh, rule_xml, discovery, next_change,
+                                   data_set, match_data);
         }
 
         if (empty) {
             crm_config_err("Invalid location constraint %s:"
-                           " rsc_location must contain at least one rule", ID(xml_obj));
+                           " rsc_location must contain at least one rule", id);
         }
+
+        /* If there is a point in the future when the evaluation of a rule will
+         * change, make sure the scheduler is re-run by that time.
+         */
+        if (crm_time_is_defined(next_change)) {
+            time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+            pe__update_recheck_time(t, data_set);
+        }
+        crm_time_free(next_change);
+        return TRUE;
     }
 
     if (role == NULL) {
@@ -1029,8 +1061,8 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node,
 
 static pe__location_t *
 generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
-                       const char *discovery, pe_working_set_t *data_set,
-                       pe_match_data_t *match_data)
+                       const char *discovery, crm_time_t *next_change,
+                       pe_working_set_t *data_set, pe_match_data_t *match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -1113,7 +1145,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         node_t *node = (node_t *) gIter->data;
 
         accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
-                              data_set->now, NULL, match_data);
+                              data_set->now, next_change, match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
