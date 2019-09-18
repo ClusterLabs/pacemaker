@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
 
@@ -95,6 +96,34 @@ crm_time_new(const char *date_time)
         dt = parse_date(date_time);
     }
     return dt;
+}
+
+/*!
+ * \brief Allocate memory for an uninitialized time object
+ *
+ * \return Newly allocated time object
+ * \note The caller is responsible for freeing the return value using
+ *       crm_time_free().
+ */
+crm_time_t *
+crm_time_new_undefined()
+{
+    return calloc(1, sizeof(crm_time_t));
+}
+
+/*!
+ * \brief Check whether a time object has been initialized yet
+ *
+ * \param[in] t  Time object to check
+ *
+ * \return TRUE if time object has been initialized, FALSE otherwise
+ */
+bool
+crm_time_is_defined(const crm_time_t *t)
+{
+    // Any nonzero member indicates something has been done to t
+    return (t != NULL) && (t->years || t->months || t->days || t->seconds
+                           || t->offset || t->duration);
 }
 
 void
@@ -451,7 +480,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         dt = date_time;
     }
 
-    if (dt == NULL) {
+    if (!crm_time_is_defined(dt)) {
         strcpy(result, "<undefined time>");
         goto done;
     }
