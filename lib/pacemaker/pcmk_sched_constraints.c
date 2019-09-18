@@ -1112,7 +1112,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         int score_f = 0;
         node_t *node = (node_t *) gIter->data;
 
-        accept = pe_test_rule_full(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now, match_data);
+        accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
+                              data_set->now, NULL, match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);

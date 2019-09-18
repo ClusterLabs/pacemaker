@@ -35,7 +35,7 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 
         if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
             ruleset_default = FALSE;
-            if (pe_test_rule_full(rule, node_hash, RSC_ROLE_UNKNOWN, now, NULL)) {
+            if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, NULL, NULL)) {
                 return TRUE;
             }
         }
@@ -47,7 +47,7 @@ test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_rule_full(rule, node_hash, role, now, NULL);
+    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
 }
 
 gboolean
@@ -58,11 +58,13 @@ pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, cr
                                     .params = NULL,
                                     .meta = NULL,
                                  };
-    return pe_test_rule_full(rule, node_hash, role, now, &match_data);
+    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
 }
 
 gboolean
-pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+             crm_time_t *now, crm_time_t *next_change,
+             pe_match_data_t *match_data)
 {
     xmlNode *expr = NULL;
     gboolean test = TRUE;
@@ -82,7 +84,8 @@ pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, 
     for (expr = __xml_first_child_element(rule); expr != NULL;
          expr = __xml_next_element(expr)) {
 
-        test = pe_test_expression_full(expr, node_hash, role, now, match_data);
+        test = pe_test_expression(expr, node_hash, role, now, next_change,
+                                  match_data);
         empty = FALSE;
 
         if (test && do_and == FALSE) {
@@ -104,9 +107,16 @@ pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, 
 }
 
 gboolean
+pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                  crm_time_t *now, pe_match_data_t *match_data)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
 test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_expression_full(expr, node_hash, role, now, NULL);
+    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
 }
 
 gboolean
@@ -117,18 +127,37 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
                                     .params = NULL,
                                     .meta = NULL,
                                  };
-    return pe_test_expression_full(expr, node_hash, role, now, &match_data);
+    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
 }
 
+/*!
+ * \brief Evaluate one rule subelement (pass/fail)
+ *
+ * A rule element may contain another rule, a node attribute expression, or a
+ * date expression. Given any one of those, evaluate it and return whether it
+ * passed.
+ *
+ * \param[in]  expr         Rule subelement XML
+ * \param[in]  node_hash    Node attributes to use when evaluating expression
+ * \param[in]  role         Resource role to use when evaluating expression
+ * \param[in]  now          Time to use when evaluating expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ * \param[in]  match_data   If not NULL, resource back-references and params
+ *
+ * \return TRUE if expression is in effect under given conditions, else FALSE
+ */
 gboolean
-pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now, crm_time_t *next_change,
+                   pe_match_data_t *match_data)
 {
     gboolean accept = FALSE;
     const char *uname = NULL;
 
     switch (find_expression_type(expr)) {
         case nested_rule:
-            accept = pe_test_rule_full(expr, node_hash, role, now, match_data);
+            accept = pe_test_rule(expr, node_hash, role, now, next_change,
+                                  match_data);
             break;
         case attr_expr:
         case loc_expr:
@@ -141,7 +170,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             break;
 
         case time_expr:
-            accept = pe_test_date_expression(expr, now, NULL);
+            accept = pe_test_date_expression(expr, now, next_change);
             break;
 
         case role_expr:
@@ -172,6 +201,14 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
     crm_trace("Expression %s %s on %s",
               ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
+}
+
+gboolean
+pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                        enum rsc_role_e role, crm_time_t *now,
+                        pe_match_data_t *match_data)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
 }
 
 enum expression_type

@@ -47,11 +47,14 @@ enum expression_type find_expression_type(xmlNode * expr);
 
 gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
 
-gboolean pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
-                         pe_match_data_t * match_data);
+gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
+                      enum rsc_role_e role, crm_time_t *now,
+                      crm_time_t *next_change, pe_match_data_t *match_data);
 
-gboolean pe_test_expression_full(xmlNode * expr, GHashTable * node_hash,
-                         enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data);
+gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
+                            enum rsc_role_e role, crm_time_t *now,
+                            crm_time_t *next_change,
+                            pe_match_data_t *match_data);
 
 void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                 GHashTable * node_hash, GHashTable * hash,
@@ -65,23 +68,33 @@ GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
-//! \deprecated Use pe_test_rule_full() instead
+//! \deprecated Use pe_test_rule() instead
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
 
-//! \deprecated Use pe_test_rule_full() instead
+//! \deprecated Use pe_test_rule() instead
 gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
                          enum rsc_role_e role, crm_time_t *now,
                          pe_re_match_data_t *re_match_data);
 
-//! \deprecated Use pe_test_expression_full() instead
+//! \deprecated Use pe_test_rule() instead
+gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
+                           enum rsc_role_e role, crm_time_t *now,
+                           pe_match_data_t *match_data);
+
+//! \deprecated Use pe_test_expression() instead
 gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
                          enum rsc_role_e role, crm_time_t *now);
 
-//! \deprecated Use pe_test_expression_full() instead
+//! \deprecated Use pe_test_expression() instead
 gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
                          enum rsc_role_e role, crm_time_t *now,
                          pe_re_match_data_t *re_match_data);
+
+//! \deprecated Use pe_test_expression() instead
+gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                                 enum rsc_role_e role,
+                                 crm_time_t *now, pe_match_data_t *match_data);
 
 #ifdef __cplusplus
 }
