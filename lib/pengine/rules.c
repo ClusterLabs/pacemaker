@@ -572,6 +572,15 @@ pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
     }
 }
 
+/*!
+ * \internal
+ * \brief Evaluate a date expression for a specific time
+ *
+ * \param[in]  time_expr    date_expression XML
+ * \param[in]  now          Time for which to evaluate expression
+ *
+ * \return Evaluation result
+ */
 pe_eval_date_result_t
 pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
 {
@@ -583,6 +592,7 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
 
+    // "undetermined" will also be returned for parsing errors
     pe_eval_date_result_t rc = pe_date_result_undetermined;
 
     crm_trace("Testing expression: %s", ID(time_expr));
@@ -604,7 +614,9 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     }
 
     if ((op == NULL) || safe_str_eq(op, "in_range")) {
-        if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+        if ((start == NULL) && (end == NULL)) {
+            // in_range requires at least one of start or end
+        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pe_date_before_range;
         } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pe_date_after_range;
@@ -617,14 +629,18 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
                                                      : pe_date_op_unsatisfied;
 
     } else if (safe_str_eq(op, "gt")) {
-        if (crm_time_compare(now, start) > 0) {
+        if (start == NULL) {
+            // gt requires start
+        } else if (crm_time_compare(now, start) > 0) {
             rc = pe_date_within_range;
         } else {
             rc = pe_date_before_range;
         }
 
     } else if (safe_str_eq(op, "lt")) {
-        if (crm_time_compare(now, end) < 0) {
+        if (end == NULL) {
+            // lt requires end
+        } else if (crm_time_compare(now, end) < 0) {
             rc = pe_date_within_range;
         } else {
             rc = pe_date_after_range;
