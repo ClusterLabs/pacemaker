@@ -7,6 +7,7 @@
 * [High-level design](#high-level-design)
 	* ["Access" on an atomic level](#access-on-an-atomic-level)
 	* [Access control as a set of conjunctions-of-three](#access-control-as-a-set-of-conjunctions-of-three)
+		* [Quadruples, actually?](#quadruples-actually)
 * [The access control label](#the-access-control-label)
 	* [Three levels](#three-levels)
 	* [Multi-label resolution](#multi-label-resolution)
@@ -19,7 +20,9 @@
 	* [Superactor untangled](#superactor-untangled)
 	* [Subject specification indirection through roles](#subject-specification-indirection-through-roles)
 	* [Actor matching criteria](#actor-matching-criteria)
-		* [System user identifier](#system-user-identifier)
+		* [User class resolution: system user identifier](#user-class-resolution-system-user-identifier)
+		* [Group class resolution: system user membership in system group](#group-class-resolution-system-user-membership-in-system-group)
+		* [Synthesis of the actor matching criteria](#synthesis-of-the-actor-matching-criteria)
 * [Practical examples of how the model works](#practical-examples-of-how-the-model-works)
 
 
@@ -272,6 +275,37 @@ _the subject_ are examined in depth, respectively.
 
 * * *
 
+#### Quadruples, actually?
+
+An interesting aspect to mention at this point, since we are about to show
+that _subjects_ can just as well be matched
+[based on membership in the system group](#group-class-resolution-system-user-membership-in-system-group),
+is that the situation with granted access is not necessarily the same
+across the nodes in the cluster.  While the same is to some extent applicable
+also to plain user-based matching of __Actors__, it is not that expected there
+would be intentional differences about which user poses particular accessing
+client.
+
+On the other hand, for fixed users, there can indeed be intentional (or even
+accidental) variations regarding on behalf of which groups they can act, unless
+a centralized account management (such as [FreeIPA](https://www.freeipa.org/);
+also possibly negatively influencing HA goals for possibly becoming a *SPOF*)
+is devised in that computing segment.  It is not hard then to imagine
+a hypothetical generalization that introduces yet another dimension to
+aforementioned three --- which set of nodes are concerned for the initial
+triple, since user-to-groups mapping would then be delivered through solely
+node-local means.  Formally, it would be a quadrupple from Cartesian product
+`O x S x L x P(N)`, where `P(N)` denotes *power set* of the set of all nodes
+available, and only for such nodes would the initial triple be in effect.
+
+We will not complicate our model like that, the point here is rather to
+demonstrate how the overall configuration space is in actuality
+a composition of in-domain and globally shared configuration, and off-domain
+host-local configuration with potential of making the play field rather
+non-uniform.  Granted, a good cluster administrator keeps this in mind
+without saying (and perhaps puts significant effort to maintain homogenity
+throughout the cluster where it matters, to avoid surprises).
+
 
 ## The access control label
 
@@ -312,8 +346,23 @@ applicable to the *single* _object_ (rest is completed per the rules
 Since a single __Asset__ can be matched multiple times (for an affixed
 __Actor__ --- matter of [matching in itself](#actor-matching-criteria)
 --- otherwise trivially holds when not), multiple labels can be
-bound to the same in parallel.  In that case, following resolution rules
-are in effect:
+bound to the same in parallel.  Note however, this can only happen for
+*user class* resolution (for that purpose, conceptually comparable to
+[*file owner class*](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_174)
+if the file access control), since this multi-match (simply) *always*
+worked that way here.
+
+Contrary, when *group class* gets considered, a different, practice proven
+[approach](#group-class-resolution-system-user-membership-in-system-group)
+is taken, and such approach then generalizes (stacks) over __Asset__
+multi-match cases we discuss here, for a predictable uniformity
+(as to whether it was the __Asset__ that was multi-matched, or it was
+__Actor__ that was inherently multi-group-matched, or even both)
+--- there is always only a single label coming from relevant _access
+control triples_ that can be bound to the __Asset__ in that case, hence
+the multi-label will *not* get applied at all, effectively keeping
+following resolution rules applicable for *user class* only (for being
+bypassed otherwise):
 
 1. `deny` takes the foremost precedence when present
 
@@ -625,10 +674,16 @@ mentioning, though, for two reasons:
 
 ### Actor matching criteria
 
-At this point, there's just a single property to discriminate particular
-__Actor__ from the universum so as to expressly specify _the access control
-triple_ --- it is elaborated
-[in the following subsection](#system-user-identifier).
+At this point, there are two properties to discriminate particular
+__Actor__ from the universum so as to expressly specify _the access
+control triple_:
+
+1. [*user class* resolution: system user identifier](#user-class-resolution-system-user-identifier)
+
+2. [*group class* resolution: system-user-membership-in-system-group](#group-class-resolution-system-user-membership-in-system-group)
+
+Both are elaborated in the respective following sections.  Subsequent section
+than deals with how both criteria combine together.
 
 Orthogonal to that, any __Actor__ interfacing with pacemaker API end-points
 needs to satisfy the hard-wired communication layer imposed prerequisite that
@@ -656,7 +711,7 @@ process making an access needs to satisfy either of:
 > [`165b05e9b`](https://github.com/ClusterLabs/pacemaker/commit/165b05e9b#diff-f0c579bcdba77d0ea4c6f0a89ee91b86R238-R274):
 > `lib/common/ipc.c:crm_client_new`)
 
-#### System user identifier
+#### User class resolution: system user identifier
 
 As preceded, this is currently the only available criterion to identify
 particular __Actor__ (_subject_) with, unless already identified as
@@ -714,6 +769,153 @@ __Actors__ in _the access control triple_.
 
 * * *
 
+#### Group class resolution: system user membership in system group
+
+Just as with [system user identifier](#user-class-resolution-system-user-identifier) that referred to
+the concept of system _user database_, system group membership is likewise tight
+to system
+[_group database_](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_188).
+
+Note however, the landscape gets more complicated with a simple fact that
+whereas there is just a single entity to be associated with the user (behind
+the accessing client), there is a `0..M:1..N` relation between such user and
+the respective groups, as was already
+[touched upon](#actor-matching-criteria)
+(see `euid` vs. _supplementary groups_).
+
+Even without considering multi-match with both *system user* and *system group*
+membership criteria applied (discussed
+[in the subsequent section](#synthesis-of-the-actor-matching-criteria),
+there is a concern of how to deal with situation that particular
+__Actor__ matches multiple groups at once.
+What naturally follows is to approach this situation in a similar
+fashion it is dealt with in
+[POSIX.1e ACL facility](https://simson.net/ref/1997/posix_1003.1e-990310.pdf#page=52),
+i.e., deferring to the
+[already introduced](#abstract-concepts-with-intuitive-notions)
+(for being on-topic here), withdrawn part of POSIX.
+Note that while it is not an official component of that specification,
+some platforms, such as Linux with standard GNU userspace, implemented it,
+nonetheless, hence a bit of familiarity with this extension is assumed⁷.
+
+The conflict resolution in such a case is hence equivalent to the respective
+part of
+[ACL access check algorithm](https://simson.net/ref/1997/posix_1003.1e-990310.pdf#page=52),
+part **(3)** of the algorithm in particular (denoted lines 189-201), as quoted
+below:
+
+```
+	[...]
+
+	if the effective group ID or any of the supplementary group IDs of the process
+	   match the group ID of the object or match the group ID specified in any
+	   ACL_GROUP or ACL_GROUP_OBJ tag type ACL entry
+	then
+
+		if the requested access modes are granted by at least one entry matched
+		   by the effective group ID or any of the supplementary group IDs of
+		   the process
+		then
+
+			set matched entry to a granting entry
+
+		else
+
+			access is denied
+
+		endiF
+
+	[...]
+
+	endif
+```
+
+where "setting matched entry" is just a distinctive phrasing for "selecting
+the respective access verdict justification, out of possibly many".
+
+In practical terms, the corollary interpretation to be applied is:
+
+> Multiple differing permissions coming from the group class resolution of
+> particular __Actor__ are flattened into the most allowing of these,
+> i.e., whichever of these _access control labels_ occurs in
+> the candidate set of the partial per-resolution intermediaries first,
+> in order: `write`, `read`, `deny`.
+
+It is vital to realize that this does *not* correspondgroup[per-subject multi-label resolution](#multi-label-resolution),
+which is *only* applied when __Actor__ gets matched at
+[*user class* resolution](#user-class-resolution-system-user-identifier),
+shall the conflicting multi-label bindings arise as stated.
+
+Likewise, it was already pointed out that this approach is generalized
+so that it does *not* matter how particular __Asset__ gets matched,
+given that all the respective _access control triples_ match
+particular __Actor__ through *group class* only (when it is *not*
+the case, is elaborated
+[in the next section](#synthesis-of-the-actor-matching-criteria)).
+
+* * *
+
+> ⁷ Beside the referenced, platform-neutral POSIX part, you can also refer to
+>   [acl(5)](https://linux.die.net/man/5/acl) manual page from the
+>   [Linux access control lists](https://savannah.nongnu.org/projects/acl)
+>   project (which conceptually follows said *POSIX.1e*, making it a full
+>   circle).
+
+* * *
+
+#### Synthesis of the actor matching criteria
+
+Now that the mechanics of how the multi-group membership
+[was clarified](#group-class-resolution-system-user-membership-in-system-group),
+we can continue our anabasis with how such group-level resolution (if any, but
+then, there is just a single input from that line of resolution that feeds this
+very resolution level) combines with the user-level one (that is itself already
+flattened per
+[the detailed multi-label resolution](#multi-label-resolution).
+
+There are no surprises, since it literally complements
+[ACL access check algorithm](https://simson.net/ref/1997/posix_1003.1e-990310.pdf#page=52)
+part of which was
+[already assumed on the group-level](#group-class-resolution-system-user-membership-in-system-group).
+Specifically, the focus is on part **(2)** of the algorithm (denoted lines
+185-189, note that part **(1)** is not applicable for a lack of *ownership*
+concept), as quoted:
+
+
+```
+	[...]
+
+	if the effective user ID of the process matches the use ID specified
+	   in any ACL_USER tag type ACL entry
+	then
+
+		set matched entry to the matching ACL_USER entry
+
+	else
+
+		see quoted step (3) of the algorithm in the previous section
+
+	[...]
+
+	endif
+```
+
+Again, in practical terms, the corollary interpretation to build the top-level
+decision logic up is (as is the order within the reference algorithm):
+
+> Whenever particular __Actor__ is matched in the first installment of the
+> access evaluation
+> [based on *user class* resolution](#user-class-resolution-system-user-identifier)
+> (also reflecting
+> [per-subject multi-label resolution](#multi-label-resolution)), it is
+> a final, explicit assessment.  Otherwise, the second installment of
+> the evaluation
+> [based on *group class* resolution](#group-class-resolution-system-user-membership-in-system-group)
+> can possibly yield a final, explicit assessment.  Otherwise, only
+> [implicit rules](#access-control-matrix-completing-rules-initialization--inheritance-rules)
+> contribute to the final assessment, making for a mutualexclusivity
+> for which of these installments will be applied in order.
+
 
 ## Practical examples of how the model works
 
@@ -735,6 +937,11 @@ __Actors__ in _the access control triple_.
    - `act5`: `(obj2, user:alice, read)`
    - `act6`: `(obj3, user:alice, write)`
    - `act7`: `(obj3, user:alice, deny)`
+   - * * *
+   - `act8`: `(obj2, group:bluehats, deny)`
+   - `act9`: `(obj3, group:redhats, read)`
+   - * * *
+   - `act10`: `(obj2, user:poki, write)`
 
 * relevant system user to group(s) memberships:
 
@@ -749,8 +956,11 @@ __Actors__ in _the access control triple_.
      particular pacemaker daemon runs as [super]privileged
      user on its own)
    - user `carol`: `haclient`
+   - * * *
+   - user `frankenstein`: `haclient`, `bluehats`, `redhats`
+   - user `poki`: `haclient`, `redhats`
 
-In practice:
+1. *user class* resolution only (assuming existence of the objects in question)
 
    - *Ex. 1*: for `/cib`, user `alice` gets `deny` assessment of
      _access control_, based on the *initialization rule* (*A.*) from
@@ -811,3 +1021,22 @@ In practice:
      [the stated implicit fallbacks](#access-control-matrix-completing-rules-initialization-inheritance-rules)
      that carries over the resolution from the immediate parent _object_
      --- see the previous *Ex. 8*
+
+2. *group class* resolution only
+
+   - *Ex. 10*: for `/cib/configuration/crm_config` (`obj2` = `obj3`), user
+     `frankenstein` gets `read` assessment of _access control_, since the
+     candidate set of intermediaries `{deny, read}` --- coming from `act8`,
+     `act9`, or `bluehats`, `redhats` groups, respectively --- is processed per
+     [*group class* resolution](#group-class-resolution-system-user-membership-in-system-group)
+     whereby `read` dominates the other "accomplice" label, `deny`
+
+3. mix of *user* and *group class* potential resolutions
+
+   - *Ex. 11*: for `/cib/configuration/crm_config` (`obj2` = `obj3`), user
+     `poki` gets `write` assessment of _access control_, since this is
+     a trivial match with `act10` explicitly resolving triple, without
+     any further involvement; note that,
+     [as stated](#synthesis-of-the-actor-matching-criteria),
+     applicability of *user class* precludes the second installment based
+     on *group class* (which itself would yield `read` assessment)
