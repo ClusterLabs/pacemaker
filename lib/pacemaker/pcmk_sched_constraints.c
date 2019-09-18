@@ -747,7 +747,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &match_data);
 
-            } if(invert && status != 0) {
+            } else if (invert && (status != 0)) {
                 crm_debug("'%s' is an inverted match of '%s' for %s", r->id, value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, NULL);
 
