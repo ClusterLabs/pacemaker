@@ -64,7 +64,6 @@ static void print_cluster_dc(mon_state_t *state, pe_working_set_t *data_set,
                              unsigned int mon_ops);
 static void print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
                                   unsigned int mon_ops, unsigned int show);
-static void print_failed_action(mon_state_t *state, xmlNode *xml_op);
 static void print_failed_actions(mon_state_t *state, pe_working_set_t *data_set);
 static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
@@ -1246,130 +1245,6 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
 
 /*!
  * \internal
- * \brief Print a failed action
- *
- * \param[in] stream     File stream to display output to
- * \param[in] xml_op     Root of XML tree describing failed action
- */
-static void
-print_failed_action(mon_state_t *state, xmlNode *xml_op)
-{
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *op_key_attr = "op_key";
-    const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
-    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
-    time_t last_change = 0;
-    char *exit_reason_cleaned;
-
-    /* If no op_key was given, use id instead */
-    if (op_key == NULL) {
-        op_key = ID(xml_op);
-        op_key_attr = "id";
-    }
-
-    /* If no exit reason was given, use "none" */
-    if (exit_reason == NULL) {
-        exit_reason = "none";
-    }
-
-    /* Print common action information */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "* %s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                     op_key, node, services_ocf_exitcode_str(rc), rc,
-                     call, services_lrm_status_str(status), exit_reason);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "  <li>%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                     op_key, node, services_ocf_exitcode_str(rc), rc,
-                     call, services_lrm_status_str(status), exit_reason);
-            break;
-
-        case mon_output_xml:
-            exit_reason_cleaned = crm_xml_escape(exit_reason);
-            fprintf(state->stream, "        <failure %s=\"%s\" node=\"%s\"",
-                    op_key_attr, op_key, node);
-            fprintf(state->stream, " exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\"",
-                    services_ocf_exitcode_str(rc), exit_reason_cleaned, rc);
-            fprintf(state->stream, " call=\"%s\" status=\"%s\"",
-                    call, services_lrm_status_str(status));
-            free(exit_reason_cleaned);
-            break;
-
-        default:
-            break;
-    }
-
-    /* If last change was given, print timing information as well */
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                &last_change) == pcmk_ok) {
-        char *run_at_s = ctime(&last_change);
-
-        if (run_at_s) {
-            run_at_s[24] = 0; /* Overwrite the newline */
-        }
-
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, ",\n    last-rc-change='%s', queued=%sms, exec=%sms",
-                         run_at_s? run_at_s : "",
-                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, " last-rc-change='%s', queued=%sms, exec=%sms",
-                        run_at_s? run_at_s : "",
-                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-                break;
-
-            case mon_output_xml:
-                fprintf(state->stream,
-                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%u\" task=\"%s\"",
-                        run_at_s? run_at_s : "",
-                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                        crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)),
-                        crm_element_value(xml_op, XML_LRM_ATTR_TASK));
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    /* End the action listing */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "</li>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, " />\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
  * \brief Print a section for failed actions
  *
  * \param[in] stream     File stream to display output to
@@ -1381,46 +1256,20 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
     xmlNode *xml_op = NULL;
 
     /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nFailed Resource Actions:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream,
-                    " <hr />\n <h2>Failed Resource Actions</h2>\n <ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <failures>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "failures");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Failed Resource Actions");
     }
 
     /* Print each failed action */
     for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
-        print_failed_action(state, xml_op);
+        state->out->message(state->out, "failed-action", xml_op);
     }
 
     /* End section */
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " </ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    </failures>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->end_list(state->out);
 }
 
 /*!
