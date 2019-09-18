@@ -439,6 +439,7 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
 
     out->begin_list(out, "Fencing history", "event", "events");
 
+    history = stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_done) {
             latest = hp;
@@ -448,14 +449,14 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             continue;
         }
 
-        out->message(out, "stonith-event", hp, 1, history);
+        out->message(out, "stonith-event", hp, 1, stonith__later_succeeded(hp, history));
     }
 
     if (latest) {
         if (quiet && out->supports_quiet) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest, 0, NULL);
+            out->message(out, "stonith-event", latest, 0, FALSE);
         }
     }
 

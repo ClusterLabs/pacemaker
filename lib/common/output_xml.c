@@ -22,9 +22,13 @@
 #include <glib.h>
 
 static gboolean legacy_xml = FALSE;
+static gboolean simple_list = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
     { "output-legacy-xml", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
+      NULL,
+      NULL },
+    { "output-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
       NULL,
       NULL },
 
@@ -231,7 +235,7 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 static void
 xml_begin_list(pcmk__output_t *out, const char *name,
                const char *singular_noun, const char *plural_noun) {
-    if (legacy_xml) {
+    if (legacy_xml || simple_list) {
         pcmk__output_xml_create_parent(out, name);
     } else {
         xmlNodePtr list_node = NULL;
@@ -258,7 +262,7 @@ xml_end_list(pcmk__output_t *out) {
 
     CRM_ASSERT(priv != NULL);
 
-    if (priv->legacy_xml) {
+    if (priv->legacy_xml || simple_list) {
         g_queue_pop_tail(priv->parent_q);
     } else {
         char *buf = NULL;

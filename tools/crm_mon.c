@@ -387,7 +387,7 @@ static GOptionEntry display_entries[] = {
       INDENT "3=show full history without reduction to most recent of each flavor",
       "LEVEL" },
 
-    { "neg-locations", 'L', 0, G_OPTION_ARG_CALLBACK, show_bans_cb,
+    { "neg-locations", 'L', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, show_bans_cb,
       "Display negative location constraints [optionally filtered by id prefix]",
       NULL },
 
@@ -893,6 +893,11 @@ main(int argc, char **argv)
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
+    } else if (output_format == mon_output_xml) {
+        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            return clean_up(CRM_EX_USAGE);
+        }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
         if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
@@ -1241,60 +1246,6 @@ reduce_stonith_history(stonith_history_t *history)
         }
     }
 
-    return new;
-}
-
-/*!
- * \internal
- * \brief Sort the stonith-history
- *        sort by competed most current on the top
- *        pending actions lacking a completed-stamp are gathered at the top
- *
- * \param[in] history    List of stonith actions
- *
- */
-static stonith_history_t *
-sort_stonith_history(stonith_history_t *history)
-{
-    stonith_history_t *new = NULL, *pending = NULL, *hp, *np, *tmp;
-
-    for (hp = history; hp; ) {
-        tmp = hp->next;
-        if ((hp->state == st_done) || (hp->state == st_failed)) {
-            /* sort into new */
-            if ((!new) || (hp->completed > new->completed)) {
-                hp->next = new;
-                new = hp;
-            } else {
-                np = new;
-                do {
-                    if ((!np->next) || (hp->completed > np->next->completed)) {
-                        hp->next = np->next;
-                        np->next = hp;
-                        break;
-                    }
-                    np = np->next;
-                } while (1);
-            }
-        } else {
-            /* put into pending */
-            hp->next = pending;
-            pending = hp;
-        }
-        hp = tmp;
-    }
-
-    /* pending actions don't have a completed-stamp so make them go front */
-    if (pending) {
-        stonith_history_t *last_pending = pending;
-
-        while (last_pending->next) {
-            last_pending = last_pending->next;
-        }
-
-        last_pending->next = new;
-        new = pending;
-    }
     return new;
 }
 
@@ -1682,7 +1633,7 @@ mon_refresh_display(gpointer user_data)
                 fprintf(stderr, "Critical: Unable to get stonith-history\n");
                 mon_cib_connection_destroy(NULL);
             } else {
-                stonith_history = sort_stonith_history(stonith_history);
+                stonith_history = stonith__sort_history(stonith_history);
                 if (is_not_set(options.mon_ops, mon_op_fence_full_history) && output_format != mon_output_xml) {
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
