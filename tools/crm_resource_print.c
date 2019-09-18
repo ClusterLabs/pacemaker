@@ -25,9 +25,9 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
             continue;
         }
 
+        // @COMPAT lifetime is deprecated
         lifetime = first_named_child(xml_obj, "lifetime");
-
-        if (test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+        if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
             continue;
         }
 

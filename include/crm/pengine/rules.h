@@ -45,7 +45,8 @@ typedef struct pe_match_data {
 
 enum expression_type find_expression_type(xmlNode * expr);
 
-gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
+gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
+                           crm_time_t *now, crm_time_t *next_change);
 
 gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
                       enum rsc_role_e role, crm_time_t *now,
@@ -67,6 +68,9 @@ GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char
 #endif
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
+
+//! \deprecated Use pe_evaluate_rules() instead
+gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 
 //! \deprecated Use pe_test_rule() instead
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,

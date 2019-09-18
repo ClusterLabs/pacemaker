@@ -24,24 +24,45 @@
 
 CRM_TRACE_INIT_DATA(pe_rules);
 
+/*!
+ * \brief Evaluate any rules contained by given XML element
+ *
+ * \param[in]  xml          XML element to check for rules
+ * \param[in]  node_hash    Node attributes to use when evaluating expressions
+ * \param[in]  now          Time to use when evaluating expressions
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if no rules, or any of rules present is in effect, else FALSE
+ */
 gboolean
-test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
+pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
+                  crm_time_t *next_change)
 {
+    // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
-    xmlNode *rule = NULL;
 
-    for (rule = __xml_first_child_element(ruleset); rule != NULL;
-         rule = __xml_next_element(rule)) {
+    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
+         rule != NULL; rule = crm_next_same_xml(rule)) {
 
-        if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
-            ruleset_default = FALSE;
-            if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, NULL, NULL)) {
-                return TRUE;
-            }
+        ruleset_default = FALSE;
+        if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, next_change,
+                         NULL)) {
+            /* Only the deprecated "lifetime" element of location constraints
+             * may contain more than one rule at the top level -- the schema
+             * limits a block of nvpairs to a single top-level rule. So, this
+             * effectively means that a lifetime is active if any rule it
+             * contains is active.
+             */
+            return TRUE;
         }
     }
-
     return ruleset_default;
+}
+
+gboolean
+test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
+{
+    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
 }
 
 gboolean
@@ -882,6 +903,7 @@ typedef struct unpack_data_s {
     GHashTable *node_hash;
     void *hash;
     crm_time_t *now;
+    crm_time_t *next_change;
     xmlNode *top;
 } unpack_data_t;
 
@@ -891,7 +913,8 @@ unpack_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
+    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
+                           unpack_data->now, unpack_data->next_change)) {
         return;
     }
 
@@ -915,7 +938,8 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
+    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
+                          unpack_data->now, unpack_data->next_change)) {
         return;
     }
 
@@ -967,6 +991,7 @@ make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_n
         data->node_hash = node_hash;
         data->now = now;
         data->overwrite = overwrite;
+        data->next_change = NULL;
         data->top = top;
     }
 

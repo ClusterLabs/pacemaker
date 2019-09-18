@@ -74,7 +74,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
                             id);
         }
 
-        if (test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+        if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (safe_str_eq(XML_CONS_TAG_RSC_ORDER, tag)) {
