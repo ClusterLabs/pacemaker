@@ -141,7 +141,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             break;
 
         case time_expr:
-            accept = pe_test_date_expression(expr, now);
+            accept = pe_test_date_expression(expr, now, NULL);
             break;
 
         case role_expr:
@@ -559,10 +559,21 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
     return end;
 }
 
+/*!
+ * \internal
+ * \brief Test a date expression (pass/fail) for a specific time
+ *
+ * \param[in]  time_expr    date_expression XML
+ * \param[in]  now          Time for which to evaluate expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if date expression is in effect at given time, FALSE otherwise
+ */
 gboolean
-pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
+pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
+                        crm_time_t *next_change)
 {
-    switch (pe_eval_date_expression(time_expr, now)) {
+    switch (pe_eval_date_expression(time_expr, now, next_change)) {
         case pe_date_within_range:
         case pe_date_op_satisfied:
             return TRUE;
@@ -572,17 +583,31 @@ pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
     }
 }
 
+// Set next_change to t if t is earlier
+static void
+crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
+{
+    if ((next_change != NULL) && (t != NULL)) {
+        if (!crm_time_is_defined(next_change)
+            || (crm_time_compare(t, next_change) < 0)) {
+            crm_time_set(next_change, t);
+        }
+    }
+}
+
 /*!
  * \internal
  * \brief Evaluate a date expression for a specific time
  *
  * \param[in]  time_expr    date_expression XML
  * \param[in]  now          Time for which to evaluate expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
  *
  * \return Evaluation result
  */
 pe_eval_date_result_t
-pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
+pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
+                        crm_time_t *next_change)
 {
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
@@ -618,15 +643,22 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pe_date_before_range;
+            crm_time_set_if_earlier(next_change, start);
         } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pe_date_after_range;
         } else {
             rc = pe_date_within_range;
+            if (end && next_change) {
+                // Evaluation doesn't change until second after end
+                crm_time_add_seconds(end, 1);
+                crm_time_set_if_earlier(next_change, end);
+            }
         }
 
     } else if (safe_str_eq(op, "date_spec")) {
         rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
                                                      : pe_date_op_unsatisfied;
+        // @TODO set next_change appropriately
 
     } else if (safe_str_eq(op, "gt")) {
         if (start == NULL) {
@@ -635,6 +667,10 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
             rc = pe_date_within_range;
         } else {
             rc = pe_date_before_range;
+
+            // Evaluation doesn't change until second after start
+            crm_time_add_seconds(start, 1);
+            crm_time_set_if_earlier(next_change, start);
         }
 
     } else if (safe_str_eq(op, "lt")) {
@@ -642,6 +678,7 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
             // lt requires end
         } else if (crm_time_compare(now, end) < 0) {
             rc = pe_date_within_range;
+            crm_time_set_if_earlier(next_change, end);
         } else {
             rc = pe_date_after_range;
         }
