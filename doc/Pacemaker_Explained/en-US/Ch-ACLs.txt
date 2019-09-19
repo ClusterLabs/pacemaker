@@ -13,6 +13,11 @@ By default, the +root+ user or any user in the +haclient+ group can modify
 Pacemaker's CIB without restriction. Pacemaker offers 'access control lists
 (ACLs)' to provide more fine-grained authorization.
 
+In the following sections, a quick overview from a configuration perspective
+is provided, for design level details,
+https://github.com/ClusterLabs/pacemaker/blob/master/doc/design/data-access-control.md[a dedicated document]
+can be reviewed.
+
 == ACL Prerequisites ==
 
 In order to use ACLs:

@@ -7,6 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+/*! \file
+ * \internal
+ * Implementation bits for the data access control feature.
+ *
+ * \see doc/design/data-access-control.md
+ */
+
+
 #include <crm_internal.h>
 
 #include <stdio.h>
