@@ -1009,13 +1009,15 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
  * \param[in]  always_first  If not NULL, process block with this ID first
  * \param[in]  overwrite     Whether to replace existing values with same name
  * \param[in]  now           Time to use when evaluating rules
+ * \param[out] next_change   If not NULL, set to when rule evaluation will change
  * \param[in]  unpack_func   Function to call to unpack each block
  */
 static void
 unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                      GHashTable *node_hash, void *hash,
                      const char *always_first, gboolean overwrite,
-                     crm_time_t *now, GFunc unpack_func)
+                     crm_time_t *now, crm_time_t *next_change,
+                     GFunc unpack_func)
 {
     GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
 
@@ -1025,7 +1027,7 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
             .node_hash = node_hash,
             .now = now,
             .overwrite = overwrite,
-            .next_change = NULL,
+            .next_change = next_change,
             .top = top,
         };
 
@@ -1045,23 +1047,37 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
  * \param[in]  always_first  If not NULL, process block with this ID first
  * \param[in]  overwrite     Whether to replace existing values with same name
  * \param[in]  now           Time to use when evaluating rules
+ * \param[out] next_change   If not NULL, set to when rule evaluation will change
  */
 void
-unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                           GHashTable * node_hash, GHashTable * hash, const char *always_first,
-                           gboolean overwrite, crm_time_t * now)
+pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                  GHashTable *node_hash, GHashTable *hash,
+                  const char *always_first, gboolean overwrite,
+                  crm_time_t *now, crm_time_t *next_change)
 {
     unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, unpack_attr_set);
+                         overwrite, now, next_change, unpack_attr_set);
+}
+
+void
+unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           crm_time_t *now)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, NULL, unpack_attr_set);
 }
 
 #if ENABLE_VERSIONED_ATTRS
 void
-pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                               GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
+pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
+                               const char *set_name, GHashTable *node_hash,
+                               xmlNode *hash, crm_time_t *now,
+                               crm_time_t *next_change)
 {
     unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, NULL, FALSE,
-                         now, unpack_versioned_attr_set);
+                         now, next_change, unpack_versioned_attr_set);
 }
 #endif
 
@@ -1135,8 +1151,9 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
         if (attr_set) {
             g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
                                 strdup(ra_version));
-            unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
-                                       node_hash, hash, NULL, FALSE, NULL);
+            pe_unpack_nvpairs(NULL, versioned_params,
+                              crm_element_name(attr_set), node_hash, hash, NULL,
+                              FALSE, NULL, NULL);
         }
 
         g_hash_table_destroy(node_hash);

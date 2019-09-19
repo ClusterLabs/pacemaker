@@ -762,8 +762,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = crm_str_table_new();
-    unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, now);
+    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
+                      config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     verify_crmd_options(config_hash);
 

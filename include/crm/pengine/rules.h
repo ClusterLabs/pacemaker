@@ -57,13 +57,16 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             crm_time_t *next_change,
                             pe_match_data_t *match_data);
 
-void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                                GHashTable * node_hash, GHashTable * hash,
-                                const char *always_first, gboolean overwrite, crm_time_t * now);
+void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                       GHashTable *node_hash, GHashTable *hash,
+                       const char *always_first, gboolean overwrite,
+                       crm_time_t *now, crm_time_t *next_change);
 
 #if ENABLE_VERSIONED_ATTRS
-void pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                                    GHashTable * node_hash, xmlNode * hash, crm_time_t * now);
+void pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
+                                    const char *set_name, GHashTable *node_hash,
+                                    xmlNode *hash, crm_time_t *now,
+                                    crm_time_t *next_change);
 GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
 #endif
 
@@ -99,6 +102,12 @@ gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
 gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
                                  enum rsc_role_e role,
                                  crm_time_t *now, pe_match_data_t *match_data);
+
+//! \deprecated Use pe_unpack_nvpairs() instead
+void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
+                                const char *set_name, GHashTable *node_hash,
+                                GHashTable *hash, const char *always_first,
+                                gboolean overwrite, crm_time_t *now);
 
 #ifdef __cplusplus
 }

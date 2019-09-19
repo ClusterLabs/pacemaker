@@ -298,9 +298,8 @@ cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t
         get_meta_attributes(params, rsc, current, data_set);
 
     } else {
-        unpack_instance_attributes(data_set->input, rsc->xml,
-                                   XML_TAG_UTILIZATION, NULL,
-                                   params, NULL, FALSE, data_set->now);
+        pe_unpack_nvpairs(data_set->input, rsc->xml, XML_TAG_UTILIZATION, NULL,
+                          params, NULL, FALSE, data_set->now, NULL);
     }
 
     crm_debug("Looking up %s in %s", attr, rsc->id);

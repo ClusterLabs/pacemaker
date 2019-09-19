@@ -669,8 +669,8 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
     if (config) {
-        unpack_instance_attributes(current_cib, config, XML_CIB_TAG_PROPSET, NULL, options,
-                                   CIB_OPTIONS_FIRST, TRUE, now);
+        pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
+                          options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
     verify_cib_options(options);

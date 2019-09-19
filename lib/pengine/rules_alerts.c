@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -20,8 +22,8 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
     crm_time_t *now = crm_time_new(NULL);
     const char *value = NULL;
 
-    unpack_instance_attributes(basenode, basenode, XML_TAG_META_SETS, NULL,
-                               config_hash, NULL, FALSE, now);
+    pe_unpack_nvpairs(basenode, basenode, XML_TAG_META_SETS, NULL, config_hash,
+                      NULL, FALSE, now, NULL);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TIMEOUT);
