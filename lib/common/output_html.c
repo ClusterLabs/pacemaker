@@ -25,6 +25,11 @@ static const char *stylesheet_default =
     ".maint { color: blue }\n"
     ".offline { color: red }\n"
     ".online { color: green }\n"
+    ".rsc-failed { color: red }\n"
+    ".rsc-failure-ignored { color: yellow }\n"
+    ".rsc-managed { color: yellow }\n"
+    ".rsc-multiple { color: orange }\n"
+    ".rsc-ok { color: green }\n"
     ".standby { color: orange }\n"
     ".warning { color: red, font-weight: bold }";
 

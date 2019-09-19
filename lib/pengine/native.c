@@ -666,7 +666,8 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
 
-    const char *color = NULL;
+    xmlNodePtr list_node = NULL;
+    const char *cl = NULL;
 
     CRM_ASSERT(rsc->variant == pe_native);
     CRM_ASSERT(kind != NULL);
@@ -684,33 +685,29 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         node = NULL;
     }
 
-    pcmk__output_xml_create_parent(out, "font");
-
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        color = "yellow";
+        cl = "rsc-managed";
 
     } else if (is_set(rsc->flags, pe_rsc_failed)) {
-        color = "red";
+        cl = "rsc-failed";
 
     } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
-        color = "red";
+        cl = "rsc-failed";
 
     } else if (g_list_length(rsc->running_on) > 1) {
-        color = "orange";
+        cl = "rsc-multiple";
 
     } else if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        color = "yellow";
+        cl = "rsc-failure-ignored";
 
     } else {
-        color = "green";
+        cl = "rsc-ok";
     }
-    xmlSetProp(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)"color", (pcmkXmlStr)color);
 
     s = native_output_string(rsc, name, node, options, target_role);
-	xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr)s);
+    list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
+    pcmk_create_html_node(list_node, "span", NULL, cl, s);
     free(s);
-
-	pcmk__output_create_xml_node(out, "br");
 
     if (is_set(options, pe_print_details)) {
         GHashTableIter iter;
