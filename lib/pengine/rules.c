@@ -747,11 +747,12 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
     return rc;
 }
 
+// Information about a block of nvpair elements
 typedef struct sorted_set_s {
-    int score;
-    const char *name;
-    const char *special_name;
-    xmlNode *attr_set;
+    int score;                  // This block's score for sorting
+    const char *name;           // This block's ID
+    const char *special_name;   // ID that should sort first
+    xmlNode *attr_set;          // This block
 } sorted_set_t;
 
 static gint
@@ -938,19 +939,27 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
+    if (pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
                           unpack_data->now, unpack_data->next_change)) {
-        return;
+        add_versioned_attributes(pair->attr_set, unpack_data->hash);
     }
-
-    add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
 #endif
 
-static GListPtr
-make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                             GHashTable * node_hash, void * hash, const char *always_first,
-                             gboolean overwrite, crm_time_t * now, unpack_data_t * data)
+/*!
+ * \internal
+ * \brief Create a sorted list of nvpair blocks
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      If not NULL, only get blocks of this element type
+ * \param[in]  always_first  If not NULL, sort block with this ID as first
+ *
+ * \return List of sorted_set_t entries for nvpair blocks
+ */
+static GList *
+make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+           const char *always_first)
 {
     GListPtr unsorted = NULL;
     const char *score = NULL;
@@ -985,36 +994,65 @@ make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_n
             unsorted = g_list_prepend(unsorted, pair);
         }
     }
-
-    if (pair != NULL) {
-        data->hash = hash;
-        data->node_hash = node_hash;
-        data->now = now;
-        data->overwrite = overwrite;
-        data->next_change = NULL;
-        data->top = top;
-    }
-
-    if (unsorted) {
-        return g_list_sort(unsorted, sort_pairs);
-    }
-
-    return NULL;
+    return g_list_sort(unsorted, sort_pairs);
 }
 
+/*!
+ * \internal
+ * \brief Extract nvpair blocks contained by an XML element into a hash table
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      If not NULL, only use blocks of this element type
+ * \param[in]  node_hash     Node attributes to use when evaluating rules
+ * \param[out] hash          Where to store extracted name/value pairs
+ * \param[in]  always_first  If not NULL, process block with this ID first
+ * \param[in]  overwrite     Whether to replace existing values with same name
+ * \param[in]  now           Time to use when evaluating rules
+ * \param[in]  unpack_func   Function to call to unpack each block
+ */
+static void
+unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                     GHashTable *node_hash, void *hash,
+                     const char *always_first, gboolean overwrite,
+                     crm_time_t *now, GFunc unpack_func)
+{
+    GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
+
+    if (pairs) {
+        unpack_data_t data = {
+            .hash = hash,
+            .node_hash = node_hash,
+            .now = now,
+            .overwrite = overwrite,
+            .next_change = NULL,
+            .top = top,
+        };
+
+        g_list_foreach(pairs, unpack_func, &data);
+        g_list_free_full(pairs, free);
+    }
+}
+
+/*!
+ * \brief Extract nvpair blocks contained by an XML element into a hash table
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      Element name to identify nvpair blocks
+ * \param[in]  node_hash     Node attributes to use when evaluating rules
+ * \param[out] hash          Where to store extracted name/value pairs
+ * \param[in]  always_first  If not NULL, process block with this ID first
+ * \param[in]  overwrite     Whether to replace existing values with same name
+ * \param[in]  now           Time to use when evaluating rules
+ */
 void
 unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                            GHashTable * node_hash, GHashTable * hash, const char *always_first,
                            gboolean overwrite, crm_time_t * now)
 {
-    unpack_data_t data;
-    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
-                                                  always_first, overwrite, now, &data);
-
-    if (pairs) {
-        g_list_foreach(pairs, unpack_attr_set, &data);
-        g_list_free_full(pairs, free);
-    }
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, unpack_attr_set);
 }
 
 #ifdef ENABLE_VERSIONED_ATTRS
@@ -1022,14 +1060,8 @@ void
 pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
 {
-    unpack_data_t data;
-    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
-                                                  NULL, FALSE, now, &data);
-
-    if (pairs) {
-        g_list_foreach(pairs, unpack_versioned_attr_set, &data);
-        g_list_free_full(pairs, free);
-    }
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, NULL, FALSE,
+                         now, unpack_versioned_attr_set);
 }
 #endif
 
