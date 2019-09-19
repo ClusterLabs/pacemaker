@@ -198,7 +198,7 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
             accept = pe_test_role_expression(expr, role, now);
             break;
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
         case version_expr:
             if (node_hash && g_hash_table_lookup_extended(node_hash,
                                                           CRM_ATTR_RA_VERSION,
@@ -258,7 +258,7 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
     } else if (safe_str_eq(attr, CRM_ATTR_RA_VERSION)) {
         return version_expr;
 #endif
@@ -840,7 +840,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 static xmlNode*
 get_versioned_rule(xmlNode * attr_set)
 {
@@ -919,7 +919,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
         g_hash_table_lookup_extended(unpack_data->node_hash,
                                      CRM_ATTR_RA_VERSION, NULL, NULL))) {
@@ -932,7 +932,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_attr_set(gpointer data, gpointer user_data)
 {
@@ -1055,7 +1055,7 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
                          overwrite, now, unpack_attr_set);
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 void
 pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
@@ -1122,7 +1122,7 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     return result;
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
