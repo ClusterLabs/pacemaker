@@ -549,9 +549,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
         if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
             && action->node != NULL && action->op_entry != NULL) {
             pe_set_action_bit(action, pe_action_have_node_attrs);
-            pe_unpack_nvpairs(data_set->input, action->op_entry,
-                              XML_TAG_ATTR_SETS, action->node->details->attrs,
-                              action->extra, NULL, FALSE, data_set->now, NULL);
+            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
+                                       action->node->details->attrs,
+                                       action->extra, NULL, FALSE, data_set);
         }
 
         if (is_set(action->flags, pe_action_pseudo)) {
@@ -839,9 +839,8 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
 
     if (timeout == NULL && data_set->op_defaults) {
         GHashTable *action_meta = crm_str_table_new();
-        pe_unpack_nvpairs(data_set->input, data_set->op_defaults,
-                          XML_TAG_META_SETS, NULL, action_meta, NULL, FALSE,
-                          data_set->now, NULL);
+        pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
+                                   NULL, action_meta, NULL, FALSE, data_set);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
@@ -921,8 +920,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe_unpack_nvpairs(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
-                      NULL, action->meta, NULL, FALSE, data_set->now, NULL);
+    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, NULL,
+                               action->meta, NULL, FALSE, data_set);
 
     // Probe timeouts default differently, so handle timeout default later
     default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
@@ -935,8 +934,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         xmlAttrPtr xIter = NULL;
 
         // <op> <meta_attributes> take precedence over defaults
-        pe_unpack_nvpairs(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                          action->meta, NULL, TRUE, data_set->now, NULL);
+        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, NULL,
+                                   action->meta, NULL, TRUE, data_set);
 
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);

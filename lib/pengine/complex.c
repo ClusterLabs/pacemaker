@@ -110,8 +110,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
         }
     }
 
-    pe_unpack_nvpairs(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
-                      meta_hash, NULL, FALSE, data_set->now, NULL);
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, node_hash,
+                               meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -119,9 +119,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
     }
 
     /* and finally check the defaults */
-    pe_unpack_nvpairs(data_set->input, data_set->rsc_defaults,
-                      XML_TAG_META_SETS, node_hash, meta_hash, NULL, FALSE,
-                      data_set->now, NULL);
+    pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
+                               node_hash, meta_hash, NULL, FALSE, data_set);
 }
 
 void
@@ -134,8 +133,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
         node_hash = node->details->attrs;
     }
 
-    pe_unpack_nvpairs(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                      meta_hash, NULL, FALSE, data_set->now, NULL);
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+                               meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -143,9 +142,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
 
     } else {
         /* and finally check the defaults */
-        pe_unpack_nvpairs(data_set->input, data_set->rsc_defaults,
-                          XML_TAG_ATTR_SETS, node_hash, meta_hash, NULL, FALSE,
-                          data_set->now, NULL);
+        pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_ATTR_SETS,
+                                   node_hash, meta_hash, NULL, FALSE, data_set);
     }
 }
 
@@ -706,8 +704,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     (*rsc)->utilization = crm_str_table_new();
 
-    pe_unpack_nvpairs(data_set->input, (*rsc)->xml, XML_TAG_UTILIZATION, NULL,
-                      (*rsc)->utilization, NULL, FALSE, data_set->now, NULL);
+    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, NULL,
+                               (*rsc)->utilization, NULL, FALSE, data_set);
 
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 
