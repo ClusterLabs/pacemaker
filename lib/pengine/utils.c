@@ -2552,3 +2552,25 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
         data_set->recheck_by = recheck;
     }
 }
+
+/*!
+ * \internal
+ * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ */
+void
+pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           pe_working_set_t *data_set)
+{
+    crm_time_t *next_change = crm_time_new_undefined();
+
+    pe_unpack_nvpairs(data_set->input, xml_obj, set_name, node_hash, hash,
+                      always_first, overwrite, data_set->now, next_change);
+    if (crm_time_is_defined(next_change)) {
+        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+        pe__update_recheck_time(recheck, data_set);
+    }
+    crm_time_free(next_change);
+}
