@@ -202,11 +202,10 @@ crm_time_log_alias(int log_level, const char *file, const char *function, int li
 
     if (log_level < LOG_CRIT) {
         printf("%s%s%s\n",
-               prefix ? prefix : "", prefix ? ": " : "", date_s ? date_s : "__invalid_date__");
+               (prefix? prefix : ""), (prefix? ": " : ""), date_s);
     } else {
         do_crm_log_alias(log_level, file, function, line, "%s%s%s",
-                         prefix ? prefix : "", prefix ? ": " : "",
-                         date_s ? date_s : "__invalid_date__");
+                         (prefix? prefix : ""), (prefix? ": " : ""), date_s);
     }
     free(date_s);
 }
@@ -388,21 +387,63 @@ crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
 }
 
 #define DATE_MAX 128
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
+static void
+crm_duration_as_string(crm_time_t *dt, char *result)
+{
+    size_t offset = 0;
+
+    if (dt->years) {
+        offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
+                           dt->years, s_if_plural(dt->years));
+    }
+    if (dt->months) {
+        offset += snprintf(result + offset, DATE_MAX - offset, "%2d month%s ",
+                           dt->months, s_if_plural(dt->months));
+    }
+    if (dt->days) {
+        offset += snprintf(result + offset, DATE_MAX - offset, "%2d day%s ",
+                           dt->days, s_if_plural(dt->days));
+    }
+
+    if ((dt->seconds != 0) && (dt->seconds > -60) && (dt->seconds < 60)) {
+        offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
+                           dt->seconds, s_if_plural(dt->seconds));
+    } else if (dt->seconds) {
+        uint h = 0, m = 0, s = 0;
+
+        offset += snprintf(result + offset, DATE_MAX - offset, "%d seconds (",
+                           dt->seconds);
+        crm_time_get_sec(dt->seconds, &h, &m, &s);
+        if (h) {
+            offset += snprintf(result + offset, DATE_MAX - offset, "%u hour%s%s",
+                               h, s_if_plural(h), ((m || s)? " " : ""));
+        }
+        if (m) {
+            offset += snprintf(result + offset, DATE_MAX - offset, "%u minute%s%s",
+                               m, s_if_plural(m), (s? " " : ""));
+        }
+        if (s) {
+            offset += snprintf(result + offset, DATE_MAX - offset, "%u second%s",
+                               s, s_if_plural(s));
+        }
+        offset += snprintf(result + offset, DATE_MAX - offset, ")");
+    }
+}
 
 char *
 crm_time_as_string(crm_time_t * date_time, int flags)
 {
-    char *date_s = NULL;
-    char *time_s = NULL;
-    char *offset_s = NULL;
-    char *result_s = NULL;
     crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
+    char result[DATE_MAX] = { '\0', };
+    char *result_copy = NULL;
+    size_t offset = 0;
 
-    if (date_time == NULL) {
-        return strdup("");
-
-    } else if (date_time->offset && (flags & crm_time_log_with_timezone) == 0) {
+    // Convert to UTC if local timezone was not requested
+    if (date_time && date_time->offset
+        && is_not_set(flags, crm_time_log_with_timezone)) {
         crm_trace("UTC conversion");
         utc = crm_get_utc_time(date_time);
         dt = utc;
@@ -410,126 +451,84 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         dt = date_time;
     }
 
-    CRM_CHECK(dt != NULL, return NULL);
-    if (flags & crm_time_log_duration) {
-        uint h = 0, m = 0, s = 0;
-        int offset = 0;
-
-        date_s = calloc(1, DATE_MAX);
-        crm_time_get_sec(dt->seconds, &h, &m, &s);
-
-        if (date_s == NULL) {
-            goto done;
-        }
-
-        if(dt->years) {
-            offset += snprintf(date_s+offset, DATE_MAX - offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
-        }
-        if(dt->months) {
-            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
-        }
-        if(dt->days) {
-            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
-        }
-        if(dt->seconds) {
-            offset += snprintf(date_s+offset, DATE_MAX - offset, "%d seconds ( ", dt->seconds);
-            if(h) {
-                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u hour%s ", h, h>1?"s":"");
-            }
-            if(m) {
-                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u minute%s ", m, m>1?"s":"");
-            }
-            if(s) {
-                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u second%s ", s, s>1?"s":"");
-            }
-            offset += snprintf(date_s+offset, DATE_MAX - offset, ")");
-        }
+    if (dt == NULL) {
+        strcpy(result, "<undefined time>");
         goto done;
     }
 
+    // Simple cases: as duration, seconds, or seconds since epoch
+
+    if (flags & crm_time_log_duration) {
+        crm_duration_as_string(date_time, result);
+        goto done;
+    }
+
+    if (flags & crm_time_seconds) {
+        snprintf(result, DATE_MAX, "%lld", crm_time_get_seconds(date_time));
+        goto done;
+    }
+
+    if (flags & crm_time_epoch) {
+        snprintf(result, DATE_MAX, "%lld",
+                 crm_time_get_seconds_since_epoch(date_time));
+        goto done;
+    }
+
+    // As readable string
+
     if (flags & crm_time_log_date) {
-        date_s = calloc(1, 34);
-        if (date_s == NULL) {
-            goto done;
-
-        } else if (flags & crm_time_seconds) {
-            long long s = crm_time_get_seconds(date_time);
-
-            snprintf(date_s, 32, "%lld", s);
-            goto done;
-
-        } else if (flags & crm_time_epoch) {
-            long long s = crm_time_get_seconds_since_epoch(date_time);
-
-            snprintf(date_s, 32, "%lld", s);
-            goto done;
-
-        } else if (flags & crm_time_weeks) {
-            /* YYYY-Www-D */
+        if (flags & crm_time_weeks) { // YYYY-WW-D
             uint y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                snprintf(date_s, 34, "%u-W%.2u-%u", y, w, d);
+                offset += snprintf(result + offset, DATE_MAX, "%u-W%.2u-%u",
+                                   y, w, d);
             }
 
-        } else if (flags & crm_time_ordinal) {
-            /* YYYY-DDD */
+        } else if (flags & crm_time_ordinal) { // YYYY-DDD
             uint y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                snprintf(date_s, 22, "%u-%.3u", y, d);
+                offset += snprintf(result + offset, DATE_MAX, "%u-%.3u", y, d);
             }
 
-        } else {
-            /* YYYY-MM-DD */
+        } else { // YYYY-MM-DD
             uint y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                snprintf(date_s, 33, "%.4u-%.2u-%.2u", y, m, d);
+                offset += snprintf(result + offset, DATE_MAX, "%.4u-%.2u-%.2u",
+                                   y, m, d);
             }
         }
     }
 
     if (flags & crm_time_log_timeofday) {
-        uint h, m, s;
+        uint h = 0, m = 0, s = 0;
 
-        time_s = calloc(1, 33);
-        if (time_s == NULL) {
-            goto cleanup;
+        if (offset > 0) {
+            offset += snprintf(result + offset, DATE_MAX, " ");
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            snprintf(time_s, 33, "%.2u:%.2u:%.2u", h, m, s);
+            offset += snprintf(result + offset, DATE_MAX, "%.2u:%.2u:%.2u",
+                               h, m, s);
         }
 
-        if (dt->offset != 0) {
+        if ((flags & crm_time_log_with_timezone) && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
-        }
-
-        offset_s = calloc(1, 31);
-        if ((flags & crm_time_log_with_timezone) == 0 || dt->offset == 0) {
-            crm_trace("flags %6x %6x", flags, crm_time_log_with_timezone);
-            snprintf(offset_s, 31, "Z");
-
+            offset += snprintf(result + offset, DATE_MAX, " %c%.2u:%.2u",
+                               ((dt->offset < 0)? '-' : '+'), h, m);
         } else {
-            snprintf(offset_s, 24, " %c%.2u:%.2u", dt->offset < 0 ? '-' : '+', h, m);
+            offset += snprintf(result + offset, DATE_MAX, "Z");
         }
     }
 
   done:
-    result_s = calloc(1, 100);
-
-    snprintf(result_s, 100, "%s%s%s%s",
-             date_s ? date_s : "", (date_s != NULL && time_s != NULL) ? " " : "",
-             time_s ? time_s : "", offset_s ? offset_s : "");
-
-  cleanup:
-    free(date_s);
-    free(time_s);
-    free(offset_s);
     crm_time_free(utc);
 
-    return result_s;
+    result_copy = strdup(result);
+    CRM_ASSERT(result_copy != NULL);
+    return result_copy;
 }
 
 static int
