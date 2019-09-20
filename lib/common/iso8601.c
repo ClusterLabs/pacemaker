@@ -671,13 +671,14 @@ parse_date(const char *date_str)
     }
     if (rc == 3) {
         if (month > 12) {
-            crm_err("Invalid month: %d", month);
+            crm_err("Invalid month '%d' in date string '%s'", month, date_str);
         } else if (day > 31) {
-            crm_err("Invalid day: %d", day);
+            crm_err("Invalid day '%d' in date string '%s'", day, date_str);
         } else {
             dt->years = year;
             dt->days = get_ordinal_days(year, month, day);
-            crm_trace("Got gergorian date: %.4d-%.3d", year, dt->days);
+            crm_trace("Parsed Gregorian date '%.4d-%.3d' from date string '%s'",
+                      year, dt->days, date_str);
         }
         goto done;
     }
@@ -685,10 +686,12 @@ parse_date(const char *date_str)
     /* YYYY-DDD */
     rc = sscanf(date_str, "%d-%d", &year, &day);
     if (rc == 2) {
-        crm_trace("Got ordinal date");
         if (day > year_days(year)) {
-            crm_err("Invalid day: %d (max=%d)", day, year_days(year));
+            crm_err("Invalid day '%d' (max=%d) in date string '%s'",
+                    day, year_days(year), date_str);
         } else {
+            crm_trace("Got ordinal year %d and days %d from date string '%s'",
+                      year, day, date_str);
             dt->days = day;
             dt->years = year;
         }
@@ -698,11 +701,11 @@ parse_date(const char *date_str)
     /* YYYY-Www-D */
     rc = sscanf(date_str, "%d-W%d-%d", &year, &week, &day);
     if (rc == 3) {
-        crm_trace("Got week date");
         if (week > crm_time_weeks_in_year(year)) {
-            crm_err("Invalid week: %d (max=%d)", week, crm_time_weeks_in_year(year));
+            crm_err("Invalid week '%d' (max=%d) in date string '%s'",
+                    week, crm_time_weeks_in_year(year), date_str);
         } else if (day < 1 || day > 7) {
-            crm_err("Invalid day: %d", day);
+            crm_err("Invalid day '%d' in date string '%s'", day, date_str);
         } else {
             /*
              * See https://en.wikipedia.org/wiki/ISO_week_date
@@ -716,7 +719,8 @@ parse_date(const char *date_str)
              */
             int jan1 = crm_time_january1_weekday(year);
 
-            crm_trace("Jan 1 = %d", jan1);
+            crm_trace("Got year %d (Jan 1 = %d), week %d, and day %d from date string '%s'",
+                      year, jan1, week, day, date_str);
 
             dt->years = year;
             crm_time_add_days(dt, (week - 1) * 7);
@@ -732,7 +736,8 @@ parse_date(const char *date_str)
         goto done;
     }
 
-    crm_err("Couldn't parse %s", date_str);
+    crm_err("Couldn't parse date string '%s'", date_str);
+
   done:
 
     time_s = strstr(date_str, " ");
