@@ -343,6 +343,22 @@ For example, +monthdays="1"+ matches the first day of every month, and
 At this time, multiple ranges (e.g. +weekdays="1,2"+ or +weekdays="1-2,5-6"+)
 are not supported.
         
+[NOTE]
+====
+Pacemaker can calculate when evaluation of a +date_expression+ with an
++operation+ of +gt+, +lt+, or +in_range+ will next change, and schedule a
+cluster re-check for that time. However, it does not do this for +date_spec+.
+Instead, it evaluates the +date_spec+ whenever a cluster re-check naturally
+happens via a cluster event or the +cluster-recheck-interval+ cluster option.
+For example, if you have a +date_spec+ enabling a resource from 9 a.m. to 5 p.m.,
+and +cluster-recheck-interval+ has been set to 5 minutes, then sometime between
+9 a.m. and 9:05 a.m. the cluster would notice that it needs to start the
+resource, and sometime between 5 p.m. and 5:05 p.m. it would realize that it
+needs to stop the resource. The timing of the actual start and stop actions
+will further depend on factors such as any other actions the cluster may need
+to perform first, and the load of the machine.
+====
+
 === Durations ===
 indexterm:[Rule,Date/Time Expression,Duration]
 indexterm:[XML element,duration element]
@@ -505,25 +521,6 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 </rule> 
 -------
 =====
-
-[[s-rules-recheck]]
-=== Ensuring Time-Based Rules Take Effect ===
-
-A Pacemaker cluster is an event-driven system.  As such, it won't
-recalculate the best place for resources to run unless something
-(like a resource failure or configuration change) happens.  This can
-mean that a location constraint that only allows resource X to run
-between 9am and 5pm is not enforced.
-
-If you rely on time-based rules, the +cluster-recheck-interval+ cluster option
-(which defaults to 15 minutes) is essential.  This tells the cluster to
-periodically recalculate the ideal state of the cluster.
-
-For example, if you set +cluster-recheck-interval="5m"+, then sometime between
-09:00 and 09:05 the cluster would notice that it needs to start resource X,
-and between 17:00 and 17:05 it would realize that X needed to be stopped.
-The timing of the actual start and stop actions depends on what other actions
-the cluster may need to perform first.
 
 == Using Rules to Determine Resource Location ==
 indexterm:[Rule,Determine Resource Location]

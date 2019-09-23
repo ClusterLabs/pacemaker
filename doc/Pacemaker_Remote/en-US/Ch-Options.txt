@@ -75,10 +75,7 @@ Resource options:
 		      reconnect to a remote node after an active connection to
 		      the remote node has been severed. When this value is
 		      nonzero, Pacemaker will retry the connection
-		      indefinitely, at the specified interval. As with any
-		      time-based actions, this is not guaranteed to be checked
-		      more frequently than the value of the
-                      cluster-recheck-interval cluster option.
+		      indefinitely, at the specified interval.
 ----
 
 When defining a remote node's connection resource, it is common and recommended
