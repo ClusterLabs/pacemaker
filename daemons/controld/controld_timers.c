@@ -102,7 +102,7 @@ get_timer_desc(fsa_timer_t * timer)
     return "Unknown Timer";
 }
 
-gboolean
+static gboolean
 crm_timer_popped(gpointer data)
 {
     fsa_timer_t *timer = (fsa_timer_t *) data;
@@ -153,6 +153,122 @@ crm_timer_popped(gpointer data)
     mainloop_set_trigger(fsa_source);
 
     return TRUE;
+}
+
+bool
+controld_init_fsa_timers()
+{
+    transition_timer = calloc(1, sizeof(fsa_timer_t));
+    if (transition_timer == NULL) {
+        return FALSE;
+    }
+
+    integration_timer = calloc(1, sizeof(fsa_timer_t));
+    if (integration_timer == NULL) {
+        return FALSE;
+    }
+
+    finalization_timer = calloc(1, sizeof(fsa_timer_t));
+    if (finalization_timer == NULL) {
+        return FALSE;
+    }
+
+    election_trigger = calloc(1, sizeof(fsa_timer_t));
+    if (election_trigger == NULL) {
+        return FALSE;
+    }
+
+    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
+    if (shutdown_escalation_timer == NULL) {
+        return FALSE;
+    }
+
+    wait_timer = calloc(1, sizeof(fsa_timer_t));
+    if (wait_timer == NULL) {
+        return FALSE;
+    }
+
+    recheck_timer = calloc(1, sizeof(fsa_timer_t));
+    if (recheck_timer == NULL) {
+        return FALSE;
+    }
+
+    election_trigger->source_id = 0;
+    election_trigger->period_ms = -1;
+    election_trigger->fsa_input = I_DC_TIMEOUT;
+    election_trigger->callback = crm_timer_popped;
+    election_trigger->log_error = FALSE;
+
+    transition_timer->source_id = 0;
+    transition_timer->period_ms = -1;
+    transition_timer->fsa_input = I_PE_CALC;
+    transition_timer->callback = crm_timer_popped;
+    transition_timer->log_error = FALSE;
+
+    integration_timer->source_id = 0;
+    integration_timer->period_ms = -1;
+    integration_timer->fsa_input = I_INTEGRATED;
+    integration_timer->callback = crm_timer_popped;
+    integration_timer->log_error = TRUE;
+
+    finalization_timer->source_id = 0;
+    finalization_timer->period_ms = -1;
+    finalization_timer->fsa_input = I_FINALIZED;
+    finalization_timer->callback = crm_timer_popped;
+    finalization_timer->log_error = FALSE;
+    /* for possible enabling... a bug in the join protocol left
+     *    a slave in S_PENDING while we think it's in S_NOT_DC
+     *
+     * raising I_FINALIZED put us into a transition loop which is
+     *    never resolved.
+     * in this loop we continually send probes which the node
+     *    NACK's because it's in S_PENDING
+     *
+     * if we have nodes where the cluster layer is active but the
+     *    CRM is not... then this will be handled in the
+     *    integration phase
+     */
+    finalization_timer->fsa_input = I_ELECTION;
+
+    shutdown_escalation_timer->source_id = 0;
+    shutdown_escalation_timer->period_ms = -1;
+    shutdown_escalation_timer->fsa_input = I_STOP;
+    shutdown_escalation_timer->callback = crm_timer_popped;
+    shutdown_escalation_timer->log_error = TRUE;
+
+    wait_timer->source_id = 0;
+    wait_timer->period_ms = 2000;
+    wait_timer->fsa_input = I_NULL;
+    wait_timer->callback = crm_timer_popped;
+    wait_timer->log_error = FALSE;
+
+    recheck_timer->source_id = 0;
+    recheck_timer->period_ms = -1;
+    recheck_timer->fsa_input = I_PE_CALC;
+    recheck_timer->callback = crm_timer_popped;
+    recheck_timer->log_error = FALSE;
+
+    return TRUE;
+}
+
+void
+controld_free_fsa_timers()
+{
+    crm_timer_stop(transition_timer);
+    crm_timer_stop(integration_timer);
+    crm_timer_stop(finalization_timer);
+    crm_timer_stop(election_trigger);
+    crm_timer_stop(shutdown_escalation_timer);
+    crm_timer_stop(wait_timer);
+    crm_timer_stop(recheck_timer);
+
+    free(transition_timer); transition_timer = NULL;
+    free(integration_timer); integration_timer = NULL;
+    free(finalization_timer); finalization_timer = NULL;
+    free(election_trigger); election_trigger = NULL;
+    free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
+    free(wait_timer); wait_timer = NULL;
+    free(recheck_timer); recheck_timer = NULL;
 }
 
 gboolean

@@ -31,9 +31,10 @@ extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
+bool controld_init_fsa_timers(void);
+void controld_free_fsa_timers(void);
 gboolean crm_timer_stop(fsa_timer_t *timer);
 gboolean crm_timer_start(fsa_timer_t *timer);
-gboolean crm_timer_popped(gpointer data);
 gboolean is_timer_started(fsa_timer_t *timer);
 
 const char *get_timer_desc(fsa_timer_t * timer);
