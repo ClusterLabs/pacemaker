@@ -31,10 +31,14 @@ extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
+extern guint recheck_interval_ms;
+extern time_t recheck_by;
+
 bool controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);
 gboolean controld_stop_timer(fsa_timer_t *timer);
 void controld_start_timer(fsa_timer_t *timer);
+void controld_start_recheck_timer(void);
 gboolean is_timer_started(fsa_timer_t *timer);
 
 const char *get_timer_desc(fsa_timer_t * timer);

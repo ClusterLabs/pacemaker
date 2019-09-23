@@ -686,9 +686,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_set_election_period(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_timer->period_ms = crm_parse_interval_spec(value);
-    crm_debug("Checking for expired actions every %ums",
-              recheck_timer->period_ms);
+    recheck_interval_ms = crm_parse_interval_spec(value);
+    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 
     value = crmd_pref(config_hash, "transition-delay");
     transition_timer->period_ms = crm_parse_interval_spec(value);

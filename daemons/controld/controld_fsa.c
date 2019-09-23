@@ -623,10 +623,7 @@ do_state_transition(long long actions,
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
                 set_bit(tmp, A_SHUTDOWN_REQ);
             }
-            if (recheck_timer->period_ms > 0) {
-                crm_debug("Starting %s", get_timer_desc(recheck_timer));
-                controld_start_timer(recheck_timer);
-            }
+            controld_start_recheck_timer();
             break;
 
         default:

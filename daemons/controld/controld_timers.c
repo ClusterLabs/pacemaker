@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <time.h>
 #include <stdlib.h>
 
 #include <crm/crm.h>
@@ -35,6 +36,12 @@ fsa_timer_t *finalization_timer = NULL;
 
 // Wait for DC to stop all resources and give us the all-clear to shut down
 fsa_timer_t *shutdown_escalation_timer = NULL;
+
+// Cluster recheck interval (from configuration)
+guint recheck_interval_ms = 0;
+
+// When scheduler should be re-run (from most recent transition graph)
+time_t recheck_by = 0;
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
@@ -291,6 +298,35 @@ controld_start_timer(fsa_timer_t *timer)
         crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
+    }
+}
+
+void
+controld_start_recheck_timer()
+{
+    // Default to recheck interval configured in CIB (if any)
+    guint period_ms = recheck_interval_ms;
+
+    // If scheduler supplied a "recheck by" time, check whether that's sooner
+    if (recheck_by > 0) {
+        time_t diff_seconds = recheck_by - time(NULL);
+
+        if (diff_seconds < 1) {
+            // We're already past the desired time
+            period_ms = 500;
+        } else {
+            period_ms = (guint) diff_seconds * 1000;
+        }
+
+        // Use "recheck by" only if it's sooner than interval from CIB
+        if (period_ms > recheck_interval_ms) {
+            period_ms = recheck_interval_ms;
+        }
+    }
+
+    if (period_ms > 0) {
+        recheck_timer->period_ms = period_ms;
+        controld_start_timer(recheck_timer);
     }
 }
 

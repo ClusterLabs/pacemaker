@@ -202,6 +202,11 @@ do_te_invoke(long long action,
             failed_start_offset = strdup(value);
         }
 
+        if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)
+            != pcmk_ok) || (recheck_by < 0)) {
+            recheck_by = 0;
+        }
+
         trigger_graph();
         print_graph(LOG_TRACE, transition_graph);
 
