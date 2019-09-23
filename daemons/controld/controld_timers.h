@@ -15,12 +15,12 @@
 #  include <controld_fsa.h>         // crmd_fsa_input
 
 typedef struct fsa_timer_s {
-    guint source_id;            /* timer source id */
-    int period_ms;              /* timer period */
-    enum crmd_fsa_input fsa_input;
-    gboolean (*callback) (gpointer data);
-    bool log_error;
-    int counter;
+    guint source_id;                        // Timer source ID
+    guint period_ms;                        // Timer period
+    enum crmd_fsa_input fsa_input;          // Input to register if timer pops
+    gboolean (*callback) (gpointer data);   // What do if timer pops
+    bool log_error;                         // Timer popping indicates error
+    int counter;                            // For detecting loops
 } fsa_timer_t;
 
 extern fsa_timer_t *election_trigger;

@@ -108,12 +108,13 @@ crm_timer_popped(gpointer data)
     fsa_timer_t *timer = (fsa_timer_t *) data;
 
     if (timer->log_error) {
-        crm_err("%s (%s) just popped in state %s! (%dms)",
-                get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                fsa_state2string(fsa_state), timer->period_ms);
+        crm_err("%s just popped in state %s! " CRM_XS " input=%s time=%ums",
+                get_timer_desc(timer), fsa_state2string(fsa_state),
+                fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
-        crm_info("%s (%s) just popped (%dms)",
-                 get_timer_desc(timer), fsa_input2string(timer->fsa_input), timer->period_ms);
+        crm_info("%s just popped " CRM_XS " input=%s time=%ums",
+                 get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                 timer->period_ms);
         timer->counter++;
     }
 
@@ -194,25 +195,25 @@ controld_init_fsa_timers()
     }
 
     election_trigger->source_id = 0;
-    election_trigger->period_ms = -1;
+    election_trigger->period_ms = 0;
     election_trigger->fsa_input = I_DC_TIMEOUT;
     election_trigger->callback = crm_timer_popped;
     election_trigger->log_error = FALSE;
 
     transition_timer->source_id = 0;
-    transition_timer->period_ms = -1;
+    transition_timer->period_ms = 0;
     transition_timer->fsa_input = I_PE_CALC;
     transition_timer->callback = crm_timer_popped;
     transition_timer->log_error = FALSE;
 
     integration_timer->source_id = 0;
-    integration_timer->period_ms = -1;
+    integration_timer->period_ms = 0;
     integration_timer->fsa_input = I_INTEGRATED;
     integration_timer->callback = crm_timer_popped;
     integration_timer->log_error = TRUE;
 
     finalization_timer->source_id = 0;
-    finalization_timer->period_ms = -1;
+    finalization_timer->period_ms = 0;
     finalization_timer->fsa_input = I_FINALIZED;
     finalization_timer->callback = crm_timer_popped;
     finalization_timer->log_error = FALSE;
@@ -231,7 +232,7 @@ controld_init_fsa_timers()
     finalization_timer->fsa_input = I_ELECTION;
 
     shutdown_escalation_timer->source_id = 0;
-    shutdown_escalation_timer->period_ms = -1;
+    shutdown_escalation_timer->period_ms = 0;
     shutdown_escalation_timer->fsa_input = I_STOP;
     shutdown_escalation_timer->callback = crm_timer_popped;
     shutdown_escalation_timer->log_error = TRUE;
@@ -243,7 +244,7 @@ controld_init_fsa_timers()
     wait_timer->log_error = FALSE;
 
     recheck_timer->source_id = 0;
-    recheck_timer->period_ms = -1;
+    recheck_timer->period_ms = 0;
     recheck_timer->fsa_input = I_PE_CALC;
     recheck_timer->callback = crm_timer_popped;
     recheck_timer->log_error = FALSE;
@@ -274,39 +275,25 @@ controld_free_fsa_timers()
 gboolean
 is_timer_started(fsa_timer_t * timer)
 {
-    if (timer->period_ms > 0) {
-        if (timer->source_id == 0) {
-            return FALSE;
-        } else {
-            return TRUE;
-        }
-    }
-    return FALSE;
+    return (timer->period_ms > 0) && (timer->source_id != 0);
 }
 
 gboolean
 crm_timer_start(fsa_timer_t * timer)
 {
-    const char *timer_desc = get_timer_desc(timer);
-
     if (timer->source_id == 0 && timer->period_ms > 0) {
         timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
         CRM_ASSERT(timer->source_id != 0);
-        crm_debug("Started %s (%s:%dms), src=%d",
-                  timer_desc, fsa_input2string(timer->fsa_input),
+        crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
-
-    } else if (timer->period_ms < 0) {
-        crm_err("Tried to start %s (%s:%dms) with a negative period",
-                timer_desc, fsa_input2string(timer->fsa_input), timer->period_ms);
-
-    } else {
-        crm_debug("%s (%s:%dms) already running: src=%d",
-                  timer_desc, fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
-        return FALSE;
+        return TRUE;
     }
-    return TRUE;
+
+    crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
+              get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+              timer->period_ms, timer->source_id);
+    return FALSE;
 }
 
 gboolean
@@ -319,14 +306,14 @@ crm_timer_stop(fsa_timer_t * timer)
         return FALSE;
 
     } else if (timer->source_id != 0) {
-        crm_trace("Stopping %s (%s:%dms), src=%d",
+        crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
                   timer_desc, fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
 
     } else {
-        crm_trace("%s (%s:%dms) already stopped",
+        crm_trace("%s already stopped (would inject %s if popped after %ums)",
                   timer_desc, fsa_input2string(timer->fsa_input), timer->period_ms);
         return FALSE;
     }

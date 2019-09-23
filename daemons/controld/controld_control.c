@@ -657,7 +657,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     verify_crmd_options(config_hash);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_trigger->period_ms = crm_get_msec(value);
+    election_trigger->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
     throttle_update_job_max(value);
@@ -678,25 +678,26 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     update_stonith_max_attempts(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_get_msec(value);
-    /* How long to declare an election over - even if not everyone voted */
-    crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
+    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
+              shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_timer->period_ms = crm_get_msec(value);
-    crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
+    recheck_timer->period_ms = crm_parse_interval_spec(value);
+    crm_debug("Checking for expired actions every %ums",
+              recheck_timer->period_ms);
 
     value = crmd_pref(config_hash, "transition-delay");
-    transition_timer->period_ms = crm_get_msec(value);
+    transition_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-integration-timeout");
-    integration_timer->period_ms = crm_get_msec(value);
+    integration_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_get_msec(value);
+    finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;
@@ -754,17 +755,15 @@ crm_shutdown(int nsig)
             set_bit(fsa_input_register, R_SHUTDOWN);
             register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
-            if (shutdown_escalation_timer->period_ms < 1) {
+            if (shutdown_escalation_timer->period_ms == 0) {
                 const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
-                int msec = crm_get_msec(value);
 
-                crm_debug("Using default shutdown escalation: %dms", msec);
-                shutdown_escalation_timer->period_ms = msec;
+                shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
             }
 
             /* can't rely on this... */
             crm_notice("Shutting down cluster resource manager " CRM_XS
-                       " limit=%dms", shutdown_escalation_timer->period_ms);
+                       " limit=%ums", shutdown_escalation_timer->period_ms);
             crm_timer_start(shutdown_escalation_timer);
         }
 
