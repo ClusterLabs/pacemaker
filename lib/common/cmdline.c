@@ -138,6 +138,14 @@ pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
             continue;
         }
 
+        /* This is just a dash by itself.  That could indicate stdin/stdout, or
+         * it could be user error.  Copy it over and let glib figure it out.
+         */
+        if (safe_str_eq(argv[i], "-")) {
+            g_ptr_array_add(arr, strdup(argv[i]));
+            continue;
+        }
+
         /* This is a short argument, or perhaps several.  Iterate over it
          * and explode them out into individual arguments.
          */
