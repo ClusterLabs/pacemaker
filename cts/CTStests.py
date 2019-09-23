@@ -2654,9 +2654,6 @@ class RemoteDriver(CTSTest):
 """ % { "node": self.remote_node, "server": node }
 
         if self.remote_use_reconnect_interval:
-            # Set cluster-recheck-interval lower
-            self.rsh(self.get_othernode(node), self.templates["SetCheckInterval"] % ("45s"))
-
             # Set reconnect interval on resource
             rsc_xml = rsc_xml + """
     <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
@@ -2919,10 +2916,6 @@ class RemoteDriver(CTSTest):
         self.set_timer("remoteMetalCleanup")
 
         self.resume_pcmk_remote(node)
-
-        if self.remote_use_reconnect_interval:
-            self.debug("Cleaning up re-check interval")
-            self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
 
         if self.remote_rsc_added == 1:
 
