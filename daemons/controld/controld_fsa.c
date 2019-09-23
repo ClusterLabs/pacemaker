@@ -34,14 +34,6 @@ char *fsa_our_uname = NULL;
 
 char *fsa_cluster_name = NULL;
 
-fsa_timer_t *wait_timer = NULL;        // How long to wait before retrying a cib or executor connection
-fsa_timer_t *recheck_timer = NULL;     // Periodically re-run scheduler to handle time-based actions
-fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
-fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
-fsa_timer_t *integration_timer = NULL;
-fsa_timer_t *finalization_timer = NULL;
-fsa_timer_t *shutdown_escalation_timer = NULL; /* How long to wait for the DC to stop all resources and give us the all-clear to shut down */
-
 gboolean do_fsa_stall = FALSE;
 long long fsa_input_register = 0;
 long long fsa_actions = A_NOTHING;

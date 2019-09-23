@@ -14,6 +14,7 @@
 #include <controld_callbacks.h>
 #include <controld_fencing.h>
 #include <controld_fsa.h>
+#include <controld_timers.h>
 #include <controld_lrm.h>
 #include <controld_membership.h>
 #include <controld_messages.h>
