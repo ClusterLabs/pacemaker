@@ -525,7 +525,7 @@ do_state_transition(long long actions,
         highest_born_on = 0;
     }
     if (next_state != S_IDLE) {
-        crm_timer_stop(recheck_timer);
+        controld_stop_timer(recheck_timer);
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
@@ -625,7 +625,7 @@ do_state_transition(long long actions,
             }
             if (recheck_timer->period_ms > 0) {
                 crm_debug("Starting %s", get_timer_desc(recheck_timer));
-                crm_timer_start(recheck_timer);
+                controld_start_timer(recheck_timer);
             }
             break;
 

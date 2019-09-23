@@ -49,28 +49,28 @@ do_timer_control(long long action,
     gboolean timer_op_ok = TRUE;
 
     if (action & A_DC_TIMER_STOP) {
-        timer_op_ok = crm_timer_stop(election_trigger);
+        timer_op_ok = controld_stop_timer(election_trigger);
 
     } else if (action & A_FINALIZE_TIMER_STOP) {
-        timer_op_ok = crm_timer_stop(finalization_timer);
+        timer_op_ok = controld_stop_timer(finalization_timer);
 
     } else if (action & A_INTEGRATE_TIMER_STOP) {
-        timer_op_ok = crm_timer_stop(integration_timer);
+        timer_op_ok = controld_stop_timer(integration_timer);
     }
 
     /* don't start a timer that wasn't already running */
     if (action & A_DC_TIMER_START && timer_op_ok) {
-        crm_timer_start(election_trigger);
+        controld_start_timer(election_trigger);
         if (AM_I_DC) {
             /* there can be only one */
             register_fsa_input(cause, I_ELECTION, NULL);
         }
 
     } else if (action & A_FINALIZE_TIMER_START) {
-        crm_timer_start(finalization_timer);
+        controld_start_timer(finalization_timer);
 
     } else if (action & A_INTEGRATE_TIMER_START) {
-        crm_timer_start(integration_timer);
+        controld_start_timer(integration_timer);
     }
 }
 
@@ -124,7 +124,7 @@ crm_timer_popped(gpointer data)
         election_trigger->counter = 0;
     }
 
-    crm_timer_stop(timer);  // Make timer _not_ go off again
+    controld_stop_timer(timer);  // Make timer _not_ go off again
 
     if (timer->fsa_input == I_INTEGRATED) {
         crm_info("Welcomed: %d, Integrated: %d",
@@ -255,13 +255,13 @@ controld_init_fsa_timers()
 void
 controld_free_fsa_timers()
 {
-    crm_timer_stop(transition_timer);
-    crm_timer_stop(integration_timer);
-    crm_timer_stop(finalization_timer);
-    crm_timer_stop(election_trigger);
-    crm_timer_stop(shutdown_escalation_timer);
-    crm_timer_stop(wait_timer);
-    crm_timer_stop(recheck_timer);
+    controld_stop_timer(transition_timer);
+    controld_stop_timer(integration_timer);
+    controld_stop_timer(finalization_timer);
+    controld_stop_timer(election_trigger);
+    controld_stop_timer(shutdown_escalation_timer);
+    controld_stop_timer(wait_timer);
+    controld_stop_timer(recheck_timer);
 
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
@@ -278,8 +278,8 @@ is_timer_started(fsa_timer_t * timer)
     return (timer->period_ms > 0) && (timer->source_id != 0);
 }
 
-gboolean
-crm_timer_start(fsa_timer_t * timer)
+void
+controld_start_timer(fsa_timer_t *timer)
 {
     if (timer->source_id == 0 && timer->period_ms > 0) {
         timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
@@ -287,34 +287,29 @@ crm_timer_start(fsa_timer_t * timer)
         crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
-        return TRUE;
+    } else {
+        crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms, timer->source_id);
     }
-
-    crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
-              get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-              timer->period_ms, timer->source_id);
-    return FALSE;
 }
 
 gboolean
-crm_timer_stop(fsa_timer_t * timer)
+controld_stop_timer(fsa_timer_t *timer)
 {
-    const char *timer_desc = get_timer_desc(timer);
+    CRM_CHECK(timer != NULL, return FALSE);
 
-    if (timer == NULL) {
-        crm_err("Attempted to stop NULL timer");
-        return FALSE;
-
-    } else if (timer->source_id != 0) {
+    if (timer->source_id != 0) {
         crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
-                  timer_desc, fsa_input2string(timer->fsa_input),
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
 
     } else {
         crm_trace("%s already stopped (would inject %s if popped after %ums)",
-                  timer_desc, fsa_input2string(timer->fsa_input), timer->period_ms);
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms);
         return FALSE;
     }
     return TRUE;

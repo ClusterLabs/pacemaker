@@ -370,7 +370,7 @@ do_lrm_control(long long action,
                          s_if_plural(lrm_state->num_lrm_register_fails),
                          MAX_LRM_REG_FAILS);
 
-                crm_timer_start(wait_timer);
+                controld_start_timer(wait_timer);
                 crmd_fsa_stall(FALSE);
                 return;
             }
