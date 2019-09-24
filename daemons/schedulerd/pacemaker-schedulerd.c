@@ -42,7 +42,7 @@ typedef struct series_s {
 } series_t;
 
 series_t series[] = {
-    {"pe-unknown", "_dont_match_anything_", -1},
+    {"pe-unknown", "_do_not_match_anything_", -1},
     {"pe-error", "pe-error-series-max", -1},
     {"pe-warn", "pe-warn-series-max", 200},
     {"pe-input", "pe-input-series-max", 400},

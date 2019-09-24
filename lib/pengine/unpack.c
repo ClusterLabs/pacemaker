@@ -1842,7 +1842,7 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
         print_resource(LOG_TRACE, "Added orphan", rsc, FALSE);
 
         CRM_CHECK(rsc != NULL, return NULL);
-        resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);
+        resource_location(rsc, NULL, -INFINITY, "__orphan_do_not_run__", data_set);
     }
     return rsc;
 }

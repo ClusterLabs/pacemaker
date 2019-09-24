@@ -294,12 +294,12 @@ crm_time_get_seconds(crm_time_t * dt)
         in_seconds += 60 * 60 * 24 * dmax;
     }
 
-    /* utc->months is an offset that can only be set for a duration
-     * By definiton, the value is variable depending on the date to
-     * which it is applied
+    /* utc->months is an offset that can only be set for a duration.
+     * By definition, the value is variable depending on the date to
+     * which it is applied.
      *
      * Force 30-day months so that something vaguely sane happens
-     * for anyone that tries to use a month in this way
+     * for anyone that tries to use a month in this way.
      */
     if (utc->months > 0) {
         in_seconds += 60 * 60 * 24 * 30 * utc->months;

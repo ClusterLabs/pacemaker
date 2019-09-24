@@ -251,7 +251,7 @@ function test_tools() {
     test_assert $CRM_EX_USAGE
 
     desc="Don't support migration to non-existent locations"
-    cmd="crm_resource -r dummy -M -N i.dont.exist"
+    cmd="crm_resource -r dummy -M -N i.do.not.exist"
     test_assert $CRM_EX_NOSUCH
 
     desc="Create a fencing resource"

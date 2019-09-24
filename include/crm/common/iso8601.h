@@ -46,9 +46,9 @@ typedef struct crm_time_period_s {
  *   Only one of date, time is required
  *   If date or timezone is unspecified, they default to the current one
  *   Supplying NULL results in the current date/time
- *   Dashes may be ommitted from dates
- *   Colons may be ommitted from times and timezones
- *   A timezone of 'Z' denoted UTC time
+ *   Dashes may be omitted from dates
+ *   Colons may be omitted from times and timezones
+ *   A timezone of 'Z' denotes UTC time
  */
 crm_time_t *crm_time_new(const char *string);
 crm_time_t *crm_time_new_undefined(void);

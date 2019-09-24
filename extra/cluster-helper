@@ -19,7 +19,7 @@ function helptext() {
     echo "cluster-helper - A tool for running commands on multiple hosts"
     echo ""
     echo "Attempt to use pdsh, qarsh, or ssh (in that order) to execute commands"
-    echo "on mutiple hosts"
+    echo "on multiple hosts"
     echo ""
     echo "DSH groups can be configured and specified with -g instead of listing"
     echo "the individual hosts every time"

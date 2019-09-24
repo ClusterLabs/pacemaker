@@ -490,7 +490,7 @@ static struct crm_option long_options[] = {
     
     {"-spacer-",   1, 0, '-', "\nAdvanced Commands:"},
     {"get-attr",   1, 0, 'G', "\tDisplay the named attribute for a ticket"},
-    {"set-attr",   1, 0, 'S', "\tSet the named attribtue for a ticket"},
+    {"set-attr",   1, 0, 'S', "\tSet the named attribute for a ticket"},
     {"delete-attr",1, 0, 'D', "\tDelete the named attribute for a ticket"},
     {"cleanup",    0, 0, 'C', "\t\tDelete all state of a ticket at this cluster site"},
     
