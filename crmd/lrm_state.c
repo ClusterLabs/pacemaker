@@ -30,7 +30,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/transition.h>
-#include <crm/lrmd_alerts_internal.h>
+#include <crm/lrmd_internal.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;

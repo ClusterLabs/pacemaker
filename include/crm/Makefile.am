@@ -23,6 +23,6 @@ header_HEADERS		= attrd.h cib.h cluster.h compatibility.h crm.h \
 			  error.h lrmd.h msg_xml.h services.h stonith-ng.h \
 			  transition.h
 
-noinst_HEADERS		= lrmd_alerts_internal.h
+noinst_HEADERS		= lrmd_internal.h
 
 SUBDIRS                 = common pengine cib fencing cluster
