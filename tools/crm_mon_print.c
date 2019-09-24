@@ -73,7 +73,6 @@ static void print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set
                                   unsigned int mon_ops, unsigned int show);
 static void print_failed_action(mon_state_t *state, xmlNode *xml_op);
 static void print_failed_actions(mon_state_t *state, pe_working_set_t *data_set);
-static void print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops, stonith_history_t *top_history);
 static void print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static void print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
@@ -1902,118 +1901,6 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Print a stonith action
- *
- * \param[in] stream     File stream to display output to
- * \param[in] event      stonith event
- */
-static void
-print_stonith_action(mon_state_t *state, stonith_history_t *event, unsigned int mon_ops, stonith_history_t *top_history)
-{
-    const char *action_s = stonith_action_str(event->action);
-    char *run_at_s = ctime(&event->completed);
-
-    if ((run_at_s) && (run_at_s[0] != 0)) {
-        run_at_s[strlen(run_at_s)-1] = 0; /* Overwrite the newline */
-    }
-
-    switch(state->output_format) {
-        case mon_output_xml:
-            fprintf(state->stream, "        <fence_event target=\"%s\" action=\"%s\"",
-                    event->target, event->action);
-            switch(event->state) {
-                case st_done:
-                    fprintf(state->stream, " state=\"success\"");
-                    break;
-                case st_failed:
-                    fprintf(state->stream, " state=\"failed\"");
-                    break;
-                default:
-                    fprintf(state->stream, " state=\"pending\"");
-            }
-            fprintf(state->stream, " origin=\"%s\" client=\"%s\"",
-                    event->origin, event->client);
-            if (event->delegate) {
-                fprintf(state->stream, " delegate=\"%s\"", event->delegate);
-            }
-            switch(event->state) {
-                case st_done:
-                case st_failed:
-                    fprintf(state->stream, " completed=\"%s\"", run_at_s?run_at_s:"");
-                    break;
-                default:
-                    break;
-            }
-            fprintf(state->stream, " />\n");
-            break;
-
-        case mon_output_plain:
-        case mon_output_console:
-            switch(event->state) {
-                case st_done:
-                    print_as(state->output_format, "* %s of %s successful: delegate=%s, client=%s, origin=%s,\n"
-                             "    %s='%s'\n",
-                             action_s, event->target,
-                             event->delegate ? event->delegate : "",
-                             event->client, event->origin,
-                             is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-successful",
-                             run_at_s?run_at_s:"");
-                    break;
-                case st_failed:
-                    print_as(state->output_format, "* %s of %s failed: delegate=%s, client=%s, origin=%s,\n"
-                             "    %s='%s' %s\n",
-                             action_s, event->target,
-                             event->delegate ? event->delegate : "",
-                             event->client, event->origin,
-                             is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
-                             run_at_s?run_at_s:"",
-                             stonith__later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
-                    break;
-                default:
-                    print_as(state->output_format, "* %s of %s pending: client=%s, origin=%s\n",
-                             action_s, event->target,
-                             event->client, event->origin);
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            switch(event->state) {
-                case st_done:
-                    fprintf(state->stream, "  <li>%s of %s successful: delegate=%s, "
-                                    "client=%s, origin=%s, %s='%s'</li>\n",
-                                    action_s, event->target,
-                                    event->delegate ? event->delegate : "",
-                                    event->client, event->origin,
-                                    is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-successful",
-                                    run_at_s?run_at_s:"");
-                    break;
-                case st_failed:
-                    fprintf(state->stream, "  <li>%s of %s failed: delegate=%s, "
-                                    "client=%s, origin=%s, %s='%s' %s</li>\n",
-                                    action_s, event->target,
-                                    event->delegate ? event->delegate : "",
-                                    event->client, event->origin,
-                                    is_set(mon_ops, mon_op_fence_full_history) ? "completed" : "last-failed",
-                                    run_at_s?run_at_s:"",
-                                    stonith__later_succeeded(event, top_history) ? "(a later attempt succeeded)" : "");
-                    break;
-                default:
-                    fprintf(state->stream, "  <li>%s of %s pending: client=%s, "
-                                    "origin=%s</li>\n",
-                                    action_s, event->target,
-                                    event->client, event->origin);
-            }
-            break;
-
-        default:
-            /* no support for fence history for other formats so far */
-            break;
-    }
-}
-
-/*!
- * \internal
  * \brief Print a section for failed stonith actions
  *
  * \param[in] stream     File stream to display output to
@@ -2035,40 +1922,20 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
     }
 
     /* Print section heading */
-    switch (state->output_format) {
-        /* no need to take care of xml in here as xml gets full
-         * history anyway
-         */
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nFailed Fencing Actions:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Failed Fencing Actions</h2>\n <ul>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format != mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "Failed Fencing Actions");
     }
 
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            print_stonith_action(state, hp, mon_ops, history);
+            state->out->message(state->out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, history);
         }
     }
 
     /* End section */
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " </ul>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format != mon_output_xml) {
+        state->out->end_list(state->out);
     }
 }
 
@@ -2092,38 +1959,21 @@ print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned i
         stonith_history_t *hp;
 
         /* Print section heading */
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, "\nPending Fencing Actions:\n");
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, " <hr />\n <h2>Pending Fencing Actions</h2>\n <ul>\n");
-                break;
-
-            default:
-                break;
-        }
+        if (state->output_format != mon_output_xml) {
+            state->out->begin_list(state->out, NULL, NULL, "Pending Fencing Actions");
+        }            
 
         history = stonith__sort_history(history);
         for (hp = history; hp; hp = hp->next) {
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            print_stonith_action(state, hp, mon_ops, history);
+            state->out->message(state->out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
         }
 
         /* End section */
-        switch (state->output_format) {
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, " </ul>\n");
-                break;
-
-        default:
-            break;
+        if (state->output_format != mon_output_xml) {
+            state->out->end_list(state->out);
         }
     }
 }
@@ -2142,46 +1992,21 @@ print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned i
     stonith_history_t *hp;
 
     /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nFencing History:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Fencing History</h2>\n <ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <fence_history>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "fence_history");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Fencing History");
     }
 
     stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
         if ((hp->state != st_failed) || (state->output_format == mon_output_xml)) {
-            print_stonith_action(state, hp, mon_ops, history);
+            state->out->message(state->out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
         }
     }
 
     /* End section */
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " </ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    </fence_history>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->end_list(state->out);
 }
 
 void

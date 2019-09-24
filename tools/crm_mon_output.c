@@ -37,13 +37,15 @@ time_t_string(time_t when) {
 static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
     int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
     int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
-    if (last) {
-        char *time = time_t_string(crm_parse_int(last, "0"));
+    time_t last_change = 0;
+    
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change) == pcmk_ok) {
+        char *time = time_t_string(last_change);
         char *buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', exitreason='%s', last-rc-change='%s', queued=%sms, exec=%sms",
                                       op_key ? op_key : ID(xml_op),
                                       crm_element_value(xml_op, XML_ATTR_UNAME),
