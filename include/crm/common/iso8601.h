@@ -51,8 +51,10 @@ typedef struct crm_time_period_s {
  *   A timezone of 'Z' denoted UTC time
  */
 crm_time_t *crm_time_new(const char *string);
+crm_time_t *crm_time_new_undefined(void);
 void crm_time_free(crm_time_t * dt);
 
+bool crm_time_is_defined(const crm_time_t *t);
 char *crm_time_as_string(crm_time_t * dt, int flags);
 
 #  define crm_time_log(level, prefix, dt, flags) crm_time_log_alias(level, __FILE__, __FUNCTION__, __LINE__, prefix, dt, flags)

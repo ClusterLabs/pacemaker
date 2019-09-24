@@ -110,8 +110,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
         }
     }
 
-    unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
-                               meta_hash, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, node_hash,
+                               meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -119,8 +119,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
     }
 
     /* and finally check the defaults */
-    unpack_instance_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_META_SETS,
-                               node_hash, meta_hash, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
+                               node_hash, meta_hash, NULL, FALSE, data_set);
 }
 
 void
@@ -133,8 +133,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
         node_hash = node->details->attrs;
     }
 
-    unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                               meta_hash, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+                               meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -142,8 +142,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
 
     } else {
         /* and finally check the defaults */
-        unpack_instance_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   node_hash, meta_hash, NULL, FALSE, data_set->now);
+        pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_ATTR_SETS,
+                                   node_hash, meta_hash, NULL, FALSE, data_set);
     }
 }
 
@@ -159,7 +159,7 @@ pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
     }
 
     pe_unpack_versioned_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                                   meta_hash, data_set->now);
+                                   meta_hash, data_set->now, NULL);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -168,7 +168,7 @@ pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
     } else {
         /* and finally check the defaults */
         pe_unpack_versioned_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_ATTR_SETS,
-                                       node_hash, meta_hash, data_set->now);
+                                       node_hash, meta_hash, data_set->now, NULL);
     }
 }
 #endif
@@ -579,6 +579,16 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
     if (value != NULL && safe_str_neq("default", value)) {
         (*rsc)->migration_threshold = char2score(value);
+        if ((*rsc)->migration_threshold < 0) {
+            /* @TODO We use 1 here to preserve previous behavior, but this
+             * should probably use the default (INFINITY) or 0 (to disable)
+             * instead.
+             */
+            pe_warn_once(pe_wo_neg_threshold,
+                         XML_RSC_ATTR_FAIL_STICKINESS
+                         " must be non-negative, using 1 instead");
+            (*rsc)->migration_threshold = 1;
+        }
     }
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
@@ -694,8 +704,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     (*rsc)->utilization = crm_str_table_new();
 
-    unpack_instance_attributes(data_set->input, (*rsc)->xml, XML_TAG_UTILIZATION, NULL,
-                               (*rsc)->utilization, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, NULL,
+                               (*rsc)->utilization, NULL, FALSE, data_set);
 
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 

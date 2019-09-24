@@ -21,6 +21,7 @@ extern "C" {
  */
 
 #  include <stdbool.h>              // bool
+#  include <sys/types.h>            // time_t
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/crm.h>              // GListPtr
 #  include <crm/common/iso8601.h>
@@ -160,6 +161,7 @@ struct pe_working_set_s {
 
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
+    time_t recheck_by;  // Hint to controller to re-run scheduler by this time
 };
 
 enum pe_check_parameters {

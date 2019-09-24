@@ -549,9 +549,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
         if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
             && action->node != NULL && action->op_entry != NULL) {
             pe_set_action_bit(action, pe_action_have_node_attrs);
-            unpack_instance_attributes(data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
+            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                        action->node->details->attrs,
-                                       action->extra, NULL, FALSE, data_set->now);
+                                       action->extra, NULL, FALSE, data_set);
         }
 
         if (is_set(action->flags, pe_action_pseudo)) {
@@ -839,8 +839,8 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
 
     if (timeout == NULL && data_set->op_defaults) {
         GHashTable *action_meta = crm_str_table_new();
-        unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
-                                   NULL, action_meta, NULL, FALSE, data_set->now);
+        pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
+                                   NULL, action_meta, NULL, FALSE, data_set);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
@@ -920,8 +920,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
-                               action->meta, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, NULL,
+                               action->meta, NULL, FALSE, data_set);
 
     // Probe timeouts default differently, so handle timeout default later
     default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
@@ -934,20 +934,19 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         xmlAttrPtr xIter = NULL;
 
         // <op> <meta_attributes> take precedence over defaults
-        unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                                   NULL, action->meta, NULL, TRUE,
-                                   data_set->now);
+        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, NULL,
+                                   action->meta, NULL, TRUE, data_set);
 
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
         pe_unpack_versioned_attributes(data_set->input, xml_obj,
                                        XML_TAG_ATTR_SETS, NULL,
                                        rsc_details->versioned_parameters,
-                                       data_set->now);
+                                       data_set->now, NULL);
         pe_unpack_versioned_attributes(data_set->input, xml_obj,
                                        XML_TAG_META_SETS, NULL,
                                        rsc_details->versioned_meta,
-                                       data_set->now);
+                                       data_set->now, NULL);
 #endif
 
         /* Anything set as an <op> XML property has highest precedence.
@@ -2534,4 +2533,43 @@ pe__shutdown_requested(pe_node_t *node)
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
     return shutdown && strcmp(shutdown, "0");
+}
+
+/*!
+ * \internal
+ * \brief Update a data set's "recheck by" time
+ *
+ * \param[in]     recheck   Epoch time when recheck should happen
+ * \param[in,out] data_set  Current working set
+ */
+void
+pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
+{
+    if ((recheck > get_effective_time(data_set))
+        && ((data_set->recheck_by == 0)
+            || (data_set->recheck_by > recheck))) {
+        data_set->recheck_by = recheck;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ */
+void
+pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           pe_working_set_t *data_set)
+{
+    crm_time_t *next_change = crm_time_new_undefined();
+
+    pe_unpack_nvpairs(data_set->input, xml_obj, set_name, node_hash, hash,
+                      always_first, overwrite, data_set->now, next_change);
+    if (crm_time_is_defined(next_change)) {
+        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+        pe__update_recheck_time(recheck, data_set);
+    }
+    crm_time_free(next_change);
 }

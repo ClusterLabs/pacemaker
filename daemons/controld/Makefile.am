@@ -23,6 +23,7 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
 		  controld_throttle.h		\
+		  controld_timers.h		\
 		  controld_transition.h		\
 		  controld_utils.h		\
 		  pacemaker-controld.h
@@ -63,6 +64,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_te_events.c	\
 			     controld_te_utils.c	\
 			     controld_throttle.c	\
+			     controld_timers.c		\
 			     controld_transition.c	\
 			     controld_utils.c
 

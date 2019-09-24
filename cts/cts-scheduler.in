@@ -140,6 +140,11 @@ TESTS = [
         [ "one-or-more-unrunnable-instances", "Avoid dependencies on instances that won't ever be started" ],
     ],
     [
+        [ "location-date-rules-1", "Use location constraints with ineffective date-based rules" ],
+        [ "location-date-rules-2", "Use location constraints with effective date-based rules" ],
+        [ "nvpair-date-rules-1", "Use nvpair blocks with a variety of date-based rules" ],
+    ],
+    [
         [ "order1", "Order start 1" ],
         [ "order2", "Order start 2" ],
         [ "order3", "Order stop" ],

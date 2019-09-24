@@ -440,15 +440,6 @@ enum crmd_fsa_cause {
     C_FSA_INTERNAL,
 };
 
-typedef struct fsa_timer_s {
-    guint source_id;            /* timer source id */
-    int period_ms;              /* timer period */
-    enum crmd_fsa_input fsa_input;
-    gboolean (*callback) (gpointer data);
-    bool log_error;
-    int counter;
-} fsa_timer_t;
-
 enum fsa_data_type {
     fsa_dt_none,
     fsa_dt_ha_msg,
@@ -483,14 +474,6 @@ extern char *fsa_our_dc_version;
 extern GListPtr fsa_message_queue;
 
 extern char *fsa_cluster_name;
-
-extern fsa_timer_t *election_trigger;
-extern fsa_timer_t *shutdown_escalation_timer;
-extern fsa_timer_t *transition_timer;
-extern fsa_timer_t *integration_timer;
-extern fsa_timer_t *finalization_timer;
-extern fsa_timer_t *wait_timer;
-extern fsa_timer_t *recheck_timer;
 
 extern crm_trigger_t *fsa_source;
 extern crm_trigger_t *config_read;

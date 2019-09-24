@@ -151,10 +151,6 @@ not enabled, then the cluster has no way to continue and will not try
 to start the resource elsewhere, but will try to stop it again after
 the failure timeout.
 
-[IMPORTANT]
-Please read <<s-rules-recheck>> to understand how timeouts work
-before configuring a +failure-timeout+.
-
 == Moving Resources ==
 indexterm:[Moving,Resources] 
 indexterm:[Resource,Moving]

@@ -35,8 +35,10 @@ CRM_TRACE_INIT_DATA(pe_status);
 	}								\
     } while(0)
 
-gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
-                       enum action_fail_response *failed, pe_working_set_t * data_set);
+static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                          xmlNode **last_failure,
+                          enum action_fail_response *failed,
+                          pe_working_set_t *data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
@@ -176,8 +178,8 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     data_set->config_hash = config_hash;
 
-    unpack_instance_attributes(data_set->input, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+                               CIB_OPTIONS_FIRST, FALSE, data_set);
 
     verify_pe_options(data_set->config_hash);
 
@@ -545,8 +547,9 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             handle_startup_fencing(data_set, new_node);
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
-            unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_UTILIZATION, NULL,
-                                       new_node->details->utilization, NULL, FALSE, data_set->now);
+            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, NULL,
+                                       new_node->details->utilization, NULL,
+                                       FALSE, data_set);
 
             crm_trace("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
         }
@@ -2663,7 +2666,8 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
 }
 
 static void
-record_failed_op(xmlNode *op, node_t* node, resource_t *rsc, pe_working_set_t * data_set)
+record_failed_op(xmlNode *op, const pe_node_t *node,
+                 const pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     xmlNode *xIter = NULL;
     const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
@@ -2961,82 +2965,13 @@ determine_op_status(
     return result;
 }
 
-static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, pe_working_set_t * data_set)
+// return TRUE if start or monitor last failure but parameters changed
+static bool
+should_clear_for_param_change(xmlNode *xml_op, const char *task,
+                              pe_resource_t *rsc, pe_node_t *node,
+                              pe_working_set_t *data_set)
 {
-    bool expired = FALSE;
-    time_t last_failure = 0;
-    guint interval_ms = 0;
-    int failure_timeout = rsc->failure_timeout;
-    const char *key = get_op_key(xml_op);
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *clear_reason = NULL;
-
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-
-    /* clearing recurring monitor operation failures automatically
-     * needs to be carefully considered */
-    if ((interval_ms != 0) && safe_str_eq(task, "monitor")) {
-
-        /* TODO, in the future we should consider not clearing recurring monitor
-         * op failures unless the last action for a resource was a "stop" action.
-         * otherwise it is possible that clearing the monitor failure will result
-         * in the resource being in an undeterministic state.
-         *
-         * For now we handle this potential undeterministic condition for remote
-         * node connection resources by not clearing a recurring monitor op failure
-         * until after the node has been fenced. */
-
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)
-            && rsc->remote_reconnect_ms) {
-
-            node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
-            if (remote_node && remote_node->details->remote_was_fenced == 0) {
-                if (strstr(ID(xml_op), "last_failure")) {
-                    crm_info("Waiting to clear monitor failure for remote node %s until fencing has occurred", rsc->id); 
-                }
-                /* disabling failure timeout for this operation because we believe
-                 * fencing of the remote node should occur first. */ 
-                failure_timeout = 0;
-            }
-        }
-    }
-
-    if (failure_timeout > 0) {
-        time_t last_run = 0;
-
-        if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                    &last_run) == 0) {
-            time_t now = get_effective_time(data_set);
-
-            if (now > (last_run + failure_timeout)) {
-                expired = TRUE;
-            }
-        }
-    }
-
-    if (expired) {
-        if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default, xml_op,
-                             data_set)) {
-
-            // There is a fail count ignoring timeout
-
-            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
-                                 xml_op, data_set) == 0) {
-                // There is no fail count considering timeout
-                clear_reason = "it expired";
-
-            } else {
-                expired = FALSE;
-            }
-
-        } else if (rsc->remote_reconnect_ms
-                   && strstr(ID(xml_op), "last_failure")) {
-            // Always clear last failure when reconnect interval is set
-            clear_reason = "reconnect interval is set";
-        }
-
-    } else if (strstr(ID(xml_op), "last_failure") &&
-               ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
+    if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
 
         if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
@@ -3052,16 +2987,176 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
-                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
-                              rsc->id, key, node->details->id);
+                    crm_trace("Resource %s history entry %s on %s"
+                              " has no digest to compare",
+                              rsc->id, get_op_key(xml_op), node->details->id);
                     break;
                 case RSC_DIGEST_MATCH:
                     break;
                 default:
-                    clear_reason = "resource parameters have changed";
-                    break;
+                    return TRUE;
             }
         }
+    }
+    return FALSE;
+}
+
+// Order action after fencing of remote node, given connection rsc
+static void
+order_after_remote_fencing(pe_action_t *action, pe_resource_t *remote_conn,
+                           pe_working_set_t *data_set)
+{
+    pe_node_t *remote_node = pe_find_node(data_set->nodes, remote_conn->id);
+
+    if (remote_node) {
+        pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
+                                         data_set);
+
+        order_actions(fence, action, pe_order_implies_then);
+    }
+}
+
+static bool
+should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
+                              const char *task, guint interval_ms,
+                              bool is_last_failure, pe_working_set_t *data_set)
+{
+    /* Clearing failures of recurring monitors has special concerns. The
+     * executor reports only changes in the monitor result, so if the
+     * monitor is still active and still getting the same failure result,
+     * that will go undetected after the failure is cleared.
+     *
+     * Also, the operation history will have the time when the recurring
+     * monitor result changed to the given code, not the time when the
+     * result last happened.
+     *
+     * @TODO We probably should clear such failures only when the failure
+     * timeout has passed since the last occurrence of the failed result.
+     * However we don't record that information. We could maybe approximate
+     * that by clearing only if there is a more recent successful monitor or
+     * stop result, but we don't even have that information at this point
+     * since we are still unpacking the resource's operation history.
+     *
+     * This is especially important for remote connection resources with a
+     * reconnect interval, so in that case, we skip clearing failures
+     * if the remote node hasn't been fenced.
+     */
+    if (rsc->remote_reconnect_ms
+        && is_set(data_set->flags, pe_flag_stonith_enabled)
+        && (interval_ms != 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+
+        pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+
+        if (remote_node && !remote_node->details->remote_was_fenced) {
+            if (is_last_failure) {
+                crm_info("Waiting to clear monitor failure for remote node %s"
+                         " until fencing has occurred", rsc->id);
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Check operation age and schedule failure clearing when appropriate
+ *
+ * This function has two distinct purposes. The first is to check whether an
+ * operation history entry is expired (i.e. the resource has a failure timeout,
+ * the entry is older than the timeout, and the resource either has no fail
+ * count or its fail count is entirely older than the timeout). The second is to
+ * schedule fail count clearing when appropriate (i.e. the operation is expired
+ * and either the resource has an expired fail count or the operation is a
+ * last_failure for a remote connection resource with a reconnect interval,
+ * or the operation is a last_failure for a start or monitor operation and the
+ * resource's parameters have changed since the operation).
+ *
+ * \param[in] rsc       Resource that operation happened to
+ * \param[in] node      Node that operation happened on
+ * \param[in] rc        Actual result of operation
+ * \param[in] xml_op    Operation history entry XML
+ * \param[in] data_set  Current working set
+ *
+ * \return TRUE if operation history entry is expired, FALSE otherwise
+ */
+static bool
+check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
+                       xmlNode *xml_op, pe_working_set_t *data_set)
+{
+    bool expired = FALSE;
+    bool is_last_failure = crm_ends_with(ID(xml_op), "_last_failure_0");
+    time_t last_run = 0;
+    guint interval_ms = 0;
+    int unexpired_fail_count = 0;
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *clear_reason = NULL;
+
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
+    if ((rsc->failure_timeout > 0)
+        && (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                    &last_run) == 0)) {
+
+        // Resource has a failure-timeout, and history entry has a timestamp
+
+        time_t now = get_effective_time(data_set);
+        time_t last_failure = 0;
+
+        // Is this particular operation history older than the failure timeout?
+        if ((now >= (last_run + rsc->failure_timeout))
+            && !should_ignore_failure_timeout(rsc, xml_op, task, interval_ms,
+                                              is_last_failure, data_set)) {
+            expired = TRUE;
+        }
+
+        // Does the resource as a whole have an unexpired fail count?
+        unexpired_fail_count = pe_get_failcount(node, rsc, &last_failure,
+                                                pe_fc_effective, xml_op,
+                                                data_set);
+
+        // Update scheduler recheck time according to *last* failure
+        crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d timeout=%ds"
+                  " last-failure@%lld",
+                  ID(xml_op), (long long) last_run, (expired? "" : "not "),
+                  (long long) now, unexpired_fail_count, rsc->failure_timeout,
+                  (long long) last_failure);
+        last_failure += rsc->failure_timeout + 1;
+        if (unexpired_fail_count && (now < last_failure)) {
+            pe__update_recheck_time(last_failure, data_set);
+        }
+    }
+
+    if (expired) {
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op, data_set)) {
+
+            // There is a fail count ignoring timeout
+
+            if (unexpired_fail_count == 0) {
+                // There is no fail count considering timeout
+                clear_reason = "it expired";
+
+            } else {
+                /* This operation is old, but there is an unexpired fail count.
+                 * In a properly functioning cluster, this should only be
+                 * possible if this operation is not a failure (otherwise the
+                 * fail count should be expired too), so this is really just a
+                 * failsafe.
+                 */
+                expired = FALSE;
+            }
+
+        } else if (is_last_failure && rsc->remote_reconnect_ms) {
+            /* Clear any expired last failure when reconnect interval is set,
+             * even if there is no fail count.
+             */
+            clear_reason = "reconnect interval is set";
+        }
+    }
+
+    if (!expired && is_last_failure
+        && should_clear_for_param_change(xml_op, task, rsc, node, data_set)) {
+        clear_reason = "resource parameters have changed";
     }
 
     if (clear_reason != NULL) {
@@ -3071,25 +3166,17 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_ms) {
-
-            pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
-
-            if (remote_node) {
-                /* If we're clearing a remote connection due to a reconnect
-                 * interval, we want to wait until any scheduled fencing
-                 * completes.
-                 *
-                 * We could limit this to remote_node->details->unclean, but at
-                 * this point, that's always true (it won't be reliable until
-                 * after unpack_node_loop() is done).
-                 */
-                pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
-                                                 data_set);
-
-                crm_info("Clearing %s failure will wait until any scheduled "
-                         "fencing of %s completes", task, rsc->id);
-                order_actions(fence, clear_op, pe_order_implies_then);
-            }
+            /* If we're clearing a remote connection due to a reconnect
+             * interval, we want to wait until any scheduled fencing
+             * completes.
+             *
+             * We could limit this to remote_node->details->unclean, but at
+             * this point, that's always true (it won't be reliable until
+             * after unpack_node_loop() is done).
+             */
+            crm_info("Clearing %s failure will wait until any scheduled "
+                     "fencing of %s completes", task, rsc->id);
+            order_after_remote_fencing(clear_op, rsc, data_set);
         }
     }
 
@@ -3100,12 +3187,12 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             case PCMK_OCF_RUNNING_MASTER:
             case PCMK_OCF_DEGRADED:
             case PCMK_OCF_DEGRADED_MASTER:
-                /* Don't expire probes that return these values */ 
+                // Don't expire probes that return these values
                 expired = FALSE;
                 break;
         }
     }
-    
+
     return expired;
 }
 
@@ -3224,14 +3311,61 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
     }
 }
 
+/*!
+ * \internal
+ * \brief Remap informational monitor results to usual values
+ *
+ * Certain OCF result codes are for providing extended information to the
+ * user about services that aren't yet failed but not entirely healthy either.
+ * These must be treated as the "normal" result by pacemaker.
+ *
+ * \param[in] rc        Actual result of a monitor action
+ * \param[in] xml_op    Operation history XML
+ * \param[in] node      Node that operation happened on
+ * \param[in] rsc       Resource that operation happened to
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Result code that pacemaker should use
+ *
+ * \note If the result is remapped, and the node is not shutting down or failed,
+ *       the operation will be recorded in the data set's list of failed
+ *       operations, to highlight it for the user.
+ */
+static int
+remap_monitor_rc(int rc, xmlNode *xml_op, const pe_node_t *node,
+                 const pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    int remapped_rc = rc;
 
-gboolean
-unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last_failure,
-              enum action_fail_response * on_fail, pe_working_set_t * data_set)
+    switch (rc) {
+        case PCMK_OCF_DEGRADED:
+            remapped_rc = PCMK_OCF_OK;
+            break;
+
+        case PCMK_OCF_DEGRADED_MASTER:
+            remapped_rc = PCMK_OCF_RUNNING_MASTER;
+            break;
+
+        default:
+            break;
+    }
+
+    if (rc != remapped_rc) {
+        crm_trace("Remapping monitor result %d to %d", rc, remapped_rc);
+        if (!node->details->shutdown || node->details->online) {
+            record_failed_op(xml_op, node, rsc, data_set);
+        }
+    }
+    return remapped_rc;
+}
+
+static void
+unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+              xmlNode **last_failure, enum action_fail_response *on_fail,
+              pe_working_set_t *data_set)
 {
     int task_id = 0;
 
-    const char *key = NULL;
     const char *task = NULL;
     const char *task_key = NULL;
 
@@ -3240,32 +3374,31 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     int target_rc = pe__target_rc_from_xml(xml_op);
     guint interval_ms = 0;
 
-    gboolean expired = FALSE;
+    bool expired = FALSE;
     resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
 
-    CRM_CHECK(rsc != NULL, return FALSE);
-    CRM_CHECK(node != NULL, return FALSE);
-    CRM_CHECK(xml_op != NULL, return FALSE);
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(node != NULL, return);
+    CRM_CHECK(xml_op != NULL, return);
 
     task_key = get_op_key(xml_op);
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
-    CRM_CHECK(task != NULL, return FALSE);
-    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return FALSE);
-    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
+    CRM_CHECK(task != NULL, return);
+    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return);
+    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return);
 
     if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
         safe_str_eq(task, CRMD_ACTION_METADATA)) {
         /* safe to ignore these */
-        return TRUE;
+        return;
     }
 
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
@@ -3281,47 +3414,50 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      node->details->uname, rsc->id);
     }
 
-    if(status != PCMK_LRM_OP_NOT_INSTALLED) {
-        expired = check_operation_expiry(rsc, node, rc, xml_op, data_set);
+    /* It should be possible to call remap_monitor_rc() first then call
+     * check_operation_expiry() only if rc != target_rc, because there should
+     * never be a fail count without at least one unexpected result in the
+     * resource history. That would be more efficient by avoiding having to call
+     * check_operation_expiry() for expected results.
+     *
+     * However, we do have such configurations in the scheduler regression
+     * tests, even if it shouldn't be possible with the current code. It's
+     * probably a good idea anyway, but that would require updating the test
+     * inputs to something currently possible.
+     */
+
+    if ((status != PCMK_LRM_OP_NOT_INSTALLED)
+        && check_operation_expiry(rsc, node, rc, xml_op, data_set)) {
+        expired = TRUE;
     }
 
-    /* Degraded results are informational only, re-map them to their error-free equivalents */
-    if (rc == PCMK_OCF_DEGRADED && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-        rc = PCMK_OCF_OK;
-
-        /* Add them to the failed list to highlight them for the user */
-        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-            crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED, PCMK_OCF_OK);
-            record_failed_op(xml_op, node, rsc, data_set);
-        }
-
-    } else if (rc == PCMK_OCF_DEGRADED_MASTER && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-        rc = PCMK_OCF_RUNNING_MASTER;
-
-        /* Add them to the failed list to highlight them for the user */
-        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-            crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED_MASTER, PCMK_OCF_RUNNING_MASTER);
-            record_failed_op(xml_op, node, rsc, data_set);
-        }
+    if (!strcmp(task, CRMD_ACTION_STATUS)) {
+        rc = remap_monitor_rc(rc, xml_op, node, rsc, data_set);
     }
 
-    if (expired && target_rc != rc) {
+    if (expired && (rc != target_rc)) {
         const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
-        pe_rsc_debug(rsc, "Expired operation '%s' on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
-                     key, node->details->uname,
-                     services_ocf_exitcode_str(rc), rc,
-                     services_ocf_exitcode_str(target_rc), target_rc);
-
         if (interval_ms == 0) {
-            crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
-                       task_key, rc, magic, node->details->uname);
+            crm_notice("Ignoring expired %s failure on %s "
+                       CRM_XS " actual=%d expected=%d magic=%s",
+                       task_key, node->details->uname, rc, target_rc, magic);
             goto done;
 
         } else if(node->details->online && node->details->unclean == FALSE) {
-            crm_notice("Re-initiated expired calculated failure %s (rc=%d, magic=%s) on %s",
-                       task_key, rc, magic, node->details->uname);
-            /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
+            /* Reschedule the recurring monitor. CancelXmlOp() won't work at
+             * this stage, so as a hacky workaround, forcibly change the restart
+             * digest so check_action_definition() does what we want later.
+             *
+             * @TODO We should skip this if there is a newer successful monitor.
+             *       Also, this causes rescheduling only if the history entry
+             *       has an op-digest (which the expire-non-blocked-failure
+             *       scheduler regression test doesn't, but that may not be a
+             *       realistic scenario in production).
+             */
+            crm_notice("Rescheduling %s after failure expired on %s "
+                       CRM_XS " actual=%d expected=%d magic=%s",
+                       task_key, node->details->uname, rc, target_rc, magic);
             crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
             goto done;
         }
@@ -3456,8 +3592,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     }
 
   done:
-    pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s", rsc->id, task, role2text(rsc->role), role2text(rsc->next_role));
-    return TRUE;
+    pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s",
+                 rsc->id, task, role2text(rsc->role),
+                 role2text(rsc->next_role));
 }
 
 static void
@@ -3487,8 +3624,8 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
                             strdup(cluster_name));
     }
 
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                               node->details->attrs, NULL, overwrite, data_set->now);
+    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, NULL,
+                               node->details->attrs, NULL, overwrite, data_set);
 
     if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {
         const char *site_name = pe_node_attribute_raw(node, "site-name");

@@ -392,9 +392,6 @@ indexterm:[Resource,Option,requires]
 |How many seconds to wait before acting as if the failure had not
  occurred, and potentially allowing the resource back to the node on
  which it failed. A value of 0 indicates that this feature is disabled.
- As with any time-based actions, this is not guaranteed to be checked more
- frequently than the value of +cluster-recheck-interval+ (see
- <<s-cluster-options>>).
  indexterm:[failure-timeout,Resource Option]
  indexterm:[Resource,Option,failure-timeout]
 
@@ -628,6 +625,13 @@ monitor the resource for failure).
 Pacemaker identifies operations by a combination of name and interval, so this
 combination must be unique for each resource. That is, you should not configure
 two operations for the same resource with the same name and interval.
+
+[[s-operation-properties]]
+=== Operation Properties ===
+
+Operation properties may be specified directly in the +op+ element as
+XML attributes, or in a separate +meta_attributes+ block as +nvpair+ elements.
+XML attributes take precedence over +nvpair+ elements if both are specified.
 
 .Properties of an Operation
 [width="95%",cols="2m,3,<6",options="header",align="center"]

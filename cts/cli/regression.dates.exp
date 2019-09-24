@@ -1,6 +1,6 @@
 =#=#=#= Begin test: 2014-01-01 00:30:00 - 1 Hour =#=#=#=
 Date: 2014-01-01 00:30:00Z
-Duration: -3600 seconds ( 1 hour )
+Duration: -3600 seconds (1 hour)
 Duration ends at: 2013-12-31 23:30:00Z
 =#=#=#= End test: 2014-01-01 00:30:00 - 1 Hour - OK (0) =#=#=#=
 * Passed: iso8601        - 2014-01-01 00:30:00 - 1 Hour
@@ -252,7 +252,7 @@ Duration ends at: 2009-04-30 00:00:00Z
 * Passed: iso8601        - 2009-01-31 + 3 Months
 =#=#=#= Begin test: 2009-03-31 - 1 Month =#=#=#=
 Date: 2009-03-31 00:00:00Z
-Duration: -1 month 
+Duration: -1 months 
 Duration ends at: 2009-02-28 00:00:00Z
 =#=#=#= End test: 2009-03-31 - 1 Month - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-03-31 - 1 Month

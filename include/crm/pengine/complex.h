@@ -24,7 +24,7 @@ void get_meta_attributes(GHashTable * meta_hash, pe_resource_t *rsc,
 void get_rsc_attributes(GHashTable *meta_hash, pe_resource_t *rsc,
                         pe_node_t *node, pe_working_set_t *data_set);
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 void pe_get_versioned_attributes(xmlNode *meta_hash, pe_resource_t *rsc,
                                  pe_node_t *node, pe_working_set_t *data_set);
 #endif

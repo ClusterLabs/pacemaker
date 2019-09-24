@@ -239,24 +239,9 @@ crmd_exit(crm_exit_t exit_code)
     crm_client_cleanup();
     crm_peer_destroy();
 
-    crm_timer_stop(transition_timer);
-    crm_timer_stop(integration_timer);
-    crm_timer_stop(finalization_timer);
-    crm_timer_stop(election_trigger);
-    crm_timer_stop(shutdown_escalation_timer);
-    crm_timer_stop(wait_timer);
-    crm_timer_stop(recheck_timer);
-
+    controld_free_fsa_timers();
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
-
-    free(transition_timer); transition_timer = NULL;
-    free(integration_timer); integration_timer = NULL;
-    free(finalization_timer); finalization_timer = NULL;
-    free(election_trigger); election_trigger = NULL;
-    free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
-    free(wait_timer); wait_timer = NULL;
-    free(recheck_timer); recheck_timer = NULL;
 
     free(fsa_our_dc_version); fsa_our_dc_version = NULL;
     free(fsa_our_uname); fsa_our_uname = NULL;
@@ -351,8 +336,6 @@ do_startup(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int was_error = 0;
-
     crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
@@ -365,101 +348,7 @@ do_startup(long long action,
     fsa_cib_conn = cib_new();
 
     lrm_state_init_local();
-
-    /* set up the timers */
-    transition_timer = calloc(1, sizeof(fsa_timer_t));
-    integration_timer = calloc(1, sizeof(fsa_timer_t));
-    finalization_timer = calloc(1, sizeof(fsa_timer_t));
-    election_trigger = calloc(1, sizeof(fsa_timer_t));
-    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
-    wait_timer = calloc(1, sizeof(fsa_timer_t));
-    recheck_timer = calloc(1, sizeof(fsa_timer_t));
-
-    if (election_trigger != NULL) {
-        election_trigger->source_id = 0;
-        election_trigger->period_ms = -1;
-        election_trigger->fsa_input = I_DC_TIMEOUT;
-        election_trigger->callback = crm_timer_popped;
-        election_trigger->log_error = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (transition_timer != NULL) {
-        transition_timer->source_id = 0;
-        transition_timer->period_ms = -1;
-        transition_timer->fsa_input = I_PE_CALC;
-        transition_timer->callback = crm_timer_popped;
-        transition_timer->log_error = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (integration_timer != NULL) {
-        integration_timer->source_id = 0;
-        integration_timer->period_ms = -1;
-        integration_timer->fsa_input = I_INTEGRATED;
-        integration_timer->callback = crm_timer_popped;
-        integration_timer->log_error = TRUE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (finalization_timer != NULL) {
-        finalization_timer->source_id = 0;
-        finalization_timer->period_ms = -1;
-        finalization_timer->fsa_input = I_FINALIZED;
-        finalization_timer->callback = crm_timer_popped;
-        finalization_timer->log_error = FALSE;
-        /* for possible enabling... a bug in the join protocol left
-         *    a slave in S_PENDING while we think it's in S_NOT_DC
-         *
-         * raising I_FINALIZED put us into a transition loop which is
-         *    never resolved.
-         * in this loop we continually send probes which the node
-         *    NACK's because it's in S_PENDING
-         *
-         * if we have nodes where the cluster layer is active but the
-         *    CRM is not... then this will be handled in the
-         *    integration phase
-         */
-        finalization_timer->fsa_input = I_ELECTION;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (shutdown_escalation_timer != NULL) {
-        shutdown_escalation_timer->source_id = 0;
-        shutdown_escalation_timer->period_ms = -1;
-        shutdown_escalation_timer->fsa_input = I_STOP;
-        shutdown_escalation_timer->callback = crm_timer_popped;
-        shutdown_escalation_timer->log_error = TRUE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (wait_timer != NULL) {
-        wait_timer->source_id = 0;
-        wait_timer->period_ms = 2000;
-        wait_timer->fsa_input = I_NULL;
-        wait_timer->callback = crm_timer_popped;
-        wait_timer->log_error = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (recheck_timer != NULL) {
-        recheck_timer->source_id = 0;
-        recheck_timer->period_ms = -1;
-        recheck_timer->fsa_input = I_PE_CALC;
-        recheck_timer->callback = crm_timer_popped;
-        recheck_timer->log_error = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (was_error) {
+    if (controld_init_fsa_timers() == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -762,13 +651,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = crm_str_table_new();
-    unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, now);
+    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
+                      config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     verify_crmd_options(config_hash);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_trigger->period_ms = crm_get_msec(value);
+    election_trigger->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
     throttle_update_job_max(value);
@@ -789,25 +678,25 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     update_stonith_max_attempts(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_get_msec(value);
-    /* How long to declare an election over - even if not everyone voted */
-    crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
+    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
+              shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_timer->period_ms = crm_get_msec(value);
-    crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
+    recheck_interval_ms = crm_parse_interval_spec(value);
+    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 
     value = crmd_pref(config_hash, "transition-delay");
-    transition_timer->period_ms = crm_get_msec(value);
+    transition_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-integration-timeout");
-    integration_timer->period_ms = crm_get_msec(value);
+    integration_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_get_msec(value);
+    finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;
@@ -865,18 +754,16 @@ crm_shutdown(int nsig)
             set_bit(fsa_input_register, R_SHUTDOWN);
             register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
-            if (shutdown_escalation_timer->period_ms < 1) {
+            if (shutdown_escalation_timer->period_ms == 0) {
                 const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
-                int msec = crm_get_msec(value);
 
-                crm_debug("Using default shutdown escalation: %dms", msec);
-                shutdown_escalation_timer->period_ms = msec;
+                shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
             }
 
             /* can't rely on this... */
             crm_notice("Shutting down cluster resource manager " CRM_XS
-                       " limit=%dms", shutdown_escalation_timer->period_ms);
-            crm_timer_start(shutdown_escalation_timer);
+                       " limit=%ums", shutdown_escalation_timer->period_ms);
+            controld_start_timer(shutdown_escalation_timer);
         }
 
     } else {

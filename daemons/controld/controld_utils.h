@@ -54,11 +54,6 @@ enum node_update_flags {
     node_update_all = node_update_cluster|node_update_peer|node_update_join|node_update_expected,
 };
 
-gboolean crm_timer_stop(fsa_timer_t * timer);
-gboolean crm_timer_start(fsa_timer_t * timer);
-gboolean crm_timer_popped(gpointer data);
-gboolean is_timer_started(fsa_timer_t * timer);
-
 crm_exit_t crmd_exit(crm_exit_t exit_code);
 _Noreturn void crmd_fast_exit(crm_exit_t exit_code);
 void pe_subsystem_free(void);
@@ -86,7 +81,6 @@ void update_attrd_clear_failures(const char *host, const char *rsc,
 int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
 
-const char *get_timer_desc(fsa_timer_t * timer);
 void crmd_peer_down(crm_node_t *peer, bool full);
 unsigned int cib_op_timeout(void);
 

@@ -25,9 +25,9 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
             continue;
         }
 
+        // @COMPAT lifetime is deprecated
         lifetime = first_named_child(xml_obj, "lifetime");
-
-        if (test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+        if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
             continue;
         }
 
@@ -298,9 +298,8 @@ cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t
         get_meta_attributes(params, rsc, current, data_set);
 
     } else {
-        unpack_instance_attributes(data_set->input, rsc->xml,
-                                   XML_TAG_UTILIZATION, NULL,
-                                   params, NULL, FALSE, data_set->now);
+        pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
+                                   NULL, FALSE, data_set);
     }
 
     crm_debug("Looking up %s in %s", attr, rsc->id);

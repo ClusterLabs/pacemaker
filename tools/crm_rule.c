@@ -89,7 +89,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    result = pe_eval_date_expression(match, effective_date);
+    result = pe_eval_date_expression(match, effective_date, NULL);
 
     if (result == pe_date_within_range) {
         printf("Rule %s is still in effect\n", rule_id);
