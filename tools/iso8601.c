@@ -24,15 +24,16 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",    0, 0, '-', "\nCommands:"},
     {"now",      0, 0, 'n', "\tDisplay the current date/time"},
-    {"date",     1, 0, 'd', "Parse an ISO8601 date/time.  Eg. '2005-01-20 00:30:00 +01:00' or '2005-040'"},
+    { "date",     1, 0, 'd',
+      "Parse an ISO 8601 date/time (for example, '2019-09-24 00:30:00 +01:00' or '2019-040')"},
     { "period",   1, 0, 'p',
-      "Parse an ISO8601 period (interval) with start time (for example, '2005-040/2005-043')"
+      "Parse an ISO 8601 period (interval) with start time (for example, '2005-040/2005-043')"
     },
     { "duration", 1, 0, 'D',
-      "Parse an ISO8601 duration with start time (for example, '2005-040/P1M')"
+      "Parse an ISO 8601 duration with start time (for example, '2005-040/P1M')"
     },
     { "expected", 1, 0, 'E',
-      "Parse an ISO8601 duration with start time (for example, '2005-040/P1M')"
+      "Parse an ISO 8601 duration with start time (for example, '2005-040/P1M')"
     },
     {"-spacer-",0, 0, '-', "\nOutput Modifiers:"},
     {"seconds", 0, 0, 's', "\tShow result as a seconds since 0000-001 00:00:00Z"},
@@ -40,8 +41,10 @@ static struct crm_option long_options[] = {
     {"local",   0, 0, 'L', "\tShow result as a 'local' date/time"},
     {"ordinal", 0, 0, 'O', "\tShow result as an 'ordinal' date/time"},
     {"week",    0, 0, 'W', "\tShow result as an 'calendar week' date/time"},
-    {"-spacer-",0, 0, '-', "\nFor more information on the ISO8601 standard, see https://en.wikipedia.org/wiki/ISO_8601"},
-    
+    { "-spacer-",0, 0, '-',
+      "\nFor more information on the ISO 8601 standard, see https://en.wikipedia.org/wiki/ISO_8601"
+    },
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -81,7 +84,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("iso8601");
     crm_set_options(NULL, "command [output modifier] ", long_options,
-                    "Display and parse ISO8601 dates and times");
+                    "Display and parse ISO 8601 dates and times");
 
     if (argc < 2) {
         argerr++;
