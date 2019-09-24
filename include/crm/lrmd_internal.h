@@ -1,28 +1,20 @@
 /*
- * Copyright 2015-2017 the Pacemaker project contributors
+ * Copyright 2015-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef LRMD_ALERT_INTERNAL_H
-#define LRMD_ALERT_INTERNAL_H
+#ifndef LRMD_INTERNAL__H
+#define LRMD_INTERNAL__H
 
-#include <glib.h>
-#include <crm/lrmd.h>
+#include <stdint.h>                     // uint32_t
+#include <glib.h>                       // GList
+#include <libxml/tree.h>                // xmlNode
+#include <crm/common/remote_internal.h> // crm_remote_t
+#include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t
 
 int lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
                               const char *node, uint32_t nodeid,
@@ -34,5 +26,8 @@ int lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
                             const char *desc, int op_rc);
 int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                              const char *node, lrmd_event_data_t *op);
+
+int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id,
+                      const char *msg_type);
 
 #endif
