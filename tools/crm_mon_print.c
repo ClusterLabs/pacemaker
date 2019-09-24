@@ -27,20 +27,13 @@
 
 #include "crm_mon.h"
 
-static void print_node_start(mon_state_t *state, node_t *node, unsigned int mon_ops);
-static void print_node_end(mon_state_t *state);
 static void print_resources_heading(mon_state_t *state, unsigned int mon_ops);
 static void print_resources_closing(mon_state_t *state, gboolean printed_heading,
                                     unsigned int mon_ops);
 static void print_resources(mon_state_t *state, pe_working_set_t *data_set,
                             int print_opts, unsigned int mon_ops);
-static void print_rsc_history_start(mon_state_t *state, pe_working_set_t *data_set,
-                                    node_t *node, resource_t *rsc, const char *rsc_id,
-                                    gboolean all);
-static void print_rsc_history_end(mon_state_t *state);
 static void print_rsc_history(mon_state_t *state, pe_working_set_t *data_set,
-                              node_t *node, xmlNode *rsc_entry, gboolean operations,
-                              unsigned int mon_ops);
+                              node_t *node, xmlNode *rsc_entry, unsigned int mon_ops);
 static void print_node_history(mon_state_t *state, pe_working_set_t *data_set,
                                xmlNode *node_state, gboolean operations,
                                unsigned int mon_ops);
@@ -67,66 +60,6 @@ static void print_stonith_history(mon_state_t *state, stonith_history_t *history
 
 /*!
  * \internal
- * \brief Print whatever is needed to start a node section
- *
- * \param[in] stream     File stream to display output to
- * \param[in] node       Node to print
- */
-static void
-print_node_start(mon_state_t *state, node_t *node, unsigned int mon_ops)
-{
-    char *node_name;
-
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            node_name = get_node_display_name(node, mon_ops);
-            print_as(state->output_format, "* Node %s:\n", node_name);
-            free(node_name);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            node_name = get_node_display_name(node, mon_ops);
-            fprintf(state->stream, "  <h3>Node: %s</h3>\n  <ul>\n", node_name);
-            free(node_name);
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "        <node name=\"%s\">\n", node->details->uname);
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print whatever is needed to end a node section
- *
- * \param[in] stream     File stream to display output to
- */
-static void
-print_node_end(mon_state_t *state)
-{
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "  </ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "        </node>\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
  * \brief Print resources section heading appropriate to options
  *
  * \param[in] stream      File stream to display output to
@@ -149,25 +82,11 @@ print_resources_heading(mon_state_t *state, unsigned int mon_ops)
     }
 
     /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\n%s:\n\n", heading);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>%s</h2>\n", heading);
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <resources>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "resources");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "%s", heading);
     }
-
 }
 
 /*!
@@ -177,7 +96,7 @@ print_resources_heading(mon_state_t *state, unsigned int mon_ops)
  * \param[in] stream     File stream to display output to
  */
 static void
-print_resources_closing(mon_state_t *state, gboolean printed_heading,
+print_resources_closing(mon_state_t *state, gboolean printed_resource,
                         unsigned int mon_ops)
 {
     const char *heading;
@@ -191,29 +110,11 @@ print_resources_closing(mon_state_t *state, gboolean printed_heading,
         heading = "active ";
     }
 
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            if (!printed_heading) {
-                print_as(state->output_format, "\nNo %sresources\n\n", heading);
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            if (!printed_heading) {
-                fprintf(state->stream, " <hr />\n <h2>No %sresources</h2>\n", heading);
-            }
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    %s\n",
-                    (printed_heading? "</resources>" : "<resources/>"));
-            break;
-
-        default:
-            break;
+    if (state->output_format != mon_output_xml && !printed_resource) {
+        state->out->list_item(state->out, NULL, "No %sresources", heading);
     }
+
+    state->out->end_list(state->out);
 }
 
 /*!
@@ -229,8 +130,7 @@ print_resources(mon_state_t *state, pe_working_set_t *data_set,
                 int print_opts, unsigned int mon_ops)
 {
     GListPtr rsc_iter;
-    const char *prefix = NULL;
-    gboolean printed_heading = FALSE;
+    gboolean printed_resource = FALSE;
     gboolean brief_output = is_set(mon_ops, mon_op_print_brief);
 
     /* If we already showed active resources by node, and
@@ -242,17 +142,16 @@ print_resources(mon_state_t *state, pe_working_set_t *data_set,
 
     /* XML uses an indent, and ignores brief option for resources */
     if (state->output_format == mon_output_xml) {
-        prefix = "        ";
         brief_output = FALSE;
     }
+
+    print_resources_heading(state, mon_ops);
 
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
     if (brief_output && is_not_set(mon_ops, mon_op_group_by_node)) {
-        print_resources_heading(state, mon_ops);
-        printed_heading = TRUE;
-        print_rscs_brief(data_set->resources, NULL, print_opts, state->stream,
-                         is_set(mon_ops, mon_op_inactive_resources));
+        pe__rscs_brief_output(state->out, data_set->resources, print_opts,
+                              is_set(mon_ops, mon_op_inactive_resources));
     }
 
     /* For each resource, display it if appropriate */
@@ -285,199 +184,33 @@ print_resources(mon_state_t *state, pe_working_set_t *data_set,
         }
 
         /* Print this resource */
-        if (printed_heading == FALSE) {
-            print_resources_heading(state, mon_ops);
-            printed_heading = TRUE;
+        if (printed_resource == FALSE) {
+            printed_resource = TRUE;
         }
-        rsc->fns->print(rsc, prefix, print_opts, state->stream);
+        state->out->message(state->out, crm_element_name(rsc->xml), print_opts, rsc);
     }
 
-    print_resources_closing(state, printed_heading, mon_ops);
+    print_resources_closing(state, printed_resource, mon_ops);
 }
 
-/*!
- * \internal
- * \brief Print heading for resource history
- *
- * \param[in] stream      File stream to display output to
- * \param[in] data_set    Current state of CIB
- * \param[in] node        Node that ran this resource
- * \param[in] rsc         Resource to print
- * \param[in] rsc_id      ID of resource to print
- * \param[in] all         Whether to print every resource or just failed ones
- */
 static void
-print_rsc_history_start(mon_state_t *state, pe_working_set_t *data_set,
-                        node_t *node, resource_t *rsc, const char *rsc_id,
-                        gboolean all)
-{
+print_failure_summary(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
+                      xmlNode *rsc_entry) {
+    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+
     time_t last_failure = 0;
-    int failcount = rsc?
+    int failcount = rsc ?
                     pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
                                      NULL, data_set)
                     : 0;
 
-    if (!all && !failcount && (last_failure <= 0)) {
+    if (!failcount && last_failure <= 0) {
         return;
     }
 
-    /* Print resource ID */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "   %s:", rsc_id);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "   <li>%s:", rsc_id);
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "            <resource_history id=\"%s\"", rsc_id);
-            break;
-
-        default:
-            break;
-    }
-
-    /* If resource is an orphan, that's all we can say about it */
-    if (rsc == NULL) {
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, " orphan");
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, " orphan");
-                break;
-
-            case mon_output_xml:
-                fprintf(state->stream, " orphan=\"true\"");
-                break;
-
-            default:
-                break;
-        }
-
-    /* If resource is not an orphan, print some details */
-    } else if (all || failcount || (last_failure > 0)) {
-
-        /* Print migration threshold */
-        switch (state->output_format) {
-            case mon_output_plain:
-            case mon_output_console:
-                print_as(state->output_format, " migration-threshold=%d", rsc->migration_threshold);
-                break;
-
-            case mon_output_html:
-            case mon_output_cgi:
-                fprintf(state->stream, " migration-threshold=%d", rsc->migration_threshold);
-                break;
-
-            case mon_output_xml:
-                fprintf(state->stream, " orphan=\"false\" migration-threshold=\"%d\"",
-                        rsc->migration_threshold);
-                break;
-
-            default:
-                break;
-        }
-
-        /* Print fail count if any */
-        if (failcount > 0) {
-            switch (state->output_format) {
-                case mon_output_plain:
-                case mon_output_console:
-                    print_as(state->output_format, " " CRM_FAIL_COUNT_PREFIX "=%d", failcount);
-                    break;
-
-                case mon_output_html:
-                case mon_output_cgi:
-                    fprintf(state->stream, " " CRM_FAIL_COUNT_PREFIX "=%d", failcount);
-                    break;
-
-                case mon_output_xml:
-                    fprintf(state->stream, " " CRM_FAIL_COUNT_PREFIX "=\"%d\"",
-                            failcount);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        /* Print last failure time if any */
-        if (last_failure > 0) {
-            switch (state->output_format) {
-                case mon_output_console:
-                case mon_output_plain: {
-                    char *time = pcmk_format_named_time(CRM_LAST_FAILURE_PREFIX, last_failure);
-                    print_as(state->output_format, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                case mon_output_cgi:
-                case mon_output_html:
-                case mon_output_xml: {
-                    char *time = pcmk_format_named_time(CRM_LAST_FAILURE_PREFIX, last_failure);
-                    fprintf(state->stream, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    /* End the heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "\n    <ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, ">\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print closing for resource history
- *
- * \param[in] stream      File stream to display output to
- */
-static void
-print_rsc_history_end(mon_state_t *state)
-{
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "    </ul>\n   </li>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "            </resource_history>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->message(state->out, "resource-history", rsc, rsc_id, FALSE, failcount, last_failure);
+    state->out->end_list(state->out);
 }
 
 /*!
@@ -488,11 +221,10 @@ print_rsc_history_end(mon_state_t *state)
  * \param[in] data_set    Current state of CIB
  * \param[in] node        Node that ran this resource
  * \param[in] rsc_entry   Root of XML tree describing resource status
- * \param[in] operations  Whether to print operations or just failcounts
  */
 static void
 print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
-                  xmlNode *rsc_entry, gboolean operations, unsigned int mon_ops)
+                  xmlNode *rsc_entry, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     GListPtr op_list = NULL;
@@ -500,13 +232,6 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
     xmlNode *rsc_op = NULL;
-
-    /* If we're not showing operations, just print the resource failure summary */
-    if (operations == FALSE) {
-        print_rsc_history_start(state, data_set, node, rsc, rsc_id, FALSE);
-        print_rsc_history_end(state);
-        return;
-    }
 
     /* Create a list of this resource's operations */
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
@@ -539,8 +264,14 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
 
         /* If this is the first printed operation, print heading for resource */
         if (printed == FALSE) {
+            time_t last_failure = 0;
+            int failcount = rsc ?
+                            pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
+                                             NULL, data_set)
+                            : 0;
+
+            state->out->message(state->out, "resource-history", rsc, rsc_id, TRUE, failcount, last_failure);
             printed = TRUE;
-            print_rsc_history_start(state, data_set, node, rsc, rsc_id, TRUE);
         }
 
         /* Print the operation */
@@ -553,7 +284,7 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
 
     /* If we printed anything, close the resource */
     if (printed) {
-        print_rsc_history_end(state);
+        state->out->end_list(state->out);
     }
 }
 
@@ -576,21 +307,29 @@ print_node_history(mon_state_t *state, pe_working_set_t *data_set,
     xmlNode *rsc_entry = NULL;
 
     if (node && node->details && node->details->online) {
-        print_node_start(state, node, mon_ops);
-
         lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
         lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+
+        if (xmlChildElementCount(lrm_rsc) == 0) {
+            return;
+        }
+
+        state->out->message(state->out, "node", node, mon_ops, FALSE);
 
         /* Print history of each of the node's resources */
         for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
              rsc_entry = __xml_next_element(rsc_entry)) {
 
             if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                print_rsc_history(state, data_set, node, rsc_entry, operations, mon_ops);
+                if (operations == FALSE) {
+                    print_failure_summary(state, data_set, node, rsc_entry);
+                } else {
+                    print_rsc_history(state, data_set, node, rsc_entry, mon_ops);
+                }
             }
         }
 
-        print_node_end(state);
+        state->out->end_list(state->out);
     }
 }
 
@@ -686,31 +425,12 @@ print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
     /* Print heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            if (operations) {
-                print_as(state->output_format, "\nOperations:\n");
-            } else {
-                print_as(state->output_format, "\nMigration Summary:\n");
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            if (operations) {
-                fprintf(state->stream, " <hr />\n <h2>Operations</h2>\n");
-            } else {
-                fprintf(state->stream, " <hr />\n <h2>Migration Summary</h2>\n");
-            }
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <node_history>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "node_history");
+    } else if (operations) {
+        state->out->begin_list(state->out, NULL, NULL, "Operations");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Migration Summary");
     }
 
     /* Print each node in the CIB status */
@@ -722,14 +442,7 @@ print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
     }
 
     /* Close section */
-    switch (state->output_format) {
-        case mon_output_xml:
-            fprintf(state->stream, "    </node_history>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->end_list(state->out);
 }
 
 static void
