@@ -84,6 +84,10 @@
 %endif
 %endif
 
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+%global supports_recommends 1
+%endif
+
 ## Different distros name certain packages differently
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
@@ -315,7 +319,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
-%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+%if 0%{?supports_recommends}
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
 # For crm_report
 Recommends:    tar
