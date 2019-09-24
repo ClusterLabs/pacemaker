@@ -3038,9 +3038,3 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     return TRUE;
 }
-
-gboolean
-is_active(pe__location_t *cons)
-{
-    return TRUE;
-}

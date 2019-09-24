@@ -2174,10 +2174,6 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         pe_rsc_debug(rsc, "Constraint (%s) is not active (role : %s vs. %s)",
                      constraint->id, role2text(constraint->role_filter), role2text(rsc->next_role));
         return;
-
-    } else if (is_active(constraint) == FALSE) {
-        pe_rsc_trace(rsc, "Constraint (%s) is not active", constraint->id);
-        return;
     }
 
     if (constraint->node_list_rh == NULL) {
