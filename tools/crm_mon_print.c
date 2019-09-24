@@ -38,9 +38,6 @@ static void print_rsc_history_start(mon_state_t *state, pe_working_set_t *data_s
                                     node_t *node, resource_t *rsc, const char *rsc_id,
                                     gboolean all);
 static void print_rsc_history_end(mon_state_t *state);
-static void print_op_history(mon_state_t *state, pe_working_set_t *data_set,
-                             node_t *node, xmlNode *xml_op, const char *task,
-                             const char *interval_ms_s, int rc, unsigned int mon_ops);
 static void print_rsc_history(mon_state_t *state, pe_working_set_t *data_set,
                               node_t *node, xmlNode *rsc_entry, gboolean operations,
                               unsigned int mon_ops);
@@ -485,193 +482,6 @@ print_rsc_history_end(mon_state_t *state)
 
 /*!
  * \internal
- * \brief Print operation history
- *
- * \param[in] stream        File stream to display output to
- * \param[in] data_set      Current state of CIB
- * \param[in] node          Node this operation is for
- * \param[in] xml_op        Root of XML tree describing this operation
- * \param[in] task          Task parsed from this operation's XML
- * \param[in] interval_ms_s Interval parsed from this operation's XML
- * \param[in] rc            Return code parsed from this operation's XML
- */
-static void
-print_op_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
-                 xmlNode *xml_op, const char *task, const char *interval_ms_s,
-                 int rc, unsigned int mon_ops)
-{
-    const char *value = NULL;
-    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-
-    /* Begin the operation description */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "    + (%s) %s:", call, task);
-            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
-                print_as(state->output_format, " %s", pair);
-                free(pair);
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, "     <li>(%s) %s:", call, task);
-            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
-                fprintf(state->stream, " %s", pair);
-                free(pair);
-            }
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "                <operation_history call=\"%s\" task=\"%s\"",
-                    call, task);
-            if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-                char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
-                fprintf(state->stream, " %s", pair);
-                free(pair);
-            }
-            break;
-
-        default:
-            break;
-    }
-
-    if (is_set(mon_ops, mon_op_print_timing)) {
-        time_t epoch = 0;
-        const char *attr;
-
-        attr = XML_RSC_OP_LAST_CHANGE;
-        if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
-            && (epoch > 0)) {
-            switch (state->output_format) {
-                case mon_output_console:
-                case mon_output_plain: {
-                    char *time = pcmk_format_named_time(attr, epoch);
-                    print_as(state->output_format, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                case mon_output_cgi:
-                case mon_output_html:
-                case mon_output_xml: {
-                    char *time = pcmk_format_named_time(attr, epoch);
-                    fprintf(state->stream, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-
-        // last-run is deprecated
-        attr = XML_RSC_OP_LAST_RUN;
-        if ((crm_element_value_epoch(xml_op, attr, &epoch) == pcmk_ok)
-            && (epoch > 0)) {
-            switch (state->output_format) {
-                case mon_output_console:
-                case mon_output_plain: {
-                    char *time = pcmk_format_named_time(attr, epoch);
-                    print_as(state->output_format, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                case mon_output_cgi:
-                case mon_output_html:
-                case mon_output_xml: {
-                    char *time = pcmk_format_named_time(attr, epoch);
-                    fprintf(state->stream, " %s", time);
-                    free(time);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-
-        attr = XML_RSC_OP_T_EXEC;
-        value = crm_element_value(xml_op, attr);
-        if (value) {
-            switch (state->output_format) {
-                case mon_output_console:
-                case mon_output_plain: {
-                    char *pair = pcmk_format_nvpair(attr, value, "ms");
-                    print_as(state->output_format, " %s", pair);
-                    free(pair);
-                    break;
-                }
-
-                case mon_output_cgi:
-                case mon_output_html:
-                case mon_output_xml: {
-                    char *pair = pcmk_format_nvpair(attr, value, "ms");
-                    fprintf(state->stream, " %s", pair);
-                    free(pair);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-
-        attr = XML_RSC_OP_T_QUEUE;
-        value = crm_element_value(xml_op, attr);
-        if (value) {
-            switch (state->output_format) {
-                case mon_output_console:
-                case mon_output_plain: {
-                    char *pair = pcmk_format_nvpair(attr, value, "ms");
-                    print_as(state->output_format, " %s", pair);
-                    free(pair);
-                    break;
-                }
-
-                case mon_output_cgi:
-                case mon_output_html:
-                case mon_output_xml: {
-                    char *pair = pcmk_format_nvpair(attr, value, "ms");
-                    fprintf(state->stream, " %s", pair);
-                    free(pair);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    /* End the operation description */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, " rc=%d (%s)\n", rc, services_ocf_exitcode_str(rc));
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " rc=%d (%s)</li>\n", rc, services_ocf_exitcode_str(rc));
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, " rc=\"%d\" rc_text=\"%s\" />\n", rc, services_ocf_exitcode_str(rc));
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
  * \brief Print resource operation/failure history
  *
  * \param[in] stream      File stream to display output to
@@ -734,7 +544,8 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
         }
 
         /* Print the operation */
-        print_op_history(state, data_set, node, xml_op, task, interval_ms_s, rc, mon_ops);
+        state->out->message(state->out, "op-history", xml_op, task, interval_ms_s,
+                            rc, mon_ops);
     }
 
     /* Free the list we created (no need to free the individual items) */
