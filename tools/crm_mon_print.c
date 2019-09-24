@@ -54,8 +54,6 @@ static void print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
                                gboolean operations, unsigned int mon_ops);
 static void print_ticket(gpointer name, gpointer value, gpointer user_data);
 static void print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set);
-static void print_ban(mon_state_t *state, pe_node_t *node, pe__location_t *location,
-                      unsigned int mon_ops);
 static void print_neg_locations(mon_state_t *state, pe_working_set_t *data_set,
                                 unsigned int mon_ops, const char *prefix);
 static void print_node_attributes(mon_state_t *state, pe_working_set_t *data_set,
@@ -994,133 +992,24 @@ print_ticket(gpointer name, gpointer value, gpointer user_data)
     mon_state_t *data = (mon_state_t *) user_data;
     ticket_t *ticket = (ticket_t *) value;
 
-    switch (data->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(data->output_format, "* %s:\t%s%s", ticket->id,
-                     (ticket->granted? "granted" : "revoked"),
-                     (ticket->standby? " [standby]" : ""));
-            if (ticket->last_granted > -1) {
-                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
-                print_as(data->output_format, " %s\n", time);
-                free(time);
-            }
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(data->stream, "  <li>%s: %s%s", ticket->id,
-                    (ticket->granted? "granted" : "revoked"),
-                    (ticket->standby? " [standby]" : ""));
-            if (ticket->last_granted > -1) {
-                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
-                fprintf(data->stream, " %s</li>\n", time);
-                free(time);
-            }
-            break;
-
-        case mon_output_xml:
-            fprintf(data->stream, "        <ticket id=\"%s\" status=\"%s\" standby=\"%s\"",
-                    ticket->id, (ticket->granted? "granted" : "revoked"),
-                    (ticket->standby? "true" : "false"));
-            if (ticket->last_granted > -1) {
-                char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
-                fprintf(data->stream, " %s />\n", time);
-                free(time);
-            }
-            break;
-
-        default:
-            break;
-    }
+    data->out->message(data->out, "ticket", ticket);
 }
 
 static void
 print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set)
 {
     /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nTickets:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Tickets</h2>\n <ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <tickets>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "tickets");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Tickets");
     }
 
     /* Print each ticket */
     g_hash_table_foreach(data_set->tickets, print_ticket, state);
 
     /* Close section */
-    switch (state->output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " </ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    </tickets>\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-/*!
- * \internal
- * \brief Print a negative location constraint
- *
- * \param[in] stream     File stream to display output to
- * \param[in] node       Node affected by constraint
- * \param[in] location   Constraint to print
- */
-static void
-print_ban(mon_state_t *state, pe_node_t *node, pe__location_t *location,
-          unsigned int mon_ops)
-{
-    char *node_name = NULL;
-
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            node_name = get_node_display_name(node, mon_ops);
-            print_as(state->output_format, " %s\tprevents %s from running %son %s\n",
-                     location->id, location->rsc_lh->id,
-                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
-                     node_name);
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            node_name = get_node_display_name(node, mon_ops);
-            fprintf(state->stream, "  <li>%s prevents %s from running %son %s</li>\n",
-                     location->id, location->rsc_lh->id,
-                     ((location->role_filter == RSC_ROLE_MASTER)? "as Master " : ""),
-                     node_name);
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream,
-                    "        <ban id=\"%s\" resource=\"%s\" node=\"%s\" weight=\"%d\" master_only=\"%s\" />\n",
-                    location->id, location->rsc_lh->id, node->details->uname, node->weight,
-                    ((location->role_filter == RSC_ROLE_MASTER)? "true" : "false"));
-            break;
-
-        default:
-            break;
-    }
-    free(node_name);
+    state->out->end_list(state->out);
 }
 
 /*!
@@ -1136,24 +1025,10 @@ print_neg_locations(mon_state_t *state, pe_working_set_t *data_set, unsigned int
 {
     GListPtr gIter, gIter2;
 
-    /* Print section heading */
-    switch (state->output_format) {
-        case mon_output_plain:
-        case mon_output_console:
-            print_as(state->output_format, "\nNegative Location Constraints:\n");
-            break;
-
-        case mon_output_html:
-        case mon_output_cgi:
-            fprintf(state->stream, " <hr />\n <h2>Negative Location Constraints</h2>\n <ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    <bans>\n");
-            break;
-
-        default:
-            break;
+    if (state->output_format == mon_output_xml) {
+        state->out->begin_list(state->out, NULL, NULL, "bans");
+    } else {
+        state->out->begin_list(state->out, NULL, NULL, "Negative Location Constraints");
     }
 
     /* Print each ban */
@@ -1165,25 +1040,12 @@ print_neg_locations(mon_state_t *state, pe_working_set_t *data_set, unsigned int
             node_t *node = (node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                print_ban(state, node, location, mon_ops);
+                state->out->message(state->out, "ban", node, location, mon_ops);
             }
         }
     }
 
-    /* Close section */
-    switch (state->output_format) {
-        case mon_output_cgi:
-        case mon_output_html:
-            fprintf(state->stream, " </ul>\n");
-            break;
-
-        case mon_output_xml:
-            fprintf(state->stream, "    </bans>\n");
-            break;
-
-        default:
-            break;
-    }
+    state->out->end_list(state->out);
 }
 
 /*!
