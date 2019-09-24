@@ -92,6 +92,7 @@ void ipc_proxy_remove_provider(crm_client_t *client);
 void ipc_proxy_forward_client(crm_client_t *client, xmlNode *xml);
 crm_client_t *ipc_proxy_get_provider(void);
 int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
+void remoted_spawn_pidone(int argc, char **argv, char **envp);
 #endif
 
 int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
