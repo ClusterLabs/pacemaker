@@ -48,7 +48,8 @@ pacemaker_remoted_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_remoted_LDADD		= $(lrmd_LDADD) \
 			$(top_builddir)/lib/lrmd/liblrmd.la
-pacemaker_remoted_SOURCES	= $(lrmd_SOURCES) tls_backend.c ipc_proxy.c
+pacemaker_remoted_SOURCES	= $(lrmd_SOURCES) tls_backend.c ipc_proxy.c \
+				  remoted_pidone.c
 
 lrmd_internal_ctl_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 				$(top_builddir)/lib/lrmd/liblrmd.la		\
