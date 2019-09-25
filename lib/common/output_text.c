@@ -236,10 +236,9 @@ pcmk__mk_text_output(char **argv) {
     return retval;
 }
 
-G_GNUC_PRINTF(2, 3)
+G_GNUC_PRINTF(2, 0)
 void
-pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
-    va_list ap;
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
 
     if (fancy) {
@@ -259,8 +258,16 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
         }
     }
 
-    va_start(ap, format);
-    len = vfprintf(out->dest, format, ap);
+    len = vfprintf(out->dest, format, args);
     CRM_ASSERT(len >= 0);
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    pcmk__indented_vprintf(out, format, ap);
     va_end(ap);
 }

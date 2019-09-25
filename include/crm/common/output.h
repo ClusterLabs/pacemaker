@@ -535,6 +535,21 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 
 /*!
  * \internal
+ * \brief A vprintf-like function.
+ *
+ * This function is like pcmk__indented_printf(), except it takes a va_list instead
+ * of a list of arguments.  This should be used when implementing custom message
+ * functions instead of vprintf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     args   A list of arguments to apply to the format string.
+ */
+void
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
+
+/*!
+ * \internal
  * \brief Create and return a new XML node with the given name, as a child of the
  *        current list parent.  The new node is then added as the new list parent,
  *        meaning all subsequent nodes will be its children.  This is used when
