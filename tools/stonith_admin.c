@@ -716,7 +716,7 @@ main(int argc, char **argv)
 
             out->begin_list(out, "Installed fence devices", "fence device", "fence devices");
             for (dIter = options.devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
@@ -734,7 +734,7 @@ main(int argc, char **argv)
 
             out->begin_list(out, "Registered fence devices", "fence device", "fence devices");
             for (dIter = options.devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
@@ -756,7 +756,7 @@ main(int argc, char **argv)
 
                 out->begin_list(out, "Fence targets", "fence target", "fence targets");
                 while (targets != NULL) {
-                    out->list_item(out, NULL, (const char *) targets->data);
+                    out->list_item(out, NULL, "%s", (const char *) targets->data);
                     targets = targets->next;
                 }
                 out->end_list(out);

@@ -1703,9 +1703,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         if (is_set(options, pe_print_implicit)) {
             child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(bundle_data->replicas) > 1) {
-                char *s = crm_strdup_printf("%sReplica[%d]", pre_text, replica->offset);
-                out->list_item(out, NULL, s);
-                free(s);
+                out->list_item(out, NULL, "%sReplica[%d]", pre_text, replica->offset);
             }
 
             out->begin_list(out, NULL, NULL, NULL);

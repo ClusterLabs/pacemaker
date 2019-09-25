@@ -79,38 +79,33 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
     int full_history = va_arg(args, int);
     gboolean later_succeeded = va_arg(args, gboolean);
 
-    char *buf = NULL;
-
     switch(event->state) {
         case st_done:
-            buf = crm_strdup_printf("%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'",
-                                    stonith_action_str(event->action), event->target,
-                                    event->delegate ? event->delegate : "",
-                                    event->client, event->origin,
-                                    full_history ? "completed" : "last-successful",
-                                    time_t_string(event->completed));
-            out->list_item(out, "successful-stonith-event", buf);
-            free(buf);
+            out->list_item(out, "successful-stonith-event",
+                           "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'",
+                           stonith_action_str(event->action), event->target,
+                           event->delegate ? event->delegate : "",
+                           event->client, event->origin,
+                           full_history ? "completed" : "last-successful",
+                           time_t_string(event->completed));
             break;
 
         case st_failed:
-            buf = crm_strdup_printf("%s of %s failed : delegate=%s, client=%s, origin=%s, %s='%s' %s",
-                                    stonith_action_str(event->action), event->target,
-                                    event->delegate ? event->delegate : "",
-                                    event->client, event->origin,
-                                    full_history ? "completed" : "last-failed",
-                                    time_t_string(event->completed),
-                                    later_succeeded ? "(a later attempt succeeded)" : "");
-            out->list_item(out, "failed-stonith-event", buf);
-            free(buf);
+            out->list_item(out, "failed-stonith-event",
+                           "%s of %s failed : delegate=%s, client=%s, origin=%s, %s='%s' %s",
+                           stonith_action_str(event->action), event->target,
+                           event->delegate ? event->delegate : "",
+                           event->client, event->origin,
+                           full_history ? "completed" : "last-failed",
+                           time_t_string(event->completed),
+                           later_succeeded ? "(a later attempt succeeded)" : "");
             break;
 
         default:
-            buf = crm_strdup_printf("%s of %s pending: client=%s, origin=%s",
-                                    stonith_action_str(event->action), event->target,
-                                    event->client, event->origin);
-            out->list_item(out, "pending-stonith-event", buf);
-            free(buf);
+            out->list_item(out, "pending-stonith-event",
+                           "%s of %s pending: client=%s, origin=%s",
+                           stonith_action_str(event->action), event->target,
+                           event->client, event->origin);
             break;
     }
 

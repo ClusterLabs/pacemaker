@@ -302,14 +302,11 @@ pe__short_output_text(pcmk__output_t *out, char *list, const char *prefix, const
 static void
 pe__short_output_html(pcmk__output_t *out, char *list, const char *type, const char *suffix, long options)
 {
-    char buffer[LINE_MAX];
-
     if (list == NULL) {
         return;
     }
 
-    snprintf(buffer, LINE_MAX, " %s: [%s ]%s", type, list, suffix ? suffix : "");
-    out->list_item(out, NULL, buffer);
+    out->list_item(out, NULL, " %s: [%s ]%s", type, list, suffix ? suffix : "");
 }
 
 static const char *

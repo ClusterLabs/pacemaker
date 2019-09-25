@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
@@ -149,17 +150,25 @@ curses_begin_list(pcmk__output_t *out, const char *name, const char *singular_no
     g_queue_push_tail(priv->parent_q, new_list);
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-curses_list_item(pcmk__output_t *out, const char *id, const char *content) {
+curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     private_data_t *priv = out->priv;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (id != NULL) {
-        curses_indented_printf(out, "%s: %s\n", id, content);
+        curses_indented_printf(out, "%s: ", id);
+        vw_printw(stdscr, format, ap);
     } else {
-        curses_indented_printf(out, "%s\n", content);
+        curses_indented_vprintf(out, format, ap);
     }
+
+    addch('\n');
+    va_end(ap);
 
     ((curses_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
 }

@@ -667,7 +667,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
 
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *n = (node_t *) gIter->data;
-            out->list_item(out, NULL, n->details->uname);
+            out->list_item(out, NULL, "%s", n->details->uname);
         }
 
         out->end_list(out);
@@ -1574,7 +1574,6 @@ pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list, long options,
         char *node_name = NULL;
         GHashTable *node_table = NULL;
         int active_counter_all = 0;
-        char buffer[LINE_MAX];
 
         g_hash_table_iter_init(&hash_iter2, active_table);
         while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
@@ -1592,23 +1591,21 @@ pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list, long options,
             }
 
             if (print_all) {
-                snprintf(buffer, LINE_MAX, " %d/%d\t(%s):\tActive %s\n",
-                             *active_counter,
-                             rsc_counter ? *rsc_counter : 0, type,
-                             (*active_counter > 0) && node_name ? node_name : "");
+                out->list_item(out, NULL, " %d/%d\t(%s):\tActive %s",
+                               *active_counter,
+                               rsc_counter ? *rsc_counter : 0, type,
+                               (*active_counter > 0) && node_name ? node_name : "");
             } else {
-                snprintf(buffer, LINE_MAX, " %d\t(%s):\tActive %s\n",
-                             *active_counter, type,
-                             (*active_counter > 0) && node_name ? node_name : "");
+                out->list_item(out, NULL, " %d\t(%s):\tActive %s",
+                               *active_counter, type,
+                               (*active_counter > 0) && node_name ? node_name : "");
             }
-            out->list_item(out, NULL, buffer);
         }
 
         if (print_all && active_counter_all == 0) {
-            snprintf(buffer, LINE_MAX, " %d/%d\t(%s):\tActive\n",
-                         active_counter_all,
-                         rsc_counter ? *rsc_counter : 0, type);
-            out->list_item(out, NULL, buffer);
+            out->list_item(out, NULL, " %d/%d\t(%s):\tActive",
+                           active_counter_all,
+                           rsc_counter ? *rsc_counter : 0, type);
         }
     }
 

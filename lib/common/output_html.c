@@ -103,7 +103,7 @@ static void
 add_error_node(gpointer data, gpointer user_data) {
     char *str = (char *) data;
     pcmk__output_t *out = (pcmk__output_t *) user_data;
-    out->list_item(out, NULL, str);
+    out->list_item(out, NULL, "%s", str);
 }
 
 static void
@@ -272,14 +272,24 @@ html_begin_list(pcmk__output_t *out, const char *name,
     pcmk__output_xml_create_parent(out, "ul");
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-html_list_item(pcmk__output_t *out, const char *name, const char *content) {
+html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     private_data_t *priv = out->priv;
     htmlNodePtr item_node = NULL;
+    va_list ap;
+    char *buf = NULL;
+    int len;
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = pcmk__output_create_xml_text_node(out, "li", content);
+    va_start(ap, format);
+    len = vasprintf(&buf, format, ap);
+    CRM_ASSERT(len >= 0);
+    va_end(ap);
+
+    item_node = pcmk__output_create_xml_text_node(out, "li", buf);
+    free(buf);
 
     if (name != NULL) {
         xmlSetProp(item_node, (pcmkXmlStr) "class", (pcmkXmlStr) name);

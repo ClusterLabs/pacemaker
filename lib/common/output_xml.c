@@ -245,14 +245,25 @@ xml_begin_list(pcmk__output_t *out, const char *name,
     }
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-xml_list_item(pcmk__output_t *out, const char *name, const char *content) {
+xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     private_data_t *priv = out->priv;
     xmlNodePtr item_node = NULL;
+    va_list ap;
+    char *buf = NULL;
+    int len;
 
     CRM_ASSERT(priv != NULL);
 
-    item_node = pcmk__output_create_xml_text_node(out, "item", content);
+    va_start(ap, format);
+    len = vasprintf(&buf, format, ap);
+    CRM_ASSERT(len >= 0);
+    va_end(ap);
+
+    item_node = pcmk__output_create_xml_text_node(out, "item", buf);
+    free(buf);
+
     xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
 }
 

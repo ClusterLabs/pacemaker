@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/output.h>
@@ -165,21 +166,33 @@ text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun
     g_queue_push_tail(priv->parent_q, new_list);
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-text_list_item(pcmk__output_t *out, const char *id, const char *content) {
+text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     private_data_t *priv = out->priv;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (fancy) {
         if (id != NULL) {
-            pcmk__indented_printf(out, "%s: %s\n", id, content);
+            /* Not really a good way to do this all in one call, so make it two.
+             * The first handles the indentation and list styling.  The second
+             * just prints right after that one.
+             */
+            pcmk__indented_printf(out, "%s: ", id);
+            vfprintf(out->dest, format, ap);
         } else {
-            pcmk__indented_printf(out, "%s\n", content);
+            pcmk__indented_vprintf(out, format, ap);
         }
     } else {
-        fprintf(out->dest, "%s\n", content);
+        pcmk__indented_vprintf(out, format, ap);
     }
+
+    fputc('\n', out->dest);
+    va_end(ap);
 
     ((text_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
 }

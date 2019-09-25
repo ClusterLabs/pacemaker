@@ -394,9 +394,11 @@ struct pcmk__output_s {
      *
      * \param[in,out] out     The output functions structure.
      * \param[in]     name    A name to associate with this item.
-     * \param[in]     content The item to be formatted.
+     * \param[in]     format  The format string.
+     * \param[in]     ...     Arguments to be formatted.
      */
-    void (*list_item) (pcmk__output_t *out, const char *name, const char *content);
+    void (*list_item) (pcmk__output_t *out, const char *name, const char *format, ...)
+                      G_GNUC_PRINTF(3, 4);
 
     /*!
      * \internal
