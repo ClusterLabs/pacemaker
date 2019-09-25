@@ -216,10 +216,9 @@ crm_mon_mk_curses_output(char **argv) {
     return retval;
 }
 
-G_GNUC_PRINTF(2, 3)
+G_GNUC_PRINTF(2, 0)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
-    va_list ap;
+curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int level = 0;
     private_data_t *priv = out->priv;
 
@@ -235,14 +234,21 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
         printw("* ");
     }
 
-    va_start(ap, format);
-    vw_printw(stdscr, format, ap);
-    va_end(ap);
+    vw_printw(stdscr, format, args);
 
     clrtoeol();
     refresh();
 }
 
+G_GNUC_PRINTF(2, 3)
+void
+curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    curses_indented_vprintf(out, format, ap);
+    va_end(ap);
+}
 #else
 
 pcmk__output_t *
@@ -251,9 +257,15 @@ crm_mon_mk_curses_output(char **argv) {
     return pcmk__mk_text_output(argv);
 }
 
+G_GNUC_PRINTF(2, 0)
+void
+curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
 G_GNUC_PRINTF(2, 3)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
+curses_indented_printf(pcmk__output_t *out, const char *format, va_list args) {
     return;
 }
 

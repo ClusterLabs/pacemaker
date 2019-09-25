@@ -123,6 +123,7 @@ int get_resource_display_options(unsigned int mon_ops,
 
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);
 void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
 #if CURSES_ENABLED
 extern GOptionEntry crm_mon_curses_output_entries[];
