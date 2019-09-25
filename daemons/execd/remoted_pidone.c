@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -195,7 +196,16 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
 {
     sigset_t set;
 
-    if (getpid() != 1) {
+    /* This environment variable exists for two purposes:
+     * - For testing, setting it to "full" enables full PID 1 behavior even
+     *   when PID is not 1
+     * - Setting to "vars" enables just the loading of environment variables
+     *   from /etc/pacemaker/pcmk-init.env, which could be useful for testing or
+     *   containers with a custom PID 1 script that launches pacemaker-remoted.
+     */
+    const char *pid1 = (getpid() == 1)? "full" : getenv("PCMK_remote_pid1");
+
+    if (pid1 == NULL) {
         return;
     }
 
@@ -206,6 +216,10 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
      * of name/value pairs, and export those into the environment.
      */
     load_env_vars("/etc/pacemaker/pcmk-init.env");
+
+    if (strcmp(pid1, "full")) {
+        return;
+    }
 
     /* Containers can be expected to have /var/log, but they may not have
      * /var/log/pacemaker, so use a different default if no value has been
