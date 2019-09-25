@@ -154,7 +154,7 @@ main(int argc, char **argv)
 
         if (date_time == NULL) {
             fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
-            crm_help('?', CRM_EX_USAGE);
+            crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
@@ -167,7 +167,7 @@ main(int argc, char **argv)
 
         if (duration == NULL) {
             fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
-            crm_help('?', CRM_EX_USAGE);
+            crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
         crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
@@ -178,7 +178,7 @@ main(int argc, char **argv)
 
         if (period == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
-            crm_help('?', CRM_EX_USAGE);
+            crm_exit(CRM_EX_INVALID_PARAM);
         }
         log_time_period(LOG_TRACE, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
