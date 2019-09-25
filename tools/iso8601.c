@@ -30,10 +30,10 @@ static struct crm_option long_options[] = {
       "Parse an ISO 8601 period (interval) with start time (for example, '2005-040/2005-043')"
     },
     { "duration", 1, 0, 'D',
-      "Parse an ISO 8601 duration with start time (for example, '2005-040/P1M')"
+      "Parse an ISO 8601 duration (for example, 'P1M')"
     },
     { "expected", 1, 0, 'E',
-      "Parse an ISO 8601 duration with start time (for example, '2005-040/P1M')"
+      "Exit with error status if result does not match this text. Requires: -n or -d"
     },
     {"-spacer-",0, 0, '-', "\nOutput Modifiers:"},
     {"seconds", 0, 0, 's', "\tShow result as a seconds since 0000-001 00:00:00Z"},
