@@ -453,7 +453,8 @@ crm_duration_as_string(crm_time_t *dt, char *result)
                            dt->days, s_if_plural(dt->days));
     }
 
-    if ((dt->seconds != 0) && (dt->seconds > -60) && (dt->seconds < 60)) {
+    if (((offset == 0) || (dt->seconds != 0))
+        && (dt->seconds > -60) && (dt->seconds < 60)) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
                            dt->seconds, s_if_plural(dt->seconds));
     } else if (dt->seconds) {
@@ -965,6 +966,7 @@ crm_time_parse_duration(const char *period_s)
     }
 
     diff = crm_time_new_undefined();
+    diff->duration = TRUE;
 
     for (const char *current = period_s + 1;
          current[0] && (current[0] != '/') && !isspace(current[0]);
