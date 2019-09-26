@@ -190,15 +190,29 @@ crm_time_weeks_in_year(int year)
     return weeks;
 }
 
-int month_days[14] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
+// Jan-Dec plus Feb of leap years
+static int month_days[13] = {
+    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29
+};
 
+/*!
+ * \brief Return number of days in given month of given year
+ *
+ * \param[in]  Ordinal month (1-12)
+ * \param[in]  Gregorian year
+ *
+ * \return Number of days in given month (0 if given month is invalid)
+ */
 int
 crm_time_days_in_month(int month, int year)
 {
-    if (month == 2 && crm_time_leapyear(year)) {
+    if ((month < 1) || (month > 12)) {
+        return 0;
+    }
+    if ((month == 2) && crm_time_leapyear(year)) {
         month = 13;
     }
-    return month_days[month];
+    return month_days[month - 1];
 }
 
 bool
@@ -563,44 +577,69 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     return result_copy;
 }
 
-static int
-crm_time_parse_sec(const char *time_str)
+/*!
+ * \internal
+ * \brief Determine number of seconds from an hour:minute:second string
+ *
+ * \param[in]  time_str  Time specification string
+ * \param[out] result    Number of seconds equivalent to time_str
+ *
+ * \return TRUE if specification was valid, FALSE (and set errno) otherwise
+ */
+static bool
+crm_time_parse_sec(const char *time_str, int *result)
 {
     int rc;
     uint hour = 0;
     uint minute = 0;
     uint second = 0;
 
+    *result = 0;
+
+    // Must have at least hour, but minutes and seconds are optional
     rc = sscanf(time_str, "%d:%d:%d", &hour, &minute, &second);
     if (rc == 1) {
         rc = sscanf(time_str, "%2d%2d%2d", &hour, &minute, &second);
     }
-
-    if (rc > 0 && rc < 4) {
-        crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
-        if (hour >= 24) {
-            crm_err("Invalid hour: %d", hour);
-        } else if (minute >= 60) {
-            crm_err("Invalid minute: %d", minute);
-        } else if (second >= 60) {
-            crm_err("Invalid second: %d", second);
-        } else {
-            second += (minute * 60);
-            second += (hour * 60 * 60);
-        }
-    } else {
-        crm_err("Bad time: %s (%d)", time_str, rc);
+    if (rc == 0) {
+        crm_err("%s is not a valid ISO 8601 time specification", time_str);
+        errno = EINVAL;
+        return FALSE;
     }
-    return second;
+
+    crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
+
+    // @TODO ISO 8601 allows YMD w/24:00:00 as equivalent to YMD+1 w/00:00:00
+    if (hour >= 24) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %d is not a valid hour", time_str, hour);
+        errno = EINVAL;
+        return FALSE;
+    }
+    if (minute >= 60) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %d is not a valid minute", time_str, minute);
+        errno = EINVAL;
+        return FALSE;
+    }
+    if (second >= 60) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %d is not a valid second", time_str, second);
+        errno = EINVAL;
+        return FALSE;
+    }
+
+    *result = (hour * 60 * 60) + (minute * 60) + second;
+    return TRUE;
 }
 
-static int
-crm_time_parse_offset(const char *offset_str)
+static bool
+crm_time_parse_offset(const char *offset_str, int *offset)
 {
-    int offset = 0;
-
     tzset();
+
     if (offset_str == NULL) {
+        // Use local offset
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
         time_t now = time(NULL);
         struct tm *now_tm = localtime(&now);
@@ -611,62 +650,78 @@ crm_time_parse_offset(const char *offset_str)
         if (h_offset < 0 && m_offset < 0) {
             m_offset = 0 - m_offset;
         }
-        offset += (60 * 60 * h_offset);
-        offset += (60 * m_offset);
+        *offset = (60 * 60 * h_offset) + (60 * m_offset);
+        return TRUE;
+    }
 
-    } else if (offset_str[0] == 'Z') {
+    if (offset_str[0] == 'Z') { // @TODO invalid if anything after?
+        *offset = 0;
+        return TRUE;
+    }
 
-    } else if (offset_str[0] == '+' || offset_str[0] == '-' || isdigit((int)offset_str[0])) {
+    *offset = 0;
+    if ((offset_str[0] == '+') || (offset_str[0] == '-')
+        || isdigit((int)offset_str[0])) {
+
         gboolean negate = FALSE;
 
         if (offset_str[0] == '-') {
             negate = TRUE;
             offset_str++;
         }
-        offset = crm_time_parse_sec(offset_str);
-        if (negate) {
-            offset = 0 - offset;
+        if (crm_time_parse_sec(offset_str, offset) == FALSE) {
+            return FALSE;
         }
-    }
-    return offset;
+        if (negate) {
+            *offset = 0 - *offset;
+        }
+    } // @TODO else invalid?
+    return TRUE;
 }
 
-static crm_time_t *
-crm_time_parse(const char *time_str, crm_time_t * a_time)
+static bool
+crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
     uint h, m, s;
     char *offset_s = NULL;
-    crm_time_t *dt = a_time;
 
     tzset();
-    if (a_time == NULL) {
-        dt = crm_time_new_undefined();
-    }
 
     if (time_str) {
-        dt->seconds = crm_time_parse_sec(time_str);
-
+        if (crm_time_parse_sec(time_str, &(a_time->seconds)) == FALSE) {
+            return FALSE;
+        }
         offset_s = strstr(time_str, "Z");
         if (offset_s == NULL) {
             offset_s = strstr(time_str, " ");
+            if (offset_s) {
+                while (isspace(offset_s[0])) {
+                    offset_s++;
+                }
+            }
         }
     }
 
-    if (offset_s) {
-        while (isspace(offset_s[0])) {
-            offset_s++;
-        }
+    if (crm_time_parse_offset(offset_s, &(a_time->offset)) == FALSE) {
+        return FALSE;
     }
-    dt->offset = crm_time_parse_offset(offset_s);
-    crm_time_get_sec(dt->offset, &h, &m, &s);
-    crm_trace("Got tz: %c%2.d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
-    return dt;
+    crm_time_get_sec(a_time->offset, &h, &m, &s);
+    crm_trace("Got tz: %c%2.d:%.2d", ((a_time->offset < 0)? '-' : '+'), h, m);
+    return TRUE;
 }
 
+/*
+ * \internal
+ * \brief Parse a time object from an ISO 8601 date/time specification
+ *
+ * \param[in] date_str  ISO 8601 date/time specification (or "epoch")
+ *
+ * \return New time object on success, NULL (and set errno) otherwise
+ */
 crm_time_t *
 parse_date(const char *date_str)
 {
-    char *time_s;
+    const char *time_s = NULL;
     crm_time_t *dt = NULL;
 
     int year = 0;
@@ -675,19 +730,25 @@ parse_date(const char *date_str)
     int day = 0;
     int rc = 0;
 
-    CRM_CHECK(date_str != NULL, return NULL);
-    CRM_CHECK(strlen(date_str) > 0, return NULL);
-
-    if (date_str[0] == 'T' || date_str[2] == ':') {
-        /* Just a time supplied - Infer current date */
-        dt = crm_time_new(NULL);
-        dt = crm_time_parse(date_str, dt);
-        goto done;
-
-    } else {
-        dt = crm_time_new_undefined();
+    if ((date_str == NULL) || (date_str[0] == '\0')) {
+        crm_err("No ISO 8601 date/time specification given");
+        goto invalid;
     }
 
+    if ((date_str[0] == 'T') || (date_str[2] == ':')) {
+        /* Just a time supplied - Infer current date */
+        dt = crm_time_new(NULL);
+        if (date_str[0] == 'T') {
+            time_s = date_str + 1;
+        } else {
+            time_s = date_str;
+        }
+        goto parse_time;
+    }
+
+    dt = crm_time_new_undefined();
+
+    // @TODO This does not handle "epoch" as a period start (e.g. "epoch/P1S")
     if (safe_str_eq("epoch", date_str)) {
         dt->days = 1;
         dt->years = 1970;
@@ -703,41 +764,52 @@ parse_date(const char *date_str)
     }
     if (rc == 3) {
         if (month > 12) {
-            crm_err("Invalid month '%d' in date string '%s'", month, date_str);
-        } else if (day > 31) {
-            crm_err("Invalid day '%d' in date string '%s'", day, date_str);
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%d' is not a valid month", date_str, month);
+            goto invalid;
+        } else if (day > crm_time_days_in_month(month, year)) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%d' is not a valid day of the month",
+                    date_str, day);
+            goto invalid;
         } else {
             dt->years = year;
             dt->days = get_ordinal_days(year, month, day);
             crm_trace("Parsed Gregorian date '%.4d-%.3d' from date string '%s'",
                       year, dt->days, date_str);
         }
-        goto done;
+        goto parse_time;
     }
 
     /* YYYY-DDD */
     rc = sscanf(date_str, "%d-%d", &year, &day);
     if (rc == 2) {
         if (day > year_days(year)) {
-            crm_err("Invalid day '%d' (max=%d) in date string '%s'",
-                    day, year_days(year), date_str);
-        } else {
-            crm_trace("Got ordinal year %d and days %d from date string '%s'",
-                      year, day, date_str);
-            dt->days = day;
-            dt->years = year;
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%d' is not a valid day of the year (max %d)",
+                    date_str, day, year_days(year));
+            goto invalid;
         }
-        goto done;
+        crm_trace("Parsed ordinal year %d and days %d from date string '%s'",
+                  year, day, date_str);
+        dt->days = day;
+        dt->years = year;
+        goto parse_time;
     }
 
     /* YYYY-Www-D */
     rc = sscanf(date_str, "%d-W%d-%d", &year, &week, &day);
     if (rc == 3) {
         if (week > crm_time_weeks_in_year(year)) {
-            crm_err("Invalid week '%d' (max=%d) in date string '%s'",
-                    week, crm_time_weeks_in_year(year), date_str);
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%d' is not a valid week of the year (max %d)",
+                    date_str, week, crm_time_weeks_in_year(year));
+            goto invalid;
         } else if (day < 1 || day > 7) {
-            crm_err("Invalid day '%d' in date string '%s'", day, date_str);
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%d' is not a valid day of the week",
+                    date_str, day);
+            goto invalid;
         } else {
             /*
              * See https://en.wikipedia.org/wiki/ISO_week_date
@@ -765,32 +837,48 @@ parse_date(const char *date_str)
 
             crm_time_add_days(dt, day);
         }
-        goto done;
+        goto parse_time;
     }
 
-    crm_err("Couldn't parse date string '%s'", date_str);
+    crm_err("'%s' is not a valid ISO 8601 date/time specification", date_str);
+    goto invalid;
 
-  done:
+  parse_time:
 
-    time_s = strstr(date_str, " ");
     if (time_s == NULL) {
-        time_s = strstr(date_str, "T");
+        // @TODO look immediately after date spec rather than anywhere
+        time_s = strstr(date_str, " ");
+        if (time_s == NULL) {
+            time_s = strstr(date_str, "T");
+        }
+        if (time_s != NULL) {
+            ++time_s;
+        }
     }
-
-    if (dt && time_s) {
-        time_s++;
-        crm_time_parse(time_s, dt);
+    if ((time_s != NULL) && (crm_time_parse(time_s, dt) == FALSE)) {
+        goto invalid;
     }
 
     crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
-
-    CRM_CHECK(crm_time_check(dt), return NULL);
-
+    if (crm_time_check(dt) == FALSE) {
+        crm_err("'%s' is not a valid ISO 8601 date/time specification",
+                date_str);
+        goto invalid;
+    }
     return dt;
+
+invalid:
+    crm_time_free(dt);
+    errno = EINVAL;
+    return NULL;
 }
 
+// Parse an ISO 8601 numeric value and return number of characters consumed
+// @TODO This cannot handle >INT_MAX int values
+// @TODO Fractions appear to be not working
+// @TODO Error out on invalid specifications
 static int
-parse_int(const char *str, int field_width, int uppper_bound, int *result)
+parse_int(const char *str, int field_width, int upper_bound, int *result)
 {
     int lpc = 0;
     int offset = 0;
@@ -798,13 +886,9 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
     gboolean fraction = FALSE;
     gboolean negate = FALSE;
 
-    CRM_CHECK(str != NULL, return FALSE);
-    CRM_CHECK(result != NULL, return FALSE);
-
     *result = 0;
-
     if (*str == '\0') {
-        return FALSE;
+        return 0;
     }
 
     if (str[offset] == 'T') {
@@ -833,10 +917,10 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
         offset++;
     }
     if (fraction) {
-        *result = (int)(*result * uppper_bound);
+        *result = (int)(*result * upper_bound);
 
-    } else if (uppper_bound > 0 && *result > uppper_bound) {
-        *result = uppper_bound;
+    } else if (upper_bound > 0 && *result > upper_bound) {
+        *result = upper_bound;
     }
     if (negate) {
         *result = 0 - *result;
@@ -848,43 +932,66 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
     return 0;
 }
 
+/*!
+ * \brief Parse a time duration from an ISO 8601 duration specification
+ *
+ * \param[in] period_s  ISO 8601 duration specification (optionally followed by
+ *                      whitespace, after which the rest of the string will be
+ *                      ignored)
+ *
+ * \return New time object on success, NULL (and set errno) otherwise
+ * \note It is the caller's responsibility to return the result using
+ *       crm_time_free().
+ */
 crm_time_t *
 crm_time_parse_duration(const char *period_s)
 {
     gboolean is_time = FALSE;
     crm_time_t *diff = NULL;
 
-    CRM_CHECK(period_s != NULL, goto bail);
-    CRM_CHECK(strlen(period_s) > 0, goto bail);
-    CRM_CHECK(period_s[0] == 'P', goto bail);
-    period_s++;
+    if ((period_s == NULL) || (period_s[0] == '\0')) {
+        crm_err("No ISO 8601 time duration given");
+        goto invalid;
+    }
+    if (period_s[0] != 'P') {
+        crm_err("'%s' is not a valid ISO 8601 time duration "
+                "because it does not start with a 'P'", period_s);
+        goto invalid;
+    }
+    if ((period_s[1] == '\0') || isspace(period_s[1])) {
+        crm_err("'%s' is not a valid ISO 8601 time duration "
+                "because nothing follows 'P'", period_s);
+        goto invalid;
+    }
 
     diff = crm_time_new_undefined();
 
-    while (isspace((int)period_s[0]) == FALSE) {
+    for (const char *current = period_s + 1;
+         current[0] && (current[0] != '/') && !isspace(current[0]);
+         ++current) {
+
         int an_int = 0, rc;
-        char ch = 0;
 
-        if (period_s[0] == 'T') {
+        if (current[0] == 'T') {
+            /* A 'T' separates year/month/day from hour/minute/seconds. We don't
+             * require it strictly, but just use it to differentiate month from
+             * minutes.
+             */
             is_time = TRUE;
-            period_s++;
+            continue;
         }
 
-        rc = parse_int(period_s, 10, 0, &an_int);
+        // An integer must be next
+        rc = parse_int(current, 10, 0, &an_int);
         if (rc == 0) {
-            break;
+            crm_err("'%s' is not a valid ISO 8601 time duration "
+                    "because no integer at '%s'", period_s, current);
+            goto invalid;
         }
-        period_s += rc;
+        current += rc;
 
-        ch = period_s[0];
-        period_s++;
-
-        crm_trace("Testing %c=%d, rc=%d", ch, an_int, rc);
-
-        switch (ch) {
-            case 0:
-                return diff;
-                break;
+        // A time unit must be next (we're not strict about the order)
+        switch (current[0]) {
             case 'Y':
                 diff->years = an_int;
                 break;
@@ -908,27 +1015,51 @@ crm_time_parse_duration(const char *period_s)
             case 'S':
                 diff->seconds += an_int;
                 break;
+            case '\0':
+                crm_err("'%s' is not a valid ISO 8601 time duration "
+                        "because no units after %d", period_s, an_int);
+                goto invalid;
             default:
-                goto bail;
-                break;
+                crm_err("'%s' is not a valid ISO 8601 time duration "
+                        "because '%c' is not a valid time unit",
+                        period_s, current[0]);
+                goto invalid;
         }
+    }
+
+    if (!crm_time_is_defined(diff)) {
+        crm_err("'%s' is not a valid ISO 8601 time duration "
+                "because no amounts and units given", period_s);
+        goto invalid;
     }
     return diff;
 
-  bail:
-    free(diff);
+invalid:
+    crm_time_free(diff);
+    errno = EINVAL;
     return NULL;
 }
 
+/*!
+ * \brief Parse a time period from an ISO 8601 interval specification
+ *
+ * \param[in] period_str  ISO 8601 interval specification (start/end,
+ *                        start/duration, or duration/end)
+ *
+ * \return New time period object on success, NULL (and set errno) otherwise
+ * \note The caller is responsible for freeing the result using
+ *       crm_time_free_period().
+ */
 crm_time_period_t *
 crm_time_parse_period(const char *period_str)
 {
-    gboolean invalid = FALSE;
     const char *original = period_str;
     crm_time_period_t *period = NULL;
 
-    CRM_CHECK(period_str != NULL, return NULL);
-    CRM_CHECK(strlen(period_str) > 0, return NULL);
+    if ((period_str == NULL) || (period_str[0] == '\0')) {
+        crm_err("No ISO 8601 time period given");
+        goto invalid;
+    }
 
     tzset();
     period = calloc(1, sizeof(crm_time_period_t));
@@ -936,54 +1067,47 @@ crm_time_parse_period(const char *period_str)
 
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
+        if (period->diff == NULL) {
+            goto error;
+        }
     } else {
         period->start = parse_date(period_str);
+        if (period->start == NULL) {
+            goto error;
+        }
     }
 
     period_str = strstr(original, "/");
     if (period_str) {
-        CRM_CHECK(period_str[0] == '/', invalid = TRUE;
-                  goto bail);
-        period_str++;
-
+        ++period_str;
         if (period_str[0] == 'P') {
+            if (period->diff != NULL) {
+                crm_err("'%s' is not a valid ISO 8601 time period "
+                        "because it has two durations",
+                        original);
+                goto invalid;
+            }
             period->diff = crm_time_parse_duration(period_str);
+            if (period->diff == NULL) {
+                goto error;
+            }
         } else {
             period->end = parse_date(period_str);
+            if (period->end == NULL) {
+                goto error;
+            }
         }
 
     } else if (period->diff != NULL) {
-        /* just aduration starting from now */
+        // Only duration given, assume start is now
         period->start = crm_time_new(NULL);
 
     } else {
-        invalid = TRUE;
-        CRM_CHECK(period_str != NULL, goto bail);
-    }
-
-    /* sanity checks */
-    if (period->start == NULL && period->end == NULL) {
-        crm_err("Invalid time period: %s", original);
-        invalid = TRUE;
-
-    } else if (period->start == NULL && period->diff == NULL) {
-        crm_err("Invalid time period: %s", original);
-        invalid = TRUE;
-
-    } else if (period->end == NULL && period->diff == NULL) {
-        crm_err("Invalid time period: %s", original);
-        invalid = TRUE;
-    }
-
-  bail:
-    if (invalid) {
-        free(period->start);
-        free(period->end);
-        free(period->diff);
-        free(period);
-        return NULL;
-    }
-    if (period->end == NULL && period->diff == NULL) {
+        // Only start given
+        crm_err("'%s' is not a valid ISO 8601 time period "
+                "because it has no duration or ending time",
+                original);
+        goto invalid;
     }
 
     if (period->start == NULL) {
@@ -993,10 +1117,23 @@ crm_time_parse_period(const char *period_str)
         period->end = crm_time_add(period->start, period->diff);
     }
 
-    crm_time_check(period->start);
-    crm_time_check(period->end);
-
+    if (crm_time_check(period->start) == FALSE) {
+        crm_err("'%s' is not a valid ISO 8601 time period "
+                "because the start is invalid", period_str);
+        goto invalid;
+    }
+    if (crm_time_check(period->end) == FALSE) {
+        crm_err("'%s' is not a valid ISO 8601 time period "
+                "because the end is invalid", period_str);
+        goto invalid;
+    }
     return period;
+
+invalid:
+    errno = EINVAL;
+error:
+    crm_time_free_period(period);
+    return NULL;
 }
 
 /*!
@@ -1150,23 +1287,19 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
     return answer;
 }
 
+/*!
+ * \brief Check whether a time object represents a sensible date/time
+ *
+ * \param[in] dt  Date/time object to check
+ *
+ * \return TRUE if years, days, and seconds are sensible, FALSE otherwise
+ */
 bool
 crm_time_check(crm_time_t * dt)
 {
-    int ydays = 0;
-
-    CRM_CHECK(dt != NULL, return FALSE);
-
-    ydays = year_days(dt->years);
-    crm_trace("max ydays: %d", ydays);
-
-    CRM_CHECK(dt->days > 0, return FALSE);
-    CRM_CHECK(dt->days <= ydays, return FALSE);
-
-    CRM_CHECK(dt->seconds >= 0, return FALSE);
-    CRM_CHECK(dt->seconds < 24 * 60 * 60, return FALSE);
-
-    return TRUE;
+    return (dt != NULL)
+           && (dt->days > 0) && (dt->days <= year_days(dt->years))
+           && (dt->seconds >= 0) && (dt->seconds < (24 * 60 * 60));
 }
 
 #define do_cmp_field(l, r, field)					\
