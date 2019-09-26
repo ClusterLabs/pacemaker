@@ -748,8 +748,8 @@ parse_date(const char *date_str)
 
     dt = crm_time_new_undefined();
 
-    // @TODO This does not handle "epoch" as a period start (e.g. "epoch/P1S")
-    if (safe_str_eq("epoch", date_str)) {
+    if (!strncasecmp("epoch", date_str, 5)
+        && ((date_str[5] == '\0') || (date_str[5] == '/') || isspace(date_str[5]))) {
         dt->days = 1;
         dt->years = 1970;
         crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
