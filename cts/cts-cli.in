@@ -53,6 +53,7 @@ VALGRIND_OPTS="
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
 CRM_EX_ERROR=1
+CRM_EX_INVALID_PARAM=2
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
 CRM_EX_CONFIG=78
@@ -438,9 +439,46 @@ function test_tools() {
     test_assert $CRM_EX_ERROR 0
 }
 
+INVALID_PERIODS=(
+    "2019-01-01 00:00:00Z"              # Start with no end
+    "2019-01-01 00:00:00Z/"             # Start with only a trailing slash
+    "PT2S/P1M"                          # Two durations
+    "2019-13-01 00:00:00Z/P1M"          # Out-of-range month
+    "20191077T15/P1M"                   # Out-of-range day
+    "2019-10-01T25:00:00Z/P1M"          # Out-of-range hour
+    "2019-10-01T24:00:01Z/P1M"          # Hour 24 with anything but :00:00
+    "PT5H/20191001T007000Z"             # Out-of-range minute
+    "2019-10-01 00:00:80Z/P1M"          # Out-of-range second
+    "2019-10-01 00:00:10 +25:00/P1M"    # Out-of-range offset hour
+    "20191001T000010 -00:61/P1M"        # Out-of-range offset minute
+    "P1Y/2019-02-29 00:00:00Z"          # Feb. 29 in non-leap-year
+    "2019-01-01 00:00:00Z/P"            # Duration with no values
+    "P1Z/2019-02-20 00:00:00Z"          # Invalid duration unit
+    "P1YM/2019-02-20 00:00:00Z"         # No number for duration unit
+)
+        
 function test_dates() {
+    # Ensure invalid period specifications are rejected
+    for spec in '' "${INVALID_PERIODS[@]}"; do
+        desc="Invalid period - [$spec]"
+        cmd="iso8601 -p \"$spec\""
+        test_assert $CRM_EX_INVALID_PARAM 0
+    done
+
     desc="2014-01-01 00:30:00 - 1 Hour"
     cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="Valid date - Feb 29 in leap year"
+    cmd="iso8601 -d '2020-02-29 00:00:00Z' -E '2020-02-29 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="Valid date - using 'T' and offset"
+    cmd="iso8601 -d '20191201T131211 -05:00' -E '2019-12-01 18:12:11Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="24:00:00 equivalent to 00:00:00 of next day"
+    cmd="iso8601 -d '2019-12-31 24:00:00Z' -E '2020-01-01 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
     for y in 06 07 08 09 10 11 12 13 14 15 16 17 18 40; do
@@ -465,8 +503,12 @@ function test_dates() {
     cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
+    desc="epoch + 2 Years 5 Months 6 Minutes"
+    cmd="iso8601 -d 'epoch' -D P2Y5MT6M -E '1972-06-01 00:06:00Z'"
+    test_assert $CRM_EX_OK 0
+
     desc="2009-01-31 + 1 Month"
-    cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P1M -E '2009-02-28 00:00:00Z'"
+    cmd="iso8601 -d '20090131T000000Z' -D P1M -E '2009-02-28 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
     desc="2009-01-31 + 2 Months"
@@ -478,7 +520,7 @@ function test_dates() {
     test_assert $CRM_EX_OK 0
 
     desc="2009-03-31 - 1 Month"
-    cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
+    cmd="iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
     desc="2038-01-01 + 3 Months"
