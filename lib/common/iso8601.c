@@ -60,7 +60,7 @@ gboolean check_for_ordinal(const char *str);
 static crm_time_t *
 crm_get_utc_time(crm_time_t * dt)
 {
-    crm_time_t *utc = calloc(1, sizeof(crm_time_t));
+    crm_time_t *utc = crm_time_new_undefined();
 
     utc->years = dt->years;
     utc->days = dt->days;
@@ -90,7 +90,7 @@ crm_time_new(const char *date_time)
     tzset();
     if (date_time == NULL) {
         tm_now = time(NULL);
-        dt = calloc(1, sizeof(crm_time_t));
+        dt = crm_time_new_undefined();
         crm_time_set_timet(dt, &tm_now);
     } else {
         dt = parse_date(date_time);
@@ -108,7 +108,10 @@ crm_time_new(const char *date_time)
 crm_time_t *
 crm_time_new_undefined()
 {
-    return calloc(1, sizeof(crm_time_t));
+    crm_time_t *result = calloc(1, sizeof(crm_time_t));
+
+    CRM_ASSERT(result != NULL);
+    return result;
 }
 
 /*!
@@ -637,7 +640,7 @@ crm_time_parse(const char *time_str, crm_time_t * a_time)
 
     tzset();
     if (a_time == NULL) {
-        dt = calloc(1, sizeof(crm_time_t));
+        dt = crm_time_new_undefined();
     }
 
     if (time_str) {
@@ -682,7 +685,7 @@ parse_date(const char *date_str)
         goto done;
 
     } else {
-        dt = calloc(1, sizeof(crm_time_t));
+        dt = crm_time_new_undefined();
     }
 
     if (safe_str_eq("epoch", date_str)) {
@@ -856,7 +859,7 @@ crm_time_parse_duration(const char *period_s)
     CRM_CHECK(period_s[0] == 'P', goto bail);
     period_s++;
 
-    diff = calloc(1, sizeof(crm_time_t));
+    diff = crm_time_new_undefined();
 
     while (isspace((int)period_s[0]) == FALSE) {
         int an_int = 0, rc;
@@ -929,6 +932,7 @@ crm_time_parse_period(const char *period_str)
 
     tzset();
     period = calloc(1, sizeof(crm_time_period_t));
+    CRM_ASSERT(period != NULL);
 
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
@@ -1071,7 +1075,7 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
 
     CRM_CHECK(dt != NULL && value != NULL, return NULL);
 
-    answer = calloc(1, sizeof(crm_time_t));
+    answer = crm_time_new_undefined();
     crm_time_set(answer, dt);
 
     utc = crm_get_utc_time(value);
@@ -1116,7 +1120,7 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
 
     CRM_CHECK(dt != NULL && value != NULL, return NULL);
 
-    answer = calloc(1, sizeof(crm_time_t));
+    answer = crm_time_new_undefined();
     crm_time_set(answer, dt);
     utc = crm_get_utc_time(value);
 
@@ -1326,16 +1330,15 @@ crm_time_hr_convert(crm_time_hr_t *target, crm_time_t *dt)
 
     if (dt) {
         hr_dt = target?target:calloc(1, sizeof(crm_time_hr_t));
-        if (hr_dt) {
-            *hr_dt = (crm_time_hr_t) {
-                .years = dt->years,
-                .months = dt->months,
-                .days = dt->days,
-                .seconds = dt->seconds,
-                .offset = dt->offset,
-                .duration = dt->duration
-            };
-        }
+        CRM_ASSERT(hr_dt != NULL);
+        *hr_dt = (crm_time_hr_t) {
+            .years = dt->years,
+            .months = dt->months,
+            .days = dt->days,
+            .seconds = dt->seconds,
+            .offset = dt->offset,
+            .duration = dt->duration
+        };
     }
 
     return hr_dt;
