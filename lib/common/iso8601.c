@@ -999,6 +999,22 @@ crm_time_parse_period(const char *period_str)
     return period;
 }
 
+/*!
+ * \brief Free a dynamically allocated time period object
+ *
+ * \param[in] period  Time period to free
+ */
+void
+crm_time_free_period(crm_time_period_t *period)
+{
+    if (period) {
+        crm_time_free(period->start);
+        crm_time_free(period->end);
+        crm_time_free(period->diff);
+        free(period);
+    }
+}
+
 void
 crm_time_set(crm_time_t * target, crm_time_t * source)
 {

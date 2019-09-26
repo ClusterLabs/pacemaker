@@ -75,7 +75,6 @@ main(int argc, char **argv)
     int print_options = 0;
     crm_time_t *duration = NULL;
     crm_time_t *date_time = NULL;
-    crm_time_period_t *period = NULL;
 
     const char *period_s = NULL;
     const char *duration_s = NULL;
@@ -174,7 +173,7 @@ main(int argc, char **argv)
     }
 
     if (period_s) {
-        period = crm_time_parse_period(period_s);
+        crm_time_period_t *period = crm_time_parse_period(period_s);
 
         if (period == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", period_s);
@@ -184,6 +183,7 @@ main(int argc, char **argv)
                         print_options | crm_time_log_date | crm_time_log_timeofday);
         log_time_period(-1, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_free_period(period);
     }
 
     if (date_time && duration) {
@@ -217,12 +217,5 @@ main(int argc, char **argv)
 
     crm_time_free(date_time);
     crm_time_free(duration);
-    if (period) {
-        crm_time_free(period->start);
-        crm_time_free(period->end);
-        crm_time_free(period->diff);
-        free(period);
-    }
-
     crm_exit(exit_code);
 }
