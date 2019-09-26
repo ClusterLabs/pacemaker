@@ -153,7 +153,7 @@ main(int argc, char **argv)
         date_time = crm_time_new(date_time_s);
 
         if (date_time == NULL) {
-            fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
+            fprintf(stderr, "Invalid date/time specified: %s\n", date_time_s);
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
@@ -177,7 +177,7 @@ main(int argc, char **argv)
         period = crm_time_parse_period(period_s);
 
         if (period == NULL) {
-            fprintf(stderr, "Invalid interval specified: %s\n", optarg);
+            fprintf(stderr, "Invalid interval specified: %s\n", period_s);
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         log_time_period(LOG_TRACE, period,
