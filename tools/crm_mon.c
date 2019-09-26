@@ -141,11 +141,6 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 static gboolean
 as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (optarg == NULL) {
-        g_set_error(error, G_OPTION_ERROR, 1, "--as-html requires filename");
-        return FALSE;
-    }
-
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
