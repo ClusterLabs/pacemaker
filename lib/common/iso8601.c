@@ -53,7 +53,7 @@ struct crm_time_s {
 };
 
 char *crm_time_as_string(crm_time_t * date_time, int flags);
-crm_time_t *parse_date(const char *date_str);
+static crm_time_t *parse_date(const char *date_str);
 
 gboolean check_for_ordinal(const char *str);
 
@@ -718,7 +718,7 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
  *
  * \return New time object on success, NULL (and set errno) otherwise
  */
-crm_time_t *
+static crm_time_t *
 parse_date(const char *date_str)
 {
     const char *time_s = NULL;
