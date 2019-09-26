@@ -46,13 +46,14 @@
 #define HOUR_SECONDS    (60 * 60)
 #define DAY_SECONDS     (HOUR_SECONDS * 24)
 
+// A date/time or duration
 struct crm_time_s {
-    int years;
-    int months;                 /* Only for durations */
-    int days;
-    int seconds;
-    int offset;                 /* Seconds */
-    bool duration;
+    int years;      // Calendar year (date/time) or number of years (duration)
+    int months;     // Number of months (duration only)
+    int days;       // Ordinal day of year (date/time) or number of days (duration)
+    int seconds;    // Seconds of day (date/time) or number of seconds (duration)
+    int offset;     // Seconds offset from UTC (date/time only)
+    bool duration;  // True if duration
 };
 
 char *crm_time_as_string(crm_time_t * date_time, int flags);
@@ -1347,23 +1348,29 @@ crm_time_compare(crm_time_t * a, crm_time_t * b)
     return rc;
 }
 
+/*!
+ * \brief Add a given number of seconds to a date/time or duration
+ *
+ * \param[in] a_time  Date/time or duration to add seconds to
+ * \param[in] extra   Number of seconds to add
+ */
 void
-crm_time_add_seconds(crm_time_t * a_time, int extra)
+crm_time_add_seconds(crm_time_t *a_time, int extra)
 {
     int days = 0;
 
-    crm_trace("Adding %d seconds to %d (max=%d)", extra, a_time->seconds, DAY_SECONDS);
-
+    crm_trace("Adding %d seconds to %d (max=%d)",
+              extra, a_time->seconds, DAY_SECONDS);
     a_time->seconds += extra;
-    while (a_time->seconds >= DAY_SECONDS) {
-        a_time->seconds -= DAY_SECONDS;
-        days++;
+    days = a_time->seconds / DAY_SECONDS;
+    a_time->seconds %= DAY_SECONDS;
+
+    // Don't have negative seconds
+    if (a_time->seconds < 0) {
+        a_time->seconds += DAY_SECONDS;
+        --days;
     }
 
-    while (a_time->seconds < 0) {
-        a_time->seconds += DAY_SECONDS;
-        days--;
-    }
     crm_time_add_days(a_time, days);
 }
 
