@@ -767,9 +767,9 @@ build_arg_context(pcmk__common_args_t *args) {
                            "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
                            "\tcrm_mon --group-by-node --inactive\n\n"
                            "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
-                           "\tcrm_mon --daemonize --as-html /path/to/docroot/filename.html\n\n"
+                           "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
                            "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
-                           "\tcrm_mon --as-xml\n";
+                           "\tcrm_mon --output-as xml\n";
 
     context = pcmk__build_arg_context(args, "console (default), html, text, xml");
     pcmk__add_main_args(context, extra_prog_entries);
