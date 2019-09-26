@@ -19,7 +19,10 @@ void
 pcmk__output_free(pcmk__output_t *out) {
     out->free_priv(out);
 
-    g_hash_table_destroy(out->messages);
+    if (out->messages != NULL) {
+        g_hash_table_destroy(out->messages);
+    }
+
     free(out->request);
     free(out);
 }
