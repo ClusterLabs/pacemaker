@@ -738,10 +738,12 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         active_instances++;
     }
 
-    pe__short_output_html(out, list_text, "Masters", NULL, options);
-    g_list_free(master_list);
-    free(list_text);
-    list_text = NULL;
+    if (list_text != NULL) {
+        pe__short_output_html(out, list_text, "Masters", NULL, options);
+        g_list_free(master_list);
+        free(list_text);
+        list_text = NULL;
+    }
 
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
@@ -752,22 +754,24 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         active_instances++;
     }
 
-    if (is_set(rsc->flags, pe_rsc_promotable)) {
-        enum rsc_role_e role = configured_role(rsc);
+    if (list_text != NULL) {
+        if (is_set(rsc->flags, pe_rsc_promotable)) {
+            enum rsc_role_e role = configured_role(rsc);
 
-        if(role == RSC_ROLE_SLAVE) {
-            pe__short_output_html(out, list_text, "Slaves (target-role)", NULL, options);
+            if(role == RSC_ROLE_SLAVE) {
+                pe__short_output_html(out, list_text, "Slaves (target-role)", NULL, options);
+            } else {
+                pe__short_output_html(out, list_text, "Slaves", NULL, options);
+            }
+
         } else {
-            pe__short_output_html(out, list_text, "Slaves", NULL, options);
+            pe__short_output_html(out, list_text, "Started", NULL, options);
         }
 
-    } else {
-        pe__short_output_html(out, list_text, "Started", NULL, options);
+        g_list_free(started_list);
+        free(list_text);
+        list_text = NULL;
     }
-
-    g_list_free(started_list);
-    free(list_text);
-    list_text = NULL;
 
     if (is_not_set(options, pe_print_clone_active)) {
         const char *state = "Stopped";
@@ -805,8 +809,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             g_list_free(list);
         }
 
-        pe__short_output_html(out, stopped_list, state, NULL, options);
-        free(stopped_list);
+        if (stopped_list != NULL) {
+            pe__short_output_html(out, stopped_list, state, NULL, options);
+            free(stopped_list);
+        }
     }
 
     out->end_list(out);
@@ -927,10 +933,12 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         active_instances++;
     }
 
-    pe__short_output_text(out, list_text, child_text, "Masters", NULL, options);
-    g_list_free(master_list);
-    free(list_text);
-    list_text = NULL;
+    if (list_text != NULL) {
+        pe__short_output_text(out, list_text, child_text, "Masters", NULL, options);
+        g_list_free(master_list);
+        free(list_text);
+        list_text = NULL;
+    }
 
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
@@ -941,21 +949,23 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         active_instances++;
     }
 
-    if (is_set(rsc->flags, pe_rsc_promotable)) {
-        enum rsc_role_e role = configured_role(rsc);
+    if (list_text != NULL) {
+        if (is_set(rsc->flags, pe_rsc_promotable)) {
+            enum rsc_role_e role = configured_role(rsc);
 
-        if(role == RSC_ROLE_SLAVE) {
-            pe__short_output_text(out, list_text, child_text, "Slaves (target-role)", NULL, options);
+            if(role == RSC_ROLE_SLAVE) {
+                pe__short_output_text(out, list_text, child_text, "Slaves (target-role)", NULL, options);
+            } else {
+                pe__short_output_text(out, list_text, child_text, "Slaves", NULL, options);
+            }
         } else {
-            pe__short_output_text(out, list_text, child_text, "Slaves", NULL, options);
+            pe__short_output_text(out, list_text, child_text, "Started", NULL, options);
         }
-    } else {
-        pe__short_output_text(out, list_text, child_text, "Started", NULL, options);
-    }
 
-    g_list_free(started_list);
-    free(list_text);
-    list_text = NULL;
+        g_list_free(started_list);
+        free(list_text);
+        list_text = NULL;
+    }
 
     if (is_not_set(options, pe_print_clone_active)) {
         const char *state = "Stopped";
@@ -993,8 +1003,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             g_list_free(list);
         }
 
-        pe__short_output_text(out, stopped_list, child_text, state, NULL, options);
-        free(stopped_list);
+        if (stopped_list != NULL) {
+            pe__short_output_text(out, stopped_list, child_text, state, NULL, options);
+            free(stopped_list);
+        }
     }
 
     free(child_text);
