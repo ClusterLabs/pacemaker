@@ -28,7 +28,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/iso8601_internal.h>
-#include <crm/lrmd_alerts_internal.h>
+#include <crm/lrmd_internal.h>
 
 #include <crm/pengine/status.h>
 #include <crm/cib.h>

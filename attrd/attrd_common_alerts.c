@@ -24,7 +24,7 @@
 #include <internal.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/pengine/rules_internal.h>
-#include <crm/lrmd_alerts_internal.h>
+#include <crm/lrmd_internal.h>
 
 static GListPtr attrd_alert_list = NULL;
 
