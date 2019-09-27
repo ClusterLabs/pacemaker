@@ -591,6 +591,8 @@ crm_time_as_string(crm_time_t * date_time, int flags)
  * \param[out] result    Number of seconds equivalent to time_str
  *
  * \return TRUE if specification was valid, FALSE (and set errno) otherwise
+ * \note This may return the number of seconds in a day (which is out of bounds
+ *       for a time object) if given 24:00:00.
  */
 static bool
 crm_time_parse_sec(const char *time_str, int *result)
@@ -615,8 +617,9 @@ crm_time_parse_sec(const char *time_str, int *result)
 
     crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
 
-    // @TODO ISO 8601 allows YMD w/24:00:00 as equivalent to YMD+1 w/00:00:00
-    if (hour >= 24) {
+    if ((hour == 24) && (minute == 0) && (second == 0)) {
+        // Equivalent to 00:00:00 of next day, return number of seconds in day
+    } else if (hour >= 24) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %d is not a valid hour", time_str, hour);
         errno = EINVAL;
@@ -685,6 +688,16 @@ crm_time_parse_offset(const char *offset_str, int *offset)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Parse the time portion of an ISO 8601 date/time string
+ *
+ * \param[in]     time_str  Time portion of specification (after any 'T')
+ * \param[in,out] a_time    Time object to parse into
+ *
+ * \return TRUE if valid time was parsed, FALSE (and set errno) otherwise
+ * \note This may add a day to a_time (if the time is 24:00:00).
+ */
 static bool
 crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
@@ -713,6 +726,12 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
     }
     crm_time_get_sec(a_time->offset, &h, &m, &s);
     crm_trace("Got tz: %c%2.d:%.2d", ((a_time->offset < 0)? '-' : '+'), h, m);
+
+    if (a_time->seconds == DAY_SECONDS) {
+        // 24:00:00 == 00:00:00 of next day
+        a_time->seconds = 0;
+        crm_time_add_days(a_time, 1);
+    }
     return TRUE;
 }
 
