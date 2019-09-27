@@ -878,13 +878,13 @@ main(int argc, char **argv)
             return clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d",
+        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
                               g_get_prgname(), options.reconnect_msec/1000)) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
