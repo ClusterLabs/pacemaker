@@ -182,7 +182,6 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->id = -1;
     new_graph->abort_priority = 0;
     new_graph->network_delay = 0;
-    new_graph->transition_timeout = -1;
     new_graph->stonith_timeout = 0;
     new_graph->completion_action = tg_done;
 

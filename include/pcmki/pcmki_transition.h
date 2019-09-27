@@ -91,7 +91,6 @@ struct crm_graph_s {
     int batch_limit;
     guint network_delay;
     guint stonith_timeout;
-    int transition_timeout;
 
     int fired;
     int pending;
