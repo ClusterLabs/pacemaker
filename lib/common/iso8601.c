@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
+#include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
@@ -851,13 +852,11 @@ parse_date(const char *date_str)
   parse_time:
 
     if (time_s == NULL) {
-        // @TODO look immediately after date spec rather than anywhere
-        time_s = strstr(date_str, " ");
-        if (time_s == NULL) {
-            time_s = strstr(date_str, "T");
-        }
-        if (time_s != NULL) {
+        time_s = date_str + strspn(date_str, "0123456789-W");
+        if ((time_s[0] == ' ') || (time_s[0] == 'T')) {
             ++time_s;
+        } else {
+            time_s = NULL;
         }
     }
     if ((time_s != NULL) && (crm_time_parse(time_s, dt) == FALSE)) {
