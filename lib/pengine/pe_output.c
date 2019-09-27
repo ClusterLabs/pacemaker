@@ -71,11 +71,8 @@ pe__group_html(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
     resource_t *rsc = va_arg(args, resource_t *);
-    char buffer[LINE_MAX];
 
-    snprintf(buffer, LINE_MAX, "Resource Group: %s", rsc->id);
-
-    out->begin_list(out, buffer, NULL, NULL);
+    out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
     if (options & pe_print_brief) {
         pe__rscs_brief_output_html(out, rsc->children, options, TRUE);

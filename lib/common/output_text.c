@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/output.h>
@@ -145,17 +146,24 @@ text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     pcmk__indented_printf(out, "%s", buf);
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
-                const char *plural_noun) {
+text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+                const char *format, ...) {
     private_data_t *priv = out->priv;
     text_list_data_t *new_list = NULL;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (fancy) {
-        pcmk__indented_printf(out, "%s:\n", name);
+        pcmk__indented_vprintf(out, format, ap);
+        fprintf(out->dest, ":\n");
     }
+
+    va_end(ap);
 
     new_list = calloc(1, sizeof(text_list_data_t));
     new_list->len = 0;
@@ -165,21 +173,33 @@ text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun
     g_queue_push_tail(priv->parent_q, new_list);
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-text_list_item(pcmk__output_t *out, const char *id, const char *content) {
+text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     private_data_t *priv = out->priv;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (fancy) {
         if (id != NULL) {
-            pcmk__indented_printf(out, "%s: %s\n", id, content);
+            /* Not really a good way to do this all in one call, so make it two.
+             * The first handles the indentation and list styling.  The second
+             * just prints right after that one.
+             */
+            pcmk__indented_printf(out, "%s: ", id);
+            vfprintf(out->dest, format, ap);
         } else {
-            pcmk__indented_printf(out, "%s\n", content);
+            pcmk__indented_vprintf(out, format, ap);
         }
     } else {
-        fprintf(out->dest, "%s\n", content);
+        pcmk__indented_vprintf(out, format, ap);
     }
+
+    fputc('\n', out->dest);
+    va_end(ap);
 
     ((text_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
 }
@@ -236,10 +256,9 @@ pcmk__mk_text_output(char **argv) {
     return retval;
 }
 
-G_GNUC_PRINTF(2, 3)
+G_GNUC_PRINTF(2, 0)
 void
-pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
-    va_list ap;
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
 
     if (fancy) {
@@ -259,8 +278,16 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
         }
     }
 
-    va_start(ap, format);
-    len = vfprintf(out->dest, format, ap);
+    len = vfprintf(out->dest, format, args);
     CRM_ASSERT(len >= 0);
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    pcmk__indented_vprintf(out, format, ap);
     va_end(ap);
 }

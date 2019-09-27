@@ -437,7 +437,7 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
                            (safe_str_eq(target, "*")? NULL : target),
                            &history, timeout);
 
-    out->begin_list(out, "Fencing history", "event", "events");
+    out->begin_list(out, "event", "events", "Fencing history");
 
     history = stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
@@ -714,9 +714,9 @@ main(int argc, char **argv)
                 break;
             }
 
-            out->begin_list(out, "Installed fence devices", "fence device", "fence devices");
+            out->begin_list(out, "fence device", "fence devices", "Installed fence devices");
             for (dIter = options.devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
@@ -732,9 +732,9 @@ main(int argc, char **argv)
                 break;
             }
 
-            out->begin_list(out, "Registered fence devices", "fence device", "fence devices");
+            out->begin_list(out, "fence device", "fence devices", "Registered fence devices");
             for (dIter = options.devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
@@ -754,9 +754,9 @@ main(int argc, char **argv)
             if (rc == 0) {
                 GList *targets = stonith__parse_targets(lists);
 
-                out->begin_list(out, "Fence targets", "fence target", "fence targets");
+                out->begin_list(out, "fence target", "fence targets", "Fence Targets");
                 while (targets != NULL) {
-                    out->list_item(out, NULL, (const char *) targets->data);
+                    out->list_item(out, NULL, "%s", (const char *) targets->data);
                     targets = targets->next;
                 }
                 out->end_list(out);

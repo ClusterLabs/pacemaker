@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
@@ -131,15 +132,22 @@ curses_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     curses_indented_printf(out, "%s", buf);
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-curses_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
-                const char *plural_noun) {
+curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+                  const char *format, ...) {
     private_data_t *priv = out->priv;
     curses_list_data_t *new_list = NULL;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
-    curses_indented_printf(out, "%s:\n", name);
+    va_start(ap, format);
+
+    curses_indented_vprintf(out, format, ap);
+    printw(":\n");
+
+    va_end(ap);
 
     new_list = calloc(1, sizeof(curses_list_data_t));
     new_list->len = 0;
@@ -149,17 +157,25 @@ curses_begin_list(pcmk__output_t *out, const char *name, const char *singular_no
     g_queue_push_tail(priv->parent_q, new_list);
 }
 
+G_GNUC_PRINTF(3, 4)
 static void
-curses_list_item(pcmk__output_t *out, const char *id, const char *content) {
+curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     private_data_t *priv = out->priv;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (id != NULL) {
-        curses_indented_printf(out, "%s: %s\n", id, content);
+        curses_indented_printf(out, "%s: ", id);
+        vw_printw(stdscr, format, ap);
     } else {
-        curses_indented_printf(out, "%s\n", content);
+        curses_indented_vprintf(out, format, ap);
     }
+
+    addch('\n');
+    va_end(ap);
 
     ((curses_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
 }
@@ -216,10 +232,9 @@ crm_mon_mk_curses_output(char **argv) {
     return retval;
 }
 
-G_GNUC_PRINTF(2, 3)
+G_GNUC_PRINTF(2, 0)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
-    va_list ap;
+curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int level = 0;
     private_data_t *priv = out->priv;
 
@@ -235,14 +250,21 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
         printw("* ");
     }
 
-    va_start(ap, format);
-    vw_printw(stdscr, format, ap);
-    va_end(ap);
+    vw_printw(stdscr, format, args);
 
     clrtoeol();
     refresh();
 }
 
+G_GNUC_PRINTF(2, 3)
+void
+curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    curses_indented_vprintf(out, format, ap);
+    va_end(ap);
+}
 #else
 
 pcmk__output_t *
@@ -251,9 +273,15 @@ crm_mon_mk_curses_output(char **argv) {
     return pcmk__mk_text_output(argv);
 }
 
+G_GNUC_PRINTF(2, 0)
+void
+curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
 G_GNUC_PRINTF(2, 3)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
+curses_indented_printf(pcmk__output_t *out, const char *format, va_list args) {
     return;
 }
 

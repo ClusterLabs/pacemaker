@@ -379,14 +379,16 @@ struct pcmk__output_s {
      *       result in a summary being added.
      *
      * \param[in,out] out           The output functions structure.
-     * \param[in]     name          A descriptive, user-facing name for this list.
      * \param[in]     singular_noun When outputting the summary for a list with
      *                              one item, the noun to use.
      * \param[in]     plural_noun   When outputting the summary for a list with
      *                              more than one item, the noun to use.
+     * \param[in]     format        The format string.
+     * \param[in]     ...           Arguments to be formatted.
      */
-    void (*begin_list) (pcmk__output_t *out, const char *name,
-                        const char *singular_noun, const char *plural_noun);
+    void (*begin_list) (pcmk__output_t *out, const char *singular_noun,
+                        const char *plural_noun, const char *format, ...)
+                        G_GNUC_PRINTF(4, 5);
 
     /*!
      * \internal
@@ -394,9 +396,11 @@ struct pcmk__output_s {
      *
      * \param[in,out] out     The output functions structure.
      * \param[in]     name    A name to associate with this item.
-     * \param[in]     content The item to be formatted.
+     * \param[in]     format  The format string.
+     * \param[in]     ...     Arguments to be formatted.
      */
-    void (*list_item) (pcmk__output_t *out, const char *name, const char *content);
+    void (*list_item) (pcmk__output_t *out, const char *name, const char *format, ...)
+                      G_GNUC_PRINTF(3, 4);
 
     /*!
      * \internal
@@ -532,6 +536,21 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table);
  */
 void
 pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+/*!
+ * \internal
+ * \brief A vprintf-like function.
+ *
+ * This function is like pcmk__indented_printf(), except it takes a va_list instead
+ * of a list of arguments.  This should be used when implementing custom message
+ * functions instead of vprintf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     args   A list of arguments to apply to the format string.
+ */
+void
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
 /*!
  * \internal
