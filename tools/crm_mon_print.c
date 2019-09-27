@@ -72,13 +72,13 @@ print_resources_heading(mon_state_t *state, unsigned int mon_ops)
     if (is_set(mon_ops, mon_op_group_by_node)) {
 
         /* Active resources have already been printed by node */
-        heading = is_set(mon_ops, mon_op_inactive_resources) ? "Inactive resources" : NULL;
+        heading = is_set(mon_ops, mon_op_inactive_resources) ? "Inactive Resources" : NULL;
 
     } else if (is_set(mon_ops, mon_op_inactive_resources)) {
-        heading = "Full list of resources";
+        heading = "Full List of Resources";
 
     } else {
-        heading = "Active resources";
+        heading = "Active Resources";
     }
 
     /* Print section heading */
