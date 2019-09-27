@@ -665,8 +665,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     pe_rsc_trace((*rsc), "\tRequired to start: %s%s", value, isdefault?" (default)":"");
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
     if (value != NULL) {
-        /* call crm_get_msec() and convert back to seconds */
-        (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
+        // Stored as seconds
+        (*rsc)->failure_timeout = (int) (crm_parse_interval_spec(value) / 1000);
     }
 
     if (remote_node) {
