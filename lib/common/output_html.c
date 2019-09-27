@@ -115,7 +115,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     /* If root is NULL, html_init failed and we are being called from pcmk__output_free
      * in the pcmk__output_new path.
      */
-    if (priv->root == NULL) {
+    if (priv == NULL || priv->root == NULL) {
         return;
     }
 

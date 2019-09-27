@@ -141,11 +141,6 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 static gboolean
 as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (optarg == NULL) {
-        g_set_error(error, G_OPTION_ERROR, 1, "--as-html requires filename");
-        return FALSE;
-    }
-
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
@@ -767,9 +762,9 @@ build_arg_context(pcmk__common_args_t *args) {
                            "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
                            "\tcrm_mon --group-by-node --inactive\n\n"
                            "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
-                           "\tcrm_mon --daemonize --as-html /path/to/docroot/filename.html\n\n"
+                           "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
                            "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
-                           "\tcrm_mon --as-xml\n";
+                           "\tcrm_mon --output-as xml\n";
 
     context = pcmk__build_arg_context(args, "console (default), html, text, xml");
     pcmk__add_main_args(context, extra_prog_entries);
@@ -883,13 +878,13 @@ main(int argc, char **argv)
             return clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d",
+        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
                               g_get_prgname(), options.reconnect_msec/1000)) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             return clean_up(CRM_EX_USAGE);
         }

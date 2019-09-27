@@ -1185,7 +1185,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                  , "resource_agent", ra_name
                  , "role", rsc_state
                  , "target_role", (rsc->meta ? g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE) : NULL)
-                 , "active ", BOOL2STR(rsc->fns->active(rsc, TRUE))
+                 , "active", BOOL2STR(rsc->fns->active(rsc, TRUE))
                  , "orphaned", BOOL2STR(is_set(rsc->flags, pe_rsc_orphan))
                  , "blocked", BOOL2STR(is_set(rsc->flags, pe_rsc_block))
                  , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))

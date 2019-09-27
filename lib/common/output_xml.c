@@ -112,7 +112,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
      * in the pcmk__output_new path.
      */
-    if (priv->root == NULL) {
+    if (priv == NULL || priv->root == NULL) {
         return;
     }
 

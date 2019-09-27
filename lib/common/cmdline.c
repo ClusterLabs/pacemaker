@@ -221,7 +221,12 @@ pcmk__force_args(GOptionContext *context, GError **error, const char *format, ..
     CRM_ASSERT(len > 0);
     va_end(ap);
 
-    extra_args = g_strsplit(buf, " ", -1);
+    if (!g_shell_parse_argv(buf, NULL, &extra_args, error)) {
+        g_strfreev(extra_args);
+        free(buf);
+        return FALSE;
+    }
+
     retval = g_option_context_parse_strv(context, &extra_args, error);
 
     g_strfreev(extra_args);
