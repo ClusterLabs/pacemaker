@@ -189,6 +189,11 @@ main(int argc, char **argv)
     if (date_time && duration) {
         crm_time_t *later = crm_time_add(date_time, duration);
 
+        if (later == NULL) {
+            fprintf(stderr, "Unable to calculate ending time of %s plus %s",
+                    date_time_s, duration_s);
+            crm_exit(CRM_EX_SOFTWARE);
+        }
         crm_time_log(LOG_TRACE, "Duration ends at", later,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(-1, "Duration ends at", later,

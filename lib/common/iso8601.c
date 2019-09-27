@@ -63,10 +63,16 @@ static crm_time_t *parse_date(const char *date_str);
 gboolean check_for_ordinal(const char *str);
 
 static crm_time_t *
-crm_get_utc_time(crm_time_t * dt)
+crm_get_utc_time(crm_time_t *dt)
 {
-    crm_time_t *utc = crm_time_new_undefined();
+    crm_time_t *utc = NULL;
 
+    if (dt == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    utc = crm_time_new_undefined();
     utc->years = dt->years;
     utc->days = dt->days;
     utc->seconds = dt->seconds;
@@ -308,7 +314,14 @@ crm_time_get_seconds(crm_time_t * dt)
     crm_time_t *utc = NULL;
     long long in_seconds = 0;
 
+    if (dt == NULL) {
+        return 0;
+    }
+
     utc = crm_get_utc_time(dt);
+    if (utc == NULL) {
+        return 0;
+    }
 
     for (lpc = 1; lpc < utc->years; lpc++) {
         int dmax = year_days(lpc);
@@ -340,7 +353,7 @@ crm_time_get_seconds(crm_time_t * dt)
 long long
 crm_time_get_seconds_since_epoch(crm_time_t * dt)
 {
-    return crm_time_get_seconds(dt) - EPOCH_SECONDS;
+    return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
 int
@@ -1250,12 +1263,19 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
 
-    CRM_CHECK(dt != NULL && value != NULL, return NULL);
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
 
     answer = crm_time_new_undefined();
     crm_time_set(answer, dt);
 
     utc = crm_get_utc_time(value);
+    if (utc == NULL) {
+        crm_time_free(answer);
+        return NULL;
+    }
 
     answer->years += utc->years;
     crm_time_add_months(answer, utc->months);
@@ -1272,10 +1292,21 @@ crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value)
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
 
-    CRM_CHECK(dt != NULL && value != NULL, return NULL);
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
 
     utc = crm_get_utc_time(value);
+    if (utc == NULL) {
+        return NULL;
+    }
+
     answer = crm_get_utc_time(dt);
+    if (answer == NULL) {
+        crm_time_free(utc);
+        return NULL;
+    }
     answer->duration = TRUE;
 
     answer->years -= utc->years;
@@ -1295,12 +1326,18 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
 
-    CRM_CHECK(dt != NULL && value != NULL, return NULL);
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    utc = crm_get_utc_time(value);
+    if (utc == NULL) {
+        return NULL;
+    }
 
     answer = crm_time_new_undefined();
     crm_time_set(answer, dt);
-    utc = crm_get_utc_time(value);
-
     answer->years -= utc->years;
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);
@@ -1340,22 +1377,19 @@ crm_time_check(crm_time_t * dt)
     }
 
 int
-crm_time_compare(crm_time_t * a, crm_time_t * b)
+crm_time_compare(crm_time_t *a, crm_time_t *b)
 {
     int rc = 0;
-    crm_time_t *t1 = NULL;
-    crm_time_t *t2 = NULL;
+    crm_time_t *t1 = crm_get_utc_time(a);
+    crm_time_t *t2 = crm_get_utc_time(b);
 
-    if (a == NULL && b == NULL) {
+    if ((t1 == NULL) && (t2 == NULL)) {
         return 0;
-    } else if (a == NULL) {
+    } else if (t1 == NULL) {
         return -1;
-    } else if (b == NULL) {
+    } else if (t2 == NULL) {
         return 1;
     }
-
-    t1 = crm_get_utc_time(a);
-    t2 = crm_get_utc_time(b);
 
     do_cmp_field(t1, t2, years);
     do_cmp_field(t1, t2, days);
