@@ -43,6 +43,9 @@
 #  define GMTOFF(tm) (-timezone+daylight)
 #endif
 
+#define HOUR_SECONDS    (60 * 60)
+#define DAY_SECONDS     (HOUR_SECONDS * 24)
+
 struct crm_time_s {
     int years;
     int months;                 /* Only for durations */
@@ -267,10 +270,10 @@ crm_time_get_sec(int sec, uint * h, uint * m, uint * s)
         seconds = sec;
     }
 
-    hours = seconds / (60 * 60);
-    seconds -= 60 * 60 * hours;
+    hours = seconds / HOUR_SECONDS;
+    seconds -= HOUR_SECONDS * hours;
 
-    minutes = seconds / (60);
+    minutes = seconds / 60;
     seconds -= 60 * minutes;
 
     crm_trace("%d == %.2d:%.2d:%.2d", sec, hours, minutes, seconds);
@@ -308,7 +311,7 @@ crm_time_get_seconds(crm_time_t * dt)
     for (lpc = 1; lpc < utc->years; lpc++) {
         int dmax = year_days(lpc);
 
-        in_seconds += 60 * 60 * 24 * dmax;
+        in_seconds += DAY_SECONDS * dmax;
     }
 
     /* utc->months is an offset that can only be set for a duration.
@@ -319,11 +322,11 @@ crm_time_get_seconds(crm_time_t * dt)
      * for anyone that tries to use a month in this way.
      */
     if (utc->months > 0) {
-        in_seconds += 60 * 60 * 24 * 30 * utc->months;
+        in_seconds += DAY_SECONDS * 30 * utc->months;
     }
 
     if (utc->days > 0) {
-        in_seconds += 60 * 60 * 24 * (utc->days - 1);
+        in_seconds += DAY_SECONDS * (utc->days - 1);
     }
     in_seconds += utc->seconds;
 
@@ -630,7 +633,7 @@ crm_time_parse_sec(const char *time_str, int *result)
         return FALSE;
     }
 
-    *result = (hour * 60 * 60) + (minute * 60) + second;
+    *result = (hour * HOUR_SECONDS) + (minute * 60) + second;
     return TRUE;
 }
 
@@ -645,13 +648,13 @@ crm_time_parse_offset(const char *offset_str, int *offset)
         time_t now = time(NULL);
         struct tm *now_tm = localtime(&now);
 #endif
-        int h_offset = GMTOFF(now_tm) / (3600);
-        int m_offset = (GMTOFF(now_tm) - (3600 * h_offset)) / (60);
+        int h_offset = GMTOFF(now_tm) / HOUR_SECONDS;
+        int m_offset = (GMTOFF(now_tm) - (HOUR_SECONDS * h_offset)) / 60;
 
         if (h_offset < 0 && m_offset < 0) {
             m_offset = 0 - m_offset;
         }
-        *offset = (60 * 60 * h_offset) + (60 * m_offset);
+        *offset = (HOUR_SECONDS * h_offset) + (60 * m_offset);
         return TRUE;
     }
 
@@ -1012,7 +1015,7 @@ crm_time_parse_duration(const char *period_s)
                 diff->days += an_int;
                 break;
             case 'H':
-                diff->seconds += an_int * 60 * 60;
+                diff->seconds += an_int * HOUR_SECONDS;
                 break;
             case 'S':
                 diff->seconds += an_int;
@@ -1198,7 +1201,7 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     }
 
     if (source->tm_hour >= 0) {
-        target->seconds += 60 * 60 * source->tm_hour;
+        target->seconds += HOUR_SECONDS * source->tm_hour;
     }
     if (source->tm_min >= 0) {
         target->seconds += 60 * source->tm_min;
@@ -1208,11 +1211,11 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     }
 
     /* tm_gmtoff == offset from UTC in seconds */
-    h_offset = GMTOFF(source) / (3600);
-    m_offset = (GMTOFF(source) - (3600 * h_offset)) / (60);
+    h_offset = GMTOFF(source) / HOUR_SECONDS;
+    m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
     crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(source), h_offset, m_offset);
 
-    target->offset += 60 * 60 * h_offset;
+    target->offset += HOUR_SECONDS * h_offset;
     target->offset += 60 * m_offset;
 }
 
@@ -1301,7 +1304,7 @@ crm_time_check(crm_time_t * dt)
 {
     return (dt != NULL)
            && (dt->days > 0) && (dt->days <= year_days(dt->years))
-           && (dt->seconds >= 0) && (dt->seconds < (24 * 60 * 60));
+           && (dt->seconds >= 0) && (dt->seconds < DAY_SECONDS);
 }
 
 #define do_cmp_field(l, r, field)					\
@@ -1348,18 +1351,17 @@ void
 crm_time_add_seconds(crm_time_t * a_time, int extra)
 {
     int days = 0;
-    int seconds = 24 * 60 * 60;
 
-    crm_trace("Adding %d seconds to %d (max=%d)", extra, a_time->seconds, seconds);
+    crm_trace("Adding %d seconds to %d (max=%d)", extra, a_time->seconds, DAY_SECONDS);
 
     a_time->seconds += extra;
-    while (a_time->seconds >= seconds) {
-        a_time->seconds -= seconds;
+    while (a_time->seconds >= DAY_SECONDS) {
+        a_time->seconds -= DAY_SECONDS;
         days++;
     }
 
     while (a_time->seconds < 0) {
-        a_time->seconds += seconds;
+        a_time->seconds += DAY_SECONDS;
         days--;
     }
     crm_time_add_days(a_time, days);
@@ -1441,7 +1443,7 @@ crm_time_add_minutes(crm_time_t * a_time, int extra)
 void
 crm_time_add_hours(crm_time_t * a_time, int extra)
 {
-    crm_time_add_seconds(a_time, extra * 60 * 60);
+    crm_time_add_seconds(a_time, extra * HOUR_SECONDS);
 }
 
 void
@@ -1464,7 +1466,7 @@ ha_get_tm_time( struct tm *target, crm_time_t *source)
         .tm_mday = source->days,
         .tm_sec = source->seconds % 60,
         .tm_min = ( source->seconds / 60 ) % 60,
-        .tm_hour = source->seconds / 60 / 60,
+        .tm_hour = source->seconds / HOUR_SECONDS,
         .tm_isdst = -1, /* don't adjust */
 
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
