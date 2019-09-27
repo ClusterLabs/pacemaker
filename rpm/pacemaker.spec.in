@@ -89,13 +89,13 @@
 %endif
 
 ## Different distros name certain packages differently
+## (note: corosync libraries also differ, but all provide corosync-devel)
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
 %global pkgname_gnutls_devel libgnutls-devel
 %global pkgname_shadow_utils shadow
 %global pkgname_procps procps
-%global pkgname_corosync_lib libcorosync
 %global pkgname_glue_libs libglue
 %global pkgname_pcmk_libs lib%{name}3
 %global hacluster_id 90
@@ -108,7 +108,6 @@
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
 %global pkgname_publican publican
-%global pkgname_corosync_lib corosynclib
 %global pkgname_glue_libs cluster-glue-libs
 %global pkgname_pcmk_libs %{name}-libs
 %global hacluster_id 189
@@ -277,7 +276,7 @@ BuildRequires: pkgconfig(systemd)
 %endif
 
 Requires:      corosync >= 2.0.0
-BuildRequires: %{pkgname_corosync_lib}-devel >= 2.0.0
+BuildRequires: corosync-devel >= 2.0.0
 
 %if %{with stonithd}
 BuildRequires: %{pkgname_glue_libs}-devel
@@ -405,7 +404,7 @@ Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
-Requires:      %{pkgname_corosync_lib}-devel%{?_isa} >= 2.0.0
+Requires:      corosync-devel >= 2.0.0
 
 %description -n %{pkgname_pcmk_libs}-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
