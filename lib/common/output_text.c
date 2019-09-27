@@ -146,17 +146,24 @@ text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     pcmk__indented_printf(out, "%s", buf);
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-text_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
-                const char *plural_noun) {
+text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+                const char *format, ...) {
     private_data_t *priv = out->priv;
     text_list_data_t *new_list = NULL;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
+    va_start(ap, format);
+
     if (fancy) {
-        pcmk__indented_printf(out, "%s:\n", name);
+        pcmk__indented_vprintf(out, format, ap);
+        fprintf(out->dest, ":\n");
     }
+
+    va_end(ap);
 
     new_list = calloc(1, sizeof(text_list_data_t));
     new_list->len = 0;

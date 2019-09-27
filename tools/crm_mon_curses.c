@@ -132,15 +132,22 @@ curses_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     curses_indented_printf(out, "%s", buf);
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-curses_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
-                const char *plural_noun) {
+curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+                  const char *format, ...) {
     private_data_t *priv = out->priv;
     curses_list_data_t *new_list = NULL;
+    va_list ap;
 
     CRM_ASSERT(priv != NULL);
 
-    curses_indented_printf(out, "%s:\n", name);
+    va_start(ap, format);
+
+    curses_indented_vprintf(out, format, ap);
+    printw(":\n");
+
+    va_end(ap);
 
     new_list = calloc(1, sizeof(curses_list_data_t));
     new_list->len = 0;

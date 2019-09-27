@@ -640,17 +640,14 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
-    char buffer[LINE_MAX];
 
     get_clone_variant_data(clone_data, rsc);
 
-    snprintf(buffer, LINE_MAX, "Clone Set: %s [%s]%s%s%s",
-                 rsc->id, ID(clone_data->xml_obj_child),
-                 is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
-                 is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
-
-    out->begin_list(out, buffer, NULL, NULL);
+    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
+                    rsc->id, ID(clone_data->xml_obj_child),
+                    is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;

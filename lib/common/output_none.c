@@ -65,9 +65,10 @@ none_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     /* This function intentionally left blank */
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-none_begin_list(pcmk__output_t *out, const char *name, const char *singular_noun,
-                const char *plural_noun) {
+none_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+                const char *format, ...) {
     /* This function intentionally left blank */
 }
 

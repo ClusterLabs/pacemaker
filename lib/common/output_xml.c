@@ -232,17 +232,29 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlAddChild(parent, cdata_node);
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-xml_begin_list(pcmk__output_t *out, const char *name,
-               const char *singular_noun, const char *plural_noun) {
+xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
+               const char *format, ...) {
+    va_list ap;
+    char *buf = NULL;
+    int len;
+
+    va_start(ap, format);
+    len = vasprintf(&buf, format, ap);
+    CRM_ASSERT(len >= 0);
+    va_end(ap);
+
     if (legacy_xml || simple_list) {
-        pcmk__output_xml_create_parent(out, name);
+        pcmk__output_xml_create_parent(out, buf);
     } else {
         xmlNodePtr list_node = NULL;
 
         list_node = pcmk__output_xml_create_parent(out, "list");
-        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) buf);
     }
+
+    free(buf);
 }
 
 G_GNUC_PRINTF(3, 4)

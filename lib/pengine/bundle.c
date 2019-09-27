@@ -1588,14 +1588,12 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    snprintf(buffer, LINE_MAX, "Container bundle%s: %s [%s]%s%s",
-                 ((bundle_data->nreplicas > 1)? " set" : ""),
-                 rsc->id, bundle_data->image,
-                 is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
-
     pcmk__output_create_xml_node(out, "br");
-    out->begin_list(out, buffer, NULL, NULL);
+    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
+                    (bundle_data->nreplicas > 1)? " set" : "",
+                    rsc->id, bundle_data->image,
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1687,12 +1685,11 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         pre_text = " ";
     }
 
-    buf = crm_strdup_printf("%sContainer bundle%s: %s [%s]%s%s",
-                            pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
-                            rsc->id, bundle_data->image,
-                            is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                            is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
-    out->begin_list(out, buf, NULL, NULL);
+    out->begin_list(out, NULL, NULL, "%sContainer bundle%s: %s [%s]%s%s",
+                    pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
+                    rsc->id, bundle_data->image,
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {

@@ -258,15 +258,26 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlSetProp(node, (pcmkXmlStr) "lang", (pcmkXmlStr) "xml");
 }
 
+G_GNUC_PRINTF(4, 5)
 static void
-html_begin_list(pcmk__output_t *out, const char *name,
-               const char *singular_noun, const char *plural_noun) {
+html_begin_list(pcmk__output_t *out, const char *singular_noun,
+                const char *plural_noun, const char *format, ...) {
     private_data_t *priv = out->priv;
 
     CRM_ASSERT(priv != NULL);
 
-    if (name != NULL) {
-        pcmk__output_create_xml_text_node(out, "h2", name);
+    if (format != NULL) {
+        va_list ap;
+        char *buf = NULL;
+        int len;
+
+        va_start(ap, format);
+        len = vasprintf(&buf, format, ap);
+        va_end(ap);
+        CRM_ASSERT(len >= 0);
+
+        pcmk__output_create_xml_text_node(out, "h2", buf);
+        free(buf);
     }
 
     pcmk__output_xml_create_parent(out, "ul");
