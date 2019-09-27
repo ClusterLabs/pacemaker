@@ -200,7 +200,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     set_if_xpath(pe_flag_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
-    data_set->stonith_timeout = crm_get_msec(value);
+    data_set->stonith_timeout = (int) crm_parse_interval_spec(value);
     crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
 
     set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);

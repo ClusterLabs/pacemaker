@@ -181,9 +181,9 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
     new_graph->id = -1;
     new_graph->abort_priority = 0;
-    new_graph->network_delay = -1;
+    new_graph->network_delay = 0;
     new_graph->transition_timeout = -1;
-    new_graph->stonith_timeout = -1;
+    new_graph->stonith_timeout = 0;
     new_graph->completion_action = tg_done;
 
     if (reference) {
@@ -201,13 +201,13 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         time = crm_element_value(xml_graph, "cluster-delay");
         CRM_CHECK(time != NULL, free(new_graph);
                   return NULL);
-        new_graph->network_delay = crm_get_msec(time);
+        new_graph->network_delay = crm_parse_interval_spec(time);
 
         time = crm_element_value(xml_graph, "stonith-timeout");
         if (time == NULL) {
             new_graph->stonith_timeout = new_graph->network_delay;
         } else {
-            new_graph->stonith_timeout = crm_get_msec(time);
+            new_graph->stonith_timeout = crm_parse_interval_spec(time);
         }
 
         t_id = crm_element_value(xml_graph, "batch-limit");

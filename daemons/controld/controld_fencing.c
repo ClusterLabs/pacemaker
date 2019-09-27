@@ -833,7 +833,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     }
 
     crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%d",
+               CRM_XS " action=%s timeout=%u",
                type, target, id, transition_graph->stonith_timeout);
 
     /* Passing NULL means block until we can connect... */
@@ -844,9 +844,11 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     }
 
     rc = stonith_api->cmds->fence(stonith_api, options, target, type,
-                                  transition_graph->stonith_timeout / 1000, 0);
+                                  (int) (transition_graph->stonith_timeout / 1000),
+                                  0);
 
-    stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
+    stonith_api->cmds->register_callback(stonith_api, rc,
+                                         (int) (transition_graph->stonith_timeout / 1000),
                                          st_opt_timeout_updates,
                                          generate_transition_key(transition_graph->id, action->id,
                                                                  0, te_uuid),

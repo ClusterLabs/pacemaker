@@ -158,9 +158,9 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s on %s had an invalid timeout (%dms).  Using %dms instead",
+            crm_err("Action %d: %s on %s had an invalid timeout (%dms).  Using %ums instead",
                     action->id, task, on_node, action->timeout, graph->network_delay);
-            action->timeout = graph->network_delay;
+            action->timeout = (int) graph->network_delay;
         }
         te_start_action_timer(graph, action);
     }
@@ -361,9 +361,9 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
                   action->id, task, task_uuid, on_node, action->timeout);
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %dms instead",
+            crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %ums instead",
                     action->id, task, task_uuid, on_node, action->timeout, graph->network_delay);
-            action->timeout = graph->network_delay;
+            action->timeout = (int) graph->network_delay;
         }
         te_update_job_count(action, 1);
         te_start_action_timer(graph, action);
