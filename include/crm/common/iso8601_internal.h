@@ -35,9 +35,6 @@ void crm_time_hr_free(crm_time_hr_t * hr_dt);
 char *crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt);
 const char *crm_now_string(time_t *when);
 
-crm_time_t *parse_date(const char *date_str); /* in iso8601.c global but
-                                                 not in header */
-
 struct crm_time_us {
     int years;
     int months;                 /* Only for durations */

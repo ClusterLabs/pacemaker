@@ -36,6 +36,14 @@ parse_cli_lifetime(const char *input)
 
     now = crm_time_new(NULL);
     later = crm_time_add(now, duration);
+    if (later == NULL) {
+        CMD_ERR("Unable to add %s to current time", move_lifetime);
+        CMD_ERR("Please report to " PACKAGE_BUGREPORT " as possible bug");
+        crm_time_free(now);
+        crm_time_free(duration);
+        return NULL;
+    }
+
     crm_time_log(LOG_INFO, "now     ", now,
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_INFO, "later   ", later,

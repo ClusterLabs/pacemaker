@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+#include <glib.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -88,9 +89,8 @@ struct crm_graph_s {
     int num_synapses;
 
     int batch_limit;
-    int network_delay;
-    int stonith_timeout;
-    int transition_timeout;
+    guint network_delay;
+    guint stonith_timeout;
 
     int fired;
     int pending;

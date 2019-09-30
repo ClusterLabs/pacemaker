@@ -1625,7 +1625,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
-         *    section which is unliklely to be a good thing
+         * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
          *    to the bottom of why it's happening.
          */

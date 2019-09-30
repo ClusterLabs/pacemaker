@@ -821,10 +821,10 @@ dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
 dnl     strnlen: is a gnu function similar to strlen, but safer.
-dnl            We wrote a tolearably-fast replacement function for it.
+dnl            We wrote a tolerably-fast replacement function for it.
 dnl
 dnl     strndup: is a gnu function similar to strdup, but safer.
-dnl            We wrote a tolearably-fast replacement function for it.
+dnl            We wrote a tolerably-fast replacement function for it.
 
 AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
 

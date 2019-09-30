@@ -763,7 +763,7 @@ main(int argc, char **argv)
                 free(lists);
 
             } else if (rc != 0) {
-                out->err(out, "List command returned error. rc : %d", rc);
+                out->err(out, "Couldn't list targets: %s", pcmk_strerror(rc));
             }
             break;
         case 'R':

@@ -210,8 +210,8 @@ of the above opt-in configuration.
 -------
 <constraints>
     <rsc_location id="loc-1" rsc="Webserver" node="sles-1" score="200"/>
-    <rsc_location id="loc-2-dont-run" rsc="Webserver" node="sles-2" score="-INFINITY"/>
-    <rsc_location id="loc-3-dont-run" rsc="Database" node="sles-1" score="-INFINITY"/>
+    <rsc_location id="loc-2-do-not-run" rsc="Webserver" node="sles-2" score="-INFINITY"/>
+    <rsc_location id="loc-3-do-not-run" rsc="Database" node="sles-1" score="-INFINITY"/>
     <rsc_location id="loc-4" rsc="Database" node="sles-2" score="200"/>
 </constraints>
 -------

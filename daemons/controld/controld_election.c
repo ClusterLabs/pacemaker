@@ -58,7 +58,7 @@ controld_election_fini()
 void
 controld_set_election_period(const char *value)
 {
-    election_timeout_set_period(fsa_election, crm_get_msec(value));
+    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 
 void

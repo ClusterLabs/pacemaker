@@ -297,13 +297,13 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             color = "red";
             font = "purple";
             if (all_actions == FALSE) {
-                goto dont_write;
+                goto do_not_write;
             }
 
         } else if (is_set(action->flags, pe_action_optional)) {
             color = "blue";
             if (all_actions == FALSE) {
-                goto dont_write;
+                goto do_not_write;
             }
 
         } else {
@@ -317,7 +317,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
                 action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
-  dont_write:
+  do_not_write:
         free(action_name);
     }
 

@@ -60,10 +60,10 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
 
     GOptionEntry main_entries[3] = {
         { "version", '$', 0, G_OPTION_ARG_NONE, &(common_args->version),
-          "Display version information and exit.",
+          "Display software version and exit",
           NULL },
         { "verbose", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, bump_verbosity,
-          "Increase debug output (may be specified multiple times).",
+          "Increase debug output (may be specified multiple times)",
           NULL },
 
         { NULL }
@@ -83,12 +83,12 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
               NULL,
               "FORMAT" },
             { "output-to", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_dest),
-              "Specify the destination for output, \"-\" for stdout or a filename.", "DEST" },
+              "Specify file name for output (or \"-\" for stdout)", "DEST" },
 
             { NULL }
         };
 
-        output_main_entries[0].description = crm_strdup_printf("Specify the format for output, one of: %s", fmts);
+        output_main_entries[0].description = crm_strdup_printf("Specify output format as one of: %s", fmts);
         g_option_context_add_main_entries(context, output_main_entries, NULL);
     }
 

@@ -17,5 +17,3 @@ noinst_HEADERS	        = config.h 			\
 pkginclude_HEADERS	= crm_config.h
 
 SUBDIRS                 =  crm pcmki
-
-.PHONY: $(ARCHIVE_VERSION)

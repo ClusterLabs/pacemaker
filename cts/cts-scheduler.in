@@ -430,7 +430,7 @@ TESTS = [
         [ "master-13", "Include preferences of colocated resources when placing master" ],
         [ "master-demote", "Ordering when actions depends on demoting a slave resource" ],
         [ "master-ordering", "Prevent resources from starting that need a master" ],
-        [ "bug-1765", "Master-Master Colocation (dont stop the slaves)" ],
+        [ "bug-1765", "Master-Master Colocation (do not stop the slaves)" ],
         [ "master-group", "Promotion of cloned groups" ],
         [ "bug-lf-1852", "Don't shuffle master/slave instances unnecessarily" ],
         [ "master-failed-demote", "Don't retry failed demote actions" ],
@@ -972,7 +972,7 @@ TESTS = [
 ]
 
 
-# Constants subsituted in the build process
+# Constants substituted in the build process
 class BuildVars(object):
     SBINDIR = "@sbindir@"
     BUILDDIR = "@abs_top_builddir@"

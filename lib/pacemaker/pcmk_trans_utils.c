@@ -221,7 +221,7 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
     }
 
     do_crm_log(log_level, "Graph %d with %d actions:"
-               " batch-limit=%d jobs, network-delay=%dms",
+               " batch-limit=%d jobs, network-delay=%ums",
                graph->id, graph->num_actions,
                graph->batch_limit, graph->network_delay);
 

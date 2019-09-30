@@ -769,7 +769,15 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     static int max_msg_types = DIMOF(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    crm_info("%s on %s", op, section);
+#if ENABLE_ACL
+    crm_info("Handling %s operation for %s as %s",
+             (op? op : "invalid"), (section? section : "entire CIB"),
+             (user_name? user_name : "default user"));
+#else
+    crm_info("Handling %s operation for %s",
+             (op? op : "invalid"), (section? section : "entire CIB"));
+#endif
+
     call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
 
     if (cib->state == cib_disconnected) {
@@ -802,7 +810,6 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     if(user_name) {
         crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     }
-    crm_trace("Performing %s operation as %s", op, user_name);
 #endif
 
     /* Mirror the logic in cib_prepare_common() */

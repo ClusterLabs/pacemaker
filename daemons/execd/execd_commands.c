@@ -446,7 +446,7 @@ time_diff_ms(struct timeb *now, struct timeb *old)
     if ((old == NULL) || (old->time == 0)) {
         return 0;
     }
-    return difftime(now->time, old->time) * 1000 + now->millitm - old->millitm;
+    return (now->time - old->time) * 1000 + now->millitm - old->millitm;
 }
 
 /*!
