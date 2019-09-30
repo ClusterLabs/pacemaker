@@ -76,7 +76,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
     if (options & pe_print_brief) {
-        pe__rscs_brief_output_html(out, rsc->children, options, TRUE);
+        pe__rscs_brief_output(out, rsc->children, options, TRUE);
 
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
@@ -99,7 +99,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
     if (options & pe_print_brief) {
-        pe__rscs_brief_output_text(out, rsc->children, options, TRUE);
+        pe__rscs_brief_output(out, rsc->children, options, TRUE);
 
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {

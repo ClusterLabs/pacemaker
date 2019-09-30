@@ -701,8 +701,8 @@ node_html(pcmk__output_t *out, va_list args) {
         }
         if (is_set(mon_ops, mon_op_print_brief) && is_set(mon_ops, mon_op_group_by_node)) {
             out->begin_list(out, NULL, NULL, NULL);
-            pe__rscs_brief_output_html(out, node->details->running_rsc,
-                                       print_opts | pe_print_rsconly, FALSE);
+            pe__rscs_brief_output(out, node->details->running_rsc, print_opts | pe_print_rsconly,
+                                  FALSE);
             out->end_list(out);
 
         } else if (is_set(mon_ops, mon_op_group_by_node)) {
@@ -752,8 +752,8 @@ node_text(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, "Resources");
 
             if (is_set(mon_ops, mon_op_print_brief)) {
-                pe__rscs_brief_output_text(out, node->details->running_rsc,
-                                           print_opts | pe_print_rsconly, FALSE);
+                pe__rscs_brief_output(out, node->details->running_rsc,
+                                      print_opts | pe_print_rsconly, FALSE);
             } else {
                 GListPtr gIter2 = NULL;
 

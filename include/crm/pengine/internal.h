@@ -352,10 +352,7 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
-void pe__rscs_brief_output_text(pcmk__output_t *out, GListPtr rsc_list,
-                                long options, gboolean print_all);
-void pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list,
-                                long options, gboolean print_all);
+void pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
 
 node_t *pe_create_node(const char *id, const char *uname, const char *type,

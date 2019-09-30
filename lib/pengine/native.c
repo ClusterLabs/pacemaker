@@ -1420,68 +1420,7 @@ print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
 }
 
 void
-pe__rscs_brief_output_text(pcmk__output_t *out, GListPtr rsc_list,
-                           long options, gboolean print_all)
-{
-    GHashTable *rsc_table = crm_str_table_new();
-    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                     free, destroy_node_table);
-    GHashTableIter hash_iter;
-    char *type = NULL;
-    int *rsc_counter = NULL;
-
-    get_rscs_brief(rsc_list, rsc_table, active_table);
-
-    g_hash_table_iter_init(&hash_iter, rsc_table);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *)&type, (gpointer *)&rsc_counter)) {
-        GHashTableIter hash_iter2;
-        char *node_name = NULL;
-        GHashTable *node_table = NULL;
-        int active_counter_all = 0;
-
-        g_hash_table_iter_init(&hash_iter2, active_table);
-        while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
-            int *active_counter = g_hash_table_lookup(node_table, type);
-
-            if (active_counter == NULL || *active_counter == 0) {
-                continue;
-
-            } else {
-                active_counter_all += *active_counter;
-            }
-
-            if (options & pe_print_rsconly) {
-                node_name = NULL;
-            }
-
-            if (print_all) {
-                pcmk__indented_printf(out, "%d/%d\t(%s):\tActive %s\n", *active_counter,
-                                      rsc_counter ? *rsc_counter : 0, type,
-                                      (*active_counter > 0) && node_name ? node_name : "");
-            } else {
-                pcmk__indented_printf(out, "%d\t(%s):\tActive %s\n", *active_counter, type,
-                                      (*active_counter > 0) && node_name ? node_name : "");
-            }
-        }
-
-        if (print_all && active_counter_all == 0) {
-            pcmk__indented_printf(out, "%d/%d\t(%s):\tActive\n", active_counter_all,
-                                  rsc_counter ? *rsc_counter : 0, type);
-        }
-    }
-
-    if (rsc_table) {
-        g_hash_table_destroy(rsc_table);
-        rsc_table = NULL;
-    }
-    if (active_table) {
-        g_hash_table_destroy(active_table);
-        active_table = NULL;
-    }
-}
-
-void
-pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all)
+pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all)
 {
     GHashTable *rsc_table = crm_str_table_new();
     GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
