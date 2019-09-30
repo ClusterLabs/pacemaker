@@ -131,3 +131,6 @@ void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list ar
 extern GOptionEntry crm_mon_curses_output_entries[];
 #define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
 #endif
+
+pcmk__output_t *crm_mon_mk_xml_output(char **argv);
+#define CRM_MON_SUPPORTED_FORMAT_XML { "xml", crm_mon_mk_xml_output, pcmk__xml_output_entries }

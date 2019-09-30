@@ -47,7 +47,6 @@ static gboolean print_neg_locations(mon_state_t *state, pe_working_set_t *data_s
                                     unsigned int mon_ops, const char *prefix);
 static gboolean print_node_attributes(mon_state_t *state, pe_working_set_t *data_set,
                                       unsigned int mon_ops);
-static void print_cluster_summary_header(mon_state_t *state);
 static void print_cluster_times(mon_state_t *state, pe_working_set_t *data_set);
 static void print_cluster_dc(mon_state_t *state, pe_working_set_t *data_set,
                              unsigned int mon_ops);
@@ -82,11 +81,7 @@ print_resources_heading(mon_state_t *state, unsigned int mon_ops)
     }
 
     /* Print section heading */
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "resources");
-    } else {
-        state->out->begin_list(state->out, NULL, NULL, "%s", heading);
-    }
+    state->out->begin_list(state->out, NULL, NULL, "%s", heading);
 }
 
 /*!
@@ -432,9 +427,7 @@ print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
     }
 
     /* Print heading */
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "node_history");
-    } else if (operations) {
+    if (operations) {
         state->out->begin_list(state->out, NULL, NULL, "Operations");
     } else {
         state->out->begin_list(state->out, NULL, NULL, "Migration Summary");
@@ -464,11 +457,7 @@ print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set)
     }
 
     /* Print section heading */
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "tickets");
-    } else {
-        state->out->begin_list(state->out, NULL, NULL, "Tickets");
-    }
+    state->out->begin_list(state->out, NULL, NULL, "Tickets");
 
     /* Print each ticket */
     g_hash_table_iter_init(&iter, data_set->tickets);
@@ -507,12 +496,7 @@ print_neg_locations(mon_state_t *state, pe_working_set_t *data_set, unsigned int
             if (node->weight < 0) {
                 if (printed_header == FALSE) {
                     printed_header = TRUE;
-
-                    if (state->output_format == mon_output_xml) {
-                        state->out->begin_list(state->out, NULL, NULL, "bans");
-                    } else {
-                        state->out->begin_list(state->out, NULL, NULL, "Negative Location Constraints");
-                    }
+                    state->out->begin_list(state->out, NULL, NULL, "Negative Location Constraints");
                 }
 
                 state->out->message(state->out, "ban", node, location, mon_ops);
@@ -572,11 +556,7 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
 
             if (printed_header == FALSE) {
                 printed_header = TRUE;
-                if (state->output_format == mon_output_xml) {
-                    state->out->begin_list(state->out, NULL, NULL, "node_attributes");
-                } else {
-                    state->out->begin_list(state->out, NULL, NULL, "Node Attributes");
-                }
+                state->out->begin_list(state->out, NULL, NULL, "Node Attributes");
             }
 
             state->out->message(state->out, "node", data.node, mon_ops, FALSE);
@@ -592,22 +572,6 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
         return TRUE;
     } else {
         return FALSE;
-    }
-}
-
-/*!
- * \internal
- * \brief Print header for cluster summary if needed
- *
- * \param[in] stream     File stream to display output to
- */
-static void
-print_cluster_summary_header(mon_state_t *state)
-{
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "summary");
-    } else {
-        state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
     }
 }
 
@@ -668,7 +632,7 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
 
     if (show & mon_show_stack) {
         if (header_printed == FALSE) {
-            print_cluster_summary_header(state);
+            state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
         state->out->message(state->out, "cluster-stack", stack_s);
@@ -677,7 +641,7 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
     /* Always print DC if none, even if not requested */
     if ((data_set->dc_node == NULL) || (show & mon_show_dc)) {
         if (header_printed == FALSE) {
-            print_cluster_summary_header(state);
+            state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
         print_cluster_dc(state, data_set, mon_ops);
@@ -685,7 +649,7 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
 
     if (show & mon_show_times) {
         if (header_printed == FALSE) {
-            print_cluster_summary_header(state);
+            state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
         print_cluster_times(state, data_set);
@@ -696,7 +660,7 @@ print_cluster_summary(mon_state_t *state, pe_working_set_t *data_set,
         || data_set->blocked_resources
         || is_set(show, mon_show_count)) {
         if (header_printed == FALSE) {
-            print_cluster_summary_header(state);
+            state->out->begin_list(state->out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
         state->out->message(state->out, "cluster-counts", g_list_length(data_set->nodes),
@@ -733,11 +697,7 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
     }
 
     /* Print section heading */
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "failures");
-    } else {
-        state->out->begin_list(state->out, NULL, NULL, "Failed Resource Actions");
-    }
+    state->out->begin_list(state->out, NULL, NULL, "Failed Resource Actions");
 
     /* Print each failed action */
     for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
@@ -853,11 +813,7 @@ print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned i
     }
 
     /* Print section heading */
-    if (state->output_format == mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "fence_history");
-    } else {
-        state->out->begin_list(state->out, NULL, NULL, "Fencing History");
-    }
+    state->out->begin_list(state->out, NULL, NULL, "Fencing History");
 
     stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {

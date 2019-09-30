@@ -89,7 +89,7 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
+    CRM_MON_SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
 
