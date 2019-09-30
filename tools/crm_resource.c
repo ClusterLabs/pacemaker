@@ -223,10 +223,10 @@ static struct crm_option long_options[] = {
     { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
     {
         "validate", no_argument, NULL, 0,
-        "\t\tCall the validate-all action.  There are two different things that can be validated.  One\n"
-        "\t\t\t\tmethod is to validate the resource given by the -r option.  The other method is to validate\n"
-        "\t\t\t\ta not-yet-existing resource.  This method requires the --class, --agent, and --provider\n"
-        "\t\t\t\targuments, plus at least one --option argument."
+        "\t\tValidate resource configuration by calling agent's validate-all action.\n"
+        "\t\t\t\tThe configuration may be specified either by giving an existing\n"
+        "\t\t\t\tresource name with -r, or by specifying --class, --agent, and\n"
+        "\t\t\t\t--provider arguments, along with any number of --option arguments."
     },
     {
         "cleanup", no_argument, NULL, 'C',
