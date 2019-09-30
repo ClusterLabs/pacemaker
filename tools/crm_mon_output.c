@@ -585,11 +585,53 @@ static int
 node_html(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
+    gboolean full = va_arg(args, gboolean);
+
     char *node_name = get_node_display_name(node, mon_ops);
     char *buf = crm_strdup_printf("Node: %s", node_name);
+    int print_opts = get_resource_display_options(mon_ops, mon_output_html);
 
-    out->message(out, "header", 3, buf);
-    out->begin_list(out, NULL, NULL, NULL);
+    if (full) {
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+
+        pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
+
+        if (node->details->standby_onfail && node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "standby", " standby (on-fail)");
+        } else if (node->details->standby && node->details->online) {
+            char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
+            pcmk_create_html_node(item_node, "span", NULL, " standby", s);
+            free(s);
+        } else if (node->details->standby) {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (standby)");
+        } else if (node->details->maintenance && node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "maint", " maintenance");
+        } else if (node->details->maintenance) {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (maintenance)");
+        } else if (node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "online", " online");
+        } else {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
+        }
+        if (is_set(mon_ops, mon_op_print_brief) && is_set(mon_ops, mon_op_group_by_node)) {
+            out->begin_list(out, NULL, NULL, NULL);
+            pe__rscs_brief_output_html(out, node->details->running_rsc,
+                                       print_opts | pe_print_rsconly, FALSE);
+            out->end_list(out);
+
+        } else if (is_set(mon_ops, mon_op_group_by_node)) {
+            GListPtr lpc2 = NULL;
+
+            out->begin_list(out, NULL, NULL, NULL);
+            for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
+                resource_t *rsc = (resource_t *) lpc2->data;
+                out->message(out, crm_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+            }
+            out->end_list(out);
+        }
+    } else {
+        out->begin_list(out, NULL, NULL, "%s", buf);
+    }
 
     free(buf);
     free(node_name);
@@ -600,20 +642,115 @@ static int
 node_text(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
-    char *node_name = get_node_display_name(node, mon_ops);
+    gboolean full = va_arg(args, gboolean);
 
-    out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+    if (full) {
+        const char *node_mode = va_arg(args, const char *);
 
-    free(node_name);
+        char *node_name = get_node_display_name(node, mon_ops);
+        int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+        char *buf = NULL;
+
+        /* Print the node name and status */
+        if (pe__is_guest_node(node)) {
+            buf = crm_strdup_printf("GuestNode %s: %s", node_name, node_mode);
+        } else if (pe__is_remote_node(node)) {
+            buf = crm_strdup_printf("RemoteNode %s: %s", node_name, node_mode);
+        } else {
+            buf = crm_strdup_printf("Node %s: %s", node_name, node_mode);
+        }
+
+        /* If we're grouping by node, print its resources */
+        if (is_set(mon_ops, mon_op_group_by_node)) {
+            out->begin_list(out, NULL, NULL, "%s", buf);
+            out->begin_list(out, NULL, NULL, "Resources");
+
+            if (is_set(mon_ops, mon_op_print_brief)) {
+                pe__rscs_brief_output_text(out, node->details->running_rsc,
+                                           print_opts | pe_print_rsconly, FALSE);
+            } else {
+                GListPtr gIter2 = NULL;
+
+                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+                    resource_t *rsc = (resource_t *) gIter2->data;
+                    out->message(out, crm_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+                }
+            }
+
+            out->end_list(out);
+            out->end_list(out);
+        } else {
+            out->list_item(out, NULL, "%s", buf);
+        }
+
+        free(buf);
+        free(node_name);
+    } else {
+        out->begin_list(out, NULL, NULL, "Node: %s", get_node_display_name(node, mon_ops));
+    }
+
     return 0;
 }
 
 static int
 node_xml(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
+    unsigned int mon_ops __attribute__((unused)) = va_arg(args, unsigned int);
+    gboolean full = va_arg(args, gboolean);
 
-    xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
-    xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+    if (full) {
+        const char *node_type = "unknown";
+        int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+        char *length_s = crm_itoa(g_list_length(node->details->running_rsc));
+
+        switch (node->details->type) {
+            case node_member:
+                node_type = "member";
+                break;
+            case node_remote:
+                node_type = "remote";
+                break;
+            case node_ping:
+                node_type = "ping";
+                break;
+        }
+        pe__name_and_nvpairs_xml(out, true, "node", 13,
+                                 "name", node->details->uname,
+                                 "id", node->details->id,
+                                 "online", node->details->online ? "true" : "false",
+                                 "standby", node->details->standby ? "true" : "false",
+                                 "standby_onfail", node->details->standby_onfail ? "true" : "false",
+                                 "maintenance", node->details->maintenance ? "true" : "false",
+                                 "pending", node->details->pending ? "true" : "false",
+                                 "unclean", node->details->unclean ? "true" : "false",
+                                 "shutdown", node->details->shutdown ? "true" : "false",
+                                 "expected_up", node->details->expected_up ? "true" : "false",
+                                 "is_dc", node->details->is_dc ? "true" : "false",
+                                 "resources_running", length_s,
+                                 "type", node_type);
+
+        if (pe__is_guest_node(node)) {
+            xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
+            xmlSetProp(xml_node, (pcmkXmlStr) "id_as_resource",
+                                 (pcmkXmlStr) node->details->remote_rsc->container->id);
+        }
+
+        if (is_set(mon_ops, mon_op_group_by_node)) {
+            GListPtr lpc = NULL;
+
+            for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
+                resource_t *rsc = (resource_t *) lpc->data;
+                out->message(out, crm_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+            }
+        }
+
+        free(length_s);
+
+        out->end_list(out);
+    } else {
+        xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
+        xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+    }
 
     return 0;
 }

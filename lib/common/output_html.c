@@ -22,6 +22,10 @@
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
+    ".maint { color: blue }\n"
+    ".offline { color: red }\n"
+    ".online { color: green }\n"
+    ".standby { color: orange }\n"
     ".warning { color: red, font-weight: bold }";
 
 static gboolean cgi_output = FALSE;

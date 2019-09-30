@@ -1029,7 +1029,7 @@ print_node_attributes(mon_state_t *state, pe_working_set_t *data_set, unsigned i
                 continue;
             }
 
-            state->out->message(state->out, "node", data.node, mon_ops);
+            state->out->message(state->out, "node", data.node, mon_ops, FALSE);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             state->out->end_list(state->out);
@@ -1321,6 +1321,7 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
     print_cluster_summary(state, data_set, mon_ops, show);
 
     /* Gather node information (and print if in bad state or grouping by node) */
+    state->out->begin_list(state->out, NULL, NULL, "Node List");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
@@ -1375,6 +1376,7 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
                 free(node_name);
                 continue;
             }
+
         } else {
             node_mode = "OFFLINE";
             if (is_not_set(mon_ops, mon_op_group_by_node)) {
@@ -1391,54 +1393,32 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
         }
 
         /* If we get here, node is in bad state, or we're grouping by node */
-
-        /* Print the node name and status */
-        if (pe__is_guest_node(node)) {
-            print_as(state->output_format, "Guest");
-        } else if (pe__is_remote_node(node)) {
-            print_as(state->output_format, "Remote");
-        }
-        print_as(state->output_format, "Node %s: %s\n", node_name, node_mode);
-
-        /* If we're grouping by node, print its resources */
-        if (is_set(mon_ops, mon_op_group_by_node)) {
-            if (is_set(mon_ops, mon_op_print_brief)) {
-                print_rscs_brief(node->details->running_rsc, "\t", print_opts | pe_print_rsconly,
-                                 state->stream, FALSE);
-            } else {
-                GListPtr gIter2 = NULL;
-
-                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                    resource_t *rsc = (resource_t *) gIter2->data;
-
-                    rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, state->stream);
-                }
-            }
-        }
-        free(node_name);
+        state->out->message(state->out, "node", node, mon_ops, TRUE, node_mode);
     }
 
     /* If we're not grouping by node, summarize nodes by status */
     if (online_nodes) {
-        print_as(state->output_format, "Online: [%s ]\n", online_nodes);
+        state->out->list_item(state->out, "Online", "[%s ]", online_nodes);
         free(online_nodes);
     }
     if (offline_nodes) {
-        print_as(state->output_format, "OFFLINE: [%s ]\n", offline_nodes);
+        state->out->list_item(state->out, "OFFLINE", "[%s ]", offline_nodes);
         free(offline_nodes);
     }
     if (online_remote_nodes) {
-        print_as(state->output_format, "RemoteOnline: [%s ]\n", online_remote_nodes);
+        state->out->list_item(state->out, "RemoteOnline", "[%s ]", online_remote_nodes);
         free(online_remote_nodes);
     }
     if (offline_remote_nodes) {
-        print_as(state->output_format, "RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
+        state->out->list_item(state->out, "RemoteOFFLINE", "[%s ]", offline_remote_nodes);
         free(offline_remote_nodes);
     }
     if (online_guest_nodes) {
-        print_as(state->output_format, "GuestOnline: [%s ]\n", online_guest_nodes);
+        state->out->list_item(state->out, "GuestOnline", "[%s ]", online_guest_nodes);
         free(online_guest_nodes);
     }
+
+    state->out->end_list(state->out);
 
     /* Print resources section, if needed */
     print_resources(state, data_set, print_opts, mon_ops);
@@ -1506,55 +1486,12 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
     print_cluster_summary(state, data_set, mon_ops, show);
 
     /*** NODES ***/
-    fprintf(state->stream, "    <nodes>\n");
+    state->out->begin_list(state->out, NULL, NULL, "nodes");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        const char *node_type = "unknown";
-
-        switch (node->details->type) {
-            case node_member:
-                node_type = "member";
-                break;
-            case node_remote:
-                node_type = "remote";
-                break;
-            case node_ping:
-                node_type = "ping";
-                break;
-        }
-
-        fprintf(state->stream, "        <node name=\"%s\" ", node->details->uname);
-        fprintf(state->stream, "id=\"%s\" ", node->details->id);
-        fprintf(state->stream, "online=\"%s\" ", node->details->online ? "true" : "false");
-        fprintf(state->stream, "standby=\"%s\" ", node->details->standby ? "true" : "false");
-        fprintf(state->stream, "standby_onfail=\"%s\" ", node->details->standby_onfail ? "true" : "false");
-        fprintf(state->stream, "maintenance=\"%s\" ", node->details->maintenance ? "true" : "false");
-        fprintf(state->stream, "pending=\"%s\" ", node->details->pending ? "true" : "false");
-        fprintf(state->stream, "unclean=\"%s\" ", node->details->unclean ? "true" : "false");
-        fprintf(state->stream, "shutdown=\"%s\" ", node->details->shutdown ? "true" : "false");
-        fprintf(state->stream, "expected_up=\"%s\" ", node->details->expected_up ? "true" : "false");
-        fprintf(state->stream, "is_dc=\"%s\" ", node->details->is_dc ? "true" : "false");
-        fprintf(state->stream, "resources_running=\"%d\" ", g_list_length(node->details->running_rsc));
-        fprintf(state->stream, "type=\"%s\" ", node_type);
-        if (pe__is_guest_node(node)) {
-            fprintf(state->stream, "id_as_resource=\"%s\" ", node->details->remote_rsc->container->id);
-        }
-
-        if (is_set(mon_ops, mon_op_group_by_node)) {
-            GListPtr lpc2 = NULL;
-
-            fprintf(state->stream, ">\n");
-            for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
-                resource_t *rsc = (resource_t *) lpc2->data;
-
-                rsc->fns->print(rsc, "            ", print_opts | pe_print_rsconly, state->stream);
-            }
-            fprintf(state->stream, "        </node>\n");
-        } else {
-            fprintf(state->stream, "/>\n");
-        }
+        state->out->message(state->out, "node", node, mon_ops, TRUE);
     }
-    fprintf(state->stream, "    </nodes>\n");
+    state->out->end_list(state->out);
 
     /* Print resources section, if needed */
     print_resources(state, data_set, print_opts, mon_ops);
@@ -1619,54 +1556,12 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
     print_cluster_summary(state, data_set, mon_ops, show);
 
     /*** NODE LIST ***/
-
-    fprintf(state->stream, " <hr />\n <h2>Node List</h2>\n");
-    fprintf(state->stream, "<ul>\n");
+    state->out->begin_list(state->out, NULL, NULL, "Node List");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        char *node_name = get_node_display_name(node, mon_ops);
-
-        fprintf(state->stream, "<li>Node: %s: ", node_name);
-        if (node->details->standby_onfail && node->details->online) {
-            fprintf(state->stream, "<font color=\"orange\">standby (on-fail)</font>\n");
-        } else if (node->details->standby && node->details->online) {
-
-            fprintf(state->stream, "<font color=\"orange\">standby%s</font>\n",
-                node->details->running_rsc?" (with active resources)":"");
-        } else if (node->details->standby) {
-            fprintf(state->stream, "<font color=\"red\">OFFLINE (standby)</font>\n");
-        } else if (node->details->maintenance && node->details->online) {
-            fprintf(state->stream, "<font color=\"blue\">maintenance</font>\n");
-        } else if (node->details->maintenance) {
-            fprintf(state->stream, "<font color=\"red\">OFFLINE (maintenance)</font>\n");
-        } else if (node->details->online) {
-            fprintf(state->stream, "<font color=\"green\">online</font>\n");
-        } else {
-            fprintf(state->stream, "<font color=\"red\">OFFLINE</font>\n");
-        }
-        if (is_set(mon_ops, mon_op_print_brief) && is_set(mon_ops, mon_op_group_by_node)) {
-            fprintf(state->stream, "<ul>\n");
-            print_rscs_brief(node->details->running_rsc, NULL, print_opts | pe_print_rsconly,
-                             state->stream, FALSE);
-            fprintf(state->stream, "</ul>\n");
-
-        } else if (is_set(mon_ops, mon_op_group_by_node)) {
-            GListPtr lpc2 = NULL;
-
-            fprintf(state->stream, "<ul>\n");
-            for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
-                resource_t *rsc = (resource_t *) lpc2->data;
-
-                fprintf(state->stream, "<li>");
-                rsc->fns->print(rsc, NULL, print_opts | pe_print_rsconly, state->stream);
-                fprintf(state->stream, "</li>\n");
-            }
-            fprintf(state->stream, "</ul>\n");
-        }
-        fprintf(state->stream, "</li>\n");
-        free(node_name);
+        state->out->message(state->out, "node", node, mon_ops, TRUE);
     }
-    fprintf(state->stream, "</ul>\n");
+    state->out->end_list(state->out);
 
     /* Print resources section, if needed */
     print_resources(state, data_set, print_opts, mon_ops);
