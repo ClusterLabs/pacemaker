@@ -907,6 +907,8 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_ERROR);
     }
 
+    crm_mon_register_messages(out);
+    pe__register_messages(out);
     stonith__register_messages(out);
 
     if (args->version) {
