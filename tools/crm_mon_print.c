@@ -52,7 +52,6 @@ static gboolean add_extra_info(mon_state_t *state, node_t * node, GListPtr rsc_l
 static void print_node_attribute(gpointer name, gpointer user_data);
 static void print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
                                gboolean operations, unsigned int mon_ops);
-static void print_ticket(gpointer name, gpointer value, gpointer user_data);
 static void print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set);
 static void print_neg_locations(mon_state_t *state, pe_working_set_t *data_set,
                                 unsigned int mon_ops, const char *prefix);
@@ -923,17 +922,11 @@ print_node_summary(mon_state_t *state, pe_working_set_t * data_set,
 }
 
 static void
-print_ticket(gpointer name, gpointer value, gpointer user_data)
-{
-    mon_state_t *data = (mon_state_t *) user_data;
-    ticket_t *ticket = (ticket_t *) value;
-
-    data->out->message(data->out, "ticket", ticket);
-}
-
-static void
 print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set)
 {
+    GHashTableIter iter;
+    gpointer key, value;
+
     /* Print section heading */
     if (state->output_format == mon_output_xml) {
         state->out->begin_list(state->out, NULL, NULL, "tickets");
@@ -942,7 +935,11 @@ print_cluster_tickets(mon_state_t *state, pe_working_set_t * data_set)
     }
 
     /* Print each ticket */
-    g_hash_table_foreach(data_set->tickets, print_ticket, state);
+    g_hash_table_iter_init(&iter, data_set->tickets);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        ticket_t *ticket = (ticket_t *) value;
+        state->out->message(state->out, "ticket", ticket);
+    }
 
     /* Close section */
     state->out->end_list(state->out);
