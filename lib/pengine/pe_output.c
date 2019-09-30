@@ -81,10 +81,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
-
-            pcmk__output_create_xml_node(out, "li");
             out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
-            pcmk__output_xml_pop_parent(out);
         }
     }
 
@@ -98,28 +95,21 @@ pe__group_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
     resource_t *rsc = va_arg(args, resource_t *);
-    const char *pre_text = va_arg(args, char *);
-    char *child_text = NULL;
 
-    if (pre_text == NULL) {
-        pre_text = " ";
-    }
+    out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
-    child_text = crm_concat(pre_text, "   ", ' ');
-
-    fprintf(out->dest, "%sResource Group: %s", pre_text, rsc->id);
     if (options & pe_print_brief) {
-        pe__rscs_brief_output_text(out, rsc->children, child_text, options, TRUE);
+        pe__rscs_brief_output_text(out, rsc->children, options, TRUE);
 
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc, child_text);
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
         }
     }
+    out->end_list(out);
 
-    free(child_text);
     return 0;
 }
 

@@ -756,6 +756,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "html", ban_html },
     { "ban", "text", ban_text },
     { "ban", "xml", ban_xml },
+    { "bundle", "console", pe__bundle_text },
     { "cluster-counts", "console", cluster_counts_text },
     { "cluster-counts", "html", cluster_counts_html },
     { "cluster-counts", "text", cluster_counts_text },
@@ -788,6 +789,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-attribute", "html", node_attribute_html },
     { "node-attribute", "text", node_attribute_text },
     { "node-attribute", "xml", node_attribute_xml },
+    { "primitive", "console", pe__resource_text },
     { "stonith-event", "console", stonith_event_console },
     { "ticket", "console", ticket_console },
 
