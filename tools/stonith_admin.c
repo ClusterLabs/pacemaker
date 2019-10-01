@@ -504,6 +504,23 @@ show_last_fenced(pcmk__output_t *out, const char *target)
     out->message(out, "last-fenced", target, when);
 }
 
+static int
+show_metadata(pcmk__output_t *out, stonith_t *st, char *agent, int timeout)
+{
+    char *buffer = NULL;
+    int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
+                                timeout);
+
+    if (rc == pcmk_ok) {
+        out->output_xml(out, "metadata", buffer);
+    } else {
+        out->err(out, "Can't get fence agent meta-data: %s",
+                 pcmk_strerror(rc));
+    }
+    free(buffer);
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
@@ -778,16 +795,7 @@ main(int argc, char **argv)
             rc = handle_level(st, target, options.fence_level, options.devices, action == 'r');
             break;
         case 'M':
-            {
-                char *buffer = NULL;
-
-                rc = st->cmds->metadata(st, st_opt_sync_call, options.agent, NULL,
-                                        &buffer, options.timeout);
-                if (rc == pcmk_ok) {
-                    out->output_xml(out, "metadata", buffer);
-                }
-                free(buffer);
-            }
+            rc = show_metadata(out, st, options.agent, options.timeout);
             break;
         case 'C':
             rc = st->cmds->confirm(st, st_opts, target);
