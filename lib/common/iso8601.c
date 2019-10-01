@@ -546,23 +546,24 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                offset += snprintf(result + offset, DATE_MAX, "%u-W%.2u-%u",
-                                   y, w, d);
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   "%u-W%.2u-%u", y, w, d);
             }
 
         } else if (flags & crm_time_ordinal) { // YYYY-DDD
             uint y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                offset += snprintf(result + offset, DATE_MAX, "%u-%.3u", y, d);
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   "%u-%.3u", y, d);
             }
 
         } else { // YYYY-MM-DD
             uint y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                offset += snprintf(result + offset, DATE_MAX, "%.4u-%.2u-%.2u",
-                                   y, m, d);
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   "%.4u-%.2u-%.2u", y, m, d);
             }
         }
     }
@@ -571,20 +572,21 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         uint h = 0, m = 0, s = 0;
 
         if (offset > 0) {
-            offset += snprintf(result + offset, DATE_MAX, " ");
+            offset += snprintf(result + offset, DATE_MAX - offset, " ");
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            offset += snprintf(result + offset, DATE_MAX, "%.2u:%.2u:%.2u",
-                               h, m, s);
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%.2u:%.2u:%.2u", h, m, s);
         }
 
         if ((flags & crm_time_log_with_timezone) && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
-            offset += snprintf(result + offset, DATE_MAX, " %c%.2u:%.2u",
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               " %c%.2u:%.2u",
                                ((dt->offset < 0)? '-' : '+'), h, m);
         } else {
-            offset += snprintf(result + offset, DATE_MAX, "Z");
+            offset += snprintf(result + offset, DATE_MAX - offset, "Z");
         }
     }
 
