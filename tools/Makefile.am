@@ -24,6 +24,7 @@ endif
 
 EXTRA_DIST		= crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
+			  crm_node.8.inc \
 			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
