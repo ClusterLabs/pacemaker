@@ -8,7 +8,11 @@
 %if 0%{?suse_version} > 0
 %global pcmk_docdir %{_docdir}/%{name}-%{version}
 %else
+%if 0%{?rhel} > 7
+%global pcmk_docdir %{_docdir}/%{name}-doc
+%else
 %global pcmk_docdir %{_docdir}/%{name}
+%endif
 %endif
 
 ## GitHub entity that distributes source (for ease of using a fork)
