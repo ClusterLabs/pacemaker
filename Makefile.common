@@ -73,7 +73,8 @@ HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource ma
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
 	$(AM_V_MAN)if [ -f $(abs_builddir)/$@.inc ]; then			\
 		PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS)	\
-			-h --help-all						\
+			-h --help-all 						\
+			--no-discard-stderr 					\
 			-i $(abs_builddir)/$@.inc $(abs_builddir)/$<		\
 			| sed -e '/.SS "Usage:"/,+3d' > $@ ;			\
 	else									\
