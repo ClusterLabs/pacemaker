@@ -321,7 +321,8 @@ static GOptionEntry addl_entries[] = {
       NULL },
 
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
-      "Run in the background as a daemon",
+      "Run in the background as a daemon.\n"
+      INDENT "Requires at least one of --output-to and --external-agent.",
       NULL },
 
     { "pid-file", 'p', 0, G_OPTION_ARG_FILENAME, &options.pid_file,
@@ -978,10 +979,8 @@ main(int argc, char **argv)
             }
             crm_enable_stderr(FALSE);
 
-            if ((output_format != mon_output_html)
-                && !options.external_agent) {
-                printf ("Looks like you forgot to specify one or more of: "
-                        "--as-html, --external-agent\n");
+            if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
+                printf("--daemonize requires at least one of --output-to and --external-agent\n");
                 return clean_up(CRM_EX_USAGE);
             }
 
