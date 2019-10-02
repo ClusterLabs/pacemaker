@@ -215,65 +215,9 @@ commands, invoke it with the `--help` option.
 ----
 ======
 
-[[s-config-testing-changes]]
-== Testing Your Configuration Changes ==
+See <<s-crm_simulate>> for how to test your changes before committing them to
+the live cluster.
 
-We saw previously how to make a series of changes to a "shadow" copy
-of the configuration.  Before loading the changes back into the
-cluster (e.g. `crm_shadow --commit mytest --force`), it is often
-advisable to simulate the effect of the changes with +crm_simulate+.
-For example:
-      
-----
-# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
-----
-
-This tool uses the same library as the live cluster to show what it
-would have done given the supplied input.  Its output, in addition to
-a significant amount of logging, is stored in two files +tmp.graph+
-and +tmp.dot+. Both files are representations of the same thing: the
-cluster's response to your changes.
-
-The graph file stores the complete transition from the existing cluster state
-to your desired new state, containing a list of all the actions, their
-parameters and their pre-requisites. Because the transition graph is not
-terribly easy to read, the tool also generates a Graphviz
-footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
-dot-file representing the same information.
-
-For information on the options supported by `crm_simulate`, use
-its `--help` option.
-
-.Interpreting the Graphviz output
- * Arrows indicate ordering dependencies
- * Dashed arrows indicate dependencies that are not present in the transition graph
- * Actions with a dashed border of any color do not form part of the transition graph
- * Actions with a green border form part of the transition graph
- * Actions with a red border are ones the cluster would like to execute but cannot run
- * Actions with a blue border are ones the cluster does not feel need to be executed
- * Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph
- * Actions with black text are sent to the executor
- * Resource actions have text of the form pass:[<replaceable>rsc</replaceable>]_pass:[<replaceable>action</replaceable>]_pass:[<replaceable>interval</replaceable>] pass:[<replaceable>node</replaceable>]
- * Any action depending on an action with a red border will not be able to execute. 
- * Loops are _really_ bad. Please report them to the development team. 
-
-=== Small Cluster Transition ===
-
-image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="16cm",height="6cm",align="center"]      
-
-In the above example, it appears that a new node, *pcmk-2*, has come
-online and that the cluster is checking to make sure *rsc1*, *rsc2*
-and *rsc3* are not already running there (Indicated by the
-*rscN_monitor_0* entries).  Once it did that, and assuming the resources
-were not active there, it would have liked to stop *rsc1* and *rsc2*
-on *pcmk-1* and move them to *pcmk-2*.  However, there appears to be
-some problem and the cluster cannot or is not permitted to perform the
-stop actions which implies it also cannot perform the start actions.
-For some reason the cluster does not want to start *rsc3* anywhere.
-
-=== Complex Cluster Transition ===
-
-image::images/Policy-Engine-big.png["Another, slightly more complex, transition graph that you're not expected to be able to read",width="16cm",height="20cm",align="center"]
 
 == Working with CIB Properties ==
 

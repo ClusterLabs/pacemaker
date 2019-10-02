@@ -1,7 +1,9 @@
 :compat-mode: legacy
 = Using Pacemaker Command-Line Tools =
 
+[[s-crm_mon]]
 == Monitor a Cluster with crm_mon ==
+indexterm:[Command-line tool,crm_mon]
 
 The `crm_mon` utility displays the current state of an active cluster. It can
 show the cluster status organized by node or by resource, and can be used in
@@ -59,3 +61,152 @@ As mentioned in an earlier chapter, the DC is the node is where decisions are
 made. The cluster elects a node to be DC as needed. The only significance of
 the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
+
+[[s-crm_simulate]]
+== Simulate Cluster Activity with crm_simulate ==
+indexterm:[Command-line tool,crm_simulate]
+
+The command-line tool `crm_simulate` shows the results of the same logic
+the cluster itself uses to respond to a particular cluster configuration and
+status.
+
+As always, the man page is the primary documentation, and should be consulted
+for further details. This section aims for a better conceptual explanation and
+practical examples.
+
+=== Replaying cluster decision-making logic ===
+
+At any given time, one node in a Pacemaker cluster will be elected DC, and that
+node will run Pacemaker's scheduler to make decisions.
+
+Each time decisions need to be made (a "transition"), the DC will have log
+messages like "Calculated transition ... saving inputs in ..." with a file
+name. You can grab the named file and replay the cluster logic to see why
+particular decisions were made. The file contains the live cluster
+configuration at that moment, so you can also look at it directly to see the
+value of node attributes, etc., at that time.
+
+The simplest usage is (replacing $FILENAME with the actual file name):
+
+.Simulate cluster response to a given CIB
+====
+----
+crm_simulate --simulate --xml-file $FILENAME
+----
+====
+
+That will show the cluster state when the process started, the actions that
+need to be taken ("Transition Summary"), and the resulting cluster state if the
+actions succeed. Most actions will have a brief description of why they were
+required.
+
+The transition inputs may be compressed. `crm_simulate` can handle these
+compressed files directly, though if you want to edit the file, you'll need to
+uncompress it first.
+
+You can do the same simulation for the live cluster configuration at the
+current moment. This is useful mainly when using `crm_shadow` to create a
+sandbox version of the CIB; the `--live-check` option will use the shadow CIB
+if one is in effect.
+
+.Simulate cluster response to current live CIB or shadow CIB
+====
+----
+crm_simulate --simulate --live-check
+----
+====
+
+
+=== Why decisions were made ===
+
+To get further insight into the "why", it gets user-unfriendly very quickly. If
+you add the `--show-scores` option, you will also see all the scores that went
+into the decision-making. The node with the highest cumulative score for a
+resource will run it. You can look for +-INFINITY+ scores in particular to see
+where complete bans came into effect.
+
+You can also add `-VVVV` to get more detailed messages about what's happening
+under the hood. You can add up to two more V's even, but that's usually useful
+only if you're a masochist or tracing through the source code.
+
+=== Visualizing the action sequence ===
+
+Another handy feature is the ability to generate a visual graph of the actions
+needed, using the `--dot-file` option. This relies on the separate Graphviz
+footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
+project.
+
+.Generate a visual graph of cluster actions from a saved CIB
+====
+----
+crm_simulate --simulate --xml-file $FILENAME --dot-file $FILENAME.dot
+dot $FILENAME.dot -Tsvg > $FILENAME.svg
+----
+====
+
++$FILENAME.dot+ will contain a GraphViz representation of the cluster's
+response to your changes, including all actions with their ordering
+dependencies.
+
++$FILENAME.svg+ will be the same information in a standard graphical format
+that you can view in your browser or other app of choice. You could, of course,
+use other `dot` options to generate other formats.
+      
+How to interpret the graphical output:
+
+ * Bubbles indicate actions, and arrows indicate ordering dependencies
+ * Resource actions have text of the form
+   pass:[<replaceable>resource</replaceable>]_pass:[<replaceable>action</replaceable>]_pass:[<replaceable>interval</replaceable>]
+   pass:[<replaceable>node</replaceable>] indicating that the specified action
+   will be executed for the specified resource on the specified node, once if
+   interval is 0 or at specified recurring milliseconds interval otherwise
+ * Actions with black text will be sent to the executor (that is, the
+   appropriate agent will be invoked)
+ * Actions with orange text are "pseudo" actions that the cluster uses
+   internally for ordering but require no real activity
+ * Actions with a solid green border are part of the transition (that is, the
+   cluster will attempt to execute them in the given order -- though a
+   transition can be interrupted by action failure or new events)
+ * Dashed arrows indicate dependencies that are not present in the transition
+   graph
+ * Actions with a dashed border will not be executed. If the dashed border is
+   blue, the cluster does not feel the action needs to be executed. If the
+   dashed border is red, the cluster would like to execute the action but
+   cannot. Any actions depending on an action with a dashed border will not be
+   able to execute. 
+ * Loops should not happen, and should be reported as a bug if found.
+
+.Small Cluster Transition
+====
+image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="1161",height="325",align="center"]      
+====
+
+In the above example, it appears that a new node, *pcmk-2*, has come online and
+that the cluster is checking to make sure *rsc1*, *rsc2* and *rsc3* are not
+already running there (indicated by the *rscN_monitor_0* entries). Once it did
+that, and assuming the resources were not active there, it would have liked to
+stop *rsc1* and *rsc2* on *pcmk-1* and move them to *pcmk-2*. However, there
+appears to be some problem and the cluster cannot or is not permitted to
+perform the stop actions which implies it also cannot perform the start
+actions. For some reason, the cluster does not want to start *rsc3* anywhere.
+
+.Complex Cluster Transition
+====
+image::images/Policy-Engine-big.png["Complex transition graph that you're not expected to be able to read",width="1455",height="1945",align="center"]
+====
+
+=== What-if scenarios ===
+
+You can make changes to the saved or shadow CIB and simulate it again, to see
+how Pacemaker would react differently. You can edit the XML by hand, use
+command-line tools such as `cibadmin` with either a shadow CIB or the
++CIB_file+ environment variable set to the filename, or use higher-level tool
+support (see the man pages of the specific tool you're using for how to perform
+actions on a saved CIB file rather than the live CIB).
+
+You can also inject node failures and/or action failures into the simulation;
+see the `crm_simulate` man page for more details.
+
+This capability is useful when using a shadow CIB to edit the configuration.
+Before committing the changes to the live cluster with `crm_shadow --commit`,
+you can use `crm_simulate` to see how the cluster will react to the changes.
