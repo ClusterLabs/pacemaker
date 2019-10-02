@@ -368,7 +368,6 @@ This capability is useful when using a shadow CIB to edit the configuration.
 Before committing the changes to the live cluster with `crm_shadow --commit`,
 you can use `crm_simulate` to see how the cluster will react to the changes.
 
-
 [[s-attrd_updater]]
 [[s-crm_attribute]]
 == Manage Node Attributes, Cluster Options and Defaults with crm_attribute and attrd_updater ==
@@ -442,3 +441,24 @@ manager), and can be used with saved CIB files and shadow CIBs.
 
 However a transient node attribute is set, it is synchronized between the CIB
 and the attribute manager, on all nodes.
+
+
+== Other Commonly Used Tools ==
+
+Other command-line tools include:
+indexterm:[Command-line tool,crm_failcount]
+indexterm:[Command-line tool,crm_node]
+indexterm:[Command-line tool,crm_report]
+indexterm:[Command-line tool,crm_standby]
+indexterm:[Command-line tool,crm_verify]
+indexterm:[Command-line tool,stonith_admin]
+
+* `crm_failcount`: query or delete resource fail counts
+* `crm_node`: manage cluster nodes
+* `crm_report`: generate a detailed cluster report for bug submissions
+* `crm_resource`: manage cluster resources
+* `crm_standby`: manage standby status of nodes
+* `crm_verify`: validate a CIB
+* `stonith_admin`: manage fencing devices
+
+See the manual pages for details.
