@@ -328,7 +328,7 @@ $(COVHTML): $(COVEMACS)
 coverity-corp: $(COVHTML)
 	$(MAKE) $(AM_MAKEFLAGS) core-clean
 	@echo "Done. See:"
-	@echo "  file://$(abs_builddir)/$(COVHTML)/index.html"
+	@echo "  file://$(COVHTML)/index.html"
 	@echo "When no longer needed, make coverity-clean"
 
 # Remove all outputs regardless of tag

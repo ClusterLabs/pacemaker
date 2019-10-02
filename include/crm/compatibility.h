@@ -13,6 +13,16 @@
 extern "C" {
 #endif
 
+/* This file allows external code that uses Pacemaker libraries to transition
+ * more easily from old APIs to current ones. Any code that compiled with an
+ * earlier API but not with the current API can include this file and have a
+ * good chance of compiling again.
+ *
+ * Everything here is deprecated and will be removed at the next major Pacemaker
+ * release (i.e. 3.0), so it should only be used during a transitionary period
+ * while the external code is being updated to the current API.
+ */
+
 #include <crm/msg_xml.h>
 #include <crm/pengine/pe_types.h> // enum pe_obj_types
 
