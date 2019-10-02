@@ -901,10 +901,133 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    add_output_args();
-    reconcile_output_format(args);
+    if (!args->version) {
+        if (args->quiet) {
+            show &= ~mon_show_times;
+        }
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+        if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            options.mon_ops |= mon_op_fence_connect;
+            /* don't moan as fence_history_level == 1 is default */
+            options.fence_history_level = 0;
+        }
+
+        /* create the cib-object early to be able to do further
+         * decisions based on the cib-source
+         */
+        cib = cib_new();
+
+        if (cib == NULL) {
+            rc = -EINVAL;
+        } else {
+            switch (cib->variant) {
+
+                case cib_native:
+                    /* cib & fencing - everything available */
+                    break;
+
+                case cib_file:
+                    /* Don't try to connect to fencing as we
+                     * either don't have a running cluster or
+                     * the fencing-information would possibly
+                     * not match the cib data from a file.
+                     * As we don't expect cib-updates coming
+                     * in enforce one-shot. */
+                    options.fence_history_level = 0;
+                    options.mon_ops |= mon_op_one_shot;
+                    break;
+
+                case cib_remote:
+                    /* updates coming in but no fencing */
+                    options.fence_history_level = 0;
+                    break;
+
+                case cib_undefined:
+                case cib_database:
+                default:
+                    /* something is odd */
+                    rc = -EINVAL;
+                    crm_err("Invalid cib-source");
+                    break;
+            }
+        }
+
+        switch (options.fence_history_level) {
+            case 3:
+                options.mon_ops |= mon_op_fence_full_history;
+                /* fall through to next lower level */
+            case 2:
+                show |= mon_show_fence_history;
+                /* fall through to next lower level */
+            case 1:
+                options.mon_ops |= mon_op_fence_history;
+                options.mon_ops |= mon_op_fence_connect;
+                break;
+            default:
+                break;
+        }
+
+        if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (output_format == mon_output_console) {
+                output_format = mon_output_plain;
+            }
+
+        } else if (options.daemonize) {
+            if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+                output_format = mon_output_none;
+            }
+            crm_enable_stderr(FALSE);
+
+            if ((output_format != mon_output_html)
+                && !options.external_agent) {
+                printf ("Looks like you forgot to specify one or more of: "
+                        "--as-html, --external-agent\n");
+                return clean_up(CRM_EX_USAGE);
+            }
+
+            if (cib) {
+                /* to be on the safe side don't have cib-object around
+                 * when we are forking
+                 */
+                cib_delete(cib);
+                cib = NULL;
+                crm_make_daemon(crm_system_name, TRUE, options.pid_file);
+                cib = cib_new();
+                if (cib == NULL) {
+                    rc = -EINVAL;
+                }
+                /* otherwise assume we've got the same cib-object we've just destroyed
+                 * in our parent
+                 */
+            }
+
+
+        } else if (output_format == mon_output_console) {
+#if CURSES_ENABLED
+            crm_enable_stderr(FALSE);
+#else
+            options.mon_ops |= mon_op_one_shot;
+            output_format = mon_output_plain;
+            printf("Defaulting to one-shot mode\n");
+            printf("You need to have curses available at compile time to enable console mode\n");
+#endif
+        }
+    }
+
+    reconcile_output_format(args);
+    add_output_args();
+
+    /* Create the output format - output_format must not be changed after this point. */
+    if (args->version && output_format == mon_output_console) {
+        /* Use the text output format here if we are in curses mode but were given
+         * --version.  Displaying version information uses printf, and then we
+         *  immediately exit.  We don't want to initialize curses for that.
+         */
+        rc = pcmk__output_new(&out, "text", args->output_dest, argv);
+    } else {
+        rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    }
+
     if (rc != 0) {
         fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
         return clean_up(CRM_EX_ERROR);
@@ -917,71 +1040,6 @@ main(int argc, char **argv)
     if (args->version) {
         out->version(out, false);
         return clean_up(CRM_EX_OK);
-    }
-
-    if (args->quiet) {
-        show &= ~mon_show_times;
-    }
-
-    if (is_set(options.mon_ops, mon_op_watch_fencing)) {
-        options.mon_ops |= mon_op_fence_connect;
-        /* don't moan as fence_history_level == 1 is default */
-        options.fence_history_level = 0;
-    }
-
-    /* create the cib-object early to be able to do further
-     * decisions based on the cib-source
-     */
-    cib = cib_new();
-
-    if (cib == NULL) {
-        rc = -EINVAL;
-    } else {
-        switch (cib->variant) {
-
-            case cib_native:
-                /* cib & fencing - everything available */
-                break;
-
-            case cib_file:
-                /* Don't try to connect to fencing as we
-                 * either don't have a running cluster or
-                 * the fencing-information would possibly
-                 * not match the cib data from a file.
-                 * As we don't expect cib-updates coming
-                 * in enforce one-shot. */
-                options.fence_history_level = 0;
-                options.mon_ops |= mon_op_one_shot;
-                break;
-
-            case cib_remote:
-                /* updates coming in but no fencing */
-                options.fence_history_level = 0;
-                break;
-
-            case cib_undefined:
-            case cib_database:
-            default:
-                /* something is odd */
-                rc = -EINVAL;
-                crm_err("Invalid cib-source");
-                break;
-        }
-    }
-
-    switch (options.fence_history_level) {
-        case 3:
-            options.mon_ops |= mon_op_fence_full_history;
-            /* fall through to next lower level */
-        case 2:
-            show |= mon_show_fence_history;
-            /* fall through to next lower level */
-        case 1:
-            options.mon_ops |= mon_op_fence_history;
-            options.mon_ops |= mon_op_fence_connect;
-            break;
-        default:
-            break;
     }
 
     /* Extra sanity checks when in CGI mode */
@@ -999,58 +1057,9 @@ main(int argc, char **argv)
     }
 
     /* XML output always prints everything */
-    if (output_format == mon_output_xml) {
+    if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
         show = mon_show_all;
         options.mon_ops |= mon_op_print_timing;
-    }
-
-    if (is_set(options.mon_ops, mon_op_one_shot)) {
-        if (output_format == mon_output_console) {
-            output_format = mon_output_plain;
-        }
-
-    } else if (options.daemonize) {
-        if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
-            output_format = mon_output_none;
-        }
-        crm_enable_stderr(FALSE);
-
-        if ((output_format != mon_output_html)
-            && !options.external_agent) {
-            printf ("Looks like you forgot to specify one or more of: "
-                    "--as-html, --external-agent\n");
-            return clean_up(CRM_EX_USAGE);
-        }
-
-        if (cib) {
-            /* to be on the safe side don't have cib-object around
-             * when we are forking
-             */
-            cib_delete(cib);
-            cib = NULL;
-            crm_make_daemon(crm_system_name, TRUE, options.pid_file);
-            cib = cib_new();
-            if (cib == NULL) {
-                rc = -EINVAL;
-            }
-            /* otherwise assume we've got the same cib-object we've just destroyed
-             * in our parent
-             */
-        }
-
-
-    } else if (output_format == mon_output_console) {
-#if CURSES_ENABLED
-        initscr();
-        cbreak();
-        noecho();
-        crm_enable_stderr(FALSE);
-#else
-        options.mon_ops |= mon_op_one_shot;
-        output_format = mon_output_plain;
-        printf("Defaulting to one-shot mode\n");
-        printf("You need to have curses available at compile time to enable console mode\n");
-#endif
     }
 
     crm_info("Starting %s", crm_system_name);

@@ -62,6 +62,10 @@ curses_init(pcmk__output_t *out) {
 
     priv->parent_q = g_queue_new();
 
+    initscr();
+    cbreak();
+    noecho();
+
     return true;
 }
 
