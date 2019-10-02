@@ -62,6 +62,86 @@ made. The cluster elects a node to be DC as needed. The only significance of
 the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
 
+
+[[s-crm_shadow]]
+== Batch Configuration Changes with crm_shadow ==
+indexterm:[Command-line tool,crm_shadow]
+
+Often, it is desirable to preview the effects of a series of configuration
+changes before updating the live configuration all at once. For this purpose,
+`crm_shadow` creates a "shadow" copy of the configuration and arranges for all
+the command-line tools to use it.
+
+To begin, simply invoke `crm_shadow --create` with a name of your choice,
+and follow the simple on-screen instructions. Shadow copies are identified with
+a name to make it possible to have more than one.
+
+[WARNING]
+====
+Read this section and the on-screen instructions carefully; failure to do so could
+result in destroying the cluster's active configuration!
+====
+      
+.Creating and displaying the active sandbox
+======
+----
+# crm_shadow --create test
+Setting up shadow instance
+Type Ctrl-D to exit the crm_shadow shell
+shadow[test]: 
+shadow[test] # crm_shadow --which
+test
+----
+======
+
+From this point on, all cluster commands will automatically use the shadow copy
+instead of talking to the cluster's active configuration. Once you have
+finished experimenting, you can either make the changes active via the
+`--commit` option, or discard them using the `--delete` option. Again, be sure
+to follow the on-screen instructions carefully!
+      
+For a full list of `crm_shadow` options and commands, invoke it with the
+`--help` option.
+
+.Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
+======
+----
+ shadow[test] # crm_failcount -r rsc_c001n01 -G
+ scope=status  name=fail-count-rsc_c001n01 value=0
+ shadow[test] # crm_standby --node c001n02 -v on
+ shadow[test] # crm_standby --node c001n02 -G
+ scope=nodes  name=standby value=on
+
+ shadow[test] # cibadmin --erase --force
+ shadow[test] # cibadmin --query
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
+   <configuration>
+     <crm_config/>
+     <nodes/>
+     <resources/>
+     <constraints/>
+   </configuration>
+   <status/>
+ </cib>
+  shadow[test] # crm_shadow --delete test --force
+  Now type Ctrl-D to exit the crm_shadow shell
+  shadow[test] # exit
+  # crm_shadow --which
+  No active shadow configuration defined
+  # cibadmin -Q
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="110" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1">
+    <configuration>
+       <crm_config>
+          <cluster_property_set id="cib-bootstrap-options">
+             <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
+             <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
+----
+======
+
+See the next section, <<s-crm_simulate>>, for how to test your changes before
+committing them to the live cluster.
+
+
 [[s-crm_simulate]]
 == Simulate Cluster Activity with crm_simulate ==
 indexterm:[Command-line tool,crm_simulate]

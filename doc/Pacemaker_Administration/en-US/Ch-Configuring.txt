@@ -65,6 +65,9 @@ Or, to change the failure threshold of *my-test-rsc*, one can use:
 Examples of using these tools for specific cases will be given throughout this
 document where appropriate. See the man pages for further details.
 
+See <<s-crm_shadow>> for a way to make a series of changes, then commit them
+all at once to the live cluster.
+
 === Editing the CIB Using XML ===
 
 The most flexible tool for modifying the configuration is Pacemaker's
@@ -138,86 +141,6 @@ See the cibadmin man page for more options.
 Never edit the live +cib.xml+ file directly. Pacemaker will detect such changes
 and refuse to use the configuration.
 ====
-
-[[s-config-sandboxes]]
-== Making Configuration Changes in a Sandbox ==
-
-Often it is desirable to preview the effects of a series of changes
-before updating the configuration all at once. For this purpose, we
-have created `crm_shadow` which creates a
-"shadow" copy of the configuration and arranges for all the command
-line tools to use it.
-
-To begin, simply invoke `crm_shadow --create` with
-the name of a configuration to create footnote:[Shadow copies are
-identified with a name, making it possible to have more than one.],
-and follow the simple on-screen instructions.
-
-[WARNING]
-====
-Read this section and the on-screen instructions carefully; failure to do so could
-result in destroying the cluster's active configuration!
-====
-      
-.Creating and displaying the active sandbox
-======
-----
-# crm_shadow --create test
-Setting up shadow instance
-Type Ctrl-D to exit the crm_shadow shell
-shadow[test]: 
-shadow[test] # crm_shadow --which
-test
-----
-======
-
-From this point on, all cluster commands will automatically use the
-shadow copy instead of talking to the cluster's active configuration.
-Once you have finished experimenting, you can either make the
-changes active via the `--commit` option, or discard them using the `--delete`
-option.  Again, be sure to follow the on-screen instructions carefully!
-      
-For a full list of `crm_shadow` options and
-commands, invoke it with the `--help` option.
-
-.Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
-======
-----
- shadow[test] # crm_failcount -r rsc_c001n01 -G
- scope=status  name=fail-count-rsc_c001n01 value=0
- shadow[test] # crm_standby --node c001n02 -v on
- shadow[test] # crm_standby --node c001n02 -G
- scope=nodes  name=standby value=on
-
- shadow[test] # cibadmin --erase --force
- shadow[test] # cibadmin --query
- <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
-   <configuration>
-     <crm_config/>
-     <nodes/>
-     <resources/>
-     <constraints/>
-   </configuration>
-   <status/>
- </cib>
-  shadow[test] # crm_shadow --delete test --force
-  Now type Ctrl-D to exit the crm_shadow shell
-  shadow[test] # exit
-  # crm_shadow --which
-  No active shadow configuration defined
-  # cibadmin -Q
- <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="110" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1">
-    <configuration>
-       <crm_config>
-          <cluster_property_set id="cib-bootstrap-options">
-             <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
-             <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
-----
-======
-
-See <<s-crm_simulate>> for how to test your changes before committing them to
-the live cluster.
-
 
 == Working with CIB Properties ==
 
