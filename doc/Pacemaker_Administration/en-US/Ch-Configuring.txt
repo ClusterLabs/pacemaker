@@ -1,37 +1,35 @@
 :compat-mode: legacy
 = Configuring Pacemaker =
 
-== How Should the Configuration be Updated? ==
-
-=== General Guidelines ===
-
-Pacemaker's configuration (the CIB) is stored in XML format. Cluster
+Pacemaker's configuration, the CIB, is stored in XML format. Cluster
 administrators have multiple options for modifying the configuration either via
 the XML, or at a more abstract (and easier for humans to understand) level.
 
-Pacemaker reacts to configuration changes as soon as they are saved. Most tools
-provide the ability to batch changes together and commit them at once, rather
-than make a series of small changes, which could cause avoid unnecessary
-actions as Pacemaker responds to each change individually.
+Pacemaker reacts to configuration changes as soon as they are saved.
+Pacemaker's command-line tools and most higher-level tools provide the ability
+to batch changes together and commit them at once, rather than make a series of
+small changes, which could cause avoid unnecessary actions as Pacemaker
+responds to each change individually.
 
-Pacemaker keeps track of revisions to the configuration and will reject any
-update that is older than the current revision. Thus, it is a good idea to
-serialize all changes to the configuration. Avoid attempting simultaneous
-changes, whether on the same node or different nodes, and whether manually or
-using some automated configuration tool.
+Pacemaker tracks revisions to the configuration and will reject any update
+older than the current revision. Thus, it is a good idea to serialize all
+changes to the configuration. Avoid attempting simultaneous changes, whether on
+the same node or different nodes, and whether manually or using some automated
+configuration tool.
 
 [NOTE]
 ====
-It is not necessary to update the configuration on all cluster nodes. All
-changes are immediately synchronized to all active members of the cluster. To
+It is not necessary to update the configuration on all cluster nodes. Pacemaker
+immediately synchronizes changes to all active members of the cluster. To
 reduce bandwidth, the cluster only broadcasts the incremental updates that
-result from your changes and uses MD5 checksums to ensure that each copy is
-completely consistent.
+result from your changes and uses checksums to ensure that each copy is
+consistent.
 ====
 
-=== Higher-level Tools ===
 
-Most users will benefit from using higher-level tools that are provided by
+=== Configuration Using Higher-level Tools ===
+
+Most users will benefit from using higher-level tools provided by
 projects separate from Pacemaker. Some of the most commonly used include the
 crm shell, hawk, and pcs. footnote:[For a list, see "Configuration Tools" at
 https://clusterlabs.org/components.html]
@@ -39,10 +37,11 @@ https://clusterlabs.org/components.html]
 See those projects' documentation for details on how to configure Pacemaker
 using them.
 
-=== Pacemaker's Command-Line Tools ===
+=== Configuration Using Pacemaker's Command-Line Tools ===
 
-Most configuration tasks can be performed without needing any XML knowledge,
-using one of the lower-level command-line tools provided with Pacemaker.
+Pacemaker provides lower-level, command-line tools to manage the cluster. Most
+configuration tasks can be performed with these tools, without needing any XML
+knowledge.
 
 To enable STONITH for example, one could run:
 
@@ -70,6 +69,7 @@ See <<s-cibadmin>> for how to edit the CIB using XML.
 See <<s-crm_shadow>> for a way to make a series of changes, then commit them
 all at once to the live cluster.
 
+
 == Working with CIB Properties ==
 
 Although these fields can be written to by the user, in
@@ -84,7 +84,7 @@ for example +admin_epoch+, one should use:
 
 A complete set of CIB properties will look something like this:
 
-.Attributes set for a cib object
+.XML attributes set for a cib element
 ======
 [source,XML]
 -------
@@ -94,6 +94,7 @@ A complete set of CIB properties will look something like this:
    update-client="crm_attribute" have-quorum="1" dc-uuid="1">
 -------
 ======
+
 
 == Querying and Setting Cluster Options ==
 
