@@ -367,3 +367,78 @@ see the `crm_simulate` man page for more details.
 This capability is useful when using a shadow CIB to edit the configuration.
 Before committing the changes to the live cluster with `crm_shadow --commit`,
 you can use `crm_simulate` to see how the cluster will react to the changes.
+
+
+[[s-attrd_updater]]
+[[s-crm_attribute]]
+== Manage Node Attributes, Cluster Options and Defaults with crm_attribute and attrd_updater ==
+indexterm:[Command-line tool,attrd_updater]
+indexterm:[Command-line tool,crm_attribute]
+
+`crm_attribute` and `attrd_updater` are confusingly similar tools with subtle
+differences.
+
+`attrd_updater` can query and update node attributes. `crm_attribute` can query
+and update not only node attributes, but also cluster options,
+resource defaults, and operation defaults.
+
+To understand the differences, it helps to understand the various types of node
+attribute.
+
+.Types of Node Attributes
+[width="95%",cols="1,1,1,1,1,1",options="header",align="center"]
+|====
+
+|Type
+|Recorded in CIB?
+|Recorded in attribute manager memory?
+|Survive full cluster restart?
+|Manageable by crm_attribute?
+|Manageable by attrd_updater?
+
+|permanent
+|yes
+|no
+|yes
+|yes
+|no
+
+|transient
+|yes
+|yes
+|no
+|yes
+|yes
+
+|private
+|no
+|yes
+|no
+|no
+|yes
+
+|====
+
+As you can see from the table above, `crm_attribute` can manage permanent and
+transient node attributes, while `attrd_updater` can manage transient and
+private node attributes.
+
+The difference between the two tools lies mainly in 'how' they update node
+attributes: `attrd_updater` always contacts the Pacemaker attribute manager
+directly, while `crm_attribute` will contact the attribute manager only for
+transient node attributes, and will instead modify the CIB directly for
+permanent node attributes (and for transient node attributes when unable to
+contact the attribute manager).
+
+By contacting the attribute manager directly, `attrd_updater` can change
+an attribute's "dampening" (whether changes are immediately flushed to the CIB
+or after a specified amount of time, to minimize disk writes for frequent
+changes), set private node attributes (which are never written to the CIB), and
+set attributes for nodes that don't yet exist.
+
+By modifying the CIB directly, `crm_attribute` can set permanent node
+attributes (which are only in the CIB and not managed by the attribute
+manager), and can be used with saved CIB files and shadow CIBs.
+
+However a transient node attribute is set, it is synchronized between the CIB
+and the attribute manager, on all nodes.
