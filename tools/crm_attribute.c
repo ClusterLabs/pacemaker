@@ -115,6 +115,8 @@ main(int argc, char **argv)
     int option_index = 0;
     int is_remote_node = 0;
 
+    bool try_attrd = true;
+
     crm_log_cli_init("crm_attribute");
     crm_set_options(NULL, "<command> -n <attribute> [options]", long_options,
                     "Manage node's attributes and cluster options."
@@ -268,8 +270,15 @@ main(int argc, char **argv)
         attr_name = attr_pattern;
     }
 
-    if (((command == 'v') || (command == 'D') || (command == 'u'))
-        && safe_str_eq(type, XML_CIB_TAG_STATUS)
+    // Only go through attribute manager for transient attributes
+    try_attrd = safe_str_eq(type, XML_CIB_TAG_STATUS);
+
+    // Don't try to contact attribute manager if we're using a file as CIB
+    if (getenv("CIB_file") || getenv("CIB_shadow")) {
+        try_attrd = FALSE;
+    }
+
+    if (((command == 'v') || (command == 'D') || (command == 'u')) && try_attrd
         && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name,
                                             attr_value, type, set_name, NULL, NULL,
                                             is_remote_node?attrd_opt_remote:attrd_opt_none)) {
