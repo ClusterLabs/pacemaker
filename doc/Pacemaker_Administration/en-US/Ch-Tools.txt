@@ -63,6 +63,83 @@ the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
 
 
+[[s-cibadmin]]
+== Edit the CIB XML with cibadmin ==
+indexterm:[Command-line tool,cibadmin]
+
+The most flexible tool for modifying the configuration is Pacemaker's
+`cibadmin` command.  With `cibadmin`, you can query, add, remove, update
+or replace any part of the configuration. All changes take effect immediately,
+so there is no need to perform a reload-like operation.
+
+The simplest way of using `cibadmin` is to use it to save the current
+configuration to a temporary file, edit that file with your favorite
+text or XML editor, and then upload the revised configuration.
+      
+.Safely using an editor to modify the cluster configuration
+======
+--------
+# cibadmin --query > tmp.xml
+# vi tmp.xml
+# cibadmin --replace --xml-file tmp.xml
+--------
+======
+
+Some of the better XML editors can make use of a RELAX NG schema to
+help make sure any changes you make are valid.  The schema describing
+the configuration can be found in +pacemaker.rng+, which may be
+deployed in a location such as +/usr/share/pacemaker+ depending on your
+operating system distribution and how you installed the software.
+
+If you want to modify just one section of the configuration, you can
+query and replace just that section to avoid modifying any others.
+      
+.Safely using an editor to modify only the resources section
+======
+--------
+# cibadmin --query --scope resources > tmp.xml
+# vi tmp.xml
+# cibadmin --replace --scope resources --xml-file tmp.xml
+--------
+======
+
+To quickly delete a part of the configuration, identify the object you wish to
+delete by XML tag and id. For example, you might search the CIB for all
+STONITH-related configuration:
+      
+.Searching for STONITH-related configuration items
+======
+----
+# cibadmin --query | grep stonith
+ <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+ <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+ <primitive id="child_DoFencing" class="stonith" type="external/vmware">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
+----
+======
+
+If you wanted to delete the +primitive+ tag with id +child_DoFencing+,
+you would run:
+
+----
+# cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
+----
+
+See the cibadmin man page for more options.
+
+[IMPORTANT]
+====
+Never edit the live +cib.xml+ file directly. Pacemaker will detect such changes
+and refuse to use the configuration.
+====
+
+
 [[s-crm_shadow]]
 == Batch Configuration Changes with crm_shadow ==
 indexterm:[Command-line tool,crm_shadow]
