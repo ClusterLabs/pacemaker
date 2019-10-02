@@ -112,11 +112,13 @@ dnl ===============================================
 dnl Helpers
 dnl ===============================================
 cc_supports_flag() {
-    local CFLAGS="-Werror $@"
+    save_CFLAGS=$CFLAGS
+    CFLAGS="-Werror $@"
     AC_MSG_CHECKING(whether $CC supports "$@")
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
                       [RC=0; AC_MSG_RESULT(yes)],
                       [RC=1; AC_MSG_RESULT(no)])
+    CFLAGS="$save_CFLAGS"
     return $RC
 }
 
@@ -134,14 +136,6 @@ cc_restore_flags() {
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
-
-dnl Some systems, like Solaris require a custom package name
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
-    [ PKGNAME="$withval" ],
-    [ PKGNAME="LXHAhb" ],
-  )
-AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
     [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
@@ -481,6 +475,8 @@ case "$host_os" in
         ;;
     *solaris*)
         AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
+        # get getpwnam_r declaration right
+        CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
         ;;
     *linux*)
         AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)

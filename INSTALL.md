@@ -3,7 +3,7 @@
 ## Build Dependencies
 * automake 1.11 or later
 * autoconf 2.64 or later
-* bash
+* bash (configuring build alone makes do with POSIX shell)
 * libtool
 * libtool-ltdl-devel
 * libuuid-devel
