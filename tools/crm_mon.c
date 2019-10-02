@@ -777,6 +777,96 @@ build_arg_context(pcmk__common_args_t *args) {
     return context;
 }
 
+/* If certain format options were specified, we want to set some extra
+ * options.  We can just process these like they were given on the
+ * command line.
+ */
+static void
+add_output_args() {
+    GError *error = NULL;
+
+    if (output_format == mon_output_plain) {
+        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_html) {
+        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
+                              g_get_prgname(), options.reconnect_msec/1000)) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_cgi) {
+        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_xml) {
+        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    }
+}
+
+/* Which output format to use could come from two places:  The --as-xml
+ * style arguments we gave in mode_entries above, or the formatted output
+ * arguments added by pcmk__register_formats.  If the latter were used,
+ * output_format will be mon_output_unset.
+ *
+ * Call the callbacks as if those older style arguments were provided so
+ * the various things they do get done.
+ */
+static void
+reconcile_output_format(pcmk__common_args_t *args) {
+    gboolean retval = TRUE;
+    GError *error = NULL;
+
+    if (output_format != mon_output_unset) {
+        return;
+    }
+
+    if (safe_str_eq(args->output_ty, "html")) {
+        retval = as_html_cb("h", args->output_dest, NULL, &error);
+    } else if (safe_str_eq(args->output_ty, "text")) {
+        retval = no_curses_cb("N", NULL, NULL, &error);
+    } else if (safe_str_eq(args->output_ty, "xml")) {
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("xml");
+        output_format = mon_output_xml;
+        options.mon_ops |= mon_op_one_shot;
+    } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("text");
+        output_format = mon_output_plain;
+    } else {
+        /* Neither old nor new arguments were given, so set the default. */
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("console");
+        output_format = mon_output_console;
+    }
+
+    if (!retval) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        clean_up(CRM_EX_USAGE);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -811,92 +901,8 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    /* Which output format to use could come from two places:  The --as-xml
-     * style arguments we gave in mode_entries above, or the formatted output
-     * arguments added by pcmk__register_formats.  If the latter were used,
-     * output_format will be mon_output_unset.
-     *
-     * Call the callbacks as if those older style arguments were provided so
-     * the various things they do get done.
-     */
-    if (output_format == mon_output_unset) {
-        gboolean retval = TRUE;
-
-        g_clear_error(&error);
-
-        /* NOTE:  There is no way to specify CGI mode or simple mode with --output-as.
-         * Those will need to get handled eventually, at which point something else
-         * will need to be added to this block.
-         */
-        if (safe_str_eq(args->output_ty, "html")) {
-            retval = as_html_cb("h", args->output_dest, NULL, &error);
-        } else if (safe_str_eq(args->output_ty, "text")) {
-            retval = no_curses_cb("N", NULL, NULL, &error);
-        } else if (safe_str_eq(args->output_ty, "xml")) {
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
-            }
-
-            args->output_ty = strdup("xml");
-            output_format = mon_output_xml;
-            options.mon_ops |= mon_op_one_shot;
-        } else if (is_set(options.mon_ops, mon_op_one_shot)) {
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
-            }
-
-            args->output_ty = strdup("text");
-            output_format = mon_output_plain;
-        } else {
-            /* Neither old nor new arguments were given, so set the default. */
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
-            }
-
-            args->output_ty = strdup("console");
-            output_format = mon_output_console;
-        }
-
-        if (!retval) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    }
-
-    /* If certain format options were specified, we want to set some extra
-     * options.  We can just process these like they were given on the
-     * command line.
-     */
-    g_clear_error(&error);
-
-    if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
-                              g_get_prgname(), options.reconnect_msec/1000)) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_legacy_xml) {
-        output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    }
+    add_output_args();
+    reconcile_output_format(args);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != 0) {
