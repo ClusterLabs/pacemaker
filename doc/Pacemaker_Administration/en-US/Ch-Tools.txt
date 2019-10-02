@@ -1,7 +1,7 @@
 :compat-mode: legacy
-= Monitoring a Pacemaker Cluster =
+= Using Pacemaker Command-Line Tools =
 
-== Using crm_mon ==
+== Monitor a Cluster with crm_mon ==
 
 The `crm_mon` utility displays the current state of an active cluster. It can
 show the cluster status organized by node or by resource, and can be used in

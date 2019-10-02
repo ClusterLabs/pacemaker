@@ -10,7 +10,7 @@
     <xi:include href="Ch-Installing.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Ch-Cluster.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Ch-Configuring.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Ch-Monitoring.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="Ch-Tools.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Ch-Troubleshooting.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Ch-Upgrading.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Ch-Agents.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
