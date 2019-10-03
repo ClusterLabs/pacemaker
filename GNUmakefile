@@ -343,8 +343,8 @@ coverity-clean:
 
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
-	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:      "
+	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
+	@printf "\n- Diff:\n"
 	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
 
 rc-changes:
