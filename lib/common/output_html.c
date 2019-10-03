@@ -272,8 +272,17 @@ static void
 html_begin_list(pcmk__output_t *out, const char *singular_noun,
                 const char *plural_noun, const char *format, ...) {
     private_data_t *priv = out->priv;
+    xmlNodePtr node = NULL;
 
     CRM_ASSERT(priv != NULL);
+
+    /* If we are already in a list (the queue depth is always at least
+     * one because of the <html> element), first create a <li> element
+     * to hold the <h2> and the new list.
+     */
+    if (g_queue_get_length(priv->parent_q) > 2) {
+        pcmk__output_xml_create_parent(out, "li");
+    }
 
     if (format != NULL) {
         va_list ap;
@@ -289,7 +298,8 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         free(buf);
     }
 
-    pcmk__output_xml_create_parent(out, "ul");
+    node = pcmk__output_xml_create_parent(out, "ul");
+    g_queue_push_tail(priv->parent_q, node);
 }
 
 G_GNUC_PRINTF(3, 4)
@@ -322,7 +332,14 @@ html_end_list(pcmk__output_t *out) {
 
     CRM_ASSERT(priv != NULL);
 
+    /* Remove the <ul> tag. */
     g_queue_pop_tail(priv->parent_q);
+    pcmk__output_xml_pop_parent(out);
+
+    /* Remove the <li> created for nested lists. */
+    if (g_queue_get_length(priv->parent_q) > 2) {
+        pcmk__output_xml_pop_parent(out);
+    }
 }
 
 pcmk__output_t *
