@@ -79,8 +79,6 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
-extern gboolean update_action_states(GListPtr actions);
-
 extern gboolean shutdown_constraints(node_t * node, action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
