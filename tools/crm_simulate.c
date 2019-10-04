@@ -207,7 +207,7 @@ create_action_name(action_t * action)
 
     if (safe_str_eq(action->task, RSC_CANCEL)) {
         prefix = "Cancel ";
-        task = "monitor";       /* TO-DO: Hack! */
+        task = action->cancel_task;
     }
 
     if (action->rsc && action->rsc->clone_name) {
