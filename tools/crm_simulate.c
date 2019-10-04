@@ -196,11 +196,12 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 }
 
 static char *
-create_action_name(action_t * action)
+create_action_name(pe_action_t *action)
 {
     char *action_name = NULL;
-    const char *prefix = NULL;
+    const char *prefix = "";
     const char *action_host = NULL;
+    const char *clone_name = NULL;
     const char *task = action->task;
 
     if (action->node) {
@@ -215,8 +216,11 @@ create_action_name(action_t * action)
     }
 
     if (action->rsc && action->rsc->clone_name) {
+        clone_name = action->rsc->clone_name;
+    }
+
+    if (clone_name) {
         char *key = NULL;
-        const char *name = action->rsc->clone_name;
         const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 
         int interval = crm_parse_int(interval_s, "0");
@@ -228,35 +232,35 @@ create_action_name(action_t * action)
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
-            key = generate_notify_key(name, n_type, n_task);
+            key = generate_notify_key(clone_name, n_type, n_task);
 
         } else {
-            key = generate_op_key(name, task, interval);
+            key = generate_op_key(clone_name, task, interval);
         }
 
         if (action_host) {
-            action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", key, action_host);
+            action_name = crm_strdup_printf("%s%s %s", prefix, key, action_host);
         } else {
-            action_name = crm_strdup_printf("%s%s", prefix ? prefix : "", key);
+            action_name = crm_strdup_printf("%s%s", prefix, key);
         }
         free(key);
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
-        action_name = crm_strdup_printf("%s%s '%s' %s", prefix ? prefix : "", action->task, op, action_host);
+        action_name = crm_strdup_printf("%s%s '%s' %s", prefix, action->task, op, action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix, action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix, action->task, action_host);
 
     } else {
         action_name = crm_strdup_printf("%s", action->uuid);
     }
 
-    if(action_numbers) {
+    if (action_numbers) { // i.e. verbose
         char *with_id = crm_strdup_printf("%s (%d)", action_name, action->id);
 
         free(action_name);
