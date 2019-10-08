@@ -21,6 +21,7 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
+noinst_SCRIPTS		= pcmk_simtimes
 
 EXTRA_DIST		= crm_mon.sysconfig		\
 			  crm_mon.8.inc			\

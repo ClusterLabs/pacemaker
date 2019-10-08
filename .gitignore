@@ -105,6 +105,7 @@ publican.cfg
 /tools/crm_report
 /tools/crm_rule
 /tools/crm_standby
+/tools/pcmk_simtimes
 /tools/report.collector
 /tools/report.common
 
