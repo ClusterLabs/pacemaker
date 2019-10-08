@@ -230,8 +230,8 @@ __xml_private_clean(xml_private_t *p)
     if(p) {
         CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
 
-        free(p->user);
-        p->user = NULL;
+        pcmk__selected_creds_free(p->selected_creds);
+        p->selected_creds = NULL;
 
         if(p->acls) {
             pcmk__free_acls(p->acls);

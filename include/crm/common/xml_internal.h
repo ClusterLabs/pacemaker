@@ -219,4 +219,14 @@ enum pcmk__acl_render_how {
 int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
                             xmlChar **doc_txt_ptr, int *doc_txt_len);
 
+/*!
+ * \internal
+ * \brief Disposal of "selected credentials" context
+ *
+ * \param[in] selected_creds  Context of ACLs unpacking to be free'd
+ *
+ * \see pcmk__selected_creds_init
+ */
+void pcmk__selected_creds_free(char **selected_creds);
+
 #endif

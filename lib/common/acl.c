@@ -156,17 +156,40 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
  * \internal
  * \brief Unpack a user, group, or role subtree of the ACLs section
  *
- * \param[in]     acl_top    XML of entire ACLs section
+ * \param[in]     acl_top    XML of entire ACLs section, or \c NULL in case
+ *                           of in-place (as opposed to iteration-walkthrough,
+ *                           in which context it'd be incorrect) role unpacking
  * \param[in]     acl_entry  XML of ACL element being unpacked
  * \param[in,out] acls       List of ACLs unpacked so far
+ * \param[in]     selected_creds  Context of ACLs unpacking (username, ...)
  *
  * \return New head of (possibly modified) acls
  */
 PCMK__XML_DIRECTLY_RECURSIVE
 static GList *
-__xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
+__xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls,
+                      char **selected_creds)
 {
+
+    const char *tag = crm_element_name(acl_entry);
     xmlNode *child = NULL;
+
+    if (acl_top == NULL && !strcmp(tag, XML_ACL_TAG_ROLE)) {
+        /* pass (we want to consider the role in this in-place context) */
+
+    } else if (!strcmp(tag, XML_ACL_TAG_USER)
+        || !strcmp(tag, XML_ACL_TAG_USERv1)) {
+        const char *id = crm_element_value(acl_entry, XML_ATTR_ID);
+
+        if (id != NULL && !strcmp(id, *selected_creds)) {
+            crm_debug("Unpacking ACLs for user '%s'", id);
+        } else {
+            return acls;
+        }
+
+    } else {
+        return acls;  /* e.g., the role in top-level iteration-walkthrough */
+    }
 
     for (child = __xml_first_child_element(acl_entry); child;
          child = __xml_next_element(child)) {
@@ -197,7 +220,8 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
                         if (role_id && strcmp(ref_role, role_id) == 0) {
                             crm_trace("Unpacking referenced role '%s' in ACL <%s> element",
                                       role_id, crm_element_name(acl_entry));
-                            acls = __xml_acl_parse_entry(acl_top, role, acls);
+                            acls = __xml_acl_parse_entry(NULL, role, acls,
+                                                         selected_creds);
                             break;
                         }
                     }
@@ -268,7 +292,7 @@ pcmk__apply_acl(xmlNode *xml)
 
     if (xml_acl_enabled(xml) == FALSE) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
-                  p->user);
+                  *p->selected_creds);
         return;
     }
 
@@ -317,9 +341,49 @@ pcmk__apply_acl(xmlNode *xml)
         p->flags |= xpf_acl_deny;
         p = xml->doc->_private;
         crm_info("Applied default deny ACL for user '%s' to <%s>",
-                 p->user, crm_element_name(xml));
+                 *p->selected_creds, crm_element_name(xml));
     }
 
+}
+
+void
+pcmk__selected_creds_free(char **selected_creds)
+{
+    char **iter = selected_creds;
+
+    if (selected_creds == NULL) {
+        return;
+    }
+
+    while (*iter != NULL) {
+        free(*iter++);
+    }
+    free(selected_creds);
+}
+
+/*!
+ * \internal
+ * \brief Initialization of "selected credentials" context
+ *
+ * \param[in] user  Username to generate the context of ACLs unpacking from
+ *
+ * \return (Hopefully) initilized context of ACLs unpacking
+ *
+ * \note Up to caller to check there was no OOM condition with return value
+ *       inspection.
+ *
+ * \see pcmk__selected_creds_free
+ */
+static char **
+pcmk__selected_creds_init(const char *user)
+{
+    char **ret = calloc(2, sizeof(char *));
+    CRM_CHECK(ret != NULL, return ret);
+
+    ret[0] = strdup(user);
+    CRM_CHECK(ret[0] != NULL, return ret);
+    /* ret[1] = NULL */
+    return ret;
 }
 
 /*!
@@ -328,7 +392,7 @@ pcmk__apply_acl(xmlNode *xml)
  *
  * \param[in]     source  XML with ACL definitions
  * \param[in,out] target  XML that ACLs will be applied to
- * \param[in]     user    Username whose ACLs need to be unpacked
+ * \param[in]     user    Username that sets the context of ACLs unpacking
  */
 void
 pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
@@ -350,25 +414,18 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
                                          source, LOG_TRACE);
 
-        free(p->user);
-        p->user = strdup(user);
+        pcmk__selected_creds_free(p->selected_creds);
+        p->selected_creds = pcmk__selected_creds_init(user);
+        CRM_ASSERT(p->selected_creds != NULL);
+        CRM_ASSERT(*p->selected_creds != NULL);
 
         if (acls) {
             xmlNode *child = NULL;
 
-            for (child = __xml_first_child_element(acls); child;
-                 child = __xml_next_element(child)) {
-                const char *tag = crm_element_name(child);
-
-                if (!strcmp(tag, XML_ACL_TAG_USER)
-                    || !strcmp(tag, XML_ACL_TAG_USERv1)) {
-                    const char *id = crm_element_value(child, XML_ATTR_ID);
-
-                    if (id && strcmp(id, user) == 0) {
-                        crm_debug("Unpacking ACLs for user '%s'", id);
-                        p->acls = __xml_acl_parse_entry(acls, child, p->acls);
-                    }
-                }
+            for (child = __xml_first_child_element(acls); child != NULL;
+                    child = __xml_next_element(child)) {
+                p->acls = __xml_acl_parse_entry(acls, child, p->acls,
+                                                p->selected_creds);
             }
         }
     }
@@ -678,7 +735,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
         if (docp->acls == NULL) {
             crm_trace("User '%s' without ACLs denied %s access to %s",
-                      docp->user, __xml_acl_to_text(mode), buffer);
+                      *docp->selected_creds, __xml_acl_to_text(mode), buffer);
             pcmk__set_xml_flag(xml, xpf_acl_denied);
             return FALSE;
         }
@@ -703,7 +760,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
             } else if (is_set(p->flags, xpf_acl_deny)) {
                 crm_trace("Parent ACL denies user '%s' %s access to %s",
-                          docp->user, __xml_acl_to_text(mode), buffer);
+                          *docp->selected_creds, __xml_acl_to_text(mode), buffer);
                 pcmk__set_xml_flag(xml, xpf_acl_denied);
                 return FALSE;
             }
@@ -711,7 +768,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         }
 
         crm_trace("Default ACL denies user '%s' %s access to %s",
-                  docp->user, __xml_acl_to_text(mode), buffer);
+                  *docp->selected_creds, __xml_acl_to_text(mode), buffer);
         pcmk__set_xml_flag(xml, xpf_acl_denied);
         return FALSE;
     }

@@ -36,10 +36,20 @@ enum xml_private_flags {
      xpf_lazy        = 0x4000,
 };
 
+/*!
+ * \internal
+ * \brief Custom, per-base-document annotations
+ *
+ * \var char** xml_private_s::selected_creds
+ * List of (abstract at this point) credentials that are relevant
+ * to the currently selected subject.  It is a simple array with
+ * \c NULL as a sentinel.  First item, which is always present,
+ * is a the user name.
+ */
 typedef struct xml_private_s {
         long check;
         uint32_t flags;
-        char *user;
+        char **selected_creds;
         GListPtr acls;
         GListPtr deleted_objs;
 } xml_private_t;
