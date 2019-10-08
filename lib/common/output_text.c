@@ -158,7 +158,7 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
     va_start(ap, format);
 
-    if (fancy) {
+    if (fancy && format) {
         pcmk__indented_vprintf(out, format, ap);
         fprintf(out->dest, ":\n");
     }
