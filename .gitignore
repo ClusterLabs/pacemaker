@@ -84,6 +84,7 @@ tools/crm_error
 tools/crm_mon.service
 tools/crm_mon.upstart
 tools/crm_report
+/tools/pcmk_simtimes
 tools/report.collector
 tools/report.common
 lrmd/regression.py
