@@ -347,8 +347,6 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             } else if (is_set(action->flags, pe_action_pseudo)
                        && (before->type & pe_order_stonith_stop)) {
                 continue;
-            } else if (before->state == pe_link_dup) {
-                continue;
             } else if (before->type == pe_order_none) {
                 continue;
             } else if (is_set(before->action->flags, pe_action_dumped)

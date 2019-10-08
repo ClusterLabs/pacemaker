@@ -2871,6 +2871,11 @@ stage8(pe_working_set_t * data_set)
    );
 */
 
+    /* The following code will de-duplicate action inputs, so nothing past this
+     * should rely on the action input type flags retaining their original
+     * values.
+     */
+
     gIter = data_set->resources;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;

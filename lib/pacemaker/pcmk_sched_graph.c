@@ -1419,32 +1419,31 @@ sort_action_id(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Check whether an action input should be in the transition graph
+ *
+ * \param[in]     action  Action to check
+ * \param[in,out] input   Action input to check
+ *
+ * \return true if input should be in graph, false otherwise
+ * \note This function may not only check an input, but disable it under certian
+ *       circumstances (load or anti-colocation orderings that are not needed).
+ */
 static bool
-check_dump_input(int last_action, pe_action_t *action,
-                 pe_action_wrapper_t *input)
+check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 {
     int type = input->type;
 
     if (input->state == pe_link_dumped) {
         return true;
-
-    } else if (input->state == pe_link_dup) {
-        return false;
     }
 
     type &= ~pe_order_implies_first_printed;
     type &= ~pe_order_implies_then_printed;
     type &= ~pe_order_optional;
 
-    if (last_action == input->action->id) {
-        crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "duplicated",
-                  action->uuid, action->id,
-                  input->action->uuid, input->action->id);
-        input->state = pe_link_dup;
-        return false;
-
-    } else if (input->type == pe_order_none) {
+    if (input->type == pe_order_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "ordering disabled",
                   action->uuid, action->id,
@@ -1602,7 +1601,6 @@ static bool
 graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                pe_action_wrapper_t *input)
 {
-    GListPtr lpc = NULL;
     bool has_loop = false;
 
     if (is_set(input->action->flags, pe_action_tracking)) {
@@ -1616,7 +1614,7 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     }
 
     // Don't need to check inputs that won't be used
-    if (!check_dump_input(-1, action, input)) {
+    if (!check_dump_input(action, input)) {
         return false;
     }
 
@@ -1642,9 +1640,11 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
               init_action->node? init_action->node->details->uname : "");
 
     // Recursively check input itself for loops
-    for (lpc = input->action->actions_before; lpc != NULL; lpc = lpc->next) {
+    for (GList *iter = input->action->actions_before;
+         iter != NULL; iter = iter->next) {
+
         if (graph_has_loop(init_action, input->action,
-                           (pe_action_wrapper_t *) lpc->data)) {
+                           (pe_action_wrapper_t *) iter->data)) {
             // Recursive call already logged a debug message
             has_loop = true;
             goto done;
@@ -1697,29 +1697,77 @@ pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
     return false;
 }
 
-static bool
-should_dump_input(int last_action, pe_action_t *action,
-                  pe_action_wrapper_t *input)
+// Remove duplicate inputs (regardless of flags)
+static void
+deduplicate_inputs(pe_action_t *action)
 {
-    input->state = pe_link_not_dumped;
+    GList *item = NULL;
+    GList *next = NULL;
+    pe_action_wrapper_t *last_input = NULL;
 
-    if (!check_dump_input(last_action, action, input)) {
-        return false;
+    action->actions_before = g_list_sort(action->actions_before,
+                                         sort_action_id);
+    for (item = action->actions_before; item != NULL; item = next) {
+        pe_action_wrapper_t *input = (pe_action_wrapper_t *) item->data;
+
+        next = item->next;
+        if (last_input && (input->action->id == last_input->action->id)) {
+            crm_trace("Input %s (%d) duplicate skipped for action %s (%d)",
+                      input->action->uuid, input->action->id,
+                      action->uuid, action->id);
+
+            /* For the purposes of scheduling, the ordering flags no longer
+             * matter, but crm_simulate looks at certain ones when creating a
+             * dot graph. Combining the flags is sufficient for that purpose.
+             */
+            last_input->type |= input->type;
+            if (input->state == pe_link_dumped) {
+                last_input->state = pe_link_dumped;
+            }
+
+            free(item->data);
+            action->actions_before = g_list_delete_link(action->actions_before,
+                                                        item);
+        } else {
+            last_input = input;
+            input->state = pe_link_not_dumped;
+        }
     }
-    return true;
 }
 
+/*!
+ * \internal
+ * \brief Add an action to the transition graph XML if appropriate
+ *
+ * \param[in] action    Action to possibly add
+ * \param[in] data_set  Cluster working set
+ *
+ * \note This will de-duplicate the action inputs, meaning that the
+ *       pe_action_wrapper_t:type flags can no longer be relied on to retain
+ *       their original settings. That means this MUST be called after stage7()
+ *       is complete, and nothing after this should rely on those type flags.
+ *       (For example, some code looks for type equal to some flag rather than
+ *       whether the flag is set, and some code looks for particular
+ *       combinations of flags -- such code must be done before stage8().)
+ */
 void
-graph_element_from_action(action_t * action, pe_working_set_t * data_set)
+graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
 {
-    GListPtr lpc = NULL;
-    int last_action = -1;
+    GList *lpc = NULL;
     int synapse_priority = 0;
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
-    xmlNode *input = NULL;
     xmlNode *xml_action = NULL;
+    pe_action_wrapper_t *input = NULL;
+
+    /* If we haven't already, de-duplicate inputs -- even if we won't be dumping
+     * the action, so that crm_simulate dot graphs don't have duplicates.
+     */
+    if (is_not_set(action->flags, pe_action_dedup)) {
+        deduplicate_inputs(action);
+        set_bit(action->flags, pe_action_dedup);
+    }
 
     if (should_dump_action(action) == FALSE) {
         return;
@@ -1747,22 +1795,14 @@ graph_element_from_action(action_t * action, pe_working_set_t * data_set)
     xml_action = action2xml(action, FALSE, data_set);
     add_node_nocopy(set, crm_element_name(xml_action), xml_action);
 
-    action->actions_before = g_list_sort(action->actions_before, sort_action_id);
-
     for (lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
-        action_wrapper_t *wrapper = (action_wrapper_t *) lpc->data;
+        input = (pe_action_wrapper_t *) lpc->data;
+        if (check_dump_input(action, input)) {
+            xmlNode *input_xml = create_xml_node(in, "trigger");
 
-        if (should_dump_input(last_action, action, wrapper) == FALSE) {
-            continue;
+            input->state = pe_link_dumped;
+            xml_action = action2xml(input->action, TRUE, data_set);
+            add_node_nocopy(input_xml, crm_element_name(xml_action), xml_action);
         }
-
-        wrapper->state = pe_link_dumped;
-        CRM_CHECK(last_action < wrapper->action->id,;
-            );
-        last_action = wrapper->action->id;
-        input = create_xml_node(in, "trigger");
-
-        xml_action = action2xml(wrapper->action, TRUE, data_set);
-        add_node_nocopy(input, crm_element_name(xml_action), xml_action);
     }
 }
