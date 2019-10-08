@@ -72,7 +72,7 @@ function test_assert() {
     printf "* Running: $app - $desc\n" 1>&2
 
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
-    eval $VALGRIND_CMD $cmd 2>&1
+    eval $wrapper $VALGRIND_CMD $cmd 2>&1
     rc=$?
 
     if [ x$cib != x0 ]; then
@@ -486,16 +486,76 @@ function test_dates() {
     test_assert $CRM_EX_OK 0
 }
 
-function test_acl_loop() {
-    local TMPXML
+UPGRADED=0
+TEST_GROUPS=0
 
-    TMPXML="$1"
+function test_acl_loop() {
+    local TMPXML="$1"
 
     # Make sure we're rejecting things for the right reasons
     export PCMK_trace_functions=pcmk__check_acl,pcmk__apply_creation_acl
     export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
+
+    if test $UPGRADED -ne 0; then
+        # we extend access control triples to contain groups just as well,
+        # but only if we actually have means to mock our custom groups, etc.;
+        # unconditionally, to keep the diff'ing logic simple
+        CIB_user=root cibadmin --patch --xml-pipe <<-EOF
+	<diff format="2">
+	  <version>
+	    <source admin_epoch="0" epoch="7" num_updates="0"/>
+	    <target admin_epoch="0" epoch="8" num_updates="0"/>
+	  </version>
+	  <change operation="modify" path="/cib">
+	    <change-list>
+	      <change-attr name="epoch" operation="set" value="8"/>
+	    </change-list>
+	    <change-result>
+	      <cib crm_feature_set="3.2.0" validate-with="pacemaker-3.2" epoch="8" num_updates="0" admin_epoch="0"/>
+	    </change-result>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="4">
+	    <acl_group id="bluehats">
+	      <role id="bluehats-role"/>
+	    </acl_group>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="5">
+	    <acl_group id="redhats">
+	      <role id="redhats-role"/>
+	    </acl_group>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="6">
+	    <acl_target id="poki">
+	      <role id="poki-role"/>
+	    </acl_target>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="13">
+	    <acl_role id="bluehats-role">
+	      <acl_permission id="bluehats-deny" kind="deny" xpath="/cib/configuration/crm_config"/>
+	    </acl_role>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="14">
+	    <acl_role id="redhats-role">
+	      <acl_permission id="redhats-read" kind="read" xpath="//crm_config"/>
+	    </acl_role>
+	  </change>
+	  <change operation="create" path="/cib/configuration/acls" position="15">
+	    <acl_role id="poki-role">
+	      <acl_permission id="poki-write" kind="write" xpath="//crm_config"/>
+	    </acl_role>
+	  </change>
+	</diff>
+	EOF
+        if ldconfig -p | grep -q libnss_wrapper\.so; then
+            TEST_GROUPS=1
+        fi
+    elif test $UPGRADED -ne 0; then
+        echo "warning: forced to skip group-based access control tests"
+        echo "       : install https://cwrap.org/download.html#nss_wrapper"
+        echo "       : so as to suppress this"
+    fi
 
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
@@ -668,6 +728,48 @@ function test_acl_loop() {
     desc="$CIB_user: Replace - delete attribute (allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
+
+    if test $TEST_GROUPS -ne 0; then
+
+        # setup
+        tmp_passwd=$(mktemp cts-cli.XXXXXX)
+        tmp_group=$(mktemp cts-cli.XXXXXX)
+        >${tmp_passwd} cat <<-EOF
+	hacluster:x:65533:65531:hacluster gecos:/tmp/${tmp_passwd}.hacluster:/bin/false
+	root:x:65534:65532:root gecos:/tmp/${tmp_passwd}.root:/bin/false
+	frankenstein:x:1001:1000:frankenstein gecos:/tmp/${tmp_passwd}.frankenstein:/bin/false
+	poki:x:1002:1000:poki gecos:/tmp/${tmp_passwd}.poki:/bin/false
+	EOF
+        >${tmp_group} cat <<-EOF
+	haclient:x:65531:frankenstein,poki
+	root:x:65532:
+	users:x:1000:
+	redhats:x:1001:frankenstein,poki
+	bluehats:x:1002:frankenstein
+	EOF
+        wrapper="env LD_PRELOAD=libnss_wrapper.so
+                     NSS_WRAPPER_PASSWD=${tmp_passwd}
+                     NSS_WRAPPER_GROUP=${tmp_group}"
+                     #NSS_WRAPPER_GROUP=${tmp_group} gdbserver localhost:9999"
+
+        export CIB_user=frankenstein
+        desc="GROUPCOND@$CIB_user: group-based access (Ex. 10), read over deny"
+        cmd="../tools/.libs/lt-cibadmin -Q --scope=crm_config"
+        test_assert $CRM_EX_OK 0
+
+        desc="GROUPCOND@$CIB_user: group-based access, write still denied"
+        cmd="../tools/.libs/lt-crm_attribute -n stonith-enabled -v false"
+        test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+        export CIB_user=poki
+        desc="GROUPCONF@$CIB_user: user- vs. group-based access (Ex. 11), former wins"
+        cmd="../tools/.libs/lt-crm_attribute -n stonith-enabled -v false"
+        test_assert $CRM_EX_OK 0
+
+        unset wrapper
+        rm "${tmp_passwd}" "${tmp_group}"
+
+    fi
 }
 
 function test_acls() {
@@ -736,6 +838,7 @@ EOF
     desc="$CIB_user: Upgrade to latest CIB schema"
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
+    UPGRADED=1
 
     SHADOWPATH="$(crm_shadow --file)"
     # sed -i isn't portable :-(
@@ -1081,6 +1184,10 @@ for t in $tests; do
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
         -e 's/\x1b/\\x1b/' \
         "$TMPFILE" > "${TMPFILE}.$$"
+    if test "$t" = acls && test $TEST_GROUPS -eq 0; then
+        sed -n -e 's/GROUPCOND@/&/;tp' -e 'd' -e ':p' -e 'p;n;bp' \
+            $test_home/cli/regression.acls.exp >> "${TMPFILE}.$$"
+    fi
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
     if [ $do_save -eq 1 ]; then

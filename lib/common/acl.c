@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <grp.h>
 
 #include <libxml/catalog.h>  /* xmlCatalogLoadCatalog */
 #include <libxml/parser.h>
@@ -45,9 +46,16 @@
 
 #define MAX_XPATH_LEN	4096
 
+/* note: this is ABI constrained (upper 2+ bytes are reserved for future use),
+         but more than reasonably enough (see "getconf NGROUPS_MAX"), and
+         using that many groups for a "composable access micromanagement"
+         is likely a wrong apprach towards the goals */
+#define PCMK__ACL_GROUPS_LIMIT  (0xFFFFU - 1)
+
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
         char *xpath;
+        uint16_t group_selector;
 } xml_acl_t;
 
 static void
@@ -68,7 +76,9 @@ pcmk__free_acls(GList *acls)
 }
 
 static GList *
-__xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
+__xml_acl_create(xmlNode *xml, GList *acls, GList **acls_pivot,
+                 enum xml_private_flags mode,
+                 uint16_t group_selector)
 {
     xml_acl_t *acl = NULL;
 
@@ -76,6 +86,13 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
     const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
     const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
+    enum pcmk_acl_cred_type cred_type =
+        (group_selector > 0 && group_selector <= PCMK__ACL_GROUPS_LIMIT)
+            ? PCMK_ACL_CRED_GROUP
+            : group_selector == 0 ? PCMK_ACL_CRED_USER : PCMK_ACL_CRED_UNSET;
+
+    CRM_CHECK(cred_type == PCMK_ACL_CRED_USER
+              || cred_type == PCMK_ACL_CRED_GROUP, return acls);
 
     if (tag == NULL) {
         // @COMPAT rolling upgrades <=1.1.11
@@ -149,7 +166,22 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
                   crm_element_name(xml), acl->xpath);
     }
 
-    return g_list_append(acls, acl);
+    switch (cred_type) {
+        case PCMK_ACL_CRED_USER:
+            acls = g_list_insert_before(acls, *acls_pivot, acl);
+            if (*acls_pivot == NULL) {
+                /* inefficient one-off initialization */
+                *acls_pivot = g_list_last(acls);
+            } else {
+                *acls_pivot = (*acls_pivot)->prev;
+            }
+            return acls;
+        case PCMK_ACL_CRED_GROUP:
+            acl->group_selector = group_selector;
+            return g_list_prepend(acls, acl);
+        default:
+            return acls;
+    }
 }
 
 /*!
@@ -168,23 +200,62 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
 PCMK__XML_DIRECTLY_RECURSIVE
 static GList *
 __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls,
-                      char **selected_creds)
+                      GList **acls_pivot, char **selected_creds)
 {
+    static char **selected_creds_base = NULL;
+    static xmlNode *acl_top_base = NULL;
 
     const char *tag = crm_element_name(acl_entry);
+    size_t selected_creds_offset = 0;
     xmlNode *child = NULL;
+    enum pcmk_acl_cred_type cred_type = PCMK_ACL_CRED_UNSET;
+
+    /* we (ab)use a simple fact that reinitialization is only needed
+       when a new top-level dive (i.e., with unique acl_top pointer)
+       is initialized, hence we can cache the true selcted_creds offset
+       locally as a static variable instead of passing that information
+       throughout the recursion stack */
+    if (acl_top != NULL && acl_top != acl_top_base) {
+        acl_top_base = acl_top;
+        selected_creds_base = selected_creds;
+    }
 
     if (acl_top == NULL && !strcmp(tag, XML_ACL_TAG_ROLE)) {
         /* pass (we want to consider the role in this in-place context) */
 
-    } else if (!strcmp(tag, XML_ACL_TAG_USER)
-        || !strcmp(tag, XML_ACL_TAG_USERv1)) {
+    /* futile arithmetics added so as to suppress GCC complaining about
+       ~ operator applied on what's otherwise tracked as boolean expression */
+    } else if ((cred_type = ~(!!strcmp(tag, XML_ACL_TAG_USER) | 0) & PCMK_ACL_CRED_USER)
+        || (cred_type = ~(!!strcmp(tag, XML_ACL_TAG_USERv1) | 0) & PCMK_ACL_CRED_USER)
+        || (cred_type = ~(!!strcmp(tag, XML_ACL_TAG_GROUP) | 0) & PCMK_ACL_CRED_GROUP)) {
         const char *id = crm_element_value(acl_entry, XML_ATTR_ID);
 
-        if (id != NULL && !strcmp(id, *selected_creds)) {
-            crm_debug("Unpacking ACLs for user '%s'", id);
-        } else {
-            return acls;
+        if (id != NULL) {
+            switch (cred_type) {
+            case PCMK_ACL_CRED_USER:
+                if (!strcmp(id, *selected_creds)) {
+                    crm_debug("Unpacking ACLs for user '%s'", id);
+                } else {
+                    return acls;
+                }
+                break;
+            case PCMK_ACL_CRED_GROUP:
+                while (*++selected_creds != NULL) {
+                    if (!strcmp(id, *selected_creds)) {
+                        id = NULL;  /* denotes "group found" */
+                        break;
+                    }
+                }
+                if (id == NULL) {
+                    crm_debug("Unpacking ACLs for group '%s'",
+                              *selected_creds);
+                } else {
+                    return acls;
+                }
+                break;
+            default:
+                return acls;
+            }
         }
 
     } else {
@@ -204,6 +275,7 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls,
             crm_trace("Unpacking ACL <%s> element", tag);
         }
 
+        selected_creds_offset = selected_creds - selected_creds_base;
         if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0
                    || strcmp(XML_ACL_TAG_ROLE_REFv1, tag) == 0) {
             const char *ref_role = crm_element_value(child, XML_ATTR_ID);
@@ -221,6 +293,7 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls,
                             crm_trace("Unpacking referenced role '%s' in ACL <%s> element",
                                       role_id, crm_element_name(acl_entry));
                             acls = __xml_acl_parse_entry(NULL, role, acls,
+                                                         acls_pivot,
                                                          selected_creds);
                             break;
                         }
@@ -229,13 +302,16 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls,
             }
 
         } else if (strcmp(XML_ACL_TAG_READ, tag) == 0) {
-            acls = __xml_acl_create(child, acls, xpf_acl_read);
+            acls = __xml_acl_create(child, acls, acls_pivot, xpf_acl_read,
+                                    selected_creds_offset);
 
         } else if (strcmp(XML_ACL_TAG_WRITE, tag) == 0) {
-            acls = __xml_acl_create(child, acls, xpf_acl_write);
+            acls = __xml_acl_create(child, acls, acls_pivot, xpf_acl_write,
+                                    selected_creds_offset);
 
         } else if (strcmp(XML_ACL_TAG_DENY, tag) == 0) {
-            acls = __xml_acl_create(child, acls, xpf_acl_deny);
+            acls = __xml_acl_create(child, acls, acls_pivot, xpf_acl_deny,
+                                    selected_creds_offset);
 
         } else {
             crm_warn("Ignoring unknown ACL %s '%s'",
@@ -289,12 +365,18 @@ pcmk__apply_acl(xmlNode *xml)
     GListPtr aIter = NULL;
     xml_private_t *p = xml->doc->_private;
     xmlXPathObjectPtr xpathObj = NULL;
+    enum pcmk_acl_cred_type cred_type;
+    uint16_t group_selector;
 
     if (xml_acl_enabled(xml) == FALSE) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
                   *p->selected_creds);
         return;
     }
+
+    /* no pivot? there were no relevant users matching the current actor */
+    cred_type = (p->acls_pivot == NULL) ? PCMK_ACL_CRED_GROUP
+                                        : PCMK_ACL_CRED_USER;
 
     for (aIter = p->acls; aIter != NULL; aIter = aIter->next) {
         int max = 0, lpc = 0;
@@ -308,8 +390,10 @@ pcmk__apply_acl(xmlNode *xml)
             char *path = xml_get_path(match);
 
             p = match->_private;
-            crm_trace("Applying %s ACL to %s matched by %s",
-                      __xml_acl_to_text(acl->mode), path, acl->xpath);
+            crm_trace("Applying %s ACL to %s matched by %s for %s %s",
+                      __xml_acl_to_text(acl->mode), path, acl->xpath,
+                      acl->group_selector == 0 ? "user" : "group",
+                      p->selected_creds[acl->group_selector]);
 
 #ifdef SUSE_ACL_COMPAT
             if (is_not_set(p->flags, acl->mode)
@@ -325,12 +409,57 @@ pcmk__apply_acl(xmlNode *xml)
                 continue;
             }
 #endif
-            p->flags |= acl->mode;
+            switch (cred_type) {
+                case PCMK_ACL_CRED_USER:
+                    /* simple parallel flagging, pcmk__check_acls decides */
+                    p->flags |= acl->mode;
+                    if (aIter == p->acls_pivot) {
+                        cred_type = PCMK_ACL_CRED_GROUP;
+                    }
+                    break;
+                case PCMK_ACL_CRED_GROUP:
+                    group_selector = 0;
+                    if (p->check & 0xFFFF) {
+                        /* some group already was in effect */
+
+                        /* due to how __xml_acl_mode_test is constructed, we
+                           need to prevent its overriding effect of "deny" */
+                        if (p->flags & (xpf_acl_write | xpf_acl_write)
+                                && p->flags & ~xpf_acl_deny
+                                && acl->mode & xpf_acl_deny) {
+                            p->flags |= acl->mode ^ xpf_acl_deny;
+                            break;
+                        }
+                        /* similarly, we want to track the final cause of
+                           possible "read" & "write" parallel combination
+                           truthfully, i.e., referring to what brought
+                           stronger "write" */
+                        if (acl->mode & (xpf_acl_write | xpf_acl_read)) {
+                            p->flags &= ~xpf_acl_deny;  /* drop it for sure */
+                            if ((p->flags & ~xpf_acl_write
+                                     && acl->mode & xpf_acl_write)
+                                || (p->flags & ~(xpf_acl_write | xpf_acl_read)
+                                     && acl->mode & xpf_acl_read)) {
+                                group_selector = acl->group_selector;
+                            }
+                        }
+                    } else {
+                        group_selector = acl->group_selector;
+                    }
+
+                    p->flags |= acl->mode;
+                    p->check |= group_selector;
+                    break;
+                default:
+                    CRM_ASSERT(false);
+                    break;
+            }
             free(path);
         }
-        crm_trace("Applied %s ACL %s (%d match%s)",
+        crm_trace("Applied %s ACL %s (%d match%s) for %s %s",
                   __xml_acl_to_text(acl->mode), acl->xpath, max,
-                  ((max == 1)? "" : "es"));
+                  ((max == 1)? "" : "es"), acl->group_selector == 0 ? "user" : "group",
+                  p->selected_creds[acl->group_selector]);
         freeXpathObject(xpathObj);
     }
 
@@ -361,6 +490,12 @@ pcmk__selected_creds_free(char **selected_creds)
     free(selected_creds);
 }
 
+/* note: this is ABI constrained (upper 2+ bytes are reserved for future use),
+         but more than reasonably enough (see "getconf NGROUPS_MAX"), and
+         using that many groups for a "composable access micromanagement"
+         is likely a wrong apprach towards the goals */
+#define PCMK__ACL_GROUPS_LIMIT  (0xFFFFU - 1)
+
 /*!
  * \internal
  * \brief Initialization of "selected credentials" context
@@ -377,12 +512,58 @@ pcmk__selected_creds_free(char **selected_creds)
 static char **
 pcmk__selected_creds_init(const char *user)
 {
-    char **ret = calloc(2, sizeof(char *));
+    char *gr_name;
+    struct group *grent;
+    size_t alloced = 1, consumed = 0;
+    /* allocation principle: always silent +1 spare, for terminating NULL */
+    char **ret = calloc(alloced + 1, sizeof(char *)), **ret_aux, **gr_mem;
     CRM_CHECK(ret != NULL, return ret);
 
-    ret[0] = strdup(user);
-    CRM_CHECK(ret[0] != NULL, return ret);
-    /* ret[1] = NULL */
+    *ret = strdup(user);
+    if (*ret == NULL) {
+        pcmk__selected_creds_free(ret);
+        return NULL;
+    }
+    consumed = 1;
+
+    while ((grent = getgrent()) != NULL) {
+        if (grent->gr_mem == NULL) {
+            continue;
+        }
+
+        gr_mem = grent->gr_mem;
+        while (*gr_mem != NULL) {
+            if (!strcmp(user, *gr_mem++)) {
+                if (consumed == PCMK__ACL_GROUPS_LIMIT) {
+                    crm_warn("Hit a hard-coded limit of %ul groups per user,"
+                             " for '%s', ignoring '%s' and beyond)",
+                             PCMK__ACL_GROUPS_LIMIT, user, grent->gr_name);
+                    break;
+                }
+
+                /* dynamic growth of the buffer */
+                if (alloced == consumed) {
+                    alloced *= 2;
+                    ret_aux = realloc(ret, (alloced + 1) * sizeof(char *));
+                    if (ret_aux == NULL) {
+                        pcmk__selected_creds_free(ret);
+                        ret = NULL;
+                        break;
+                    }
+                    ret = ret_aux;
+                }
+
+                gr_name = ret[consumed++] = strdup(grent->gr_name);
+                ret[consumed] = NULL;
+                if (gr_name == NULL) {
+                    pcmk__selected_creds_free(ret);
+                    ret = NULL;
+                    break;
+                }
+            }
+        }
+    }
+    endgrent();
     return ret;
 }
 
@@ -425,9 +606,14 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             for (child = __xml_first_child_element(acls); child != NULL;
                     child = __xml_next_element(child)) {
                 p->acls = __xml_acl_parse_entry(acls, child, p->acls,
+                                                &p->acls_pivot,
                                                 p->selected_creds);
             }
         }
+        /* we unpacked in certain internal-only order, now need
+           to reverse it so that we fulfill our easy-to-consume
+           contract at the outcome */
+        p->acls = g_list_reverse(p->acls);
     }
 #endif
 }

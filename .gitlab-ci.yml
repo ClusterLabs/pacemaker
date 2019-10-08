@@ -71,7 +71,8 @@ stages:
                                 pkgconfig(libxml-2.0)
                                 pkgconfig(libqb)\v>=0.13
                                 pkgconfig(libcpg)"
-  GLOBAL_RPM_REQ_LIBS:          bzip2-libs glib2  # not dragged transitively
+  GLOBAL_RPM_REQ_LIBS:          bzip2-libs glib2
+                                nss-wrapper  # not dragged transitively
 
 .fedora-rawhide-gcc: &fedora-rawhide-gcc-anchor
   <<: *fedora-rawhide-anchor  #extends: .fedora-rawhide

@@ -334,9 +334,12 @@ void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, b
 /* exclusive (should any combination make sense -> explicitly enumerated),
    with intentional symbolic constant duality (easier to adapt to growth) */
 enum pcmk_acl_cred_type {
+#define PCMK_ACL_CRED_UNSET PCMK_ACL_CRED_UNSET
+    PCMK_ACL_CRED_UNSET = 0,
 #define PCMK_ACL_CRED_USER PCMK_ACL_CRED_USER
-    PCMK_ACL_CRED_USER = 1,
-    /* XXX no proper support for groups yet */
+    PCMK_ACL_CRED_USER,
+#define PCMK_ACL_CRED_GROUP PCMK_ACL_CRED_GROUP
+    PCMK_ACL_CRED_GROUP,
 };
 
 /* need to be ORable */

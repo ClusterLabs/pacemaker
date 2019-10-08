@@ -211,7 +211,7 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 
 static int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
-#define XML_PRIVATE_MAGIC (long) 0x81726354
+#define XML_PRIVATE_MAGIC 0x81720000L
 
 static void
 __xml_deleted_obj_free(void *data)
@@ -228,7 +228,9 @@ static void
 __xml_private_clean(xml_private_t *p)
 {
     if(p) {
-        CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
+        /* there may have been group selector assigned, but not 0xFFFF */
+        CRM_ASSERT((p->check & ~0xFFFFL) == XML_PRIVATE_MAGIC);
+        CRM_ASSERT((p->check & 0xFFFFL) != 0xFFFFL);
 
         pcmk__selected_creds_free(p->selected_creds);
         p->selected_creds = NULL;

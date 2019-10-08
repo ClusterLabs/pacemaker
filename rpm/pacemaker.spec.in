@@ -441,6 +441,10 @@ Test framework for cluster-related technologies like Pacemaker
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+## for cts-cli -t acls
+Recommends:    nss_wrapper
+%endif
 BuildArch:     noarch
 
 %description   doc
