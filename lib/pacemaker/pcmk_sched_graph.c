@@ -1436,20 +1436,6 @@ check_dump_input(int last_action, pe_action_t *action,
     type &= ~pe_order_implies_then_printed;
     type &= ~pe_order_optional;
 
-    if (is_not_set(input->type, pe_order_preserve)
-        && action->rsc && action->rsc->fillers
-        && input->action->rsc && input->action->node
-        && input->action->node->details->remote_rsc
-        && (input->action->node->details->remote_rsc->container == action->rsc)) {
-        /* This prevents user-defined ordering constraints between resources
-         * running in a guest node and the resource that defines that node.
-         */
-        crm_warn("Invalid ordering constraint between %s and %s",
-                 input->action->rsc->id, action->rsc->id);
-        input->type = pe_order_none;
-        return false;
-    }
-
     if (last_action == input->action->id) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "duplicated",
@@ -1634,14 +1620,6 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
         return false;
     }
 
-    /* If there's any order like:
-     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
-     * rscA is being migrated from node1 to node2,
-     * while rscB is being migrated from node2 to node1.
-     * There will be potential graph loop.
-     * Break the order "load_stopped_node2" -> "rscA_migrate_to node1".
-     */
-
     if (input->action == init_action) {
         crm_debug("Input loop found in %s@%s ->...-> %s@%s",
                   action->uuid,
@@ -1687,6 +1665,38 @@ done:
     return has_loop;
 }
 
+bool
+pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
+{
+    /* Prevent user-defined ordering constraints between resources
+     * running in a guest node and the resource that defines that node.
+     */
+    if (is_not_set(input->type, pe_order_preserve)
+        && action->rsc && action->rsc->fillers
+        && input->action->rsc && input->action->node
+        && input->action->node->details->remote_rsc
+        && (input->action->node->details->remote_rsc->container == action->rsc)) {
+        crm_warn("Invalid ordering constraint between %s and %s",
+                 input->action->rsc->id, action->rsc->id);
+        return true;
+    }
+
+    /* If there's an order like
+     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
+     *
+     * then rscA is being migrated from node1 to node2, while rscB is being
+     * migrated from node2 to node1. If there would be a graph loop,
+     * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
+     */
+    if ((input->type == pe_order_load) && action->rsc
+        && safe_str_eq(action->task, RSC_MIGRATE)
+        && graph_has_loop(action, action, input)) {
+        return true;
+    }
+
+    return false;
+}
+
 static bool
 should_dump_input(int last_action, pe_action_t *action,
                   pe_action_wrapper_t *input)
@@ -1694,15 +1704,6 @@ should_dump_input(int last_action, pe_action_t *action,
     input->state = pe_link_not_dumped;
 
     if (!check_dump_input(last_action, action, input)) {
-        return false;
-    }
-    if ((input->type == pe_order_load) && action->rsc
-        && safe_str_eq(action->task, RSC_MIGRATE)
-        && graph_has_loop(action, action, input)) {
-        /* Remove orders like the following if they introduce any graph loops:
-         *     "load_stopped_node2" -> "rscA_migrate_to node1"
-         */
-        input->type = pe_order_none;
         return false;
     }
     return true;
