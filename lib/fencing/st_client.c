@@ -811,6 +811,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
+    set_bit(svc_action->flags, SVC_ACTION_NON_BLOCKED);
 
     /* keep retries from executing out of control and free previous results */
     if (is_retry) {
