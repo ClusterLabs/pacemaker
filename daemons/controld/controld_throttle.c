@@ -22,12 +22,15 @@
 
 #include <pacemaker-controld.h>
 
+/* These values don't need to be bits, but these particular values must be kept
+ * for backward compatibility during rolling upgrades.
+ */
 enum throttle_state_e {
-    throttle_extreme = 0x1000,
-    throttle_high = 0x0100,
-    throttle_med  = 0x0010,
-    throttle_low  = 0x0001,
-    throttle_none = 0x0000,
+    throttle_none       = 0x0000,
+    throttle_low        = 0x0001,
+    throttle_med        = 0x0010,
+    throttle_high       = 0x0100,
+    throttle_extreme    = 0x1000,
 };
 
 struct throttle_record_s {
@@ -45,6 +48,19 @@ static float throttle_load_target = 0.0;
 
 static GHashTable *throttle_records = NULL;
 static mainloop_timer_t *throttle_timer = NULL;
+
+static const char *
+load2str(enum throttle_state_e mode)
+{
+    switch (mode) {
+        case throttle_extreme:  return "extreme";
+        case throttle_high:     return "high";
+        case throttle_med:      return "medium";
+        case throttle_low:      return "low";
+        case throttle_none:     return "negligible";
+        default:                return "undetermined";
+    }
+}
 
 #if SUPPORT_PROCFS
 /*!
@@ -283,11 +299,12 @@ throttle_handle_load(float load, const char *desc, int cores)
 static enum throttle_state_e
 throttle_mode(void)
 {
+    enum throttle_state_e mode = throttle_none;
+
 #if SUPPORT_PROCFS
     unsigned int cores;
     float load;
     float thresholds[4];
-    enum throttle_state_e mode = throttle_none;
 
     cores = crm_procfs_num_cores();
     if(throttle_cib_load(&load)) {
@@ -317,7 +334,7 @@ throttle_mode(void)
         /* Can only happen on machines with a low number of cores */
         thresholds[3] = cib_max_cpu * 1.5;
 
-        mode |= throttle_check_thresholds(load, "CIB load", thresholds);
+        mode = throttle_check_thresholds(load, "CIB load", thresholds);
     }
 
     if(throttle_load_target <= 0) {
@@ -326,21 +343,16 @@ throttle_mode(void)
     }
 
     if(throttle_load_avg(&load)) {
-        crm_debug("Current load is %f across %u core(s)", load, cores);
-        mode |= throttle_handle_load(load, "CPU load", cores);
-    }
+        enum throttle_state_e cpu_load;
 
-    if(mode & throttle_extreme) {
-        return throttle_extreme;
-    } else if(mode & throttle_high) {
-        return throttle_high;
-    } else if(mode & throttle_med) {
-        return throttle_med;
-    } else if(mode & throttle_low) {
-        return throttle_low;
+        cpu_load = throttle_handle_load(load, "CPU load", cores);
+        if (cpu_load > mode) {
+            mode = cpu_load;
+        }
+        crm_debug("Current load is %f across %u core(s)", load, cores);
     }
 #endif // SUPPORT_PROCFS
-    return throttle_none;
+    return mode;
 }
 
 static void
@@ -350,7 +362,8 @@ throttle_send_command(enum throttle_state_e mode)
     static enum throttle_state_e last = -1;
 
     if(mode != last) {
-        crm_info("New throttle mode: %.4x (was %.4x)", mode, last);
+        crm_info("New throttle mode: %s load (was %s)",
+                 load2str(mode), load2str(last));
         last = mode;
 
         xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
@@ -517,11 +530,11 @@ void
 throttle_update(xmlNode *xml)
 {
     int max = 0;
-    enum throttle_state_e mode = 0;
+    int mode = 0;
     struct throttle_record_s *r = NULL;
     const char *from = crm_element_value(xml, F_CRM_HOST_FROM);
 
-    crm_element_value_int(xml, F_CRM_THROTTLE_MODE, (int*)&mode);
+    crm_element_value_int(xml, F_CRM_THROTTLE_MODE, &mode);
     crm_element_value_int(xml, F_CRM_THROTTLE_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
@@ -533,8 +546,9 @@ throttle_update(xmlNode *xml)
     }
 
     r->max = max;
-    r->mode = mode;
+    r->mode = (enum throttle_state_e) mode;
 
-    crm_debug("Host %s supports a maximum of %d jobs and throttle mode %.4x.  New job limit is %d",
-              from, max, mode, throttle_get_job_limit(from));
+    crm_debug("Node %s has %s load and supports at most %d jobs; new job limit %d",
+              from, load2str((enum throttle_state_e) mode), max,
+              throttle_get_job_limit(from));
 }
