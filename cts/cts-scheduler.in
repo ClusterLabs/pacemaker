@@ -1092,7 +1092,7 @@ class CtsScheduler(object):
         for arg in argv:
             narg = narg + 1
             if arg == '--run':
-                (argv, self.single_test_args) = (argv[:narg+2], argv[narg+2:])
+                (argv, self.single_test_args) = (argv[:narg+1], argv[narg+1:])
                 break
 
         self.args = parser.parse_args(argv[1:])
