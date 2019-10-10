@@ -15,43 +15,120 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
 #include <crm/attrd.h>
 
-static int command = 0;
+#define SUMMARY "crm_node - Tool for displaying low-level node information"
+
+struct {
+    gboolean corosync;
+    gboolean dangerous_cmd;
+    gboolean force_flag;
+    char command;
+    int nodeid;
+    const char *target_uname;
+} options = {
+    .command = '\0',
+    .force_flag = FALSE
+};
+
+gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+
 static char *pid_s = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",       0, 0, '?', "\tThis text"},
-    {"version",    0, 0, '$', "\tVersion information"  },
-    {"verbose",    0, 0, 'V', "\tIncrease debug output"},
-    {"quiet",      0, 0, 'Q', "\tEssential output only"},
+#define INDENT "                           "
 
-    {"-spacer-",      1, 0, '-', "\nCommands:"},
-    {"name",	      0, 0, 'n', "\tDisplay the name used by the cluster for this node"},
-    {"name-for-id",   1, 0, 'N', "\tDisplay the name used by the cluster for the node with the specified id"},
-    {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
-    {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster"},
-    {"partition",     0, 0, 'p', "Display the members of this partition"},
-    {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
-    {"remove",        1, 0, 'R', "(Advanced) Remove the (stopped) node with the specified name from Pacemaker's configuration and caches"},
-    {"-spacer-",      1, 0, '-', "(the node must already have been removed from the underlying cluster stack configuration)"},
+static GOptionEntry command_entries[] = {
+    { "cluster-id", 'i', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display this node's cluster id",
+      NULL },
+    { "list", 'l', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display all known members (past and present) of this cluster",
+      NULL },
+    { "name", 'n', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the name used by the cluster for this node",
+      NULL },
+    { "partition", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the members of this partition",
+      NULL },
+    { "quorum", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display a 1 if our partition has quorum, 0 if not",
+      NULL },
+    { "name-for-id", 'N', 0, G_OPTION_ARG_CALLBACK, name_cb,
+      "Display the name used by the cluster for the node with the specified ID",
+      "ID" },
+    { "remove", 'R', 0, G_OPTION_ARG_CALLBACK, remove_cb,
+      "(Advanced) Remove the (stopped) node with the specified name from Pacemaker's\n"
+      INDENT "configuration and caches (the node must already have been removed from\n"
+      INDENT "the underlying cluster stack configuration",
+      "NAME" },
 
-    {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
-    {"force",	 0, 0, 'f'},
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "force", 'f', 0, G_OPTION_ARG_NONE, &options.force_flag,
+      NULL,
+      NULL },
 #if SUPPORT_COROSYNC
-    { "corosync",   0, 0, 'C', NULL, pcmk_option_hidden },
+    /* Unused and deprecated */
+    { "corosync", 'C', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.corosync,
+      NULL,
+      NULL },
 #endif
 
     // @TODO add timeout option for when IPC replies are needed
 
-    {0, 0, 0, 0}
+    { NULL }
 };
+
+gboolean
+command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (safe_str_eq("-i", option_name) || safe_str_eq("--cluster-id", option_name)) {
+        options.command = 'i';
+    } else if (safe_str_eq("-l", option_name) || safe_str_eq("--list", option_name)) {
+        options.command = 'l';
+    } else if (safe_str_eq("-n", option_name) || safe_str_eq("--name", option_name)) {
+        options.command = 'n';
+    } else if (safe_str_eq("-p", option_name) || safe_str_eq("--partition", option_name)) {
+        options.command = 'p';
+    } else if (safe_str_eq("-q", option_name) || safe_str_eq("--quorum", option_name)) {
+        options.command = 'q';
+    } else {
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.command = 'N';
+    options.nodeid = crm_parse_int(optarg, NULL);
+    return TRUE;
+}
+
+gboolean
+remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (optarg == NULL) {
+        crm_err("-R option requires an argument");
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
+        return FALSE;
+    }
+
+    options.command = 'R';
+    options.dangerous_cmd = TRUE;
+    options.target_uname = optarg;
+    return TRUE;
+}
 
 /*!
  * \internal
@@ -181,7 +258,7 @@ dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
         goto done;
     }
 
-    switch (command) {
+    switch (options.command) {
         case 'i':
             value = crm_element_value(data, XML_ATTR_ID);
             if (value == NULL) {
@@ -451,18 +528,18 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         uname = crm_element_value(node, "uname");
         state = crm_element_value(node, "state");
 
-        if (command == 'l') {
+        if (options.command == 'l') {
             int id = 0;
 
             crm_element_value_int(node, "id", &id);
             printf("%d %s %s\n", id, (uname? uname : ""), (state? state : ""));
 
         // This is CRM_NODE_MEMBER but we don't want to include cluster header
-        } else if ((command == 'p') && safe_str_eq(state, "member")) {
+        } else if ((options.command == 'p') && safe_str_eq(state, "member")) {
             printf("%s ", (uname? uname : ""));
         }
     }
-    if (command == 'p') {
+    if (options.command == 'p') {
         fprintf(stdout, "\n");
     }
 
@@ -488,93 +565,85 @@ run_pacemakerd_mainloop()
     run_mainloop_and_exit();
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Be less descriptive in output.",
+          NULL },
+
+        { NULL }
+    };
+
+    context = pcmk__build_arg_context(args, NULL);
+
+    /* Add the -q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    pcmk__add_main_args(context, extra_prog_entries);
+
+    pcmk__add_arg_group(context, "commands", "Commands:",
+                        "Show command help", command_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int flag = 0;
-    int argerr = 0;
-    uint32_t nodeid = 0;
-    gboolean force_flag = FALSE;
-    gboolean dangerous_cmd = FALSE;
-    int option_index = 0;
-    const char *target_uname = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
 
     crm_log_cli_init("crm_node");
-    crm_set_options(NULL, "command [options]", long_options,
-                    "Tool for displaying low-level node information");
 
-    while (flag >= 0) {
-        flag = crm_get_option(argc, argv, &option_index);
-        switch (flag) {
-            case -1:
-                break;
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                crm_help(flag, CRM_EX_OK);
-                break;
-            case 'Q':
-                // currently unused
-                break;
-            case 'C':
-                // unused and deprecated
-                break;
-            case 'f':
-                force_flag = TRUE;
-                break;
-            case 'R':
-                command = flag;
-                dangerous_cmd = TRUE;
-                target_uname = optarg;
-                if (optarg == NULL) {
-                    ++argerr;
-                }
-                break;
-            case 'N':
-                command = flag;
-                nodeid = crm_parse_int(optarg, NULL);
-                break;
-            case 'p':
-            case 'q':
-            case 'i':
-            case 'l':
-            case 'n':
-                command = flag;
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    processed_args = pcmk__cmdline_preproc(argc, argv, "NR");
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
     }
 
-    if (optind > argc) {
-        ++argerr;
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
     }
 
-    if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+    if (args->version) {
+        /* FIXME:  When crm_node is converted to use formatted output, this can go. */
+        crm_help('v', CRM_EX_USAGE);
     }
 
-    if (dangerous_cmd && force_flag == FALSE) {
+    if (optind > argc || options.command == 0) {
+        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
+    if (options.dangerous_cmd && options.force_flag == FALSE) {
         fprintf(stderr, "The supplied command is considered dangerous."
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
-        crm_node_exit(CRM_EX_USAGE);
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    switch (command) {
+    switch (options.command) {
         case 'n':
             print_node_name();
             break;
         case 'R':
-            remove_node(target_uname);
+            remove_node(options.target_uname);
             break;
         case 'i':
         case 'q':
         case 'N':
-            run_controller_mainloop(nodeid);
+            run_controller_mainloop(options.nodeid);
             break;
         case 'l':
         case 'p':
@@ -584,7 +653,9 @@ main(int argc, char **argv)
             break;
     }
 
-    fprintf(stderr, "error: Must specify a command option\n");
-    crm_node_exit(CRM_EX_USAGE);
-    return CRM_EX_USAGE;
+done:
+    g_strfreev(processed_args);
+    g_option_context_free(context);
+    crm_node_exit(exit_code);
+    return exit_code;
 }
