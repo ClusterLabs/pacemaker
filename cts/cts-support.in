@@ -23,6 +23,7 @@ CRM_EX_ERROR=1
 CRM_EX_USAGE=64
 
 UNIT_DIR="@systemdsystemunitdir@"
+RUNTIME_UNIT_DIR="@runstatedir@/systemd/system"
 LIBEXEC_DIR="@libexecdir@/pacemaker"
 INIT_DIR="@INITDIR@"
 SBIN_DIR="@sbindir@"
@@ -31,6 +32,8 @@ UPSTART_DIR="/etc/init"
 
 DUMMY_DAEMON="pacemaker-cts-dummyd"
 DUMMY_DAEMON_UNIT="pacemaker-cts-dummyd@.service" 
+COROSYNC_RUNTIME_UNIT="corosync.service.d"
+COROSYNC_RUNTIME_CONF="cts.conf"
 
 LSB_DUMMY="LSBDummy"
 UPSTART_DUMMY="pacemaker-cts-dummyd.conf"
@@ -71,6 +74,12 @@ support_uninstall() {
         systemctl daemon-reload # Ignore failure
     fi
 
+    if [ -e "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT" ]; then
+        echo "Removing $RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT ..."
+        rm -rf "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT"
+        systemctl daemon-reload # Ignore failure
+    fi
+
     for FILE in \
         "$LIBEXEC_DIR/$DUMMY_DAEMON" \
         "$UPSTART_DIR/$UPSTART_DUMMY" \
@@ -104,6 +113,15 @@ support_install() {
 
         echo "Installing $DUMMY_DAEMON_UNIT ..."
         install -m 0644 "$DUMMY_DAEMON_UNIT" "$UNIT_DIR" || return $CRM_EX_ERROR
+        systemctl daemon-reload # Ignore failure
+    fi
+
+    if [ -d "$RUNTIME_UNIT_DIR" ]; then
+
+        echo "Installing $COROSYNC_RUNTIME_CONF to $RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT ..."
+        mkdir -p "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT"
+        install -m 0644 "$COROSYNC_RUNTIME_CONF" "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT" || return $CRM_EX_ERROR
+
         systemctl daemon-reload # Ignore failure
     fi
 
