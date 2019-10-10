@@ -1917,6 +1917,7 @@ AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
 AC_CONFIG_FILES([tools/crm_standby], [chmod +x tools/crm_standby])
 AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
+AC_CONFIG_FILES([tools/pcmk_simtimes], [chmod +x tools/pcmk_simtimes])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \

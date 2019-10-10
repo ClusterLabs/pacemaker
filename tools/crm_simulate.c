@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -42,7 +43,7 @@ extern gboolean bringing_nodes_online;
 char *use_date = NULL;
 
 static void
-get_date(pe_working_set_t * data_set)
+get_date(pe_working_set_t *data_set, bool print_original)
 {
     time_t original_date = 0;
 
@@ -55,16 +56,18 @@ get_date(pe_working_set_t * data_set)
                      crm_time_log_date | crm_time_log_timeofday);
 
 
-    } else if(original_date) {
-        char *when = NULL;
+    } else if (original_date) {
 
         data_set->now = crm_time_new(NULL);
         crm_time_set_timet(data_set->now, &original_date);
 
-        when = crm_time_as_string(data_set->now, crm_time_log_date|crm_time_log_timeofday);
-        printf("Using the original execution date of: %s\n", when);
+        if (print_original) {
+            char *when = crm_time_as_string(data_set->now,
+                            crm_time_log_date|crm_time_log_timeofday);
 
-        free(when);
+            printf("Using the original execution date of: %s\n", when);
+            free(when);
+        }
     }
 }
 
@@ -192,11 +195,12 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 }
 
 static char *
-create_action_name(action_t * action)
+create_action_name(pe_action_t *action)
 {
     char *action_name = NULL;
-    const char *prefix = NULL;
+    const char *prefix = "";
     const char *action_host = NULL;
+    const char *clone_name = NULL;
     const char *task = action->task;
 
     if (action->node) {
@@ -207,12 +211,15 @@ create_action_name(action_t * action)
 
     if (safe_str_eq(action->task, RSC_CANCEL)) {
         prefix = "Cancel ";
-        task = "monitor";       /* TO-DO: Hack! */
+        task = action->cancel_task;
     }
 
     if (action->rsc && action->rsc->clone_name) {
+        clone_name = action->rsc->clone_name;
+    }
+
+    if (clone_name) {
         char *key = NULL;
-        const char *name = action->rsc->clone_name;
         const char *interval_ms_s = NULL;
         guint interval_ms = 0;
 
@@ -227,35 +234,35 @@ create_action_name(action_t * action)
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
-            key = generate_notify_key(name, n_type, n_task);
+            key = generate_notify_key(clone_name, n_type, n_task);
 
         } else {
-            key = generate_op_key(name, task, interval_ms);
+            key = generate_op_key(clone_name, task, interval_ms);
         }
 
         if (action_host) {
-            action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", key, action_host);
+            action_name = crm_strdup_printf("%s%s %s", prefix, key, action_host);
         } else {
-            action_name = crm_strdup_printf("%s%s", prefix ? prefix : "", key);
+            action_name = crm_strdup_printf("%s%s", prefix, key);
         }
         free(key);
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
-        action_name = crm_strdup_printf("%s%s '%s' %s", prefix ? prefix : "", action->task, op, action_host);
+        action_name = crm_strdup_printf("%s%s '%s' %s", prefix, action->task, op, action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix, action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
+        action_name = crm_strdup_printf("%s%s %s", prefix, action->task, action_host);
 
     } else {
         action_name = crm_strdup_printf("%s", action->uuid);
     }
 
-    if(action_numbers) {
+    if (action_numbers) { // i.e. verbose
         char *with_id = crm_strdup_printf("%s (%d)", action_name, action->id);
 
         free(action_name);
@@ -339,8 +346,6 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
                 style = "bold";
             } else if (is_set(action->flags, pe_action_pseudo)
                        && (before->type & pe_order_stonith_stop)) {
-                continue;
-            } else if (before->state == pe_link_dup) {
                 continue;
             } else if (before->type == pe_order_none) {
                 continue;
@@ -457,6 +462,7 @@ static struct crm_option long_options[] = {
     {"show-scores",   0, 0, 's', "Show allocation scores"},
     {"show-utilization",   0, 0, 'U', "Show utilization information"},
     {"profile",       1, 0, 'P', "Run all tests in the named directory to create profiling data"},
+    {"repeat",        1, 0, 'N', "With --profile, repeat each test N times and print timings"},
     {"pending",       0, 0, 'j', "\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
@@ -505,15 +511,21 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 static void
-profile_one(const char *xml_file, pe_working_set_t *data_set)
+profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
 {
     xmlNode *cib_object = NULL;
+    clock_t start = 0;
 
-    printf("* Testing %s\n", xml_file);
+    printf("* Testing %s ...", xml_file);
+    fflush(stdout);
+
     cib_object = filename2xml(xml_file);
+    start = clock();
+
     if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
+
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
@@ -525,10 +537,15 @@ profile_one(const char *xml_file, pe_working_set_t *data_set)
         return;
     }
 
-    data_set->input = cib_object;
-    get_date(data_set);
-    pcmk__schedule_actions(data_set, cib_object, NULL);
-    pe_reset_working_set(data_set);
+    for (int i = 0; i < repeat; ++i) {
+        xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
+
+        data_set->input = input;
+        get_date(data_set, false);
+        pcmk__schedule_actions(data_set, input, NULL);
+        pe_reset_working_set(data_set);
+    }
+    printf(" %.2f secs\n", (clock() - start) / (float) CLOCKS_PER_SEC);
 }
 
 #ifndef FILENAME_MAX
@@ -536,7 +553,7 @@ profile_one(const char *xml_file, pe_working_set_t *data_set)
 #endif
 
 static void
-profile_all(const char *dir, pe_working_set_t *data_set)
+profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
 {
     struct dirent **namelist;
 
@@ -557,7 +574,7 @@ profile_all(const char *dir, pe_working_set_t *data_set)
             }
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_one(buffer, data_set);
+                profile_one(buffer, repeat, data_set);
             }
             free(namelist[file_num]);
         }
@@ -607,10 +624,12 @@ main(int argc, char **argv)
     const char *graph_file = NULL;
     const char *input_file = NULL;
     const char *output_file = NULL;
+    const char *repeat_s = NULL;
 
     int flag = 0;
     int index = 0;
     int argerr = 0;
+    long long repeat = 1;
 
     GListPtr node_up = NULL;
     GListPtr node_down = NULL;
@@ -756,6 +775,9 @@ main(int argc, char **argv)
             case 'P':
                 test_dir = optarg;
                 break;
+            case 'N':
+                repeat_s = optarg;
+                break;
             default:
                 ++argerr;
                 break;
@@ -778,7 +800,15 @@ main(int argc, char **argv)
     }
 
     if (test_dir != NULL) {
-        profile_all(test_dir, data_set);
+        if (repeat_s != NULL) {
+            repeat = crm_int_helper(repeat_s, NULL);
+            if (errno || (repeat < 1)) {
+                fprintf(stderr, "--repeat must be positive integer, not '%s' -- using 1",
+                        repeat_s);
+                repeat = 1;
+            }
+        }
+        profile_all(test_dir, repeat, data_set);
         return CRM_EX_OK;
     }
 
@@ -799,7 +829,7 @@ main(int argc, char **argv)
     }
 
     data_set->input = input;
-    get_date(data_set);
+    get_date(data_set, true);
     if(xml_file) {
         set_bit(data_set->flags, pe_flag_sanitized);
     }
@@ -839,7 +869,7 @@ main(int argc, char **argv)
 
         cleanup_calculations(data_set);
         data_set->input = input;
-        get_date(data_set);
+        get_date(data_set, true);
 
         if(xml_file) {
             set_bit(data_set->flags, pe_flag_sanitized);
@@ -902,7 +932,7 @@ main(int argc, char **argv)
             rc = pcmk_err_generic;
         }
         if(quiet == FALSE) {
-            get_date(data_set);
+            get_date(data_set, true);
 
             quiet_log("\nRevised cluster status:\n");
             set_bit(data_set->flags, pe_flag_stdout);
