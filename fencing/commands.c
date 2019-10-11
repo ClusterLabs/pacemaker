@@ -350,7 +350,7 @@ stonith_device_execute(stonith_device_t * device)
         if (pending_op && pending_op->delay_id) {
             crm_trace
                 ("Operation %s%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 pending_op->action, pending_op->victim ? " for node " : "",
+                 pending_op->action, pending_op->victim ? " targeting " : "",
                  pending_op->victim ? pending_op->victim : "",
                  device->id, pending_op->start_delay);
             continue;
@@ -482,11 +482,15 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling %s on %s for remote peer %s with op id (%s) (timeout=%ds)",
-                  cmd->action, device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
+        crm_debug("Scheduling %s%s%s on %s for remote peer %s with op id (%s) (timeout=%ds)",
+                  cmd->action,
+                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
-        crm_debug("Scheduling %s on %s for %s (timeout=%ds)",
-                  cmd->action, device->id, cmd->client, cmd->timeout);
+        crm_debug("Scheduling %s%s%s on %s for %s (timeout=%ds)",
+                  cmd->action,
+                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  device->id, cmd->client, cmd->timeout);
     }
 
     device->pending_ops = g_list_append(device->pending_ops, cmd);
@@ -508,9 +512,11 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         cmd->start_delay =
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+        crm_notice("Delaying %s%s%s on %s for %dms (timeout=%ds, base=%dms, "
                    "max=%dms)",
-                    cmd->action, device->id, cmd->start_delay, cmd->timeout,
+                    cmd->action,
+                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                    device->id, cmd->start_delay, cmd->timeout,
                     delay_base, delay_max);
         cmd->delay_id =
             g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
