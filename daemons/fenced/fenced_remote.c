@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1829,7 +1831,10 @@ process_remote_stonith_query(xmlNode * msg)
         return -EOPNOTSUPP;
     }
 
-    replies_expected = QB_MIN(op->replies_expected, fencing_active_peers());
+    replies_expected = fencing_active_peers();
+    if (op->replies_expected < replies_expected) {
+        replies_expected = op->replies_expected;
+    }
     if ((++op->replies >= replies_expected) && (op->state == st_query)) {
         have_all_replies = TRUE;
     }
