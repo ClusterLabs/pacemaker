@@ -52,7 +52,7 @@ GOptionEntry pcmk__html_output_entries[] = {
       "URI" },
 
     { "output-title", 0, 0, G_OPTION_ARG_STRING, &title,
-      "Page title (defaults to command line)",
+      "Page title",
       "TITLE" },
 
     { NULL }
