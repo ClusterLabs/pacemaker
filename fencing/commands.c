@@ -329,6 +329,8 @@ stonith_device_execute(stonith_device_t * device)
     stonith_action_t *action = NULL;
     int active_cmds = 0;
     int action_limit = 0;
+    GListPtr gIter = NULL;
+    GListPtr gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return FALSE);
 
@@ -340,24 +342,29 @@ stonith_device_execute(stonith_device_t * device)
         return TRUE;
     }
 
-    if (device->pending_ops) {
-        GList *first = device->pending_ops;
+    for (gIter = device->pending_ops; gIter != NULL; gIter = gIterNext) {
+        async_command_t *pending_op = gIter->data;
 
-        cmd = first->data;
-        if (cmd && cmd->delay_id) {
+        gIterNext = gIter->next;
+
+        if (pending_op && pending_op->delay_id) {
             crm_trace
                 ("Operation %s%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
-                 device->id, cmd->start_delay);
-            return TRUE;
+                 pending_op->action, pending_op->victim ? " for node " : "",
+                 pending_op->victim ? pending_op->victim : "",
+                 device->id, pending_op->start_delay);
+            continue;
         }
 
-        device->pending_ops = g_list_remove_link(device->pending_ops, first);
-        g_list_free_1(first);
+        device->pending_ops = g_list_remove_link(device->pending_ops, gIter);
+        g_list_free_1(gIter);
+
+        cmd = pending_op;
+        break;
     }
 
     if (cmd == NULL) {
-        crm_trace("Nothing further to do for %s", device->id);
+        crm_trace("Nothing further to do for %s for now", device->id);
         return TRUE;
     }
 
