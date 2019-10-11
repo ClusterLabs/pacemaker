@@ -445,6 +445,7 @@ static void
 action_launch_child(svc_action_t *op)
 {
     int lpc;
+    DIR *dir;
 
     /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
      * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
@@ -476,8 +477,29 @@ action_launch_child(svc_action_t *op)
     setpgid(0, 0);
 
     // Close all file descriptors except stdin/stdout/stderr
-    for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
-        close(lpc);
+#if SUPPORT_PROCFS
+    dir = opendir("/proc/self/fd");
+#else
+    dir = opendir("/dev/fd");
+#endif
+    if (dir == NULL) { /* /proc or /dev/fd not available */
+	/* Iterate over all possible fds, might be slow */
+        for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
+            close(lpc);
+        }
+    } else {
+        /* Iterate over fds obtained from /proc or /dev/fd */
+        struct dirent *entry;
+        int dir_fd = dirfd(dir);
+
+        while ((entry = readdir(dir)) != NULL) {
+            lpc = atoi(entry->d_name);
+            if (lpc > STDERR_FILENO && lpc != dir_fd) {
+                close(lpc);
+            }
+        }
+
+        closedir(dir);
     }
 
 #if SUPPORT_CIBSECRETS
