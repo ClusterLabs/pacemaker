@@ -371,16 +371,16 @@ stonith_device_execute(stonith_device_t * device)
     if(safe_str_eq(device->agent, STONITH_WATCHDOG_AGENT)) {
         if(safe_str_eq(cmd->action, "reboot")) {
             pcmk_panic(__FUNCTION__);
-            return TRUE;
+            goto done;
 
         } else if(safe_str_eq(cmd->action, "off")) {
             pcmk_panic(__FUNCTION__);
-            return TRUE;
+            goto done;
 
         } else {
             crm_info("Faking success for %s watchdog operation", cmd->action);
             cmd->done_cb(0, 0, NULL, cmd);
-            return TRUE;
+            goto done;
         }
     }
 
@@ -396,7 +396,7 @@ stonith_device_execute(stonith_device_t * device)
                     "considering resource not configured", device->id);
             exec_rc = PCMK_OCF_NOT_CONFIGURED;
             cmd->done_cb(0, exec_rc, NULL, cmd);
-            return TRUE;
+            goto done;
         }
     }
 #endif
@@ -425,6 +425,14 @@ stonith_device_execute(stonith_device_t * device)
                  device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
         cmd->done_cb(0, exec_rc, NULL, cmd);
+    }
+
+done:
+    /* Device might get triggered to work by multiple fencing commands
+     * simultaneously. Trigger the device again to make sure any
+     * remaining concurrent commands get executed. */
+    if (device->pending_ops && g_list_length(device->pending_ops) > 0) {
+        mainloop_set_trigger(device->work);
     }
     return TRUE;
 }
