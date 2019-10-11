@@ -29,7 +29,7 @@ struct {
     gboolean force_flag;
     char command;
     int nodeid;
-    const char *target_uname;
+    char *target_uname;
 } options = {
     .command = '\0',
     .force_flag = FALSE
@@ -126,7 +126,7 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     options.command = 'R';
     options.dangerous_cmd = TRUE;
-    options.target_uname = optarg;
+    options.target_uname = strdup(optarg);
     return TRUE;
 }
 
