@@ -33,7 +33,8 @@ static void print_resources_closing(mon_state_t *state, gboolean printed_heading
 static gboolean print_resources(mon_state_t *state, pe_working_set_t *data_set,
                                 int print_opts, unsigned int mon_ops);
 static void print_rsc_history(mon_state_t *state, pe_working_set_t *data_set,
-                              node_t *node, xmlNode *rsc_entry, unsigned int mon_ops);
+                              node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
+                              GListPtr op_list);
 static void print_node_history(mon_state_t *state, pe_working_set_t *data_set,
                                xmlNode *node_state, gboolean operations,
                                unsigned int mon_ops);
@@ -189,24 +190,27 @@ print_resources(mon_state_t *state, pe_working_set_t *data_set,
     return TRUE;
 }
 
-static void
-print_failure_summary(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
-                      xmlNode *rsc_entry) {
-    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+static int
+failure_count(pe_working_set_t *data_set, node_t *node, resource_t *rsc, time_t *last_failure) {
+    return rsc ? pe_get_failcount(node, rsc, last_failure, pe_fc_default,
+                                  NULL, data_set)
+               : 0;
+}
 
-    time_t last_failure = 0;
-    int failcount = rsc ?
-                    pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                     NULL, data_set)
-                    : 0;
+static GListPtr
+get_operation_list(xmlNode *rsc_entry) {
+    GListPtr op_list = NULL;
+    xmlNode *rsc_op = NULL;
 
-    if (!failcount && last_failure <= 0) {
-        return;
+    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
+         rsc_op = __xml_next_element(rsc_op)) {
+        if (crm_str_eq((const char *) rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+            op_list = g_list_append(op_list, rsc_op);
+        }
     }
 
-    state->out->message(state->out, "resource-history", rsc, rsc_id, FALSE, failcount, last_failure);
-    state->out->end_list(state->out);
+    op_list = g_list_sort(op_list, sort_op_by_callid);
+    return op_list;
 }
 
 /*!
@@ -220,23 +224,12 @@ print_failure_summary(mon_state_t *state, pe_working_set_t *data_set, node_t *no
  */
 static void
 print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
-                  xmlNode *rsc_entry, unsigned int mon_ops)
+                  xmlNode *rsc_entry, unsigned int mon_ops, GListPtr op_list)
 {
     GListPtr gIter = NULL;
-    GListPtr op_list = NULL;
     gboolean printed = FALSE;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-    xmlNode *rsc_op = NULL;
-
-    /* Create a list of this resource's operations */
-    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
-         rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
-            op_list = g_list_append(op_list, rsc_op);
-        }
-    }
-    op_list = g_list_sort(op_list, sort_op_by_callid);
 
     /* Print each operation */
     for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
@@ -261,10 +254,7 @@ print_rsc_history(mon_state_t *state, pe_working_set_t *data_set, node_t *node,
         /* If this is the first printed operation, print heading for resource */
         if (printed == FALSE) {
             time_t last_failure = 0;
-            int failcount = rsc ?
-                            pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL, data_set)
-                            : 0;
+            int failcount = failure_count(data_set, node, rsc, &last_failure);
 
             state->out->message(state->out, "resource-history", rsc, rsc_id, TRUE, failcount, last_failure);
             printed = TRUE;
@@ -312,15 +302,33 @@ print_node_history(mon_state_t *state, pe_working_set_t *data_set,
              rsc_entry = __xml_next_element(rsc_entry)) {
 
             if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                if (printed_header == FALSE) {
-                    printed_header = TRUE;
-                    state->out->message(state->out, "node", node, mon_ops, FALSE);
-                }
-
                 if (operations == FALSE) {
-                    print_failure_summary(state, data_set, node, rsc_entry);
+                    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+                    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+                    time_t last_failure = 0;
+                    int failcount = failure_count(data_set, node, rsc, &last_failure);
+
+                    if (failcount > 0) {
+                        if (printed_header == FALSE) {
+                            printed_header = TRUE;
+                            state->out->message(state->out, "node", node, mon_ops, FALSE);
+                        }
+
+                        state->out->message(state->out, "resource-history", rsc,
+                                            rsc_id, FALSE, failcount, last_failure);
+                        state->out->end_list(state->out);
+                    }
                 } else {
-                    print_rsc_history(state, data_set, node, rsc_entry, mon_ops);
+                    GListPtr op_list = get_operation_list(rsc_entry);
+
+                    if (printed_header == FALSE) {
+                        printed_header = TRUE;
+                        state->out->message(state->out, "node", node, mon_ops, FALSE);
+                    }
+
+                    if (g_list_length(op_list) > 0) {
+                        print_rsc_history(state, data_set, node, rsc_entry, mon_ops, op_list);
+                    }
                 }
             }
         }
