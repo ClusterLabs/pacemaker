@@ -14,6 +14,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -1086,7 +1087,7 @@ child_timeout_callback(gpointer p)
     return FALSE;
 }
 
-static gboolean
+static bool
 child_waitpid(mainloop_child_t *child, int flags)
 {
     int rc = 0;
@@ -1094,65 +1095,73 @@ child_waitpid(mainloop_child_t *child, int flags)
     int signo = 0;
     int status = 0;
     int exitcode = 0;
+    bool callback_needed = true;
 
     rc = waitpid(child->pid, &status, flags);
-    if(rc == 0) {
-        crm_perror(LOG_DEBUG, "wait(%d) = %d", child->pid, rc);
-        return FALSE;
+    if (rc == 0) { // WNOHANG in flags, and child status is not available
+        crm_trace("Child process %d (%s) still active",
+                  child->pid, child->desc);
+        callback_needed = false;
 
-    } else if(rc != child->pid) {
+    } else if (rc != child->pid) {
+        /* According to POSIX, possible conditions:
+         * - child->pid was non-positive (process group or any child),
+         *   and rc is specific child
+         * - errno ECHILD (pid does not exist or is not child)
+         * - errno EINVAL (invalid flags)
+         * - errno EINTR (caller interrupted by signal)
+         *
+         * @TODO Handle these cases more specifically.
+         */
         signo = SIGCHLD;
         exitcode = 1;
-        status = 1;
-        crm_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
+        crm_notice("Wait for child process %d (%s) interrupted: %s",
+                   child->pid, child->desc, pcmk_strerror(errno));
 
-    } else {
-        crm_trace("Managed process %d exited: %p", child->pid, child);
+    } else if (WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
+        crm_trace("Child process %d (%s) exited with status %d",
+                  child->pid, child->desc, exitcode);
 
-        if (WIFEXITED(status)) {
-            exitcode = WEXITSTATUS(status);
-            crm_trace("Managed process %d (%s) exited with rc=%d", child->pid, child->desc, exitcode);
+    } else if (WIFSIGNALED(status)) {
+        signo = WTERMSIG(status);
+        crm_trace("Child process %d (%s) exited with signal %d (%s)",
+                  child->pid, child->desc, signo, strsignal(signo));
 
-        } else if (WIFSIGNALED(status)) {
-            signo = WTERMSIG(status);
-            crm_trace("Managed process %d (%s) exited with signal=%d", child->pid, child->desc, signo);
-        }
-#ifdef WCOREDUMP
-        if (WCOREDUMP(status)) {
-            core = 1;
-            crm_err("Managed process %d (%s) dumped core", child->pid, child->desc);
-        }
+#ifdef WCOREDUMP // AIX, SunOS, maybe others
+    } else if (WCOREDUMP(status)) {
+        core = 1;
+        crm_err("Child process %d (%s) dumped core",
+                child->pid, child->desc);
 #endif
+
+    } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
+        crm_trace("Child process %d (%s) stopped or continued",
+                  child->pid, child->desc);
+        callback_needed = false;
     }
 
-    if (child->callback) {
+    if (callback_needed && child->callback) {
         child->callback(child, child->pid, core, signo, exitcode);
     }
-    return TRUE;
+    return callback_needed;
 }
 
 static void
 child_death_dispatch(int signal)
 {
-    GListPtr iter = child_list;
-    gboolean exited;
-
-    while(iter) {
-        GListPtr saved = NULL;
+    for (GList *iter = child_list; iter; ) {
+        GList *saved = iter;
         mainloop_child_t *child = iter->data;
-        exited = child_waitpid(child, WNOHANG);
 
-        saved = iter;
         iter = iter->next;
-
-        if (exited == FALSE) {
-            continue;
+        if (child_waitpid(child, WNOHANG)) {
+            crm_trace("Removing completed process %d from child list",
+                      child->pid);
+            child_list = g_list_remove_link(child_list, saved);
+            g_list_free(saved);
+            child_free(child);
         }
-        crm_trace("Removing process entry %p for %d", child, child->pid);
-
-        child_list = g_list_remove_link(child_list, saved);
-        g_list_free(saved);
-        child_free(child);
     }
 }
 
@@ -1191,16 +1200,13 @@ mainloop_child_kill(pid_t pid)
 
     rc = child_kill_helper(match);
     if(rc == -ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet
-         *
-         * Wait until we get SIGCHLD and let child_death_dispatch()
-         * clean it up as normal (so we get the correct return
-         * code/status)
-         *
-         * The blocking alternative would be to call:
-         *    child_waitpid(match, 0);
+        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
+         * SIGCHLD and let handler clean it up as normal (so we get the correct
+         * return code/status). The blocking alternative would be to call
+         * child_waitpid(match, 0).
          */
-        crm_trace("Waiting for child %d to be reaped by child_death_dispatch()", match->pid);
+        crm_trace("Waiting for signal that child process %d completed",
+                  match->pid);
         return TRUE;
 
     } else if(rc != 0) {
@@ -1210,7 +1216,7 @@ mainloop_child_kill(pid_t pid)
         waitflags = WNOHANG;
     }
 
-    if (child_waitpid(match, waitflags) == FALSE) {
+    if (!child_waitpid(match, waitflags)) {
         /* not much we can do if this occurs */
         return FALSE;
     }
@@ -1222,6 +1228,10 @@ mainloop_child_kill(pid_t pid)
 
 /* Create/Log a new tracked process
  * To track a process group, use -pid
+ *
+ * @TODO Using a non-positive pid (i.e. any child, or process group) would
+ *       likely not be useful since we will free the child after the first
+ *       completed process.
  */
 void
 mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 

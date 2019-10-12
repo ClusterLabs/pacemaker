@@ -1,6 +1,6 @@
 * Tue Jun 04 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2
 - Changesets: 288
- 225 files changed, 28494 insertions(+), 24465 deletions(-)
+- Diff: 225 files changed, 28494 insertions(+), 24465 deletions(-)
 
 - Features added since Pacemaker-2.0.1
   + tools: crm_resource --validate can get resource parameters from command line
@@ -25,7 +25,7 @@
 
 * Mon Mar 4 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1
 - Changesets: 592
- 173 files changed, 9268 insertions(+), 5344 deletions(-)
+- Diff: 173 files changed, 9268 insertions(+), 5344 deletions(-)
 
 - Features added since Pacemaker-2.0.0
   + Pacemaker bundles support podman for container management
