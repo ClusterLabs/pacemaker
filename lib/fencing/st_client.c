@@ -566,7 +566,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
 
         /* Don't overwrite explictly set values for $param */
         if (value == NULL || safe_str_eq(value, "dynamic")) {
-            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param,
+            crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
                       alias);
             append_arg(param, alias, &arg_list);
         }
