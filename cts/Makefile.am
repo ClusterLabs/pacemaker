@@ -48,8 +48,9 @@ nodist_ctslib_PYTHON	= CTS.py		\
 
 ctsdir		= 	$(testdir)/cts
 cts_DATA	=	pacemaker-cts-dummyd@.service
+dist_cts_DATA	=	cts.conf
 if BUILD_UPSTART
-dist_cts_DATA	=	pacemaker-cts-dummyd.conf
+dist_cts_DATA	+=	pacemaker-cts-dummyd.conf
 endif
 cts_SCRIPTS		= CTSlab.py		\
 			  cts			\
