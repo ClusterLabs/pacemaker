@@ -329,6 +329,8 @@ stonith_device_execute(stonith_device_t * device)
     stonith_action_t *action = NULL;
     int active_cmds = 0;
     int action_limit = 0;
+    GListPtr gIter = NULL;
+    GListPtr gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return FALSE);
 
@@ -340,40 +342,45 @@ stonith_device_execute(stonith_device_t * device)
         return TRUE;
     }
 
-    if (device->pending_ops) {
-        GList *first = device->pending_ops;
+    for (gIter = device->pending_ops; gIter != NULL; gIter = gIterNext) {
+        async_command_t *pending_op = gIter->data;
 
-        cmd = first->data;
-        if (cmd && cmd->delay_id) {
+        gIterNext = gIter->next;
+
+        if (pending_op && pending_op->delay_id) {
             crm_trace
                 ("Operation %s%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
-                 device->id, cmd->start_delay);
-            return TRUE;
+                 pending_op->action, pending_op->victim ? " targeting " : "",
+                 pending_op->victim ? pending_op->victim : "",
+                 device->id, pending_op->start_delay);
+            continue;
         }
 
-        device->pending_ops = g_list_remove_link(device->pending_ops, first);
-        g_list_free_1(first);
+        device->pending_ops = g_list_remove_link(device->pending_ops, gIter);
+        g_list_free_1(gIter);
+
+        cmd = pending_op;
+        break;
     }
 
     if (cmd == NULL) {
-        crm_trace("Nothing further to do for %s", device->id);
+        crm_trace("Nothing further to do for %s for now", device->id);
         return TRUE;
     }
 
     if(safe_str_eq(device->agent, STONITH_WATCHDOG_AGENT)) {
         if(safe_str_eq(cmd->action, "reboot")) {
             pcmk_panic(__FUNCTION__);
-            return TRUE;
+            goto done;
 
         } else if(safe_str_eq(cmd->action, "off")) {
             pcmk_panic(__FUNCTION__);
-            return TRUE;
+            goto done;
 
         } else {
             crm_info("Faking success for %s watchdog operation", cmd->action);
             cmd->done_cb(0, 0, NULL, cmd);
-            return TRUE;
+            goto done;
         }
     }
 
@@ -389,7 +396,7 @@ stonith_device_execute(stonith_device_t * device)
                     "considering resource not configured", device->id);
             exec_rc = PCMK_OCF_NOT_CONFIGURED;
             cmd->done_cb(0, exec_rc, NULL, cmd);
-            return TRUE;
+            goto done;
         }
     }
 #endif
@@ -418,6 +425,14 @@ stonith_device_execute(stonith_device_t * device)
                  device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
         cmd->done_cb(0, exec_rc, NULL, cmd);
+    }
+
+done:
+    /* Device might get triggered to work by multiple fencing commands
+     * simultaneously. Trigger the device again to make sure any
+     * remaining concurrent commands get executed. */
+    if (device->pending_ops && g_list_length(device->pending_ops) > 0) {
+        mainloop_set_trigger(device->work);
     }
     return TRUE;
 }
@@ -467,11 +482,15 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling %s on %s for remote peer %s with op id (%s) (timeout=%ds)",
-                  cmd->action, device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
+        crm_debug("Scheduling %s%s%s on %s for remote peer %s with op id (%s) (timeout=%ds)",
+                  cmd->action,
+                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
-        crm_debug("Scheduling %s on %s for %s (timeout=%ds)",
-                  cmd->action, device->id, cmd->client, cmd->timeout);
+        crm_debug("Scheduling %s%s%s on %s for %s (timeout=%ds)",
+                  cmd->action,
+                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  device->id, cmd->client, cmd->timeout);
     }
 
     device->pending_ops = g_list_append(device->pending_ops, cmd);
@@ -493,9 +512,11 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         cmd->start_delay =
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+        crm_notice("Delaying %s%s%s on %s for %dms (timeout=%ds, base=%dms, "
                    "max=%dms)",
-                    cmd->action, device->id, cmd->start_delay, cmd->timeout,
+                    cmd->action,
+                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                    device->id, cmd->start_delay, cmd->timeout,
                     delay_base, delay_max);
         cmd->delay_id =
             g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
