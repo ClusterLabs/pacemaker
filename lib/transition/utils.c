@@ -140,77 +140,102 @@ find_action(crm_graph_t * graph, int id)
     return NULL;
 }
 
+static const char *
+synapse_state_str(synapse_t *synapse)
+{
+    if (synapse->failed) {
+        return "Failed";
+
+    } else if (synapse->confirmed) {
+        return "Completed";
+
+    } else if (synapse->executed) {
+        return "In-flight";
+
+    } else if (synapse->ready) {
+        return "Ready";
+    }
+    return "Pending";
+}
+
+// List action IDs of inputs in graph that haven't completed successfully
+static char *
+synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
+{
+    char *pending = NULL;
+
+    for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+        crm_action_t *input = (crm_action_t *) lpc->data;
+
+        if (input->failed) {
+            pending = add_list_element(pending, ID(input->xml));
+
+        } else if (input->confirmed) {
+            // Confirmed successful inputs are not pending
+
+        } else if (find_action(graph, input->id) != NULL) {
+            // In-flight or pending
+            pending = add_list_element(pending, ID(input->xml));
+        }
+    }
+    if (pending == NULL) {
+        pending = strdup("none");
+    }
+    return pending;
+}
+
+// Log synapse inputs that aren't in graph
+static void
+log_unresolved_inputs(unsigned int log_level, crm_graph_t *graph,
+                      synapse_t *synapse)
+{
+    for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+        crm_action_t *input = (crm_action_t *) lpc->data;
+        const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
+        const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+
+        if (find_action(graph, input->id) == NULL) {
+            do_crm_log(log_level,
+                       " * [Input %2d]: Unresolved dependency %s op %s%s%s",
+                       input->id, actiontype2text(input->type), key,
+                       (host? " on " : ""), (host? host : ""));
+        }
+    }
+}
+
+static void
+log_synapse_action(unsigned int log_level, synapse_t *synapse,
+                   crm_action_t *action, const char *pending_inputs)
+{
+    const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    char *desc = crm_strdup_printf("%s %s op %s",
+                                   synapse_state_str(synapse),
+                                   actiontype2text(action->type), key);
+
+    do_crm_log(log_level,
+               "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
+               action->id, desc, (host? host : "N/A"),
+               synapse->priority, pending_inputs);
+    free(desc);
+}
+
 static void
 print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
 {
-    GListPtr lpc = NULL;
     char *pending = NULL;
-    const char *state = "Pending";
 
-    if (synapse->failed) {
-        state = "Failed";
-
-    } else if (synapse->confirmed) {
-        state = "Completed";
-
-    } else if (synapse->executed) {
-        state = "In-flight";
-
-    } else if (synapse->ready) {
-        state = "Ready";
+    if (!synapse->executed) {
+        pending = synapse_pending_inputs(graph, synapse);
     }
-
-    if (synapse->executed == FALSE) {
-        for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-            crm_action_t *input = (crm_action_t *) lpc->data;
-            const char *id_string = crm_element_value(input->xml, XML_ATTR_ID);
-
-            if (input->failed) {
-                pending = add_list_element(pending, id_string);
-
-            } else if (input->confirmed) {
-                /* Confirmed, skip */
-
-            } else if (find_action(graph, input->id)) {
-                /* In-flight or pending */
-                pending = add_list_element(pending, id_string);
-            }
-        }
+    for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+        log_synapse_action(log_level, synapse, (crm_action_t *) lpc->data,
+                           pending);
     }
-
-    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *action = (crm_action_t *) lpc->data;
-        const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-        const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-        char *desc = crm_strdup_printf("%s %s op %s", state, actiontype2text(action->type), key);
-
-        do_crm_log(log_level,
-                   "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
-                   action->id, desc, host ? host : "N/A",
-                   synapse->priority, pending ? pending : "none");
-
-        free(desc);
-    }
-
-    if (synapse->executed == FALSE) {
-        for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-            crm_action_t *input = (crm_action_t *) lpc->data;
-            const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
-            const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
-
-            if (find_action(graph, input->id) == NULL) {
-                if (host == NULL) {
-                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependency %s op %s",
-                               input->id, actiontype2text(input->type), key);
-                } else {
-                    do_crm_log(log_level, " * [Input %2d]: Unresolved dependency %s op %s on %s",
-                               input->id, actiontype2text(input->type), key, host);
-                }
-            }
-        }
-    }
-
     free(pending);
+    if (!synapse->executed) {
+        log_unresolved_inputs(log_level, graph, synapse);
+    }
 }
 
 void
