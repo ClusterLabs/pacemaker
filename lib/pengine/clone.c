@@ -281,34 +281,6 @@ short_print(char *list, const char *prefix, const char *type, const char *suffix
     }
 }
 
-static void
-pe__short_output_text(pcmk__output_t *out, char *list, const char *prefix, const char *type, const char *suffix, long options)
-{
-    if(suffix == NULL) {
-        suffix = "";
-    }
-
-    if (list) {
-        fprintf(out->dest, "%s%s: [%s ]%s", prefix, type, list, suffix);
-
-        if (options & pe_print_suppres_nl) {
-            /* nothing */
-        } else {
-            fprintf(out->dest, "\n");
-        }
-    }
-}
-
-static void
-pe__short_output_html(pcmk__output_t *out, char *list, const char *type, const char *suffix, long options)
-{
-    if (list == NULL) {
-        return;
-    }
-
-    out->list_item(out, NULL, " %s: [%s ]%s", type, list, suffix ? suffix : "");
-}
-
 static const char *
 configured_role_str(resource_t * rsc)
 {
@@ -717,9 +689,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            pcmk__output_xml_create_parent(out, "li");
             out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
-            pcmk__output_xml_pop_parent(out);
         }
     }
 
@@ -733,7 +703,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        pe__short_output_html(out, list_text, "Masters", NULL, options);
+        out->list_item(out, NULL, " Masters: [%s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
@@ -753,13 +723,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
-                pe__short_output_html(out, list_text, "Slaves (target-role)", NULL, options);
+                out->list_item(out, NULL, " Slaves (target-role): [%s ]", list_text);
             } else {
-                pe__short_output_html(out, list_text, "Slaves", NULL, options);
+                out->list_item(out, NULL, " Slaves: [%s ]", list_text);
             }
 
         } else {
-            pe__short_output_html(out, list_text, "Started", NULL, options);
+            out->list_item(out, NULL, " Started: [%s ]", list_text);
         }
 
         g_list_free(started_list);
@@ -804,7 +774,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (stopped_list != NULL) {
-            pe__short_output_html(out, stopped_list, state, NULL, options);
+            out->list_item(out, NULL, " %s: [%s ]", state, stopped_list);
             free(stopped_list);
         }
     }
@@ -819,10 +789,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
     resource_t *rsc = va_arg(args, resource_t *);
-    const char *pre_text = va_arg(args, char *);
 
     char *list_text = NULL;
-    char *child_text = NULL;
     char *stopped_list = NULL;
 
     GListPtr master_list = NULL;
@@ -832,19 +800,13 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
 
-    if (pre_text == NULL) {
-        pre_text = " ";
-    }
-
     get_clone_variant_data(clone_data, rsc);
 
-    child_text = crm_concat(pre_text, "   ", ' ');
-
-    fprintf(out->dest, "%sClone Set: %s [%s]%s%s%s",
-            pre_text, rsc->id, ID(clone_data->xml_obj_child),
-            is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
-            is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-            is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
+                    rsc->id, ID(clone_data->xml_obj_child),
+                    is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
@@ -914,7 +876,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc, child_text);
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 
@@ -928,7 +890,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        pe__short_output_text(out, list_text, child_text, "Masters", NULL, options);
+        out->list_item(out, "Masters", "[%s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
@@ -948,12 +910,12 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
-                pe__short_output_text(out, list_text, child_text, "Slaves (target-role)", NULL, options);
+                out->list_item(out, "Slaves (target-role)", "[%s ]", list_text);
             } else {
-                pe__short_output_text(out, list_text, child_text, "Slaves", NULL, options);
+                out->list_item(out, "Slaves", "[%s ]", list_text);
             }
         } else {
-            pe__short_output_text(out, list_text, child_text, "Started", NULL, options);
+            out->list_item(out, "Started", "[%s ]", list_text);
         }
 
         g_list_free(started_list);
@@ -998,12 +960,12 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (stopped_list != NULL) {
-            pe__short_output_text(out, stopped_list, child_text, state, NULL, options);
+            out->list_item(out, state, "[%s ]", stopped_list);
             free(stopped_list);
         }
     }
 
-    free(child_text);
+    out->end_list(out);
 
     return 0;
 }

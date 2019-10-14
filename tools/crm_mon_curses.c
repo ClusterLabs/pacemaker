@@ -62,6 +62,10 @@ curses_init(pcmk__output_t *out) {
 
     priv->parent_q = g_queue_new();
 
+    initscr();
+    cbreak();
+    noecho();
+
     return true;
 }
 
@@ -243,7 +247,7 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     level = g_queue_get_length(priv->parent_q);
 
     for (int i = 0; i < level; i++) {
-        addch('\t');
+        printw("  ");
     }
 
     if (level > 0) {

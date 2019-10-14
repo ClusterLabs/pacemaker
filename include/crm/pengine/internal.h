@@ -352,17 +352,14 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
-void pe__rscs_brief_output_text(pcmk__output_t *out, GListPtr rsc_list, const char *pre_text,
-                                long options, gboolean print_all);
-void pe__rscs_brief_output_html(pcmk__output_t *out, GListPtr rsc_list,
-                                long options, gboolean print_all);
+void pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
 
 node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
-void pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options);
+void pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
 void pe__common_output_html(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);

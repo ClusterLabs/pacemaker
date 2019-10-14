@@ -80,26 +80,34 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
     gboolean later_succeeded = va_arg(args, gboolean);
 
     switch(event->state) {
-        case st_done:
+        case st_done: {
+            char *completed_s = time_t_string(event->completed);
+
             out->list_item(out, "successful-stonith-event",
                            "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'",
                            stonith_action_str(event->action), event->target,
                            event->delegate ? event->delegate : "",
                            event->client, event->origin,
                            full_history ? "completed" : "last-successful",
-                           time_t_string(event->completed));
+                           completed_s);
+            free(completed_s);
             break;
+        }
 
-        case st_failed:
+        case st_failed: {
+            char *failed_s = time_t_string(event->completed);
+
             out->list_item(out, "failed-stonith-event",
                            "%s of %s failed : delegate=%s, client=%s, origin=%s, %s='%s' %s",
                            stonith_action_str(event->action), event->target,
                            event->delegate ? event->delegate : "",
                            event->client, event->origin,
                            full_history ? "completed" : "last-failed",
-                           time_t_string(event->completed),
+                           failed_s,
                            later_succeeded ? "(a later attempt succeeded)" : "");
+            free(failed_s);
             break;
+        }
 
         default:
             out->list_item(out, "pending-stonith-event",

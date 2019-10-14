@@ -62,8 +62,6 @@ static unsigned int show = mon_show_default;
 
 static mon_output_format_t output_format = mon_output_unset;
 
-static char *output_filename = NULL;   /* if sending output to a file, its name */
-
 /* other globals */
 static GMainLoop *mainloop = NULL;
 static guint timer_id = 0;
@@ -91,7 +89,7 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
+    CRM_MON_SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
 
@@ -145,9 +143,16 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
         free(args->output_ty);
     }
 
+    if (args->output_dest != NULL) {
+        free(args->output_dest);
+    }
+
+    if (optarg != NULL) {
+        args->output_dest = strdup(optarg);
+    }
+
     args->output_ty = strdup("html");
     output_format = mon_output_html;
-    output_filename = strdup(optarg);
     umask(S_IWGRP | S_IWOTH);
     return TRUE;
 }
@@ -324,7 +329,8 @@ static GOptionEntry addl_entries[] = {
       NULL },
 
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
-      "Run in the background as a daemon",
+      "Run in the background as a daemon.\n"
+      INDENT "Requires at least one of --output-to and --external-agent.",
       NULL },
 
     { "pid-file", 'p', 0, G_OPTION_ARG_FILENAME, &options.pid_file,
@@ -780,6 +786,103 @@ build_arg_context(pcmk__common_args_t *args) {
     return context;
 }
 
+/* If certain format options were specified, we want to set some extra
+ * options.  We can just process these like they were given on the
+ * command line.
+ */
+static void
+add_output_args() {
+    GError *error = NULL;
+
+    if (output_format == mon_output_plain) {
+        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_html) {
+        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
+                              g_get_prgname(), options.reconnect_msec/1000)) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_cgi) {
+        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_xml) {
+        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    } else if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            clean_up(CRM_EX_USAGE);
+        }
+    }
+}
+
+/* Which output format to use could come from two places:  The --as-xml
+ * style arguments we gave in mode_entries above, or the formatted output
+ * arguments added by pcmk__register_formats.  If the latter were used,
+ * output_format will be mon_output_unset.
+ *
+ * Call the callbacks as if those older style arguments were provided so
+ * the various things they do get done.
+ */
+static void
+reconcile_output_format(pcmk__common_args_t *args) {
+    gboolean retval = TRUE;
+    GError *error = NULL;
+
+    if (output_format != mon_output_unset) {
+        return;
+    }
+
+    if (safe_str_eq(args->output_ty, "html")) {
+        char *dest = NULL;
+
+        if (args->output_dest != NULL) {
+            dest = strdup(args->output_dest);
+        }
+
+        retval = as_html_cb("h", dest, NULL, &error);
+        free(dest);
+    } else if (safe_str_eq(args->output_ty, "text")) {
+        retval = no_curses_cb("N", NULL, NULL, &error);
+    } else if (safe_str_eq(args->output_ty, "xml")) {
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("xml");
+        output_format = mon_output_xml;
+        options.mon_ops |= mon_op_one_shot;
+    } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("text");
+        output_format = mon_output_plain;
+    } else {
+        /* Neither old nor new arguments were given, so set the default. */
+        if (args->output_ty != NULL) {
+            free(args->output_ty);
+        }
+
+        args->output_ty = strdup("console");
+        output_format = mon_output_console;
+    }
+
+    if (!retval) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        clean_up(CRM_EX_USAGE);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -814,181 +917,148 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    /* Which output format to use could come from two places:  The --as-xml
-     * style arguments we gave in mode_entries above, or the formatted output
-     * arguments added by pcmk__register_formats.  If the latter were used,
-     * output_format will be mon_output_unset.
-     *
-     * Call the callbacks as if those older style arguments were provided so
-     * the various things they do get done.
-     */
-    if (output_format == mon_output_unset) {
-        gboolean retval = TRUE;
+    if (!args->version) {
+        if (args->quiet) {
+            show &= ~mon_show_times;
+        }
 
-        g_clear_error(&error);
+        if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            options.mon_ops |= mon_op_fence_connect;
+            /* don't moan as fence_history_level == 1 is default */
+            options.fence_history_level = 0;
+        }
 
-        /* NOTE:  There is no way to specify CGI mode or simple mode with --output-as.
-         * Those will need to get handled eventually, at which point something else
-         * will need to be added to this block.
+        /* create the cib-object early to be able to do further
+         * decisions based on the cib-source
          */
-        if (safe_str_eq(args->output_ty, "html")) {
-            retval = as_html_cb("h", args->output_dest, NULL, &error);
-        } else if (safe_str_eq(args->output_ty, "text")) {
-            retval = no_curses_cb("N", NULL, NULL, &error);
-        } else if (safe_str_eq(args->output_ty, "xml")) {
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
-            }
+        cib = cib_new();
 
-            args->output_ty = strdup("xml");
-            output_format = mon_output_xml;
-            options.mon_ops |= mon_op_one_shot;
-        } else if (is_set(options.mon_ops, mon_op_one_shot)) {
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
-            }
-
-            args->output_ty = strdup("text");
-            output_format = mon_output_plain;
+        if (cib == NULL) {
+            rc = -EINVAL;
         } else {
-            /* Neither old nor new arguments were given, so set the default. */
-            if (args->output_ty != NULL) {
-                free(args->output_ty);
+            switch (cib->variant) {
+
+                case cib_native:
+                    /* cib & fencing - everything available */
+                    break;
+
+                case cib_file:
+                    /* Don't try to connect to fencing as we
+                     * either don't have a running cluster or
+                     * the fencing-information would possibly
+                     * not match the cib data from a file.
+                     * As we don't expect cib-updates coming
+                     * in enforce one-shot. */
+                    options.fence_history_level = 0;
+                    options.mon_ops |= mon_op_one_shot;
+                    break;
+
+                case cib_remote:
+                    /* updates coming in but no fencing */
+                    options.fence_history_level = 0;
+                    break;
+
+                case cib_undefined:
+                case cib_database:
+                default:
+                    /* something is odd */
+                    rc = -EINVAL;
+                    crm_err("Invalid cib-source");
+                    break;
+            }
+        }
+
+        switch (options.fence_history_level) {
+            case 3:
+                options.mon_ops |= mon_op_fence_full_history;
+                /* fall through to next lower level */
+            case 2:
+                show |= mon_show_fence_history;
+                /* fall through to next lower level */
+            case 1:
+                options.mon_ops |= mon_op_fence_history;
+                options.mon_ops |= mon_op_fence_connect;
+                break;
+            default:
+                break;
+        }
+
+        if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (output_format == mon_output_console) {
+                output_format = mon_output_plain;
             }
 
-            args->output_ty = strdup("console");
-            output_format = mon_output_console;
-        }
+        } else if (options.daemonize) {
+            if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+                output_format = mon_output_none;
+            }
+            crm_enable_stderr(FALSE);
 
-        if (!retval) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
+            if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
+                printf("--daemonize requires at least one of --output-to and --external-agent\n");
+                return clean_up(CRM_EX_USAGE);
+            }
+
+            if (cib) {
+                /* to be on the safe side don't have cib-object around
+                 * when we are forking
+                 */
+                cib_delete(cib);
+                cib = NULL;
+                crm_make_daemon(crm_system_name, TRUE, options.pid_file);
+                cib = cib_new();
+                if (cib == NULL) {
+                    rc = -EINVAL;
+                }
+                /* otherwise assume we've got the same cib-object we've just destroyed
+                 * in our parent
+                 */
+            }
+
+
+        } else if (output_format == mon_output_console) {
+#if CURSES_ENABLED
+            crm_enable_stderr(FALSE);
+#else
+            options.mon_ops |= mon_op_one_shot;
+            output_format = mon_output_plain;
+            printf("Defaulting to one-shot mode\n");
+            printf("You need to have curses available at compile time to enable console mode\n");
+#endif
         }
     }
 
-    /* If certain format options were specified, we want to set some extra
-     * options.  We can just process these like they were given on the
-     * command line.
-     */
-    g_clear_error(&error);
+    reconcile_output_format(args);
+    add_output_args();
 
-    if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
-                              g_get_prgname(), options.reconnect_msec/1000)) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_legacy_xml) {
-        output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-            return clean_up(CRM_EX_USAGE);
-        }
+    /* Create the output format - output_format must not be changed after this point. */
+    if (args->version && output_format == mon_output_console) {
+        /* Use the text output format here if we are in curses mode but were given
+         * --version.  Displaying version information uses printf, and then we
+         *  immediately exit.  We don't want to initialize curses for that.
+         */
+        rc = pcmk__output_new(&out, "text", args->output_dest, argv);
+    } else {
+        rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     }
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != 0) {
         fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
         return clean_up(CRM_EX_ERROR);
     }
 
+    crm_mon_register_messages(out);
+    pe__register_messages(out);
     stonith__register_messages(out);
 
     if (args->version) {
-        /* FIXME: For the moment, this won't do anything on XML or HTML formats
-         * because finish is not getting called.  That's commented out in
-         * clean_up.
-         */
         out->version(out, false);
         return clean_up(CRM_EX_OK);
     }
 
-    if (args->quiet) {
-        show &= ~mon_show_times;
-    }
-
-    if (is_set(options.mon_ops, mon_op_watch_fencing)) {
-        options.mon_ops |= mon_op_fence_connect;
-        /* don't moan as fence_history_level == 1 is default */
-        options.fence_history_level = 0;
-    }
-
-    /* create the cib-object early to be able to do further
-     * decisions based on the cib-source
-     */
-    cib = cib_new();
-
-    if (cib == NULL) {
-        rc = -EINVAL;
-    } else {
-        switch (cib->variant) {
-
-            case cib_native:
-                /* cib & fencing - everything available */
-                break;
-
-            case cib_file:
-                /* Don't try to connect to fencing as we
-                 * either don't have a running cluster or
-                 * the fencing-information would possibly
-                 * not match the cib data from a file.
-                 * As we don't expect cib-updates coming
-                 * in enforce one-shot. */
-                options.fence_history_level = 0;
-                options.mon_ops |= mon_op_one_shot;
-                break;
-
-            case cib_remote:
-                /* updates coming in but no fencing */
-                options.fence_history_level = 0;
-                break;
-
-            case cib_undefined:
-            case cib_database:
-            default:
-                /* something is odd */
-                rc = -EINVAL;
-                crm_err("Invalid cib-source");
-                break;
-        }
-    }
-
-    switch (options.fence_history_level) {
-        case 3:
-            options.mon_ops |= mon_op_fence_full_history;
-            /* fall through to next lower level */
-        case 2:
-            show |= mon_show_fence_history;
-            /* fall through to next lower level */
-        case 1:
-            options.mon_ops |= mon_op_fence_history;
-            options.mon_ops |= mon_op_fence_connect;
-            break;
-        default:
-            break;
-    }
-
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
-        if (output_filename != NULL) {
-            fprintf(stderr, "CGI mode cannot be used with -h\n");
-            return clean_up(CRM_EX_USAGE);
-        } else if (cib && cib->variant == cib_file) {
+        if (cib && cib->variant == cib_file) {
             fprintf(stderr, "CGI mode used with CIB file\n");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
@@ -1001,58 +1071,9 @@ main(int argc, char **argv)
     }
 
     /* XML output always prints everything */
-    if (output_format == mon_output_xml) {
+    if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
         show = mon_show_all;
         options.mon_ops |= mon_op_print_timing;
-    }
-
-    if (is_set(options.mon_ops, mon_op_one_shot)) {
-        if (output_format == mon_output_console) {
-            output_format = mon_output_plain;
-        }
-
-    } else if (options.daemonize) {
-        if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
-            output_format = mon_output_none;
-        }
-        crm_enable_stderr(FALSE);
-
-        if ((output_format != mon_output_html)
-            && !options.external_agent) {
-            printf ("Looks like you forgot to specify one or more of: "
-                    "--as-html, --external-agent\n");
-            return clean_up(CRM_EX_USAGE);
-        }
-
-        if (cib) {
-            /* to be on the safe side don't have cib-object around
-             * when we are forking
-             */
-            cib_delete(cib);
-            cib = NULL;
-            crm_make_daemon(crm_system_name, TRUE, options.pid_file);
-            cib = cib_new();
-            if (cib == NULL) {
-                rc = -EINVAL;
-            }
-            /* otherwise assume we've got the same cib-object we've just destroyed
-             * in our parent
-             */
-        }
-
-
-    } else if (output_format == mon_output_console) {
-#if CURSES_ENABLED
-        initscr();
-        cbreak();
-        noecho();
-        crm_enable_stderr(FALSE);
-#else
-        options.mon_ops |= mon_op_one_shot;
-        output_format = mon_output_plain;
-        printf("Defaulting to one-shot mode\n");
-        printf("You need to have curses available at compile time to enable console mode\n");
-#endif
     }
 
     crm_info("Starting %s", crm_system_name);
@@ -1077,8 +1098,8 @@ main(int argc, char **argv)
                 }
 #endif
             } else {
-                if (output_format == mon_output_html) {
-                    print_as(output_format, "Writing html to %s ...\n", output_filename);
+                if (output_format == mon_output_html && out->dest != stdout) {
+                    printf("Writing html to %s ...\n", args->output_dest);
                 }
             }
 
@@ -1181,17 +1202,17 @@ print_simple_status(pe_working_set_t * data_set, stonith_history_t *history,
     if (is_not_set(mon_ops, mon_op_has_warnings)) {
         int nresources = count_resources(data_set, NULL);
 
-        print_as(output_format, "CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
+        printf("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
         if (nodes_standby > 0) {
-            print_as(output_format, ", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
+            printf(", %d standby node%s", nodes_standby, s_if_plural(nodes_standby));
         }
         if (nodes_maintenance > 0) {
-            print_as(output_format, ", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
+            printf(", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
         }
-        print_as(output_format, ", %d resource%s configured", nresources, s_if_plural(nresources));
+        printf(", %d resource%s configured", nresources, s_if_plural(nresources));
     }
 
-    print_as(output_format, "\n");
+    printf("\n");
 }
 
 /*!
@@ -1665,9 +1686,9 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(&state, mon_data_set, output_filename,
-                                  stonith_history, options.mon_ops, show,
-                                  print_neg_location_prefix, options.reconnect_msec) != 0) {
+            if (print_html_status(&state, mon_data_set, stonith_history,
+                                  options.mon_ops, show, print_neg_location_prefix,
+                                  options.reconnect_msec) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1808,7 +1829,6 @@ clean_up(crm_exit_t exit_code)
 #endif
 
     clean_up_connections();
-    free(output_filename);
     free(options.pid_file);
 
     pe_free_working_set(mon_data_set);
@@ -1826,10 +1846,7 @@ clean_up(crm_exit_t exit_code)
     g_option_context_free(context);
 
     if (out != NULL) {
-        /* FIXME: When we are ready to enable formatted output, uncomment
-         * the following line:
-         */
-        /* out->finish(out, exit_code, true, NULL); */
+        out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
 

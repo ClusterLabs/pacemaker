@@ -108,8 +108,8 @@ void print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
                       unsigned int show, const char *prefix);
 int print_html_status(mon_state_t *state, pe_working_set_t *data_set,
-                      const char *filename, stonith_history_t *stonith_history,
-                      unsigned int mon_ops, unsigned int show, const char *prefix,
+                      stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int show, const char *prefix,
                       unsigned int reconnect_msec);
 
 GList *append_attr_list(GList *attr_list, char *name);
@@ -121,6 +121,8 @@ char *get_node_display_name(node_t *node, unsigned int mon_ops);
 int get_resource_display_options(unsigned int mon_ops,
                                  mon_output_format_t output_format);
 
+void crm_mon_register_messages(pcmk__output_t *out);
+
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);
 void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
@@ -129,3 +131,6 @@ void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list ar
 extern GOptionEntry crm_mon_curses_output_entries[];
 #define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
 #endif
+
+pcmk__output_t *crm_mon_mk_xml_output(char **argv);
+#define CRM_MON_SUPPORTED_FORMAT_XML { "xml", crm_mon_mk_xml_output, pcmk__xml_output_entries }

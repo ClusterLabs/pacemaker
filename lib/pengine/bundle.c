@@ -1638,7 +1638,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               const char *pre_text, long options)
+                               long options)
 {
     node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
@@ -1663,7 +1663,7 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     }
 
     node = pe__current_node(replica->container);
-    pe__common_output_text(out, rsc, pre_text, buffer, node, options);
+    pe__common_output_text(out, rsc, buffer, node, options);
 }
 
 int
@@ -1671,22 +1671,15 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, int);
     resource_t *rsc = va_arg(args, resource_t *);
-    const char *pre_text = va_arg(args, char *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
-    char *child_text = NULL;
-    char *buf = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (pre_text == NULL) {
-        pre_text = " ";
-    }
-
-    out->begin_list(out, NULL, NULL, "%sContainer bundle%s: %s [%s]%s%s",
-                    pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
+    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
+                    (bundle_data->nreplicas > 1)? " set" : "",
                     rsc->id, bundle_data->image,
                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
@@ -1698,36 +1691,32 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         CRM_ASSERT(replica);
 
         if (is_set(options, pe_print_implicit)) {
-            child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(bundle_data->replicas) > 1) {
-                out->list_item(out, NULL, "%sReplica[%d]", pre_text, replica->offset);
+                out->list_item(out, NULL, "Replica[%d]", replica->offset);
             }
 
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip, child_text);
+                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_element_name(replica->child->xml), options, replica->child, child_text);
+                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
             }
 
-            out->message(out, crm_element_name(replica->container->xml), options, replica->container, child_text);
+            out->message(out, crm_element_name(replica->container->xml), options, replica->container);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote, child_text);
+                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
             }
 
             out->end_list(out);
         } else {
-            child_text = crm_strdup_printf("%s  ", pre_text);
-            pe__bundle_replica_output_text(out, replica, child_text, options);
+            pe__bundle_replica_output_text(out, replica, options);
         }
-        free(child_text);
     }
 
-    free(buf);
     out->end_list(out);
     return 0;
 }
