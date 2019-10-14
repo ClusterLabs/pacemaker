@@ -433,7 +433,7 @@ done:
     /* Device might get triggered to work by multiple fencing commands
      * simultaneously. Trigger the device again to make sure any
      * remaining concurrent commands get executed. */
-    if (device->pending_ops && g_list_length(device->pending_ops) > 0) {
+    if (device->pending_ops) {
         mainloop_set_trigger(device->work);
     }
     return TRUE;
