@@ -104,7 +104,7 @@ export:
 #   directory (everything else uses the usual defaults)
 #
 # - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
-#   everything else in dedicated "rpmbuild" subdirectory of build tree
+#   everything else in dedicated "rpm" subdirectory of build tree
 RPMDEST         	?= toplevel
 
 RPM_SPEC_DIR_toplevel	= $(abs_builddir)
@@ -184,7 +184,8 @@ rpmbuild-with = \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"
 
-$(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
+# Depend on spec-clean so it gets rebuilt every time
+$(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
 	$(AM_V_GEN)if [ x != x"`git ls-files -m rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\

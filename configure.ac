@@ -2283,6 +2283,7 @@ lib/gnu/Makefile						\
 		)
 
 AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
+AC_CONFIG_FILES([tools/pcmk_simtimes], [chmod +x tools/pcmk_simtimes])
 
 dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()

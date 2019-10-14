@@ -231,7 +231,8 @@ add_unallocated_utilization(GHashTable * all_utilization, resource_t * rsc,
             }
         }
 
-        if (existing == FALSE) {
+        // rsc->children is always non-NULL but this makes static analysis happy
+        if (!existing && (rsc->children != NULL)) {
             resource_t *first_child = (resource_t *) rsc->children->data;
 
             pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",

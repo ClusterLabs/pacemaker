@@ -540,19 +540,19 @@ find_rsc_list(GListPtr result, resource_t * rsc, const char *id, gboolean rename
 
     if (id == NULL) {
         return NULL;
+    }
 
-    } else if (rsc == NULL && data_set) {
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
+    if (rsc == NULL) {
+        if (data_set == NULL) {
+            return NULL;
         }
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
+            result = find_rsc_list(result, child, id, renamed_clones, partial,
+                                   NULL);
+        }
         return result;
-
-    } else if (rsc == NULL) {
-        return NULL;
     }
 
     if (partial) {

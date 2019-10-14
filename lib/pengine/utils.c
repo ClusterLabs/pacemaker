@@ -22,6 +22,7 @@
 #include <crm/common/util.h>
 
 #include <glib.h>
+#include <stdbool.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
@@ -735,68 +736,46 @@ unpack_start_delay(const char *value, GHashTable *meta)
     return start_delay;
 }
 
-static int
-unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
-                       unsigned long long interval, crm_time_t *now)
+// true if value contains valid, non-NULL interval origin for recurring op
+static bool
+unpack_interval_origin(const char *value, xmlNode *xml_obj, unsigned long long interval_ms,
+                       crm_time_t *now, long long *start_delay)
 {
-    int start_delay = 0;
+    long long result = 0;
+    guint interval_sec = interval_ms / 1000;
+    crm_time_t *origin = NULL;
 
-    if (interval > 0 && value) {
-        crm_time_t *origin = crm_time_new(value);
-
-        if (origin && now) {
-            crm_time_t *delay = NULL;
-            int rc = crm_time_compare(origin, now);
-            long long delay_s = 0;
-            int interval_s = (interval / 1000);
-
-            crm_trace("Origin: %s, interval: %d", value, interval_s);
-
-            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
-            while(rc > 0) {
-                crm_time_add_seconds(origin, -interval_s);
-                rc = crm_time_compare(origin, now);
-            }
-
-            /* Now find the first "multiple" that occurs after 'now' */
-            while (rc < 0) {
-                crm_time_add_seconds(origin, interval_s);
-                rc = crm_time_compare(origin, now);
-            }
-
-            delay = crm_time_calculate_duration(origin, now);
-
-            crm_time_log(LOG_TRACE, "origin", origin,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "now", now,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
-
-            delay_s = crm_time_get_seconds(delay);
-
-            CRM_CHECK(delay_s >= 0, delay_s = 0);
-            start_delay = delay_s * 1000;
-
-            if (xml_obj) {
-                crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
-            }
-
-            if (meta) {
-                g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
-                                     crm_itoa(start_delay));
-            }
-
-            crm_time_free(origin);
-            crm_time_free(delay);
-        } else if (!origin && xml_obj) {
-            crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
-                           ID(xml_obj), value);
-        }
+    // Ignore unspecified values and non-recurring operations
+    if ((value == NULL) || (interval_ms == 0) || (now == NULL)) {
+        return false;
     }
 
-    return start_delay;
+    // Parse interval origin from text
+    origin = crm_time_new(value);
+    if (origin == NULL) {
+        crm_config_err("Operation '%s' contains invalid " XML_OP_ATTR_ORIGIN
+                       " '%s'",
+                       (ID(xml_obj)? ID(xml_obj) : "(unspecified)"), value);
+        return false;
+    }
+
+    // Get seconds since origin (negative if origin is in the future)
+    result = crm_time_get_seconds(now) - crm_time_get_seconds(origin);
+    crm_time_free(origin);
+
+    // Calculate seconds from closest interval to now
+    result = result % interval_sec;
+
+    // Calculate seconds remaining until next interval
+    result = ((result <= 0)? 0 : interval_sec) - result;
+    crm_info("Calculated a start delay of %llds for operation '%s'",
+             result,
+             (ID(xml_obj)? ID(xml_obj) : "(unspecified)"));
+
+    if (start_delay != NULL) {
+        *start_delay = result * 1000; // milliseconds
+    }
+    return true;
 }
 
 static int
@@ -887,10 +866,14 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
             } else if (safe_str_eq(name, XML_OP_ATTR_ORIGIN)) {
-                int start_delay = unpack_interval_origin(value, NULL, xml_obj, interval, now);
+                long long start_delay = 0;
 
-                crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
-                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+                if (unpack_interval_origin(value, xml_obj, interval, now,
+                                           &start_delay)) {
+                    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME,
+                                XML_OP_ATTR_START_DELAY);
+                    crm_xml_add_ll(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+                }
             } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
                 int timeout = unpack_timeout(value, NULL, NULL, 0, NULL);
 
@@ -1209,8 +1192,14 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     if (value) {
         unpack_start_delay(value, action->meta);
     } else {
+        long long start_delay = 0;
+
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        unpack_interval_origin(value, action->meta, xml_obj, interval, data_set->now);
+        if (unpack_interval_origin(value, xml_obj, interval, data_set->now,
+                                   &start_delay)) {
+            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
+                                 crm_strdup_printf("%lld", start_delay));
+        }
     }
 
     value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
