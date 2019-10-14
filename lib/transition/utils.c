@@ -108,12 +108,11 @@ actiontype2text(action_type_e type)
         case action_type_pseudo:
             return "pseudo";
         case action_type_rsc:
-            return "rsc";
+            return "resource";
         case action_type_crm:
-            return "crm";
-
+            return "cluster";
     }
-    return "<unknown>";
+    return "invalid";
 }
 
 static crm_action_t *
@@ -214,8 +213,8 @@ log_synapse_action(unsigned int log_level, synapse_t *synapse,
                                    actiontype2text(action->type), key);
 
     do_crm_log(log_level,
-               "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
-               action->id, desc, (host? host : "N/A"),
+               "[Action %4d]: %-50s%s%s (priority: %d, waiting: %s)",
+               action->id, desc, (host? " on " : ""), (host? host : ""),
                synapse->priority, pending_inputs);
     free(desc);
 }
