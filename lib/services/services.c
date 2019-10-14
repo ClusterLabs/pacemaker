@@ -827,7 +827,8 @@ services_action_async_fork_notify(svc_action_t * op,
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
-    if (op->rsc && is_op_blocked(op->rsc)) {
+    if (is_not_set(op->flags, SVC_ACTION_NON_BLOCKED)
+        && op->rsc && is_op_blocked(op->rsc)) {
         blocked_ops = g_list_append(blocked_ops, op);
         return TRUE;
     }

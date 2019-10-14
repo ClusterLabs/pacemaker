@@ -156,6 +156,7 @@ enum nagios_exitcode {
 enum svc_action_flags {
     /* On timeout, only kill pid, do not kill entire pid group */
     SVC_ACTION_LEAVE_GROUP = 0x01,
+    SVC_ACTION_NON_BLOCKED = 0x02,
 };
 
 typedef struct svc_action_private_s svc_action_private_t;
