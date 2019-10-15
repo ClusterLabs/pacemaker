@@ -109,8 +109,7 @@ void print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
                       unsigned int show, const char *prefix);
 int print_html_status(mon_state_t *state, pe_working_set_t *data_set,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int show, const char *prefix,
-                      unsigned int reconnect_msec);
+                      unsigned int show, const char *prefix);
 
 GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
