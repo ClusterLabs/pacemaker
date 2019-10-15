@@ -483,7 +483,7 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
         test.add_cmd("stonith_admin", "-F node3 -t 10")
         ### one merger will happen
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
         test.add_stonith_log_pattern("Operation off of node3 by")
         test.add_stonith_log_pattern("Operation off of node3 by")
@@ -501,10 +501,10 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
         test.add_cmd("stonith_admin", "-F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
         test.add_stonith_log_pattern("Operation off of node3 by")
         test.add_stonith_log_pattern("Operation off of node3 by")
@@ -528,10 +528,10 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
         test.add_cmd("stonith_admin", "-F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action off for node node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
         test.add_stonith_log_pattern("Operation off of node3 by")
         test.add_stonith_log_pattern("Operation off of node3 by")
@@ -552,7 +552,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
         test.add_cmd_no_wait("stonith_admin", "-F node2 -t 10")
         test.add_cmd("stonith_admin", "-F node3 -t 10")
-        test.add_stonith_neg_log_pattern("Merging stonith action off for node node3 originating from client")
+        test.add_stonith_neg_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
 
     def build_standalone_tests(self):
         """ Register a grab bag of tests that can be executed in standalone or corosync mode """
