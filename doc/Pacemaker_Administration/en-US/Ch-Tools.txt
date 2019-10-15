@@ -1,6 +1,37 @@
 :compat-mode: legacy
 = Using Pacemaker Command-Line Tools =
 
+[[s-cmdline-output]]
+== Controlling Command Line Output ==
+Some of the pacemaker command line utilities have been converted to a new output
+system.  Among these tools are `crm_mon` and `stonith_admin`.  This is an ongoing
+project, and more tools will be converted over time.  This system lets you
+control the formatting of output with `--output-as=` and the destination of output
+with `--output-to=`.
+
+The available formats vary by tool, but at least plain text, HTML, and XML are
+supported by all tools.  The default format is plain text.  The default
+destination is stdout but can be redirected to any file.  Some formats support
+command line options for changing the style of the output.  For instance:
+
+======
+-------
+# crm_mon --help-output-html
+Usage:
+  crm_mon [OPTION?]
+
+Provides a summary of cluster's current state.
+
+Outputs varying levels of detail in a number of different formats.
+
+Output Options (html):
+  --output-cgi                      Add text needed to use output in a CGI program
+  --output-meta-refresh=SECONDS     How often to refresh
+  --output-stylesheet-link=URI      Link to an external CSS stylesheet
+  --output-title=TITLE              Page title
+-------
+======
+
 [[s-crm_mon]]
 == Monitor a Cluster with crm_mon ==
 indexterm:[Command-line tool,crm_mon]
