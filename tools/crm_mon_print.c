@@ -28,10 +28,10 @@
 #include "crm_mon.h"
 
 static void print_resources_heading(mon_state_t *state, unsigned int mon_ops);
-static void print_resources_closing(mon_state_t *state, gboolean printed_heading,
-                                    unsigned int mon_ops);
+static void print_resources_closing(mon_state_t *state, unsigned int mon_ops);
 static gboolean print_resources(mon_state_t *state, pe_working_set_t *data_set,
-                                int print_opts, unsigned int mon_ops);
+                                int print_opts, unsigned int mon_ops, gboolean brief_output,
+                                gboolean print_summary);
 static void print_rsc_history(mon_state_t *state, pe_working_set_t *data_set,
                               node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                               GListPtr op_list);
@@ -57,6 +57,7 @@ static gboolean print_failed_actions(mon_state_t *state, pe_working_set_t *data_
 static gboolean print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static gboolean print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 static gboolean print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
+static gboolean print_stonith_history_full(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops);
 
 /*!
  * \internal
@@ -92,8 +93,7 @@ print_resources_heading(mon_state_t *state, unsigned int mon_ops)
  * \param[in] stream     File stream to display output to
  */
 static void
-print_resources_closing(mon_state_t *state, gboolean printed_resource,
-                        unsigned int mon_ops)
+print_resources_closing(mon_state_t *state, unsigned int mon_ops)
 {
     const char *heading;
 
@@ -106,11 +106,7 @@ print_resources_closing(mon_state_t *state, gboolean printed_resource,
         heading = "active ";
     }
 
-    if (state->output_format != mon_output_xml && !printed_resource) {
-        state->out->list_item(state->out, NULL, "No %sresources", heading);
-    }
-
-    state->out->end_list(state->out);
+    state->out->list_item(state->out, NULL, "No %sresources", heading);
 }
 
 /*!
@@ -123,22 +119,17 @@ print_resources_closing(mon_state_t *state, gboolean printed_resource,
  */
 static gboolean
 print_resources(mon_state_t *state, pe_working_set_t *data_set,
-                int print_opts, unsigned int mon_ops)
+                int print_opts, unsigned int mon_ops, gboolean brief_output,
+                gboolean print_summary)
 {
     GListPtr rsc_iter;
     gboolean printed_resource = FALSE;
-    gboolean brief_output = is_set(mon_ops, mon_op_print_brief);
 
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
     if (is_set(mon_ops, mon_op_group_by_node) && is_not_set(mon_ops, mon_op_inactive_resources)) {
         return FALSE;
-    }
-
-    /* XML uses an indent, and ignores brief option for resources */
-    if (state->output_format == mon_output_xml) {
-        brief_output = FALSE;
     }
 
     print_resources_heading(state, mon_ops);
@@ -186,7 +177,12 @@ print_resources(mon_state_t *state, pe_working_set_t *data_set,
         state->out->message(state->out, crm_element_name(rsc->xml), print_opts, rsc);
     }
 
-    print_resources_closing(state, printed_resource, mon_ops);
+    if (print_summary && !printed_resource) {
+        print_resources_closing(state, mon_ops);
+    }
+
+    state->out->end_list(state->out);
+
     return TRUE;
 }
 
@@ -722,6 +718,8 @@ print_failed_actions(mon_state_t *state, pe_working_set_t *data_set)
  * \internal
  * \brief Print a section for failed stonith actions
  *
+ * \note This function should not be called for XML output.
+ *
  * \param[in] stream     File stream to display output to
  * \param[in] history    List of stonith actions
  *
@@ -741,9 +739,7 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
     }
 
     /* Print section heading */
-    if (state->output_format != mon_output_xml) {
-        state->out->begin_list(state->out, NULL, NULL, "Failed Fencing Actions");
-    }
+    state->out->begin_list(state->out, NULL, NULL, "Failed Fencing Actions");
 
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
@@ -753,9 +749,7 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
     }
 
     /* End section */
-    if (state->output_format != mon_output_xml) {
-        state->out->end_list(state->out);
-    }
+    state->out->end_list(state->out);
 
     return TRUE;
 }
@@ -763,6 +757,8 @@ print_failed_stonith_actions(mon_state_t *state, stonith_history_t *history, uns
 /*!
  * \internal
  * \brief Print pending stonith actions
+ *
+ * \note This function should not be called for XML output.
  *
  * \param[in] stream     File stream to display output to
  * \param[in] history    List of stonith actions
@@ -780,9 +776,7 @@ print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned i
         stonith_history_t *hp;
 
         /* Print section heading */
-        if (state->output_format != mon_output_xml) {
-            state->out->begin_list(state->out, NULL, NULL, "Pending Fencing Actions");
-        }            
+        state->out->begin_list(state->out, NULL, NULL, "Pending Fencing Actions");
 
         history = stonith__sort_history(history);
         for (hp = history; hp; hp = hp->next) {
@@ -793,9 +787,7 @@ print_stonith_pending(mon_state_t *state, stonith_history_t *history, unsigned i
         }
 
         /* End section */
-        if (state->output_format != mon_output_xml) {
-            state->out->end_list(state->out);
-        }
+        state->out->end_list(state->out);
 
         return TRUE;
     }
@@ -825,9 +817,31 @@ print_stonith_history(mon_state_t *state, stonith_history_t *history, unsigned i
 
     stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
-        if ((hp->state != st_failed) || (state->output_format == mon_output_xml)) {
+        if (hp->state != st_failed) {
             state->out->message(state->out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
         }
+    }
+
+    /* End section */
+    state->out->end_list(state->out);
+    return TRUE;
+}
+
+static gboolean
+print_stonith_history_full(mon_state_t *state, stonith_history_t *history, unsigned int mon_ops)
+{
+    stonith_history_t *hp;
+
+    if (history == NULL) {
+        return FALSE;
+    }
+
+    /* Print section heading */
+    state->out->begin_list(state->out, NULL, NULL, "Fencing History");
+
+    stonith__sort_history(history);
+    for (hp = history; hp; hp = hp->next) {
+        state->out->message(state->out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
     }
 
     /* End section */
@@ -851,9 +865,6 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    if (state->output_format == mon_output_console) {
-        blank_screen();
-    }
     print_cluster_summary(state, data_set, mon_ops, show);
 
     if (is_set(show, mon_show_headers)) {
@@ -962,7 +973,8 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
     state->out->info(state->out, "%s", "");
 
     /* Print resources section, if needed */
-    printed = print_resources(state, data_set, print_opts, mon_ops);
+    printed = print_resources(state, data_set, print_opts, mon_ops,
+                              is_set(mon_ops, mon_op_print_brief), TRUE);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -1033,12 +1045,6 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
             print_stonith_pending(state, stonith_history, mon_ops);
         }
     }
-
-#if CURSES_ENABLED
-    if (state->output_format == mon_output_console) {
-        refresh();
-    }
-#endif
 }
 
 void
@@ -1060,7 +1066,7 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
     state->out->end_list(state->out);
 
     /* Print resources section, if needed */
-    print_resources(state, data_set, print_opts, mon_ops);
+    print_resources(state, data_set, print_opts, mon_ops, FALSE, FALSE);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {
@@ -1082,7 +1088,7 @@ print_xml_status(mon_state_t *state, pe_working_set_t *data_set,
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        print_stonith_history(state, stonith_history, mon_ops);
+        print_stonith_history_full(state, stonith_history, mon_ops);
     }
 
     /* Print tickets if requested */
@@ -1115,7 +1121,8 @@ print_html_status(mon_state_t *state, pe_working_set_t *data_set,
     state->out->end_list(state->out);
 
     /* Print resources section, if needed */
-    print_resources(state, data_set, print_opts, mon_ops);
+    print_resources(state, data_set, print_opts, mon_ops,
+                    is_set(mon_ops, mon_op_print_brief), TRUE);
 
     /* print Node Attributes section if requested */
     if (show & mon_show_attributes) {

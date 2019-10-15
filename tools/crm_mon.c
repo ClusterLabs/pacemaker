@@ -1712,8 +1712,19 @@ mon_refresh_display(gpointer user_data)
             }
             break;
 
-        case mon_output_plain:
         case mon_output_console:
+            /* If curses is not enabled, this will just fall through to the plain
+             * text case.
+             */
+#if CURSES_ENABLED
+            blank_screen();
+            print_status(&state, mon_data_set, stonith_history, options.mon_ops,
+                         show, print_neg_location_prefix);
+            refresh();
+            break;
+#endif
+
+        case mon_output_plain:
             print_status(&state, mon_data_set, stonith_history, options.mon_ops,
                          show, print_neg_location_prefix);
             break;
