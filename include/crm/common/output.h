@@ -404,6 +404,20 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Increment the internal counter of the current list's length.
+     *
+     * Typically, this counter is maintained behind the scenes as a side effect
+     * of calling list_item().  However, custom functions that maintain lists
+     * some other way will need to manage this counter manually.  This is
+     * useful for implementing custom message functions and should not be
+     * needed otherwise.
+     *
+     * \param[in,out] out The output functions structure.
+     */
+    void (*increment_list) (pcmk__output_t *out);
+
+    /*!
+     * \internal
      * \brief Conclude a list.
      *
      * \note If begin_list was called with non-NULL for both the singular_noun

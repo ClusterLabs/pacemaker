@@ -280,6 +280,11 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 }
 
 static void
+xml_increment_list(pcmk__output_t *out) {
+    /* This function intentially left blank */
+}
+
+static void
 xml_end_list(pcmk__output_t *out) {
     private_data_t *priv = out->priv;
 
@@ -326,6 +331,7 @@ pcmk__mk_xml_output(char **argv) {
 
     retval->begin_list = xml_begin_list;
     retval->list_item = xml_list_item;
+    retval->increment_list = xml_increment_list;
     retval->end_list = xml_end_list;
 
     return retval;

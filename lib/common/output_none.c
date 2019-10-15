@@ -79,6 +79,11 @@ none_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 }
 
 static void
+none_increment_list(pcmk__output_t *out) {
+    /* This function intentionally left blank */
+}
+
+static void
 none_end_list(pcmk__output_t *out) {
     /* This function intentionally left blank */
 }
@@ -111,6 +116,7 @@ pcmk__mk_none_output(char **argv) {
 
     retval->begin_list = none_begin_list;
     retval->list_item = none_list_item;
+    retval->increment_list = none_increment_list;
     retval->end_list = none_end_list;
 
     return retval;

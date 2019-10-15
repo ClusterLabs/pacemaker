@@ -327,6 +327,11 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 }
 
 static void
+html_increment_list(pcmk__output_t *out) {
+    /* This function intentially left blank */
+}
+
+static void
 html_end_list(pcmk__output_t *out) {
     private_data_t *priv = out->priv;
 
@@ -370,6 +375,7 @@ pcmk__mk_html_output(char **argv) {
 
     retval->begin_list = html_begin_list;
     retval->list_item = html_list_item;
+    retval->increment_list = html_increment_list;
     retval->end_list = html_end_list;
 
     return retval;
