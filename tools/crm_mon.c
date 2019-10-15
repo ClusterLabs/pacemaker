@@ -1691,8 +1691,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(&state, mon_data_set, stonith_history,
-                                  options.mon_ops, show, print_neg_location_prefix,
-                                  options.reconnect_msec) != 0) {
+                                  options.mon_ops, show, print_neg_location_prefix) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
