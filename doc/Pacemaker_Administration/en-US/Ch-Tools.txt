@@ -19,41 +19,42 @@ its many options.
 .Sample output from crm_mon -1
 ======
 -------
-Stack: corosync
-Current DC: node2 (version 2.0.0-1) - partition with quorum
-Last updated: Mon Jan 29 12:18:42 2018
-Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: node2 (version 2.0.0-1) - partition with quorum
+  * Last updated: Mon Jan 29 12:18:42 2018
+  * Last change:  Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+  * 5 nodes configured
+  * 2 resources configured
 
-5 nodes configured
-2 resources configured
+Node List:
+  * Online: [ node1 node2 node3 node4 node5 ]
 
-Online: [ node1 node2 node3 node4 node5 ]
-
-Active resources:
-
-Fencing (stonith:fence_xvm):    Started node1
-IP	(ocf:heartbeat:IPaddr2):	Started node2
+* Active resources:
+  * Fencing (stonith:fence_xvm):    Started node1
+  * IP	(ocf:heartbeat:IPaddr2):	Started node2
 -------
 ======
       
 .Sample output from crm_mon -n -1
 ======
 -------
-Stack: corosync
-Current DC: node2 (version 2.0.0-1) - partition with quorum
-Last updated: Mon Jan 29 12:21:48 2018
-Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: node2 (version 2.0.0-1) - partition with quorum
+  * Last updated: Mon Jan 29 12:21:48 2018
+  * Last change:  Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+  * 5 nodes configured
+  * 2 resources configured
 
-5 nodes configured
-2 resources configured
-
-Node node1: online
-        Fencing (stonith:fence_xvm):    Started
-Node node2: online
-	IP	(ocf:heartbeat:IPaddr2):	Started
-Node node3: online
-Node node4: online
-Node node5: online
+* Node List:
+  * Node node1: online
+    * Fencing (stonith:fence_xvm):    Started
+  * Node node2: online
+    * IP	(ocf:heartbeat:IPaddr2):	Started
+  * Node node3: online
+  * Node node4: online
+  * Node node5: online
 -------
 ======
 
