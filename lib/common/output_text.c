@@ -201,7 +201,18 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     fputc('\n', out->dest);
     va_end(ap);
 
-    ((text_list_data_t *) g_queue_peek_tail(priv->parent_q))->len++;
+    out->increment_list(out);
+}
+
+static void
+text_increment_list(pcmk__output_t *out) {
+    private_data_t *priv = out->priv;
+    gpointer tail;
+
+    CRM_ASSERT(priv != NULL);
+    tail = g_queue_peek_tail(priv->parent_q);
+    CRM_ASSERT(tail != NULL);
+    ((text_list_data_t *) tail)->len++;
 }
 
 static void
@@ -251,6 +262,7 @@ pcmk__mk_text_output(char **argv) {
 
     retval->begin_list = text_begin_list;
     retval->list_item = text_list_item;
+    retval->increment_list = text_increment_list;
     retval->end_list = text_end_list;
 
     return retval;

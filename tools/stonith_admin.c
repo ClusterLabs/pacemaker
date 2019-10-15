@@ -450,6 +450,7 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
         }
 
         out->message(out, "stonith-event", hp, 1, stonith__later_succeeded(hp, history));
+        out->increment_list(out);
     }
 
     if (latest) {
@@ -457,6 +458,7 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             out->message(out, "stonith-event", latest, 0, FALSE);
+            out->increment_list(out);
         }
     }
 
