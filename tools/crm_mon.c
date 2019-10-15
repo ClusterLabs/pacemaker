@@ -626,7 +626,7 @@ get_option_desc(char c)
 }
 
 #define print_option_help(output_format, option, condition) \
-    print_as(output_format, "%c %c: \t%s\n", ((condition)? '*': ' '), option, get_option_desc(option));
+    out->info(out, "%c %c: \t%s", ((condition)? '*': ' '), option, get_option_desc(option));
 
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
@@ -709,23 +709,21 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         blank_screen();
 
-        print_as(output_format, "Display option change mode\n");
-        print_as(output_format, "\n");
-        print_option_help(output_format, 'c', show & mon_show_tickets);
-        print_option_help(output_format, 'f', show & mon_show_failcounts);
-        print_option_help(output_format, 'n', is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(output_format, 'o', show & mon_show_operations);
-        print_option_help(output_format, 'r', is_set(options.mon_ops, mon_op_inactive_resources));
-        print_option_help(output_format, 't', is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(output_format, 'A', show & mon_show_attributes);
-        print_option_help(output_format, 'L', show & mon_show_bans);
-        print_option_help(output_format, 'D', (show & mon_show_headers) == 0);
-        print_option_help(output_format, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
-        print_option_help(output_format, 'b', is_set(options.mon_ops, mon_op_print_brief));
-        print_option_help(output_format, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(output_format, 'm', (show & mon_show_fence_history));
-        print_as(output_format, "\n");
-        print_as(output_format, "Toggle fields via field letter, type any other key to return");
+        out->info(out, "%s", "Display option change mode\n");
+        print_option_help(out, 'c', show & mon_show_tickets);
+        print_option_help(out, 'f', show & mon_show_failcounts);
+        print_option_help(out, 'n', is_set(options.mon_ops, mon_op_group_by_node));
+        print_option_help(out, 'o', show & mon_show_operations);
+        print_option_help(out, 'r', is_set(options.mon_ops, mon_op_inactive_resources));
+        print_option_help(out, 't', is_set(options.mon_ops, mon_op_print_timing));
+        print_option_help(out, 'A', show & mon_show_attributes);
+        print_option_help(out, 'L', show & mon_show_bans);
+        print_option_help(out, 'D', (show & mon_show_headers) == 0);
+        print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
+        print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
+        print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
+        print_option_help(out, 'm', (show & mon_show_fence_history));
+        out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
 refresh:
@@ -1117,10 +1115,9 @@ main(int argc, char **argv)
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                print_as(output_format ,"\nError: cluster is not available on this node\n");
+                out->err(out, "%s", "\nError: cluster is not available on this node");
             } else {
-                print_as(output_format ,"\nConnection to cluster failed: %s\n",
-                         pcmk_strerror(rc));
+                out->err(out, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
         if (output_format == mon_output_console) {
@@ -1156,13 +1153,13 @@ main(int argc, char **argv)
     return clean_up(CRM_EX_OK);
 }
 
-#define mon_warn(output_format, mon_ops, fmt...) do {			\
+#define mon_warn(out, mon_ops, fmt...) do {			\
 	if (is_not_set(mon_ops, mon_op_has_warnings)) {			\
-	    print_as(output_format, "CLUSTER WARN:");		\
+	    out->info(out, "CLUSTER WARN:");		\
 	} else {				\
-	    print_as(output_format, ",");			\
+	    out->info(out, ",");			\
 	}					\
-	print_as(output_format, fmt);				\
+	out->info(out, fmt);				\
 	mon_ops |= mon_op_has_warnings;			\
     } while(0)
 
@@ -1177,8 +1174,8 @@ main(int argc, char **argv)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
 static void
-print_simple_status(pe_working_set_t * data_set, stonith_history_t *history,
-                    unsigned int mon_ops, mon_output_format_t output_format)
+print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
+                    stonith_history_t *history, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     int nodes_online = 0;
@@ -1186,7 +1183,7 @@ print_simple_status(pe_working_set_t * data_set, stonith_history_t *history,
     int nodes_maintenance = 0;
 
     if (data_set->dc_node == NULL) {
-        mon_warn(output_format, mon_ops, " No DC");
+        mon_warn(out, mon_ops, " No DC");
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1199,7 +1196,7 @@ print_simple_status(pe_working_set_t * data_set, stonith_history_t *history,
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            mon_warn(output_format, mon_ops, " offline node: %s", node->details->uname);
+            mon_warn(out, mon_ops, " offline node: %s", node->details->uname);
         }
     }
 
@@ -1700,7 +1697,7 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_monitor:
-            print_simple_status(mon_data_set, stonith_history, options.mon_ops, output_format);
+            print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
             if (is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
