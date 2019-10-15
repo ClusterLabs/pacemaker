@@ -324,10 +324,6 @@ static GOptionEntry addl_entries[] = {
       "Display the cluster status once on the console and exit",
       NULL },
 
-    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
-      "Disable the use of ncurses",
-      NULL },
-
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
       "Run in the background as a daemon.\n"
       INDENT "Requires at least one of --output-to and --external-agent.",
@@ -412,24 +408,32 @@ static GOptionEntry display_entries[] = {
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
+    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
+      "Display the cluster status once as a simple one line output (suitable for nagios)",
+      NULL },
+
     { NULL }
 };
 
-static GOptionEntry mode_entries[] = {
+static GOptionEntry deprecated_entries[] = {
     { "as-html", 'h', G_OPTION_FLAG_FILENAME, G_OPTION_ARG_CALLBACK, as_html_cb,
-      "Write cluster status to the named HTML file",
+      "Write cluster status to the named HTML file.\n"
+      INDENT "Use --output-as=html --output-to=FILE instead.",
       "FILE" },
 
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
-      "Write cluster status as XML to stdout. This will enable one-shot mode.",
+      "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
+      INDENT "Use --output-as=xml instead.",
+      NULL },
+
+    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
+      "Disable the use of ncurses.\n"
+      INDENT "Use --output-as=text instead.",
       NULL },
 
     { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
-      "Web mode with output suitable for CGI (preselected when run as *.cgi)",
-      NULL },
-
-    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
-      "Display the cluster status once as a simple one line output (suitable for nagios)",
+      "Web mode with output suitable for CGI (preselected when run as *.cgi).\n"
+      INDENT "Use --output-as=html --output-cgi instead.",
       NULL },
 
     { NULL }
@@ -776,12 +780,12 @@ build_arg_context(pcmk__common_args_t *args) {
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, examples);
 
-    pcmk__add_arg_group(context, "mode", "Mode Options (mutually exclusive):",
-                        "Show mode options", mode_entries);
     pcmk__add_arg_group(context, "display", "Display Options:",
                         "Show display options", display_entries);
     pcmk__add_arg_group(context, "additional", "Additional Options:",
                         "Show additional options", addl_entries);
+    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
+                        "Show deprecated options", deprecated_entries);
 
     return context;
 }
@@ -825,7 +829,7 @@ add_output_args() {
 }
 
 /* Which output format to use could come from two places:  The --as-xml
- * style arguments we gave in mode_entries above, or the formatted output
+ * style arguments we gave in deprecated_entries above, or the formatted output
  * arguments added by pcmk__register_formats.  If the latter were used,
  * output_format will be mon_output_unset.
  *
