@@ -1631,11 +1631,6 @@ mon_refresh_display(gpointer user_data)
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
 
-    /* stdout for everything except the HTML case, which does a bunch of file
-     * renaming.  We'll handle changing stream in print_html_status.
-     */
-    mon_state_t state = { .stream = stdout, .output_format = output_format, .out = out };
-
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
@@ -1695,7 +1690,7 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(&state, mon_data_set, stonith_history,
+            if (print_html_status(out, output_format, mon_data_set, stonith_history,
                                   options.mon_ops, show, print_neg_location_prefix) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
@@ -1705,7 +1700,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_legacy_xml:
         case mon_output_xml:
-            print_xml_status(&state, mon_data_set, stonith_history,
+            print_xml_status(out, output_format, mon_data_set, stonith_history,
                              options.mon_ops, show, print_neg_location_prefix);
             break;
 
@@ -1723,14 +1718,14 @@ mon_refresh_display(gpointer user_data)
              */
 #if CURSES_ENABLED
             blank_screen();
-            print_status(&state, mon_data_set, stonith_history, options.mon_ops,
+            print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
                          show, print_neg_location_prefix);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
-            print_status(&state, mon_data_set, stonith_history, options.mon_ops,
+            print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
                          show, print_neg_location_prefix);
             break;
 
