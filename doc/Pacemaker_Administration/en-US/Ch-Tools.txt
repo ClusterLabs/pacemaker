@@ -94,6 +94,49 @@ made. The cluster elects a node to be DC as needed. The only significance of
 the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
 
+[[s-crm_mon-css]]
+== Styling crm_mon output ==
+indexterm:[Command-line tool,crm_mon,css]
+
+Various parts of `crm_mon`'s HTML output have a CSS class associated with them.
+Not everything does, but some of the most interesting portions do.  In the following
+example, the status of each node has an "online" class and the details of each
+resource have an "rsc-ok" class.
+
+======
+-------
+<h2>Node List</h2>
+<ul>
+<li>
+<span>Node: cluster01</span><span class="online"> online</span>
+</li>
+<li><ul><li><span class="rsc-ok">ping   (ocf::pacemaker:ping):   Started</span></li></ul></li>
+<li>
+<span>Node: cluster02</span><span class="online"> online</span>
+</li>
+<li><ul><li><span class="rsc-ok">ping   (ocf::pacemaker:ping):   Started</span></li></ul></li>
+</ul>
+-------
+======
+
+By default, a stylesheet for styling these classes is included in the head of
+the HTML output.  The relevant portions of this stylesheet that would be used
+in the above example is:
+
+======
+-------
+<style>
+.online { color: green }
+.rsc-ok { color: green }
+</style>
+-------
+======
+
+If you want to override some or all of the styling, simply create your own
+stylesheet, place it on a web server, and pass `--output-stylesheet-link=<URL>`
+to `crm_mon`.  The link is added after the default stylesheet, so your
+changes take precedence.  You don't need to duplicate the entire default.
+Only include what you want to change.
 
 [[s-cibadmin]]
 == Edit the CIB XML with cibadmin ==
