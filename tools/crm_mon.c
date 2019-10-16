@@ -963,7 +963,6 @@ main(int argc, char **argv)
                 default:
                     /* something is odd */
                     rc = -EINVAL;
-                    crm_err("Invalid cib-source");
                     break;
             }
         }
@@ -1026,6 +1025,12 @@ main(int argc, char **argv)
             printf("You need to have curses available at compile time to enable console mode\n");
 #endif
         }
+    }
+
+    if (rc != pcmk_ok) {
+        // Shouldn't really be possible
+        fprintf(stderr, "Invalid CIB source\n");
+        return clean_up(CRM_EX_ERROR);
     }
 
     reconcile_output_format(args);
