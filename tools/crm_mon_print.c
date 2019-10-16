@@ -934,6 +934,7 @@ print_status(mon_state_t *state, pe_working_set_t *data_set,
 
         /* If we get here, node is in bad state, or we're grouping by node */
         state->out->message(state->out, "node", node, mon_ops, TRUE, node_mode);
+        free(node_name);
     }
 
     /* If we're not grouping by node, summarize nodes by status */
