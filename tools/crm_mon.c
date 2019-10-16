@@ -1702,8 +1702,8 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_legacy_xml:
         case mon_output_xml:
-            print_xml_status(out, output_format, mon_data_set, stonith_history,
-                             options.mon_ops, show, print_neg_location_prefix);
+            print_xml_status(out, mon_data_set, stonith_history, options.mon_ops,
+                             show, print_neg_location_prefix);
             break;
 
         case mon_output_monitor:
