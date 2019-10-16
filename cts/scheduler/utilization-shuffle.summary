@@ -3,12 +3,12 @@ Current cluster status:
 Online: [ act1 act2 act3 sby1 sby2 ]
 
  Resource Group: grpPostgreSQLDB1
-     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
-     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	Stopped 
-     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	Stopped 
-     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	Stopped 
-     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
-     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped 
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped
+     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	Stopped
+     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	Stopped
+     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	Stopped
+     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped
+     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	Stopped
  Resource Group: grpPostgreSQLDB2
      prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
      prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	Started act2
@@ -31,12 +31,12 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      Started: [ act1 act2 act3 sby1 sby2 ]
 
 Transition Summary:
- * Start   prmExPostgreSQLDB1	(act3)
- * Start   prmFsPostgreSQLDB1-1	(act3)
- * Start   prmFsPostgreSQLDB1-2	(act3)
- * Start   prmFsPostgreSQLDB1-3	(act3)
- * Start   prmIpPostgreSQLDB1	(act3)
- * Start   prmApPostgreSQLDB1	(act3)
+ * Start      prmExPostgreSQLDB1     (  act3 )  
+ * Start      prmFsPostgreSQLDB1-1   (  act3 )  
+ * Start      prmFsPostgreSQLDB1-2   (  act3 )  
+ * Start      prmFsPostgreSQLDB1-3   (  act3 )  
+ * Start      prmIpPostgreSQLDB1     (  act3 )  
+ * Start      prmApPostgreSQLDB1     (  act3 )  
 
 Executing cluster transition:
  * Pseudo action:   grpPostgreSQLDB1_start_0

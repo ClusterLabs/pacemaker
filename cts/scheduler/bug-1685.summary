@@ -4,11 +4,11 @@ Online: [ redun1 redun2 ]
 
  Clone Set: shared_storage [prim_shared_storage] (promotable)
      Slaves: [ redun1 redun2 ]
- shared_filesystem	(ocf::heartbeat:Filesystem):	Stopped 
+ shared_filesystem	(ocf::heartbeat:Filesystem):	Stopped
 
 Transition Summary:
- * Promote prim_shared_storage:0	(Slave -> Master redun2)
- * Start   shared_filesystem	(redun2)
+ * Promote    prim_shared_storage:0     ( Slave -> Master redun2 )  
+ * Start      shared_filesystem         (                 redun2 )  
 
 Executing cluster transition:
  * Pseudo action:   shared_storage_pre_notify_promote_0

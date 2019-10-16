@@ -23,8 +23,8 @@ Online: [ srv01 srv02 srv03 srv04 ]
      prmStonithN4	(stonith:external/ssh):	Started srv03
  Clone Set: clnUMgroup01 [clnUmResource]
      Resource Group: clnUmResource:0
-         clnUMdummy01	(ocf::pacemaker:Dummy):	FAILED srv04 
-         clnUMdummy02	(ocf::pacemaker:Dummy):	Started srv04 
+         clnUMdummy01	(ocf::pacemaker:Dummy):	FAILED srv04
+         clnUMdummy02	(ocf::pacemaker:Dummy):	Started srv04
      Started: [ srv01 ]
      Stopped: [ srv02 srv03 ]
  Clone Set: clnPingd [clnPrmPingd]
@@ -43,8 +43,8 @@ Transition Summary:
  * Move       UmDummy02          ( srv01 -> srv04 )  
  * Recover    clnUMdummy01:0     (          srv04 )  
  * Restart    clnUMdummy02:0     (          srv04 )   due to required clnUMdummy01:0 start
- * Stop    clnUMdummy01:1	(srv01)  	due to node availability
- * Stop    clnUMdummy02:1	(srv01)  	due to node availability
+ * Stop       clnUMdummy01:1     (          srv01 )   due to node availability
+ * Stop       clnUMdummy02:1     (          srv01 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   UMgroup01_stop_0

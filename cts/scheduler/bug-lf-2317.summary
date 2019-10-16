@@ -8,7 +8,7 @@ Online: [ ibm1.isg.si ibm2.isg.si ]
      Slaves: [ ibm1.isg.si ]
 
 Transition Summary:
- * Promote drbd_r0:1	(Slave -> Master ibm1.isg.si)
+ * Promote    drbd_r0:1     ( Slave -> Master ibm1.isg.si )  
 
 Executing cluster transition:
  * Resource action: drbd_r0:0       cancel=30000 on ibm1.isg.si

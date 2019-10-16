@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel rsc5_monitor_25000 rhel7-2" -> "rsc5_start_0 rhel7-2" [ style = bold]
 "Cancel rsc5_monitor_25000 rhel7-2" [ style=bold color="green" fontcolor="black"]
 "rsc2_monitor_0 rhel7-1" -> "rsc2_start_0 rhel7-3" [ style = bold]

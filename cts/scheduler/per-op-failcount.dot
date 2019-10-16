@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "prmDummy_monitor_10000 rh73-02-snmp" [ style=bold color="green" fontcolor="black"]
 "prmDummy_start_0 rh73-02-snmp" -> "prmDummy_monitor_10000 rh73-02-snmp" [ style = bold]
 "prmDummy_start_0 rh73-02-snmp" [ style=bold color="green" fontcolor="black"]

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "do_shutdown rhel7-2" [ style=bold color="green" fontcolor="black"]
 "do_shutdown rhel7-4" [ style=bold color="green" fontcolor="black"]
 "do_shutdown rhel7-5" [ style=bold color="green" fontcolor="black"]

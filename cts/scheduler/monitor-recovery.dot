@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "cl_tomcat_stop_0" -> "cl_tomcat_stopped_0" [ style = bold]
 "cl_tomcat_stop_0" -> "d_tomcat_stop_0 CSE-1" [ style = bold]
 "cl_tomcat_stop_0" [ style=bold color="green" fontcolor="orange"]

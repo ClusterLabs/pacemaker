@@ -7,9 +7,9 @@ Online: [ node1 node2 node3 ]
  rsc3	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
- * Start   rsc1	(node1)
- * Start   rsc2	(node1)
- * Start   rsc3	(node1)
+ * Start      rsc1    ( node1 )  
+ * Start      rsc2    ( node1 )  
+ * Start      rsc3    ( node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node3

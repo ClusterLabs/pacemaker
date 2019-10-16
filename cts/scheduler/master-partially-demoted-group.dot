@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "cdev-pool-0-drbd_demote_0 sd01-1" -> "cdev-pool-0-drbd_monitor_20000 sd01-1" [ style = bold]
 "cdev-pool-0-drbd_demote_0 sd01-1" -> "ms-cdev-pool-0-drbd_demoted_0" [ style = bold]
 "cdev-pool-0-drbd_demote_0 sd01-1" [ style=bold color="green" fontcolor="black"]

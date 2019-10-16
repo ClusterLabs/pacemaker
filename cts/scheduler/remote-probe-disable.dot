@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "FAKE1_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]
 "FAKE1_monitor_0 remote1" [ style=bold color="green" fontcolor="black"]
 "FAKE2_monitor_0 remote1" -> "remote1_stop_0 18builder" [ style = bold]

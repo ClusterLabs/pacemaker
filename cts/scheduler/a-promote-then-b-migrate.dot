@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel rsc1:1_monitor_10000 node2" -> "rsc1:1_promote_0 node2" [ style = bold]
 "Cancel rsc1:1_monitor_10000 node2" [ style=bold color="green" fontcolor="black"]
 "ms1_confirmed-post_notify_promoted_0" -> "rsc1:1_monitor_5000 node2" [ style = bold]

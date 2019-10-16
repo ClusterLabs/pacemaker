@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "clone1_running_0" [ style=bold color="green" fontcolor="orange"]
 "clone1_start_0" -> "clone1_running_0" [ style = bold]
 "clone1_start_0" -> "group1:0_start_0" [ style = bold]

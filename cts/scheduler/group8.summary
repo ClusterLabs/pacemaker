@@ -14,10 +14,10 @@ OFFLINE: [ node2 node3 ]
      child_rsc6	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
- * Start   rsc1	(node1)
- * Start   child_rsc1	(node1)
- * Start   child_rsc2	(node1)
- * Start   child_rsc3	(node1)
+ * Start      rsc1           ( node1 )  
+ * Start      child_rsc1     ( node1 )  
+ * Start      child_rsc2     ( node1 )  
+ * Start      child_rsc3     ( node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node1

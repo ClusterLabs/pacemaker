@@ -6,7 +6,7 @@ Online: [ sles11-a sles11-b ]
      Masters: [ sles11-a sles11-b ]
 
 Transition Summary:
- * Demote  res_Stateful_1:1	(Master -> Slave sles11-a)
+ * Demote     res_Stateful_1:1     ( Master -> Slave sles11-a )  
 
 Executing cluster transition:
  * Pseudo action:   ms_res_Stateful_1_demote_0

@@ -5,11 +5,11 @@ Online: [ node1 node2 ]
  Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
- rsc2	(ocf::pacemaker:Dummy):	Started node1 
+ rsc2	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
  * Demote     rsc1:0     ( Master -> Slave node1 )  
- * Promote rsc1:1	(Slave -> Master node2)
+ * Promote    rsc1:1     ( Slave -> Master node2 )  
  * Migrate    rsc2       (        node1 -> node2 )  
 
 Executing cluster transition:
@@ -51,5 +51,5 @@ Online: [ node1 node2 ]
  Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node2 ]
      Slaves: [ node1 ]
- rsc2	(ocf::pacemaker:Dummy):	Started node2 
+ rsc2	(ocf::pacemaker:Dummy):	Started node2
 

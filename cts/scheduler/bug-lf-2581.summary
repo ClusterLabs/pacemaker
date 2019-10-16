@@ -16,9 +16,9 @@ Online: [ elvis queen ]
      Stopped: [ queen ]
 
 Transition Summary:
- * Start   A:1	(queen)
- * Start   Z:1	(queen)
- * Start   stonith-l2network:1	(queen)
+ * Start      A:1                     ( queen )  
+ * Start      Z:1                     ( queen )  
+ * Start      stonith-l2network:1     ( queen )  
 
 Executing cluster transition:
  * Resource action: A:1             monitor on queen

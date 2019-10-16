@@ -15,18 +15,18 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
      container	(ocf::heartbeat:Dummy):	Stopped
 
 Transition Summary:
- * Start   fake1	(c7auto3)
- * Start   fake2	(c7auto4)
- * Start   fake3	(c7auto2)
- * Start   fake4	(c7auto3)
- * Start   fake5	(c7auto4)
- * Start   fake:0	(c7auto2)
- * Start   fake:1	(c7auto3)
- * Start   fake:2	(c7auto4)
- * Start   fake:3	(c7auto1)
- * Start   fake_fs	(c7auto1)
- * Start   container	(c7auto1)
- * Start   c7auto4	(c7auto1)
+ * Start      fake1         ( c7auto3 )  
+ * Start      fake2         ( c7auto4 )  
+ * Start      fake3         ( c7auto2 )  
+ * Start      fake4         ( c7auto3 )  
+ * Start      fake5         ( c7auto4 )  
+ * Start      fake:0        ( c7auto2 )  
+ * Start      fake:1        ( c7auto3 )  
+ * Start      fake:2        ( c7auto4 )  
+ * Start      fake:3        ( c7auto1 )  
+ * Start      fake_fs       ( c7auto1 )  
+ * Start      container     ( c7auto1 )  
+ * Start      c7auto4       ( c7auto1 )  
 
 Executing cluster transition:
  * Resource action: fake1           monitor on c7auto3

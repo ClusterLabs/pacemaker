@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "dummy1_start_0 sle12sp2-2" [ style=bold color="green" fontcolor="black"]
 "dummy1_stop_0 sle12sp2-1" -> "dummy1_start_0 sle12sp2-2" [ style = bold]
 "dummy1_stop_0 sle12sp2-1" -> "ms1_demote_0" [ style = bold]

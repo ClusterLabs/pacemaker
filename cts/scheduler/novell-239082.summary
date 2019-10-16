@@ -10,7 +10,7 @@ Online: [ xen-1 xen-2 ]
 Transition Summary:
  * Shutdown xen-1
  * Move       fs_1        (        xen-1 -> xen-2 )  
- * Promote drbd0:0	(Slave -> Master xen-2)
+ * Promote    drbd0:0     ( Slave -> Master xen-2 )  
  * Stop       drbd0:1     (          Master xen-1 )   due to node availability
 
 Executing cluster transition:

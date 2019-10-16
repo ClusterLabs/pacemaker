@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" -> "license.anbriz.vds-ok.com-vm_start_0 v03-a" [ style = bold]
 "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" -> "license.anbriz.vds-ok.com-vm_stop_0 v03-b" [ style = bold]
 "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" [ style=bold color="green" fontcolor="black"]

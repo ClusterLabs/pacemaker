@@ -3,37 +3,37 @@ Current cluster status:
 Online: [ 18builder 18node1 18node2 18node3 18node4 ]
 RemoteOFFLINE: [ remote1 ]
 
- shooter	(stonith:fence_xvm):	Started 18node1 
- remote1	(ocf::pacemaker:remote):	Stopped 
- FAKE1	(ocf::heartbeat:Dummy):	Stopped 
- FAKE2	(ocf::heartbeat:Dummy):	Started 18node2 
- FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
- FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
- FAKE5	(ocf::heartbeat:Dummy):	Stopped 
+ shooter	(stonith:fence_xvm):	Started 18node1
+ remote1	(ocf::pacemaker:remote):	Stopped
+ FAKE1	(ocf::heartbeat:Dummy):	Stopped
+ FAKE2	(ocf::heartbeat:Dummy):	Started 18node2
+ FAKE3	(ocf::heartbeat:Dummy):	Started 18builder
+ FAKE4	(ocf::heartbeat:Dummy):	Started 18node1
+ FAKE5	(ocf::heartbeat:Dummy):	Stopped
  Clone Set: FAKECLONE1-clone [FAKECLONE1]
      Stopped: [ 18builder 18node1 18node2 18node3 18node4 remote1 ]
  Clone Set: FAKECLONE2-clone [FAKECLONE2]
      Stopped: [ 18builder 18node1 18node2 18node3 18node4 remote1 ]
 
 Transition Summary:
- * Start   remote1	(18builder)
- * Start   FAKE1	(18node2)
+ * Start      remote1          (            18builder )  
+ * Start      FAKE1            (              18node2 )  
  * Move       FAKE2            (   18node2 -> 18node3 )  
  * Move       FAKE3            ( 18builder -> 18node4 )  
  * Move       FAKE4            (   18node1 -> remote1 )  
- * Start   FAKE5	(18builder)
- * Start   FAKECLONE1:0	(18node1)
- * Start   FAKECLONE1:1	(18node2)
- * Start   FAKECLONE1:2	(18node3)
- * Start   FAKECLONE1:3	(18node4)
- * Start   FAKECLONE1:4	(remote1)
- * Start   FAKECLONE1:5	(18builder)
- * Start   FAKECLONE2:0	(18node1)
- * Start   FAKECLONE2:1	(18node2)
- * Start   FAKECLONE2:2	(18node3)
- * Start   FAKECLONE2:3	(18node4)
- * Start   FAKECLONE2:4	(remote1)
- * Start   FAKECLONE2:5	(18builder)
+ * Start      FAKE5            (            18builder )  
+ * Start      FAKECLONE1:0     (              18node1 )  
+ * Start      FAKECLONE1:1     (              18node2 )  
+ * Start      FAKECLONE1:2     (              18node3 )  
+ * Start      FAKECLONE1:3     (              18node4 )  
+ * Start      FAKECLONE1:4     (              remote1 )  
+ * Start      FAKECLONE1:5     (            18builder )  
+ * Start      FAKECLONE2:0     (              18node1 )  
+ * Start      FAKECLONE2:1     (              18node2 )  
+ * Start      FAKECLONE2:2     (              18node3 )  
+ * Start      FAKECLONE2:3     (              18node4 )  
+ * Start      FAKECLONE2:4     (              remote1 )  
+ * Start      FAKECLONE2:5     (            18builder )  
 
 Executing cluster transition:
  * Resource action: shooter         monitor on 18node4
@@ -114,13 +114,13 @@ Revised cluster status:
 Online: [ 18builder 18node1 18node2 18node3 18node4 ]
 RemoteOnline: [ remote1 ]
 
- shooter	(stonith:fence_xvm):	Started 18node1 
- remote1	(ocf::pacemaker:remote):	Started 18builder 
- FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
- FAKE2	(ocf::heartbeat:Dummy):	Started 18node3 
- FAKE3	(ocf::heartbeat:Dummy):	Started 18node4 
- FAKE4	(ocf::heartbeat:Dummy):	Started remote1 
- FAKE5	(ocf::heartbeat:Dummy):	Started 18builder 
+ shooter	(stonith:fence_xvm):	Started 18node1
+ remote1	(ocf::pacemaker:remote):	Started 18builder
+ FAKE1	(ocf::heartbeat:Dummy):	Started 18node2
+ FAKE2	(ocf::heartbeat:Dummy):	Started 18node3
+ FAKE3	(ocf::heartbeat:Dummy):	Started 18node4
+ FAKE4	(ocf::heartbeat:Dummy):	Started remote1
+ FAKE5	(ocf::heartbeat:Dummy):	Started 18builder
  Clone Set: FAKECLONE1-clone [FAKECLONE1]
      Started: [ 18builder 18node1 18node2 18node3 18node4 remote1 ]
  Clone Set: FAKECLONE2-clone [FAKECLONE2]

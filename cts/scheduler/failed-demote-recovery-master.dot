@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "DB2_HADR-master_confirmed-post_notify_promoted_0" -> "DB2_HADR_monitor_22000 fastvm-rhel-7-4-96" [ style = bold]
 "DB2_HADR-master_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange"]
 "DB2_HADR-master_confirmed-post_notify_running_0" -> "DB2_HADR-master_pre_notify_promote_0" [ style = bold]

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "drbd-mgs:0_monitor_30000 lustre01-left" [ style=bold color="green" fontcolor="black"]
 "drbd-mgs:0_post_notify_start_0 lustre01-left" -> "ms-drbd-mgs_confirmed-post_notify_running_0" [ style = bold]
 "drbd-mgs:0_post_notify_start_0 lustre01-left" [ style=bold color="green" fontcolor="black"]

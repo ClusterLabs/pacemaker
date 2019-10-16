@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ClusterIP_monitor_60000 pcmk-1" [ style=dashed color="red" fontcolor="black"]
 "clvm-clone_stop_0" -> "clvm-clone_stopped_0" [ style = bold]
 "clvm-clone_stop_0" -> "clvm_stop_0 pcmk-2" [ style = bold]

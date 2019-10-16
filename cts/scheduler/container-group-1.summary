@@ -3,14 +3,14 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Resource Group: container-group
-     container1	(ocf::pacemaker:Dummy):	Stopped 
-     rsc1	(ocf::pacemaker:Dummy):	Stopped 
-     rsc2	(ocf::pacemaker:Dummy):	Stopped 
+     container1	(ocf::pacemaker:Dummy):	Stopped
+     rsc1	(ocf::pacemaker:Dummy):	Stopped
+     rsc2	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   container1	(node1)
- * Start   rsc1	(node1)
- * Start   rsc2	(node1)
+ * Start      container1     ( node1 )  
+ * Start      rsc1           ( node1 )  
+ * Start      rsc2           ( node1 )  
 
 Executing cluster transition:
  * Pseudo action:   container-group_start_0

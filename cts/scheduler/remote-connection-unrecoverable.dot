@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "killer_monitor_60000 node2" [ style=bold color="green" fontcolor="black"]
 "killer_start_0 node2" -> "killer_monitor_60000 node2" [ style = bold]
 "killer_start_0 node2" [ style=bold color="green" fontcolor="black"]

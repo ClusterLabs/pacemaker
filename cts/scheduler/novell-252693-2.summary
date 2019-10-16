@@ -20,11 +20,11 @@ Online: [ node1 node2 ]
  sles10	(ocf::heartbeat:Xen):	Started node2
 
 Transition Summary:
- * Start   stonithclone:1	(node1)
- * Start   evmsdclone:1	(node1)
- * Start   evmsclone:1	(node1)
- * Start   imagestoreclone:1	(node1)
- * Start   configstoreclone:1	(node1)
+ * Start      stonithclone:1        (          node1 )  
+ * Start      evmsdclone:1          (          node1 )  
+ * Start      evmsclone:1           (          node1 )  
+ * Start      imagestoreclone:1     (          node1 )  
+ * Start      configstoreclone:1    (          node1 )  
  * Migrate    sles10                ( node2 -> node1 )  
 
 Executing cluster transition:

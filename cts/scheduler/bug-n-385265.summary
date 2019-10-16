@@ -4,10 +4,10 @@ Online: [ ih01 ih02 ]
 
  Resource Group: group_common
      resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih02
-     resource_idvscommon	(ocf::dfs:idvs):	FAILED ih02 
+     resource_idvscommon	(ocf::dfs:idvs):	FAILED ih02
 
 Transition Summary:
- * Stop    resource_idvscommon	(ih02)  	due to node availability
+ * Stop       resource_idvscommon     (  ih02 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group_common_stop_0
@@ -19,5 +19,5 @@ Online: [ ih01 ih02 ]
 
  Resource Group: group_common
      resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih02
-     resource_idvscommon	(ocf::dfs:idvs):	Stopped 
+     resource_idvscommon	(ocf::dfs:idvs):	Stopped
 

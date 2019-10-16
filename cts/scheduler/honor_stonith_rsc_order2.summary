@@ -5,17 +5,17 @@ Online: [ fc16-builder ]
  Clone Set: S_CLONE [S_A]
      Stopped: [ fc16-builder ]
  Resource Group: S_GROUP
-     S_B	(stonith:fence_xvm):	Stopped 
-     S_C	(stonith:fence_xvm):	Stopped 
-     S_D	(stonith:fence_xvm):	Stopped 
- A	(ocf::pacemaker:Dummy):	Stopped 
+     S_B	(stonith:fence_xvm):	Stopped
+     S_C	(stonith:fence_xvm):	Stopped
+     S_D	(stonith:fence_xvm):	Stopped
+ A	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   S_A:0	(fc16-builder)
- * Start   S_B	(fc16-builder)
- * Start   S_C	(fc16-builder)
- * Start   S_D	(fc16-builder)
- * Start   A	(fc16-builder)
+ * Start      S_A:0   ( fc16-builder )  
+ * Start      S_B     ( fc16-builder )  
+ * Start      S_C     ( fc16-builder )  
+ * Start      S_D     ( fc16-builder )  
+ * Start      A       ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: S_A:0           monitor on fc16-builder

@@ -3,7 +3,7 @@
 Current cluster status:
 Online: [ hex-0 hex-7 hex-8 hex-9 ]
 
- fencing-sbd	(stonith:external/sbd):	Stopped 
+ fencing-sbd	(stonith:external/sbd):	Stopped
  Clone Set: o2cb-clone [o2cb]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
  Clone Set: vg1-clone [vg1]
@@ -18,7 +18,7 @@ Online: [ hex-0 hex-7 hex-8 hex-9 ]
      Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
 
 Transition Summary:
- * Start   fencing-sbd	(hex-0)
+ * Start      fencing-sbd     ( hex-0 )  
 
 Executing cluster transition:
  * Resource action: fencing-sbd     start on hex-0

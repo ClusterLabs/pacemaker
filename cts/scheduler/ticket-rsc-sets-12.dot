@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "group2_stop_0" -> "group2_stopped_0" [ style = bold]
 "group2_stop_0" -> "rsc2_stop_0 node1" [ style = bold]
 "group2_stop_0" -> "rsc3_stop_0 node1" [ style = bold]

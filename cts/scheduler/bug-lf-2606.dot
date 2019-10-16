@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ms3_demote_0" -> "ms3_demoted_0" [ style = bold]
 "ms3_demote_0" -> "rsc3:1_demote_0 node2" [ style = bold]
 "ms3_demote_0" [ style=bold color="green" fontcolor="orange"]

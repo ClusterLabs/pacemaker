@@ -1,7 +1,7 @@
-digraph "g" {
-"rsc_sles-5_monitor_5000 sles-6" [ style=bold color="green" fontcolor="black" ]
+ digraph "g" {
+"rsc_sles-5_monitor_5000 sles-6" [ style=bold color="green" fontcolor="black"]
 "rsc_sles-5_start_0 sles-6" -> "rsc_sles-5_monitor_5000 sles-6" [ style = bold]
-"rsc_sles-5_start_0 sles-6" [ style=bold color="green" fontcolor="black" ]
+"rsc_sles-5_start_0 sles-6" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' sles-5" -> "rsc_sles-5_start_0 sles-6" [ style = bold]
 "stonith 'reboot' sles-5" [ style=bold color="green" fontcolor="black"]
 }

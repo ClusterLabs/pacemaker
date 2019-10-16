@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "stonith 'reboot' node1" -> "stonith 'reboot' node2" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' node2" [ style=bold color="green" fontcolor="black"]

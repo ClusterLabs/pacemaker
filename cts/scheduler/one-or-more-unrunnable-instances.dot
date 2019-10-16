@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ceilometer-alarm-evaluator-clone_running_0" -> "ceilometer-alarm-notifier-clone_start_0" [ style = bold]
 "ceilometer-alarm-evaluator-clone_running_0" [ style=bold color="green" fontcolor="orange"]
 "ceilometer-alarm-evaluator-clone_start_0" -> "ceilometer-alarm-evaluator-clone_running_0" [ style = bold]

@@ -2,12 +2,12 @@
 Current cluster status:
 Online: [ fc16-builder ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
- ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped
+ ClusterIP2	(ocf::heartbeat:IPaddr2):	Stopped
 
 Transition Summary:
- * Start   ClusterIP	(fc16-builder)
- * Start   ClusterIP2	(fc16-builder)
+ * Start      ClusterIP     ( fc16-builder )  
+ * Start      ClusterIP2    ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: ClusterIP       monitor on fc16-builder

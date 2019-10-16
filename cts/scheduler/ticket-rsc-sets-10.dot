@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "clone4_stop_0" -> "clone4_stopped_0" [ style = bold]
 "clone4_stop_0" -> "rsc4:0_stop_0 node2" [ style = bold]
 "clone4_stop_0" -> "rsc4:1_stop_0 node1" [ style = bold]

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "drbd-r1_monitor_29000 hex-2" [ style=bold color="green" fontcolor="black"]
 "drbd-r1_monitor_31000 hex-3" [ style=bold color="green" fontcolor="black"]
 "drbd-r1_post_notify_promoted_0 hex-2" -> "ms-r1_confirmed-post_notify_promoted_0" [ style = bold]

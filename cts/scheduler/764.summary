@@ -11,8 +11,8 @@ OFFLINE: [ posic042 posic044 ]
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started posic043
      child_DoFencing:1	(stonith:ssh):	Started posic041
-     child_DoFencing:2	(stonith:ssh):	Stopped 
-     child_DoFencing:3	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped
+     child_DoFencing:3	(stonith:ssh):	Stopped
 
 Transition Summary:
  * Stop       DcIPaddr         ( posic043 )   due to no quorum
@@ -42,14 +42,14 @@ Revised cluster status:
 Online: [ posic041 posic043 ]
 OFFLINE: [ posic042 posic044 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_posic041	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_posic042	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_posic043	(ocf::heartbeat:IPaddr):	Stopped 
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_posic041	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_posic042	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_posic043	(ocf::heartbeat:IPaddr):	Stopped
  rsc_posic044	(ocf::heartbeat:IPaddr):	Started posic041
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started posic043
      child_DoFencing:1	(stonith:ssh):	Started posic041
-     child_DoFencing:2	(stonith:ssh):	Stopped 
-     child_DoFencing:3	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped
+     child_DoFencing:3	(stonith:ssh):	Stopped
 

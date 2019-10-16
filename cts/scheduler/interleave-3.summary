@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n09	(ocf::heartbeat:IPaddr):	Stopped  (unmanaged)
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	Stopped (unmanaged)
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02 (unmanaged)
  rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03 (unmanaged)
  rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04 (unmanaged)
@@ -21,24 +21,24 @@ Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
      child_DoFencing:6	(stonith:ssh):	Started c001n08
      child_DoFencing:7	(stonith:ssh):	Started c001n09
  Clone Set: CloneSet [child_CloneSet] (unique)
-     child_CloneSet:0	(stonith:ssh):	Stopped 
-     child_CloneSet:1	(stonith:ssh):	Stopped 
-     child_CloneSet:2	(stonith:ssh):	Stopped 
-     child_CloneSet:3	(stonith:ssh):	Stopped 
-     child_CloneSet:4	(stonith:ssh):	Stopped 
-     child_CloneSet:5	(stonith:ssh):	Stopped 
-     child_CloneSet:6	(stonith:ssh):	Stopped 
-     child_CloneSet:7	(stonith:ssh):	Stopped 
+     child_CloneSet:0	(stonith:ssh):	Stopped
+     child_CloneSet:1	(stonith:ssh):	Stopped
+     child_CloneSet:2	(stonith:ssh):	Stopped
+     child_CloneSet:3	(stonith:ssh):	Stopped
+     child_CloneSet:4	(stonith:ssh):	Stopped
+     child_CloneSet:5	(stonith:ssh):	Stopped
+     child_CloneSet:6	(stonith:ssh):	Stopped
+     child_CloneSet:7	(stonith:ssh):	Stopped
 
 Transition Summary:
- * Start   child_CloneSet:0	(c001n02)
- * Start   child_CloneSet:1	(c001n03)
- * Start   child_CloneSet:2	(c001n04)
- * Start   child_CloneSet:3	(c001n05)
- * Start   child_CloneSet:4	(c001n06)
- * Start   child_CloneSet:5	(c001n07)
- * Start   child_CloneSet:6	(c001n08)
- * Start   child_CloneSet:7	(c001n09)
+ * Start      child_CloneSet:0     ( c001n02 )  
+ * Start      child_CloneSet:1     ( c001n03 )  
+ * Start      child_CloneSet:2     ( c001n04 )  
+ * Start      child_CloneSet:3     ( c001n05 )  
+ * Start      child_CloneSet:4     ( c001n06 )  
+ * Start      child_CloneSet:5     ( c001n07 )  
+ * Start      child_CloneSet:6     ( c001n08 )  
+ * Start      child_CloneSet:7     ( c001n09 )  
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n08
@@ -210,7 +210,7 @@ Revised cluster status:
 Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n09	(ocf::heartbeat:IPaddr):	Stopped  (unmanaged)
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	Stopped (unmanaged)
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02 (unmanaged)
  rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03 (unmanaged)
  rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04 (unmanaged)

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "clnPingd_stop_0" -> "clnPingd_stopped_0" [ style = bold]
 "clnPingd_stop_0" -> "prmPingd_stop_0 srv01" [ style = dashed]
 "clnPingd_stop_0" -> "prmPingd_stop_0 srv02" [ style = dashed]

@@ -2,15 +2,15 @@
 Current cluster status:
 Online: [ alice.demo bob.demo ]
 
- dummy1	(ocf::heartbeat:Dummy):	Stopped 
+ dummy1	(ocf::heartbeat:Dummy):	Stopped
  Clone Set: ms_stateful [stateful] (promotable)
      Stopped: [ alice.demo bob.demo ]
  Clone Set: cl_dummy2 [dummy2]
      Stopped: [ alice.demo bob.demo ]
 
 Transition Summary:
- * Start   stateful:0	(alice.demo)
- * Start   stateful:1	(bob.demo)
+ * Start      stateful:0     ( alice.demo )  
+ * Start      stateful:1     (   bob.demo )  
  * Start      dummy2:0       ( alice.demo )   due to unrunnable dummy1 start (blocked)
  * Start      dummy2:1       (   bob.demo )   due to unrunnable dummy1 start (blocked)
 
@@ -34,7 +34,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ alice.demo bob.demo ]
 
- dummy1	(ocf::heartbeat:Dummy):	Stopped 
+ dummy1	(ocf::heartbeat:Dummy):	Stopped
  Clone Set: ms_stateful [stateful] (promotable)
      Slaves: [ alice.demo bob.demo ]
  Clone Set: cl_dummy2 [dummy2]

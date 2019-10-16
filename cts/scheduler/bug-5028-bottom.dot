@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "do_shutdown bl460g6a" [ style=dashed color="red" fontcolor="black"]
 "dummy-g_stop_0" -> "dummy-g_stopped_0" [ style = dashed]
 "dummy-g_stop_0" -> "dummy02_stop_0 bl460g6a" [ style = bold]

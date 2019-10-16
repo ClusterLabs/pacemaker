@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "remote1_migrate_from_0 node2" -> "remote1_start_0 node2" [ style = bold]
 "remote1_migrate_from_0 node2" -> "remote1_stop_0 node1" [ style = bold]
 "remote1_migrate_from_0 node2" [ style=bold color="green" fontcolor="black"]

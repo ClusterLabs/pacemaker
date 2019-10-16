@@ -7,18 +7,18 @@ Online: [ node1 node2 node3 ]
  Clone Set: clone2 [group1]
      Stopped: [ node1 node2 node3 ]
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	Stopped 
-     rsc5	(ocf::pacemaker:Dummy):	Stopped 
+     rsc4	(ocf::pacemaker:Dummy):	Stopped
+     rsc5	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   rsc1:0	(node2)
- * Start   rsc1:1	(node3)
- * Start   rsc2:0	(node3)
- * Start   rsc3:0	(node3)
- * Start   rsc2:1	(node2)
- * Start   rsc3:1	(node2)
- * Start   rsc4	(node3)
- * Start   rsc5	(node3)
+ * Start      rsc1:0     ( node2 )  
+ * Start      rsc1:1     ( node3 )  
+ * Start      rsc2:0     ( node3 )  
+ * Start      rsc3:0     ( node3 )  
+ * Start      rsc2:1     ( node2 )  
+ * Start      rsc3:1     ( node2 )  
+ * Start      rsc4       ( node3 )  
+ * Start      rsc5       ( node3 )  
 
 Executing cluster transition:
  * Resource action: rsc1:0          monitor on node2
@@ -66,6 +66,6 @@ Online: [ node1 node2 node3 ]
  Clone Set: clone2 [group1]
      Started: [ node2 node3 ]
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	Started node3 
-     rsc5	(ocf::pacemaker:Dummy):	Started node3 
+     rsc4	(ocf::pacemaker:Dummy):	Started node3
+     rsc5	(ocf::pacemaker:Dummy):	Started node3
 

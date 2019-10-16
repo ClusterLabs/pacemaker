@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ms_drbd-dtest1_confirmed-post_notify_promoted_0" -> "p_drbd-dtest1_monitor_10000 c7" [ style = bold]
 "ms_drbd-dtest1_confirmed-post_notify_promoted_0" -> "p_drbd-dtest1_monitor_20000 c6" [ style = bold]
 "ms_drbd-dtest1_confirmed-post_notify_promoted_0" -> "p_dtest1_start_0 c7" [ style = bold]

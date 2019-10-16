@@ -11,7 +11,7 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
      Stopped: [ c7auto1 c7auto2 c7auto3 ]
 
 Transition Summary:
- * Start   FAKE1:0	(c7auto1)
+ * Start      FAKE1:0     ( c7auto1 )  
  * Start      FAKE2:0     ( c7auto2 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)
  * Start      FAKE2:1     ( c7auto3 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)
  * Start      FAKE2:2     ( c7auto1 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory (blocked)

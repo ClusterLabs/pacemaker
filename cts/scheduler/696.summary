@@ -9,11 +9,11 @@ Online: [ hadev1 hadev2 hadev3 ]
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	Started hadev2 (Monitoring)
      child_DoFencing:1	(stonith:ssh):	Started hadev3 (Monitoring)
-     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped
 
 Transition Summary:
  * Move       rsc_hadev1            ( hadev3 -> hadev1 )  
- * Start   child_DoFencing:2	(hadev1)
+ * Start      child_DoFencing:2     (           hadev1 )  
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on hadev3

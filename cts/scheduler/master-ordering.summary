@@ -22,12 +22,12 @@ OFFLINE: [ webcluster02 ]
  fs_mysql	(ocf::heartbeat:Filesystem):	Stopped
 
 Transition Summary:
- * Start   extip_1	(webcluster01)
- * Start   extip_2	(webcluster01)
- * Start   intip_1_master	(webcluster01)
- * Start   intip_2_slave	(webcluster01)
- * Start   drbd_www:0	(webcluster01)
- * Start   drbd_mysql:0	(webcluster01)
+ * Start      extip_1            ( webcluster01 )  
+ * Start      extip_2            ( webcluster01 )  
+ * Start      intip_1_master     ( webcluster01 )  
+ * Start      intip_2_slave      ( webcluster01 )  
+ * Start      drbd_www:0         ( webcluster01 )  
+ * Start      drbd_mysql:0       ( webcluster01 )  
 
 Executing cluster transition:
  * Resource action: mysql-server    monitor on webcluster01

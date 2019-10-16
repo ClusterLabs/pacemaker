@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
- dummy	(ocf::pacemaker:Dummy):	Stopped 
+ dummy	(ocf::pacemaker:Dummy):	Stopped
  Clone Set: clone-1 [child-1]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 ]
  Clone Set: clone-2 [child-2]
@@ -11,14 +11,14 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 ]
 
 Transition Summary:
- * Start   dummy	(pcmk-1)
- * Start   child-1:0	(pcmk-2)
- * Start   child-1:1	(pcmk-3)
- * Start   child-1:2	(pcmk-1)
- * Start   child-2:0	(pcmk-2)
- * Start   child-2:1	(pcmk-3)
- * Start   child-3:1	(pcmk-2)
- * Start   child-3:2	(pcmk-3)
+ * Start      dummy         ( pcmk-1 )  
+ * Start      child-1:0     ( pcmk-2 )  
+ * Start      child-1:1     ( pcmk-3 )  
+ * Start      child-1:2     ( pcmk-1 )  
+ * Start      child-2:0     ( pcmk-2 )  
+ * Start      child-2:1     ( pcmk-3 )  
+ * Start      child-3:1     ( pcmk-2 )  
+ * Start      child-3:2     ( pcmk-3 )  
 
 Executing cluster transition:
  * Pseudo action:   clone-1_start_0
@@ -39,7 +39,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started pcmk-1 
+ dummy	(ocf::pacemaker:Dummy):	Started pcmk-1
  Clone Set: clone-1 [child-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
  Clone Set: clone-2 [child-2]

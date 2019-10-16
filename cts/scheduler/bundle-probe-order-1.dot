@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "galera-bundle-docker-0_monitor_0 centos1" [ style=bold color="green" fontcolor="black"]
 "galera-bundle-docker-0_monitor_0 centos2" [ style=bold color="green" fontcolor="black"]
 "galera-bundle-docker-0_monitor_0 centos3" [ style=bold color="green" fontcolor="black"]

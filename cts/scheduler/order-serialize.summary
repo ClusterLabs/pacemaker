@@ -59,7 +59,7 @@ Node xen-a (445a93d5-655e-430b-b45d-47d79a2f78c7): standby
 Online: [ xen-b ]
 
  xen-a-fencing	(stonith:external/ipmi):	Started xen-b
- xen-b-fencing	(stonith:external/ipmi):	Stopped 
+ xen-b-fencing	(stonith:external/ipmi):	Stopped
  db	(ocf::heartbeat:Xen):	Started xen-b
  dbreplica	(ocf::heartbeat:Xen):	Started xen-b
  core-101	(ocf::heartbeat:Xen):	Started xen-b

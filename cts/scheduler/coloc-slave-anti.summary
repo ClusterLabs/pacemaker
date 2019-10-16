@@ -8,16 +8,16 @@ Online: [ pollux sirius ]
      Masters: [ pollux ]
      Slaves: [ sirius ]
  Resource Group: group-1
-     fs-1	(ocf::heartbeat:Filesystem):	Stopped 
-     ip-198	(ocf::heartbeat:IPaddr2):	Stopped 
-     apache	(ocf::custom:apache2):	Stopped 
+     fs-1	(ocf::heartbeat:Filesystem):	Stopped
+     ip-198	(ocf::heartbeat:IPaddr2):	Stopped
+     apache	(ocf::custom:apache2):	Stopped
  pollux-fencing	(stonith:external/ipmi-soft):	Started sirius
  sirius-fencing	(stonith:external/ipmi-soft):	Started pollux
 
 Transition Summary:
- * Start   fs-1	(pollux)
- * Start   ip-198	(pollux)
- * Start   apache	(pollux)
+ * Start      fs-1       ( pollux )  
+ * Start      ip-198     ( pollux )  
+ * Start      apache     ( pollux )  
 
 Executing cluster transition:
  * Pseudo action:   group-1_start_0

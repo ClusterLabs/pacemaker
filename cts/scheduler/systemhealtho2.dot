@@ -1,6 +1,6 @@
-digraph "g" {
-"apache_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black" ]
-"nfs_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black" ]
+ digraph "g" {
+"apache_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"]
+"nfs_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' hs21d" [ style=bold color="green" fontcolor="black"]
-"stonith-1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black" ]
+"stonith-1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"]
 }

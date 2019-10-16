@@ -12,14 +12,14 @@ Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
  rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
  Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
-     child_DoFencing:0	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:1	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:2	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:3	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:4	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:5	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:6	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:7	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	Stopped (unmanaged)
 
 Transition Summary:
 
@@ -153,12 +153,12 @@ Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
  rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
  Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
-     child_DoFencing:0	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:1	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:2	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:3	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:4	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:5	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:6	(stonith:ssh):	Stopped  (unmanaged)
-     child_DoFencing:7	(stonith:ssh):	Stopped  (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	Stopped (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	Stopped (unmanaged)
 

@@ -1,7 +1,7 @@
  digraph "g" {
-"child_rsc1_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"child_rsc2_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"child_rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rsc1_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
+"child_rsc1_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"child_rsc2_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"child_rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"rsc1_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
 }

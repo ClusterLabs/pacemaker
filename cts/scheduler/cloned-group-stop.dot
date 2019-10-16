@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "cinder-api_monitor_60000 rhos4-node3" [ style=dashed color="red" fontcolor="black"]
 "cinder-api_monitor_60000 rhos4-node4" [ style=dashed color="red" fontcolor="black"]
 "cinder-api_start_0 rhos4-node3" -> "cinder-api_monitor_60000 rhos4-node3" [ style = dashed]

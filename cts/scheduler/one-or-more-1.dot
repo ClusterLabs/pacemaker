@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "A_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "B_monitor_0 fc16-builder" -> "B_start_0 fc16-builder" [ style = dashed]
 "B_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]

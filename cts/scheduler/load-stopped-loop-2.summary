@@ -13,10 +13,10 @@ Online: [ xfc0 xfc1 xfc2 xfc3 ]
  xu-test11	(ocf::heartbeat:Xen):	Started xfc3
  xu-test12	(ocf::heartbeat:Xen):	Started xfc2
  xu-test13	(ocf::heartbeat:Xen):	Stopped
- xu-test14	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test15	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test16	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test17	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test14	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test15	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test16	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test17	(ocf::heartbeat:Xen):	Stopped (disabled)
  xu-test2	(ocf::heartbeat:Xen):	Started xfc3
  xu-test3	(ocf::heartbeat:Xen):	Started xfc1
  xu-test4	(ocf::heartbeat:Xen):	Started xfc0
@@ -34,7 +34,7 @@ Transition Summary:
  * Migrate    xu-test6      ( xfc3 -> xfc1 )  
  * Migrate    xu-test7      ( xfc1 -> xfc0 )  
  * Migrate    xu-test9      ( xfc0 -> xfc2 )  
- * Start   xu-test13	(xfc3)
+ * Start      xu-test13     (         xfc3 )  
 
 Executing cluster transition:
  * Resource action: xu-test4        migrate_to on xfc0
@@ -97,10 +97,10 @@ Online: [ xfc0 xfc1 xfc2 xfc3 ]
  xu-test11	(ocf::heartbeat:Xen):	Started xfc3
  xu-test12	(ocf::heartbeat:Xen):	Started xfc3
  xu-test13	(ocf::heartbeat:Xen):	Started xfc3
- xu-test14	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test15	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test16	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
- xu-test17	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ xu-test14	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test15	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test16	(ocf::heartbeat:Xen):	Stopped (disabled)
+ xu-test17	(ocf::heartbeat:Xen):	Stopped (disabled)
  xu-test2	(ocf::heartbeat:Xen):	Started xfc1
  xu-test3	(ocf::heartbeat:Xen):	Started xfc0
  xu-test4	(ocf::heartbeat:Xen):	Started xfc2

@@ -5,13 +5,13 @@ RemoteNode rhel7-alt4: UNCLEAN (offline)
 Online: [ rhel7-alt1 ]
 OFFLINE: [ rhel7-alt3 ]
 
- shooter	(stonith:fence_xvm):	Stopped 
- rhel7-alt4	(ocf::pacemaker:remote):	Stopped 
+ shooter	(stonith:fence_xvm):	Stopped
+ rhel7-alt4	(ocf::pacemaker:remote):	Stopped
  fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 (UNCLEAN)
 
 Transition Summary:
- * Start   shooter	(rhel7-alt1)
- * Start   rhel7-alt4	(rhel7-alt1)
+ * Start      shooter        ( rhel7-alt1 )  
+ * Start      rhel7-alt4     ( rhel7-alt1 )  
 
 Executing cluster transition:
  * Resource action: shooter         start on rhel7-alt1
@@ -26,7 +26,7 @@ Online: [ rhel7-alt1 ]
 OFFLINE: [ rhel7-alt3 ]
 RemoteOnline: [ rhel7-alt4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-alt1 
- rhel7-alt4	(ocf::pacemaker:remote):	Started rhel7-alt1 
- fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 
+ shooter	(stonith:fence_xvm):	Started rhel7-alt1
+ rhel7-alt4	(ocf::pacemaker:remote):	Started rhel7-alt1
+ fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4
 

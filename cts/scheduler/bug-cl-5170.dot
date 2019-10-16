@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ip_mgmt_stop_0 TCS-2" -> "ip_trf_stop_0 TCS-2" [ style = bold]
 "ip_mgmt_stop_0 TCS-2" -> "svc_stopped_0" [ style = bold]
 "ip_mgmt_stop_0 TCS-2" [ style=bold color="green" fontcolor="black"]

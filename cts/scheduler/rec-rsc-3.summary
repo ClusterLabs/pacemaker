@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  rsc1	(ocf::heartbeat:apache):	Stopped (failure ignored)
 
 Transition Summary:
- * Start   rsc1	(node1)
+ * Start      rsc1    ( node1 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node1

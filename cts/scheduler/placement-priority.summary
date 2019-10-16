@@ -19,5 +19,5 @@ Node node1: standby
 Online: [ node2 ]
 
  rsc2	(ocf::pacemaker:Dummy):	Started node2
- rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ rsc1	(ocf::pacemaker:Dummy):	Stopped
 

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "child-1:0_start_0 pcmk-2" -> "child-2:0_start_0 pcmk-2" [ style = bold]
 "child-1:0_start_0 pcmk-2" -> "clone-1_running_0" [ style = bold]
 "child-1:0_start_0 pcmk-2" [ style=bold color="green" fontcolor="black"]
