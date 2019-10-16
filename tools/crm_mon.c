@@ -101,6 +101,8 @@ static pcmk__supported_format_t formats[] = {
 #define MON_STATUS_CRIT    CRM_EX_INVALID_PARAM
 #define MON_STATUS_UNKNOWN CRM_EX_UNIMPLEMENT_FEATURE
 
+#define RECONNECT_MSECS 5000
+
 struct {
     int reconnect_msec;
     int fence_history_level;
@@ -111,7 +113,7 @@ struct {
     char *external_recipient;
     unsigned int mon_ops;
 } options = {
-    .reconnect_msec = 5000,
+    .reconnect_msec = RECONNECT_MSECS,
     .fence_history_level = 1,
     .mon_ops = mon_op_default
 };
@@ -317,7 +319,7 @@ watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency in seconds",
+      "Update frequency in seconds (default is 5)",
       "SECONDS" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
@@ -804,8 +806,8 @@ add_output_args() {
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
-                              g_get_prgname(), options.reconnect_msec/1000)) {
+        if (!pcmk__force_args(context, &error, "%s --output-title \"Cluster Status\"",
+                              g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
@@ -1822,6 +1824,16 @@ clean_up_connections(void)
     }
 }
 
+static void
+handle_html_output(crm_exit_t exit_code) {
+    xmlNodePtr html = NULL;
+
+    out->finish(out, exit_code, false, (void **) &html);
+    pcmk__html_add_header(html, "meta", "http-equiv", "refresh", "content",
+                          crm_itoa(options.reconnect_msec/1000), NULL);
+    htmlDocDump(out->dest, html->doc);
+}
+
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
@@ -1860,7 +1872,12 @@ clean_up(crm_exit_t exit_code)
     g_option_context_free(context);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        if (output_format == mon_output_cgi || output_format == mon_output_html) {
+            handle_html_output(exit_code);
+        } else {
+            out->finish(out, exit_code, true, NULL);
+        }
+
         pcmk__output_free(out);
     }
 
