@@ -17,11 +17,10 @@
 #include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/stonith-ng.h>
-#include <crm/transition.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>
 
 int main()
 {
-	return 0;
+    return 0;
 }
