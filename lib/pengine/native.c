@@ -501,21 +501,22 @@ comma_if(int i)
 }
 
 static char *
-flags_string(resource_t *rsc, node_t *node, long options, const char *target_role) {
-    gchar **flags = calloc(6, sizeof(gchar *));
+flags_string(pe_resource_t *rsc, pe_node_t *node, long options,
+             const char *target_role)
+{
+    char *flags[6] = { NULL, };
+    char *result = NULL;
     int ndx = 0;
 
     if (node && node->details->online == FALSE && node->details->unclean) {
-        flags[ndx] = strdup("UNCLEAN");
-        ndx++;
+        flags[ndx++] = strdup("UNCLEAN");
     }
 
     if (is_set(options, pe_print_pending)) {
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
-            flags[ndx] = strdup(pending_task);
-            ndx++;
+            flags[ndx++] = strdup(pending_task);
         }
     }
 
@@ -526,42 +527,39 @@ flags_string(resource_t *rsc, node_t *node, long options, const char *target_rol
          * (and would also allow a Master to be Master).
          * Show if target role limits our abilities. */
         if (target_role_e == RSC_ROLE_STOPPED) {
-            flags[ndx] = strdup("disabled");
-            ndx++;
+            flags[ndx++] = strdup("disabled");
             rsc->cluster->disabled_resources++;
 
         } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_SLAVE) {
-            flags[ndx] = crm_strdup_printf("target-role:%s", target_role);
-            ndx++;
+            flags[ndx++] = crm_strdup_printf("target-role:%s", target_role);
             rsc->cluster->disabled_resources++;
         }
     }
 
     if (is_set(rsc->flags, pe_rsc_block)) {
-        flags[ndx] = strdup("blocked");
-        ndx++;
+        flags[ndx++] = strdup("blocked");
         rsc->cluster->blocked_resources++;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
-        flags[ndx] = strdup("unmanaged");
-        ndx++;
+        flags[ndx++] = strdup("unmanaged");
     }
 
     if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        flags[ndx] = strdup("failure ignored");
+        flags[ndx++] = strdup("failure ignored");
     }
 
-    if (flags[0] != NULL) {
+    if (ndx > 0) {
         char *total = g_strjoinv(" ", flags);
-        char *flags_s = crm_strdup_printf(" (%s)", total);
 
+        result = crm_strdup_printf(" (%s)", total);
         g_free(total);
-        g_strfreev(flags);
-        return flags_s;
     }
 
-    return NULL;
+    while (--ndx >= 0) {
+        free(flags[ndx]);
+    }
+    return result;
 }
 
 static char *
