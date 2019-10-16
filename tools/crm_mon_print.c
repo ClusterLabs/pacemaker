@@ -39,7 +39,7 @@ static void print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                                xmlNode *node_state, gboolean operations,
                                unsigned int mon_ops);
 static gboolean add_extra_info(pcmk__output_t *out, node_t * node, GListPtr rsc_list,
-                               const char *attrname, const char *attrvalue, int *expected_score);
+                               const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static gboolean print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                                    gboolean operations, unsigned int mon_ops);
@@ -67,7 +67,8 @@ static gboolean print_stonith_history_full(pcmk__output_t *out, stonith_history_
  * \internal
  * \brief Print resources section heading appropriate to options
  *
- * \param[in] stream      File stream to display output to
+ * \param[in] out     The output functions structure.
+ * \param[in] mon_ops Bitmask of mon_op_options.
  */
 static void
 print_resources_heading(pcmk__output_t *out, unsigned int mon_ops)
@@ -94,7 +95,8 @@ print_resources_heading(pcmk__output_t *out, unsigned int mon_ops)
  * \internal
  * \brief Print whatever resource section closing is appropriate
  *
- * \param[in] stream     File stream to display output to
+ * \param[in] out     The output functions structure.
+ * \param[in] mon_ops Bitmask of mon_op_options.
  */
 static void
 print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
@@ -117,9 +119,12 @@ print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
  * \internal
  * \brief Print whatever resource section(s) are appropriate
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Cluster state to display
- * \param[in] print_opts  Bitmask of pe_print_options
+ * \param[in] out           The output functions structure.
+ * \param[in] data_set      Cluster state to display.
+ * \param[in] print_opts    Bitmask of pe_print_options.
+ * \param[in] mon_ops       Bitmask of mon_op_options.
+ * \param[in] brief_output  Whether to display full or brief output.
+ * \param[in] print_summary Whether to display a failure summary.
  */
 static gboolean
 print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
@@ -217,10 +222,12 @@ get_operation_list(xmlNode *rsc_entry) {
  * \internal
  * \brief Print resource operation/failure history
  *
- * \param[in] stream      File stream to display output to
- * \param[in] data_set    Current state of CIB
- * \param[in] node        Node that ran this resource
- * \param[in] rsc_entry   Root of XML tree describing resource status
+ * \param[in] out       The output functions structure.
+ * \param[in] data_set  Cluster state to display.
+ * \param[in] node      Node that ran this resource.
+ * \param[in] rsc_entry Root of XML tree describing resource status.
+ * \param[in] mon_ops   Bitmask of mon_op_options.
+ * \param[in] op_list   A list of operations to print.
  */
 static void
 print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
@@ -278,10 +285,11 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
  * \internal
  * \brief Print node operation/failure history
  *
- * \param[in] stream      File stream to display output to
- * \param[in] data_set    Current state of CIB
- * \param[in] node_state  Root of XML tree describing node status
- * \param[in] operations  Whether to print operations or just failcounts
+ * \param[in] out        The output functions structure.
+ * \param[in] data_set   Cluster state to display.
+ * \param[in] node_state Root of XML tree describing node status.
+ * \param[in] operations Whether to print operations or just failcounts.
+ * \param[in] mon_ops    Bitmask of mon_op_options.
  */
 static void
 print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
@@ -343,7 +351,11 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Determine whether extended information about an attribute should be added.
  *
- * \param[in] data_set  Working set of CIB state
+ * \param[in]  out            The output functions structure.
+ * \param[in]  node           Node that ran this resource.
+ * \param[in]  rsc_list       The list of resources for this node.
+ * \param[in]  attrname       The attribute to find.
+ * \param[out] expected_score The expected value for this attribute.
  *
  * \return TRUE if extended information should be printed, FALSE otherwise
  * \note Currently, extended information is only supported for ping/pingd
@@ -352,7 +364,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 static gboolean
 add_extra_info(pcmk__output_t *out, node_t *node, GListPtr rsc_list,
-               const char *attrname, const char *attrvalue, int *expected_score)
+               const char *attrname, int *expected_score)
 {
     GListPtr gIter = NULL;
 
@@ -362,7 +374,7 @@ add_extra_info(pcmk__output_t *out, node_t *node, GListPtr rsc_list,
         const char *name = NULL;
 
         if (rsc->children != NULL) {
-            if (add_extra_info(out, node, rsc->children, attrname, attrvalue, expected_score)) {
+            if (add_extra_info(out, node, rsc->children, attrname, expected_score)) {
                 return TRUE;
             }
         }
@@ -416,13 +428,22 @@ print_node_attribute(gpointer name, gpointer user_data)
     value = pe_node_attribute_raw(data->node, name);
 
     add_extra = add_extra_info(data->out, data->node, data->node->details->running_rsc,
-                               name, value, &expected_score);
+                               name, &expected_score);
 
     /* Print attribute name and value */
     data->out->message(data->out, "node-attribute", name, value, add_extra,
                        expected_score);
 }
 
+/*!
+ * \internal
+ * \brief Print history for all nodes.
+ *
+ * \param[in] out        The output functions structure.
+ * \param[in] data_set   Cluster state to display.
+ * \param[in] operations Whether to print operations or just failcounts.
+ * \param[in] mon_ops    Bitmask of mon_op_options.
+ */
 static gboolean
 print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                    gboolean operations, unsigned int mon_ops)
@@ -454,6 +475,13 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Print all tickets.
+ *
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
+ */
 static gboolean
 print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set)
 {
@@ -483,8 +511,10 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set)
  * \internal
  * \brief Print section for negative location constraints
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set corresponding to CIB status to display
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
+ * \param[in] prefix   ID prefix to filter results by.
  */
 static gboolean
 print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops,
@@ -524,8 +554,9 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
  * \internal
  * \brief Print node attributes section
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
  */
 static gboolean
 print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops)
@@ -587,8 +618,8 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
  * \internal
  * \brief Print times the display was last updated and CIB last changed
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
  */
 static void
 print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
@@ -605,8 +636,9 @@ print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
  * \internal
  * \brief Print current DC and its version
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
  */
 static void
 print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops)
@@ -628,8 +660,10 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
  * \internal
  * \brief Print a summary of cluster-wide information
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
+ * \param[in] show     Bitmask of mon_show_options.
  */
 static void
 print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
@@ -692,8 +726,8 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Print a section for failed actions
  *
- * \param[in] stream     File stream to display output to
- * \param[in] data_set   Working set of CIB state
+ * \param[in] out      The output functions structure.
+ * \param[in] data_set Cluster state to display.
  */
 static gboolean
 print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
@@ -725,9 +759,9 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
  *
  * \note This function should not be called for XML output.
  *
- * \param[in] stream     File stream to display output to
- * \param[in] history    List of stonith actions
- *
+ * \param[in] out      The output functions structure.
+ * \param[in] history  List of stonith actions.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
  */
 static gboolean
 print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
@@ -766,9 +800,9 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
  *
  * \note This function should not be called for XML output.
  *
- * \param[in] stream     File stream to display output to
- * \param[in] history    List of stonith actions
- *
+ * \param[in] out      The output functions structure.
+ * \param[in] history  List of stonith actions.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
  */
 static gboolean
 print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
@@ -804,11 +838,13 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
 
 /*!
  * \internal
- * \brief Print a section for stonith-history
+ * \brief Print fencing history, skipping all failed actions.
  *
- * \param[in] stream     File stream to display output to
- * \param[in] history    List of stonith actions
+ * \note This function should not be called for XML output.
  *
+ * \param[in] out      The output functions structure.
+ * \param[in] history  List of stonith actions.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
  */
 static gboolean
 print_stonith_history(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
@@ -835,6 +871,17 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history, unsigned 
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Print fencing history, including failed actions.
+ *
+ * \note This function should be called for XML output.  It may also be
+ *       interesting for other output formats.
+ *
+ * \param[in] out      The output functions structure.
+ * \param[in] history  List of stonith actions.
+ * \param[in] mon_ops  Bitmask of mon_op_options.
+ */
 static gboolean
 print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
 {
@@ -858,6 +905,18 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Top-level printing function for text/curses output.
+ *
+ * \param[in] out             The output functions structure.
+ * \param[in] output_format   Is this text or curses output?
+ * \param[in] data_set        Cluster state to display.
+ * \param[in] stonith_history List of stonith actions.
+ * \param[in] mon_ops         Bitmask of mon_op_options.
+ * \param[in] show            Bitmask of mon_show_options.
+ * \param[in] prefix          ID prefix to filter results by.
+ */
 void
 print_status(pcmk__output_t *out, mon_output_format_t output_format,
              pe_working_set_t *data_set, stonith_history_t *stonith_history,
@@ -1056,13 +1115,24 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 }
 
+/*!
+ * \internal
+ * \brief Top-level printing function for XML output.
+ *
+ * \param[in] out             The output functions structure.
+ * \param[in] data_set        Cluster state to display.
+ * \param[in] stonith_history List of stonith actions.
+ * \param[in] mon_ops         Bitmask of mon_op_options.
+ * \param[in] show            Bitmask of mon_show_options.
+ * \param[in] prefix          ID prefix to filter results by.
+ */
 void
-print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
-                 pe_working_set_t *data_set, stonith_history_t *stonith_history,
-                 unsigned int mon_ops, unsigned int show, const char *prefix)
+print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
+                 stonith_history_t *stonith_history, unsigned int mon_ops,
+                 unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, output_format);
+    int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
 
     print_cluster_summary(out, data_set, mon_ops, show);
 
@@ -1111,6 +1181,18 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 }
 
+/*!
+ * \internal
+ * \brief Top-level printing function for HTML output.
+ *
+ * \param[in] out             The output functions structure.
+ * \param[in] output_format   Is this HTML or CGI output?
+ * \param[in] data_set        Cluster state to display.
+ * \param[in] stonith_history List of stonith actions.
+ * \param[in] mon_ops         Bitmask of mon_op_options.
+ * \param[in] show            Bitmask of mon_show_options.
+ * \param[in] prefix          ID prefix to filter results by.
+ */
 int
 print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                   pe_working_set_t *data_set, stonith_history_t *stonith_history,
