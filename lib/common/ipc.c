@@ -754,6 +754,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uin
                  header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
+            free(buffer);
             pcmk_free_ipc_event(iov);
             return rc;
         }
