@@ -34,7 +34,6 @@ static const char *stylesheet_default =
     ".warning { color: red, font-weight: bold }";
 
 static gboolean cgi_output = FALSE;
-static int meta_refresh = 0;
 static char *stylesheet_link = NULL;
 static char *title = NULL;
 
@@ -42,10 +41,6 @@ GOptionEntry pcmk__html_output_entries[] = {
     { "output-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
       "Add text needed to use output in a CGI program",
       NULL },
-
-    { "output-meta-refresh", 0, 0, G_OPTION_ARG_INT, &meta_refresh,
-      "How often to refresh",
-      "SECONDS" },
 
     { "output-stylesheet-link", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
       "Link to an external CSS stylesheet",
@@ -146,12 +141,6 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     charset_node = create_xml_node(head_node, "meta");
     xmlSetProp(charset_node, (pcmkXmlStr) "charset", (pcmkXmlStr) "utf-8");
-
-    if (meta_refresh != 0) {
-        htmlNodePtr refresh_node = create_xml_node(head_node, "meta");
-        xmlSetProp(refresh_node, (pcmkXmlStr) "http-equiv", (pcmkXmlStr) "refresh");
-        xmlSetProp(refresh_node, (pcmkXmlStr) "content", (pcmkXmlStr) crm_itoa(meta_refresh));
-    }
 
     /* Stylesheets are included two different ways.  The first is via a built-in
      * default (see the stylesheet_default const above).  The second is via the
@@ -395,4 +384,30 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     }
 
     return node;
+}
+
+void
+pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
+    htmlNodePtr head_node;
+    htmlNodePtr header_node;
+    va_list ap;
+
+    head_node = find_xml_node(parent, "head", TRUE);
+
+    va_start(ap, name);
+
+    header_node = create_xml_node(head_node, name);
+    while (1) {
+        char *key = va_arg(ap, char *);
+        char *value;
+
+        if (key == NULL) {
+            break;
+        }
+
+        value = va_arg(ap, char *);
+        xmlSetProp(header_node, (pcmkXmlStr) key, (pcmkXmlStr) value);
+    }
+
+    va_end(ap);
 }
