@@ -5,7 +5,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2012-2018 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2019 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -669,8 +669,8 @@ class Tests(object):
         ### one merger will happen
         test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
 
         ### Test that multiple mergers occur
         test = self.new_test("cpg_custom_merge_multiple",
@@ -690,11 +690,11 @@ class Tests(object):
         test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
 
         ### Test that multiple mergers occur with topologies used
         test = self.new_test("cpg_custom_merge_with_topology",
@@ -717,11 +717,11 @@ class Tests(object):
         test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
-        test.add_stonith_log_pattern("Operation off of node3 by")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
 
     def build_fence_no_merge_tests(self):
         """ Register tests to verify when fence operations should not be merged """
@@ -1304,16 +1304,16 @@ class Tests(object):
                      """-o "pcmk_off_timeout=2" -o "pcmk_reboot_timeout=20" """)
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
-        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing of node_fake")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
-        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
+        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         # fence_dummy sets "on" as an on_target action
-        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
-        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) for node_fake")
-        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
+        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_automatic",
                              "Verify remapped topology reboot skips automatic 'on'", 1)
@@ -1325,12 +1325,12 @@ class Tests(object):
                      """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
-        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
-        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
-        test.add_stonith_neg_log_pattern("perform op 'node_fake on' with")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_stonith_neg_log_pattern("perform 'on' action targeting node_fake using")
         test.add_stonith_neg_log_pattern("'on' failure")
 
         test = self.new_test("cpg_remap_complex_1",
@@ -1342,14 +1342,14 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v false1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'false1'")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true2'")
-        test.add_stonith_log_pattern("Remapped off of node_fake complete, remapping to on")
-        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) for node_fake")
-        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) for node_fake")
-        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'false1'")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
+        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_complex_2",
                              "Verify remapped topology reboot failure in second level proceeds to third level",
@@ -1363,13 +1363,13 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v false2 -v true3")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 3 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'false1'")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot of node_fake")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'true1'")
-        test.add_stonith_log_pattern("perform op 'node_fake off' with 'false2'")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'false1'")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'false2'")
         test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
-        test.add_stonith_log_pattern("Undoing remap of reboot of node_fake")
-        test.add_stonith_log_pattern("perform op 'node_fake reboot' with 'true2'")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'true2'")
         test.add_stonith_neg_log_pattern("node_fake with true3")
 
     def setup_environment(self, use_corosync):
