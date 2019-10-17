@@ -7,36 +7,14 @@
 
 language: c
 
+# We build with both gcc and clang. If MAINT_EXTRA=1 (gcc only), the
+# schema regression tests will additionally be run.
 matrix:
   include:
     - compiler: gcc
-      env:      MAINT_EXTRA=0
+      env:      MAINT_EXTRA=1
     - compiler: clang
       env:      MAINT_EXTRA=0
-    #- compiler: cov-build
-    #  env:      MAINT_EXTRA=0
-    - compiler: gcc
-      env:      MAINT_EXTRA=1
-
-env:
-  global:
-
-    # -- BEGIN Coverity Scan ENV
-    # Used by https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh
-    # The build command with all of the arguments that you would apply to a manual `cov-build`
-    - COVERITY_SCAN_BUILD_COMMAND="make"
-
-    # Email address for notifications related to this build
-    - OWNER_EMAIL="admin@clusterlabs.org"
-
-    # Regular expression selects on which branches to run analysis
-    # Be aware of quotas. Do not run on every branch/commit
-    - COVERITY_SCAN_BRANCH_PATTERN="1.1"
-
-    # COVERITY_SCAN_TOKEN via "travis encrypt" using the repo's public key
-    - secure: "qnrF7L8RejLUY7URdNe7XP4Hu4R55C0tvAuMRg4EjVtelOpw+nIgA7BLiX19q/70VjFuKcGnMhW28TdYl0uwMMdWKKxmwTim04Sy3UfOE2BPeuQOBphr+8s9gd0U1MO8j2dZ84A40t5Mkk946wWZwT0okpjOr/PfBOZkU3o87FM="
-
-    # -- END Coverity Scan ENV
 
 cache:
   directories:
@@ -60,8 +38,7 @@ before_install:
 #   https://github.com/travis-ci/apt-package-whitelist/issues?utf8=%E2%9C%93&q=is%3Aissue+libdbus+-1-dev
 #   (a workaround is to install libdbus-glib-1-dev, which depends on it and is whitelisted)
 install:
- - test $MAINT_EXTRA -ne 0
-   || sudo apt-get install -qq
+ - sudo apt-get install -qq
       automake autoconf libtool
       python python-dev
       libbz2-dev libdbus-1-dev libglib2.0-dev libgnutls-dev libltdl-dev
@@ -69,37 +46,18 @@ install:
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
       libquorum-dev libsam-dev libtotem-pg-dev libvotequorum-dev
       cluster-glue-dev resource-agents
- - test $MAINT_EXTRA -eq 0
-   || sudo apt-get install -qq
-      make libxml2-utils xsltproc
+ - test $MAINT_EXTRA -eq 0 || sudo apt-get install -qq libxml2-utils xsltproc
 
 before_script:
-# Save and restore CC so that ./configure can pass;
 # some tests (e.g. cts-exec-helper) require actual system-wide credentials
- - test $MAINT_EXTRA -ne 0 || {
-     export CC_SAVED=$CC;
-     export CC=$(echo ${CC} | sed s/cov-build/gcc/);
-     sed -e 's|^\(CRM_DAEMON_USER=\).*$|\1nobody|'
-         -e 's|^\(CRM_DAEMON_GROUP=\).*$|\1nobody|'
-         -i -- configure.ac;
-     ./autogen.sh;
-     ./configure;
-     export CC=$CC_SAVED;
-   }
- - test $MAINT_EXTRA -eq 0 || (
-     cd xml;
-     { cat Makefile.am; printf 'hack_rng\x3a %s' '${RNG_generated}'; }
-     | make -f- top_srcdir=$(pwd)/.. top_builddir=$(pwd)/.. hack_rng
-   )
+ -   ./autogen.sh
+ -   ./configure --with-daemon-user=nobody --with-daemon-group=nobody
 
 script: 
-# XXX Is the following item needed?
-- test $MAINT_EXTRA -ne 0 || test ${CC} = cov-build
-  || sudo make install-exec-local || true
-- test $MAINT_EXTRA -ne 0 || test ${CC} = cov-build
-  || { make && ./cts/cts-regression -V cli scheduler exec; }
-- test $MAINT_EXTRA -ne 0 || test ${CC} != cov-build
-  || export CC=gcc; bash ./maint/travisci_build_coverity_scan.sh
+# Create directories needed by commands used by regression tests
+- sudo make install-exec-local || true
+- make
+- ./cts/cts-regression -V cli scheduler exec
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files

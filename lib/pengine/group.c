@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -7,10 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/curses_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <unpack.h>
 #include <crm/msg_xml.h>
 
 #define VARIANT_GROUP 1
@@ -46,7 +48,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 
-    for (xml_native_rsc = __xml_first_child(xml_obj); xml_native_rsc != NULL;
+    for (xml_native_rsc = __xml_first_child_element(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = __xml_next_element(xml_native_rsc)) {
         if (crm_str_eq((const char *)xml_native_rsc->name, XML_CIB_TAG_RESOURCE, TRUE)) {
             resource_t *new_rsc = NULL;

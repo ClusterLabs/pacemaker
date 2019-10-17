@@ -7,83 +7,94 @@ with that construct for chapter headings
 ////
 
 anchor:ch-rules[Chapter 8, Rules]
-indexterm:[Resource,Constraint,Rule]
+indexterm:[Constraint,Rule]
 
-Rules can be used to make your configuration more dynamic.  One common
-example is to set one value for +resource-stickiness+ during working
-hours, to prevent resources from being moved back to their most
-preferred location, and another on weekends when no-one is around to
-notice an outage.
+Rules can be used to make your configuration more dynamic, allowing values to
+change depending on the time or the value of a node attribute. Examples of
+things rules are useful for:
 
-Another use of rules might be to assign machines to different
-processing groups (using a node attribute) based on time and to then
-use that attribute when creating location constraints.
+* Set a higher value for <<s-resource-options,+resource-stickiness+>> during
+  working hours, to minimize downtime, and a lower value on weekends, to allow
+  resources to move to their most preferred locations when people aren't around
+  to notice.
 
-Each rule can contain a number of expressions, date-expressions and
-even other rules.  The results of the expressions are combined based
-on the rule's +boolean-op+ field to determine if the rule ultimately
-evaluates to +true+ or +false+.  What happens next depends on the
-context in which the rule is being used.
-    
+* Automatically place the cluster into maintenance mode during a scheduled
+  maintenance window.
+
+* Assign certain nodes and resources to a particular department via custom
+  node attributes and meta-attributes, and add a single location constraint
+  that restricts the department's resources to run only on those nodes.
+
+Each constraint type or property set that supports rules may contain one or more
++rule+ elements specifying conditions under which the constraint or properties
+take effect. Examples later in this chapter will make this clearer.
+
 == Rule Properties ==
 
-.Properties of a Rule
+indexterm:[XML element,rule element]
+
+.Attributes of a rule Element
 [width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Default
 |Description
 
 |id
 |
 |A unique name for the rule (required)
- indexterm:[id,Constraint Rule]
- indexterm:[Constraint,Rule,id]
+ indexterm:[XML attribute,id attribute,rule element]
+ indexterm:[XML element,rule element,id attribute]
 
 |role
 |+Started+
-|Limits the rule to apply only when the resource is in the specified
+|The rule is in effect only when the resource is in the specified
  role. Allowed values are +Started+, +Slave+, and +Master+. A rule
  with +role="Master"+ cannot determine the initial location of a
  clone instance and will only affect which of the active instances
  will be promoted.
- indexterm:[role,Constraint Rule]
- indexterm:[Constraint,Rule,role]
+ indexterm:[XML attribute,role attribute,rule element]
+ indexterm:[XML element,rule element,role attribute]
 
 |score
 |
-|The score to apply if the rule evaluates to +true+. Limited to use in
- rules that are part of location constraints.
- indexterm:[score,Constraint Rule]
- indexterm:[Constraint,Rule,score]
+|If this rule is used in a location constraint and evaluates to true, apply
+ this score to the constraint. Only one of +score+ and +score-attribute+ may be
+ used.
+ indexterm:[XML attribute,score attribute,rule element]
+ indexterm:[XML element,rule element,score attribute]
 
 |score-attribute
 |
-|The node attribute to look up and use as a score if the rule
- evaluates to +true+. Limited to use in rules that are part of
- location constraints.
- indexterm:[score-attribute,Constraint Rule]
- indexterm:[Constraint,Rule,score-attribute]
+|If this rule is used in a location constraint and evaluates to true, use the
+ value of this node attribute as the score to apply to the constraint. Only one
+ of +score+ and +score-attribute+ may be used.
+ indexterm:[XML attribute,score-attribute attribute,rule element]
+ indexterm:[XML element,rule element,score-attribute attribute]
 
 |boolean-op 
 |+and+
-|How to combine the result of multiple expression objects. Allowed
- values are +and+ and +or+.
- indexterm:[boolean-op,Constraint Rule]
- indexterm:[Constraint,Rule,boolean-op]
+|If this rule contains more than one condition, a value of +and+ specifies that
+ the rule evaluates to true only if all conditions are true, and a value of
+ +or+ specifies that the rule evaluates to true if any condition is true.
+ indexterm:[XML attribute,boolean-op attribute,rule element]
+ indexterm:[XML element,rule element,boolean-op attribute]
 
 |=========================================================
+
+A +rule+ element must contain one or more conditions. A condition may be an
++expression+ element, a +date_expression+ element, or another +rule+ element.
 
 == Node Attribute Expressions ==
 
 [[node-attribute-expressions]]
-indexterm:[Resource,Constraint,Attribute Expression]
+indexterm:[Rule,Node Attribute Expression]
+indexterm:[XML element,expression element]
 
-Expression objects are used to control a resource based on the
-attributes defined by a node or nodes.
+Expressions are rule conditions based on the values of node attributes.
 
-.Properties of an Expression
+.Attributes of an expression Element
 [width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
@@ -94,43 +105,43 @@ attributes defined by a node or nodes.
 |id
 |
 |A unique name for the expression (required)
- indexterm:[id,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,id]
+ indexterm:[XML attribute,id attribute,expression element]
+ indexterm:[XML element,expression element,id attribute]
 
 |attribute
 |
 |The node attribute to test (required)
- indexterm:[attribute,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,attribute]
+ indexterm:[XML attribute,attribute attribute,expression element]
+ indexterm:[XML element,expression element,attribute attribute]
 
 |type
 |+string+
-|Determines how the value(s) should be tested. Allowed values are
+|How the node attributes should be compared. Allowed values are
  +string+, +integer+, and +version+.
- indexterm:[type,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,type]
+ indexterm:[XML attribute,type attribute,expression element]
+ indexterm:[XML element,expression element,type attribute]
 
 |operation
 |
 a|The comparison to perform (required). Allowed values:
 
-* +lt:+ True if the value of the node's +attribute+ is less than +value+
-* +gt:+ True if the value of the node's +attribute+ is greater than +value+
-* +lte:+ True if the value of the node's +attribute+ is less than or equal to +value+
-* +gte:+ True if the value of the node's +attribute+ is greater than or equal to +value+
-* +eq:+ True if the value of the node's +attribute+ is equal to +value+
-* +ne:+ True if the value of the node's +attribute+ is not equal to +value+
+* +lt:+ True if the node attribute value is less than the comparison value
+* +gt:+ True if the node attribute value is greater than the comparison value
+* +lte:+ True if the node attribute value is less than or equal to the comparison value
+* +gte:+ True if the node attribute value is greater than or equal to the comparison value
+* +eq:+ True if the node attribute value is equal to the comparison value
+* +ne:+ True if the node attribute value is not equal to the comparison value
 * +defined:+ True if the node has the named attribute
 * +not_defined:+ True if the node does not have the named attribute
- indexterm:[operation,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,operation]
+ indexterm:[XML attribute,operation attribute,expression element]
+ indexterm:[XML element,expression element,operation attribute]
 
 |value
 |
 |User-supplied value for comparison (required for operations other than
  +defined+ and +not_defined+)
- indexterm:[value,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,value]
+ indexterm:[XML attribute,value attribute,expression element]
+ indexterm:[XML element,expression element,value attribute]
 
 |value-source
 |+literal+
@@ -141,16 +152,17 @@ a|How the +value+ is derived. Allowed values:
   valid in location constraints)
 * +meta+: +value+ is the name of a resource meta-attribute to compare against
   (only valid in location constraints)
- indexterm:[value,Constraint Expression]
- indexterm:[Constraint,Attribute Expression,value]
+ indexterm:[XML attribute,value-source attribute,expression element]
+ indexterm:[XML element,expression element,value-source attribute]
 
 |=========================================================
 
 [[node-attribute-expressions-special]]
-In addition to any attributes added by the administrator, the cluster defines
-special, built-in node attributes for each node that can also be used.
+In addition to custom node attributes defined by the administrator, the cluster
+defines special, built-in node attributes for each node that can also be used
+in rule expressions.
 
-.Built-in node attributes
+.Built-in Node Attributes
 [width="95%",cols="1m,<5",options="header",align="center"]
 |=========================================================
 
@@ -194,34 +206,43 @@ The installed version of the resource agent on the node, as defined
 
 |=========================================================
 
-== Time- and Date-Based Expressions ==
+== Date/Time Expressions ==
 
-indexterm:[Time Based Expressions]
-indexterm:[Resource,Constraint,Date/Time Expression]
+indexterm:[Rule,Date/Time Expression]
+indexterm:[XML element,date_expression element]
         
-As the name suggests, +date_expressions+ are used to control a
-resource or cluster option based on the current date/time.  They may
-contain an optional +date_spec+ and/or +duration+ object depending on
-the context.
+Date/time expressions are rule conditions based (as the name suggests) on the
+current date and time.
+
+A +date_expression+ element may optionally contain a +date_spec+ or +duration+
+element depending on the context.
       
-.Properties of a Date Expression
+.Attributes of a date_expression Element
 [width="95%",cols="2m,<5",options="header",align="center"]
 |=========================================================
 |Field
 |Description
 
+|id
+|A unique name for the expression (required)
+ indexterm:[XML attribute,id attribute,date_expression element]
+ indexterm:[XML element,date_expression element,id attribute]
+
 |start
 |A date/time conforming to the http://en.wikipedia.org/wiki/ISO_8601[ISO8601]
- specification.
- indexterm:[start,Constraint Expression]
- indexterm:[Constraint,Date/Time Expression,start]
+ specification. May be used when +operation+ is +in_range+ (in which case at
+ least one of +start+ or +end+ must be specified) or +gt+ (in which case
+ +start+ is required).
+ indexterm:[XML attribute,start attribute,date_expression element]
+ indexterm:[XML element,date_expression element,start attribute]
 
 |end
 |A date/time conforming to the http://en.wikipedia.org/wiki/ISO_8601[ISO8601]
- specification. Can be inferred by supplying a value for +start+ and a
- +duration+.
- indexterm:[end,Constraint Expression]
- indexterm:[Constraint,Date/Time Expression,end]
+ specification. May be used when +operation+ is +in_range+ (in which case at
+ least one of +start+ or +end+ must be specified) or +lt+ (in which case
+ +end+ is required).
+ indexterm:[XML attribute,end attribute,date_expression element]
+ indexterm:[XML element,date_expression element,end attribute]
 
 |operation
 a|Compares the current date/time with the start and/or end date,
@@ -229,36 +250,31 @@ a|Compares the current date/time with the start and/or end date,
 
 * +gt:+ True if the current date/time is after +start+
 * +lt:+ True if the current date/time is before +end+
-* +in_range:+ True if the current date/time is after +start+ and before +end+
-* +date_spec:+ True if the current date/time matches a +date_spec+ object
-  (described below)
- indexterm:[operation,Constraint Expression]
- indexterm:[Constraint,Date/Time Expression,operation]
+* +in_range:+ True if the current date/time is after +start+ (if specified)
+  and before either +end+ (if specified) or +start+ plus the value of the
+  +duration+ element (if one is contained in the +date_expression+)
+* +date_spec:+ True if the current date/time matches the specification
+  given in the contained +date_spec+ element (described below)
+ indexterm:[XML attribute,operation attribute,date_expression element]
+ indexterm:[XML element,date_expression element,operation attribute]
 
 |=========================================================
 
 [NOTE]
 ======
-As these comparisons (except for +date_spec+) include the time, the
-+eq+, +neq+, +gte+ and +lte+ operators have not been implemented since
-they would only be valid for a single second.
+There is no +eq+, +neq+, +gte+, or +lte+ operation, since they would be valid
+only for a single second.
 ======
 
 === Date Specifications ===
-indexterm:[Date Specification]
-indexterm:[Resource,Constraint,Date Specification]
+indexterm:[Rule,Date/Time Expression,Date Specification]
+indexterm:[XML element,date_spec element]
 
-+date_spec+ objects are used to create cron-like expressions relating
-to time.  Each field can contain a single number or a single range.
-Instead of defaulting to zero, any field not supplied is ignored.
+A +date_spec+ element is used to create a cron-like expression relating
+to time. Each field can contain a single number or range. Any field not
+supplied is ignored.
 
-For example, +monthdays="1"+ matches the first day of every month and
-+hours="09-17"+ matches the hours between 9am and 5pm (inclusive).
-At this time, multiple ranges (e.g. +weekdays="1,2"+ or
-+weekdays="1-2,5-6"+) are not supported; depending on
-demand, this might be implemented in a future release.
-        
-.Properties of a Date Specification
+.Attributes of a date_spec Element
 [width="95%",cols="2m,<5",options="header",align="center"]
 |=========================================================
 
@@ -266,86 +282,146 @@ demand, this might be implemented in a future release.
 |Description
 
 |id
-|A unique name for the object
- indexterm:[id,Date Specification]
- indexterm:[Constraint,Date Specification,id]
+|A unique name for the object (required)
+ indexterm:[XML attribute,id attribute,date_spec element]
+ indexterm:[XML element,date_spec element,id attribute]
 
 |hours
-|Allowed values: 0-23
- indexterm:[hours,Date Specification]
- indexterm:[Constraint,Date Specification,hours]
+|Allowed values: 0-23 (where 0 is midnight and 23 is 11 p.m.)
+ indexterm:[XML attribute,hours attribute,date_spec element]
+ indexterm:[XML element,date_spec element,hours attribute]
 
 |monthdays
 |Allowed values: 1-31 (depending on month and year)
- indexterm:[monthdays,Date Specification]
- indexterm:[Constraint,Date Specification,monthdays]
+ indexterm:[XML attribute,monthdays attribute,date_spec element]
+ indexterm:[XML element,date_spec element,monthdays attribute]
 
 |weekdays
-|Allowed values: 1-7 (1=Monday, 7=Sunday)
- indexterm:[weekdays,Date Specification]
- indexterm:[Constraint,Date Specification,weekdays]
+|Allowed values: 1-7 (where 1 is Monday and  7 is Sunday)
+ indexterm:[XML attribute,weekdays attribute,date_spec element]
+ indexterm:[XML element,date_spec element,weekdays attribute]
 
 |yeardays
 |Allowed values: 1-366 (depending on the year)
- indexterm:[yeardays,Date Specification]
- indexterm:[Constraint,Date Specification,yeardays]
+ indexterm:[XML attribute,yeardays attribute,date_spec element]
+ indexterm:[XML element,date_spec element,yeardays attribute]
 
 |months
 |Allowed values: 1-12
- indexterm:[months,Date Specification]
- indexterm:[Constraint,Date Specification,months]
+ indexterm:[XML attribute,months attribute,date_spec element]
+ indexterm:[XML element,date_spec element,months attribute]
 
 |weeks
 |Allowed values: 1-53 (depending on weekyear)
- indexterm:[weeks,Date Specification]
- indexterm:[Constraint,Date Specification,weeks]
+ indexterm:[XML attribute,weeks attribute,date_spec element]
+ indexterm:[XML element,date_spec element,weeks attribute]
 
 |years
 |Year according to the Gregorian calendar
- indexterm:[years,Date Specification]
- indexterm:[Constraint,Date Specification,years]
+ indexterm:[XML attribute,years attribute,date_spec element]
+ indexterm:[XML element,date_spec element,years attribute]
 
 |weekyears
-|Year in which the week started; e.g. 1 January 2005
- can be specified as '2005-001 Ordinal', '2005-01-01 Gregorian' or '2004-W53-6
- Weekly' and thus would match +years="2005"+ or +weekyears="2004"+
- indexterm:[weekyears,Date Specification]
- indexterm:[Constraint,Date Specification,weekyears]
+|Year in which the week started; for example, 1 January 2005 can be specified
+ in ISO 8601 as '2005-001 Ordinal', '2005-01-01 Gregorian' or
+ '2004-W53-6 Weekly' and thus would match +years="2005"+ or +weekyears="2004"+
+ indexterm:[XML attribute,weekyears attribute,date_spec element]
+ indexterm:[XML element,date_spec element,weekyears attribute]
 
 |moon
-|Allowed values are 0-7 (0 is new, 4 is full moon). Seriously, you can
- use this. This was implemented to demonstrate the ease with which new
- comparisons could be added.
- indexterm:[moon,Date Specification]
- indexterm:[Constraint,Date Specification,moon]
+|Allowed values are 0-7 (where 0 is the new moon and 4 is full moon).
+ Seriously, you can use this. This was implemented to demonstrate the ease with
+ which new comparisons could be added.
+ indexterm:[XML attribute,moon attribute,date_spec element]
+ indexterm:[XML element,date_spec element,moon attribute]
 
 |=========================================================
 
+For example, +monthdays="1"+ matches the first day of every month, and
++hours="09-17"+ matches the hours between 9 a.m. and 5 p.m. (inclusive).
+
+At this time, multiple ranges (e.g. +weekdays="1,2"+ or +weekdays="1-2,5-6"+)
+are not supported.
+        
+[NOTE]
+====
+Pacemaker can calculate when evaluation of a +date_expression+ with an
++operation+ of +gt+, +lt+, or +in_range+ will next change, and schedule a
+cluster re-check for that time. However, it does not do this for +date_spec+.
+Instead, it evaluates the +date_spec+ whenever a cluster re-check naturally
+happens via a cluster event or the +cluster-recheck-interval+ cluster option.
+For example, if you have a +date_spec+ enabling a resource from 9 a.m. to 5 p.m.,
+and +cluster-recheck-interval+ has been set to 5 minutes, then sometime between
+9 a.m. and 9:05 a.m. the cluster would notice that it needs to start the
+resource, and sometime between 5 p.m. and 5:05 p.m. it would realize that it
+needs to stop the resource. The timing of the actual start and stop actions
+will further depend on factors such as any other actions the cluster may need
+to perform first, and the load of the machine.
+====
+
 === Durations ===
-indexterm:[Duration]
-indexterm:[Resource,Constraint,Duration]
+indexterm:[Rule,Date/Time Expression,Duration]
+indexterm:[XML element,duration element]
 
-Durations are used to calculate a value for +end+ when one is not
-supplied to +in_range+ operations. They contain the same fields as
-+date_spec+ objects but without the limitations (e.g. you can have a
-duration of 19 months). As with +date_specs+, any field not supplied is
-ignored.
+A +duration+ is used to calculate a value for +end+ when one is not supplied to
++in_range+ operations. It contains one or more attributes each containing a
+single number. Any attribute not supplied is ignored.
 
-=== Sample Time-Based Expressions ===
+.Attributes of a duration Element
+[width="95%",cols="2m,<5",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|A unique name for this duration element (required)
+ indexterm:[XML attribute,id attribute,duration element]
+ indexterm:[XML element,duration element,id attribute]
+
+|seconds
+|This many seconds will be added to the total duration
+ indexterm:[XML attribute,seconds attribute,duration element]
+ indexterm:[XML element,duration element,seconds attribute]
+
+|minutes
+|This many minutes will be added to the total duration
+ indexterm:[XML attribute,minutes attribute,duration element]
+ indexterm:[XML element,duration element,minutes attribute]
+
+|hours
+|This many hours will be added to the total duration
+ indexterm:[XML attribute,hours attribute,duration element]
+ indexterm:[XML element,duration element,hours attribute]
+
+|weeks
+|This many weeks will be added to the total duration
+ indexterm:[XML attribute,weeks attribute,duration element]
+ indexterm:[XML element,duration element,weeks attribute]
+
+|months
+|This many months will be added to the total duration
+ indexterm:[XML attribute,months attribute,duration element]
+ indexterm:[XML element,duration element,months attribute]
+
+|years
+|This many years will be added to the total duration
+ indexterm:[XML attribute,years attribute,duration element]
+ indexterm:[XML element,duration element,years attribute]
+
+|=========================================================
+
+=== Example Time-Based Expressions ===
 
 A small sample of how time-based expressions can be used:
-
-////
-On older versions of asciidoc, the [source] directive makes the title disappear
-////
 
 .True if now is any time in the year 2005
 ====
 [source,XML]
 ----
-<rule id="rule1">
+<rule id="rule1" score="INFINITY">
    <date_expression id="date_expr1" start="2005-001" operation="in_range">
-    <duration years="1"/>
+    <duration id="duration1" years="1"/>
    </date_expression>
 </rule>
 ----
@@ -355,9 +431,9 @@ On older versions of asciidoc, the [source] directive makes the title disappear
 ====
 [source,XML]
 ----
-<rule id="rule2">
+<rule id="rule2" score="INFINITY">
    <date_expression id="date_expr2" operation="date_spec">
-    <date_spec years="2005"/>
+    <date_spec id="date_spec2" years="2005"/>
    </date_expression>
 </rule> 
 ----
@@ -367,9 +443,9 @@ On older versions of asciidoc, the [source] directive makes the title disappear
 ====
 [source,XML]
 -------
-<rule id="rule3">
+<rule id="rule3" score="INFINITY">
    <date_expression id="date_expr3" operation="date_spec">
-    <date_spec hours="9-16" days="1-5"/>
+    <date_spec id="date_spec3" hours="9-16" weekdays="1-5"/>
    </date_expression>
 </rule> 
 -------
@@ -382,12 +458,12 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule4" boolean-op="or">
+<rule id="rule4" score="INFINITY" boolean-op="or">
    <date_expression id="date_expr4-1" operation="date_spec">
-    <date_spec hours="9-16" days="1-5"/>
+    <date_spec id="date_spec4-1" hours="9-16" weekdays="1-5"/>
    </date_expression>
    <date_expression id="date_expr4-2" operation="date_spec">
-    <date_spec days="6"/>
+    <date_spec id="date_spec4-2" weekdays="6"/>
    </date_expression>
 </rule> 
 -------
@@ -397,19 +473,19 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule5" boolean-op="and">
-   <rule id="rule5-nested1" boolean-op="or">
+<rule id="rule5" score="INFINITY" boolean-op="and">
+   <rule id="rule5-nested1" score="INFINITY" boolean-op="or">
     <date_expression id="date_expr5-1" operation="date_spec">
-     <date_spec hours="9-16"/>
+     <date_spec id="date_spec5-1" hours="9-16"/>
     </date_expression>
     <date_expression id="date_expr5-2" operation="date_spec">
-     <date_spec hours="21-23"/>
+     <date_spec id="date_spec5-2" hours="21-23"/>
     </date_expression>
    </rule>
    <date_expression id="date_expr5-3" operation="date_spec">
-    <date_spec days="1-5"/>
+    <date_spec id="date_spec5-3" weekdays="1-5"/>
    </date_expression>
-  </rule> 
+</rule> 
 -------
 ====
 
@@ -417,13 +493,13 @@ value (hour) still matches!
 ====
 [source,XML]
 -------
-<rule id="rule6" boolean-op="and">
+<rule id="rule6" score="INFINITY" boolean-op="and">
    <date_expression id="date_expr6-1" operation="date_spec">
-    <date_spec weekdays="1"/>
+    <date_spec id="date_spec6" weekdays="1"/>
    </date_expression>
    <date_expression id="date_expr6-2" operation="in_range"
      start="2005-03-01" end="2005-04-01"/>
-  </rule> 
+</rule> 
 -------
 ====
 
@@ -438,9 +514,9 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 =====
 [source,XML]
 -------
-<rule id="rule7" boolean-op="and">
+<rule id="rule7" score="INFINITY" boolean-op="and">
    <date_expression id="date_expr7" operation="date_spec">
-    <date_spec weekdays="5" monthdays="13" moon="4"/>
+    <date_spec id="date_spec7" weekdays="5" monthdays="13" moon="4"/>
    </date_expression>
 </rule> 
 -------
@@ -450,42 +526,39 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 indexterm:[Rule,Determine Resource Location]
 indexterm:[Resource,Location,Determine by Rules]
 
-A location constraint may contain rules. When the constraint's outermost
-rule evaluates to +false+, the cluster treats the constraint as if it were not
-there.  When the rule evaluates to +true+, the node's preference for running
-the resource is updated with the score associated with the rule.
+A location constraint may contain one or more top-level rules. The cluster
+will act as if there is a separate location constraint for each rule that
+evaluates as true.
 
-If this sounds familiar, it is because you have been using a simplified
-syntax for location constraint rules already.  Consider the following
-location constraint:
+Consider the following simple location constraint:
       
-.Prevent myApacheRsc from running on c001n03
+.Prevent resource "webserver" from running on node3
 =====
 [source,XML]
 -------
-<rsc_location id="dont-run-apache-on-c001n03" rsc="myApacheRsc" 
-              score="-INFINITY" node="c001n03"/> 
+<rsc_location id="ban-apache-on-node3" rsc="webserver" 
+              score="-INFINITY" node="node3"/> 
 -------
 =====
 
-This constraint can be more verbosely written as:
+The constraint can be more verbosely written using a rule:
 
-.Prevent myApacheRsc from running on c001n03 - expanded version
+.Prevent resource "webserver" from running on node3 using rule
 =====
 [source,XML]
 -------
-<rsc_location id="dont-run-apache-on-c001n03" rsc="myApacheRsc">
-    <rule id="dont-run-apache-rule" score="-INFINITY">
-      <expression id="dont-run-apache-expr" attribute="#uname"
-        operation="eq" value="c00n03"/>
+<rsc_location id="ban-apache-on-node3" rsc="webserver">
+    <rule id="ban-apache-rule" score="-INFINITY">
+      <expression id="ban-apache-expr" attribute="#uname"
+        operation="eq" value="node3"/>
     </rule>
 </rsc_location>
 -------
 =====
 
-The advantage of using the expanded form is that one can then add
-extra clauses to the rule, such as limiting the rule such that it only
-applies during certain times of the day or days of the week.
+The advantage of using the expanded form is that one could add more expressions
+(for example, limiting the constraint to certain days of the week), or activate
+the constraint by some node attribute other than node name.
 
 === Location Rules Based on Other Node Properties ===
 
@@ -531,7 +604,20 @@ rule used +score-attribute="cpu_mips"+, +c001n01+ would have its
 preference to run the resource increased by +1234+ whereas +c001n02+
 would have its preference increased by +5678+.
 
-== Using Rules to Control Resource Options ==
+== Using Rules to Define Options ==
+
+Rules may be used to control a variety of options:
+
+* <<s-cluster-options,Cluster options>> (+cluster_property_set+ elements)
+* <<s-node-attributes,Node attributes>> (as +instance_attributes+ or
+  +utilization+ elements inside a +node+ element)
+* <<s-resource-options,Resource options>> (as +utilization+, +meta_attributes+,
+  or +instance_attributes+ elements inside a resource definition element or
+  +op+ , +rsc_defaults+, +op_defaults+, or +template+ element)
+* <<s-operation-properties,Operation properties>> (+meta_attributes+
+  inside an +op+ or +op_defaults+ element)
+
+=== Using Rules to Control Resource Options ===
 
 Often some cluster nodes will be different from their peers. Sometimes,
 these differences -- e.g. the location of a binary or the names of network
@@ -591,20 +677,13 @@ For example, given the configuration above, if the resource is placed on node1:
   are examined; +interface+ is already defined, so the value here is not used,
   but +port+ is not yet defined, so +port+ is set to +9999+.
 
-== Using Rules to Control Cluster Options ==
-indexterm:[Rule,Controlling Cluster Options]
-indexterm:[Cluster,Setting Options with Rules]
+=== Using Rules to Control Resource Defaults ===
 
-Controlling cluster options is achieved in much the same manner as
-specifying different resource options on different nodes.
-
-The difference is that because they are cluster options, one cannot
-(or should not, because they won't work) use attribute-based
-expressions.  The following example illustrates how to set a different
-+resource-stickiness+ value during and outside work hours.  This
-allows resources to automatically move back to their most preferred
-hosts, but at a time that (in theory) does not interfere with business
-activities.
+Rules can be used for resource and operation defaults. The following example
+illustrates how to set a different +resource-stickiness+ value during and
+outside work hours. This allows resources to automatically move back to their
+most preferred hosts, but at a time that (in theory) does not interfere with
+business activities.
 
 .Change +resource-stickiness+ during working hours
 =====
@@ -626,21 +705,50 @@ activities.
 -------
 =====
 
-[[s-rules-recheck]]
-== Ensuring Time-Based Rules Take Effect ==
+Rules may be used similarly in +instance_attributes+ or +utilization+ blocks.
 
-A Pacemaker cluster is an event-driven system.  As such, it won't
-recalculate the best place for resources to run unless something
-(like a resource failure or configuration change) happens.  This can
-mean that a location constraint that only allows resource X to run
-between 9am and 5pm is not enforced.
+Any single block may directly contain only a single rule, but that rule may
+itself contain any number of rules.
 
-If you rely on time-based rules, the +cluster-recheck-interval+ cluster option
-(which defaults to 15 minutes) is essential.  This tells the cluster to
-periodically recalculate the ideal state of the cluster.
+=== Using Rules to Control Cluster Options ===
+indexterm:[Rule,Controlling Cluster Options]
+indexterm:[Cluster,Setting Options with Rules]
 
-For example, if you set +cluster-recheck-interval="5m"+, then sometime between
-09:00 and 09:05 the cluster would notice that it needs to start resource X,
-and between 17:00 and 17:05 it would realize that X needed to be stopped.
-The timing of the actual start and stop actions depends on what other actions
-the cluster may need to perform first.
+Controlling cluster options is achieved in much the same manner as
+specifying different resource options on different nodes.
+
+The difference is that because they are cluster options, one cannot (or should
+not, because they won't work) use attribute-based expressions. The following
+example illustrates how to set +maintenance_mode+ during a scheduled
+maintenance window. This will keep the cluster running but not monitor, start,
+or stop resources during this time.
+
+.Schedule a maintenance window for 9 to 11 p.m. CDT Sept. 20, 2019
+=====
+[source,XML]
+-------
+<crm_config>
+   <cluster_property_set id="cib-bootstrap-options">
+     <nvpair id="bootstrap-stonith-enabled" name="stonith-enabled" value="1"/>
+   </cluster_property_set>
+   <cluster_property_set id="normal-set" score="10">
+     <nvpair id="normal-maintenance-mode" name="maintenance-mode" value="false"/>
+   </cluster_property_set>
+   <cluster_property_set id="maintenance-window-set" score="1000">
+     <nvpair id="maintenance-nvpair1" name="maintenance-mode" value="true"/>
+     <rule id="maintenance-rule1" score="INFINITY">
+       <date_expression id="maintenance-date1" operation="in_range"
+         start="2019-09-20 21:00:00 -05:00" end="2019-09-20 23:00:00 -05:00"/>
+     </rule>
+   </cluster_property_set>
+</crm_config>
+-------
+=====
+
+[IMPORTANT]
+====
+The +cluster_property_set+ with an +id+ set to "cib-bootstrap-options" will
+'always' have the highest priority, regardless of any scores. Therefore,
+rules in another +cluster_property_set+ can never take effect for any
+properties listed in the bootstrap set.
+====

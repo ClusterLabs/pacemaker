@@ -10,6 +10,15 @@
 #ifndef PENGINE_AUTILS__H
 #  define PENGINE_AUTILS__H
 
+#include <stdbool.h>                    // bool
+#include <glib.h>                       // GList, GHashTable, gboolean, guint
+#include <crm/crm.h>                    // GListPtr
+#include <crm/lrmd.h>                   // lrmd_event_data_t
+#include <crm/cib.h>                    // cib_t
+#include <crm/pengine/pe_types.h>
+#include <crm/pengine/internal.h>
+#include <pcmki/pcmki_scheduler.h>
+
 /* Constraint helper functions */
 extern rsc_colocation_t *invert_constraint(rsc_colocation_t * constraint);
 
@@ -73,6 +82,19 @@ pe_action_t *pe_cancel_op(pe_resource_t *rsc, const char *name,
                           pe_working_set_t *data_set);
 pe_action_t *sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set);
 
+xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
+                                 const char *caller_version, int target_rc,
+                                 const char *node, const char *origin,
+                                 int level);
+
 #  define LOAD_STOPPED "load_stopped"
+
+void modify_configuration(
+    pe_working_set_t * data_set, cib_t *cib,
+    const char *quorum, const char *watchdog, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
+    GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke,
+    GListPtr ticket_standby, GListPtr ticket_activate);
+
+int run_simulation(pe_working_set_t * data_set, cib_t *cib, GListPtr op_fail_list, bool quiet);
 
 #endif

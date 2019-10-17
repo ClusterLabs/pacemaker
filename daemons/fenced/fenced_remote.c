@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -369,8 +371,8 @@ create_op_done_notify(remote_fencing_op_t * op, int rc)
     return notify_data;
 }
 
-static void
-bcast_result_to_peers(remote_fencing_op_t * op, int rc)
+void
+stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
@@ -509,7 +511,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     subt = crm_element_value(data, F_SUBTYPE);
     if (dup == FALSE && safe_str_neq(subt, "broadcast")) {
         /* Defer notification until the bcast message arrives */
-        bcast_result_to_peers(op, rc);
+        stonith_bcast_result_to_peers(op, rc);
         goto remote_op_done_cleanup;
     }
 
@@ -1473,14 +1475,14 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
                           get_device_timeout(op, peer, device);
-            crm_info("Requesting that '%s' perform op '%s %s' with '%s' for %s (%ds)", peer->host,
+            crm_notice("Requesting that '%s' perform op '%s %s' with '%s' " CRM_XS " for %s (%ds)", peer->host,
                      op->target, op->action, device, op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
             crm_xml_add(remote_op, F_STONITH_MODE, "slave");
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
-            crm_info("Requesting that '%s' perform op '%s %s' for %s (%ds, %lds)",
+            crm_notice("Requesting that '%s' perform op '%s %s' " CRM_XS " for %s (%ds, %lds)",
                      peer->host, op->target, op->action, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
 
@@ -1829,7 +1831,10 @@ process_remote_stonith_query(xmlNode * msg)
         return -EOPNOTSUPP;
     }
 
-    replies_expected = QB_MIN(op->replies_expected, fencing_active_peers());
+    replies_expected = fencing_active_peers();
+    if (op->replies_expected < replies_expected) {
+        replies_expected = op->replies_expected;
+    }
     if ((++op->replies >= replies_expected) && (op->state == st_query)) {
         have_all_replies = TRUE;
     }

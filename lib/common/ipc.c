@@ -78,10 +78,10 @@ generateReference(const char *custom1, const char *custom2)
 {
     static uint ref_counter = 0;
 
-    return crm_strdup_printf("%s-%s-%lu-%u",
+    return crm_strdup_printf("%s-%s-%lld-%u",
                              (custom1? custom1 : "_empty_"),
                              (custom2? custom2 : "_empty_"),
-                             (unsigned long)time(NULL), ref_counter++);
+                             (long long) time(NULL), ref_counter++);
 }
 
 xmlNode *

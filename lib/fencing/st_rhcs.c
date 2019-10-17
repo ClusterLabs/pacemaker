@@ -78,7 +78,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
         free(namelist);
     }
 #if _POSIX_C_SOURCE >= 200809L || defined(O_SEARCH) || defined(O_PATH)
-    if (dirfd > 0) {
+    if (dirfd >= 0) {
         close(dirfd);
     }
 #endif

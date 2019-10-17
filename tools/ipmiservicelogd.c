@@ -10,7 +10,7 @@
  *         Jeff Zheng <Jeff.Zheng@Intel.com>
  *
  * Original copyright 2009 International Business Machines, IBM
- * Later changes copyright 2009-2018 the Pacemaker project contributors
+ * Later changes copyright 2009-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -563,7 +563,7 @@ main(int argc, char *argv[])
     }
 #endif
 
-    crm_make_daemon("ipmiservicelogd", TRUE, "/var/run/ipmiservicelogd.pid0");
+    crm_make_daemon("ipmiservicelogd", TRUE, PCMK_RUN_DIR "/ipmiservicelogd.pid0");
     crm_log_cli_init("ipmiservicelogd");
     // Maybe this should log like a daemon instead?
     // crm_log_init("ipmiservicelogd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);

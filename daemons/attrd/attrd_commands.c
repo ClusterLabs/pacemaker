@@ -189,7 +189,7 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
     char *host_alloc = NULL;
 
     if (host == NULL) {
-        int nodeid;
+        int nodeid = 0;
 
         crm_element_value_int(xml, F_ATTRD_HOST_ID, &nodeid);
         if (nodeid > 0) {
@@ -865,8 +865,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         free_xml(sync);
 
     } else if (safe_str_neq(v->current, value)) {
-        crm_info("Setting %s[%s]: %s -> %s from %s",
-                 attr, host, v->current, value, peer->uname);
+        crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
+                   attr, host, v->current? v->current : "(unset)", value? value : "(unset)", peer->uname);
         free(v->current);
         v->current = (value? strdup(value) : NULL);
         a->changed = TRUE;

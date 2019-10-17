@@ -33,9 +33,7 @@ crm_time_hr_t *crm_time_timeval_hr_convert(crm_time_hr_t *target,
 crm_time_hr_t *crm_time_hr_new(const char *date_time);
 void crm_time_hr_free(crm_time_hr_t * hr_dt);
 char *crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt);
-
-crm_time_t *parse_date(const char *date_str); /* in iso8601.c global but
-                                                 not in header */
+const char *crm_now_string(time_t *when);
 
 struct crm_time_us {
     int years;

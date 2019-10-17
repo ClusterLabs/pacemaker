@@ -2,12 +2,12 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2018 the Pacemaker project contributors
+# Copyright 2016-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
-# This source code is licensed under GNU General Public License version 2 or
-# later (GPLv2+) WITHOUT ANY WARRANTY.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 USAGE="Usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
@@ -15,9 +15,9 @@ USAGE="Usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-d
 Expects to have a fully populated OCF RA-compliant environment set."
 
 # Load OCF helper functions
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 # Ensure certain variables are set and not empty
 : ${HA_VARRUN:="/var/run"}
@@ -25,7 +25,7 @@ Expects to have a fully populated OCF RA-compliant environment set."
 : ${OCF_RESOURCE_INSTANCE:="undef"}
 
 DEFAULT_STATE_FILE="${HA_VARRUN%%/}/opa-${OCF_RESOURCE_INSTANCE}.state"
-if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
     # Strip off any trailing clone marker (note + is not portable in sed)
     DEFAULT_STATE_FILE=$(echo "$DEFAULT_STATE_FILE" | sed s/:[0-9][0-9]*\.state/.state/)
 fi
@@ -37,11 +37,12 @@ DEFAULT_INACTIVE_VALUE="0"
 : ${OCF_RESKEY_state:="$DEFAULT_STATE_FILE"}
 : ${OCF_RESKEY_name:="$DEFAULT_ATTR_NAME"}
 
-# Values may be empty string
-if [ -z ${OCF_RESKEY_active_value+x} ]; then
+# If the user did not set a value, use the default. If the user explicitly set
+# a value to the empty string, use that (-z "${V+x}" tests whether $V was set).
+if [ -z "${OCF_RESKEY_active_value+x}" ]; then
     OCF_RESKEY_active_value="$DEFAULT_ACTIVE_VALUE"
 fi
-if [ -z ${OCF_RESKEY_inactive_value+x} ]; then
+if [ -z "${OCF_RESKEY_inactive_value+x}" ]; then
     OCF_RESKEY_inactive_value="$DEFAULT_INACTIVE_VALUE"
 fi
 
@@ -232,4 +233,4 @@ esac
 
 exit $?
 
-# vim: expandtab:tabstop=4:softtabstop=4:shiftwidth=4:textwidth=80
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

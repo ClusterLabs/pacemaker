@@ -78,6 +78,25 @@ void fix_plus_plus_recursive(xmlNode * target);
 xmlNode *create_xml_node(xmlNode * parent, const char *name);
 
 /*
+ * Create a node named "name" as a child of "parent", giving it the provided
+ * text content.
+ * If parent is NULL, creates an unconnected node.
+ *
+ * Returns the created node
+ *
+ */
+xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content);
+
+/*
+ * Create a new HTML node named "element_name" as a child of "parent", giving it the
+ * provided text content.  Optionally, apply a CSS #id and #class.
+ *
+ * Returns the created node.
+ */
+xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
+                               const char *class_name, const char *text);
+
+/*
  *
  */
 void purge_diff_markers(xmlNode * a_node);
@@ -257,6 +276,7 @@ __xml_next_element(const xmlNode *child)
     return next;
 }
 
+void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(const xmlNode *parent, const char *name);

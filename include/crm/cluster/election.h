@@ -51,8 +51,6 @@ extern "C" {
  * If a node receives no-votes from all other active nodes, it declares itself
  * the winner. The library API does not notify other nodes of this; callers
  * must implement that if desired.
- *
- * \ingroup core
  */
 
 typedef struct election_s election_t;

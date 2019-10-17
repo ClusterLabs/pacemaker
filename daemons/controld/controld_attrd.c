@@ -13,9 +13,7 @@
 #include <crm/attrd.h>
 #include <crm/msg_xml.h>
 
-#include <controld_fsa.h>
-#include <controld_utils.h>
-#include <controld_messages.h>
+#include <pacemaker-controld.h>
 
 static crm_ipc_t *attrd_ipc = NULL;
 

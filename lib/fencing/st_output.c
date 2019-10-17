@@ -16,29 +16,28 @@
 #include <crm/common/xml.h>
 #include <crm/fencing/internal.h>
 
-static int
-fence_target_text(pcmk__output_t *out, va_list args) {
-    const char *hostname = va_arg(args, const char *);
-    const char *uuid = va_arg(args, const char *);
-    const char *status = va_arg(args, const char *);
+static char *
+time_t_string(time_t when) {
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
 
-    pcmk__indented_printf(out, "%s\t%s\t%s\n", hostname, uuid, status);
-    return 0;
+    crm_time_set_timet(crm_when, &when);
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_free(crm_when);
+    return buf;
 }
 
 static int
-fence_target_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
-    const char *hostname = va_arg(args, const char *);
-    const char *uuid = va_arg(args, const char *);
-    const char *status = va_arg(args, const char *);
+last_fenced_html(pcmk__output_t *out, va_list args) {
+    const char *target = va_arg(args, const char *);
+    time_t when = va_arg(args, time_t);
 
-    node = xmlNewNode(NULL, (pcmkXmlStr) "target");
-    xmlSetProp(node, (pcmkXmlStr) "hostname", (pcmkXmlStr) hostname);
-    xmlSetProp(node, (pcmkXmlStr) "uuid", (pcmkXmlStr) uuid);
-    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) status);
+    if (when) {
+        char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
+        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        free(buf);
+    }
 
-    pcmk__xml_add_node(out, node);
     return 0;
 }
 
@@ -62,20 +61,60 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        crm_time_t *crm_when = crm_time_new(NULL);
-        xmlNodePtr node = xmlNewNode(NULL, (pcmkXmlStr) "last-fenced");
-        char *buf = NULL;
-
-        crm_time_set_timet(crm_when, &when);
-        buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        xmlNodePtr node = pcmk__output_create_xml_node(out, "last-fenced");
+        char *buf = time_t_string(when);
 
         xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) target);
         xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
 
-        pcmk__xml_add_node(out, node);
-
-        crm_time_free(crm_when);
         free(buf);
+    }
+
+    return 0;
+}
+
+static int
+stonith_event_html(pcmk__output_t *out, va_list args) {
+    stonith_history_t *event = va_arg(args, stonith_history_t *);
+    int full_history = va_arg(args, int);
+    gboolean later_succeeded = va_arg(args, gboolean);
+
+    switch(event->state) {
+        case st_done: {
+            char *completed_s = time_t_string(event->completed);
+
+            out->list_item(out, "successful-stonith-event",
+                           "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'",
+                           stonith_action_str(event->action), event->target,
+                           event->delegate ? event->delegate : "",
+                           event->client, event->origin,
+                           full_history ? "completed" : "last-successful",
+                           completed_s);
+            free(completed_s);
+            break;
+        }
+
+        case st_failed: {
+            char *failed_s = time_t_string(event->completed);
+
+            out->list_item(out, "failed-stonith-event",
+                           "%s of %s failed : delegate=%s, client=%s, origin=%s, %s='%s' %s",
+                           stonith_action_str(event->action), event->target,
+                           event->delegate ? event->delegate : "",
+                           event->client, event->origin,
+                           full_history ? "completed" : "last-failed",
+                           failed_s,
+                           later_succeeded ? "(a later attempt succeeded)" : "");
+            free(failed_s);
+            break;
+        }
+
+        default:
+            out->list_item(out, "pending-stonith-event",
+                           "%s of %s pending: client=%s, origin=%s",
+                           stonith_action_str(event->action), event->target,
+                           event->client, event->origin);
+            break;
     }
 
     return 0;
@@ -84,44 +123,46 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 static int
 stonith_event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
+    int full_history = va_arg(args, int);
+    gboolean later_succeeded = va_arg(args, gboolean);
+
+    char *buf = time_t_string(event->completed);
 
     switch (event->state) {
         case st_failed:
-            pcmk__indented_printf(out, "%s failed %s node %s on behalf of %s from %s at %s",
-                                  event->delegate ? event->delegate : "We",
+            pcmk__indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
                                   stonith_action_str(event->action), event->target,
-                                  event->client, event->origin, ctime(&event->completed));
+                                  event->delegate ? event->delegate : "",
+                                  event->client, event->origin,
+                                  full_history ? "completed" : "last-failed", buf,
+                                  later_succeeded ? "(a later attempt succeeded)" : "");
             break;
 
         case st_done:
-            pcmk__indented_printf(out, "%s succeeded %s node %s on behalf of %s from %s at %s",
-                                  event->delegate ? event->delegate : "This node",
+            pcmk__indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
                                   stonith_action_str(event->action), event->target,
-                                  event->client, event->origin, ctime(&event->completed));
+                                  event->delegate ? event->delegate : "",
+                                  event->client, event->origin,
+                                  full_history ? "completed" : "last-successful", buf);
             break;
 
         default:
-            /* ocf:pacemaker:controld depends on "wishes to" being
-             * in this output, when used with older versions of DLM
-             * that don't report stateful_merge_wait
-             */
-            pcmk__indented_printf(out, "%s at %s wishes to %s node %s - %d %lld\n",
-                                  event->client, event->origin, stonith_action_str(event->action),
-                                  event->target, event->state, (long long) event->completed);
+            pcmk__indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
+                                  stonith_action_str(event->action), event->target,
+                                  event->client, event->origin);
             break;
     }
 
+    free(buf);
     return 0;
 }
 
 static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    crm_time_t *crm_when = crm_time_new(NULL);
-    char *buf = NULL;
 
-    node = xmlNewNode(NULL, (pcmkXmlStr) "fence_event");
+    char *buf = NULL;
 
     switch (event->state) {
         case st_failed:
@@ -151,16 +192,36 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(node, (pcmkXmlStr) "origin", (pcmkXmlStr) event->origin);
 
     if (event->state == st_failed || event->state == st_done) {
-        crm_time_set_timet(crm_when, &event->completed);
-        buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        buf = time_t_string(event->completed);
         xmlSetProp(node, (pcmkXmlStr) "completed", (pcmkXmlStr) buf);
         free(buf);
     }
 
-    pcmk__xml_add_node(out, node);
-
-    crm_time_free(crm_when);
     return 0;
+}
+
+static int
+validate_agent_html(pcmk__output_t *out, va_list args) {
+    const char *agent = va_arg(args, const char *);
+    const char *device = va_arg(args, const char *);
+    const char *output = va_arg(args, const char *);
+    const char *error_output = va_arg(args, const char *);
+    int rc = va_arg(args, int);
+
+    if (device) {
+        char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
+                                      rc ? "failed" : "succeeded");
+        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        free(buf);
+    } else {
+        char *buf = crm_strdup_printf("Validation of %s %s", agent,
+                                      rc ? "failed" : "succeeded");
+        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        free(buf);
+    }
+
+    out->subprocess_output(out, rc, output, error_output);
+    return rc;
 }
 
 static int
@@ -192,7 +253,7 @@ validate_agent_text(pcmk__output_t *out, va_list args) {
 
 static int
 validate_agent_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = NULL;
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate");
 
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
@@ -200,28 +261,27 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    node = xmlNewNode(NULL, (pcmkXmlStr) "validate");
     xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent);
     if (device != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "device", (pcmkXmlStr) device);
     }
     xmlSetProp(node, (pcmkXmlStr) "valid", (pcmkXmlStr) (rc ? "false" : "true"));
 
-    pcmk__xml_push_parent(out, node);
+    pcmk__output_xml_push_parent(out, node);
     out->subprocess_output(out, rc, output, error_output);
-    pcmk__xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
 
-    pcmk__xml_add_node(out, node);
     return rc;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "fence-target", "text", fence_target_text },
-    { "fence-target", "xml", fence_target_xml },
+    { "last-fenced", "html", last_fenced_html },
     { "last-fenced", "text", last_fenced_text },
     { "last-fenced", "xml", last_fenced_xml },
+    { "stonith-event", "html", stonith_event_html },
     { "stonith-event", "text", stonith_event_text },
     { "stonith-event", "xml", stonith_event_xml },
+    { "validate", "html", validate_agent_html },
     { "validate", "text", validate_agent_text },
     { "validate", "xml", validate_agent_xml },
 
@@ -230,10 +290,5 @@ static pcmk__message_entry_t fmt_functions[] = {
 
 void
 stonith__register_messages(pcmk__output_t *out) {
-    static bool registered = FALSE;
-
-    if (!registered) {
-        pcmk__register_messages(out, fmt_functions);
-        registered = TRUE;
-    }
+    pcmk__register_messages(out, fmt_functions);
 }

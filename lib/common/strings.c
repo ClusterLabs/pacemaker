@@ -64,6 +64,10 @@ crm_int_helper(const char *text, char **end_text)
 
         } else if (errno != 0) {
             crm_perror(LOG_ERR, "Conversion of %s failed", text);
+
+        } else if (local_end_text == text) {
+            crm_err("Text contained no digits: %s", text);
+            result = -1;
         }
 
         if (local_end_text != NULL && local_end_text[0] != '\0') {
@@ -463,7 +467,7 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
 
     crm_trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms",
              length, *result_len, length / (*result_len),
-             difftime (after_t.tv_sec, before_t.tv_sec) * 1000 +
+             (after_t.tv_sec - before_t.tv_sec) * 1000 +
              (after_t.tv_nsec - before_t.tv_nsec) / 1e6);
 #else
     crm_trace("Compressed %d bytes into %d (ratio %d:1)",

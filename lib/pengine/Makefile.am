@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -40,6 +42,7 @@ libpe_status_la_SOURCES	+= rules.c
 libpe_status_la_SOURCES	+= status.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
+libpe_status_la_SOURCES	+= pe_output.c
 
 clean-generic:
 	rm -f *.log *.debug *~

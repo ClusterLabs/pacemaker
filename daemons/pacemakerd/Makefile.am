@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -14,8 +16,10 @@ init_SCRIPTS		= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker.service
+systemdsystemunit_DATA	= pacemaker.service
 endif
+
+EXTRA_DIST		= pacemaker.sysconfig
 
 ## SOURCES
 

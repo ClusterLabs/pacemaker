@@ -1,14 +1,8 @@
 #!/bin/sh
 #
-# ocf:pacmaker:remote OCF resource agent
+# ocf:pacemaker:remote OCF resource agent
 #
-# This script provides metadata for Pacemaker's internal remote agent.
-# Outside of acting as a placeholder so the agent can be indexed, and
-# providing metadata, this script should never be invoked. The actual
-# functionality behind the remote connection lives within Pacemaker's
-# controller daemon.
-#
-# Copyright 2013-2018 the Pacemaker project contributors
+# Copyright 2013-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,17 +10,23 @@
 # (GPLv2) WITHOUT ANY WARRANTY.
 #
 
+# This script provides metadata for Pacemaker's internal remote agent.
+# Outside of acting as a placeholder so the agent can be indexed, and
+# providing metadata, this script should never be invoked. The actual
+# functionality behind the remote connection lives within Pacemaker's
+# controller daemon.
+#
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
 meta_data() {
-	cat <<END
+    cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="remote" version="0.1">
@@ -76,7 +76,7 @@ END
 #######################################################################
 
 remote_usage() {
-	cat <<END
+    cat <<END
 usage: $0 {meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
@@ -84,28 +84,30 @@ END
 }
 
 remote_unsupported() {
-	ocf_log info "The ocf:pacemaker:remote agent should not be directly invoked except for meta-data action"
-	return $OCF_ERR_GENERIC
+    ocf_log info "The ocf:pacemaker:remote agent should not be directly invoked except for meta-data action"
+    return $OCF_ERR_GENERIC
 }
 
 case $__OCF_ACTION in
-meta-data)	meta_data
-		exit $OCF_SUCCESS
-		;;
-start)		remote_unsupported;;
-stop)		remote_unsupported;;
-monitor)	remote_unsupported;;
-migrate_to)	remote_unsupported;;
-migrate_from)	remote_unsupported;;
-reload)		remote_unsupported;;
-validate-all)	remote_unsupported;;
-usage|help)	remote_usage
-		exit $OCF_SUCCESS
-		;;
-*)		remote_usage
-		exit $OCF_ERR_UNIMPLEMENTED
-		;;
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          remote_unsupported;;
+stop)           remote_unsupported;;
+monitor)        remote_unsupported;;
+migrate_to)     remote_unsupported;;
+migrate_from)   remote_unsupported;;
+reload)         remote_unsupported;;
+validate-all)   remote_unsupported;;
+usage|help)     remote_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              remote_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
 esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
 exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

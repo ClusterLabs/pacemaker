@@ -246,6 +246,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     } else if (crm_str_eq(type, LRMD_OP_RSC_UNREG, TRUE)) {
         event.type = lrmd_event_unregister;
     } else if (crm_str_eq(type, LRMD_OP_RSC_EXEC, TRUE)) {
+        time_t epoch = 0;
+
         crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
         crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
@@ -253,8 +255,12 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         crm_element_value_int(msg, F_LRMD_OP_STATUS, &event.op_status);
         crm_element_value_int(msg, F_LRMD_RSC_DELETED, &event.rsc_deleted);
 
-        crm_element_value_int(msg, F_LRMD_RSC_RUN_TIME, (int *)&event.t_run);
-        crm_element_value_int(msg, F_LRMD_RSC_RCCHANGE_TIME, (int *)&event.t_rcchange);
+        crm_element_value_epoch(msg, F_LRMD_RSC_RUN_TIME, &epoch);
+        event.t_run = (unsigned int) epoch;
+
+        crm_element_value_epoch(msg, F_LRMD_RSC_RCCHANGE_TIME, &epoch);
+        event.t_rcchange = (unsigned int) epoch;
+
         crm_element_value_int(msg, F_LRMD_RSC_EXEC_TIME, (int *)&event.exec_time);
         crm_element_value_int(msg, F_LRMD_RSC_QUEUE_TIME, (int *)&event.queue_time);
 
@@ -1664,13 +1670,17 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
     int rc = pcmk_ok;
     stonith_t *stonith_api = stonith_api_new();
 
-    if(stonith_api) {
-        stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
-        stonith_api->cmds->free(stonith_api);
+    if (stonith_api == NULL) {
+        crm_err("Could not get fence agent meta-data: API memory allocation failed");
+        return -ENOMEM;
     }
-    if (*output == NULL) {
+
+    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type,
+                                     provider, output, 0);
+    if ((rc == pcmk_ok) && (*output == NULL)) {
         rc = -EIO;
     }
+    stonith_api->cmds->free(stonith_api);
     return rc;
 }
 
@@ -1820,10 +1830,13 @@ list_stonith_agents(lrmd_list_t ** resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    if(stonith_api) {
-        stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
-        stonith_api->cmds->free(stonith_api);
+    if (stonith_api == NULL) {
+        crm_err("Could not list fence agents: API memory allocation failed");
+        return -ENOMEM;
     }
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
+                                   &stonith_resources, 0);
+    stonith_api->cmds->free(stonith_api);
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
         rc++;
@@ -1841,9 +1854,10 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
                      const char *provider)
 {
     int rc = 0;
+    int stonith_count = 0; // Initially, whether to include stonith devices
 
     if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
-        rc += list_stonith_agents(resources);
+        stonith_count = 1;
 
     } else {
         GListPtr gIter = NULL;
@@ -1856,10 +1870,17 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         g_list_free_full(agents, free);
 
         if (!class) {
-            rc += list_stonith_agents(resources);
+            stonith_count = 1;
         }
     }
 
+    if (stonith_count) {
+        // Now, if stonith devices are included, how many there are
+        stonith_count = list_stonith_agents(resources);
+        if (stonith_count > 0) {
+            rc += stonith_count;
+        }
+    }
     if (rc == 0) {
         crm_notice("No agents found for class %s", class);
         rc = -EPROTONOSUPPORT;

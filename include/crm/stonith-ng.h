@@ -29,6 +29,7 @@ extern "C" {
 #  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
 #  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
 #  define T_STONITH_NOTIFY_HISTORY        "st_notify_history"
+#  define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -429,6 +430,10 @@ stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
 void stonith_history_free(stonith_history_t *history);
+
+// Convenience functions
+int stonith_api_connect_retry(stonith_t *st, const char *name,
+                              int max_attempts);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API

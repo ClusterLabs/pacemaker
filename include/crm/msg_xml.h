@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -278,7 +278,7 @@ extern "C" {
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
-#  define XML_RSC_OP_LAST_RUN           "last-run"
+#  define XML_RSC_OP_LAST_RUN           "last-run"  // deprecated since 2.0.3
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
@@ -345,6 +345,7 @@ extern "C" {
 #  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
 #  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
+#  define XML_CONFIG_ATTR_FENCE_REACTION	"fence-reaction"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"

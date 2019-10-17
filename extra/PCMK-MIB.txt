@@ -14,12 +14,15 @@ IMPORTS
 ;
 
 pacemaker MODULE-IDENTITY
-    LAST-UPDATED "201703242100Z"
+    LAST-UPDATED "201906010000Z"
     ORGANIZATION "www.clusterlabs.org"
     CONTACT-INFO    
-        "name:  Andrew Beekhof
-        email:  users@clusterlabs.org"
+        "name:  ClusterLabs Administrators
+        email:  admin@clusterlabs.org"
     DESCRIPTION "MIB objects for the Pacemaker cluster manager implementation"
+
+    REVISION    "201906010000Z"
+    DESCRIPTION "Update organization contact information"
 
     REVISION    "201703242100Z"
     DESCRIPTION "Add pacemakerNotificationAttributeName and pacemakerNotificationAttributeValue"

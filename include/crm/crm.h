@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,29 @@ extern "C" {
 
 #  include <libxml/tree.h>
 
-#  define CRM_FEATURE_SET		"3.1.0"
+/*!
+ * The CRM feature set assists with compatibility in mixed-version clusters.
+ * The major version number increases when nodes with different versions
+ * would not work (rolling upgrades are not allowed). The minor version
+ * number increases when mixed-version clusters are allowed only during
+ * rolling upgrades (a node with the oldest feature set will be elected DC). The
+ * minor-minor version number is ignored, but allows resource agents to detect
+ * cluster support for various features.
+ *
+ * The feature set also affects the processing of old saved CIBs (such as for
+ * many scheduler regression tests).
+ *
+ * Particular feature points currently used by pacemaker:
+ *
+ * >2.1:     Operation updates include timing data
+ * >=3.0.5:  XML v2 digests are created
+ * >=3.0.8:  Peers do not need acks for cancellations
+ * >=3.0.9:  DC will send its own shutdown request to all peers
+ *           XML v2 patchsets are created by default
+ * >=3.0.13: Fail counts include operation name and interval
+ * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
+ */
+#  define CRM_FEATURE_SET		"3.2.0"
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )

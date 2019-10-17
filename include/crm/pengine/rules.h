@@ -1,22 +1,12 @@
-/* 
- * Copyright 2004-2018 the Pacemaker project contributors
+/*
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PENGINE_RULES__H
 #  define PENGINE_RULES__H
 
@@ -55,36 +45,69 @@ typedef struct pe_match_data {
 
 enum expression_type find_expression_type(xmlNode * expr);
 
-gboolean test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now);
+gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
+                           crm_time_t *now, crm_time_t *next_change);
 
-gboolean test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now);
+gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
+                      enum rsc_role_e role, crm_time_t *now,
+                      crm_time_t *next_change, pe_match_data_t *match_data);
 
-gboolean pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
-                         pe_re_match_data_t * re_match_data);
+gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
+                            enum rsc_role_e role, crm_time_t *now,
+                            crm_time_t *next_change,
+                            pe_match_data_t *match_data);
 
-gboolean pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now,
-                         pe_match_data_t * match_data);
+void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                       GHashTable *node_hash, GHashTable *hash,
+                       const char *always_first, gboolean overwrite,
+                       crm_time_t *now, crm_time_t *next_change);
 
-gboolean test_expression(xmlNode * expr, GHashTable * node_hash,
-                         enum rsc_role_e role, crm_time_t * now);
-
-gboolean pe_test_expression_re(xmlNode * expr, GHashTable * node_hash,
-                         enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data);
-
-gboolean pe_test_expression_full(xmlNode * expr, GHashTable * node_hash,
-                         enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data);
-
-void unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                                GHashTable * node_hash, GHashTable * hash,
-                                const char *always_first, gboolean overwrite, crm_time_t * now);
-
-#ifdef ENABLE_VERSIONED_ATTRS
-void pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                                    GHashTable * node_hash, xmlNode * hash, crm_time_t * now);
+#if ENABLE_VERSIONED_ATTRS
+void pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
+                                    const char *set_name, GHashTable *node_hash,
+                                    xmlNode *hash, crm_time_t *now,
+                                    crm_time_t *next_change);
 GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
 #endif
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
+
+//! \deprecated Use pe_evaluate_rules() instead
+gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
+
+//! \deprecated Use pe_test_rule() instead
+gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now);
+
+//! \deprecated Use pe_test_rule() instead
+gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now,
+                         pe_re_match_data_t *re_match_data);
+
+//! \deprecated Use pe_test_rule() instead
+gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
+                           enum rsc_role_e role, crm_time_t *now,
+                           pe_match_data_t *match_data);
+
+//! \deprecated Use pe_test_expression() instead
+gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now);
+
+//! \deprecated Use pe_test_expression() instead
+gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now,
+                         pe_re_match_data_t *re_match_data);
+
+//! \deprecated Use pe_test_expression() instead
+gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                                 enum rsc_role_e role,
+                                 crm_time_t *now, pe_match_data_t *match_data);
+
+//! \deprecated Use pe_unpack_nvpairs() instead
+void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
+                                const char *set_name, GHashTable *node_hash,
+                                GHashTable *hash, const char *always_first,
+                                gboolean overwrite, crm_time_t *now);
 
 #ifdef __cplusplus
 }

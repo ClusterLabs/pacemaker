@@ -1,44 +1,30 @@
 #!/bin/sh
 #
-# OCF resource agent for managing the DLM controld process
+# ocf:pacemaker:controld resource agent
 #
-# Copyright 2008-2018 the Pacemaker project contributors
+# Copyright 2008-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
-#                    All Rights Reserved.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+
 #
-# This program is distributed in the hope that it would be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# Further, this software is distributed without any warranty that it is
-# free of the rightful claim of any third person regarding infringement
-# or the like.  Any license provided herein, whether implied or
-# otherwise, applies only to this software file.  Patent licenses, if
-# any, provided herein do not apply to combinations of this program with
-# other software, or any other product whatsoever.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write the Free Software Foundation,
-# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+# Manages the DLM controld process
 #
 
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
 if [ -e "$OCF_ROOT/resource.d/heartbeat/controld" ]; then
     ocf_log info "Using heartbeat controld agent"
-    $OCF_ROOT/resource.d/heartbeat/controld $1
+    "$OCF_ROOT/resource.d/heartbeat/controld" "$1"
     exit $?
 fi
 
@@ -117,7 +103,7 @@ END
 
 check_uncontrolled_locks()
 {
-    CUL_TMP=$(ls $DLM_SYSFS_DIR 2>&1)
+    CUL_TMP=$(ls "$DLM_SYSFS_DIR" 2>&1)
     if [ $? -eq 0 ]; then
         if [ -n "$CUL_TMP" ]; then
 
@@ -161,12 +147,12 @@ controld_start() {
     fi
 
     if ! ocf_is_true "$OCF_RESKEY_allow_stonith_disabled" && \
-        ! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`"; then
+        ! ocf_is_true "$(crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true)"; then
         ocf_log err "The cluster property stonith-enabled may not be deactivated to use the DLM"
         return $OCF_ERR_CONFIGURED
     fi
 
-    ${OCF_RESKEY_daemon} $OCF_RESKEY_args
+    "${OCF_RESKEY_daemon}" $OCF_RESKEY_args
 
     while true
     do
@@ -180,10 +166,10 @@ controld_start() {
                 return $OCF_SUCCESS
             fi
             ;;
-          $OCF_NOT_RUNNING) 
+          $OCF_NOT_RUNNING)
             return $OCF_NOT_RUNNING
             ;;
-          *) 
+          *)
             return $OCF_ERR_GENERIC
             ;;
         esac
@@ -195,23 +181,23 @@ controld_start() {
 controld_stop() {
     controld_monitor; rc=$?
 
-    if [ $rc = $OCF_NOT_RUNNING ]; then
+    if [ $rc -eq $OCF_NOT_RUNNING ]; then
         return $OCF_SUCCESS
     fi
 
-    killall -TERM ${OCF_RESKEY_daemon}; rc=$?
+    killall -TERM "${OCF_RESKEY_daemon}"; rc=$?
 
-    if [ $rc != 0 ]; then
+    if [ $rc -ne 0 ]; then
         return $OCF_ERR_GENERIC
     fi
 
     rc=$OCF_SUCCESS
-    while [ $rc = $OCF_SUCCESS ]; do
+    while [ $rc -eq $OCF_SUCCESS ]; do
         controld_monitor; rc=$?
         sleep 1
     done
 
-    if [ $rc = $OCF_NOT_RUNNING ]; then
+    if [ $rc -eq $OCF_NOT_RUNNING ]; then
         rc=$OCF_SUCCESS
     fi
 
@@ -227,7 +213,7 @@ controld_monitor() {
              ocf_log err "DLM status is: stateful_merge_wait"
              CM_RC=$OCF_ERR_GENERIC
          elif [ -z "$smw" ] && dlm_tool ls | grep -q "wait fencing" && \
-              ! stonith_admin -H '*' -V | grep -q "wishes to"; then
+              ! stonith_admin -H '*' --output-as xml | grep -q "extended-status=\"pending\""; then
              ocf_log err "DLM status is: wait fencing"
              CM_RC=$OCF_ERR_GENERIC
          else
@@ -249,10 +235,10 @@ controld_monitor() {
 
 controld_validate() {
     check_binary killall
-    check_binary ${OCF_RESKEY_daemon}
+    check_binary "${OCF_RESKEY_daemon}"
 
-    case ${OCF_RESKEY_CRM_meta_globally_unique} in
-        yes|Yes|true|True|1) 
+    case "${OCF_RESKEY_CRM_meta_globally_unique}" in
+        yes|Yes|true|True|1)
             ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
             exit $OCF_ERR_CONFIGURED
             ;;
@@ -263,24 +249,24 @@ controld_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_sctp=false}
+: ${OCF_RESKEY_sctp:="false"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$OCF_RESOURCE_INSTANCE" in
-    *[gG][fF][sS]*) 
+    *[gG][fF][sS]*)
         : ${OCF_RESKEY_args=-g 0}
-        : ${OCF_RESKEY_daemon=gfs_controld}
+        : ${OCF_RESKEY_daemon:=gfs_controld}
         ;;
     *[dD][lL][mM]*)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
         ;;
     *)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
 esac
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;
@@ -298,3 +284,5 @@ esac
 rc=$?
 
 exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

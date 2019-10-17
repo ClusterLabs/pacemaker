@@ -11,7 +11,6 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <bzlib.h>
 #include <errno.h>
 #include <crm_internal.h>
 #include <unistd.h>

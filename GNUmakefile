@@ -7,45 +7,41 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
+default: build
+.PHONY: default
+
+# The toplevel "clean" targets are generated from Makefile.am, not this file.
+# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
+# define this target, which Makefile.am can use as a dependency of clean-local.
+EXTRA_CLEAN_TARGETS	= ancillary-clean
 
 -include Makefile
 
+# The main purpose of this GNUmakefile is that its targets can be invoked
+# without having to call autogen.sh and configure first. That means automake
+# variables may or may not be defined. Here, we use the current working
+# directory if a relevant variable hasn't been defined.
+#
+# The idea is to keep generated artifacts in the build tree, in case a VPATH
+# build is in use, but in practice it would be difficult to make the targets
+# here usable from a different location than the source tree.
+abs_srcdir	?= $(shell pwd)
+abs_builddir	?= $(shell pwd)
+
 PACKAGE		?= pacemaker
 
-# Force 'make dist' to be consistent with 'make export'
-distdir			= $(PACKAGE)-$(TAG)
-TARFILE			= $(PACKAGE)-$(SHORTTAG).tar.gz
-DIST_ARCHIVES		= $(TARFILE)
 
-RPM_ROOT	= $(shell pwd)
-RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
-		  --define "_specdir   $(RPM_ROOT)" 	\
-		  --define "_srcrpmdir $(RPM_ROOT)" 	\
+# Definitions that specify what various targets will apply to
 
-MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock --no-cleanup-after
-
-# Default to building Fedora-compliant spec files
-# SLES:     /etc/SuSE-release
-# openSUSE: /etc/SuSE-release
-# RHEL:     /etc/redhat-release, /etc/system-release
-# Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
-# CentOS:   /etc/centos-release, /etc/redhat-release, /etc/system-release
-F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
-ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
-MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
-DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
 	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)')
+	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*$(rparen) echo '$(TAG)' | cut -c11-;; \
+SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
 	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
 SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
-WITH    ?= --without doc
-#WITH    ?= --without=doc --with=gcov
 
 LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
 ifneq ($(origin VERSION), undefined)
@@ -55,11 +51,81 @@ LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | he
 endif
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
+
+# This Makefile can create 2 types of distributions:
+#
+# - "make dist" is automake's native functionality, based on the various
+#   dist/nodist make variables; it always uses the current sources
+#
+# - "make export" is a custom target based on git archive and relevant entries
+#   from .gitattributes; it defaults to current sources but can use any git tag
+#
+# Both types use the TARFILE name for the result, though they generate
+# different contents.
+distdir			= $(PACKAGE)-$(SHORTTAG)
+TARFILE			= $(abs_builddir)/$(PACKAGE)-$(SHORTTAG).tar.gz
+
+.PHONY: init
+init:
+	test -e $(top_srcdir)/configure || ./autogen.sh
+	test -e $(abs_builddir)/Makefile || $(abs_builddir)/configure
+
+.PHONY: build
+build: init
+	$(MAKE) $(AM_MAKEFLAGS) core
+
+export:
+	if [ ! -f "$(TARFILE)" ]; then						\
+	    if [ $(TAG) = dirty ]; then 					\
+		git commit -m "DO-NOT-PUSH" -a;					\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
+		git reset --mixed HEAD^; 					\
+	    else								\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
+	    fi;									\
+	    echo "`date`: Rebuilt $(TARFILE)";					\
+	else									\
+	    echo "`date`: Using existing tarball: $(TARFILE)";			\
+	fi
+
+## RPM-related targets
+
+# Where to put RPM artifacts; possible values:
+#
+# - toplevel (default): RPM sources, spec, and source rpm in top-level build
+#   directory (everything else uses the usual defaults)
+#
+# - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
+#   everything else in dedicated "rpm" subdirectory of build tree
+RPMDEST         	?= toplevel
+
+RPM_SPEC_DIR_toplevel	= $(abs_builddir)
+RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)
+RPM_OPTS_toplevel	= --define "_sourcedir $(abs_builddir)" 		\
+			  --define "_specdir   $(RPM_SPEC_DIR_toplevel)"	\
+			  --define "_srcrpmdir $(RPM_SRCRPM_DIR_toplevel)"
+
+RPM_SPEC_DIR_subtree	= $(abs_builddir)/rpm/SPECS
+RPM_SRCRPM_DIR_subtree	= $(abs_builddir)/rpm/SRPMS
+RPM_OPTS_subtree	= --define "_sourcedir $(abs_builddir)" 		\
+			  --define "_topdir $(abs_builddir)/rpm"
+
+RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMDEST))
+RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMDEST))
+RPM_OPTS	= $(RPM_OPTS_$(RPMDEST))
+
+WITH		?= --without doc
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
 COUNT           = $(shell expr 1 + $(LAST_COUNT))
-
 SPECVERSION	?= $(COUNT)
+
+MOCK_DIR	= $(abs_builddir)/mock
+MOCK_OPTIONS	?= --resultdir=$(MOCK_DIR) --no-cleanup-after
+
+F	?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-release && rpm --eval %{fedora})
+ARCH	?= $(shell test ! -e /etc/fedora-release && uname -m; test -e /etc/fedora-release && rpm --eval %{_arch})
+MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 
 # rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
 #
@@ -103,196 +169,187 @@ rpmbuild-with = \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"
 
-init:
-	./autogen.sh init
+# Depend on spec-clean so it gets rebuilt every time
+$(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
+	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
+	$(AM_V_GEN)if [ x != x"`git ls-files -m rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
+	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
+	elif git cat-file -e $(TAG):rpm/pacemaker.spec.in 2>/dev/null; then		\
+	    git show $(TAG):rpm/pacemaker.spec.in;					\
+	elif git cat-file -e $(TAG):pacemaker.spec.in 2>/dev/null; then			\
+	    git show $(TAG):pacemaker.spec.in;						\
+	else 										\
+	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
+	fi | sed									\
+	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
+	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
+	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
+	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
+	    -e "s/PACKAGE_VERSION/$$(git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/"	\
+	    > "$@"
 
-export:
-	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
-	if [ ! -f $(TARFILE) ]; then						\
-	    rm -f $(PACKAGE).tar.*;						\
-	    if [ $(TAG) = dirty ]; then 					\
-		git commit -m "DO-NOT-PUSH" -a;					\
-		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-		git reset --mixed HEAD^; 					\
-	    else								\
-		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
-	    fi;									\
-	    echo `date`: Rebuilt $(TARFILE);					\
-	else									\
-	    echo `date`: Using existing tarball: $(TARFILE);			\
-	fi
+.PHONY: $(PACKAGE).spec
+$(PACKAGE).spec: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 
-$(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
-	cp $^ $@
-	@echo Rebuilt $@
+.PHONY: spec-clean
+spec-clean:
+	-rm -f $(RPM_SPEC_DIR)/$(PACKAGE).spec
 
-$(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
-	rm -f $@
-	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
-	    cp $(PACKAGE).spec.in $@;						\
-	    echo "Rebuilt $@ (local modifications)";				\
-	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
-	    cp $(PACKAGE).spec.in $@;						\
-	    echo "Rebuilt $@";							\
-	else 									\
-	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
-	    echo "Rebuilt $@ from $(TAG)";					\
-	fi
-	sed -i									\
-	    -e 's:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g'		\
-	    -e 's:%{name}-libs:lib%{name}3:g'					\
-	    -e 's: libtool-ltdl-devel\(%{?_isa}\)\?::g'				\
-	    -e 's:bzip2-devel:libbz2-devel:g'					\
-	    -e 's:docbook-style-xsl:docbook-xsl-stylesheets:g'			\
-	    -e 's: byacc::g'							\
-	    -e 's:gnutls-devel:libgnutls-devel:g'				\
-	    -e 's:corosynclib:libcorosync:g'					\
-	    -e 's:cluster-glue-libs:libglue:g'					\
-	    -e 's:shadow-utils:shadow:g'					\
-	    -e 's: publican::g'							\
-	    -e 's: 189: 90:g'							\
-	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
-	    -e 's:procps-ng:procps:g'						\
-	    $@
-	@echo "Applied SUSE-specific modifications"
-
-
-# Works for all fedora based distros
-$(PACKAGE)-%.spec: $(PACKAGE).spec.in
-	rm -f $@
-	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
-	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
-	    echo "Rebuilt $@ (local modifications)";				\
-	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
-	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
-	    echo "Rebuilt $@";							\
-	else 									\
-	    git show $(TAG):$(PACKAGE).spec.in >> $(PACKAGE)-$*.spec;		\
-	    echo "Rebuilt $@ from $(TAG)";					\
-	fi
-
-srpm-%:	export $(PACKAGE)-%.spec
-	rm -f *.src.rpm
-	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
-	echo "* $(shell date +"%a %b %d %Y") Andrew Beekhof <andrew@beekhof.net> $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)-1" >> $(PACKAGE).spec
-	echo " - See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details" >> $(PACKAGE).spec
+.PHONY: srpm
+srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' \
-	    -e 's/global\ commit\ .*/global\ commit\ $(TAG)/' \
-	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
-	    -i $(PACKAGE).spec
-	$(call rpmbuild-with,$(WITH),-bs --define "dist .$*" $(RPM_OPTS),$(PACKAGE).spec)
+	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(RPM_SPEC_DIR)/$(PACKAGE).spec)
 
+.PHONY: srpm-clean
+srpm-clean:
+	-rm -f $(RPM_SRCRPM_DIR)/*.src.rpm
+
+.PHONY: chroot
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
+.PHONY: mock-next
 mock-next:
-	make F=$(shell expr 1 + $(F)) mock
+	$(MAKE) $(AM_MAKEFLAGS) F=$(shell expr 1 + $(F)) mock
 
+.PHONY: mock-rawhide
 mock-rawhide:
-	make F=rawhide mock
+	$(MAKE) $(AM_MAKEFLAGS) F=rawhide mock
 
 mock-install-%:
-	echo "Installing packages"
-	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents psmisc
+	@echo "Installing packages"
+	mock --root=$* $(MOCK_OPTIONS) --install $(MOCK_DIR)/*.rpm \
+		vi sudo valgrind lcov gdb fence-agents psmisc
 
+.PHONY: mock-install
 mock-install: mock-install-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
+.PHONY: mock-sh
 mock-sh: mock-sh-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
 mock-sh-%:
-	echo "Connecting"
+	@echo "Connecting"
 	mock --root=$* $(MOCK_OPTIONS) --shell
-	echo "Done"
+	@echo "Done"
 
-# eg. make WITH="--with pre_release" rpm
-mock-%:
-	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
-	-rm -rf $(RPM_ROOT)/mock
-	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
-	mock --root=$* --no-cleanup-after --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
+mock-%: srpm mock-clean
+	mock $(MOCK_OPTIONS) --root=$* --no-cleanup-after --rebuild	\
+		$(WITH) $(RPM_SRCRPM_DIR)/*.src.rpm
 
-srpm:	srpm-$(DISTRO)
-	echo "Done"
-
+.PHONY: mock
 mock:   mock-$(MOCK_CFG)
-	echo "Done"
+	@echo "Done"
 
-rpm-dep: $(PACKAGE)-$(DISTRO).spec
-	if [ x != x`which yum-builddep 2>/dev/null` ]; then			\
-	    echo "Installing with yum-builddep";		\
-	    sudo yum-builddep $(PACKAGE)-$(DISTRO).spec;	\
-	elif [ x != x`which yum 2>/dev/null` ]; then				\
-	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
-	    sudo yum install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');	\
-	elif [ x != x`which zypper` ]; then			\
-	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
-	    sudo zypper install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');\
-	else							\
-	    echo "I don't know how to install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')";\
-	fi
+.PHONY: dirty
+dirty:
+	$(MAKE) $(AM_MAKEFLAGS) TAG=dirty mock
 
+.PHONY: mock-clean
+mock-clean:
+	-rm -rf $(MOCK_DIR)
+
+.PHONY: rpm-dep
+rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+	sudo yum-builddep $(PACKAGE).spec
+
+# e.g. make WITH="--with pre_release" rpm
+.PHONY: rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
-	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_ROOT)/*.src.rpm)
+	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
 
+.PHONY: rpmlint
+rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
+	rpmlint -f rpm/rpmlintrc "$<"
+
+.PHONY: release
 release:
-	make TAG=$(LAST_RELEASE) rpm
+	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RELEASE) rpm
 
+.PHONY: rc
 rc:
-	make TAG=$(LAST_RC) rpm
+	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RC) rpm
 
-dirty:
-	make TAG=dirty mock
 
-COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
-COVFILE          = $(PACKAGE)-coverity-$(TAG).tgz
-COVHOST		?= scan5.coverity.com
-COVPASS		?= password
+## Static analysis via coverity
 
-# Static analysis via coverity
+# Aggressiveness (low, medium, or high)
+COVLEVEL	?= low
 
-coverity-common:
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
-	make core-clean
-	rm -rf $(COVERITY_DIR)
-	cov-build --dir $(COVERITY_DIR) make core
+# Generated outputs
+COVERITY_DIR	= $(abs_builddir)/coverity-$(TAG)
+COVTAR		= $(abs_builddir)/$(PACKAGE)-coverity-$(TAG).tgz
+COVEMACS	= $(abs_builddir)/$(TAG).coverity
+COVHTML		= $(COVERITY_DIR)/output/errors
 
-coverity: coverity-common
-	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
-	@echo "Uploading to public Coverity instance..."
-	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
-	rm -rf $(COVFILE) $(COVERITY_DIR)
-	make core-clean
+# Coverity outputs are phony so they get rebuilt every invocation
 
-coverity-corp: coverity-common
-	test -e configure || ./autogen.sh
-	test -e Makefile || ./configure
-	make core-clean
-	rm -rf $(COVERITY_DIR)
-	cov-build --dir $(COVERITY_DIR) make core
-	@echo "Waiting for a corporate Coverity license..."
-	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
-	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
-	cov-format-errors --dir $(COVERITY_DIR)
-#	rsync $(RSYNC_OPTS) "$(COVERITY_DIR)/c/output/errors/" "$(RSYNC_DEST)/$(PACKAGE)/coverity/$(TAG)/"
-	make core-clean
-#	cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
-#	rm -rf $(COVERITY_DIR)
+.PHONY: $(COVERITY_DIR)
+$(COVERITY_DIR): init core-clean coverity-clean
+	$(AM_V_GEN)cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
+
+# Public coverity instance
+
+.PHONY: $(COVTAR)
+$(COVTAR): $(COVERITY_DIR)
+	$(AM_V_GEN)tar czf "$@" --transform="s@.*$(TAG)@cov-int@" "$<"
+
+.PHONY: coverity
+coverity: $(COVTAR)
+	@echo "Now go to https://scan.coverity.com/users/sign_in and upload:"
+	@echo "  $(COVTAR)"
+	@echo "then make core-clean coverity-clean"
+
+# Licensed coverity instance
+#
+# The prerequisites are a little hacky; rather than actually required, some
+# of them are designed so that things execute in the proper order (which is
+# not the same as GNU make's order-only prerequisites).
+
+.PHONY: coverity-analyze
+coverity-analyze: $(COVERITY_DIR)
+	@echo ""
+	@echo "Analyzing (waiting for coverity license if necessary) ..."
+	cov-analyze --dir "$<" --wait-for-license --security		\
+		--aggressiveness-level "$(COVLEVEL)"
+
+.PHONY: $(COVEMACS)
+$(COVEMACS): coverity-analyze
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --emacs-style > "$@"
+
+.PHONY: $(COVHTML)
+$(COVHTML): $(COVEMACS)
+	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --html-output "$@"
+
+.PHONY: coverity-corp
+coverity-corp: $(COVHTML)
+	$(MAKE) $(AM_MAKEFLAGS) core-clean
+	@echo "Done. See:"
+	@echo "  file://$(COVHTML)/index.html"
+	@echo "When no longer needed, make coverity-clean"
+
+# Remove all outputs regardless of tag
+.PHONY: coverity-clean
+coverity-clean:
+	-rm -rf "$(abs_builddir)"/coverity-*			\
+		"$(abs_builddir)"/$(PACKAGE)-coverity-*.tgz	\
+		"$(abs_builddir)"/*.coverity
+
+
+## Change log generation
 
 summary:
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
-	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:      "
+	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
+	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
+	@printf "\n- Diff:\n"
 	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
 
 rc-changes:
-	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
+	@$(MAKE) $(AM_MAKEFLAGS) NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
 
 changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
@@ -308,8 +365,11 @@ changes: summary
 			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
 		| sort -uf
 
+authors:
+	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
+
 changelog:
-	@make changes > ChangeLog
+	@$(MAKE) $(AM_MAKEFLAGS) changes > ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 
@@ -334,7 +394,7 @@ cppcheck:
 
 clang:
 	test -e $(CLANG_analyzer)
-	scan-build $(CLANG_checkers:%=-enable-checker %) make clean all
+	scan-build $(CLANG_checkers:%=-enable-checker %) $(MAKE) $(AM_MAKEFLAGS) clean all
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
@@ -352,3 +412,6 @@ gnulib-update:
 	maint/gnulib/gnulib-tool \
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
+
+ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean
+	-rm -f $(TARFILE)

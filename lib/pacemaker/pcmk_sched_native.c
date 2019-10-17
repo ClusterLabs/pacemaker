@@ -596,8 +596,9 @@ is_op_dup(resource_t *rsc, const char *name, guint interval_ms)
     guint interval2_ms = 0;
 
     CRM_ASSERT(rsc);
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
+
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             value = crm_element_value(operation, "name");
             if (safe_str_neq(value, name)) {
@@ -820,8 +821,10 @@ Recurring(resource_t * rsc, action_t * start, node_t * node, pe_working_set_t * 
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+        for (operation = __xml_first_child_element(rsc->ops_xml);
+             operation != NULL;
              operation = __xml_next_element(operation)) {
+
             if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 RecurringOp(rsc, start, node, operation, data_set);
             }
@@ -877,7 +880,8 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
     // @TODO add support
     if (is_set(rsc->flags, pe_rsc_unique) == FALSE) {
-        crm_notice("Ignoring %s (recurring monitors for role=Stopped are not supported for anonyous clones)",
+        crm_notice("Ignoring %s (recurring monitors for Stopped role are "
+                   "not supported for anonymous clones)",
                    ID(operation));
         return;
     }
@@ -1026,8 +1030,10 @@ Recurring_Stopped(resource_t * rsc, action_t * start, node_t * node, pe_working_
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+        for (operation = __xml_first_child_element(rsc->ops_xml);
+             operation != NULL;
              operation = __xml_next_element(operation)) {
+
             if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 RecurringOp_Stopped(rsc, start, node, operation, data_set);
             }
@@ -2167,10 +2173,6 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     if (constraint->role_filter > RSC_ROLE_UNKNOWN && constraint->role_filter != rsc->next_role) {
         pe_rsc_debug(rsc, "Constraint (%s) is not active (role : %s vs. %s)",
                      constraint->id, role2text(constraint->role_filter), role2text(rsc->next_role));
-        return;
-
-    } else if (is_active(constraint) == FALSE) {
-        pe_rsc_trace(rsc, "Constraint (%s) is not active", constraint->id);
         return;
     }
 

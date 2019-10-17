@@ -142,7 +142,6 @@ void promotable_colocation_rh(resource_t *lh_rsc, resource_t *rh_rsc,
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
-gboolean is_active(pe__location_t *cons);
 
 extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set);
 

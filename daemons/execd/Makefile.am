@@ -1,5 +1,7 @@
 #
-# Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+# Copyright 2012-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU Lesser General Public License
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -16,7 +18,7 @@ init_SCRIPTS		= pacemaker_remote
 sbin_PROGRAMS		= pacemaker-remoted
 
 if BUILD_SYSTEMD
-systemdunit_DATA	= pacemaker_remote.service
+systemdsystemunit_DATA	= pacemaker_remote.service
 endif
 
 pacemaker_execd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
@@ -36,7 +38,7 @@ pacemaker_remoted_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pacemaker_remoted_LDADD		= $(pacemaker_execd_LDADD) \
 				  $(top_builddir)/lib/lrmd/liblrmd.la
 pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) \
-				  remoted_tls.c remoted_proxy.c
+				  remoted_tls.c remoted_pidone.c remoted_proxy.c
 
 cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la    \
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\

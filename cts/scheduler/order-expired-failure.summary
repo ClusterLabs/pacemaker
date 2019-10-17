@@ -52,6 +52,7 @@ Transition Summary:
  * Stop       compute-unfence-trigger:1            ( overcloud-novacompute-1 )   due to node availability
 
 Executing cluster transition:
+ * Resource action: overcloud-novacompute-1 stop on controller-1
  * Resource action: stonith-fence_compute-fence-nova stop on controller-2
  * Fencing overcloud-novacompute-1 (reboot)
  * Cluster action:  clear_failcount for overcloud-novacompute-1 on controller-1
@@ -62,7 +63,6 @@ Executing cluster transition:
  * Resource action: ip-10.0.0.110   monitor=10000 on controller-1
  * Pseudo action:   compute-unfence-trigger_stop_0
  * Pseudo action:   compute-unfence-trigger-clone_stopped_0
- * Resource action: overcloud-novacompute-1 stop on controller-1
 Using the original execution date of: 2018-04-09 07:55:35Z
 
 Revised cluster status:

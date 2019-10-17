@@ -14,6 +14,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -509,6 +510,65 @@ gio_poll_destroy(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Convert libqb's poll priority into GLib's one
+ *
+ * \param[in] prio  libqb's poll priority (#QB_LOOP_MED assumed as fallback)
+ *
+ * \return  best matching GLib's priority
+ */
+static gint
+conv_prio_libqb2glib(enum qb_loop_priority prio)
+{
+    gint ret = G_PRIORITY_DEFAULT;
+    switch (prio) {
+        case QB_LOOP_LOW:
+            ret = G_PRIORITY_LOW;
+            break;
+        case QB_LOOP_HIGH:
+            ret = G_PRIORITY_HIGH;
+            break;
+        default:
+            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
+                      prio);
+            /* fall-through */
+        case QB_LOOP_MED:
+            break;
+    }
+    return ret;
+}
+
+/*!
+ * \internal
+ * \brief Convert libqb's poll priority to rate limiting spec
+ *
+ * \param[in] prio  libqb's poll priority (#QB_LOOP_MED assumed as fallback)
+ *
+ * \return  best matching rate limiting spec
+ */
+static enum qb_ipcs_rate_limit
+conv_libqb_prio2ratelimit(enum qb_loop_priority prio)
+{
+    /* this is an inversion of what libqb's qb_ipcs_request_rate_limit does */
+    enum qb_ipcs_rate_limit ret = QB_IPCS_RATE_NORMAL;
+    switch (prio) {
+        case QB_LOOP_LOW:
+            ret = QB_IPCS_RATE_SLOW;
+            break;
+        case QB_LOOP_HIGH:
+            ret = QB_IPCS_RATE_FAST;
+            break;
+        default:
+            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
+                      prio);
+            /* fall-through */
+        case QB_LOOP_MED:
+            break;
+    }
+    return ret;
+}
+
 static int32_t
 gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
                          void *data, qb_ipcs_dispatch_fn_t fn, int32_t add)
@@ -555,8 +615,8 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
     adaptor->p = p;
     adaptor->is_used++;
     adaptor->source =
-        g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
-                            gio_poll_destroy);
+        g_io_add_watch_full(channel, conv_prio_libqb2glib(p), evts,
+                            gio_read_socket, adaptor, gio_poll_destroy);
 
     /* Now that mainloop now holds a reference to channel,
      * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
@@ -640,7 +700,15 @@ pick_ipc_type(enum qb_ipc_type requested)
 
 qb_ipcs_service_t *
 mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
-                        struct qb_ipcs_service_handlers * callbacks)
+                        struct qb_ipcs_service_handlers *callbacks)
+{
+    return mainloop_add_ipc_server_with_prio(name, type, callbacks, QB_LOOP_MED);
+}
+
+qb_ipcs_service_t *
+mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
+                                  struct qb_ipcs_service_handlers *callbacks,
+                                  enum qb_loop_priority prio)
 {
     int rc = 0;
     qb_ipcs_service_t *server = NULL;
@@ -651,6 +719,15 @@ mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
 
     crm_client_init();
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
+
+    if (server == NULL) {
+        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
+        return NULL;
+    }
+
+    if (prio != QB_LOOP_MED) {
+        qb_ipcs_request_rate_limit(server, conv_libqb_prio2ratelimit(prio));
+    }
 
 #ifdef HAVE_IPCS_GET_BUFFER_SIZE
     /* All clients should use at least ipc_buffer_max as their buffer size */
@@ -1010,7 +1087,7 @@ child_timeout_callback(gpointer p)
     return FALSE;
 }
 
-static gboolean
+static bool
 child_waitpid(mainloop_child_t *child, int flags)
 {
     int rc = 0;
@@ -1018,65 +1095,73 @@ child_waitpid(mainloop_child_t *child, int flags)
     int signo = 0;
     int status = 0;
     int exitcode = 0;
+    bool callback_needed = true;
 
     rc = waitpid(child->pid, &status, flags);
-    if(rc == 0) {
-        crm_perror(LOG_DEBUG, "wait(%d) = %d", child->pid, rc);
-        return FALSE;
+    if (rc == 0) { // WNOHANG in flags, and child status is not available
+        crm_trace("Child process %d (%s) still active",
+                  child->pid, child->desc);
+        callback_needed = false;
 
-    } else if(rc != child->pid) {
+    } else if (rc != child->pid) {
+        /* According to POSIX, possible conditions:
+         * - child->pid was non-positive (process group or any child),
+         *   and rc is specific child
+         * - errno ECHILD (pid does not exist or is not child)
+         * - errno EINVAL (invalid flags)
+         * - errno EINTR (caller interrupted by signal)
+         *
+         * @TODO Handle these cases more specifically.
+         */
         signo = SIGCHLD;
         exitcode = 1;
-        status = 1;
-        crm_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
+        crm_notice("Wait for child process %d (%s) interrupted: %s",
+                   child->pid, child->desc, pcmk_strerror(errno));
 
-    } else {
-        crm_trace("Managed process %d exited: %p", child->pid, child);
+    } else if (WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
+        crm_trace("Child process %d (%s) exited with status %d",
+                  child->pid, child->desc, exitcode);
 
-        if (WIFEXITED(status)) {
-            exitcode = WEXITSTATUS(status);
-            crm_trace("Managed process %d (%s) exited with rc=%d", child->pid, child->desc, exitcode);
+    } else if (WIFSIGNALED(status)) {
+        signo = WTERMSIG(status);
+        crm_trace("Child process %d (%s) exited with signal %d (%s)",
+                  child->pid, child->desc, signo, strsignal(signo));
 
-        } else if (WIFSIGNALED(status)) {
-            signo = WTERMSIG(status);
-            crm_trace("Managed process %d (%s) exited with signal=%d", child->pid, child->desc, signo);
-        }
-#ifdef WCOREDUMP
-        if (WCOREDUMP(status)) {
-            core = 1;
-            crm_err("Managed process %d (%s) dumped core", child->pid, child->desc);
-        }
+#ifdef WCOREDUMP // AIX, SunOS, maybe others
+    } else if (WCOREDUMP(status)) {
+        core = 1;
+        crm_err("Child process %d (%s) dumped core",
+                child->pid, child->desc);
 #endif
+
+    } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
+        crm_trace("Child process %d (%s) stopped or continued",
+                  child->pid, child->desc);
+        callback_needed = false;
     }
 
-    if (child->callback) {
+    if (callback_needed && child->callback) {
         child->callback(child, child->pid, core, signo, exitcode);
     }
-    return TRUE;
+    return callback_needed;
 }
 
 static void
 child_death_dispatch(int signal)
 {
-    GListPtr iter = child_list;
-    gboolean exited;
-
-    while(iter) {
-        GListPtr saved = NULL;
+    for (GList *iter = child_list; iter; ) {
+        GList *saved = iter;
         mainloop_child_t *child = iter->data;
-        exited = child_waitpid(child, WNOHANG);
 
-        saved = iter;
         iter = iter->next;
-
-        if (exited == FALSE) {
-            continue;
+        if (child_waitpid(child, WNOHANG)) {
+            crm_trace("Removing completed process %d from child list",
+                      child->pid);
+            child_list = g_list_remove_link(child_list, saved);
+            g_list_free(saved);
+            child_free(child);
         }
-        crm_trace("Removing process entry %p for %d", child, child->pid);
-
-        child_list = g_list_remove_link(child_list, saved);
-        g_list_free(saved);
-        child_free(child);
     }
 }
 
@@ -1115,16 +1200,13 @@ mainloop_child_kill(pid_t pid)
 
     rc = child_kill_helper(match);
     if(rc == -ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet
-         *
-         * Wait until we get SIGCHLD and let child_death_dispatch()
-         * clean it up as normal (so we get the correct return
-         * code/status)
-         *
-         * The blocking alternative would be to call:
-         *    child_waitpid(match, 0);
+        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
+         * SIGCHLD and let handler clean it up as normal (so we get the correct
+         * return code/status). The blocking alternative would be to call
+         * child_waitpid(match, 0).
          */
-        crm_trace("Waiting for child %d to be reaped by child_death_dispatch()", match->pid);
+        crm_trace("Waiting for signal that child process %d completed",
+                  match->pid);
         return TRUE;
 
     } else if(rc != 0) {
@@ -1134,7 +1216,7 @@ mainloop_child_kill(pid_t pid)
         waitflags = WNOHANG;
     }
 
-    if (child_waitpid(match, waitflags) == FALSE) {
+    if (!child_waitpid(match, waitflags)) {
         /* not much we can do if this occurs */
         return FALSE;
     }
@@ -1146,6 +1228,10 @@ mainloop_child_kill(pid_t pid)
 
 /* Create/Log a new tracked process
  * To track a process group, use -pid
+ *
+ * @TODO Using a non-positive pid (i.e. any child, or process group) would
+ *       likely not be useful since we will free the child after the first
+ *       completed process.
  */
 void
 mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 

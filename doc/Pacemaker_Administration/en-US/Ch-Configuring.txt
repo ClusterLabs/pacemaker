@@ -1,37 +1,35 @@
 :compat-mode: legacy
 = Configuring Pacemaker =
 
-== How Should the Configuration be Updated? ==
-
-=== General Guidelines ===
-
-Pacemaker's configuration (the CIB) is stored in XML format. Cluster
+Pacemaker's configuration, the CIB, is stored in XML format. Cluster
 administrators have multiple options for modifying the configuration either via
 the XML, or at a more abstract (and easier for humans to understand) level.
 
-Pacemaker reacts to configuration changes as soon as they are saved. Most tools
-provide the ability to batch changes together and commit them at once, rather
-than make a series of small changes, which could cause avoid unnecessary
-actions as Pacemaker responds to each change individually.
+Pacemaker reacts to configuration changes as soon as they are saved.
+Pacemaker's command-line tools and most higher-level tools provide the ability
+to batch changes together and commit them at once, rather than make a series of
+small changes, which could cause avoid unnecessary actions as Pacemaker
+responds to each change individually.
 
-Pacemaker keeps track of revisions to the configuration and will reject any
-update that is older than the current revision. Thus, it is a good idea to
-serialize all changes to the configuration. Avoid attempting simultaneous
-changes, whether on the same node or different nodes, and whether manually or
-using some automated configuration tool.
+Pacemaker tracks revisions to the configuration and will reject any update
+older than the current revision. Thus, it is a good idea to serialize all
+changes to the configuration. Avoid attempting simultaneous changes, whether on
+the same node or different nodes, and whether manually or using some automated
+configuration tool.
 
 [NOTE]
 ====
-It is not necessary to update the configuration on all cluster nodes. All
-changes are immediately synchronized to all active members of the cluster. To
+It is not necessary to update the configuration on all cluster nodes. Pacemaker
+immediately synchronizes changes to all active members of the cluster. To
 reduce bandwidth, the cluster only broadcasts the incremental updates that
-result from your changes and uses MD5 checksums to ensure that each copy is
-completely consistent.
+result from your changes and uses checksums to ensure that each copy is
+consistent.
 ====
 
-=== Higher-level Tools ===
 
-Most users will benefit from using higher-level tools that are provided by
+=== Configuration Using Higher-level Tools ===
+
+Most users will benefit from using higher-level tools provided by
 projects separate from Pacemaker. Some of the most commonly used include the
 crm shell, hawk, and pcs. footnote:[For a list, see "Configuration Tools" at
 https://clusterlabs.org/components.html]
@@ -39,10 +37,11 @@ https://clusterlabs.org/components.html]
 See those projects' documentation for details on how to configure Pacemaker
 using them.
 
-=== Pacemaker's Command-Line Tools ===
+=== Configuration Using Pacemaker's Command-Line Tools ===
 
-Most configuration tasks can be performed without needing any XML knowledge,
-using one of the lower-level command-line tools provided with Pacemaker.
+Pacemaker provides lower-level, command-line tools to manage the cluster. Most
+configuration tasks can be performed with these tools, without needing any XML
+knowledge.
 
 To enable STONITH for example, one could run:
 
@@ -65,215 +64,11 @@ Or, to change the failure threshold of *my-test-rsc*, one can use:
 Examples of using these tools for specific cases will be given throughout this
 document where appropriate. See the man pages for further details.
 
-=== Editing the CIB Using XML ===
+See <<s-cibadmin>> for how to edit the CIB using XML.
 
-The most flexible tool for modifying the configuration is Pacemaker's
-+cibadmin+ command.  With +cibadmin+, you can query, add, remove, update
-or replace any part of the configuration. All changes take effect immediately,
-so there is no need to perform a reload-like operation.
+See <<s-crm_shadow>> for a way to make a series of changes, then commit them
+all at once to the live cluster.
 
-The simplest way of using `cibadmin` is to use it to save the current
-configuration to a temporary file, edit that file with your favorite
-text or XML editor, and then upload the revised configuration.
-      
-.Safely using an editor to modify the cluster configuration
-======
---------
-# cibadmin --query > tmp.xml
-# vi tmp.xml
-# cibadmin --replace --xml-file tmp.xml
---------
-======
-
-Some of the better XML editors can make use of a Relax NG schema to
-help make sure any changes you make are valid.  The schema describing
-the configuration can be found in +pacemaker.rng+, which may be
-deployed in a location such as +/usr/share/pacemaker+ depending on your
-operating system distribution and how you installed the software.
-
-If you want to modify just one section of the configuration, you can
-query and replace just that section to avoid modifying any others.
-      
-.Safely using an editor to modify only the resources section
-======
---------
-# cibadmin --query --scope resources > tmp.xml
-# vi tmp.xml
-# cibadmin --replace --scope resources --xml-file tmp.xml
---------
-======
-
-To quickly delete a part of the configuration, identify the object you wish to
-delete by XML tag and id. For example, you might search the CIB for all
-STONITH-related configuration:
-      
-.Searching for STONITH-related configuration items
-======
-----
-# cibadmin --query | grep stonith
- <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
- <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
- <primitive id="child_DoFencing" class="stonith" type="external/vmware">
- <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
- <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
-----
-======
-
-If you wanted to delete the +primitive+ tag with id +child_DoFencing+,
-you would run:
-
-----
-# cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
-----
-
-See the cibadmin man page for more options.
-
-[IMPORTANT]
-====
-Never edit the live +cib.xml+ file directly. Pacemaker will detect such changes
-and refuse to use the configuration.
-====
-
-[[s-config-sandboxes]]
-== Making Configuration Changes in a Sandbox ==
-
-Often it is desirable to preview the effects of a series of changes
-before updating the configuration all at once. For this purpose, we
-have created `crm_shadow` which creates a
-"shadow" copy of the configuration and arranges for all the command
-line tools to use it.
-
-To begin, simply invoke `crm_shadow --create` with
-the name of a configuration to create footnote:[Shadow copies are
-identified with a name, making it possible to have more than one.],
-and follow the simple on-screen instructions.
-
-[WARNING]
-====
-Read this section and the on-screen instructions carefully; failure to do so could
-result in destroying the cluster's active configuration!
-====
-      
-.Creating and displaying the active sandbox
-======
-----
-# crm_shadow --create test
-Setting up shadow instance
-Type Ctrl-D to exit the crm_shadow shell
-shadow[test]: 
-shadow[test] # crm_shadow --which
-test
-----
-======
-
-From this point on, all cluster commands will automatically use the
-shadow copy instead of talking to the cluster's active configuration.
-Once you have finished experimenting, you can either make the
-changes active via the `--commit` option, or discard them using the `--delete`
-option.  Again, be sure to follow the on-screen instructions carefully!
-      
-For a full list of `crm_shadow` options and
-commands, invoke it with the `--help` option.
-
-.Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
-======
-----
- shadow[test] # crm_failcount -r rsc_c001n01 -G
- scope=status  name=fail-count-rsc_c001n01 value=0
- shadow[test] # crm_standby --node c001n02 -v on
- shadow[test] # crm_standby --node c001n02 -G
- scope=nodes  name=standby value=on
-
- shadow[test] # cibadmin --erase --force
- shadow[test] # cibadmin --query
- <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
-   <configuration>
-     <crm_config/>
-     <nodes/>
-     <resources/>
-     <constraints/>
-   </configuration>
-   <status/>
- </cib>
-  shadow[test] # crm_shadow --delete test --force
-  Now type Ctrl-D to exit the crm_shadow shell
-  shadow[test] # exit
-  # crm_shadow --which
-  No active shadow configuration defined
-  # cibadmin -Q
- <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="110" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1">
-    <configuration>
-       <crm_config>
-          <cluster_property_set id="cib-bootstrap-options">
-             <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
-             <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
-----
-======
-
-[[s-config-testing-changes]]
-== Testing Your Configuration Changes ==
-
-We saw previously how to make a series of changes to a "shadow" copy
-of the configuration.  Before loading the changes back into the
-cluster (e.g. `crm_shadow --commit mytest --force`), it is often
-advisable to simulate the effect of the changes with +crm_simulate+.
-For example:
-      
-----
-# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
-----
-
-This tool uses the same library as the live cluster to show what it
-would have done given the supplied input.  Its output, in addition to
-a significant amount of logging, is stored in two files +tmp.graph+
-and +tmp.dot+. Both files are representations of the same thing: the
-cluster's response to your changes.
-
-The graph file stores the complete transition from the existing cluster state
-to your desired new state, containing a list of all the actions, their
-parameters and their pre-requisites. Because the transition graph is not
-terribly easy to read, the tool also generates a Graphviz
-footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
-dot-file representing the same information.
-
-For information on the options supported by `crm_simulate`, use
-its `--help` option.
-
-.Interpreting the Graphviz output
- * Arrows indicate ordering dependencies
- * Dashed arrows indicate dependencies that are not present in the transition graph
- * Actions with a dashed border of any color do not form part of the transition graph
- * Actions with a green border form part of the transition graph
- * Actions with a red border are ones the cluster would like to execute but cannot run
- * Actions with a blue border are ones the cluster does not feel need to be executed
- * Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph
- * Actions with black text are sent to the executor
- * Resource actions have text of the form pass:[<replaceable>rsc</replaceable>]_pass:[<replaceable>action</replaceable>]_pass:[<replaceable>interval</replaceable>] pass:[<replaceable>node</replaceable>]
- * Any action depending on an action with a red border will not be able to execute. 
- * Loops are _really_ bad. Please report them to the development team. 
-
-=== Small Cluster Transition ===
-
-image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="16cm",height="6cm",align="center"]      
-
-In the above example, it appears that a new node, *pcmk-2*, has come
-online and that the cluster is checking to make sure *rsc1*, *rsc2*
-and *rsc3* are not already running there (Indicated by the
-*rscN_monitor_0* entries).  Once it did that, and assuming the resources
-were not active there, it would have liked to stop *rsc1* and *rsc2*
-on *pcmk-1* and move them to *pcmk-2*.  However, there appears to be
-some problem and the cluster cannot or is not permitted to perform the
-stop actions which implies it also cannot perform the start actions.
-For some reason the cluster does not want to start *rsc3* anywhere.
-
-=== Complex Cluster Transition ===
-
-image::images/Policy-Engine-big.png["Another, slightly more complex, transition graph that you're not expected to be able to read",width="16cm",height="20cm",align="center"]
 
 == Working with CIB Properties ==
 
@@ -289,7 +84,7 @@ for example +admin_epoch+, one should use:
 
 A complete set of CIB properties will look something like this:
 
-.Attributes set for a cib object
+.XML attributes set for a cib element
 ======
 [source,XML]
 -------
@@ -299,6 +94,7 @@ A complete set of CIB properties will look something like this:
    update-client="crm_attribute" have-quorum="1" dc-uuid="1">
 -------
 ======
+
 
 == Querying and Setting Cluster Options ==
 

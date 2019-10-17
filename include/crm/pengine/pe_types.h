@@ -21,6 +21,7 @@ extern "C" {
  */
 
 #  include <stdbool.h>              // bool
+#  include <sys/types.h>            // time_t
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/crm.h>              // GListPtr
 #  include <crm/common/iso8601.h>
@@ -160,6 +161,7 @@ struct pe_working_set_s {
 
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
+    time_t recheck_by;  // Hint to controller to re-run scheduler by this time
 };
 
 enum pe_check_parameters {
@@ -277,6 +279,7 @@ enum pe_action_flags {
 
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
+    pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
 };
 /* *INDENT-ON* */
 
@@ -421,10 +424,11 @@ typedef struct pe_tag_s {
     GListPtr refs;
 } pe_tag_t;
 
+//! Internal tracking for transition graph creation
 enum pe_link_state {
-    pe_link_not_dumped,
-    pe_link_dumped,
-    pe_link_dup,
+    pe_link_not_dumped, //! Internal tracking for transition graph creation
+    pe_link_dumped,     //! Internal tracking for transition graph creation
+    pe_link_dup,        //! \deprecated No longer used by Pacemaker
 };
 
 enum pe_discover_e {

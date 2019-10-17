@@ -70,6 +70,12 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
     free(attr_section); \
     free(attr_set);
 
+#define set_option(option_var) \
+    if (option_var) { \
+        free(option_var); \
+    } \
+    option_var = strdup(optarg);
+
 int
 main(int argc, char **argv)
 {
@@ -111,20 +117,20 @@ main(int argc, char **argv)
                 crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
-                attr_name = strdup(optarg);
+                set_option(attr_name);
                 break;
             case 's':
-                attr_set = strdup(optarg);
+                set_option(attr_set);
                 break;
             case 'd':
-                attr_dampen = strdup(optarg);
+                set_option(attr_dampen);
                 break;
             case 'l':
             case 'S':
-                attr_section = strdup(optarg);
+                set_option(attr_section);
                 break;
             case 'N':
-                attr_node = strdup(optarg);
+                set_option(attr_node);
                 break;
             case 'A':
                 query_all = TRUE;

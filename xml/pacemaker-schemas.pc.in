@@ -1,0 +1,12 @@
+# compatible with pacemaker-cib.pc:schemadir
+schemadir=@CRM_SCHEMA_DIRECTORY@
+
+# where machine-friendly API interchange format is formalized as schemas
+schemadir4api=${schemadir}/api
+
+Name:             Pacemaker Schemas & Transformations
+Version:          @PACKAGE_VERSION@
+Description:      XML validation & transformation variables per Pacemaker build
+URL:              @PACKAGE_URL@
+
+# no linker/compiler properties to associate

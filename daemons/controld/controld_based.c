@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -15,9 +17,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_callbacks.h> // for crmd_cib_connection_destroy()
-#include <controld_fsa.h>
-#include <controld_messages.h>
 
 int cib_retries = 0;
 
@@ -121,7 +120,7 @@ do_cib_control(long long action,
                      " times... pause and retry", cib_retries);
 
             if (cib_retries < 30) {
-                crm_timer_start(wait_timer);
+                controld_start_timer(wait_timer);
                 crmd_fsa_stall(FALSE);
 
             } else {

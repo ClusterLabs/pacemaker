@@ -195,6 +195,7 @@ lrmd_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
+// Dispatch callback for remote server socket
 static int
 lrmd_remote_listen(gpointer data)
 {
@@ -202,10 +203,13 @@ lrmd_remote_listen(gpointer data)
     gnutls_session_t *session = NULL;
     crm_client_t *new_client = NULL;
 
+    // For client socket
     static struct mainloop_fd_callbacks lrmd_remote_fd_cb = {
         .dispatch = lrmd_remote_client_msg,
         .destroy = lrmd_remote_client_destroy,
     };
+
+    CRM_CHECK(ssock >= 0, return TRUE);
 
     csock = crm_remote_accept(ssock);
     if (csock < 0) {
@@ -300,22 +304,47 @@ bind_and_listen(struct addrinfo *addr)
     return fd;
 }
 
+static int
+get_address_info(const char *bind_name, int port, struct addrinfo **res)
+{
+    int rc;
+    char port_str[6]; // at most "65535"
+    struct addrinfo hints;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_family = AF_UNSPEC; // IPv6 or IPv4
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    snprintf(port_str, sizeof(port_str), "%d", port);
+    rc = getaddrinfo(bind_name, port_str, &hints, res);
+    if (rc) {
+        crm_err("Unable to get IP address(es) for %s: %s",
+                (bind_name? bind_name : "local node"), gai_strerror(rc));
+        return -EADDRNOTAVAIL;
+    }
+    return pcmk_ok;
+}
+
 int
 lrmd_init_remote_tls_server()
 {
-    int rc;
     int filter;
     int port = crm_default_remote_port();
-    struct addrinfo hints, *res = NULL, *iter;
-    char port_str[6]; // at most "65535"
+    struct addrinfo *res = NULL, *iter;
     gnutls_datum_t psk_key = { NULL, 0 };
+    const char *bind_name = getenv("PCMK_remote_address");
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
         .destroy = lrmd_remote_connection_destroy,
     };
 
-    crm_debug("Starting TLS listener on port %d", port);
+    CRM_CHECK(ssock == -1, return ssock);
+
+    crm_debug("Starting TLS listener on %s port %d",
+              (bind_name? bind_name : "all addresses on"), port);
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
@@ -331,32 +360,27 @@ lrmd_init_remote_tls_server()
      * read the key. We don't error out, though, because it's fine if the key is
      * going to be added later.
      */
-    rc = lrmd_tls_set_key(&psk_key);
-    if (rc != 0) {
+    if (lrmd_tls_set_key(&psk_key) != pcmk_ok) {
         crm_warn("A cluster connection will not be possible until the key is available");
     }
     gnutls_free(psk_key.data);
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    /* Bind to the wildcard address (INADDR_ANY or IN6ADDR_ANY_INIT).
-     * @TODO allow user to specify a specific address
-     */
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_family = AF_UNSPEC; /* Return IPv6 or IPv4 */
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-
-    snprintf(port_str, sizeof(port_str), "%d", port);
-    rc = getaddrinfo(NULL, port_str, &hints, &res);
-    if (rc) {
-        crm_err("Unable to get IP address info for local node: %s",
-                gai_strerror(rc));
+    if (get_address_info(bind_name, port, &res) != pcmk_ok) {
         return -1;
     }
 
+    /* Currently we listen on only one address from the resulting list (the
+     * first IPv6 address we can bind to if possible, otherwise the first IPv4
+     * address we can bind to). When bind_name is NULL, this should be the
+     * respective wildcard address.
+     *
+     * @TODO If there is demand for specifying more than one address, allow
+     * bind_name to be a space-separated list, call getaddrinfo() for each,
+     * and create a socket for each result (set IPV6_V6ONLY on IPv6 sockets
+     * since IPv4 listeners will have their own sockets).
+     */
     iter = res;
     filter = AF_INET6;
-    /* Try IPv6 addresses first, then IPv4 */
     while (iter) {
         if (iter->ai_family == filter) {
             ssock = bind_and_listen(iter);
@@ -372,24 +396,14 @@ lrmd_init_remote_tls_server()
         }
     }
 
-    if (ssock < 0) {
-        goto init_remote_cleanup;
-    }
-
-    mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock, NULL,
-                    &remote_listen_fd_callbacks);
-
-    rc = ssock;
-
-  init_remote_cleanup:
-    if (rc < 0) {
-        close(ssock);
-        ssock = 0;
-    } else {
-        crm_debug("Started TLS listener on port %d", port);
+    if (ssock >= 0) {
+        mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock,
+                        NULL, &remote_listen_fd_callbacks);
+        crm_debug("Started TLS listener on %s port %d",
+                  (bind_name? bind_name : "all addresses on"), port);
     }
     freeaddrinfo(res);
-    return rc;
+    return ssock;
 }
 
 void
@@ -400,9 +414,9 @@ lrmd_tls_server_destroy(void)
         psk_cred_s = 0;
     }
 
-    if (ssock > 0) {
+    if (ssock >= 0) {
         close(ssock);
-        ssock = 0;
+        ssock = -1;
     }
 }
 #endif

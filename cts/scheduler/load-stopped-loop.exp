@@ -221,7 +221,11 @@
         <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_to" CRM_meta_on_node="v03-b" CRM_meta_on_node_uuid="v03-b" CRM_meta_record_pending="true" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK"  devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="107" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="20">
     <action_set>
@@ -287,11 +291,7 @@
         <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_to" CRM_meta_on_node="v03-a" CRM_meta_on_node_uuid="v03-a" CRM_meta_record_pending="true" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK"  devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="108" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="25">
     <action_set>

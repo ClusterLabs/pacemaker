@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -16,8 +18,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>  /* register_fsa_error_adv */
 
 static mainloop_io_t *pe_subsystem = NULL;
 
@@ -28,9 +28,12 @@ static mainloop_io_t *pe_subsystem = NULL;
 void
 pe_subsystem_free(void)
 {
+    clear_bit(fsa_input_register, R_PE_REQUIRED);
     if (pe_subsystem) {
+        controld_expect_sched_reply(NULL);
         mainloop_del_ipc_client(pe_subsystem);
         pe_subsystem = NULL;
+        clear_bit(fsa_input_register, R_PE_CONNECTED);
     }
 }
 
@@ -78,6 +81,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 static void
 pe_ipc_destroy(gpointer user_data)
 {
+    // If we aren't connected to the scheduler, we can't expect a reply
+    controld_expect_sched_reply(NULL);
+
     if (is_set(fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
@@ -132,7 +138,7 @@ pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
 /*!
  * \internal
- * \brief Make new connection to PE
+ * \brief Make new connection to scheduler
  *
  * \return TRUE on success, FALSE otherwise
  */
@@ -144,11 +150,16 @@ pe_subsystem_new()
         .destroy = pe_ipc_destroy
     };
 
+    set_bit(fsa_input_register, R_PE_REQUIRED);
     pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
                                            G_PRIORITY_DEFAULT,
                                            5 * 1024 * 1024 /* 5MB */,
                                            NULL, &pe_callbacks);
-    return (pe_subsystem != NULL);
+    if (pe_subsystem == NULL) {
+        return FALSE;
+    }
+    set_bit(fsa_input_register, R_PE_CONNECTED);
+    return TRUE;
 }
 
 /*!
@@ -187,28 +198,104 @@ do_pe_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_PE_STOP) {
-        clear_bit(fsa_input_register, R_PE_REQUIRED);
         pe_subsystem_free();
-        clear_bit(fsa_input_register, R_PE_CONNECTED);
     }
+    if ((action & A_PE_START)
+        && (is_not_set(fsa_input_register, R_PE_CONNECTED))) {
 
-    if ((action & A_PE_START) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
-        if (cur_state != S_STOPPING) {
-            set_bit(fsa_input_register, R_PE_REQUIRED);
-            if (pe_subsystem_new()) {
-                set_bit(fsa_input_register, R_PE_CONNECTED);
-            } else {
-                crm_warn("Could not connect to scheduler");
-                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-            }
-        } else {
+        if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
+
+        } else if (!pe_subsystem_new()) {
+            crm_warn("Could not connect to scheduler");
+            register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
 }
 
 int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
+static mainloop_timer_t *controld_sched_timer = NULL;
+
+// @TODO Make this a configurable cluster option if there's demand for it
+#define SCHED_TIMEOUT_MS (120000)
+
+/*!
+ * \internal
+ * \brief Handle a timeout waiting for scheduler reply
+ *
+ * \param[in] user_data  Ignored
+ *
+ * \return FALSE (indicating that timer should not be restarted)
+ */
+static gboolean
+controld_sched_timeout(gpointer user_data)
+{
+    if (AM_I_DC) {
+        /* If this node is the DC but can't communicate with the scheduler, just
+         * exit (and likely get fenced) so this node doesn't interfere with any
+         * further DC elections.
+         *
+         * @TODO We could try something less drastic first, like disconnecting
+         * and reconnecting to the scheduler, but something is likely going
+         * seriously wrong, so perhaps it's better to just fail as quickly as
+         * possible.
+         */
+        crmd_exit(CRM_EX_FATAL);
+    }
+    return FALSE;
+}
+
+void
+controld_stop_sched_timer()
+{
+    if (controld_sched_timer && fsa_pe_ref) {
+        crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
+    }
+    mainloop_timer_stop(controld_sched_timer);
+}
+
+/*!
+ * \internal
+ * \brief Set the scheduler request currently being waited on
+ *
+ * \param[in] msg  Request to expect reply to (or NULL for none)
+ */
+void
+controld_expect_sched_reply(xmlNode *msg)
+{
+    char *ref = NULL;
+
+    if (msg) {
+        ref = crm_element_value_copy(msg, XML_ATTR_REFERENCE);
+        CRM_ASSERT(ref != NULL);
+
+        if (controld_sched_timer == NULL) {
+            controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
+                                                      SCHED_TIMEOUT_MS, FALSE,
+                                                      controld_sched_timeout,
+                                                      NULL);
+        }
+        mainloop_timer_start(controld_sched_timer);
+    } else {
+        controld_stop_sched_timer();
+    }
+    free(fsa_pe_ref);
+    fsa_pe_ref = ref;
+}
+
+/*!
+ * \internal
+ * \brief Free the scheduler reply timer
+ */
+void
+controld_free_sched_timer()
+{
+    if (controld_sched_timer != NULL) {
+        mainloop_timer_del(controld_sched_timer);
+        controld_sched_timer = NULL;
+    }
+}
 
 /*	 A_PE_INVOKE	*/
 void
@@ -254,10 +341,7 @@ do_pe_invoke(long long action,
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(fsa_state));
 
-    /* Make sure any queued calculations are discarded */
-    free(fsa_pe_ref);
-    fsa_pe_ref = NULL;
-
+    controld_expect_sched_reply(NULL);
     fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
 }
 
@@ -370,16 +454,15 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     cmd = create_request(CRM_OP_PECALC, output, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
-    free(fsa_pe_ref);
-    fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
-
     rc = pe_subsystem_send(cmd);
     if (rc < 0) {
         crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+    } else {
+        controld_expect_sched_reply(cmd);
+        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
+                  fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     }
-    crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
-              fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);
 }

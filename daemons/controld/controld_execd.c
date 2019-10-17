@@ -9,23 +9,20 @@
 
 #include <crm_internal.h>
 
+#include <regex.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <regex.h>
 #include <crm/pengine/rules.h>
+
+#include <pacemaker-internal.h>
+#include <pacemaker-controld.h>
 
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
@@ -373,7 +370,7 @@ do_lrm_control(long long action,
                          s_if_plural(lrm_state->num_lrm_register_fails),
                          MAX_LRM_REG_FAILS);
 
-                crm_timer_start(wait_timer);
+                controld_start_timer(wait_timer);
                 crmd_fsa_stall(FALSE);
                 return;
             }
@@ -679,7 +676,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     }
 
     crm_trace("Building %s operation update with originator version: %s", op->rsc_id, caller_version);
-    xml_op = create_operation_update(parent, op, caller_version, target_rc, fsa_our_uname, src, LOG_DEBUG);
+    xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
+                                      fsa_our_uname, src, LOG_DEBUG);
     if (xml_op == NULL) {
         return TRUE;
     }
@@ -1424,8 +1422,22 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
+/*!
+ * \internal
+ * \brief Fail a requested action without actually executing it
+ *
+ * For an action that can't be executed, process it similarly to an actual
+ * execution result, with specified error status (except for notify actions,
+ * which will always be treated as successful).
+ *
+ * \param[in] lrm_state  Executor connection that action is for
+ * \param[in] action     Action XML from request
+ * \param[in] rc         Desired return code to use
+ * \param[in] op_status  Desired operation status to use
+ */
 static void
-synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc) 
+synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
+                        int op_status, enum ocf_exitcode rc)
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
@@ -1451,7 +1463,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     if (safe_str_eq(operation, RSC_NOTIFY)) { // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_OK);
     } else {
-        fake_op_status(lrm_state, op, PCMK_LRM_OP_ERROR, rc);
+        fake_op_status(lrm_state, op, op_status, rc);
     }
 
     crm_info("Faking " CRM_OP_FMT " result (%d) on %s",
@@ -1744,7 +1756,8 @@ do_lrm_invoke(long long action,
     if ((lrm_state == NULL) && is_remote_node) {
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
-        synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
+        synthesize_lrmd_failure(NULL, input->xml, PCMK_LRM_OP_NOT_CONNECTED,
+                                PCMK_OCF_UNKNOWN_ERROR);
         return;
     }
     CRM_ASSERT(lrm_state != NULL);
@@ -1801,7 +1814,8 @@ do_lrm_invoke(long long action,
         rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
         if (rc == -ENOTCONN) {
             synthesize_lrmd_failure(lrm_state, input->xml,
-                                    PCMK_OCF_CONNECTION_DIED);
+                                    PCMK_LRM_OP_NOT_CONNECTED,
+                                    PCMK_OCF_UNKNOWN_ERROR);
             return;
 
         } else if ((rc < 0) && !create_rsc) {
@@ -1822,7 +1836,7 @@ do_lrm_invoke(long long action,
             // Resource operation on malformed resource
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
-            synthesize_lrmd_failure(lrm_state, input->xml,
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
                                     PCMK_OCF_NOT_CONFIGURED); // fatal error
             return;
 
@@ -1832,7 +1846,7 @@ do_lrm_invoke(long long action,
                     CRM_XS " rc=%d",
                     ID(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
-            synthesize_lrmd_failure(lrm_state, input->xml,
+            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_LRM_OP_ERROR,
                                     PCMK_OCF_INVALID_PARAM); // hard error
             return;
         }
@@ -2238,8 +2252,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
                    operation, rsc->id, fsa_state2string(fsa_state),
                    is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
 
-        op->rc = CRM_DIRECT_NACK_RC;
-        op->op_status = PCMK_LRM_OP_ERROR;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->op_status = PCMK_LRM_OP_INVALID;
         send_direct_ack(NULL, NULL, rsc, op, rsc->id);
         lrmd_free_event(op);
         free(op_id);
@@ -2468,12 +2482,39 @@ unescape_newlines(const char *string)
     ret = strdup(string);
     pch = strstr(ret, escaped_newline);
     while (pch != NULL) {
-        /* 2 chars for 2 chars, null-termination irrelevant */
-        memcpy(pch, "\n ", 2 * sizeof(char));
+        /* Replace newline escape pattern with actual newline (and a space so we
+         * don't have to shuffle the rest of the buffer)
+         */
+        pch[0] = '\n';
+        pch[1] = ' ';
         pch = strstr(pch, escaped_newline);
     }
 
     return ret;
+}
+
+static bool
+did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
+                    const char * op_type, guint interval_ms)
+{
+    rsc_history_t *entry = NULL;
+
+    CRM_CHECK(lrm_state != NULL, return FALSE);
+    CRM_CHECK(rsc_id != NULL, return FALSE);
+    CRM_CHECK(op_type != NULL, return FALSE);
+
+    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+    if (entry == NULL || entry->failed == NULL) {
+        return FALSE;
+    }
+
+    if (crm_str_eq(entry->failed->rsc_id, rsc_id, TRUE)
+        && safe_str_eq(entry->failed->op_type, op_type)
+        && entry->failed->interval_ms == interval_ms) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 void
@@ -2492,6 +2533,22 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(op->rsc_id != NULL, return);
+
+    // Remap new status codes for older DCs
+    if (compare_version(fsa_our_dc_version, "3.2.0") < 0) {
+        switch (op->op_status) {
+            case PCMK_LRM_OP_NOT_CONNECTED:
+                op->op_status = PCMK_LRM_OP_ERROR;
+                op->rc = PCMK_OCF_CONNECTION_DIED;
+                break;
+            case PCMK_LRM_OP_INVALID:
+                op->op_status = PCMK_LRM_OP_ERROR;
+                op->rc = CRM_DIRECT_NACK_RC;
+                break;
+            default:
+                break;
+        }
+    }
 
     op_id = make_stop_id(op->rsc_id, op->call_id);
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval_ms);
@@ -2605,6 +2662,20 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
             erase_lrm_history_by_op(lrm_state, op);
         }
 
+        /* If the recurring operation had failed, the lrm_rsc_op is recorded as
+         * "last_failure" which won't get erased from the cib given the logic on
+         * purpose in erase_lrm_history_by_op(). So that the cancel action won't
+         * have a chance to get confirmed by DC with process_op_deletion().
+         * Cluster transition would get stuck waiting for the remaining action
+         * timer to time out.
+         *
+         * Directly acknowledge the cancel operation in this case.
+         */
+        if (did_lrm_rsc_op_fail(lrm_state, pending->rsc_id,
+                                pending->op_type, pending->interval_ms)) {
+            need_direct_ack = TRUE;
+        }
+
     } else if (op->rsc_deleted) {
         /* This recurring operation was cancelled (but not by us, and the
          * executor does not have resource information, likely due to resource
@@ -2659,8 +2730,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
             break;
 
         case PCMK_LRM_OP_DONE:
-            do_crm_log((op->interval_ms? LOG_INFO : LOG_NOTICE),
-                       "Result of %s operation for %s on %s: %d (%s) "
+            crm_notice("Result of %s operation for %s on %s: %d (%s) "
                        CRM_XS " call=%d key=%s confirmed=%s cib-update=%d",
                        crm_action_str(op->op_type, op->interval_ms),
                        op->rsc_id, node_name,

@@ -46,7 +46,7 @@ static bool global_keep_tracking = false;
 static const char *local_name = NULL;
 static uint32_t local_nodeid = 0;
 static crm_trigger_t *shutdown_trigger = NULL;
-static const char *pid_file = "/var/run/pacemaker.pid";
+static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
 
 typedef struct pcmk_child_s {
     int pid;
@@ -883,19 +883,14 @@ check_active_before_startup_processes(gpointer user_data)
                     case 0:
                     case 2:  /* this very case: it was OK once already */
                         if (pcmk_children[lpc].respawn == TRUE) {
-                            /* presumably after crash, hence critical */
-                            crm_crit("Process %s terminated (pid=%lld)%s", \
-                                     name, (long long)
-                                     PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                     ret ? ", at least per IPC end-point that went AWOL"
-                                         : "");
+                            crm_err("%s[%d] terminated%s", name,
+                                    PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
+                                    ret ? " as IPC server" : "");
                         } else {
                             /* orderly shutdown */
-                            crm_notice("Process %s terminated (pid=%lld)%s", \
-                                       name, (long long)
+                            crm_notice("%s[%d] terminated%s", name,
                                        PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                       ret ? ", at least per IPC end-point that went AWOL"
-                                           : "");
+                                       ret ? " as IPC server" : "");
                         }
                         pcmk_process_exit(&(pcmk_children[lpc]));
                         continue;
@@ -1250,12 +1245,12 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
-    crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
+    crm_debug("Checking for existing Pacemaker instance");
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
-    crm_ipc_connect(old_instance);
+    (void) crm_ipc_connect(old_instance);
 
     if (shutdown) {
-        crm_debug("Terminating previous instance");
+        crm_debug("Shutting down existing Pacemaker instance by request");
         while (crm_ipc_connected(old_instance)) {
             xmlNode *cmd =
                 create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
@@ -1273,7 +1268,7 @@ main(int argc, char **argv)
     } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("Pacemaker is already active, aborting startup");
+        crm_err("Aborting start-up because active Pacemaker instance found");
         crm_exit(CRM_EX_FATAL);
     }
 
@@ -1323,8 +1318,12 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_NOUSER);
     }
 
-    mkdir(CRM_STATE_DIR, 0750);
-    mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    // Used by some resource agents
+    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
+        crm_warn("Could not create " CRM_STATE_DIR ": %s", pcmk_strerror(errno));
+    } else {
+        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    }
 
     /* Used to store core/blackbox/scheduler/cib files in */
     crm_build_path(CRM_PACEMAKER_DIR, 0750);

@@ -10,23 +10,17 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
-#include <crm/crm.h>
 #include <string.h>
 #include <time.h>
-#include <controld_fsa.h>
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_lrm.h>
-#include <controld_transition.h>
-#include <controld_throttle.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
@@ -1017,9 +1011,9 @@ handle_response(xmlNode * stored_msg)
         } else if (safe_str_eq(msg_ref, fsa_pe_ref)) {
             ha_msg_input_t fsa_input;
 
+            controld_stop_sched_timer();
             fsa_input.msg = stored_msg;
             register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
-            crm_trace("Completed: %s...", fsa_pe_ref);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);

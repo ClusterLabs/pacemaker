@@ -1,5 +1,7 @@
 /*
- * Copyright 2014-2018 Gao,Yan <ygao@suse.com>
+ * Copyright 2014-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -219,7 +221,8 @@ add_unallocated_utilization(GHashTable * all_utilization, resource_t * rsc,
             }
         }
 
-        if (existing == FALSE) {
+        // rsc->children is always non-NULL but this makes static analysis happy
+        if (!existing && (rsc->children != NULL)) {
             resource_t *first_child = (resource_t *) rsc->children->data;
 
             pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",

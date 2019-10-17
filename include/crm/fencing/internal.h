@@ -10,6 +10,7 @@
 #ifndef STONITH_NG_INTERNAL__H
 #  define STONITH_NG_INTERNAL__H
 
+#  include <glib.h>
 #  include <crm/common/ipc.h>
 #  include <crm/common/output.h>
 #  include <crm/common/xml.h>
@@ -48,6 +49,11 @@ xmlNode *create_device_registration_xml(const char *id,
                                         const char *rsc_provides);
 
 void stonith__register_messages(pcmk__output_t *out);
+
+GList *stonith__parse_targets(const char *hosts);
+
+gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
+stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
 #  define ST_LEVEL_MAX 10
 

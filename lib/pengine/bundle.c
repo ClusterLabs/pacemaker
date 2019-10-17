@@ -11,10 +11,10 @@
 
 #include <ctype.h>
 
+#include <crm/common/curses_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <unpack.h>
 #include <crm/msg_xml.h>
 
 #define PE__VARIANT_BUNDLE 1
@@ -80,7 +80,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
 }
 
 static xmlNode *
-create_resource(const char *name, const char *provider, const char *kind) 
+create_resource(const char *name, const char *provider, const char *kind)
 {
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
@@ -228,7 +228,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -396,7 +396,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -562,7 +562,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
-            if(mount->flags) {
+            if (is_set(mount->flags, pe__bundle_mount_subdir)) {
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
@@ -894,7 +894,7 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
 static void
 mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
-          const char *target, const char *options, int flags)
+          const char *target, const char *options, uint32_t flags)
 {
     pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
 
@@ -1027,6 +1027,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     xmlNode *xml_obj = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
+    bool need_log_mount = TRUE;
 
     CRM_ASSERT(rsc != NULL);
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -1142,15 +1143,18 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         const char *source = crm_element_value(xml_child, "source-dir");
         const char *target = crm_element_value(xml_child, "target-dir");
         const char *options = crm_element_value(xml_child, "options");
-        int flags = 0;
+        int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
             source = crm_element_value(xml_child, "source-dir-root");
-            flags = 1;
+            set_bit(flags, pe__bundle_mount_subdir);
         }
 
         if (source && target) {
             mount_add(bundle_data, source, target, options, flags);
+            if (strcmp(target, "/var/log") == 0) {
+                need_log_mount = FALSE;
+            }
         } else {
             pe_err("Invalid mount directive %s", ID(xml_child));
         }
@@ -1251,9 +1255,12 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
          * reasonable.
          */
         mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
-                  DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
+                  DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
 
-        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
+        if (need_log_mount) {
+            mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
+                      pe__bundle_mount_subdir);
+        }
 
         port = calloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {
@@ -1485,6 +1492,233 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     }
     status_print("%s</bundle>\n", pre_text);
     free(child_text);
+}
+
+int
+pe__bundle_xml(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    int rc = 0;
+
+    CRM_ASSERT(rsc != NULL);
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6
+                 , "id", rsc->id
+                 , "type", container_agent_str(bundle_data->agent_type)
+                 , "image", bundle_data->image
+                 , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
+                 , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
+                 , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed)));
+    CRM_ASSERT(rc == 0);
+
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
+        char *id = crm_itoa(replica->offset);
+
+        CRM_ASSERT(replica);
+
+        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
+        free(id);
+        CRM_ASSERT(rc == 0);
+
+        if (replica->ip != NULL) {
+            out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+        }
+
+        if (replica->child != NULL) {
+            out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+        }
+
+        out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+
+        if (replica->remote != NULL) {
+            out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+        }
+
+        pcmk__output_xml_pop_parent(out); // replica
+    }
+    pcmk__output_xml_pop_parent(out); // bundle
+    return rc;
+}
+
+static void
+pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
+                               long options)
+{
+    node_t *node = NULL;
+    pe_resource_t *rsc = replica->child;
+
+    int offset = 0;
+    char buffer[LINE_MAX];
+
+    if(rsc == NULL) {
+        rsc = replica->container;
+    }
+
+    if (replica->remote) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                           rsc_printable_id(replica->remote));
+    } else {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                           rsc_printable_id(replica->container));
+    }
+    if (replica->ipaddr) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
+                           replica->ipaddr);
+    }
+
+    node = pe__current_node(replica->container);
+    pe__common_output_html(out, rsc, buffer, node, options);
+}
+
+int
+pe__bundle_html(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    char buffer[LINE_MAX];
+
+    CRM_ASSERT(rsc != NULL);
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    pcmk__output_create_xml_node(out, "br");
+    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
+                    (bundle_data->nreplicas > 1)? " set" : "",
+                    rsc->id, bundle_data->image,
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
+
+        CRM_ASSERT(replica);
+
+        pcmk__output_xml_create_parent(out, "li");
+        if (is_set(options, pe_print_implicit)) {
+            if(g_list_length(bundle_data->replicas) > 1) {
+                snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
+                xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
+            }
+            pcmk__output_create_xml_node(out, "br");
+            out->begin_list(out, NULL, NULL, NULL);
+
+            if (replica->ip != NULL) {
+                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+            }
+
+            if (replica->child != NULL) {
+                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+            }
+
+            out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+
+            if (replica->remote != NULL) {
+                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+            }
+
+            out->end_list(out);
+        } else {
+            pe__bundle_replica_output_html(out, replica, options);
+        }
+
+        pcmk__output_xml_pop_parent(out);
+    }
+
+    out->end_list(out);
+    return 0;
+}
+
+static void
+pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
+                               long options)
+{
+    node_t *node = NULL;
+    pe_resource_t *rsc = replica->child;
+
+    int offset = 0;
+    char buffer[LINE_MAX];
+
+    if(rsc == NULL) {
+        rsc = replica->container;
+    }
+
+    if (replica->remote) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                           rsc_printable_id(replica->remote));
+    } else {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                           rsc_printable_id(replica->container));
+    }
+    if (replica->ipaddr) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
+                           replica->ipaddr);
+    }
+
+    node = pe__current_node(replica->container);
+    pe__common_output_text(out, rsc, buffer, node, options);
+}
+
+int
+pe__bundle_text(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, int);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    CRM_ASSERT(rsc != NULL);
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
+                    (bundle_data->nreplicas > 1)? " set" : "",
+                    rsc->id, bundle_data->image,
+                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+
+    for (GList *gIter = bundle_data->replicas; gIter != NULL;
+         gIter = gIter->next) {
+        pe__bundle_replica_t *replica = gIter->data;
+
+        CRM_ASSERT(replica);
+
+        if (is_set(options, pe_print_implicit)) {
+            if(g_list_length(bundle_data->replicas) > 1) {
+                out->list_item(out, NULL, "Replica[%d]", replica->offset);
+            }
+
+            out->begin_list(out, NULL, NULL, NULL);
+
+            if (replica->ip != NULL) {
+                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+            }
+
+            if (replica->child != NULL) {
+                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+            }
+
+            out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+
+            if (replica->remote != NULL) {
+                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+            }
+
+            out->end_list(out);
+        } else {
+            pe__bundle_replica_output_text(out, replica, options);
+        }
+    }
+
+    out->end_list(out);
+    return 0;
 }
 
 static void

@@ -11,7 +11,8 @@
 #  define PE_INTERNAL__H
 #  include <string.h>
 #  include <crm/pengine/status.h>
-#  include <crm/pengine/remote.h>
+#  include <crm/pengine/remote_internal.h>
+#  include <crm/common/output.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -103,6 +104,19 @@ void clone_print(resource_t * rsc, const char *pre_text, long options, void *pri
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
+int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
+                         , size_t pairs_count, ...);
+
+int pe__clone_xml(pcmk__output_t *out, va_list args);
+int pe__clone_html(pcmk__output_t *out, va_list args);
+int pe__clone_text(pcmk__output_t *out, va_list args);
+int pe__bundle_xml(pcmk__output_t *out, va_list args);
+int pe__bundle_html(pcmk__output_t *out, va_list args);
+int pe__bundle_text(pcmk__output_t *out, va_list args);
+int pe__resource_xml(pcmk__output_t *out, va_list args);
+int pe__resource_html(pcmk__output_t *out, va_list args);
+int pe__resource_text(pcmk__output_t *out, va_list args);
+
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
@@ -174,8 +188,11 @@ GHashTable *node_hash_dup(GHashTable * hash);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
+extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
+extern void pe__output_node(node_t * node, gboolean details, pcmk__output_t *out);
 
 extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
+extern void pe__output_resource(int log_level, resource_t * rsc, gboolean details, pcmk__output_t *out);
 
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
@@ -288,7 +305,7 @@ pe_base_name_eq(resource_t *rsc, const char *id)
     return FALSE;
 }
 
-int get_target_rc(xmlNode * xml_op);
+int pe__target_rc_from_xml(xmlNode *xml_op);
 
 gint sort_node_uname(gconstpointer a, gconstpointer b);
 bool is_set_recursive(resource_t * rsc, long long flag, bool any);
@@ -335,12 +352,15 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
+void pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason);
 
 node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
+void pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
+void pe__common_output_html(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
@@ -359,4 +379,20 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
                                         enum pe_check_parameters,
                                         pe_working_set_t*));
 void pe__free_param_checks(pe_working_set_t *data_set);
+
+bool pe__shutdown_requested(pe_node_t *node);
+void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
+
+#define BOOL2STR(x) ((x) ? "true" : "false")
+/*!
+ * \internal
+ * \brief Register xml formatting message functions.
+ */
+void pe__register_messages(pcmk__output_t *out);
+
+void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+                                GHashTable *node_hash, GHashTable *hash,
+                                const char *always_first, gboolean overwrite,
+                                pe_working_set_t *data_set);
+
 #endif

@@ -1,36 +1,51 @@
 # How to Install Pacemaker
 
 ## Build Dependencies
-* automake 1.11 or later
-* autoconf 2.64 or later
-* bash
-* libtool
-* libtool-ltdl-devel
-* libuuid-devel
-* pkgconfig
-* python (or python-devel if that's preferred as a build dependency)
-* glib2-devel 2.16.0 or later
-* libxml2-devel
-* libxslt-devel 
-* bzip2-devel
-* libqb-devel
 
-## Cluster Stack Dependencies (Pick at least one)
-* Corosync: corosynclib-devel
-* (no other stacks are currently supported)
+| Version         | Fedora-based       | Suse-based         | Debian-based   |
+|:---------------:|:------------------:|:------------------:|:--------------:|
+| 1.11 or later   | automake           | automake           | automake       |
+| 2.64 or later   | autoconf           | autoconf           | autoconf       |
+|                 | libtool            | libtool            | libtool        |
+|                 | libtool-ltdl-devel |                    | libltdl-dev    |
+|                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
+|                 | pkgconfig          | pkgconfig          | pkg-config     |
+| 2.16.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
+|                 | libxml2-devel      | libxml2-devel      | libxml2-dev    |
+|                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
+|                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
+|                 | libqb-devel        | libqb-devel        | libqb-dev      |
 
-## Optional Build Dependencies
-* gnutls-devel 2.1.7 or later (Pacemaker Remote and encrypted remote CIB admin)
-* pam-devel (encrypted remote CIB admin)
-* ncurses-devel (interactive crm_mon)
-* systemd-devel (systemd support)
-* dbus-devel (systemd/upstart resource support)
-* cluster-glue-libs-devel (Linux-HA style fencing agents)
-* asciidoc or asciidoctor (documentation)
-* help2man (documentation)
-* publican (documentation)
-* inkscape (documentation)
-* docbook-style-xsl (documentation)
+Also: GNU make, and Python 2.7 or Python 3.2 or later
+
+### Cluster Stack Dependencies
+
+*Only corosync is currently supported*
+
+| Version         | Fedora-based       | Suse-based         | Debian-based   |
+|:---------------:|:------------------:|:------------------:|:--------------:|
+| 2.0.0 or later  | corosynclib        | libcorosync        | corosync       |
+| 2.0.0 or later  | corosynclib-devel  | libcorosync-devel  |                |
+|                 |                    |                    | libcfg-dev     |
+|                 |                    |                    | libcpg-dev     |
+|                 |                    |                    | libcmap-dev    |
+|                 |                    |                    | libquorum-dev  |
+
+### Optional Build Dependencies
+
+| Feature Enabled                                 | Version        | Fedora-based            | Suse-based              | Debian-based            |
+|:-----------------------------------------------:|:--------------:|:-----------------------:|:-----------------------:|:-----------------------:|
+| Pacemaker Remote and encrypted remote CIB admin | 2.1.7 or later | gnutls-devel            | libgnutls-devel         | libgnutls-dev           |
+| encrypted remote CIB admin                      |                | pam-devel               | pam-devel               | libpam0g-dev            |
+| interactive crm_mon                             |                | ncurses-devel           | ncurses-devel           | ncurses-dev             |
+| systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |
+| systemd/upstart resource support                |                | dbus-devel              | dbus-devel              | libdbus-1-dev           |
+| Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
+| documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
+| documentation                                   |                | help2man                | help2man                | help2man                |
+| documentation                                   |                | publican                |                         | publican                |
+| documentation                                   |                | inkscape                | inkscape                | inkscape                |
+| documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
@@ -40,15 +55,18 @@
 * libvirt-daemon-lxc (if running CTS container tests)
 * libvirt-login-shell (if running CTS container tests)
 
-## Source Control (GIT)
+## Simple install
 
-    git clone git://github.com/ClusterLabs/pacemaker.git
+    $ make && sudo make install
 
-[See Github](https://github.com/ClusterLabs/pacemaker)
+If GNU make is not your default make, use "gmake" instead.
 
-## Installing from source
+## Detailed install
+
+First, browse the build options that are available:
 
     $ ./autogen.sh
-    $ ./configure
-    $ make
-    $ sudo make install
+    $ ./configure --help
+
+Re-run ./configure with any options you want, then proceed with the simple
+method.

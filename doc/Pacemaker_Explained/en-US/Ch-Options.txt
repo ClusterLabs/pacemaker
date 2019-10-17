@@ -281,6 +281,17 @@ indexterm:[concurrent-fencing,Cluster Option]
 indexterm:[Cluster,Option,concurrent-fencing]
 Is the cluster allowed to initiate multiple fence actions concurrently?
 
+| fence-reaction | stop |
+indexterm:[fence-reaction,Cluster Option]
+indexterm:[Cluster,Option,fence-reaction]
+How should a cluster node react if notified of its own fencing? A cluster node
+may receive notification of its own fencing if fencing is misconfigured, or if
+fabric fencing is in use that doesn't cut cluster communication. Allowed values
+are +stop+ to attempt to immediately stop pacemaker and stay stopped, or
++panic+ to attempt to immediately reboot the local node, falling back to stop
+on failure. The default is likely to be changed to +panic+ in a future release.
+'(since 2.0.3)'
+
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
 indexterm:[Cluster,Option,cluster-delay]
@@ -297,17 +308,6 @@ indexterm:[Cluster,Option,dc-deadtime]
 How long to wait for a response from other nodes during startup.
 
 The "correct" value will depend on the speed/load of your network and the type of switches used.
-
-| cluster-recheck-interval | 15min |
-indexterm:[cluster-recheck-interval,Cluster Option]
-indexterm:[Cluster,Option,cluster-recheck-interval]
-Polling interval for time-based changes to options, resource parameters and constraints.
-
-The Cluster is primarily event-driven, but your configuration can have
-elements that take effect based on the time of day. To ensure these changes
-take effect, we can optionally poll the cluster's status for changes. A value
-of 0 disables polling. Positive values are an interval (in seconds unless other
-SI units are specified, e.g. 5min).
 
 | cluster-ipc-limit | 500 |
 indexterm:[cluster-ipc-limit,Cluster Option]
@@ -349,6 +349,12 @@ indexterm:[Cluster,Option,node-health-strategy]
  Allowed values are +none+, +migrate-on-red+, +only-green+, +progressive+, and
  +custom+.
 
+| enable-acl | FALSE |
+indexterm:[enable-acl,Cluster Option]
+indexterm:[Cluster,Option,enable-acl]
+ Whether access control lists (ACLs) (see <<ch-acls>>) can be used to authorize
+ modifications to the CIB.
+
 | node-health-base | 0 |
 indexterm:[node-health-base,Cluster Option]
 indexterm:[Cluster,Option,node-health-base]
@@ -372,6 +378,16 @@ indexterm:[node-health-red,Cluster Option]
 indexterm:[Cluster,Option,node-health-red]
  The score to use for a node health attribute whose value is +red+.
  Only used when +node-health-strategy+ is +progressive+ or +custom+.
+
+| cluster-recheck-interval | 15min |
+indexterm:[cluster-recheck-interval,Cluster Option]
+indexterm:[Cluster,Option,cluster-recheck-interval]
+Pacemaker is primarily event-driven, and looks ahead to know when to recheck
+the cluster for failure timeouts and most time-based rules. However, it will
+also recheck the cluster after this amount of inactivity. This has two goals:
+rules with +date_spec+ are only guaranteed to be checked this often, and it
+also serves as a fail-safe for certain classes of scheduler bugs. A value of 0
+disables this polling; positive values are a time interval.
 
 | remove-after-stop | FALSE |
 indexterm:[remove-after-stop,Cluster Option]

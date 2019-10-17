@@ -1,19 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -33,28 +24,51 @@
 
 CRM_TRACE_INIT_DATA(pe_rules);
 
+/*!
+ * \brief Evaluate any rules contained by given XML element
+ *
+ * \param[in]  xml          XML element to check for rules
+ * \param[in]  node_hash    Node attributes to use when evaluating expressions
+ * \param[in]  now          Time to use when evaluating expressions
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if no rules, or any of rules present is in effect, else FALSE
+ */
 gboolean
-test_ruleset(xmlNode * ruleset, GHashTable * node_hash, crm_time_t * now)
+pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
+                  crm_time_t *next_change)
 {
+    // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
-    xmlNode *rule = NULL;
 
-    for (rule = __xml_first_child(ruleset); rule != NULL; rule = __xml_next_element(rule)) {
-        if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
-            ruleset_default = FALSE;
-            if (test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now)) {
-                return TRUE;
-            }
+    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
+         rule != NULL; rule = crm_next_same_xml(rule)) {
+
+        ruleset_default = FALSE;
+        if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, next_change,
+                         NULL)) {
+            /* Only the deprecated "lifetime" element of location constraints
+             * may contain more than one rule at the top level -- the schema
+             * limits a block of nvpairs to a single top-level rule. So, this
+             * effectively means that a lifetime is active if any rule it
+             * contains is active.
+             */
+            return TRUE;
         }
     }
-
     return ruleset_default;
+}
+
+gboolean
+test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
+{
+    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
 }
 
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_rule_full(rule, node_hash, role, now, NULL);
+    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
 }
 
 gboolean
@@ -65,11 +79,13 @@ pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, cr
                                     .params = NULL,
                                     .meta = NULL,
                                  };
-    return pe_test_rule_full(rule, node_hash, role, now, &match_data);
+    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
 }
 
 gboolean
-pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+             crm_time_t *now, crm_time_t *next_change,
+             pe_match_data_t *match_data)
 {
     xmlNode *expr = NULL;
     gboolean test = TRUE;
@@ -86,8 +102,11 @@ pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, 
     }
 
     crm_trace("Testing rule %s", ID(rule));
-    for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
-        test = pe_test_expression_full(expr, node_hash, role, now, match_data);
+    for (expr = __xml_first_child_element(rule); expr != NULL;
+         expr = __xml_next_element(expr)) {
+
+        test = pe_test_expression(expr, node_hash, role, now, next_change,
+                                  match_data);
         empty = FALSE;
 
         if (test && do_and == FALSE) {
@@ -109,9 +128,16 @@ pe_test_rule_full(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, 
 }
 
 gboolean
+pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                  crm_time_t *now, pe_match_data_t *match_data)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
 test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    return pe_test_expression_full(expr, node_hash, role, now, NULL);
+    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
 }
 
 gboolean
@@ -122,18 +148,37 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
                                     .params = NULL,
                                     .meta = NULL,
                                  };
-    return pe_test_expression_full(expr, node_hash, role, now, &match_data);
+    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
 }
 
+/*!
+ * \brief Evaluate one rule subelement (pass/fail)
+ *
+ * A rule element may contain another rule, a node attribute expression, or a
+ * date expression. Given any one of those, evaluate it and return whether it
+ * passed.
+ *
+ * \param[in]  expr         Rule subelement XML
+ * \param[in]  node_hash    Node attributes to use when evaluating expression
+ * \param[in]  role         Resource role to use when evaluating expression
+ * \param[in]  now          Time to use when evaluating expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ * \param[in]  match_data   If not NULL, resource back-references and params
+ *
+ * \return TRUE if expression is in effect under given conditions, else FALSE
+ */
 gboolean
-pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now, crm_time_t *next_change,
+                   pe_match_data_t *match_data)
 {
     gboolean accept = FALSE;
     const char *uname = NULL;
 
     switch (find_expression_type(expr)) {
         case nested_rule:
-            accept = pe_test_rule_full(expr, node_hash, role, now, match_data);
+            accept = pe_test_rule(expr, node_hash, role, now, next_change,
+                                  match_data);
             break;
         case attr_expr:
         case loc_expr:
@@ -141,24 +186,24 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
              * no node to compare with
              */
             if (node_hash != NULL) {
-                accept = pe_test_attr_expression_full(expr, node_hash, now, match_data);
+                accept = pe_test_attr_expression(expr, node_hash, now, match_data);
             }
             break;
 
         case time_expr:
-            accept = pe_test_date_expression(expr, now);
+            accept = pe_test_date_expression(expr, now, next_change);
             break;
 
         case role_expr:
             accept = pe_test_role_expression(expr, role, now);
             break;
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
         case version_expr:
             if (node_hash && g_hash_table_lookup_extended(node_hash,
                                                           CRM_ATTR_RA_VERSION,
                                                           NULL, NULL)) {
-                accept = pe_test_attr_expression(expr, node_hash, now);
+                accept = pe_test_attr_expression(expr, node_hash, now, NULL);
             } else {
                 // we are going to test it when we have ra-version
                 accept = TRUE;
@@ -177,6 +222,14 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
     crm_trace("Expression %s %s on %s",
               ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
+}
+
+gboolean
+pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                        enum rsc_role_e role, crm_time_t *now,
+                        pe_match_data_t *match_data)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
 }
 
 enum expression_type
@@ -205,7 +258,7 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
     } else if (safe_str_eq(attr, CRM_ATTR_RA_VERSION)) {
         return version_expr;
 #endif
@@ -256,13 +309,8 @@ pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
 }
 
 gboolean
-pe_test_attr_expression(xmlNode * expr, GHashTable * hash, crm_time_t * now)
-{
-    return pe_test_attr_expression_full(expr, hash, now, NULL);
-}
-
-gboolean
-pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now, pe_match_data_t * match_data)
+pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
+                        pe_match_data_t *match_data)
 {
     gboolean accept = FALSE;
     gboolean attr_allocated = FALSE;
@@ -569,30 +617,55 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
     return end;
 }
 
+/*!
+ * \internal
+ * \brief Test a date expression (pass/fail) for a specific time
+ *
+ * \param[in]  time_expr    date_expression XML
+ * \param[in]  now          Time for which to evaluate expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if date expression is in effect at given time, FALSE otherwise
+ */
 gboolean
-pe_test_date_expression(xmlNode * time_expr, crm_time_t * now)
+pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
+                        crm_time_t *next_change)
 {
-    pe_eval_date_result_t result = pe_eval_date_expression(time_expr, now);
-    const char *op = crm_element_value(time_expr, "operation");
+    switch (pe_eval_date_expression(time_expr, now, next_change)) {
+        case pe_date_within_range:
+        case pe_date_op_satisfied:
+            return TRUE;
 
-    if (result == pe_date_within_range) {
-        return TRUE;
-
-    } else if ((safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range") || op == NULL) &&
-               result == pe_date_op_satisfied) {
-        return TRUE;
-
-    } else if ((safe_str_eq(op, "eq") || safe_str_eq(op, "neq")) &&
-               result == pe_date_op_satisfied) {
-        return TRUE;
-
-    } else {
-        return FALSE;
+        default:
+            return FALSE;
     }
 }
 
+// Set next_change to t if t is earlier
+static void
+crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
+{
+    if ((next_change != NULL) && (t != NULL)) {
+        if (!crm_time_is_defined(next_change)
+            || (crm_time_compare(t, next_change) < 0)) {
+            crm_time_set(next_change, t);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Evaluate a date expression for a specific time
+ *
+ * \param[in]  time_expr    date_expression XML
+ * \param[in]  now          Time for which to evaluate expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Evaluation result
+ */
 pe_eval_date_result_t
-pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
+pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
+                        crm_time_t *next_change)
 {
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
@@ -602,6 +675,7 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
 
+    // "undetermined" will also be returned for parsing errors
     pe_eval_date_result_t rc = pe_date_result_undetermined;
 
     crm_trace("Testing expression: %s", ID(time_expr));
@@ -621,35 +695,51 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     if (start != NULL && end == NULL && duration_spec != NULL) {
         end = pe_parse_xml_duration(start, duration_spec);
     }
-    if (op == NULL) {
-        op = "in_range";
-    }
 
-    if (safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
-        if (start != NULL && crm_time_compare(start, now) > 0) {
+    if ((op == NULL) || safe_str_eq(op, "in_range")) {
+        if ((start == NULL) && (end == NULL)) {
+            // in_range requires at least one of start or end
+        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pe_date_before_range;
-        } else if (end != NULL && crm_time_compare(end, now) < 0) {
+            crm_time_set_if_earlier(next_change, start);
+        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pe_date_after_range;
-        } else if (safe_str_eq(op, "in_range")) {
-            rc = pe_date_within_range;
         } else {
-            rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
-                                                         : pe_date_op_unsatisfied;
+            rc = pe_date_within_range;
+            if (end && next_change) {
+                // Evaluation doesn't change until second after end
+                crm_time_add_seconds(end, 1);
+                crm_time_set_if_earlier(next_change, end);
+            }
         }
 
+    } else if (safe_str_eq(op, "date_spec")) {
+        rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
+                                                     : pe_date_op_unsatisfied;
+        // @TODO set next_change appropriately
+
     } else if (safe_str_eq(op, "gt")) {
-        rc = crm_time_compare(start, now) < 0 ? pe_date_within_range : pe_date_before_range;
+        if (start == NULL) {
+            // gt requires start
+        } else if (crm_time_compare(now, start) > 0) {
+            rc = pe_date_within_range;
+        } else {
+            rc = pe_date_before_range;
+
+            // Evaluation doesn't change until second after start
+            crm_time_add_seconds(start, 1);
+            crm_time_set_if_earlier(next_change, start);
+        }
 
     } else if (safe_str_eq(op, "lt")) {
-        rc = crm_time_compare(end, now) > 0 ? pe_date_within_range : pe_date_after_range;
-
-    } else if (safe_str_eq(op, "eq")) {
-        rc = crm_time_compare(start, now) == 0 ? pe_date_op_satisfied
-                                               : pe_date_op_unsatisfied;
-
-    } else if (safe_str_eq(op, "neq")) {
-        rc = crm_time_compare(start, now) != 0 ? pe_date_op_satisfied
-                                               : pe_date_op_unsatisfied;
+        if (end == NULL) {
+            // lt requires end
+        } else if (crm_time_compare(now, end) < 0) {
+            rc = pe_date_within_range;
+            crm_time_set_if_earlier(next_change, end);
+        } else {
+            rc = pe_date_after_range;
+        }
     }
 
     crm_time_free(start);
@@ -657,11 +747,12 @@ pe_eval_date_expression(xmlNode * time_expr, crm_time_t * now)
     return rc;
 }
 
+// Information about a block of nvpair elements
 typedef struct sorted_set_s {
-    int score;
-    const char *name;
-    const char *special_name;
-    xmlNode *attr_set;
+    int score;                  // This block's score for sorting
+    const char *name;           // This block's ID
+    const char *special_name;   // ID that should sort first
+    xmlNode *attr_set;          // This block
 } sorted_set_t;
 
 static gint
@@ -707,7 +798,9 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         list = list->children;
     }
 
-    for (an_attr = __xml_first_child(list); an_attr != NULL; an_attr = __xml_next_element(an_attr)) {
+    for (an_attr = __xml_first_child_element(list); an_attr != NULL;
+         an_attr = __xml_next_element(an_attr)) {
+
         if (crm_str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, TRUE)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
@@ -747,16 +840,20 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 static xmlNode*
 get_versioned_rule(xmlNode * attr_set)
 {
     xmlNode * rule = NULL;
     xmlNode * expr = NULL;
 
-    for (rule = __xml_first_child(attr_set); rule != NULL; rule = __xml_next_element(rule)) {
+    for (rule = __xml_first_child_element(attr_set); rule != NULL;
+         rule = __xml_next_element(rule)) {
+
         if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
-            for (expr = __xml_first_child(rule); expr != NULL; expr = __xml_next_element(expr)) {
+            for (expr = __xml_first_child_element(rule); expr != NULL;
+                 expr = __xml_next_element(expr)) {
+
                 if (find_expression_type(expr) == version_expr) {
                     return rule;
                 }
@@ -786,7 +883,7 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
         return;
     }
 
-    expr = __xml_first_child(rule);
+    expr = __xml_first_child_element(rule);
     while (expr != NULL) {
         if (find_expression_type(expr) != version_expr) {
             xmlNode *node = expr;
@@ -807,6 +904,7 @@ typedef struct unpack_data_s {
     GHashTable *node_hash;
     void *hash;
     crm_time_t *now;
+    crm_time_t *next_change;
     xmlNode *top;
 } unpack_data_t;
 
@@ -816,11 +914,12 @@ unpack_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
+    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
+                           unpack_data->now, unpack_data->next_change)) {
         return;
     }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
         g_hash_table_lookup_extended(unpack_data->node_hash,
                                      CRM_ATTR_RA_VERSION, NULL, NULL))) {
@@ -833,25 +932,34 @@ unpack_attr_set(gpointer data, gpointer user_data)
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_attr_set(gpointer data, gpointer user_data)
 {
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
-        return;
+    if (pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
+                          unpack_data->now, unpack_data->next_change)) {
+        add_versioned_attributes(pair->attr_set, unpack_data->hash);
     }
-
-    add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
 #endif
 
-static GListPtr
-make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                             GHashTable * node_hash, void * hash, const char *always_first,
-                             gboolean overwrite, crm_time_t * now, unpack_data_t * data)
+/*!
+ * \internal
+ * \brief Create a sorted list of nvpair blocks
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      If not NULL, only get blocks of this element type
+ * \param[in]  always_first  If not NULL, sort block with this ID as first
+ *
+ * \return List of sorted_set_t entries for nvpair blocks
+ */
+static GList *
+make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+           const char *always_first)
 {
     GListPtr unsorted = NULL;
     const char *score = NULL;
@@ -864,7 +972,9 @@ make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_n
     }
 
     crm_trace("Checking for attributes");
-    for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next_element(attr_set)) {
+    for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
+         attr_set = __xml_next_element(attr_set)) {
+
         /* Uncertain if set_name == NULL check is strictly necessary here */
         if (set_name == NULL || crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
             pair = NULL;
@@ -884,50 +994,90 @@ make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_n
             unsorted = g_list_prepend(unsorted, pair);
         }
     }
-
-    if (pair != NULL) {
-        data->hash = hash;
-        data->node_hash = node_hash;
-        data->now = now;
-        data->overwrite = overwrite;
-        data->top = top;
-    }
-
-    if (unsorted) {
-        return g_list_sort(unsorted, sort_pairs);
-    }
-
-    return NULL;
+    return g_list_sort(unsorted, sort_pairs);
 }
 
-void
-unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                           GHashTable * node_hash, GHashTable * hash, const char *always_first,
-                           gboolean overwrite, crm_time_t * now)
+/*!
+ * \internal
+ * \brief Extract nvpair blocks contained by an XML element into a hash table
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      If not NULL, only use blocks of this element type
+ * \param[in]  node_hash     Node attributes to use when evaluating rules
+ * \param[out] hash          Where to store extracted name/value pairs
+ * \param[in]  always_first  If not NULL, process block with this ID first
+ * \param[in]  overwrite     Whether to replace existing values with same name
+ * \param[in]  now           Time to use when evaluating rules
+ * \param[out] next_change   If not NULL, set to when rule evaluation will change
+ * \param[in]  unpack_func   Function to call to unpack each block
+ */
+static void
+unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                     GHashTable *node_hash, void *hash,
+                     const char *always_first, gboolean overwrite,
+                     crm_time_t *now, crm_time_t *next_change,
+                     GFunc unpack_func)
 {
-    unpack_data_t data;
-    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
-                                                  always_first, overwrite, now, &data);
+    GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
 
     if (pairs) {
-        g_list_foreach(pairs, unpack_attr_set, &data);
+        unpack_data_t data = {
+            .hash = hash,
+            .node_hash = node_hash,
+            .now = now,
+            .overwrite = overwrite,
+            .next_change = next_change,
+            .top = top,
+        };
+
+        g_list_foreach(pairs, unpack_func, &data);
         g_list_free_full(pairs, free);
     }
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+/*!
+ * \brief Extract nvpair blocks contained by an XML element into a hash table
+ *
+ * \param[in]  top           XML document root (used to expand id-ref's)
+ * \param[in]  xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]  set_name      Element name to identify nvpair blocks
+ * \param[in]  node_hash     Node attributes to use when evaluating rules
+ * \param[out] hash          Where to store extracted name/value pairs
+ * \param[in]  always_first  If not NULL, process block with this ID first
+ * \param[in]  overwrite     Whether to replace existing values with same name
+ * \param[in]  now           Time to use when evaluating rules
+ * \param[out] next_change   If not NULL, set to when rule evaluation will change
+ */
 void
-pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
-                               GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
+pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                  GHashTable *node_hash, GHashTable *hash,
+                  const char *always_first, gboolean overwrite,
+                  crm_time_t *now, crm_time_t *next_change)
 {
-    unpack_data_t data;
-    GListPtr pairs = make_pairs_and_populate_data(top, xml_obj, set_name, node_hash, hash,
-                                                  NULL, FALSE, now, &data);
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, next_change, unpack_attr_set);
+}
 
-    if (pairs) {
-        g_list_foreach(pairs, unpack_versioned_attr_set, &data);
-        g_list_free_full(pairs, free);
-    }
+void
+unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           crm_time_t *now)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, NULL, unpack_attr_set);
+}
+
+#if ENABLE_VERSIONED_ATTRS
+void
+pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
+                               const char *set_name, GHashTable *node_hash,
+                               xmlNode *hash, crm_time_t *now,
+                               crm_time_t *next_change)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, NULL, FALSE,
+                         now, next_change, unpack_versioned_attr_set);
 }
 #endif
 
@@ -988,7 +1138,7 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     return result;
 }
 
-#ifdef ENABLE_VERSIONED_ATTRS
+#if ENABLE_VERSIONED_ATTRS
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
@@ -996,13 +1146,14 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
 
     if (versioned_params && ra_version) {
         GHashTable *node_hash = crm_str_table_new();
-        xmlNode *attr_set = __xml_first_child(versioned_params);
+        xmlNode *attr_set = __xml_first_child_element(versioned_params);
 
         if (attr_set) {
             g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
                                 strdup(ra_version));
-            unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
-                                       node_hash, hash, NULL, FALSE, NULL);
+            pe_unpack_nvpairs(NULL, versioned_params,
+                              crm_element_name(attr_set), node_hash, hash, NULL,
+                              FALSE, NULL, NULL);
         }
 
         g_hash_table_destroy(node_hash);

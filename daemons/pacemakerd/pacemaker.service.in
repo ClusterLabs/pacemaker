@@ -73,6 +73,14 @@ SendSIGKILL=no
 #
 # ExecStopPost=/bin/sh -c 'pidof pacemaker-controld || killall -TERM corosync'
 
+# Pacemaker will restart along with Corosync if Corosync is stopped while
+# Pacemaker is running.
+# In this case, if you want to be fenced always (if you do not want to restart)
+# uncomment ExecStopPost below.
+# 
+# ExecStopPost=/bin/sh -c 'pidof corosync || \
+#              /usr/bin/systemctl --no-block stop pacemaker'
+
 # When the service functions properly, it will wait to exit until all resources
 # have been stopped on the local node, and potentially across all nodes that
 # are shutting down.  The default of 30min should cover most typical cluster
