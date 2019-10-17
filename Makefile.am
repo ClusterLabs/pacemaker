@@ -7,38 +7,10 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-EXTRA_DIST		= CONTRIBUTING.md	\
-			  GNUmakefile		\
-			  INSTALL.md		\
-			  README.markdown	\
-			  autogen.sh		\
-			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4	\
-			  rpm/rpmlintrc		\
-			  rpm/pacemaker.spec.in
+EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
 
-DISTCLEANFILES		= config.status
-
-MAINTAINERCLEANFILES	= Makefile.in		\
-			  aclocal.m4		\
-			  config.guess		\
-			  config.sub		\
-			  configure		\
-			  depcomp		\
-			  install-sh		\
-			  ltmain.sh		\
-			  missing		\
-			  py-compile		\
-			  test-driver
-
-# Disable building Publican documentation when doing "make distcheck", because
-# some of our book sources are in the source directory, while others are
-# dynamically generated in the build directory, and publican can't handle that.
-#
-# @TODO To support VPATH builds for Publican, we'd probably have to create
-# a separate subtree of the build directory to use as Publican's source
-# directory, and copy the static sources into it.
-AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""
+MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
+                        DRF/stamp-h.in libtool.m4 ltdl.m4
 
 # Only these will get installed with a plain "make install"
 CORE_INSTALL	= replace include lib daemons tools xml
@@ -53,7 +25,7 @@ AM_CPPFLAGS		= -I$(top_srcdir)/include
 doc_DATA = README.markdown COPYING
 
 licensedir              = $(docdir)/licenses/
-dist_license_DATA	= $(wildcard licenses/*)
+license_DATA            = $(wildcard licenses/*)
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch
@@ -65,26 +37,22 @@ scratch.c:
 
 core:
 	@echo "Building only core components and tests: $(CORE)"
-	@for subdir in $(CORE); do \
-		echo "Building $$subdir"; \
-		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
-	done
+	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; $(MAKE) -C $$subdir all || exit 1; done
 
 core-install:
 	@echo "Installing only core components: $(CORE_INSTALL)"
-	@for subdir in $(CORE_INSTALL); do \
+	list='$(CORE_INSTALL)'; \
+	for subdir in $$list; do \
 	    echo "Installing $$subdir"; \
-	    $(MAKE) $(AM_MAKEFLAGS) -C $$subdir install || exit 1; \
+	    $(MAKE) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
-	@for subdir in $(CORE); do \
-		echo "Cleaning $$subdir"; \
-		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir clean || exit 1; \
-	done
+	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; $(MAKE) -C $$subdir clean || exit 1; done
 
 install-exec-local:
+	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(PACEMAKER_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CORE_DIR)
@@ -100,10 +68,7 @@ install-exec-local:
 # Use chown because the user/group may not exist
 
 clean-generic:
-	-rm -f *.tar.bz2 *.sed
+	rm -f $(TARFILE) *.tar.bz2 *.sed
 
-clean-local:
-	$(MAKE) $(AM_MAKEFLAGS) ancillary-clean
-
-distclean-local:
-	-rm -rf libltdl autom4te.cache
+dist-clean-local:
+	rm -f autoconf automake autoheader

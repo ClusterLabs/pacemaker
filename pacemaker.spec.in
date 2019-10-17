@@ -5,11 +5,7 @@
 %global gname haclient
 
 ## Where to install Pacemaker documentation
-%if 0%{?suse_version} > 0
-%global pcmk_docdir %{_docdir}/%{name}-%{version}
-%else
 %global pcmk_docdir %{_docdir}/%{name}
-%endif
 
 ## GitHub entity that distributes source (for ease of using a fork)
 %global github_owner ClusterLabs
@@ -74,32 +70,6 @@
 ## Base GnuTLS cipher priorities (presumably only the initial, required keyword)
 ## overridable with "rpmbuild --define 'pcmk_gnutls_priorities PRIORITY-SPEC'"
 %define gnutls_priorities %{?pcmk_gnutls_priorities}%{!?pcmk_gnutls_priorities:@SYSTEM}
-%endif
-
-## Different distros name certain packages differently
-%if 0%{?suse_version} > 0
-%global pkgname_bzip2_devel libbz2-devel
-%global pkgname_docbook_xsl docbook-xsl-stylesheets
-%global pkgname_gnutls_devel libgnutls-devel
-%global pkgname_shadow_utils shadow
-%global pkgname_procps procps
-%global pkgname_corosync_lib libcorosync
-%global pkgname_glue_libs libglue
-%global pkgname_pcmk_libs lib%{name}3
-%global hacluster_id 90
-%else
-%global pkgname_libtool_devel libtool-ltdl-devel
-%global pkgname_libtool_devel_arch libtool-ltdl-devel%{?_isa}
-%global pkgname_bzip2_devel bzip2-devel
-%global pkgname_docbook_xsl docbook-style-xsl
-%global pkgname_gnutls_devel gnutls-devel
-%global pkgname_shadow_utils shadow-utils
-%global pkgname_procps procps-ng
-%global pkgname_publican publican
-%global pkgname_corosync_lib corosynclib
-%global pkgname_glue_libs cluster-glue-libs
-%global pkgname_pcmk_libs %{name}-libs
-%global hacluster_id 189
 %endif
 
 # Python-related definitions
@@ -231,11 +201,11 @@ Group:         System Environment/Daemons
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Requires:      resource-agents
-Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 %if !%{defined _unitdir}
-Requires:      %{pkgname_procps}
+Requires:      procps-ng
 Requires:      psmisc
 %endif
 %{?systemd_requires}
@@ -251,30 +221,30 @@ BuildRequires: libqb-devel >= 0.13.0
 BuildRequires: coreutils findutils grep sed
 
 # Required for core functionality
-BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
+BuildRequires: automake autoconf gcc libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
-BuildRequires: %{pkgname_bzip2_devel}
+BuildRequires: bzip2-devel
 
 # Enables optional functionality
-BuildRequires: ncurses-devel %{pkgname_docbook_xsl}
-BuildRequires: help2man %{pkgname_gnutls_devel} pam-devel pkgconfig(dbus-1)
+BuildRequires: ncurses-devel docbook-style-xsl
+BuildRequires: help2man gnutls-devel pam-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
 %endif
 
 Requires:      corosync >= 2.0.0
-BuildRequires: %{pkgname_corosync_lib}-devel >= 2.0.0
+BuildRequires: corosynclib-devel >= 2.0.0
 
 %if %{with stonithd}
-BuildRequires: %{pkgname_glue_libs}-devel
+BuildRequires: cluster-glue-libs-devel
 %endif
 
 ## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{?pkgname_publican}
+BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
@@ -306,15 +276,12 @@ Available rpmbuild rebuild options:
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
-Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
-# For crm_report
-Recommends:    tar
-Recommends:    bzip2
 %endif
 Requires:      perl-TimeDate
-Requires:      %{pkgname_procps}
+Requires:      procps-ng
 Requires:      psmisc
 Requires(post):coreutils
 
@@ -326,27 +293,27 @@ The %{name}-cli package contains command line tools that can be used
 to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
-%package -n %{pkgname_pcmk_libs}
+%package libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
-Requires(pre): %{pkgname_shadow_utils}
+Requires(pre): shadow-utils
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
 Conflicts:     sbd < 1.4.0
 
-%description -n %{pkgname_pcmk_libs}
+%description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
-The %{pkgname_pcmk_libs} package contains shared libraries needed for cluster
+The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
 %package cluster-libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -364,11 +331,11 @@ License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
 Group:         System Environment/Daemons
-Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
 %if !%{defined _unitdir}
-Requires:      %{pkgname_procps}
+Requires:      procps-ng
 %endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
@@ -383,23 +350,23 @@ The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
 nodes not running the full corosync/cluster stack.
 
-%package -n %{pkgname_pcmk_libs}-devel
+%package libs-devel
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
-Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
+Requires:      libuuid-devel%{?_isa} libtool-ltdl-devel%{?_isa}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
-Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
+Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
-Requires:      %{pkgname_corosync_lib}-devel%{?_isa} >= 2.0.0
+Requires:      corosynclib-devel%{?_isa} >= 2.0.0
 
-%description -n %{pkgname_pcmk_libs}-devel
+%description libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
-The %{pkgname_pcmk_libs}-devel package contains headers and shared libraries
+The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
 %package       cts
@@ -407,8 +374,8 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{python_path}
-Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
-Requires:      %{pkgname_procps}
+Requires:      %{name}-libs = %{version}-%{release}
+Requires:      procps-ng
 Requires:      psmisc
 BuildArch:     noarch
 
@@ -493,7 +460,7 @@ sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 %endif
 
-make %{_smp_mflags} V=1
+make %{_smp_mflags} V=1 all
 
 %check
 { cts/cts-scheduler --run load-stopped-loop \
@@ -659,17 +626,17 @@ fi
 %systemd_postun_with_restart crm_mon.service
 %endif
 
-%pre -n %{pkgname_pcmk_libs}
-getent group %{gname} >/dev/null || groupadd -r %{gname} -g %{hacluster_id}
-getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u %{hacluster_id} -s /sbin/nologin -c "cluster user" %{uname}
+%pre libs
+getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
+getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
 
 %if %{defined ldconfig_scriptlets}
 %ldconfig_scriptlets libs
 %ldconfig_scriptlets cluster-libs
 %else
-%post -n %{pkgname_pcmk_libs} -p /sbin/ldconfig
-%postun -n %{pkgname_pcmk_libs} -p /sbin/ldconfig
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
 
 %post cluster-libs -p /sbin/ldconfig
 %postun cluster-libs -p /sbin/ldconfig
@@ -795,7 +762,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files -n %{pkgname_pcmk_libs}
+%files libs
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
@@ -850,7 +817,7 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
-%files -n %{pkgname_pcmk_libs}-devel
+%files libs-devel
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with coverage}
@@ -870,5 +837,3 @@ exit 0
 
 %changelog
 
-* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION-1
- - See included ChangeLog file for details
