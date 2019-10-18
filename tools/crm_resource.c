@@ -223,23 +223,26 @@ static struct crm_option long_options[] = {
     { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
     {
         "validate", no_argument, NULL, 0,
-        "\t\tCall the validate-all action.  There are two different things that can be validated.  One\n"
-        "\t\t\t\tmethod is to validate the resource given by the -r option.  The other method is to validate\n"
-        "\t\t\t\ta not-yet-existing resource.  This method requires the --class, --agent, and --provider\n"
-        "\t\t\t\targuments, plus at least one --option argument."
+        "\t\tValidate resource configuration by calling agent's validate-all action.\n"
+        "\t\t\t\tThe configuration may be specified either by giving an existing\n"
+        "\t\t\t\tresource name with -r, or by specifying --class, --agent, and\n"
+        "\t\t\t\t--provider arguments, along with any number of --option arguments."
     },
     {
         "cleanup", no_argument, NULL, 'C',
         "\t\tIf resource has any past failures, clear its history and fail count.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
         "\t\t\t\t--operation and --interval apply to fail counts, but entire history is always cleared,\n"
-        "\t\t\t\tto allow current state to be rechecked.\n"
+        "\t\t\t\tto allow current state to be rechecked. If the named resource is part of a group, or\n"
+        "\t\t\t\tone numbered instance of a clone or bundled resource, the clean-up applies to the\n"
+        "\t\t\t\twhole collective resource unless --force is given."
     },
     {
         "refresh", no_argument, NULL, 'R',
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all).\n"
-        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be refreshed."
+        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all). If the named resource is\n"
+        "\t\t\t\tpart of a group, or one numbered instance of a clone or bundled resource, the clean-up\n"
+        "applies to the whole collective resource unless --force is given."
     },
     {
         "set-parameter", required_argument, NULL, 'p',

@@ -42,7 +42,7 @@ typedef struct series_s {
 } series_t;
 
 series_t series[] = {
-    {"pe-unknown", "_dont_match_anything_", -1},
+    {"pe-unknown", "_do_not_match_anything_", -1},
     {"pe-error", "pe-error-series-max", -1},
     {"pe-warn", "pe-warn-series-max", 200},
     {"pe-input", "pe-input-series-max", 400},
@@ -56,7 +56,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
     static char *last_digest = NULL;
     static char *filename = NULL;
 
-    time_t execution_date = time(NULL);
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
@@ -82,6 +81,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         int series_wrap = 0;
         char *digest = NULL;
         const char *value = NULL;
+        time_t execution_date = time(NULL);
         xmlNode *converted = NULL;
         xmlNode *reply = NULL;
         gboolean is_repoke = FALSE;
@@ -146,8 +146,9 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE) {
             free(filename);
-            filename =
-                generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, HAVE_BZLIB_H);
+            filename = generate_series_filename(PE_STATE_DIR,
+                                                series[series_id].name, seq,
+                                                TRUE);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -182,8 +183,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE && series_wrap != 0) {
             unlink(filename);
-            crm_xml_add_int(xml_data, "execution-date", execution_date);
-            write_xml_file(xml_data, filename, HAVE_BZLIB_H);
+            crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
+            write_xml_file(xml_data, filename, TRUE);
             write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
         } else {
             crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);

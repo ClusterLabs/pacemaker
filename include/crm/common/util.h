@@ -20,10 +20,10 @@ extern "C" {
  * \ingroup core
  */
 
-#  include <sys/types.h>
+#  include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
 #  include <stdlib.h>
 #  include <stdbool.h>
-#  include <stdint.h> // uint32_t
+#  include <stdint.h>       // uint32_t
 #  include <limits.h>
 #  include <signal.h>
 #  include <glib.h>
@@ -38,6 +38,8 @@ extern "C" {
 
 // public name/value pair functions (from nvpair.c)
 int pcmk_scan_nvpair(const char *input, char **name, char **value);
+char *pcmk_format_nvpair(const char *name, const char *value, const char *units);
+char *pcmk_format_named_time(const char *name, time_t epoch_time);
 
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
@@ -63,6 +65,18 @@ static inline char *
 crm_itoa(int an_int)
 {
     return crm_strdup_printf("%d", an_int);
+}
+
+static inline char *
+crm_ftoa(double a_float)
+{
+    return crm_strdup_printf("%f", a_float);
+}
+
+static inline char *
+crm_ttoa(time_t epoch_time)
+{
+    return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
 /*!

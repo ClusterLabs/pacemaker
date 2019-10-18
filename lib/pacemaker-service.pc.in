@@ -1,21 +1,17 @@
-sub=service
-prefix=@prefix@
+sub=crmservice
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-build=@BUILD_VERSION@
-
 ocfdir=@OCF_RA_DIR@
-with_upstart=@SUPPORT_UPSTART@
-with_systemd=@SUPPORT_SYSTEMD@
 
-Name:         @PACKAGE_NAME@-${sub}
-URL:	      @PACKAGE_URL@
-Version:      @PACKAGE_VERSION@
-Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
-Requires:     
-Conflicts:    
-Cflags:       -I${includedir}
-Libs:         -L${libdir} -lcrm${sub}
-Libs.private:
-
+Name:             lib${sub}
+URL:              @PACKAGE_URL@
+Version:          @PACKAGE_VERSION@
+Description:      Service APIs for Pacemaker
+# pacemaker-service is not very useful without glib hash table and list APIs
+Requires:         pacemaker glib-2.0
+Requires.private: libxml-2.0 @PC_NAME_DBUS@
+Conflicts:
+Cflags:           -I${includedir}
+Libs:             -L${libdir} -l${sub}
+Libs.private:     @PC_LIBS_RT@

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "fence_db1_monitor_60000 407892-db2" [ style=bold color="green" fontcolor="black"]
 "fence_db1_start_0 407892-db2" -> "fence_db1_monitor_60000 407892-db2" [ style = bold]
 "fence_db1_start_0 407892-db2" [ style=bold color="green" fontcolor="black"]

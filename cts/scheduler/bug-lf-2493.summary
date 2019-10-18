@@ -3,17 +3,17 @@ Current cluster status:
 Online: [ hpn07 hpn08 ]
 
  p_dummy1	(ocf::pacemaker:Dummy):	Started hpn07
- p_dummy2	(ocf::pacemaker:Dummy):	Stopped 
- p_dummy4	(ocf::pacemaker:Dummy):	Stopped 
- p_dummy3	(ocf::pacemaker:Dummy):	Stopped 
+ p_dummy2	(ocf::pacemaker:Dummy):	Stopped
+ p_dummy4	(ocf::pacemaker:Dummy):	Stopped
+ p_dummy3	(ocf::pacemaker:Dummy):	Stopped
  Clone Set: ms_stateful1 [p_stateful1] (promotable)
      Masters: [ hpn07 ]
      Slaves: [ hpn08 ]
 
 Transition Summary:
- * Start   p_dummy2	(hpn08)
- * Start   p_dummy4	(hpn07)
- * Start   p_dummy3	(hpn08)
+ * Start      p_dummy2     ( hpn08 )  
+ * Start      p_dummy4     ( hpn07 )  
+ * Start      p_dummy3     ( hpn08 )  
 
 Executing cluster transition:
  * Resource action: p_dummy2        start on hpn08

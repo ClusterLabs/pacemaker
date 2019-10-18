@@ -8,16 +8,13 @@
  */
 
 #include <crm_internal.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
 #include <crm/lrmd.h>
 #include <crm/services.h>
+
+#include <pacemaker-controld.h>
 
 #define REMOTE_LRMD_RA "remote"
 
@@ -359,10 +356,10 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.interval_ms = cmd->interval_ms;
     op.rc = cmd->rc;
     op.op_status = cmd->op_status;
-    op.t_run = cmd->start_time;
-    op.t_rcchange = cmd->start_time;
+    op.t_run = (unsigned int) cmd->start_time;
+    op.t_rcchange = (unsigned int) cmd->start_time;
     if (cmd->reported_success && cmd->rc != PCMK_OCF_OK) {
-        op.t_rcchange = time(NULL);
+        op.t_rcchange = (unsigned int) time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
          * remotely possible because we are able to detect a connection resource's tcp
@@ -508,7 +505,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.op_type = op_type;
     op.rc = PCMK_OCF_OK;
     op.op_status = PCMK_LRM_OP_DONE;
-    op.t_run = time(NULL);
+    op.t_run = (unsigned int) time(NULL);
     op.t_rcchange = op.t_run;
     op.call_id = generate_callid();
     process_lrm_event(lrm_state, &op, NULL, NULL);
@@ -778,11 +775,13 @@ handle_remote_ra_exec(gpointer user_data)
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                 /* take care of this later when we get async connection result */
-                crm_debug("Remote connection started, waiting for connect event");
+                crm_debug("Initiated async remote connection, %s action will complete after connect event",
+                          cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             } else {
-                crm_debug("connect failed, not expecting to match any connection event later");
+                crm_debug("Could not initiate remote connection for %s action",
+                          cmd->action);
                 cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
                 cmd->op_status = PCMK_LRM_OP_ERROR;
             }

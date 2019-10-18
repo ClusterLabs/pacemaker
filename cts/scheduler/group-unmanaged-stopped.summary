@@ -3,12 +3,12 @@ Current cluster status:
 Online: [ pcmk-1 pcmk-2 ]
 
  Resource Group: group-1
-     r192.168.122.113	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
-     r192.168.122.114	(ocf::heartbeat:IPaddr2):	Stopped (unmanaged) 
-     r192.168.122.115	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
+     r192.168.122.113	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     r192.168.122.114	(ocf::heartbeat:IPaddr2):	Stopped (unmanaged)
+     r192.168.122.115	(ocf::heartbeat:IPaddr2):	Started pcmk-1
 
 Transition Summary:
- * Stop    r192.168.122.115	(pcmk-1)  	due to node availability
+ * Stop       r192.168.122.115     ( pcmk-1 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group-1_stop_0
@@ -19,7 +19,7 @@ Revised cluster status:
 Online: [ pcmk-1 pcmk-2 ]
 
  Resource Group: group-1
-     r192.168.122.113	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
-     r192.168.122.114	(ocf::heartbeat:IPaddr2):	Stopped (unmanaged) 
-     r192.168.122.115	(ocf::heartbeat:IPaddr2):	Stopped 
+     r192.168.122.113	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     r192.168.122.114	(ocf::heartbeat:IPaddr2):	Stopped (unmanaged)
+     r192.168.122.115	(ocf::heartbeat:IPaddr2):	Stopped
 

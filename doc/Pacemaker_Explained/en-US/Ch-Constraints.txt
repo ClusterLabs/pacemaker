@@ -6,10 +6,12 @@ We prefer [[ch-constraints]], but older versions of asciidoc don't deal well
 with that construct for chapter headings
 ////
 anchor:ch-constraints[Chapter 7, Alerts]
-indexterm:[Resource,Constraints]
+indexterm:[Resource,Constraint]
 
 == Scores ==
 
+indexterm:[Resource,Score]
+indexterm:[Node,Score]
 Scores of all kinds are integral to how the cluster works.
 Practically everything from moving a resource to deciding which
 resource to stop in a degraded cluster is achieved by manipulating
@@ -46,8 +48,7 @@ the score (possibly as part of a custom resource agent).
 
 == Deciding Which Nodes a Resource Can Run On ==
 
-indexterm:[Location Constraints]
-indexterm:[Resource,Constraints,Location]
+indexterm:[Constraint,Location Constraint]
 'Location constraints' tell the cluster which nodes a resource can run on.
 
 There are two alternative strategies. One way is to say that, by default,
@@ -65,52 +66,62 @@ configuration might be simpler.
 
 === Location Properties ===
 
-.Properties of a rsc_location Constraint
+indexterm:[XML element,rsc_location element]
+indexterm:[Constraint,Location Constraint,rsc_location element]
+
+.Attributes of a rsc_location Element
 [width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Default
 |Description
 
 |id
 |
-|A unique name for the constraint
-indexterm:[id,Location Constraints]
-indexterm:[Constraints,Location,id]
+|A unique name for the constraint (required)
+indexterm:[XML attribute,id attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,id attribute]
 
 |rsc
 |
-|The name of the resource to which this constraint applies
-indexterm:[rsc,Location Constraints]
-indexterm:[Constraints,Location,rsc]
+|The name of the resource to which this constraint applies. A location
+ constraint must either have a +rsc+, have a +rsc-pattern+, or contain at least
+ one resource set.
+indexterm:[XML attribute,rsc attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,rsc attribute]
 
 |rsc-pattern
 |
-|An extended regular expression (as defined in
- http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04[POSIX])
- matching the names of resources to which this constraint
- applies, if +rsc+ is not specified; if the regular expression contains
- submatches and the constraint is governed by a rule (see <<ch-rules>>), the
- submatches can be referenced as +%0+ through +%9+ in the rule's
- +score-attribute+ or a rule expression's +attribute+
-indexterm:[rsc-pattern,Location Constraints]
-indexterm:[Constraints,Location,rsc-pattern]
+|A pattern matching the names of resources to which this constraint applies.
+ The syntax is the same as
+ http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04[POSIX]
+ extended regular expressions, with the addition of an initial '!' indicating
+ that resources 'not' matching the pattern are selected. If the regular
+ expression contains submatches, and the constraint is governed by a
+ <<ch-rules,rule>>, the submatches can be referenced as +%0+ through +%9+ in
+ the rule's +score-attribute+ or a rule expression's +attribute+. A location
+ constraint must either have a +rsc+, have a +rsc-pattern+, or contain at least
+ one resource set.
+indexterm:[XML attribute,rsc-pattern attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,rsc-pattern attribute]
 
 |node
 |
-|A node's name
-indexterm:[node,Location Constraints]
-indexterm:[Constraints,Location,node]
+|The name of the node to which this constraint applies. A location constraint
+ must either have a +node+ and +score+, or contain at least one rule.
+indexterm:[XML attribute,node attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,node attribute]
 
 |score
 |
 |Positive values indicate a preference for running the affected resource(s) on
- this node -- the higher the value, the stronger the preference. Negative values
+ +node+ -- the higher the value, the stronger the preference. Negative values
  indicate the resource(s) should avoid this node (a value of +-INFINITY+
- changes "should" to "must").
-indexterm:[score,Location Constraints]
-indexterm:[Constraints,Location,score]
+ changes "should" to "must"). A location constraint must either have a +node+
+ and +score+, or contain at least one rule.
+indexterm:[XML attribute,score attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,score attribute]
 
 |resource-discovery
 |always
@@ -136,8 +147,9 @@ a|Whether Pacemaker should perform resource discovery (that is, check whether
   If a resource is marked for +exclusive+ discovery on one or more nodes, that
   resource is only allowed to be placed within that subset of nodes.
 
-indexterm:[Resource Discovery,Location Constraints]
-indexterm:[Constraints,Location,Resource Discovery]
+indexterm:[XML attribute,resource-discovery attribute,rsc_location element]
+indexterm:[XML element,rsc_location element,resource-discovery attribute]
+indexterm:[Constraint,Location Constraint,Resource Discovery]
 
 |=========================================================
 
@@ -151,8 +163,8 @@ resource-discovery (such as by leaving the relevant software uninstalled).
 =========
 
 === Asymmetrical "Opt-In" Clusters ===
-indexterm:[Asymmetrical Opt-In Clusters]
-indexterm:[Cluster Type,Asymmetrical Opt-In]
+indexterm:[Asymmetrical Clusters]
+indexterm:[Opt-In Clusters]
 
 To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
@@ -179,8 +191,8 @@ fail over to *sles-3* if their most preferred node fails.
 ======
 
 === Symmetrical "Opt-Out" Clusters ===
-indexterm:[Symmetrical Opt-Out Clusters]
-indexterm:[Cluster Type,Symmetrical Opt-Out]
+indexterm:[Symmetrical Clusters]
+indexterm:[Opt-Out Clusters]
 
 To create an opt-out cluster, start by allowing resources to run
 anywhere by default:
@@ -198,8 +210,8 @@ of the above opt-in configuration.
 -------
 <constraints>
     <rsc_location id="loc-1" rsc="Webserver" node="sles-1" score="200"/>
-    <rsc_location id="loc-2-dont-run" rsc="Webserver" node="sles-2" score="-INFINITY"/>
-    <rsc_location id="loc-3-dont-run" rsc="Database" node="sles-1" score="-INFINITY"/>
+    <rsc_location id="loc-2-do-not-run" rsc="Webserver" node="sles-2" score="-INFINITY"/>
+    <rsc_location id="loc-3-do-not-run" rsc="Database" node="sles-1" score="-INFINITY"/>
     <rsc_location id="loc-4" rsc="Database" node="sles-2" score="200"/>
 </constraints>
 -------
@@ -236,9 +248,8 @@ in more complex configurations.
 [[s-resource-ordering]]
 == Specifying the Order in which Resources Should Start/Stop ==
 
-indexterm:[Resource,Constraints,Ordering]
+indexterm:[Constraint,Ordering Constraint]
 indexterm:[Resource,Start Order]
-indexterm:[Ordering Constraints]
 
 'Ordering constraints' tell the cluster the order in which certain
 resource actions should occur.
@@ -255,7 +266,10 @@ alternatively, a group (see <<group-resources>>).
 
 === Ordering Properties ===
 
-.Properties of a rsc_order Constraint
+indexterm:[XML element,rsc_order element]
+indexterm:[Constraint,Ordering Constraint,rsc_order element]
+
+.Attributes of a rsc_order Element
 [width="95%",cols="1m,1,<4",options="header",align="center"]
 |=========================================================
 
@@ -266,36 +280,36 @@ alternatively, a group (see <<group-resources>>).
 |id
 |
 |A unique name for the constraint
-indexterm:[id,Ordering Constraints]
-indexterm:[Constraints,Ordering,id]
+indexterm:[XML attribute,id attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,id attribute]
 
 |first
 |
 |Name of the resource that the +then+ resource depends on
-indexterm:[first,Ordering Constraints]
-indexterm:[Constraints,Ordering,first]
+indexterm:[XML attribute,first attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,first attribute]
 
 |then
 |
 |Name of the dependent resource
-indexterm:[then,Ordering Constraints]
-indexterm:[Constraints,Ordering,then]
+indexterm:[XML attribute,then attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,then attribute]
 
 |first-action
 |start
 |The action that the +first+ resource must complete before +then-action+
  can be initiated for the +then+ resource.  Allowed values: +start+,
  +stop+, +promote+, +demote+.
- indexterm:[first-action,Ordering Constraints]
- indexterm:[Constraints,Ordering,first-action]
+indexterm:[XML attribute,first-action attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,first-action attribute]
 
 |then-action
 |value of +first-action+
 |The action that the +then+ resource can execute only after the
  +first-action+ on the +first+ resource has completed.  Allowed
  values: +start+, +stop+, +promote+, +demote+.
- indexterm:[then-action,Ordering Constraints]
- indexterm:[Constraints,Ordering,then-action]
+indexterm:[XML attribute,then-action attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,then-action attribute]
 
 |kind
 |Mandatory
@@ -315,16 +329,16 @@ a|How to enforce the constraint. Allowed values:
   be initiated. An example use case is when resource start-up puts a high load
   on the host.
 
-indexterm:[kind,Ordering Constraints]
-indexterm:[Constraints,Ordering,kind]
+indexterm:[XML attribute,kind attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,kind attribute]
 
 |symmetrical
 |TRUE for +Mandatory+ and +Optional+ kinds. FALSE for +Serialize+ kind.
 |If true, the reverse of the constraint applies for the opposite action (for
  example, if B starts after A starts, then B stops before A stops).
  +Serialize+ orders cannot be symmetrical.
-indexterm:[symmetrical,Ordering Constraints]
-indexterm:[Ordering Constraints,symmetrical]
+indexterm:[XML attribute,symmetrical attribute,rsc_order element]
+indexterm:[XML element,rsc_order element,symmetrical attribute]
 
 |=========================================================
 
@@ -356,8 +370,8 @@ if they both need to be stopped.
 [[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==
 
-indexterm:[Resource,Constraints,Colocation]
-indexterm:[Resource,Location Relative to other Resources]
+indexterm:[Constraint,Colocation Constraint]
+indexterm:[Resource,Location Relative to Other Resources]
 'Colocation constraints' tell the cluster that the location of one resource
 depends on the location of another one.
 
@@ -391,7 +405,10 @@ constraint, or alternatively, a group (see <<group-resources>>).
 
 === Colocation Properties ===
 
-.Properties of a rsc_colocation Constraint
+indexterm:[XML element,rsc_colocation element]
+indexterm:[Constraint,Colocation Constraint,rsc_colocation element]
+
+.Attributes of a rsc_colocation Constraint
 [width="95%",cols="1m,1,<4",options="header",align="center"]
 |=========================================================
 
@@ -402,37 +419,37 @@ constraint, or alternatively, a group (see <<group-resources>>).
 |id
 |
 |A unique name for the constraint (required).
- indexterm:[id,Colocation Constraints]
- indexterm:[Constraints,Colocation,id]
+indexterm:[XML attribute,id attribute,rsc_colocation element]
+indexterm:[XML element,rsc_colocation element,id attribute]
 
 |rsc
 |
 |The name of a resource that should be located relative to +with-rsc+ (required).
- indexterm:[rsc,Colocation Constraints]
- indexterm:[Constraints,Colocation,rsc]
+indexterm:[XML attribute,rsc attribute,rsc_colocation element]
+indexterm:[XML element,rsc_colocation element,rsc attribute]
 
 |with-rsc
 |
 |The name of the resource used as the colocation target. The cluster will
  decide where to put this resource first and then decide where to put +rsc+ (required).
- indexterm:[with-rsc,Colocation Constraints]
- indexterm:[Constraints,Colocation,with-rsc]
+indexterm:[XML attribute,with-rsc attribute,rsc_colocation element]
+indexterm:[XML element,rsc_colocation element,with-rsc attribute]
 
 |node-attribute
 |#uname
 |The node attribute that must be the same on the node running +rsc+ and the
  node running +with-rsc+ for the constraint to be satisfied. (For details,
  see <<s-coloc-attribute>>.)
- indexterm:[node-attribute,Colocation Constraints]
- indexterm:[Constraints,Colocation,node-attribute]
+indexterm:[XML attribute,node-attribute attribute,rsc_colocation element]
+indexterm:[XML element,rsc_colocation element,node-attribute attribute]
 
 |score
 |
 |Positive values indicate the resources should run on the same
  node. Negative values indicate the resources should run on
  different nodes. Values of \+/- +INFINITY+ change "should" to "must".
- indexterm:[score,Colocation Constraints]
- indexterm:[Constraints,Colocation,score]
+indexterm:[XML attribute,score attribute,rsc_colocation element]
+indexterm:[XML element,rsc_colocation element,score attribute]
 
 |=========================================================
 
@@ -512,6 +529,8 @@ could colocate +r2+ with +r1+ using +node-attribute+ set to +san+.
 == Resource Sets ==
 
 'Resource sets' allow multiple resources to be affected by a single constraint.
+indexterm:[Constraint,Resource Set]
+indexterm:[Resource,Resource Set]
 
 .A set of 3 resources
 ====
@@ -533,7 +552,7 @@ and +rsc_ticket+ (see <<s-ticket-constraints>>) constraints.
 A resource set has a number of properties that can be set,
 though not all have an effect in all contexts.
 
-.Properties of a resource_set
+.Attributes of a resource_set Element
 [width="95%",cols="2m,1,<5",options="header",align="center"]
 |=========================================================
 
@@ -544,15 +563,15 @@ though not all have an effect in all contexts.
 |id
 |
 |A unique name for the set
-indexterm:[id,Resource Sets]
-indexterm:[Constraints,Resource Sets,id]
+indexterm:[XML attribute,id attribute,resource_set element]
+indexterm:[XML element,resource_set element,id attribute]
 
 |sequential
 |true
 |Whether the members of the set must be acted on in order.
  Meaningful within +rsc_order+ and +rsc_colocation+.
-indexterm:[sequential,Resource Sets]
-indexterm:[Constraints,Resource Sets,sequential]
+indexterm:[XML attribute,sequential attribute,resource_set element]
+indexterm:[XML element,resource_set element,sequential attribute]
 
 |require-all
 |true
@@ -562,28 +581,28 @@ indexterm:[Constraints,Resource Sets,sequential]
  starting at the same time, the cluster will still wait until all of those have
  started before continuing (this may change in future versions).
  Meaningful within +rsc_order+.
-indexterm:[require-all,Resource Sets]
-indexterm:[Constraints,Resource Sets,require-all]
+indexterm:[XML attribute,require-all attribute,resource_set element]
+indexterm:[XML element,resource_set element,require-all attribute]
 
 |role
 |
 |Limit the effect of the constraint to the specified role.
  Meaningful within +rsc_location+, +rsc_colocation+ and +rsc_ticket+.
-indexterm:[role,Resource Sets]
-indexterm:[Constraints,Resource Sets,role]
+indexterm:[XML attribute,role attribute,resource_set element]
+indexterm:[XML element,resource_set element,role attribute]
 
 |action
 |
 |Limit the effect of the constraint to the specified action.
  Meaningful within +rsc_order+.
-indexterm:[action,Resource Sets]
-indexterm:[Constraints,Resource Sets,action]
+indexterm:[XML attribute,action attribute,resource_set element]
+indexterm:[XML element,resource_set element,action attribute]
 
 |score
 |
 |'Advanced use only.' Use a specific score for this set within the constraint.
-indexterm:[score,Resource Sets]
-indexterm:[Constraints,Resource Sets,score]
+indexterm:[XML attribute,score attribute,resource_set element]
+indexterm:[XML element,resource_set element,score attribute]
 
 |=========================================================
   

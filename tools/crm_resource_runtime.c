@@ -154,44 +154,67 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     return rc;
 }
 
-static resource_t *
-find_matching_attr_resource(resource_t * rsc, const char * rsc_id, const char * attr_set, const char * attr_id,
+/* PRIVATE. Use the find_matching_attr_resources instead. */
+static void
+find_matching_attr_resources_recursive(GList/* <resource_t*> */ ** result, resource_t * rsc, const char * rsc_id, 
+		                       const char * attr_set, const char * attr_id,
+                                       const char * attr_name, cib_t * cib, const char * cmd, int depth)
+{
+    int rc = pcmk_ok;
+    char *lookup_id = clone_strip(rsc->id);
+    char *local_attr_id = NULL;
+
+    /* visit the children */
+    for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
+        find_matching_attr_resources_recursive(result, (resource_t*)gIter->data, rsc_id, attr_set, attr_id, attr_name, cib, cmd, depth+1);
+        /* do it only once for clones */
+        if(pe_clone == rsc->variant) {
+            break;
+        }
+    }
+
+    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+    /* Post-order traversal. 
+     * The root is always on the list and it is the last item. */
+    if((0 == depth) || (pcmk_ok == rc)) {
+        /* push the head */
+        *result = g_list_append(*result, rsc);
+    }
+
+    free(local_attr_id);
+    free(lookup_id);
+}
+
+
+/* The result is a linearized pre-ordered tree of resources. */
+static GList/*<resource_t*>*/ *
+find_matching_attr_resources(resource_t * rsc, const char * rsc_id, const char * attr_set, const char * attr_id,
                             const char * attr_name, cib_t * cib, const char * cmd)
 {
     int rc = pcmk_ok;
     char *lookup_id = NULL;
     char *local_attr_id = NULL;
-
+    GList * result = NULL;
+    /* If --force is used, update only the requested resource (clone or primitive).
+     * Otherwise, if the primitive has the attribute, use that.
+     * Otherwise use the clone. */
     if(do_force == TRUE) {
-        return rsc;
+        return g_list_append(result, rsc);
+    }
+    if(rsc->parent && pe_clone == rsc->parent->variant) {
+        int rc = pcmk_ok;
+        char *local_attr_id = NULL;
+        rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+        free(local_attr_id);
 
-    } else if(rsc->parent) {
-        switch(rsc->parent->variant) {
-            case pe_group:
-                if (BE_QUIET == FALSE) {
-                    printf("Performing %s of '%s' for '%s' will not apply to its peers in '%s'\n", cmd, attr_name, rsc_id, rsc->parent->id);
-                }
-                break;
-
-            case pe_clone:
-                rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
-                free(local_attr_id);
-
-                if(rc != pcmk_ok) {
-                    rsc = rsc->parent;
-                    if (BE_QUIET == FALSE) {
-                        printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
-                    }
-                }
-                break;
-            default:
-                break;
+        if(rc != pcmk_ok) {
+            rsc = rsc->parent;
+            if (BE_QUIET == FALSE) {
+                printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
+            }
         }
-
-    } else if (rsc->parent && BE_QUIET == FALSE) {
-        printf("Forcing %s of '%s' for '%s' instead of '%s'\n", cmd, attr_name, rsc_id, rsc->parent->id);
-
-    } else if(rsc->parent == NULL && rsc->children) {
+        return g_list_append(result, rsc);
+    } else if(rsc->parent == NULL && rsc->children && pe_clone == rsc->variant) {
         resource_t *child = rsc->children->data;
 
         if(child->variant == pe_native) {
@@ -208,9 +231,11 @@ find_matching_attr_resource(resource_t * rsc, const char * rsc_id, const char * 
             free(local_attr_id);
             free(lookup_id);
         }
+        return g_list_append(result, rsc);
     }
-
-    return rsc;
+    /* If the resource is a group ==> children inherit the attribute if defined. */
+    find_matching_attr_resources_recursive(&result, rsc, rsc_id, attr_set, attr_id, attr_name, cib, cmd, 0);
+    return result;
 }
 
 int
@@ -223,12 +248,11 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
     int rc = pcmk_ok;
     static bool need_init = TRUE;
 
-    char *lookup_id = NULL;
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
 
-    xmlNode *xml_top = NULL;
-    xmlNode *xml_obj = NULL;
+    GList/*<resource_t*>*/ *resources = NULL;
+    const char *common_attr_id = attr_id;
 
     if(attr_id == NULL
        && do_force == FALSE
@@ -253,97 +277,115 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
                 return -ENOTUNIQ;
             }
         }
+        resources = g_list_append(resources, rsc);
 
     } else {
-        rsc = find_matching_attr_resource(rsc, requested_name, attr_set,
-                                          attr_id, attr_name, cib, "update");
+        resources = find_matching_attr_resources(rsc, requested_name, attr_set,
+                                                 attr_id, attr_name, cib, "update");
     }
 
-    lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
-    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
-                            &local_attr_id);
+    /* If either attr_set or attr_id is specified,
+     * one clearly intends to modify a single resource.
+     * It is the last item on the resource list.*/
+    for(GList *gIter = (attr_set||attr_id) ? g_list_last(resources) : resources
+            ; gIter; gIter = gIter->next) {
+        char *lookup_id = NULL;
 
-    if (rc == pcmk_ok) {
-        crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
-        attr_id = local_attr_id;
+        xmlNode *xml_top = NULL;
+        xmlNode *xml_obj = NULL;
+        local_attr_id = NULL;
+        local_attr_set = NULL;
 
-    } else if (rc != -ENXIO) {
+        rsc = (resource_t*)gIter->data;
+        attr_id = common_attr_id;
+
+        lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
+        rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
+                                &local_attr_id);
+
+        if (rc == pcmk_ok) {
+            crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
+            attr_id = local_attr_id;
+
+        } else if (rc != -ENXIO) {
+            free(lookup_id);
+            free(local_attr_id);
+            g_list_free(resources);
+            return rc;
+
+        } else {
+            const char *tag = crm_element_name(rsc->xml);
+
+            if (attr_set == NULL) {
+                local_attr_set = crm_concat(lookup_id, attr_set_type, '-');
+                attr_set = local_attr_set;
+            }
+            if (attr_id == NULL) {
+                local_attr_id = crm_concat(attr_set, attr_name, '-');
+                attr_id = local_attr_id;
+            }
+
+            xml_top = create_xml_node(NULL, tag);
+            crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
+
+            xml_obj = create_xml_node(xml_top, attr_set_type);
+            crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
+        }
+
+        xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
+        if (xml_top == NULL) {
+            xml_top = xml_obj;
+        }
+
+        crm_log_xml_debug(xml_top, "Update");
+
+        rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
+        if (rc == pcmk_ok && BE_QUIET == FALSE) {
+            printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
+                   attr_set ? " set=" : "", attr_set ? attr_set : "",
+                   attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
+        }
+
+        free_xml(xml_top);
+
         free(lookup_id);
         free(local_attr_id);
-        return rc;
+        free(local_attr_set);
 
-    } else {
-        const char *tag = crm_element_name(rsc->xml);
+        if(recursive && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+            GListPtr lpc = NULL;
 
-        if (attr_set == NULL) {
-            local_attr_set = crm_concat(lookup_id, attr_set_type, '-');
-            attr_set = local_attr_set;
-        }
-        if (attr_id == NULL) {
-            local_attr_id = crm_concat(attr_set, attr_name, '-');
-            attr_id = local_attr_id;
-        }
+            if(need_init) {
+                xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
-        xml_top = create_xml_node(NULL, tag);
-        crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
+                need_init = FALSE;
+                unpack_constraints(cib_constraints, data_set);
 
-        xml_obj = create_xml_node(xml_top, attr_set_type);
-        crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
-    }
+                for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
+                    resource_t *r = (resource_t *) lpc->data;
 
-    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
-    if (xml_top == NULL) {
-        xml_top = xml_obj;
-    }
-
-    crm_log_xml_debug(xml_top, "Update");
-
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
-    if (rc == pcmk_ok && BE_QUIET == FALSE) {
-        printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
-               attr_set ? " set=" : "", attr_set ? attr_set : "",
-               attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
-    }
-
-    free_xml(xml_top);
-
-    free(lookup_id);
-    free(local_attr_id);
-    free(local_attr_set);
-
-    if(recursive && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-        GListPtr lpc = NULL;
-
-        if(need_init) {
-            xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
-            need_init = FALSE;
-            unpack_constraints(cib_constraints, data_set);
-
-            for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-                resource_t *r = (resource_t *) lpc->data;
-
-                clear_bit(r->flags, pe_rsc_allocating);
+                    clear_bit(r->flags, pe_rsc_allocating);
+                }
             }
-        }
 
-        crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
-        set_bit(rsc->flags, pe_rsc_allocating);
-        for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
-            rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
-            resource_t *peer = cons->rsc_lh;
+            crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
+            set_bit(rsc->flags, pe_rsc_allocating);
+            for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+                rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+                resource_t *peer = cons->rsc_lh;
 
-            crm_debug("Checking %s %d", cons->id, cons->score);
-            if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
-                /* Don't get into colocation loops */
-                crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
-                cli_resource_update_attribute(peer, peer->id, NULL, NULL,
-                                              attr_name, attr_value, recursive,
-                                              cib, data_set);
+                crm_debug("Checking %s %d", cons->id, cons->score);
+                if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
+                    /* Don't get into colocation loops */
+                    crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
+                    cli_resource_update_attribute(peer, peer->id, NULL, NULL,
+                                                  attr_name, attr_value, recursive,
+                                                  cib, data_set);
+                }
             }
         }
     }
-
+    g_list_free(resources);
     return rc;
 }
 
@@ -353,11 +395,8 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
                               const char *attr_name, cib_t *cib,
                               pe_working_set_t *data_set)
 {
-    xmlNode *xml_obj = NULL;
-
     int rc = pcmk_ok;
-    char *lookup_id = NULL;
-    char *local_attr_id = NULL;
+    GList/*<resource_t*>*/ *resources = NULL;
 
     if(attr_id == NULL
        && do_force == FALSE
@@ -367,42 +406,55 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
     }
 
     if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-        rsc = find_matching_attr_resource(rsc, requested_name, attr_set,
-                                          attr_id, attr_name, cib, "delete");
+        resources = find_matching_attr_resources(rsc, requested_name, attr_set,
+                                                 attr_id, attr_name, cib, "delete");
+    } else {
+        resources = g_list_append(resources, rsc);
     }
 
-    lookup_id = clone_strip(rsc->id);
-    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
-                            &local_attr_id);
+    for(GList *gIter = resources; gIter; gIter = gIter->next) {
+        char *lookup_id = NULL;
+        xmlNode *xml_obj = NULL;
+        char *local_attr_id = NULL;
 
-    if (rc == -ENXIO) {
+        rsc = (resource_t*)gIter->data;
+
+        lookup_id = clone_strip(rsc->id);
+        rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
+                                &local_attr_id);
+
+        if (rc == -ENXIO) {
+            free(lookup_id);
+            rc = pcmk_ok;
+            continue;
+
+        } else if (rc != pcmk_ok) {
+            free(lookup_id);
+            g_list_free(resources);
+            return rc;
+        }
+
+        if (attr_id == NULL) {
+            attr_id = local_attr_id;
+        }
+
+        xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
+        crm_log_xml_debug(xml_obj, "Delete");
+
+        CRM_ASSERT(cib);
+        rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
+
+        if (rc == pcmk_ok && BE_QUIET == FALSE) {
+            printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
+                   attr_set ? " set=" : "", attr_set ? attr_set : "",
+                   attr_name ? " name=" : "", attr_name ? attr_name : "");
+        }
+
         free(lookup_id);
-        return pcmk_ok;
-
-    } else if (rc != pcmk_ok) {
-        free(lookup_id);
-        return rc;
+        free_xml(xml_obj);
+        free(local_attr_id);
     }
-
-    if (attr_id == NULL) {
-        attr_id = local_attr_id;
-    }
-
-    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
-    crm_log_xml_debug(xml_obj, "Delete");
-
-    CRM_ASSERT(cib);
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
-
-    if (rc == pcmk_ok && BE_QUIET == FALSE) {
-        printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
-               attr_set ? " set=" : "", attr_set ? attr_set : "",
-               attr_name ? " name=" : "", attr_name ? attr_name : "");
-    }
-
-    free(lookup_id);
-    free_xml(xml_obj);
-    free(local_attr_id);
+    g_list_free(resources);
     return rc;
 }
 

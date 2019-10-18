@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ bl460g1n13 bl460g1n14 ]
 
  Resource Group: grpDRBD
-     dummy01	(ocf::pacemaker:Dummy):	FAILED bl460g1n13 
+     dummy01	(ocf::pacemaker:Dummy):	FAILED bl460g1n13
      dummy02	(ocf::pacemaker:Dummy):	Started bl460g1n13
-     dummy03	(ocf::pacemaker:Dummy):	Stopped 
+     dummy03	(ocf::pacemaker:Dummy):	Stopped
  Clone Set: msDRBD [prmDRBD] (promotable)
      Masters: [ bl460g1n13 ]
      Slaves: [ bl460g1n14 ]
@@ -13,9 +13,9 @@ Online: [ bl460g1n13 bl460g1n14 ]
 Transition Summary:
  * Recover    dummy01     (   bl460g1n13 -> bl460g1n14 )  
  * Move       dummy02     (   bl460g1n13 -> bl460g1n14 )  
- * Start   dummy03	(bl460g1n14)
- * Demote  prmDRBD:0	(Master -> Slave bl460g1n13)
- * Promote prmDRBD:1	(Slave -> Master bl460g1n14)
+ * Start      dummy03     (                 bl460g1n14 )  
+ * Demote     prmDRBD:0   ( Master -> Slave bl460g1n13 )  
+ * Promote    prmDRBD:1   ( Slave -> Master bl460g1n14 )  
 
 Executing cluster transition:
  * Pseudo action:   grpDRBD_stop_0

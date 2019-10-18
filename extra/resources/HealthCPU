@@ -1,40 +1,43 @@
 #!/bin/sh
 #
-# HealthCPU OCF RA
-# Measures CPUs idling and writes #health-cpu status into the CIB
+# ocf:pacemaker:HealthCPU resource agent
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.
 #
+
+#
+# Measures CPUs idling and writes #health-cpu status into the CIB
+#
 ################################
 #
-#	TODO: Enter default values
-#		Error handling in getting uptime
+# TODO: Enter default values
+#       Error handling in getting uptime
 #
 ##################################
 
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
 meta_data() {
-	cat <<END
+    cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="HealthCPU" version="0.1">
 <version>1.0</version>
 
 <longdesc lang="en">
-Systhem health agent that measures the CPU idling and updates the #health-cpu attribute.
+System health agent that measures the CPU idling and updates the #health-cpu attribute.
 </longdesc>
 <shortdesc lang="en">System health CPU usage</shortdesc>
 
@@ -80,118 +83,106 @@ END
 
 #######################################################################
 
-dummy_usage() {
-	cat <<END
+healthcpu_usage() {
+    cat <<END
 usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
 }
 
-dummy_start() {
-    dummy_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
-	return $OCF_SUCCESS
+healthcpu_start() {
+    healthcpu_monitor
+    if [ $? -eq $OCF_SUCCESS ]; then
+        return $OCF_SUCCESS
     fi
-    touch ${OCF_RESKEY_state}
+    touch "${OCF_RESKEY_state}"
 }
 
-dummy_stop() {
-    dummy_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
-	rm ${OCF_RESKEY_state}
+healthcpu_stop() {
+    healthcpu_monitor
+    if [ $? -eq $OCF_SUCCESS ]; then
+        rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
 }
 
-dummy_monitor() {
-	# Monitor _MUST!_ differentiate correctly between running
-	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
-	# That is THREE states, not just yes/no.
-	
-	if [ -f ${OCF_RESKEY_state} ]; then
+healthcpu_monitor() {
+    if [ -f "${OCF_RESKEY_state}" ]; then
 
-	  IDLE=`top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }'`
-	  # echo "System idle: " $IDLE
-	  # echo "$OCF_RESKEY_red_limit"
-	  # echo $OCF_RESKEY_yellow_limit
+        IDLE=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }')
+        # echo "System idle: " $IDLE
+        # echo "$OCF_RESKEY_red_limit"
+        # echo $OCF_RESKEY_yellow_limit
 
-	  if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
-	    # echo "System state RED!"
-	    attrd_updater -n "#health-cpu" -U "red" -d "30s"
-	    return $OCF_SUCCESS
-          fi
-
-	  if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
-	    # echo "System state yellow."
-            attrd_updater -n "#health-cpu" -U "yellow" -d "30s"
-	  else
-	    # echo "System state green."
-	    attrd_updater -n "#health-cpu" -U "green" -d "30s"
-
-          fi
-	
-	  return $OCF_SUCCESS
-	fi
-
-	if false ; then
-                return $OCF_ERR_GENERIC
+        if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
+            # echo "System state RED!"
+            attrd_updater -n "#health-cpu" -U "red" -d "30s"
+            return $OCF_SUCCESS
         fi
-        return $OCF_NOT_RUNNING
 
+        if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
+            # echo "System state yellow."
+            attrd_updater -n "#health-cpu" -U "yellow" -d "30s"
+        else
+            # echo "System state green."
+            attrd_updater -n "#health-cpu" -U "green" -d "30s"
+        fi
+
+        return $OCF_SUCCESS
+    fi
+
+    return $OCF_NOT_RUNNING
 }
 
-dummy_validate() {
-    
-    # Is the state directory writable? 
-    state_dir=`dirname "$OCF_RESKEY_state"`
-    touch "$state_dir/$$"
-    if [ $? != 0 ]; then
-	return $OCF_ERR_ARGS
+healthcpu_validate() {
+    # Is the state directory writable?
+    state_dir=$(dirname "$OCF_RESKEY_state")
+    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_ARGS
     fi
-    rm "$state_dir/$$"
-
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
-if [ "x$OCF_RESKEY_state" = "x" ]; then
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
-	state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
-	
-	# Strip off the trailing clone marker
-	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
-    else 
-	OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+if [ -z "$OCF_RESKEY_state" ]; then
+    state="${HA_VARRUN%%/}/HealthCPU-${OCF_RESOURCE_INSTANCE}.state"
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
+        # Strip off the trailing clone marker
+        OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
+    else
+        OCF_RESKEY_state="$state"
     fi
 fi
 
-if [ "x${OCF_RESKEY_red_limit}" = "x" ] ; then
-  OCF_RESKEY_red_limit=10
+if [ -z "${OCF_RESKEY_red_limit}" ] ; then
+    OCF_RESKEY_red_limit=10
 fi
 
-if [ "x${OCF_RESKEY_yellow_limit}" = "x" ] ; then
-  OCF_RESKEY_yellow_limit=50
+if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
+    OCF_RESKEY_yellow_limit=50
 fi
 
-case $__OCF_ACTION in
-meta-data)	meta_data
-		exit $OCF_SUCCESS
-		;;
-start)		dummy_start;;
-stop)		dummy_stop;;
-monitor)	dummy_monitor;;
-validate-all)	dummy_validate;;
-usage|help)	dummy_usage
-		exit $OCF_SUCCESS
-		;;
-*)		dummy_usage
-		exit $OCF_ERR_UNIMPLEMENTED
-		;;
+case "$__OCF_ACTION" in
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          healthcpu_start;;
+stop)           healthcpu_stop;;
+monitor)        healthcpu_monitor;;
+validate-all)   healthcpu_validate;;
+usage|help)     healthcpu_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              healthcpu_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
 esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
 exit $rc
 
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

@@ -10,7 +10,7 @@ Online: [ box1 box2 ]
      sship	(ocf::heartbeat:IPaddr2):	Started box2
 
 Transition Summary:
- * Promote conntrackd-stateful:1	(Slave -> Master box2)
+ * Promote    conntrackd-stateful:1     ( Slave -> Master box2 )  
 
 Executing cluster transition:
  * Resource action: conntrackd-stateful:0 monitor=29000 on box1

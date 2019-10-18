@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -9,7 +11,7 @@ include $(top_srcdir)/Makefile.common
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 
-libcrmcluster_la_LDFLAGS = -version-info 29:2:0
+libcrmcluster_la_LDFLAGS = -version-info 29:3:0
 
 libcrmcluster_la_CFLAGS  = $(CFLAGS_HARDENED_LIB)
 libcrmcluster_la_LDFLAGS += $(LDFLAGS_HARDENED_LIB)

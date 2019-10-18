@@ -1,17 +1,15 @@
 sub=pe_rules
-prefix=@prefix@
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-build=@BUILD_VERSION@
-
-Name:         @PACKAGE_NAME@-${sub}
-URL:	      @PACKAGE_URL@
-Version:      @PACKAGE_VERSION@
-Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
-Requires:     
-Conflicts:    
-Cflags:       -I${includedir}
-Libs:         -L${libdir} -l${sub}
+Name:             lib${sub}
+URL:              @PACKAGE_URL@
+Version:          @PACKAGE_VERSION@
+Description:      Scheduler rule APIs for Pacemaker
+# pe_rules isn't very useful without glib hash table API
+Requires:         pacemaker glib-2.0
+Requires.private: libxml-2.0
+Conflicts:
+Cflags:           -I${includedir}
+Libs:             -L${libdir} -l${sub}
 Libs.private:
-

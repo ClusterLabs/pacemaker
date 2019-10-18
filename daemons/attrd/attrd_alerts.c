@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -13,7 +15,7 @@
 #include <crm/cluster/election.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/pengine/rules_internal.h>
-#include <crm/lrmd_alerts_internal.h>
+#include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
 
 static GListPtr attrd_alert_list = NULL;

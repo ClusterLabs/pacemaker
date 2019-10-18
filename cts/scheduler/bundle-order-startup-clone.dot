@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "galera-bundle-0_monitor_0 metal-1" -> "galera-bundle-0_start_0 metal-1" [ style = dashed]
 "galera-bundle-0_monitor_0 metal-1" [ style=dashed color="red" fontcolor="black"]
 "galera-bundle-0_monitor_0 metal-2" -> "galera-bundle-0_start_0 metal-1" [ style = dashed]

@@ -1,17 +1,16 @@
 sub=pe_status
-prefix=@prefix@
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-build=@BUILD_VERSION@
+penginedir=@PE_STATE_DIR@
 
-Name:         @PACKAGE_NAME@-${sub}
-URL:	      @PACKAGE_URL@
-Version:      @PACKAGE_VERSION@
-Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
-Requires:     
-Conflicts:    
-Cflags:       -I${includedir}
-Libs:         -L${libdir} -l${sub}
-Libs.private:
-
+Name:             lib${sub}
+URL:              @PACKAGE_URL@
+Version:          @PACKAGE_VERSION@
+Description:      Scheduler APIs for Pacemaker
+Requires:         pacemaker
+Requires.private: glib-2.0 libxml-2.0 @PC_NAME_CURSES@
+Conflicts:
+Cflags:           -I${includedir}
+Libs:             -L${libdir} -l${sub}
+Libs.private:     @PC_LIBS_CURSES@

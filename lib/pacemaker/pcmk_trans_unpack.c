@@ -1,30 +1,21 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <sys/stat.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-
 #include <crm/common/xml.h>
-#include <crm/transition.h>
-#include <sys/stat.h>
+#include <pacemaker-internal.h>
 
 CRM_TRACE_INIT_DATA(transitioner);
 
@@ -190,9 +181,8 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
     new_graph->id = -1;
     new_graph->abort_priority = 0;
-    new_graph->network_delay = -1;
-    new_graph->transition_timeout = -1;
-    new_graph->stonith_timeout = -1;
+    new_graph->network_delay = 0;
+    new_graph->stonith_timeout = 0;
     new_graph->completion_action = tg_done;
 
     if (reference) {
@@ -210,13 +200,13 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         time = crm_element_value(xml_graph, "cluster-delay");
         CRM_CHECK(time != NULL, free(new_graph);
                   return NULL);
-        new_graph->network_delay = crm_get_msec(time);
+        new_graph->network_delay = crm_parse_interval_spec(time);
 
         time = crm_element_value(xml_graph, "stonith-timeout");
         if (time == NULL) {
             new_graph->stonith_timeout = new_graph->network_delay;
         } else {
-            new_graph->stonith_timeout = crm_get_msec(time);
+            new_graph->stonith_timeout = crm_parse_interval_spec(time);
         }
 
         t_id = crm_element_value(xml_graph, "batch-limit");

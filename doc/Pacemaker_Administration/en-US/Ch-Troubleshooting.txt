@@ -48,7 +48,7 @@ Nov 30 20:28:16 rhel7-1 pacemaker-schedulerd[36417] (process_pe_message)        
 The file listed as the "inputs" is a snapshot of the cluster configuration and
 state at that moment (the CIB). This file can help determine why particular
 actions were scheduled. The `crm_simulate` command, described in
-<<s-config-testing-changes>>, can be used to replay the file.
+<<s-crm_simulate>>, can be used to replay the file.
 
 == Further Information About Troubleshooting ==
 

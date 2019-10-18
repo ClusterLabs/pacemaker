@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "baseclone_stop_0" -> "baseclone_stopped_0" [ style = bold]
 "baseclone_stop_0" -> "basegrp:0_stop_0" [ style = bold]
 "baseclone_stop_0" [ style=bold color="green" fontcolor="orange"]

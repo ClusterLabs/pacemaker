@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "AdminClone_confirmed-post_notify_promoted_0" -> "AdminDrbd:0_monitor_59000 hypatia-corosync.nevis.columbia.edu" [ style = bold]
 "AdminClone_confirmed-post_notify_promoted_0" -> "AdminDrbd:1_monitor_59000 orestes-corosync.nevis.columbia.edu" [ style = bold]
 "AdminClone_confirmed-post_notify_promoted_0" -> "FilesystemClone_start_0" [ style = bold]

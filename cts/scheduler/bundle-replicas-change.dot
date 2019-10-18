@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "httpd-bundle-0_monitor_30000 rh74-test" [ style=bold color="green" fontcolor="black"]
 "httpd-bundle-0_start_0 rh74-test" -> "httpd-bundle-0_monitor_30000 rh74-test" [ style = bold]
 "httpd-bundle-0_start_0 rh74-test" -> "httpd:0_monitor_0 httpd-bundle-0" [ style = bold]

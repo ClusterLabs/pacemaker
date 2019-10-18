@@ -20,13 +20,9 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/election.h>
-
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_fsa.h>
-#include <controld_transition.h>
 #include <controld_matrix.h>
 
 char *fsa_our_dc = NULL;
@@ -37,14 +33,6 @@ char *fsa_our_uuid = NULL;
 char *fsa_our_uname = NULL;
 
 char *fsa_cluster_name = NULL;
-
-fsa_timer_t *wait_timer = NULL;        // How long to wait before retrying a cib or executor connection
-fsa_timer_t *recheck_timer = NULL;     // Periodically re-run scheduler to handle time-based actions
-fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
-fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
-fsa_timer_t *integration_timer = NULL;
-fsa_timer_t *finalization_timer = NULL;
-fsa_timer_t *shutdown_escalation_timer = NULL; /* How long to wait for the DC to stop all resources and give us the all-clear to shut down */
 
 gboolean do_fsa_stall = FALSE;
 long long fsa_input_register = 0;
@@ -537,7 +525,7 @@ do_state_transition(long long actions,
         highest_born_on = 0;
     }
     if (next_state != S_IDLE) {
-        crm_timer_stop(recheck_timer);
+        controld_stop_timer(recheck_timer);
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
@@ -635,10 +623,7 @@ do_state_transition(long long actions,
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
                 set_bit(tmp, A_SHUTDOWN_REQ);
             }
-            if (recheck_timer->period_ms > 0) {
-                crm_debug("Starting %s", get_timer_desc(recheck_timer));
-                crm_timer_start(recheck_timer);
-            }
+            controld_start_recheck_timer();
             break;
 
         default:

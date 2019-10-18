@@ -9,11 +9,11 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_HEADERS	        = pcmki_error.h \
-						  pcmki_sched_allocate.h \
-						  pcmki_sched_notif.h \
-						  pcmki_sched_transition.h \
-						  pcmki_sched_utils.h \
-						  pcmki_scheduler.h
+noinst_HEADERS		= pcmki_error.h \
+			  pcmki_sched_allocate.h \
+			  pcmki_sched_notif.h \
+			  pcmki_sched_utils.h \
+			  pcmki_scheduler.h \
+			  pcmki_transition.h
 
 .PHONY: $(ARCHIVE_VERSION)

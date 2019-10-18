@@ -13,7 +13,7 @@
 		simple textual changes (corrections, translations, etc.).
 	-->
 	<edition>7</edition>
-	<pubsnumber>2</pubsnumber>
+	<pubsnumber>3</pubsnumber>
 	<abstract>
 		<para>
 			The document exists as both a reference and deployment guide for the Pacemaker Remote service.

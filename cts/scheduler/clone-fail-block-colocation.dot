@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "d_bird_subnet_state_monitor_10000 DEM-2" [ style=bold color="green" fontcolor="black"]
 "d_bird_subnet_state_start_0 DEM-2" -> "d_bird_subnet_state_monitor_10000 DEM-2" [ style = bold]
 "d_bird_subnet_state_start_0 DEM-2" -> "ip_mgmt_start_0 DEM-2" [ style = bold]

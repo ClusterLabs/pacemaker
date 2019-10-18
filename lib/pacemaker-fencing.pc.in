@@ -1,17 +1,14 @@
-sub=fencing
-prefix=@prefix@
+sub=stonithd
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-build=@BUILD_VERSION@
-
-Name:         @PACKAGE_NAME@-${sub}
-URL:	      @PACKAGE_URL@
-Version:      @PACKAGE_VERSION@
-Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
-Requires:     
-Conflicts:    
-Cflags:       -I${includedir}
-Libs:         -L${libdir} -lstonithd
+Name:             lib${sub}
+URL:              @PACKAGE_URL@
+Version:          @PACKAGE_VERSION@
+Description:      Fencing APIs for Pacemaker
+Requires:         pacemaker-service pacemaker
+Requires.private: glib-2.0 libxml-2.0
+Conflicts:
+Cflags:           -I${includedir}
+Libs:             -L${libdir} -l${sub}
 Libs.private:
-

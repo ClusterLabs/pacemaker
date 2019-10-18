@@ -28,6 +28,15 @@ project's existence, especially the many users who participate in the mailing
 lists, blog about HA clustering, and otherwise actively make the project more
 useful.
 
+## Where do I get Pacemaker?
+
+Pacemaker source code is distributed via
+[Github](https://github.com/ClusterLabs/pacemaker).
+
+From there, you can clone or download the repository to get the latest
+development code, or download one of the official
+[releases](https://github.com/ClusterLabs/pacemaker/releases).
+
 ## How do I install Pacemaker?
 
 See [INSTALL.md](https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md).

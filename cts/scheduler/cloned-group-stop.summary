@@ -3,11 +3,11 @@
 Current cluster status:
 Online: [ rhos4-node3 rhos4-node4 ]
 
- virt-fencing	(stonith:fence_xvm):	Started rhos4-node3 
+ virt-fencing	(stonith:fence_xvm):	Started rhos4-node3
  Resource Group: mysql-group
-     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3 
-     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3 
-     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3 
+     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3
+     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3
+     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3
  Clone Set: qpidd-clone [qpidd]
      Started: [ rhos4-node3 rhos4-node4 ]
  Clone Set: keystone-clone [keystone]
@@ -18,8 +18,8 @@ Online: [ rhos4-node3 rhos4-node4 ]
      Started: [ rhos4-node3 rhos4-node4 ]
 
 Transition Summary:
- * Stop    qpidd:0	(rhos4-node4)  	due to node availability
- * Stop    qpidd:1	(rhos4-node3)  	due to node availability
+ * Stop       qpidd:0               ( rhos4-node4 )   due to node availability
+ * Stop       qpidd:1               ( rhos4-node3 )   due to node availability
  * Stop       keystone:0            ( rhos4-node4 )   due to unrunnable qpidd-clone running
  * Stop       keystone:1            ( rhos4-node3 )   due to unrunnable qpidd-clone running
  * Stop       glance-fs:0           ( rhos4-node4 )   due to required keystone-clone running
@@ -72,11 +72,11 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ rhos4-node3 rhos4-node4 ]
 
- virt-fencing	(stonith:fence_xvm):	Started rhos4-node3 
+ virt-fencing	(stonith:fence_xvm):	Started rhos4-node3
  Resource Group: mysql-group
-     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3 
-     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3 
-     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3 
+     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3
+     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3
+     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3
  Clone Set: qpidd-clone [qpidd]
      Stopped (disabled): [ rhos4-node3 rhos4-node4 ]
  Clone Set: keystone-clone [keystone]

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "clvmd-clone_running_0" [ style=bold color="green" fontcolor="orange"]
 "clvmd-clone_start_0" -> "clvmd-clone_running_0" [ style = bold]
 "clvmd-clone_start_0" -> "clvmd:1_start_0 virt-2" [ style = bold]

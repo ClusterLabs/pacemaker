@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -8,22 +10,15 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
-#include <crm/crm.h>
 #include <string.h>
-#include <controld_fsa.h>
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster.h>
 #include <crm/cib.h>
 
 #include <pacemaker-controld.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_transition.h>
-#include <controld_membership.h>
 
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
@@ -210,7 +205,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if(AM_I_DC) {
                 if (appeared) {
-                    te_trigger_stonith_history_sync();
+                    te_trigger_stonith_history_sync(FALSE);
                 } else {
                     erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 }
@@ -227,7 +222,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         crm_trace("Alive=%d, appeared=%d, down=%d",
                   alive, appeared, (down? down->id : -1));
 
-        if (appeared && (alive > 0)) {
+        if (appeared && (alive > 0) && !is_remote) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 

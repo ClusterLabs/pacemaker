@@ -22,23 +22,12 @@ extern "C" {
 #  include <stdbool.h>
 #  include <stdio.h>
 #  include <libxml/tree.h>
+#  include <libxml/HTMLtree.h>
 
 #  include <glib.h>
 #  include <crm/common/results.h>
 
-#  define PCMK__API_VERSION "1.0"
-
-/* Add to the long_options block in each tool to get the formatted output
- * command line options added.  Then call pcmk__parse_output_args to handle
- * them.
- */
-#  define PCMK__OUTPUT_OPTIONS(fmts) \
-    {   "output-as", required_argument, NULL, 0, \
-        "Specify the format for output, one of: " fmts \
-    }, \
-    {   "output-to", required_argument, NULL, 0, \
-        "Specify the destination for formatted output, \"-\" for stdout or a filename" \
-    }
+#  define PCMK__API_VERSION "2.0"
 
 typedef struct pcmk__output_s pcmk__output_t;
 
@@ -107,11 +96,48 @@ typedef struct pcmk__message_entry_s {
     pcmk__message_fn_t fn;
 } pcmk__message_entry_t;
 
-/* Basic formatters everything supports.  This block needs to be updated every
- * time a new base formatter is added.
+/*!
+ * \internal
+ * \brief This structure contains everything needed to add support for a
+ *        single output formatter to a command line program.
  */
+typedef struct pcmk__supported_format_s {
+    /*!
+     * \brief The name of this output formatter, which should match the
+     *        fmt_name parameter in some ::pcmk__output_t structure.
+     */
+    const char *name;
+
+    /*!
+     * \brief A function that creates a ::pcmk__output_t.
+     */
+    pcmk__output_factory_t create;
+
+    /*!
+     * \brief Format-specific command line options.  This can be NULL if
+     *        no command line options should be supported.
+     */
+    GOptionEntry *options;
+} pcmk__supported_format_t;
+
+/* The following three blocks need to be updated each time a new base formatter
+ * is added.
+ */
+
+extern GOptionEntry pcmk__html_output_entries[];
+extern GOptionEntry pcmk__none_output_entries[];
+extern GOptionEntry pcmk__text_output_entries[];
+extern GOptionEntry pcmk__xml_output_entries[];
+
+pcmk__output_t *pcmk__mk_html_output(char **argv);
+pcmk__output_t *pcmk__mk_none_output(char **argv);
 pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
+
+#define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
+#define PCMK__SUPPORTED_FORMAT_NONE { "none", pcmk__mk_none_output, pcmk__none_output_entries }
+#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
+#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
 
 /*!
  * \brief This structure contains everything that makes up a single output
@@ -125,7 +151,7 @@ struct pcmk__output_s {
     /*!
      * \brief The name of this output formatter.
      */
-    char *fmt_name;
+    const char *fmt_name;
 
     /*!
      * \brief A copy of the request that generated this output.
@@ -201,17 +227,37 @@ struct pcmk__output_s {
      * \brief Take whatever actions are necessary to end formatted output.
      *
      * This could include flushing output to a file, but does not include freeing
-     * anything.  Note that pcmk__output_free() will automatically call this
-     * function, so there is typically no need to do so manually.
+     * anything.  The finish method can potentially be fairly complicated, adding
+     * additional information to the internal data structures or doing whatever
+     * else.  It is therefore suggested that finish only be called once.
      *
-     * \note For formatted output implementers - This function should be written in
-     *       such a way that it can be called repeatedly on a previously finished
-     *       object without crashing.
+     * \note The print parameter will only affect those formatters that do all
+     *       their output at the end.  Console-oriented formatters typically print
+     *       a line at a time as they go, so this parameter will not affect them.
+     *       Structured formatters will honor it, however.
+     *
+     * \note The copy_dest parameter does not apply to all formatters.  Console-
+     *       oriented formatters do not build up a structure as they go, and thus
+     *       do not have anything to return.  Structured formatters will honor it,
+     *       however.  Note that each type of formatter will return a different
+     *       type of value in this parameter.  To use this parameter, call this
+     *       function like so:
+     *
+     * \code
+     * xmlNode *dest = NULL;
+     * out->finish(out, exit_code, false, (void **) &dest);
+     * \endcode
      *
      * \param[in,out] out         The output functions structure.
      * \param[in]     exit_status The exit value of the whole program.
+     * \param[in]     print       Whether this function should write any output.
+     * \param[out]    copy_dest   A destination to store a copy of the internal
+     *                            data structure for this output, or NULL if no
+     *                            copy is required.  The caller should free this
+     *                            memory when done with it.
      */
-    void (*finish) (pcmk__output_t *out, crm_exit_t exit_status);
+    void (*finish) (pcmk__output_t *out, crm_exit_t exit_status, bool print,
+                    void **copy_dest);
 
     /*!
      * \internal
@@ -275,6 +321,16 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Format version information.  This is useful for the --version
+     *        argument of command line tools.
+     *
+     * \param[in,out] out      The output functions structure.
+     * \param[in]     extended Add additional version information.
+     */
+    void (*version) (pcmk__output_t *out, bool extended);
+
+    /*!
+     * \internal
      * \brief Format an informational message that should be shown to
      *        to an interactive user.  Not all formatters will do this.
      *
@@ -286,6 +342,20 @@ struct pcmk__output_s {
      * \param[in]     ... Arguments to be formatted.
      */
     void (*info) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+    /*!
+     * \internal
+     * \brief Format an error message that should be shown to an interactive
+     *        user.  Not all formatters will do this.
+     *
+     * \note A newline will automatically be added to the end of the format
+     *       string, so callers should not include a newline.
+     *
+     * \param[in,out] out The output functions structure.
+     * \param[in]     buf The message to be printed.
+     * \param[in]     ... Arguments to be formatted.
+     */
+    void (*err) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
     /*!
      * \internal
@@ -309,14 +379,16 @@ struct pcmk__output_s {
      *       result in a summary being added.
      *
      * \param[in,out] out           The output functions structure.
-     * \param[in]     name          A descriptive, user-facing name for this list.
      * \param[in]     singular_noun When outputting the summary for a list with
      *                              one item, the noun to use.
      * \param[in]     plural_noun   When outputting the summary for a list with
      *                              more than one item, the noun to use.
+     * \param[in]     format        The format string.
+     * \param[in]     ...           Arguments to be formatted.
      */
-    void (*begin_list) (pcmk__output_t *out, const char *name,
-                        const char *singular_noun, const char *plural_noun);
+    void (*begin_list) (pcmk__output_t *out, const char *singular_noun,
+                        const char *plural_noun, const char *format, ...)
+                        G_GNUC_PRINTF(4, 5);
 
     /*!
      * \internal
@@ -324,9 +396,25 @@ struct pcmk__output_s {
      *
      * \param[in,out] out     The output functions structure.
      * \param[in]     name    A name to associate with this item.
-     * \param[in]     content The item to be formatted.
+     * \param[in]     format  The format string.
+     * \param[in]     ...     Arguments to be formatted.
      */
-    void (*list_item) (pcmk__output_t *out, const char *name, const char *content);
+    void (*list_item) (pcmk__output_t *out, const char *name, const char *format, ...)
+                      G_GNUC_PRINTF(3, 4);
+
+    /*!
+     * \internal
+     * \brief Increment the internal counter of the current list's length.
+     *
+     * Typically, this counter is maintained behind the scenes as a side effect
+     * of calling list_item().  However, custom functions that maintain lists
+     * some other way will need to manage this counter manually.  This is
+     * useful for implementing custom message functions and should not be
+     * needed otherwise.
+     *
+     * \param[in,out] out The output functions structure.
+     */
+    void (*increment_list) (pcmk__output_t *out);
 
     /*!
      * \internal
@@ -359,7 +447,7 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
 /*!
  * \internal
  * \brief Free a ::pcmk__output_t structure that was previously created by
- *        pcmk__output_new().  This will first call the finish function.
+ *        pcmk__output_new().
  *
  * \note While the create and finish functions are designed in such a way that
  *       they can be called repeatedly, this function will completely free the
@@ -367,9 +455,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
  *       more output requires starting over from pcmk__output_new().
  *
  * \param[in,out] out         The output structure.
- * \param[in]     exit_status The exit value of the whole program.
  */
-void pcmk__output_free(pcmk__output_t *out, crm_exit_t exit_status);
+void pcmk__output_free(pcmk__output_t *out);
 
 /*!
  * \internal
@@ -390,33 +477,35 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
 
 /*!
  * \internal
- * \brief Process formatted output related command line options.  This should
- *        be called wherever other long options are handled.
- *
- * \param[in]  argname      The long command line argument to process.
- * \param[in]  argvalue     The value of the command line argument.
- * \param[out] output_ty   How should output be formatted? ("text", "xml", etc.)
- * \param[out] output_dest Where should formatted output be written to?  This is
- *                         typically a filename, but could be NULL or "-".
- *
- * \return true if longname was handled, false otherwise.
- */
-bool
-pcmk__parse_output_args(const char *argname, char *argvalue, char **output_ty,
-                        char **output_dest);
-
-/*!
- * \internal
  * \brief Register a new output formatter, making it available for use
  *        the same as a base formatter.
  *
- * \param[in] fmt The new output formatter to register.
+ * \param[in,out] context A context to add any format-specific options to.  This
+ *                        can be NULL for use outside of command line programs.
+ * \param[in]     name    The name of the format.  This will be used to select a
+ *                        format from command line options and for displaying help.
+ * \param[in]     create  A function that creates a ::pcmk__output_t.
+ * \param[in]     options Format-specific command line options.  These will be
+ *                        added to the context.  This argument can also be NULL.
  *
  * \return 0 on success or an error code on error.
  */
 int
-pcmk__register_format(const char *fmt_name, pcmk__output_factory_t create);
+pcmk__register_format(GOptionContext *context, const char *name,
+                      pcmk__output_factory_t create, GOptionEntry *options);
 
+/*!
+ * \internal
+ * \brief Register an entire table of output formatters at once.
+ *
+ * \param[in,out] context A context to add any format-specific options to.  This
+ *                        can be NULL for use outside of command line programs.
+ * \param[in]     table An array of ::pcmk__supported_format_t which should
+ *                      all be registered.  This array must be NULL-terminated.
+ *
+ */
+void
+pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *table);
 
 /*!
  * \internal
@@ -464,6 +553,34 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 
 /*!
  * \internal
+ * \brief A vprintf-like function.
+ *
+ * This function is like pcmk__indented_printf(), except it takes a va_list instead
+ * of a list of arguments.  This should be used when implementing custom message
+ * functions instead of vprintf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     args   A list of arguments to apply to the format string.
+ */
+void
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
+
+/*!
+ * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  The new node is then added as the new list parent,
+ *        meaning all subsequent nodes will be its children.  This is used when
+ *        implementing custom functions.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
  * \brief Add the given node as a child of the current list parent.  This is
  *        used when implementing custom message functions.
  *
@@ -471,7 +588,30 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
  * \param[in]     node An XML node to be added as a child.
  */
 void
-pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+
+/*!
+ * \internal
+ * \brief Create and return a new XML node with the given name, as a child of the
+ *        current list parent.  This is used when implementing custom functions.
+ *
+ * \param[in,out] out  The output functions structure.
+ * \param[in]     name The name of the node to be created.
+ */
+xmlNodePtr
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name);
+
+/*!
+ * \internal
+ * \brief Like pcmk__output_create_xml_node(), but add the given text content to the
+ *        new node.
+ *
+ * \param[in,out] out     The output functions structure.
+ * \param[in]     name    The name of the node to be created.
+ * \param[in]     content The text content of the node.
+ */
+xmlNodePtr
+pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content);
 
 /*!
  * \internal
@@ -488,7 +628,7 @@ pcmk__xml_add_node(pcmk__output_t *out, xmlNodePtr node);
  * \param[in]     node The node to be added/
  */
 void
-pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -505,7 +645,60 @@ pcmk__xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
  * \param[in,out] out The output functions structure.
  */
 void
-pcmk__xml_pop_parent(pcmk__output_t *out);
+pcmk__output_xml_pop_parent(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Peek a parent XML node onto the stack.  This is used when implementing
+ *        custom message functions.
+ *
+ * This function peeks a parent node on stack.  See pcmk__xml_push_parent()
+ * for more details. It has no side-effect and can be called for an empty stack.
+ *
+ * \note Little checking is done with this function.
+ *
+ * \param[in,out] out The output functions structure.
+ *
+ * \return NULL if stack is empty, otherwise the parent of the stack.
+ */
+xmlNodePtr
+pcmk__output_xml_peek_parent(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Create a new XML node consisting of the provided text inside an HTML
+ *        element node of the given name.
+ *
+ * \param[in,out] out          The output functions structure.
+ * \param[in]     element_name The name of the new HTML element.
+ * \param[in]     id           The CSS ID selector to apply to this element.
+ *                             If NULL, no ID is added.
+ * \param[in]     class_name   The CSS class selector to apply to this element.
+ *                             If NULL, no class is added.
+ * \param[in]     text         The text content of the node.
+ */
+xmlNodePtr
+pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
+                              const char *class_name, const char *text);
+
+/*!
+ * \internal
+ * \brief Add an HTML tag to the <head> section.
+ *
+ * The arguments after name are a NULL-terminated list of keys and values,
+ * all of which will be added as attributes to the given tag.  For instance,
+ * the following code would generate the tag "<meta http-equiv='refresh' content='19'>":
+ *
+ * \code
+ * pcmk__html_add_header(parent, "meta", "http-equiv", "refresh", "content", "19", NULL);
+ * \endcode
+ *
+ * \param[in,out] parent The node that will be the parent of the new node.
+ * \param[in]     name   The HTML tag for the new node.
+ * \param[in]     ...    A NULL-terminated key/value list of attributes.
+ */
+void
+pcmk__html_add_header(xmlNodePtr parent, const char *name, ...);
 
 #ifdef __cplusplus
 }

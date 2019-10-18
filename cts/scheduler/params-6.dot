@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "c5-x64-devel.vds-ok.com-vm_monitor_10000 v03-a" [ style=bold color="green" fontcolor="black"]
 "c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" -> "c5-x64-devel.vds-ok.com-vm_monitor_10000 v03-a" [ style = bold]
 "c5-x64-devel.vds-ok.com-vm_reload_0 v03-a" [ style=bold color="green" fontcolor="black"]

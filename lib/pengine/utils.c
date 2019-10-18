@@ -15,6 +15,7 @@
 
 #include <ctype.h>
 #include <glib.h>
+#include <stdbool.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
@@ -549,9 +550,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
         if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
             && action->node != NULL && action->op_entry != NULL) {
             pe_set_action_bit(action, pe_action_have_node_attrs);
-            unpack_instance_attributes(data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
+            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                        action->node->details->attrs,
-                                       action->extra, NULL, FALSE, data_set->now);
+                                       action->extra, NULL, FALSE, data_set);
         }
 
         if (is_set(action->flags, pe_action_pseudo)) {
@@ -660,7 +661,7 @@ unpack_operation_on_fail(action_t * action)
 
         CRM_CHECK(action->rsc != NULL, return NULL);
 
-        for (operation = __xml_first_child(action->rsc->ops_xml);
+        for (operation = __xml_first_child_element(action->rsc->ops_xml);
              operation && !value; operation = __xml_next_element(operation)) {
 
             if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
@@ -699,7 +700,7 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
 
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
 
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
@@ -746,69 +747,46 @@ unpack_start_delay(const char *value, GHashTable *meta)
     return start_delay;
 }
 
-static int
-unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
-                       guint interval_ms, crm_time_t *now)
+// true if value contains valid, non-NULL interval origin for recurring op
+static bool
+unpack_interval_origin(const char *value, xmlNode *xml_obj, guint interval_ms,
+                       crm_time_t *now, long long *start_delay)
 {
-    int start_delay = 0;
+    long long result = 0;
+    guint interval_sec = interval_ms / 1000;
+    crm_time_t *origin = NULL;
 
-    if ((interval_ms > 0) && (value != NULL)) {
-        crm_time_t *origin = crm_time_new(value);
-
-        if (origin && now) {
-            crm_time_t *delay = NULL;
-            int rc = crm_time_compare(origin, now);
-            long long delay_s = 0;
-            int interval_sec = interval_ms / 1000;
-
-            crm_trace("Origin: %s, interval: %d", value, interval_sec);
-
-            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
-            while(rc > 0) {
-                crm_time_add_seconds(origin, -interval_sec);
-                rc = crm_time_compare(origin, now);
-            }
-
-            /* Now find the first "multiple" that occurs after 'now' */
-            while (rc < 0) {
-                crm_time_add_seconds(origin, interval_sec);
-                rc = crm_time_compare(origin, now);
-            }
-
-            delay = crm_time_calculate_duration(origin, now);
-
-            crm_time_log(LOG_TRACE, "origin", origin,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "now", now,
-                         crm_time_log_date | crm_time_log_timeofday |
-                         crm_time_log_with_timezone);
-            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
-
-            delay_s = crm_time_get_seconds(delay);
-            if (delay_s < 0) {
-                delay_s = 0;
-            }
-            start_delay = delay_s * 1000;
-
-            if (xml_obj) {
-                crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
-            }
-
-            if (meta) {
-                g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
-                                     crm_itoa(start_delay));
-            }
-
-            crm_time_free(origin);
-            crm_time_free(delay);
-        } else if (!origin && xml_obj) {
-            crm_config_err("Operation %s contained an invalid " XML_OP_ATTR_ORIGIN ": %s",
-                           ID(xml_obj), value);
-        }
+    // Ignore unspecified values and non-recurring operations
+    if ((value == NULL) || (interval_ms == 0) || (now == NULL)) {
+        return false;
     }
 
-    return start_delay;
+    // Parse interval origin from text
+    origin = crm_time_new(value);
+    if (origin == NULL) {
+        crm_config_err("Operation '%s' contains invalid " XML_OP_ATTR_ORIGIN
+                       " '%s'",
+                       (ID(xml_obj)? ID(xml_obj) : "(unspecified)"), value);
+        return false;
+    }
+
+    // Get seconds since origin (negative if origin is in the future)
+    result = crm_time_get_seconds(now) - crm_time_get_seconds(origin);
+    crm_time_free(origin);
+
+    // Calculate seconds from closest interval to now
+    result = result % interval_sec;
+
+    // Calculate seconds remaining until next interval
+    result = ((result <= 0)? 0 : interval_sec) - result;
+    crm_info("Calculated a start delay of %llds for operation '%s'",
+             result,
+             (ID(xml_obj)? ID(xml_obj) : "(unspecified)"));
+
+    if (start_delay != NULL) {
+        *start_delay = result * 1000; // milliseconds
+    }
+    return true;
 }
 
 static int
@@ -839,8 +817,8 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
 
     if (timeout == NULL && data_set->op_defaults) {
         GHashTable *action_meta = crm_str_table_new();
-        unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
-                                   NULL, action_meta, NULL, FALSE, data_set->now);
+        pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
+                                   NULL, action_meta, NULL, FALSE, data_set);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
@@ -862,8 +840,12 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
     xmlNode *attrs = NULL;
     xmlNode *attr = NULL;
 
-    for (attrs = __xml_first_child(versioned_meta); attrs != NULL; attrs = __xml_next_element(attrs)) {
-        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
+    for (attrs = __xml_first_child_element(versioned_meta); attrs != NULL;
+         attrs = __xml_next_element(attrs)) {
+
+        for (attr = __xml_first_child_element(attrs); attr != NULL;
+             attr = __xml_next_element(attr)) {
+
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
 
@@ -872,11 +854,14 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
             } else if (safe_str_eq(name, XML_OP_ATTR_ORIGIN)) {
-                int start_delay = unpack_interval_origin(value, NULL, xml_obj,
-                                                         interval_ms, now);
+                long long start_delay = 0;
 
-                crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
-                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+                if (unpack_interval_origin(value, xml_obj, interval_ms, now,
+                                           &start_delay)) {
+                    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME,
+                                XML_OP_ATTR_START_DELAY);
+                    crm_xml_add_ll(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
+                }
             } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
                 int timeout = unpack_timeout(value);
 
@@ -916,8 +901,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
-                               action->meta, NULL, FALSE, data_set->now);
+    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, NULL,
+                               action->meta, NULL, FALSE, data_set);
 
     // Probe timeouts default differently, so handle timeout default later
     default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
@@ -930,20 +915,19 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         xmlAttrPtr xIter = NULL;
 
         // <op> <meta_attributes> take precedence over defaults
-        unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                                   NULL, action->meta, NULL, TRUE,
-                                   data_set->now);
+        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, NULL,
+                                   action->meta, NULL, TRUE, data_set);
 
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
         pe_unpack_versioned_attributes(data_set->input, xml_obj,
                                        XML_TAG_ATTR_SETS, NULL,
                                        rsc_details->versioned_parameters,
-                                       data_set->now);
+                                       data_set->now, NULL);
         pe_unpack_versioned_attributes(data_set->input, xml_obj,
                                        XML_TAG_META_SETS, NULL,
                                        rsc_details->versioned_meta,
-                                       data_set->now);
+                                       data_set->now, NULL);
 #endif
 
         /* Anything set as an <op> XML property has highest precedence.
@@ -1162,9 +1146,14 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     if (value) {
         unpack_start_delay(value, action->meta);
     } else {
+        long long start_delay = 0;
+
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        unpack_interval_origin(value, action->meta, xml_obj, interval_ms,
-                               data_set->now);
+        if (unpack_interval_origin(value, xml_obj, interval_ms, data_set->now,
+                                   &start_delay)) {
+            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
+                                 crm_strdup_printf("%lld", start_delay));
+        }
     }
 
     value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
@@ -1191,7 +1180,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
     xmlNode *operation = NULL;
 
   retry:
-    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");
@@ -1622,7 +1611,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
-         *    section which is unliklely to be a good thing
+         * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
          *    to the bottom of why it's happening.
          */
@@ -1650,13 +1639,14 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          * The op and last_failed_op are the same
          * Order on last-rc-change
          */
-        int last_a = -1;
-        int last_b = -1;
+        time_t last_a = -1;
+        time_t last_b = -1;
 
-        crm_element_value_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_epoch(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
+        crm_element_value_epoch(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
 
-        crm_trace("rc-change: %d vs %d", last_a, last_b);
+        crm_trace("rc-change: %lld vs %lld",
+                  (long long) last_a, (long long) last_b);
         if (last_a >= 0 && last_a < last_b) {
             sort_return(-1, "rc-change");
 
@@ -1936,9 +1926,24 @@ append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNo
 }
 #endif
 
+/*!
+ * \internal
+ * \brief Calculate action digests and store in node's digest cache
+ *
+ * \param[in] rsc          Resource that action was for
+ * \param[in] task         Name of action performed
+ * \param[in] key          Action's task key
+ * \param[in] node         Node action was performed on
+ * \param[in] xml_op       XML of operation in CIB status (if available)
+ * \param[in] calc_secure  Whether to calculate secure digest
+ * \param[in] data_set     Cluster working set
+ *
+ * \return Pointer to node's digest cache entry
+ */
 static op_digest_cache_t *
-rsc_action_digest(resource_t * rsc, const char *task, const char *key,
-                  node_t * node, xmlNode * xml_op, pe_working_set_t * data_set) 
+rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
+                  pe_node_t *node, xmlNode *xml_op, bool calc_secure,
+                  pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
 
@@ -2007,7 +2012,7 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 
         data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
-        if (is_set(data_set->flags, pe_flag_sanitized)) {
+        if (calc_secure) {
             data->params_secure = copy_xml(data->params_all);
             if(secure_list) {
                 filter_parameters(data->params_secure, secure_list, FALSE);
@@ -2053,7 +2058,9 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     interval_ms = crm_parse_ms(interval_ms_s);
     key = generate_op_key(rsc->id, task, interval_ms);
-    data = rsc_action_digest(rsc, task, key, node, xml_op, data_set);
+    data = rsc_action_digest(rsc, task, key, node, xml_op,
+                             is_set(data_set->flags, pe_flag_sanitized),
+                             data_set);
 
     data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
@@ -2080,57 +2087,134 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     return data;
 }
 
+/*!
+ * \internal
+ * \brief Create an unfencing summary for use in special node attribute
+ *
+ * Create a string combining a fence device's resource ID, agent type, and
+ * parameter digest (whether for all parameters or just non-private parameters).
+ * This can be stored in a special node attribute, allowing us to detect changes
+ * in either the agent type or parameters, to know whether unfencing must be
+ * redone or can be safely skipped when the device's history is cleaned.
+ *
+ * \param[in] rsc_id        Fence device resource ID
+ * \param[in] agent_type    Fence device agent
+ * \param[in] param_digest  Fence device parameter digest
+ *
+ * \return Newly allocated string with unfencing digest
+ * \note The caller is responsible for freeing the result.
+ */
+static inline char *
+create_unfencing_summary(const char *rsc_id, const char *agent_type,
+                         const char *param_digest)
+{
+    return crm_strdup_printf("%s:%s:%s", rsc_id, agent_type, param_digest);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a node can skip unfencing
+ *
+ * Check whether a fence device's current definition matches a node's
+ * stored summary of when it was last unfenced by the device.
+ *
+ * \param[in] rsc_id        Fence device's resource ID
+ * \param[in] agent         Fence device's agent type
+ * \param[in] digest_calc   Fence device's current parameter digest
+ * \param[in] node_summary  Value of node's special unfencing node attribute
+ *                          (a comma-separated list of unfencing summaries for
+ *                          all devices that have unfenced this node)
+ *
+ * \return TRUE if digest matches, FALSE otherwise
+ */
+static bool
+unfencing_digest_matches(const char *rsc_id, const char *agent,
+                         const char *digest_calc, const char *node_summary)
+{
+    bool matches = FALSE;
+
+    if (rsc_id && agent && digest_calc && node_summary) {
+        char *search_secure = create_unfencing_summary(rsc_id, agent,
+                                                       digest_calc);
+
+        /* The digest was calculated including the device ID and agent,
+         * so there is no risk of collision using strstr().
+         */
+        matches = (strstr(node_summary, search_secure) != NULL);
+        crm_trace("Calculated unfencing digest '%s' %sfound in '%s'",
+                  search_secure, matches? "" : "not ", node_summary);
+        free(search_secure);
+    }
+    return matches;
+}
+
+/* Magic string to use as action name for digest cache entries used for
+ * unfencing checks. This is not a real action name (i.e. "on"), so
+ * check_action_definition() won't confuse these entries with real actions.
+ */
 #define STONITH_DIGEST_TASK "stonith-on"
 
+/*!
+ * \internal
+ * \brief Calculate fence device digests and digest comparison result
+ *
+ * \param[in] rsc       Fence device resource
+ * \param[in] agent     Fence device's agent type
+ * \param[in] node      Node with digest cache to use
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Node's digest cache entry
+ */
 static op_digest_cache_t *
-fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
+                          pe_node_t *node, pe_working_set_t *data_set)
 {
+    const char *node_summary = NULL;
+
+    // Calculate device's current parameter digests
     char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
-    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key, node, NULL, data_set);
-
-    const char *digest_all = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
-    const char *digest_secure = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
-
-    /* No 'reloads' for fencing device changes
-     *
-     * We use the resource id + agent + digest so that we can detect
-     * changes to the agent and/or the parameters used
-     */
-    char *search_all = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_all_calc);
-    char *search_secure = crm_strdup_printf("%s:%s:%s", rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
-
-    data->rc = RSC_DIGEST_ALL;
-    if (digest_all == NULL) {
-        /* it is unknown what the previous op digest was */
-        data->rc = RSC_DIGEST_UNKNOWN;
-
-    } else if (strstr(digest_all, search_all)) {
-        data->rc = RSC_DIGEST_MATCH;
-
-    } else if(digest_secure && data->digest_secure_calc) {
-        if(strstr(digest_secure, search_secure)) {
-            if (is_set(data_set->flags, pe_flag_stdout)) {
-                printf("Only 'private' parameters to %s for unfencing %s changed\n",
-                       rsc->id, node->details->uname);
-            }
-            data->rc = RSC_DIGEST_MATCH;
-        }
-    }
-
-    if (is_set(data_set->flags, pe_flag_sanitized)
-        && is_set(data_set->flags, pe_flag_stdout)
-        && (data->rc == RSC_DIGEST_ALL)
-        && data->digest_secure_calc) {
-        printf("Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
-               rsc->id, node->details->uname, rsc->id,
-               (const char *) g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE),
-               data->digest_secure_calc);
-    }
+    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key,
+                                                node, NULL, TRUE, data_set);
 
     free(key);
-    free(search_all);
-    free(search_secure);
 
+    // Check whether node has special unfencing summary node attribute
+    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
+    if (node_summary == NULL) {
+        data->rc = RSC_DIGEST_UNKNOWN;
+        return data;
+    }
+
+    // Check whether full parameter digest matches
+    if (unfencing_digest_matches(rsc->id, agent, data->digest_all_calc,
+                                 node_summary)) {
+        data->rc = RSC_DIGEST_MATCH;
+        return data;
+    }
+
+    // Check whether secure parameter digest matches
+    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
+    if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
+                                 node_summary)) {
+        data->rc = RSC_DIGEST_MATCH;
+        if (is_set(data_set->flags, pe_flag_stdout)) {
+            printf("Only 'private' parameters to %s for unfencing %s changed\n",
+                   rsc->id, node->details->uname);
+        }
+        return data;
+    }
+
+    // Parameters don't match
+    data->rc = RSC_DIGEST_ALL;
+    if (is_set(data_set->flags, (pe_flag_sanitized|pe_flag_stdout))
+        && data->digest_secure_calc) {
+        char *digest = create_unfencing_summary(rsc->id, agent,
+                                                data->digest_secure_calc);
+
+        printf("Parameters to %s for unfencing %s changed, try '%s'\n",
+               rsc->id, node->details->uname, digest);
+        free(digest);
+    }
     return data;
 }
 
@@ -2218,9 +2302,6 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
              *
              * We may do this for all nodes in the future, but for now
              * the check_action_definition() based stuff works fine.
-             *
-             * Use "stonith-on" to avoid creating cache entries for
-             * operations check_action_definition() would look for.
              */
             long max = 1024;
             long digests_all_offset = 0;
@@ -2232,8 +2313,11 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
 
             for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
                 resource_t *match = gIter->data;
-                op_digest_cache_t *data = fencing_action_digest_cmp(match, node, data_set);
+                const char *agent = g_hash_table_lookup(match->meta,
+                                                        XML_ATTR_TYPE);
+                op_digest_cache_t *data = NULL;
 
+                data = fencing_action_digest_cmp(match, agent, node, data_set);
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
@@ -2244,11 +2328,11 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
 
                 digests_all_offset += snprintf(
                     digests_all+digests_all_offset, max-digests_all_offset,
-                    "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_all_calc);
+                    "%s:%s:%s,", match->id, agent, data->digest_all_calc);
 
                 digests_secure_offset += snprintf(
                     digests_secure+digests_secure_offset, max-digests_secure_offset,
-                    "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+                    "%s:%s:%s,", match->id, agent, data->digest_secure_calc);
             }
             g_hash_table_insert(stonith_op->meta,
                                 strdup(XML_OP_ATTR_DIGESTS_ALL),
@@ -2415,4 +2499,63 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
             action->reason = NULL;
         }
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether shutdown has been requested for a node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return TRUE if node has shutdown attribute set and nonzero, FALSE otherwise
+ * \note This differs from simply using node->details->shutdown in that it can
+ *       be used before that has been determined (and in fact to determine it),
+ *       and it can also be used to distinguish requested shutdown from implicit
+ *       shutdown of remote nodes by virtue of their connection stopping.
+ */
+bool
+pe__shutdown_requested(pe_node_t *node)
+{
+    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+
+    return shutdown && strcmp(shutdown, "0");
+}
+
+/*!
+ * \internal
+ * \brief Update a data set's "recheck by" time
+ *
+ * \param[in]     recheck   Epoch time when recheck should happen
+ * \param[in,out] data_set  Current working set
+ */
+void
+pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
+{
+    if ((recheck > get_effective_time(data_set))
+        && ((data_set->recheck_by == 0)
+            || (data_set->recheck_by > recheck))) {
+        data_set->recheck_by = recheck;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ */
+void
+pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           pe_working_set_t *data_set)
+{
+    crm_time_t *next_change = crm_time_new_undefined();
+
+    pe_unpack_nvpairs(data_set->input, xml_obj, set_name, node_hash, hash,
+                      always_first, overwrite, data_set->now, next_change);
+    if (crm_time_is_defined(next_change)) {
+        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+        pe__update_recheck_time(recheck, data_set);
+    }
+    crm_time_free(next_change);
 }

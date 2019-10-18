@@ -35,7 +35,7 @@
   - [Edit fail counts](#edit-fail-counts)
   - [Handling configuration elements by type](#handling-configuration-elements-by-type)
   - [Create a clone](#create-a-clone)
-  - [Create a master/slave clone](#create-a-masterslave-clone)
+  - [Create a promotable (master/slave) clone](#create-a-promotable-masterslave-clone)
 - [Other operations](#other-operations)
   - [Batch changes](#batch-changes)
   - [Template creation](#template-creation)
@@ -69,13 +69,15 @@ also
 
 Put node in standby
 
-    crmsh # crm node standby pcmk-1
-    pcs   # pcs cluster standby pcmk-1
+    crmsh    # crm node standby pcmk-1
+    pcs-0.9  # pcs cluster standby pcmk-1
+    pcs-0.10 # pcs node standby pcmk-1
 
 Remove node from standby
 
-    crmsh # crm node online pcmk-1
-    pcs   # pcs cluster unstandby pcmk-1
+    crmsh    # crm node online pcmk-1
+    pcs-0.9  # pcs cluster unstandby pcmk-1
+    pcs-0.10 # pcs node unstandby pcmk-1
 
 crm has the ability to set the status on reboot or forever. 
 pcs can apply the change to all the nodes.
@@ -132,21 +134,24 @@ The monitor operation is automatically created based on the agent's metadata.
 
 ## Display a resource
 
-    crmsh # crm configure show
-    pcs   # pcs resource show
+    crmsh    # crm configure show
+    pcs-0.9  # pcs resource show --full
+    pcs-0.10 # pcs resource config
 
 crmsh also displays fencing resources. 
 The result can be filtered by supplying a resource name (IE `ClusterIP`):
 
-    crmsh # crm configure show ClusterIP
-    pcs   # pcs resource show ClusterIP
+    crmsh    # crm configure show ClusterIP
+    pcs-0.9  # pcs resource show ClusterIP
+    pcs-0.10 # pcs resource config ClusterIP
 
 crmsh also displays fencing resources. 
 
 ## Display fencing resources
 
-    crmsh # crm resource show
-    pcs   # pcs stonith show
+    crmsh    # crm resource show
+    pcs-0.9  # pcs stonith show --full
+    pcs-0.10 # pcs stonith config
 
 pcs treats STONITH devices separately.
 
@@ -196,12 +201,12 @@ edited and verified before committing to the live configuration.
 ## List the current resource defaults
 
     crmsh # crm configure show type:rsc_defaults
-    pcs   # pcs resource rsc defaults
+    pcs   # pcs resource defaults
 
 ## Set resource defaults
 
     crmsh # crm configure rsc_defaults resource-stickiness=100
-    pcs   # pcs resource rsc defaults resource-stickiness=100
+    pcs   # pcs resource defaults resource-stickiness=100
     
 ## List the current operation defaults
 
@@ -295,14 +300,17 @@ resources and constraints by type:
     crmsh # crm configure clone WebIP ClusterIP meta globally-unique=true clone-max=2 clone-node-max=2
     pcs   # pcs resource clone ClusterIP globally-unique=true clone-max=2 clone-node-max=2
 
-## Create a master/slave clone
+## Create a promotable (master/slave) clone
 
-    crmsh # crm configure ms WebDataClone WebData \
-            meta master-max=1 master-node-max=1 \
-            clone-max=2 clone-node-max=1 notify=true
-    pcs   # pcs resource master WebDataClone WebData \
-            master-max=1 master-node-max=1 \
-            clone-max=2 clone-node-max=1 notify=true
+    crmsh    # crm configure ms WebDataClone WebData \
+               meta master-max=1 master-node-max=1 \
+               clone-max=2 clone-node-max=1 notify=true
+    pcs-0.9  # pcs resource master WebDataClone WebData \
+               master-max=1 master-node-max=1 \
+               clone-max=2 clone-node-max=1 notify=true
+    pcs-0.10 # pcs resource promotable WebData \
+               promoted-max=1 promoted-node-max=1 \
+               clone-max=2 clone-node-max=1 notify=true
 
 # Other operations
 
@@ -318,12 +326,14 @@ resources and constraints by type:
     crmsh # quit
 .
 
-    pcs   # pcs cluster cib drbd_cfg
-    pcs   # pcs -f drbd_cfg resource create WebData ocf:linbit:drbd drbd_resource=wwwdata \
-            op monitor interval=60s
-    pcs   # pcs -f drbd_cfg resource master WebDataClone WebData master-max=1 master-node-max=1 \
-            clone-max=2 clone-node-max=1 notify=true
-    pcs   # pcs cluster push cib drbd_cfg
+    pcs      # pcs cluster cib drbd_cfg
+    pcs      # pcs -f drbd_cfg resource create WebData ocf:linbit:drbd drbd_resource=wwwdata \
+               op monitor interval=60s
+    pcs-0.9  # pcs -f drbd_cfg resource master WebDataClone WebData master-max=1 master-node-max=1 \
+               clone-max=2 clone-node-max=1 notify=true
+    pcs-0.10 # pcs -f drbd_cfg resource promotable WebData promoted-max=1 promoted-node-max=1 \
+               clone-max=2 clone-node-max=1 notify=true
+    pcs      # pcs cluster push cib drbd_cfg
 
 ## Template creation
 

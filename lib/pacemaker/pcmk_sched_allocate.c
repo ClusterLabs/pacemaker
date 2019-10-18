@@ -436,7 +436,9 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 
-    for (rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next_element(rsc_op)) {
+    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
+         rsc_op = __xml_next_element(rsc_op)) {
+
         if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_prepend(op_list, rsc_op);
         }
@@ -509,19 +511,19 @@ find_rsc_list(GListPtr result, resource_t * rsc, const char *id, gboolean rename
 
     if (id == NULL) {
         return NULL;
+    }
 
-    } else if (rsc == NULL && data_set) {
-
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
+    if (rsc == NULL) {
+        if (data_set == NULL) {
+            return NULL;
         }
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
+            result = find_rsc_list(result, child, id, renamed_clones, partial,
+                                   NULL);
+        }
         return result;
-
-    } else if (rsc == NULL) {
-        return NULL;
     }
 
     if (partial) {
@@ -567,7 +569,7 @@ check_actions(pe_working_set_t * data_set)
 
     xmlNode *node_state = NULL;
 
-    for (node_state = __xml_first_child(status); node_state != NULL;
+    for (node_state = __xml_first_child_element(status); node_state != NULL;
          node_state = __xml_next_element(node_state)) {
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
             id = crm_element_value(node_state, XML_ATTR_ID);
@@ -590,8 +592,10 @@ check_actions(pe_working_set_t * data_set)
             if (node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 xmlNode *rsc_entry = NULL;
 
-                for (rsc_entry = __xml_first_child(lrm_rscs); rsc_entry != NULL;
+                for (rsc_entry = __xml_first_child_element(lrm_rscs);
+                     rsc_entry != NULL;
                      rsc_entry = __xml_next_element(rsc_entry)) {
+
                     if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
 
                         if (xml_has_children(rsc_entry)) {
@@ -1261,19 +1265,11 @@ order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
     }
 }
 
+// Clear fail counts for orphaned rsc on all online nodes
 static void
 cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-
-    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
-        return;
-    }
-
-    /* Don't recurse into ->children, those are just unallocated clone instances */
-    if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-        return;
-    }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -1375,10 +1371,17 @@ stage5(pe_working_set_t * data_set)
     }
 
     crm_trace("Handle orphans");
+    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
-        cleanup_orphans(rsc, data_set);
+            /* There's no need to recurse into rsc->children because those
+             * should just be unallocated clone instances.
+             */
+            if (is_set(rsc->flags, pe_rsc_orphan)) {
+                cleanup_orphans(rsc, data_set);
+            }
+        }
     }
 
     crm_trace("Creating actions");
@@ -1530,13 +1533,11 @@ stage6(pe_working_set_t * data_set)
     GListPtr stonith_ops = NULL;
     GList *shutdown_ops = NULL;
 
-    /* Remote ordering constraints need to happen prior to calculate
-     * fencing because it is one more place we will mark the node as
-     * dirty.
+    /* Remote ordering constraints need to happen prior to calculating fencing
+     * because it is one more place we will mark the node as dirty.
      *
-     * A nice side-effect of doing it first is that we can remove a
-     * bunch of special logic from apply_*_ordering() because its
-     * already part of pe_fence_node()
+     * A nice side effect of doing them early is that apply_*_ordering() can be
+     * simpler because pe_fence_node() has already done some of the work.
      */
     crm_trace("Creating remote ordering constraints");
     apply_remote_node_ordering(data_set);
@@ -1972,7 +1973,8 @@ get_remote_node_state(pe_node_t *node)
 
         if ((remote_rsc->next_role == RSC_ROLE_STOPPED)
             && remote_rsc->remote_reconnect_ms
-            && node->details->remote_was_fenced) {
+            && node->details->remote_was_fenced
+            && !pe__shutdown_requested(node)) {
 
             /* We won't know whether the connection is recoverable until the
              * reconnect interval expires and we reattempt connection.
@@ -2064,14 +2066,13 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                        pe_order_implies_first, data_set);
 
             } else if(state == remote_state_failed) {
-                /* We would only be here if the resource is
-                 * running on the remote node.  Since we have no
-                 * way to stop it, it is necessary to fence the
-                 * node.
+                /* The resource is active on the node, but since we don't have a
+                 * valid connection, the only way to stop the resource is by
+                 * fencing the node. There is no need to order the stop relative
+                 * to the remote connection, since the stop will become implied
+                 * by the fencing.
                  */
                 pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
-                order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first, data_set);
 
             } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
                 /* State must be remote_state_unknown or remote_state_stopped.
@@ -2268,9 +2269,8 @@ order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
     return FALSE;
 }
 
-
 static void
-order_first_probes(pe_working_set_t * data_set)
+order_first_probes_imply_stops(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
@@ -2391,6 +2391,198 @@ order_first_probes(pe_working_set_t * data_set)
         g_list_free(rh_actions);
         g_list_free(probes);
     }
+}
+
+static void
+order_first_probe_then_restart_repromote(pe_action_t * probe,
+                                         pe_action_t * after,
+                                         pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+    bool interleave = FALSE;
+    pe_resource_t *compatible_rsc = NULL;
+
+    if (probe == NULL
+        || probe->rsc == NULL
+        || probe->rsc->variant != pe_native) {
+        return;
+    }
+
+    if (after == NULL
+        // Avoid running into any possible loop
+        || is_set(after->flags, pe_action_tracking)) {
+        return;
+    }
+
+    if (safe_str_neq(probe->task, RSC_STATUS)) {
+        return;
+    }
+
+    pe_set_action_bit(after, pe_action_tracking);
+
+    crm_trace("Processing based on %s %s -> %s %s",
+              probe->uuid,
+              probe->node ? probe->node->details->uname: "",
+              after->uuid,
+              after->node ? after->node->details->uname : "");
+
+    if (after->rsc
+        /* Better not build a dependency directly with a clone/group.
+         * We are going to proceed through the ordering chain and build
+         * dependencies with its children.
+         */
+        && after->rsc->variant == pe_native
+        && probe->rsc != after->rsc) {
+
+            GListPtr then_actions = NULL;
+            enum pe_ordering probe_order_type = pe_order_optional;
+
+            if (safe_str_eq(after->task, RSC_START)) {
+                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP, FALSE);
+
+            } else if (safe_str_eq(after->task, RSC_PROMOTE)) {
+                then_actions = pe__resource_actions(after->rsc, NULL, RSC_DEMOTE, FALSE);
+            }
+
+            for (gIter = then_actions; gIter != NULL; gIter = gIter->next) {
+                pe_action_t *then = (pe_action_t *) gIter->data;
+
+                // Skip any pseudo action which for example is implied by fencing
+                if (is_set(then->flags, pe_action_pseudo)) {
+                    continue;
+                }
+
+                order_actions(probe, then, probe_order_type);
+            }
+            g_list_free(then_actions);
+    }
+
+    if (after->rsc
+        && after->rsc->variant > pe_group) {
+        const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
+                                                       XML_RSC_ATTR_INTERLEAVE);
+
+        interleave = crm_is_true(interleave_s);
+
+        if (interleave) {
+            /* For an interleaved clone, we should build a dependency only
+             * with the relevant clone child.
+             */
+            compatible_rsc = find_compatible_child(probe->rsc,
+                                                   after->rsc,
+                                                   RSC_ROLE_UNKNOWN,
+                                                   FALSE, data_set);
+        }
+    }
+
+    for (gIter = after->actions_after; gIter != NULL; gIter = gIter->next) {
+        pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) gIter->data;
+        /* pe_order_implies_then is the reason why a required A.start
+         * implies/enforces B.start to be required too, which is the cause of
+         * B.restart/re-promote.
+         *
+         * Not sure about pe_order_implies_then_on_node though. It's now only
+         * used for unfencing case, which tends to introduce transition
+         * loops...
+         */
+
+        if (is_not_set(after_wrapper->type, pe_order_implies_then)) {
+            /* The order type between a group/clone and its child such as
+             * B.start-> B_child.start is:
+             * pe_order_implies_first_printed | pe_order_runnable_left
+             *
+             * Proceed through the ordering chain and build dependencies with
+             * its children.
+             */
+            if (after->rsc == NULL
+                || after->rsc->variant < pe_group
+                || probe->rsc->parent == after->rsc
+                || after_wrapper->action->rsc == NULL
+                || after_wrapper->action->rsc->variant > pe_group
+                || after->rsc != after_wrapper->action->rsc->parent) {
+                continue;
+            }
+
+            /* Proceed to the children of a group or a non-interleaved clone.
+             * For an interleaved clone, proceed only to the relevant child.
+             */
+            if (after->rsc->variant > pe_group
+                && interleave == TRUE
+                && (compatible_rsc == NULL
+                    || compatible_rsc != after_wrapper->action->rsc)) {
+                continue;
+            }
+        }
+
+        crm_trace("Proceeding through %s %s -> %s %s (type=0x%.6x)",
+                  after->uuid,
+                  after->node ? after->node->details->uname: "",
+                  after_wrapper->action->uuid,
+                  after_wrapper->action->node ? after_wrapper->action->node->details->uname : "",
+                  after_wrapper->type);
+
+        order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+    }
+}
+
+static void clear_actions_tracking_flag(pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
+
+        if (is_set(action->flags, pe_action_tracking)) {
+            pe_clear_action_bit(action, pe_action_tracking);
+        }
+    }
+}
+
+static void
+order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+    GListPtr probes = NULL;
+
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t * child = (pe_resource_t *) gIter->data;
+
+        order_first_rsc_probes(child, data_set);
+    }
+
+    if (rsc->variant != pe_native) {
+        return;
+    }
+
+    probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+
+    for (gIter = probes; gIter != NULL; gIter= gIter->next) {
+        pe_action_t *probe = (pe_action_t *) gIter->data;
+        GListPtr aIter = NULL;
+
+        for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
+            pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
+
+            order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+            clear_actions_tracking_flag(data_set);
+        }
+    }
+
+    g_list_free(probes);
+}
+
+static void
+order_first_probes(pe_working_set_t * data_set)
+{
+    GListPtr gIter = NULL;
+
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+
+        order_first_rsc_probes(rsc, data_set);
+    }
+
+    order_first_probes_imply_stops(data_set);
 }
 
 static void
@@ -2520,7 +2712,7 @@ order_probes(pe_working_set_t * data_set)
 gboolean
 stage7(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     crm_trace("Applying ordering constraints");
 
@@ -2569,6 +2761,21 @@ stage7(pe_working_set_t * data_set)
         action_t *action = (action_t *) gIter->data;
 
         update_action(action, data_set);
+    }
+
+    // Check for invalid orderings
+    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
+        pe_action_wrapper_t *input = NULL;
+
+        for (GList *input_iter = action->actions_before;
+             input_iter != NULL; input_iter = input_iter->next) {
+
+            input = (pe_action_wrapper_t *) input_iter->data;
+            if (pcmk__ordering_is_invalid(action, input)) {
+                input->type = pe_order_none;
+            }
+        }
     }
 
     LogNodeActions(data_set, FALSE);
@@ -2647,6 +2854,15 @@ stage8(pe_working_set_t * data_set)
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 
+    if (data_set->recheck_by > 0) {
+        char *recheck_epoch = NULL;
+
+        recheck_epoch = crm_strdup_printf("%llu",
+                                          (long long) data_set->recheck_by);
+        crm_xml_add(data_set->graph, "recheck-by", recheck_epoch);
+        free(recheck_epoch);
+    }
+
 /* errors...
    slist_iter(action, action_t, action_list, lpc,
    if(action->optional == FALSE && action->runnable == FALSE) {
@@ -2654,6 +2870,11 @@ stage8(pe_working_set_t * data_set)
    }
    );
 */
+
+    /* The following code will de-duplicate action inputs, so nothing past this
+     * should rely on the action input type flags retaining their original
+     * values.
+     */
 
     gIter = data_set->resources;
     for (; gIter != NULL; gIter = gIter->next) {

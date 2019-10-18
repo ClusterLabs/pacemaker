@@ -1016,7 +1016,7 @@ cib_process_request(xmlNode *request, gboolean force_synchronous,
     } else if (process) {
         time_t finished = 0;
 
-        int now = time(NULL);
+        time_t now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
@@ -1052,7 +1052,7 @@ cib_process_request(xmlNode *request, gboolean force_synchronous,
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
         finished = time(NULL);
-        if (finished - now > 3) {
+        if ((finished - now) > 3) {
             crm_trace("%s operation took %lds to complete", op, (long)(finished - now));
             crm_write_blackbox(0, NULL);
         }

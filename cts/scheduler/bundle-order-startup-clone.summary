@@ -19,10 +19,10 @@ Transition Summary:
  * Start      galera-bundle-docker-0     (         metal-1 )   due to unrunnable storage-clone notified (blocked)
  * Start      galera-bundle-0            (         metal-1 )   due to unrunnable galera-bundle-docker-0 start (blocked)
  * Start      galera:0                   ( galera-bundle-0 )   due to unrunnable galera-bundle-docker-0 start (blocked)
- * Start   haproxy-bundle-docker-0	(metal-2)
- * Start   redis-bundle-docker-0	(metal-2)
- * Start   redis-bundle-0	(metal-2)
- * Start   redis:0	(redis-bundle-0)
+ * Start      haproxy-bundle-docker-0    (         metal-2 )  
+ * Start      redis-bundle-docker-0      (         metal-2 )  
+ * Start      redis-bundle-0             (         metal-2 )  
+ * Start      redis:0                    (  redis-bundle-0 )  
 
 Executing cluster transition:
  * Resource action: storage:0       monitor on metal-1

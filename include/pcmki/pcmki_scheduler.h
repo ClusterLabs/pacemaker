@@ -79,8 +79,6 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
-extern gboolean update_action_states(GListPtr actions);
-
 extern gboolean shutdown_constraints(node_t * node, action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
@@ -104,6 +102,7 @@ extern void graph_element_from_action(action_t * action, pe_working_set_t * data
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                 crm_time_t *now);
+bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern gboolean show_scores;
 extern int scores_log_level;

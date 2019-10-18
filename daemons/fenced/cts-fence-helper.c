@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -124,8 +124,10 @@ passive_test(void)
     int rc = 0;
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
-    crm_debug("Connect: %d", rc);
-
+    if (rc != pcmk_ok) {
+        stonith_api_delete(st);
+        crm_exit(CRM_EX_DISCONNECT);
+    }
     st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
@@ -271,8 +273,10 @@ sanity_tests(void)
     int rc = 0;
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
-    crm_debug("Connect: %d", rc);
-
+    if (rc != pcmk_ok) {
+        stonith_api_delete(st);
+        crm_exit(CRM_EX_DISCONNECT);
+    }
     st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
@@ -295,7 +299,10 @@ standard_dev_test(void)
     stonith_key_value_t *params = NULL;
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
-    crm_debug("Connect: %d", rc);
+    if (rc != pcmk_ok) {
+        stonith_api_delete(st);
+        crm_exit(CRM_EX_DISCONNECT);
+    }
 
     params = stonith_key_value_add(params, "pcmk_host_map", "some-host=pcmk-7 true_1_node1=3,4");
 
@@ -502,23 +509,12 @@ test_register_async_devices(int check_event)
 static void
 try_mainloop_connect(int check_event)
 {
-    int tries = 10;
-    int i = 0;
-    int rc = 0;
+    int rc = stonith_api_connect_retry(st, crm_system_name, 10);
 
-    for (i = 0; i < tries; i++) {
-        rc = st->cmds->connect(st, crm_system_name, NULL);
-
-        if (!rc) {
-            crm_info("stonith client connection established");
-            mainloop_test_done(TRUE);
-            return;
-        } else {
-            crm_info("stonith client connection failed");
-        }
-        sleep(1);
+    if (rc == pcmk_ok) {
+        mainloop_test_done(TRUE);
+        return;
     }
-
     crm_err("API CONNECTION FAILURE");
     mainloop_test_done(FALSE);
 }
@@ -635,8 +631,11 @@ main(int argc, char **argv)
         crm_help('?', CRM_EX_USAGE);
     }
 
-    crm_debug("Create");
     st = stonith_api_new();
+    if (st == NULL) {
+        crm_err("Could not connect to fencer: API memory allocation failed");
+        crm_exit(CRM_EX_DISCONNECT);
+    }
 
     switch (mode) {
         case test_standard:

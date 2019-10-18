@@ -89,9 +89,26 @@
 # "/etc/pacemaker/authkey".
 # PCMK_authkey_location=/etc/pacemaker/authkey
 
+# If the Pacemaker Remote service is run on the local node, it will listen
+# for connections on this address. The value may be a resolvable hostname or an
+# IPv4 or IPv6 numeric address. When resolving names or using the default
+# wildcard address (i.e. listen on all available addresses), IPv6 will be
+# preferred if available. When listening on an IPv6 address, IPv4 clients will
+# be supported (via IPv4-mapped IPv6 addresses).
+# PCMK_remote_address="192.0.2.1"
+
 # Use this TCP port number when connecting to a Pacemaker Remote node. This
 # value must be the same on all nodes. The default is "3121".
 # PCMK_remote_port=3121
+
+# Use these GnuTLS cipher priorities for TLS connections. See:
+#
+#   https://gnutls.org/manual/html_node/Priority-Strings.html
+#
+# Pacemaker will append ":+ANON-DH" for remote CIB access (when enabled) and
+# ":+DHE-PSK:+PSK" for Pacemaker Remote connections, as they are required for
+# the respective functionality.
+# PCMK_tls_priorities="NORMAL"
 
 # Set bounds on the bit length of the prime number generated for Diffie-Hellman
 # parameters needed by TLS connections. The default is not to set any bounds.

@@ -78,10 +78,10 @@ generateReference(const char *custom1, const char *custom2)
 {
     static uint ref_counter = 0;
 
-    return crm_strdup_printf("%s-%s-%lu-%u",
+    return crm_strdup_printf("%s-%s-%lld-%u",
                              (custom1? custom1 : "_empty_"),
                              (custom2? custom2 : "_empty_"),
-                             (unsigned long)time(NULL), ref_counter++);
+                             (long long) time(NULL), ref_counter++);
 }
 
 xmlNode *
@@ -754,6 +754,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uin
                  header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
+            free(buffer);
             pcmk_free_ipc_event(iov);
             return rc;
         }

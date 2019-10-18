@@ -6,11 +6,11 @@ Online: [ bl460g1n6 bl460g1n8 ]
  prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n7 (UNCLEAN)
  prmVM2	(ocf::heartbeat:VirtualDomain):	Migrating bl460g1n7 (UNCLEAN)
  Resource Group: grpStonith6
-     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8 
-     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8 
+     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8
+     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8
  Resource Group: grpStonith7
-     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6 
-     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6 
+     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6
+     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6
  Resource Group: grpStonith8
      prmStonith8-1	(stonith:external/stonith-helper):	Started bl460g1n7 (UNCLEAN)
      prmStonith8-2	(stonith:external/ipmi):	Started bl460g1n7 (UNCLEAN)
@@ -30,9 +30,9 @@ Transition Summary:
  * Move       prmVM2            ( bl460g1n7 -> bl460g1n8 )  
  * Move       prmStonith8-1     ( bl460g1n7 -> bl460g1n6 )  
  * Move       prmStonith8-2     ( bl460g1n7 -> bl460g1n6 )  
- * Stop    prmDiskd1:0	(bl460g1n7)  	due to node availability
- * Stop    prmDiskd2:0	(bl460g1n7)  	due to node availability
- * Stop    prmPing:0	(bl460g1n7)  	due to node availability
+ * Stop       prmDiskd1:0       (              bl460g1n7 )   due to node availability
+ * Stop       prmDiskd2:0       (              bl460g1n7 )   due to node availability
+ * Stop       prmPing:0         (              bl460g1n7 )   due to node availability
 
 Executing cluster transition:
  * Resource action: prmVM2          stop on bl460g1n6
@@ -66,17 +66,17 @@ Revised cluster status:
 Online: [ bl460g1n6 bl460g1n8 ]
 OFFLINE: [ bl460g1n7 ]
 
- prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n6 
- prmVM2	(ocf::heartbeat:VirtualDomain):	Started bl460g1n8 
+ prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n6
+ prmVM2	(ocf::heartbeat:VirtualDomain):	Started bl460g1n8
  Resource Group: grpStonith6
-     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8 
-     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8 
+     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8
+     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8
  Resource Group: grpStonith7
-     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6 
-     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6 
+     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6
+     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6
  Resource Group: grpStonith8
-     prmStonith8-1	(stonith:external/stonith-helper):	Started bl460g1n6 
-     prmStonith8-2	(stonith:external/ipmi):	Started bl460g1n6 
+     prmStonith8-1	(stonith:external/stonith-helper):	Started bl460g1n6
+     prmStonith8-2	(stonith:external/ipmi):	Started bl460g1n6
  Clone Set: clnDiskd1 [prmDiskd1]
      Started: [ bl460g1n6 bl460g1n8 ]
      Stopped: [ bl460g1n7 ]

@@ -26,6 +26,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
 
@@ -36,154 +37,194 @@
 
 #include <crm/common/xml.h>
 
+#define SUMMARY "stonith_admin - Access the Pacemaker fencing API"
+
+char action = 0;
+
+struct {
+    gboolean as_nodeid;
+    gboolean broadcast;
+    gboolean cleanup;
+    gboolean installed;
+    gboolean metadata;
+    gboolean registered;
+    gboolean validate_cfg;
+    stonith_key_value_t *devices;
+    stonith_key_value_t *params;
+    int fence_level;
+    int timeout ;
+    int tolerance;
+    char *agent;
+    char *confirm_host;
+    char *fence_host;
+    char *history;
+    char *last_fenced;
+    char *query;
+    char *reboot_host;
+    char *register_dev;
+    char *register_level;
+    char *targets;
+    char *terminate;
+    char *unfence_host;
+    char *unregister_dev;
+    char *unregister_level;
+} options = {
+    .timeout = 120
+};
+
+gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+
+#define INDENT "                                    "
 
 /* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    {   "help", no_argument, NULL, '?',
-        "\tDisplay this text and exit."
-    },
-    {   "version", no_argument, NULL, '$',
-        "\tDisplay version information and exit."
-    },
-    {   "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output (may be specified multiple times)."
-    },
-    {   "quiet", no_argument, NULL, 'q',
-        "\tBe less descriptive in output."
-    },
-    {   "cleanup", no_argument, NULL, 'c',
-        "\tCleanup wherever appropriate."
-    },
-    {   "broadcast", no_argument, NULL, 'b',
-        "Broadcast wherever appropriate."
-    },
-    PCMK__OUTPUT_OPTIONS("text, xml"),
-    {   "-spacer-", no_argument, NULL, '-', "\nDevice definition commands:" },
+static GOptionEntry defn_entries[] = {
+    { "register", 'R', 0, G_OPTION_ARG_STRING, &options.register_dev,
+      "Register the named stonith device. Requires: --agent.\n"
+      INDENT "Optional: --option, --env-option.",
+      "DEVICE" },
+    { "deregister", 'D', 0, G_OPTION_ARG_STRING, &options.unregister_dev,
+      "De-register the named stonith device.",
+      "DEVICE" },
+    { "register-level", 'r', 0, G_OPTION_ARG_STRING, &options.register_level,
+      "Register a stonith level for the named target,\n"
+      INDENT "specified as one of NAME, @PATTERN, or ATTR=VALUE.\n"
+      INDENT "Requires: --index and one or more --device entries.",
+      "TARGET" },
+    { "deregister-level", 'd', 0, G_OPTION_ARG_STRING, &options.unregister_level,
+      "Unregister a stonith level for the named target,\n"
+      INDENT "specified as for --register-level. Requires: --index",
+      "TARGET" },
 
-    {   "register", required_argument, NULL, 'R',
-        "Register the named stonith device. Requires: --agent.\n"
-        "\t\t\tOptional: --option, --env-option."
-    },
-    {   "deregister", required_argument, NULL, 'D',
-        "De-register the named stonith device."
-    },
-    {   "register-level", required_argument, NULL, 'r',
-        "Register a stonith level for the named target,\n"
-        "\t\t\tspecified as one of NAME, @PATTERN, or ATTR=VALUE.\n"
-        "\t\t\tRequires: --index and one or more --device entries."
-    },
-    {   "deregister-level", required_argument, NULL, 'd',
-        "Unregister a stonith level for the named target,\n"
-        "\t\t\tspecified as for --register-level. Requires: --index."
-    },
+    { NULL }
+};
 
-    {   "-spacer-", no_argument, NULL, '-', "\nQueries:" },
+static GOptionEntry query_entries[] = {
+    { "list", 'l', 0, G_OPTION_ARG_STRING, &options.terminate,
+      "List devices that can terminate the specified host.\n"
+      INDENT "Optional: --timeout",
+      "HOST" },
+    { "list-registered", 'L', 0, G_OPTION_ARG_NONE, &options.registered,
+      "List all registered devices. Optional: --timeout.",
+      NULL },
+    { "list-installed", 'I', 0, G_OPTION_ARG_NONE, &options.installed,
+      "List all installed devices. Optional: --timeout.",
+      NULL },
+    { "list-targets", 's', 0, G_OPTION_ARG_STRING, &options.targets,
+      "List the targets that can be fenced by the\n"
+      INDENT "named device. Optional: --timeout.",
+      "DEVICE" },
+    { "metadata", 'M', 0, G_OPTION_ARG_NONE, &options.metadata,
+      "Show agent metadata. Requires: --agent.\n"
+      INDENT "Optional: --timeout.",
+      NULL },
+    { "query", 'Q', 0, G_OPTION_ARG_STRING, &options.query,
+      "Check the named device's status. Optional: --timeout.",
+      "DEVICE" },
+    { "history", 'H', 0, G_OPTION_ARG_STRING, &options.history,
+      "Show last successful fencing operation for named node\n"
+      INDENT "(or '*' for all nodes). Optional: --timeout, --cleanup,\n"
+      INDENT "--quiet (show only the operation's epoch timestamp),\n"
+      INDENT "--verbose (show all recorded and pending operations),\n"
+      INDENT "--broadcast (update history from all nodes available).",
+      "NODE" },
+    { "last", 'h', 0, G_OPTION_ARG_STRING, &options.last_fenced,
+      "Indicate when the named node was last fenced.\n"
+      INDENT "Optional: --as-node-id.",
+      "NODE" },
+    { "validate", 'K', 0, G_OPTION_ARG_NONE, &options.validate_cfg,
+      "Validate a fence device configuration.\n"
+      INDENT "Requires: --agent. Optional: --option, --env-option,\n"
+      INDENT "--quiet (print no output, only return status).",
+      NULL },
 
-    {   "list", required_argument, NULL, 'l',
-        "List devices that can terminate the specified host.\n"
-        "\t\t\tOptional: --timeout."
-    },
-    {   "list-registered", no_argument, NULL, 'L',
-        "List all registered devices. Optional: --timeout."
-    },
-    {   "list-installed", no_argument, NULL, 'I',
-        "List all installed devices. Optional: --timeout."
-    },
-    {   "list-targets", required_argument, NULL, 's',
-        "List the targets that can be fenced by the\n"
-        "\t\t\tnamed device. Optional: --timeout."
-    },
-    {   "metadata", no_argument, NULL, 'M',
-        "\tShow agent metadata. Requires: --agent.\n"
-        "\t\t\tOptional: --timeout."
-    },
-    {   "query", required_argument, NULL, 'Q',
-        "Check the named device's status. Optional: --timeout."
-    },
-    {   "history", required_argument, NULL, 'H',
-        "Show last successful fencing operation for named node\n"
-        "\t\t\t(or '*' for all nodes). Optional: --timeout, --cleanup,\n"
-        "\t\t\t--quiet (show only the operation's epoch timestamp),\n"
-        "\t\t\t--verbose (show all recorded and pending operations),\n"
-        "\t\t\t--broadcast (update history from all nodes available)."
-    },
-    {   "last", required_argument, NULL, 'h',
-        "Indicate when the named node was last fenced.\n"
-        "\t\t\tOptional: --as-node-id."
-    },
-    {   "validate", no_argument, NULL, 'K',
-        "\tValidate a fence device configuration.\n"
-        "\t\t\tRequires: --agent. Optional: --option, --env-option,\n"
-        "\t\t\t--quiet (print no output, only return status).\n"
-    },
+    { NULL }
+};
 
-    {   "-spacer-", no_argument, NULL, '-', "\nFencing Commands:" },
+static GOptionEntry fence_entries[] = {
+    { "fence", 'F', 0, G_OPTION_ARG_STRING, &options.fence_host,
+      "Fence named host. Optional: --timeout, --tolerance.",
+      "HOST" },
+    { "unfence", 'U', 0, G_OPTION_ARG_STRING, &options.unfence_host,
+      "Unfence named host. Optional: --timeout, --tolerance.",
+      "HOST" },
+    { "reboot", 'B', 0, G_OPTION_ARG_STRING, &options.reboot_host,
+      "Reboot named host. Optional: --timeout, --tolerance.",
+      "HOST" },
+    { "confirm", 'C', 0, G_OPTION_ARG_STRING, &options.confirm_host,
+      "Tell cluster that named host is now safely down.",
+      "HOST", },
 
-    {   "fence", required_argument, NULL, 'F',
-        "Fence named host. Optional: --timeout, --tolerance."
-    },
-    {   "unfence", required_argument, NULL, 'U',
-        "Unfence named host. Optional: --timeout, --tolerance."
-    },
-    {   "reboot", required_argument, NULL, 'B',
-        "Reboot named host. Optional: --timeout, --tolerance."
-    },
-    {   "confirm", required_argument, NULL, 'C',
-        "Tell cluster that named host is now safely down."
-    },
+    { NULL }
+};
 
-    {   "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
-
-    {   "agent", required_argument, NULL, 'a',
-        "The agent to use (for example, fence_xvm;\n"
-        "\t\t\twith --register, --metadata, --validate)."
-    },
-    {   "option", required_argument, NULL, 'o',
-        "Specify a device configuration parameter as NAME=VALUE\n"
-        "\t\t\t(may be specified multiple times; with --register,\n"
-        "\t\t\t--validate)."
-    },
-    {   "env-option", required_argument, NULL, 'e',
-        "Specify a device configuration parameter with the\n"
-        "\t\t\tspecified name, using the value of the\n"
-        "\t\t\tenvironment variable of the same name prefixed with\n"
-        "\t\t\tOCF_RESKEY_ (may be specified multiple times;\n"
-        "\t\t\twith --register, --validate)."
-    },
-    {   "tag", required_argument, NULL, 'T',
-        "Identify fencing operations in logs with the specified\n"
-        "\t\t\ttag; useful when multiple entities might invoke\n"
-        "\t\t\tstonith_admin (used with most commands)."
-    },
-    {   "device", required_argument, NULL, 'v',
-        "Device ID (with --register-level, device to associate with\n"
-        "\t\t\ta given host and level; may be specified multiple times)"
+static GOptionEntry addl_entries[] = {
+    { "cleanup", 'c', 0, G_OPTION_ARG_NONE, &options.cleanup,
+      "Cleanup wherever appropriate. Requires --history.",
+      NULL },
+    { "broadcast", 'b', 0, G_OPTION_ARG_NONE, &options.broadcast,
+      "Broadcast wherever appropriate.",
+      NULL },
+    { "agent", 'a', 0, G_OPTION_ARG_STRING, &options.agent,
+      "The agent to use (for example, fence_xvm;\n"
+      INDENT "with --register, --metadata, --validate).",
+      "AGENT" },
+    { "option", 'o', 0, G_OPTION_ARG_CALLBACK, add_stonith_params,
+      "Specify a device configuration parameter as NAME=VALUE\n"
+      INDENT "(may be specified multiple times; with --register,\n"
+      INDENT "--validate).",
+      "PARAM" },
+    { "env-option", 'e', 0, G_OPTION_ARG_CALLBACK, add_env_params,
+      "Specify a device configuration parameter with the\n"
+      INDENT "specified name, using the value of the\n"
+      INDENT "environment variable of the same name prefixed with\n"
+      INDENT "OCF_RESKEY_ (may be specified multiple times;\n"
+      INDENT "with --register, --validate).",
+      "PARAM" },
+    { "tag", 'T', 0, G_OPTION_ARG_CALLBACK, set_tag,
+      "Identify fencing operations in logs with the specified\n"
+      INDENT "tag; useful when multiple entities might invoke\n"
+      INDENT "stonith_admin (used with most commands).",
+      "TAG" },
+    { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_stonith_device,
+      "Device ID (with --register-level, device to associate with\n"
+      INDENT "a given host and level; may be specified multiple times)"
 #if SUPPORT_CIBSECRETS
-        "\n\t\t\t(with --validate, name to use to load CIB secrets)"
+      "\n" INDENT "(with --validate, name to use to load CIB secrets)"
 #endif
-        "."
-    },
-    {   "index", required_argument, NULL, 'i',
-        "The stonith level (1-9) (with --register-level,\n"
-        "\t\t\t--deregister-level)."
-    },
-    {   "timeout", required_argument, NULL, 't',
-        "Operation timeout in seconds (default 120;\n"
-        "\t\t\tused with most commands)."
-    },
-    {   "as-node-id", no_argument, NULL, 'n',
-        "(Advanced) The supplied node is the corosync node ID\n"
-        "\t\t\t(with --last)."
-    },
-    {   "tolerance", required_argument, NULL,   0,
-        "(Advanced) Do nothing if an equivalent --fence request\n"
-        "\t\t\tsucceeded less than this many seconds earlier\n"
-        "\t\t\t(with --fence, --unfence, --reboot)."
-    },
+      ".",
+      "DEVICE" },
+    { "index", 'i', 0, G_OPTION_ARG_INT, &options.fence_level,
+      "The stonith level (1-9) (with --register-level,\n"
+      INDENT "--deregister-level).",
+      "LEVEL" },
+    { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
+      "Operation timeout in seconds (default 120;\n"
+      INDENT "used with most commands).",
+      "SECONDS" },
+    { "as-node-id", 'n', 0, G_OPTION_ARG_NONE, &options.as_nodeid,
+      "(Advanced) The supplied node is the corosync node ID\n"
+      INDENT "(with --last).",
+      NULL },
+    { "tolerance", 0, 0, G_OPTION_ARG_CALLBACK, add_tolerance,
+      "(Advanced) Do nothing if an equivalent --fence request\n"
+      INDENT "succeeded less than this many seconds earlier\n"
+      INDENT "(with --fence, --unfence, --reboot).",
+      "SECONDS" },
 
-    { 0, 0, 0, 0 }
+    { NULL }
 };
 /* *INDENT-ON* */
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_HTML,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
@@ -198,29 +239,67 @@ struct {
     int rc;
 } async_fence_data;
 
-static int
-try_mainloop_connect(void)
-{
-    stonith_t *st = async_fence_data.st;
-    int tries = 10;
-    int i = 0;
-    int rc = 0;
+gboolean
+add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    char *key = crm_concat("OCF_RESKEY", optarg, '_');
+    const char *env = getenv(key);
+    gboolean retval = TRUE;
 
-    for (i = 0; i < tries; i++) {
-        crm_debug("Connecting as %s", async_fence_data.name);
-        rc = st->cmds->connect(st, async_fence_data.name, NULL);
-
-        if (!rc) {
-            crm_debug("stonith client connection established");
-            return 0;
-        } else {
-            crm_debug("stonith client connection failed");
-        }
-        sleep(1);
+    if (env == NULL) {
+        crm_err("Invalid option: -e %s", optarg);
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
+        retval = FALSE;
+    } else {
+        crm_info("Got: '%s'='%s'", optarg, env);
+        options.params = stonith_key_value_add(options.params, optarg, env);
     }
 
-    crm_err("Could not connect to the fencer");
-    return -1;
+    free(key);
+    return retval;
+}
+
+gboolean
+add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.devices = stonith_key_value_add(options.devices, NULL, optarg);
+    return TRUE;
+}
+
+gboolean
+add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.tolerance = crm_get_msec(optarg) / 1000;
+    return TRUE;
+}
+
+gboolean
+add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    char *name = NULL;
+    char *value = NULL;
+    int rc = 0;
+    gboolean retval = TRUE;
+
+    crm_info("Scanning: -o %s", optarg);
+
+    rc = pcmk_scan_nvpair(optarg, &name, &value);
+
+    if (rc != 2) {
+        crm_err("Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
+        g_set_error(error, G_OPTION_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
+        retval = FALSE;
+    } else {
+        crm_info("Got: '%s'='%s'", name, value);
+        options.params = stonith_key_value_add(options.params, name, value);
+    }
+
+    free(name);
+    free(value);
+    return retval;
+}
+
+gboolean
+set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    free(async_fence_data.name);
+    async_fence_data.name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
+    return TRUE;
 }
 
 static void
@@ -251,8 +330,10 @@ async_fence_helper(gpointer user_data)
 {
     stonith_t *st = async_fence_data.st;
     int call_id = 0;
+    int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
 
-    if (try_mainloop_connect()) {
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not connect to fencer: %s\n", pcmk_strerror(rc));
         g_main_loop_quit(mainloop);
         return TRUE;
     }
@@ -306,9 +387,15 @@ handle_level(stonith_t *st, char *target, int fence_level,
     char *node = NULL;
     char *pattern = NULL;
     char *name = NULL;
-    char *value = strchr(target, '=');
+    char *value = NULL;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return -EINVAL;
+    }
 
     /* Determine if targeting by attribute, node name pattern or node name */
+    value = strchr(target, '=');
     if (value != NULL)  {
         name = target;
         *value++ = '\0';
@@ -350,8 +437,9 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
                            (safe_str_eq(target, "*")? NULL : target),
                            &history, timeout);
 
-    out->begin_list(out, "Fencing history", "event", "events");
+    out->begin_list(out, "event", "events", "Fencing history");
 
+    history = stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_done) {
             latest = hp;
@@ -361,14 +449,16 @@ handle_history(stonith_t *st, const char *target, int timeout, int quiet,
             continue;
         }
 
-        out->message(out, "stonith-event", hp);
+        out->message(out, "stonith-event", hp, 1, stonith__later_succeeded(hp, history));
+        out->increment_list(out);
     }
 
     if (latest) {
         if (quiet && out->supports_quiet) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest);
+            out->message(out, "stonith-event", latest, 0, FALSE);
+            out->increment_list(out);
         }
     }
 
@@ -398,384 +488,356 @@ validate(stonith_t *st, const char *agent, const char *id,
     return rc;
 }
 
+static void
+show_last_fenced(pcmk__output_t *out, const char *target)
+{
+    time_t when = 0;
+
+    if (target == NULL) {
+        // Not really possible, but makes static analysis happy
+        return;
+    }
+    if (options.as_nodeid) {
+        uint32_t nodeid = atol(target);
+        when = stonith_api_time(nodeid, NULL, FALSE);
+    } else {
+        when = stonith_api_time(0, target, FALSE);
+    }
+    out->message(out, "last-fenced", target, when);
+}
+
+static int
+show_metadata(pcmk__output_t *out, stonith_t *st, char *agent, int timeout)
+{
+    char *buffer = NULL;
+    int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
+                                timeout);
+
+    if (rc == pcmk_ok) {
+        out->output_xml(out, "metadata", buffer);
+    } else {
+        out->err(out, "Can't get fence agent meta-data: %s",
+                 pcmk_strerror(rc));
+    }
+    free(buffer);
+    return rc;
+}
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Be less descriptive in output.",
+          NULL },
+
+        { NULL }
+    };
+
+    context = pcmk__build_arg_context(args, "text (default), html, xml");
+
+    /* Add the -q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    pcmk__add_main_args(context, extra_prog_entries);
+
+    pcmk__add_arg_group(context, "definition", "Device Definition Commands:",
+                        "Show device definition help", defn_entries);
+    pcmk__add_arg_group(context, "queries", "Queries:",
+                        "Show query help", query_entries);
+    pcmk__add_arg_group(context, "fence", "Fencing Commands:",
+                        "Show fence help", fence_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int flag;
     int rc = 0;
-    int quiet = 0;
-    int cleanup = 0;
-    int broadcast = 0;
-    int verbose = 0;
-    int argerr = 0;
-    int timeout = 120;
-    int option_index = 0;
-    int fence_level = 0;
-    int no_connect = 0;
-    int tolerance = 0;
-    int as_nodeid = FALSE;
+    bool no_connect = false;
     bool required_agent = false;
 
-    char *name = NULL;
-    char *value = NULL;
     char *target = NULL;
     char *lists = NULL;
-    const char *agent = NULL;
     const char *device = NULL;
-    const char *longname = NULL;
 
-    char action = 0;
     crm_exit_t exit_code = CRM_EX_OK;
     stonith_t *st = NULL;
-    stonith_key_value_t *params = NULL;
-    stonith_key_value_t *devices = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    char *output_ty = NULL;
-    char *output_dest = NULL;
     pcmk__output_t *out = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
+    pcmk__register_formats(context, formats);
 
     crm_log_cli_init("stonith_admin");
-    crm_set_options(NULL, "<command> [<options>]", long_options,
-                    "access the Pacemaker fencing API");
 
     async_fence_data.name = strdup(crm_system_name);
 
-    while (1) {
-        flag = crm_get_option_long(argc, argv, &option_index, &longname);
-        if (flag == -1)
-            break;
+    processed_args = pcmk__cmdline_preproc(argc, argv, "adehilorstvBCDFHQRTU");
 
-        switch (flag) {
-            case 'V':
-                verbose = 1;
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                crm_help(flag, CRM_EX_OK);
-                break;
-
-            case 'K':
-                required_agent = true;
-                /* fall through */
-            case 'I':
-                no_connect = 1;
-                /* fall through */
-            case 'L':
-                action = flag;
-                break;
-
-            case 'q':
-                quiet = 1;
-                break;
-            case 'c':
-                cleanup = 1;
-                break;
-            case 'b':
-                broadcast = 1;
-                break;
-            case 'R':
-                required_agent = true;
-                /* fall through */
-            case 'Q':
-            case 'D':
-            case 's':
-                action = flag;
-                device = optarg;
-                break;
-            case 'T':
-                free(async_fence_data.name);
-                async_fence_data.name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
-                break;
-            case 'a':
-                agent = optarg;
-                break;
-            case 'l':
-                target = optarg;
-                action = 'L';
-                break;
-            case 'M':
-                no_connect = 1;
-                action = flag;
-                required_agent = true;
-                break;
-            case 't':
-                timeout = crm_atoi(optarg, NULL);
-                break;
-            case 'B':
-            case 'F':
-            case 'U':
-                /* using mainloop here */
-                no_connect = 1;
-                /* fall through */
-            case 'C':
-                /* Always log the input arguments */
-                crm_log_args(argc, argv);
-                target = optarg;
-                action = flag;
-                break;
-            case 'n':
-                as_nodeid = TRUE;
-                break;
-            case 'h':
-            case 'H':
-            case 'r':
-            case 'd':
-                target = optarg;
-                action = flag;
-                break;
-            case 'i':
-                fence_level = crm_atoi(optarg, NULL);
-                break;
-            case 'v':
-                devices = stonith_key_value_add(devices, NULL, optarg);
-                break;
-            case 'o':
-                crm_info("Scanning: -o %s", optarg);
-                rc = pcmk_scan_nvpair(optarg, &name, &value);
-
-                if (rc != 2) {
-                    crm_err("Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
-                    ++argerr;
-                } else {
-                    crm_info("Got: '%s'='%s'", name, value);
-                    params = stonith_key_value_add(params, name, value);
-                }
-                free(value); value = NULL;
-                free(name); name = NULL;
-                break;
-            case 'e':
-                {
-                    char *key = crm_concat("OCF_RESKEY", optarg, '_');
-                    const char *env = getenv(key);
-
-                    if (env == NULL) {
-                        crm_err("Invalid option: -e %s", optarg);
-                        ++argerr;
-                    } else {
-                        crm_info("Got: '%s'='%s'", optarg, env);
-                        params = stonith_key_value_add(params, optarg, env);
-                    }
-                    free(key);
-                }
-                break;
-            case 0:
-                if (safe_str_eq("tolerance", longname)) {
-                    tolerance = crm_get_msec(optarg) / 1000;    /* Send in seconds */
-                } else if (pcmk__parse_output_args(longname, optarg, &output_ty,
-                                                   &output_dest) == false) {
-                    fprintf(stderr, "Unknown long option used: %s\n", longname);
-                    ++argerr;
-                }
-
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
     }
 
-    if (optind > argc || action == 0) {
-        ++argerr;
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
     }
 
-    if (required_agent && agent == NULL) {
-        fprintf(stderr, "Please specify an agent to query using -a,--agent [value]\n");
-        ++argerr;
-    }
-
-    if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
-    }
-
-    CRM_ASSERT(pcmk__register_format("text", pcmk__mk_text_output) == 0);
-    CRM_ASSERT(pcmk__register_format("xml", pcmk__mk_xml_output) == 0);
-
-    rc = pcmk__output_new(&out, output_ty, output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != 0) {
-        fprintf(stderr, "Error creating output format %s: %s\n", output_ty, pcmk_strerror(rc));
+        fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
         exit_code = CRM_EX_ERROR;
         goto done;
     }
 
     stonith__register_messages(out);
 
-    st = stonith_api_new();
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
 
-    if (!no_connect) {
+    if (options.validate_cfg) {
+        required_agent = true;
+        no_connect = true;
+        action = 'K';
+    }
+
+    if (options.installed) {
+        no_connect = true;
+        action = 'I';
+    }
+
+    if (options.registered) {
+        action = 'L';
+    }
+
+    if (options.register_dev != NULL) {
+        required_agent = true;
+        action = 'R';
+        device = options.register_dev;
+    }
+
+    if (options.query != NULL) {
+        action = 'Q';
+        device = options.query;
+    }
+
+    if (options.unregister_dev != NULL) {
+        action = 'D';
+        device = options.unregister_dev;
+    }
+
+    if (options.targets != NULL) {
+        action = 's';
+        device = options.targets;
+    }
+
+    if (options.terminate != NULL) {
+        action = 'L';
+        target = options.terminate;
+    }
+
+    if (options.metadata) {
+        no_connect = true;
+        required_agent = true;
+        action = 'M';
+    }
+
+    if (options.reboot_host != NULL) {
+        no_connect = true;
+        action = 'B';
+        target = options.reboot_host;
+        crm_log_args(argc, argv);
+    }
+
+    if (options.fence_host != NULL) {
+        no_connect = true;
+        action = 'F';
+        target = options.fence_host;
+        crm_log_args(argc, argv);
+    }
+
+    if (options.unfence_host != NULL) {
+        no_connect = true;
+        action = 'U';
+        target = options.unfence_host;
+        crm_log_args(argc, argv);
+    }
+
+    if (options.confirm_host != NULL) {
+        action = 'C';
+        target = options.confirm_host;
+        crm_log_args(argc, argv);
+    }
+
+    if (options.last_fenced != NULL) {
+        action = 'h';
+        target = options.last_fenced;
+    }
+
+    if (options.history != NULL) {
+        action = 'H';
+        target = options.history;
+    }
+
+    if (options.register_level != NULL) {
+        action = 'r';
+        target = options.register_level;
+    }
+
+    if (options.unregister_level != NULL) {
+        action = 'd';
+        target = options.unregister_level;
+    }
+
+    if (optind > argc || action == 0) {
+        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
+    if (required_agent && options.agent == NULL) {
+        out->err(out, "Please specify an agent to query using -a,--agent [value]");
+        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
+    st = stonith_api_new();
+    if (st == NULL) {
+        rc = -ENOMEM;
+    } else if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
-        if (rc < 0) {
-            fprintf(stderr, "Could not connect to fencer: %s\n",
-                    pcmk_strerror(rc));
-            exit_code = CRM_EX_DISCONNECT;
-            goto done;
-        }
+    }
+    if (rc < 0) {
+        out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
+        exit_code = CRM_EX_DISCONNECT;
+        goto done;
     }
 
     switch (action) {
         case 'I':
-            rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout);
+            rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &options.devices, options.timeout);
             if (rc < 0) {
-                fprintf(stderr, "Failed to list installed devices: %s\n", pcmk_strerror(rc));
+                out->err(out, "Failed to list installed devices: %s", pcmk_strerror(rc));
                 break;
             }
 
-            out->begin_list(out, "Installed fence devices", "fence device", "fence devices");
-            for (dIter = devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+            out->begin_list(out, "fence device", "fence devices", "Installed fence devices");
+            for (dIter = options.devices; dIter; dIter = dIter->next) {
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
             rc = 0;
 
-            stonith_key_value_freeall(devices, 1, 1);
+            stonith_key_value_freeall(options.devices, 1, 1);
             break;
 
         case 'L':
-            rc = st->cmds->query(st, st_opts, target, &devices, timeout);
+            rc = st->cmds->query(st, st_opts, target, &options.devices, options.timeout);
             if (rc < 0) {
-                fprintf(stderr, "Failed to list registered devices: %s\n", pcmk_strerror(rc));
+                out->err(out, "Failed to list registered devices: %s", pcmk_strerror(rc));
                 break;
             }
 
-            out->begin_list(out, "Registered fence devices", "fence device", "fence devices");
-            for (dIter = devices; dIter; dIter = dIter->next) {
-                out->list_item(out, "device", dIter->value);
+            out->begin_list(out, "fence device", "fence devices", "Registered fence devices");
+            for (dIter = options.devices; dIter; dIter = dIter->next) {
+                out->list_item(out, "device", "%s", dIter->value);
             }
 
             out->end_list(out);
             rc = 0;
 
-            stonith_key_value_freeall(devices, 1, 1);
+            stonith_key_value_freeall(options.devices, 1, 1);
             break;
 
         case 'Q':
-            rc = st->cmds->monitor(st, st_opts, device, timeout);
+            rc = st->cmds->monitor(st, st_opts, device, options.timeout);
             if (rc < 0) {
-                rc = st->cmds->list(st, st_opts, device, NULL, timeout);
+                rc = st->cmds->list(st, st_opts, device, NULL, options.timeout);
             }
             break;
         case 's':
-            rc = st->cmds->list(st, st_opts, device, &lists, timeout);
-            if (rc == 0 && lists) {
-                char *head = lists;
-                char *eol = NULL;
+            rc = st->cmds->list(st, st_opts, device, &lists, options.timeout);
+            if (rc == 0) {
+                GList *targets = stonith__parse_targets(lists);
 
-                out->begin_list(out, "Fence targets", "fence target", "fence targets");
-
-                do {
-                    char *line = NULL;
-                    char *elem = NULL;
-
-                    char *hostname = NULL;
-                    char *uuid = NULL;
-                    char *status = NULL;
-
-                    eol = strstr(head, "\\n");
-                    line = strndup(head, eol-head);
-
-                    while ((elem = strsep(&line, " ")) != NULL) {
-                        if (strcmp(elem, "") == 0) {
-                            continue;
-                        }
-
-                        if (hostname == NULL) {
-                            hostname = elem;
-                        } else if (uuid == NULL) {
-                            uuid = elem;
-                        } else if (status == NULL) {
-                            char *end = NULL;
-                            status = elem;
-
-                            end = strchr(status, '\n');
-                            if (end != NULL) {
-                                *end = '\0';
-                            }
-                        }
-                    }
-
-                    if (hostname != NULL && uuid != NULL && status != NULL) {
-                        out->message(out, "fence-target", hostname, uuid, status);
-                    }
-
-                    free(line);
-
-                    head = eol+2;
-                } while (eol != NULL);
-
+                out->begin_list(out, "fence target", "fence targets", "Fence Targets");
+                while (targets != NULL) {
+                    out->list_item(out, NULL, "%s", (const char *) targets->data);
+                    targets = targets->next;
+                }
                 out->end_list(out);
+                free(lists);
+
             } else if (rc != 0) {
-                fprintf(stderr, "List command returned error. rc : %d\n", rc);
+                out->err(out, "Couldn't list targets: %s", pcmk_strerror(rc));
             }
             break;
         case 'R':
-            rc = st->cmds->register_device(st, st_opts, device, NULL, agent,
-                                           params);
+            rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
+                                           options.params);
             break;
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
             break;
         case 'd':
         case 'r':
-            rc = handle_level(st, target, fence_level, devices, action == 'r');
+            rc = handle_level(st, target, options.fence_level, options.devices, action == 'r');
             break;
         case 'M':
-            {
-                char *buffer = NULL;
-
-                rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
-                if (rc == pcmk_ok) {
-                    out->output_xml(out, "metadata", buffer);
-                }
-                free(buffer);
-            }
+            rc = show_metadata(out, st, options.agent, options.timeout);
             break;
         case 'C':
             rc = st->cmds->confirm(st, st_opts, target);
             break;
         case 'B':
-            rc = mainloop_fencing(st, target, "reboot", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "reboot", options.timeout, options.tolerance);
             break;
         case 'F':
-            rc = mainloop_fencing(st, target, "off", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "off", options.timeout, options.tolerance);
             break;
         case 'U':
-            rc = mainloop_fencing(st, target, "on", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "on", options.timeout, options.tolerance);
             break;
         case 'h':
-            {
-                time_t when = 0;
-
-                if(as_nodeid) {
-                    uint32_t nodeid = atol(target);
-                    when = stonith_api_time(nodeid, NULL, FALSE);
-                } else {
-                    when = stonith_api_time(0, target, FALSE);
-                }
-
-                out->message(out, "last-fenced", target, when);
-            }
-
+            show_last_fenced(out, target);
             break;
         case 'H':
-            rc = handle_history(st, target, timeout, quiet,
-                                verbose, cleanup, broadcast, out);
+            rc = handle_history(st, target, options.timeout, args->quiet,
+                                args->verbosity, options.cleanup,
+                                options.broadcast, out);
             break;
         case 'K':
-            device = (devices? devices->key : NULL);
-            rc = validate(st, agent, device, params, timeout, quiet, out);
+            device = (options.devices ? options.devices->key : NULL);
+            rc = validate(st, options.agent, device, options.params,
+                          options.timeout, args->quiet, out);
             break;
     }
 
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
     exit_code = crm_errno2exit(rc);
 
-    pcmk__output_free(out, exit_code);
-
   done:
+    g_strfreev(processed_args);
+    g_option_context_free(context);
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
     free(async_fence_data.name);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith_key_value_freeall(options.params, 1, 1);
 
     if (st != NULL) {
         st->cmds->disconnect(st);

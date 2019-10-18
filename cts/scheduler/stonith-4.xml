@@ -4,6 +4,7 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-0.772.26fe3e5.git.fc17-26fe3e52d259e4726699300d27991fc1a80c556b"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="options-concurrent-fencing" name="concurrent-fencing" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

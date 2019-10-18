@@ -7,7 +7,7 @@ Online: [ node1 node2 ]
      Slaves: [ node1 node2 ]
 
 Transition Summary:
- * Promote rsc1:0	(Slave -> Master node1)
+ * Promote    rsc1:0     ( Slave -> Master node1 )  
 
 Executing cluster transition:
  * Pseudo action:   ms1_promote_0

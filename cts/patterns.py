@@ -44,9 +44,6 @@ class BasePatterns(object):
             "ReduceCommCmd"  : "",
             "RestoreCommCmd" : "tc qdisc del dev lo root",
 
-            "SetCheckInterval"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-recheck-interval-setting\" name=\"cluster-recheck-interval\" value=\"%s\"/></cluster_property_set>'",
-            "ClearCheckInterval"    : "cibadmin --delete --xpath \"//nvpair[@name='cluster-recheck-interval']\"",
-
             "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
             "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
 
@@ -65,9 +62,11 @@ class BasePatterns(object):
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"schedulerd.*: Recover %s",
+            "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
+            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s on .* for .*@.*: OK",
+            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover %s",
+            "Pat:Fencing_active"  : r"pacemaker-schedulerd.*: Resource %s is active on .* nodes",
+            "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
@@ -130,7 +129,8 @@ class crm_corosync(BasePatterns):
             "Pat:They_dead"    : "pacemaker-controld.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated with signal 9",
+            # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
+            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
@@ -174,8 +174,8 @@ class crm_corosync(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
-            r"\[[0-9]+\] terminated with signal [0-9]+ \(",
-            r"schedulerd:.*Recover .*\(.* -\> .*\)",
+            r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
+            r"pacemaker-schedulerd.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -227,6 +227,12 @@ class crm_corosync(BasePatterns):
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit: Fencing daemon connection failed",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
             ]
 
         self.components["corosync"] = [
@@ -260,6 +266,12 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
         self.components["pacemaker-execd"] = [
@@ -268,12 +280,14 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
-            r"pacemakerd.*pacemaker-execd.* terminated with signal 9",
             r"pacemakerd.*pacemaker-controld\[[0-9]+\] exited with status 1",
             r"pacemakerd.*Respawning failed child process: pacemaker-execd",
             r"pacemakerd.*Respawning failed child process: pacemaker-controld",
         ]
-        self.components["pacemaker-execd-ignore"] = []
+        self.components["pacemaker-execd-ignore"] = [
+            r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+            r"pacemaker-(attrd|controld).*Could not execute alert",
+        ]
 
         self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
@@ -303,14 +317,20 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-fenced"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"Fencing daemon connection failed",
-            r"pacemaker-controld.*:\s*warn.*:\s*Callback already present",
+            r"pacemaker-controld.*Fencer successfully connected",
         ]
         self.components["pacemaker-fenced-ignore"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
-            r"error:.*Sign-in failed: triggered a retry",
+            r"error:.*Fencer connection failed \(will retry\)",
             r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
+            # This is overbroad, but we don't have a way to say that only
+            # certain transition errors are acceptable (if the fencer respawns,
+            # fence devices may appear multiply active). We have to rely on
+            # other causes of a transition error logging their own error
+            # message, which is the usual practice.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 

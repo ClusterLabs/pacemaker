@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "do_shutdown controller-0" [ style=bold color="green" fontcolor="black"]
 "haproxy-bundle-docker-0_stop_0 controller-0" -> "do_shutdown controller-0" [ style = bold]
 "haproxy-bundle-docker-0_stop_0 controller-0" -> "haproxy-bundle_stopped_0" [ style = bold]

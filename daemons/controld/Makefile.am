@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2018-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -13,6 +15,7 @@ halib_PROGRAMS	= pacemaker-controld
 
 noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
+		  controld_fencing.h		\
 		  controld_fsa.h		\
 		  controld_lrm.h		\
 		  controld_matrix.h		\
@@ -20,6 +23,7 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
 		  controld_throttle.h		\
+		  controld_timers.h		\
 		  controld_transition.h		\
 		  controld_utils.h		\
 		  pacemaker-controld.h
@@ -46,6 +50,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_election.c	\
 			     controld_execd.c		\
 			     controld_execd_state.c	\
+			     controld_fencing.c		\
 			     controld_fsa.c		\
 			     controld_join_client.c	\
 			     controld_join_dc.c		\
@@ -59,6 +64,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_te_events.c	\
 			     controld_te_utils.c	\
 			     controld_throttle.c	\
+			     controld_timers.c		\
 			     controld_transition.c	\
 			     controld_utils.c
 

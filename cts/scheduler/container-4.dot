@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "container1_monitor_20000 node2" [ style=bold color="green" fontcolor="black"]
 "container1_start_0 node2" -> "container1_monitor_20000 node2" [ style = bold]
 "container1_start_0 node2" -> "rsc1_start_0 node2" [ style = bold]

@@ -3,10 +3,10 @@ Current cluster status:
 Online: [ srv01 srv02 srv03 srv04 ]
 
  Resource Group: UMgroup01
-     UmVIPcheck	(ocf::heartbeat:Dummy):	Stopped 
-     UmIPaddr	(ocf::heartbeat:Dummy):	Stopped 
-     UmDummy01	(ocf::heartbeat:Dummy):	Stopped 
-     UmDummy02	(ocf::heartbeat:Dummy):	Stopped 
+     UmVIPcheck	(ocf::heartbeat:Dummy):	Stopped
+     UmIPaddr	(ocf::heartbeat:Dummy):	Stopped
+     UmDummy01	(ocf::heartbeat:Dummy):	Stopped
+     UmDummy02	(ocf::heartbeat:Dummy):	Stopped
  Resource Group: OVDBgroup02-1
      prmExPostgreSQLDB1	(ocf::heartbeat:Dummy):	Started srv04
      prmFsPostgreSQLDB1-1	(ocf::heartbeat:Dummy):	Started srv04
@@ -54,10 +54,10 @@ Online: [ srv01 srv02 srv03 srv04 ]
 
 Transition Summary:
  * Shutdown srv01
- * Start   UmVIPcheck	(srv04)
- * Start   UmIPaddr	(srv04)
- * Start   UmDummy01	(srv04)
- * Start   UmDummy02	(srv04)
+ * Start      UmVIPcheck     ( srv04 )  
+ * Start      UmIPaddr       ( srv04 )  
+ * Start      UmDummy01      ( srv04 )  
+ * Start      UmDummy02      ( srv04 )  
 
 Executing cluster transition:
  * Pseudo action:   UMgroup01_start_0

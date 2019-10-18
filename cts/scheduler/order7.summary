@@ -10,9 +10,9 @@ Online: [ node1 ]
  rscC	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
- * Start   rsc2	(node1)
- * Start   rsc3	(node1)
- * Start   rscB	(node1)
+ * Start      rsc2    ( node1 )  
+ * Start      rsc3    ( node1 )  
+ * Start      rscB    ( node1 )  
  * Start      rscC    ( node1 )   due to unrunnable rscA start (blocked)
 
 Executing cluster transition:

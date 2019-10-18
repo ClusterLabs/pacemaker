@@ -9,10 +9,10 @@
 include $(top_srcdir)/Makefile.common
 
 if BUILD_SYSTEMD
-systemdunit_DATA = crm_mon.service
+systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_resource.h
+noinst_HEADERS		= crm_mon.h crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -21,7 +21,12 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-EXTRA_DIST		= $(sbin_SCRIPTS)
+noinst_SCRIPTS		= pcmk_simtimes
+
+EXTRA_DIST		= crm_mon.sysconfig		\
+			  crm_mon.8.inc			\
+			  crm_node.8.inc \
+			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
 			  cibadmin \
@@ -49,7 +54,10 @@ endif
 
 ## SOURCES
 
-MAN8DEPS		= crm_attribute crm_node
+# A few tools are just thin wrappers around crm_attribute.
+# This makes their help get updated when crm_attribute changes
+# (see Makefile.common).
+MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
@@ -81,7 +89,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_mon_SOURCES		= crm_mon.c
+crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_output.c crm_mon_print.c crm_mon_runtime.c crm_mon_xml.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
@@ -89,7 +97,6 @@ crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(CURSESLIBS)
 
-# Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\

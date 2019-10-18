@@ -556,8 +556,13 @@ crm_parse_interval_spec(const char *input)
     } else {
         crm_time_t *period_s = crm_time_parse_duration(input);
 
-        msec = 1000 * crm_time_get_seconds(period_s);
-        crm_time_free(period_s);
+        if (period_s) {
+            msec = 1000 * crm_time_get_seconds(period_s);
+            crm_time_free(period_s);
+        } else {
+            // Reason why not valid has already been logged
+            crm_warn("Using 0 instead of '%s'", input);
+        }
     }
 
     return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
@@ -1031,7 +1036,8 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
 void
 stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server_with_prio("stonith-ng", QB_IPC_NATIVE, cb,
+                                              QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
         crm_err("Failed to create fencer: exiting and inhibiting respawn.");

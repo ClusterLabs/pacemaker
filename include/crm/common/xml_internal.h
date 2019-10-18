@@ -133,4 +133,34 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
+enum pcmk__xml_artefact_ns {
+    pcmk__xml_artefact_ns_legacy_rng = 1,
+    pcmk__xml_artefact_ns_legacy_xslt,
+    pcmk__xml_artefact_ns_base_rng,
+    pcmk__xml_artefact_ns_base_xslt,
+};
+
+/*!
+ * \internal
+ * \brief Get the root directory to scan XML artefacts of given kind for
+ *
+ * \param[in] ns governs the hierarchy nesting against the inherent root dir
+ *
+ * \return root directory to scan XML artefacts of given kind for
+ */
+char *
+pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
+
+/*!
+ * \internal
+ * \brief Get the fully unwrapped path to particular XML artifact (RNG/XSLT)
+ *
+ * \param[in] ns       denotes path forming details (parent dir, suffix)
+ * \param[in] filespec symbolic file specification to be combined with
+ *                     #artefact_ns to form the final path
+ * \return unwrapped path to particular XML artifact (RNG/XSLT)
+ */
+char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
+                              const char *filespec);
+
 #endif

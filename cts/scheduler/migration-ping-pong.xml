@@ -1,0 +1,165 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.7" epoch="6815" num_updates="15" admin_epoch="2" cib-last-written="Thu Jun  6 15:41:29 2019" update-origin="ha-idg-2" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1084777482" execution-date="1559829405">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="have-watchdog" value="false" id="cib-bootstrap-options-have-watchdog"/>
+        <nvpair name="dc-version" value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="last-lrm-refresh" value="1559146053" id="cib-bootstrap-options-last-lrm-refresh"/>
+        <nvpair name="cluster-name" value="ha-idg" id="cib-bootstrap-options-cluster-name"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="stonith-action" value="Off" id="cib-bootstrap-options-stonith-action"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084777492" uname="ha-idg-2">
+        <instance_attributes id="nodes-1084777492">
+          <nvpair id="nodes-1084777492-maintenance" name="maintenance" value="off"/>
+          <nvpair id="nodes-1084777492-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="1084777482" uname="ha-idg-1">
+        <instance_attributes id="nodes-1084777482">
+          <nvpair id="nodes-1084777482-maintenance" name="maintenance" value="off"/>
+          <nvpair id="nodes-1084777482-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="fence_ilo_ha-idg-2" class="stonith" type="fence_ilo2" description="fenct ha-idg-2 mit ILO">
+        <operations>
+          <op name="monitor" interval="30m" timeout="120s" id="fence_ha-idg-2-monitor-30m"/>
+        </operations>
+      </primitive>
+      <primitive id="fence_ilo_ha-idg-1" class="stonith" type="fence_ilo4" description="fenct ha-idg-1 mit ILO">
+        <operations>
+          <op name="monitor" interval="30m" timeout="120s" id="fence_ha-idg-1-monitor-30m"/>
+        </operations>
+      </primitive>
+      <primitive id="vm_idcc_devel" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="vm_idcc-devel-instance_attributes">
+          <nvpair name="config" value="/mnt/share/idcc_devel.xml" id="vm_idcc-devel-instance_attributes-config"/>
+        </instance_attributes>
+        <instance_attributes id="vm_idcc-devel-instance_attributes-0">
+          <nvpair name="hypervisor" value="qemu:///system" id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        </instance_attributes>
+        <instance_attributes id="vm_idcc-devel-instance_attributes-1">
+          <nvpair name="migration_transport" value="ssh" id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        </instance_attributes>
+        <instance_attributes id="vm_idcc-devel-instance_attributes-2">
+          <nvpair name="migration_network_suffix" value="-private" id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="120" id="vm_idcc-devel-start-0"/>
+          <op name="stop" interval="0" timeout="130" id="vm_idcc-devel-stop-0"/>
+          <op name="monitor" interval="30" timeout="25" id="vm_idcc-devel-monitor-30"/>
+          <op name="migrate_from" interval="0" timeout="300" id="vm_idcc-devel-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="300" id="vm_idcc-devel-migrate_to-0"/>
+        </operations>
+        <meta_attributes id="vm_idcc-devel-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="vm_idcc-devel-meta_attributes-target-role"/>
+          <nvpair name="is-managed" value="true" id="vm_idcc-devel-meta_attributes-is-managed"/>
+        </meta_attributes>
+        <utilization id="vm_idcc-devel-utilization">
+          <nvpair name="cpu" value="1" id="vm_idcc-devel-utilization-cpu"/>
+          <nvpair name="hv_memory" value="1020" id="vm_idcc-devel-utilization-hv_memory"/>
+        </utilization>
+      </primitive>
+      <primitive id="vm_severin" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="vm_severin-instance_attributes">
+          <nvpair name="config" value="/mnt/share/severin.xml" id="vm_severin-instance_attributes-config"/>
+        </instance_attributes>
+        <instance_attributes id="vm_severin-instance_attributes-0">
+          <nvpair name="hypervisor" value="qemu:///system" id="vm_severin-instance_attributes-0-hypervisor"/>
+        </instance_attributes>
+        <instance_attributes id="vm_severin-instance_attributes-1">
+          <nvpair name="migration_transport" value="ssh" id="vm_severin-instance_attributes-1-migration_transport"/>
+        </instance_attributes>
+        <instance_attributes id="vm_severin-instance_attributes-2">
+          <nvpair name="migration_network_suffix" value="-private" id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="120" id="vm_severin-start-0"/>
+          <op name="stop" interval="0" timeout="130" id="vm_severin-stop-0"/>
+          <op name="monitor" interval="30" timeout="25" id="vm_severin-monitor-30"/>
+          <op name="migrate_from" interval="0" timeout="300" id="vm_severin-migrate_from-0"/>
+          <op name="migrate_to" interval="0" timeout="300" id="vm_severin-migrate_to-0"/>
+        </operations>
+        <meta_attributes id="vm_severin-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="vm_severin-meta_attributes-allow-migrate"/>
+          <nvpair name="target-role" value="Started" id="vm_severin-meta_attributes-target-role"/>
+          <nvpair name="is-managed" value="true" id="vm_severin-meta_attributes-is-managed"/>
+        </meta_attributes>
+        <utilization id="vm_severin-utilization">
+          <nvpair name="cpu" value="2" id="vm_severin-utilization-cpu"/>
+          <nvpair name="hv_memory" value="2176" id="vm_severin-utilization-hv_memory"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="loc_fence_ilo_ha-idg-2" rsc="fence_ilo_ha-idg-2" score="-INFINITY" node="ha-idg-2"/>
+      <rsc_location id="loc_fence_ilo_ha-idg-1" rsc="fence_ilo_ha-idg-1" score="-INFINITY" node="ha-idg-1"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="200" id="rsc-options-resource-stickiness"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <alerts/>
+  </configuration>
+  <status>
+    <node_state id="1084777482" uname="ha-idg-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1084777482">
+        <instance_attributes id="status-1084777482">
+          <nvpair id="status-1084777482-fail-count-vm_idcc_devel.monitor_30000" name="fail-count-vm_idcc_devel#monitor_30000" value="4"/>
+          <nvpair id="status-1084777482-last-failure-vm_idcc_devel.monitor_30000" name="last-failure-vm_idcc_devel#monitor_30000" value="1559766644"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1084777482">
+        <lrm_resources>
+          <lrm_resource id="fence_ilo_ha-idg-1" type="fence_ilo4" class="stonith">
+            <lrm_rsc_op id="fence_ilo_ha-idg-1_last_0" operation_key="fence_ilo_ha-idg-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="3:0:7:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:7;3:0:7:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-1" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1558969612" last-rc-change="1558969612" exec-time="0" queue-time="0" op-digest="3954a01b79da87e4607bb152bdb8fc12" op-secure-params=" password  passwd " op-secure-digest="ba60b2919b6ff526e7844689cbedee60"/>
+          </lrm_resource>
+          <lrm_resource id="fence_ilo_ha-idg-2" type="fence_ilo2" class="stonith">
+            <lrm_rsc_op id="fence_ilo_ha-idg-2_last_0" operation_key="fence_ilo_ha-idg-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.2.0" transition-key="279:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;279:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="ha-idg-1" call-id="279" rc-code="0" op-status="0" interval="0" last-run="1562373136" last-rc-change="1562373136" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" password  passwd " op-secure-digest="bddd7b99d0ff68fb24869b2682af58e1"/>
+            <lrm_rsc_op id="fence_ilo_ha-idg-2_monitor_1800000" operation_key="fence_ilo_ha-idg-2_monitor_1800000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.2.0" transition-key="280:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;280:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="ha-idg-1" call-id="280" rc-code="0" op-status="0" interval="1800000" last-rc-change="1562373136" exec-time="0" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd" op-secure-params=" password  passwd " op-secure-digest="bddd7b99d0ff68fb24869b2682af58e1"/>
+          </lrm_resource>
+          <lrm_resource id="vm_idcc_devel" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_idcc_devel_last_failure_0" operation_key="vm_idcc_devel_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="57:1178:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:1;57:1178:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="idcc_devel: live migration to ha-idg-2-private failed: 1" on_node="ha-idg-1" call-id="427" rc-code="1" op-status="0" interval="0" last-rc-change="1559811643" exec-time="657" queue-time="4" op-digest="006e1cb46abea81d42ca1f06bdcf2a15" last-run="1559811643" migrate_source="ha-idg-1" migrate_target="ha-idg-2"/>
+            <lrm_rsc_op id="vm_idcc_devel_last_0" operation_key="vm_idcc_devel_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="57:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;57:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-1" call-id="432" rc-code="0" op-status="0" interval="0" last-run="1559828500" last-rc-change="1559828500" exec-time="1958" queue-time="0" op-digest="006e1cb46abea81d42ca1f06bdcf2a15" migrate_source="ha-idg-2" migrate_target="ha-idg-1"/>
+            <lrm_rsc_op id="vm_idcc_devel_monitor_30000" operation_key="vm_idcc_devel_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="55:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;55:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-1" call-id="436" rc-code="0" op-status="0" interval="30000" last-rc-change="1559828502" exec-time="199" queue-time="0" op-digest="89602f284e214dd8243cc82b08200ead"/>
+          </lrm_resource>
+          <lrm_resource id="vm_severin" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_severin_last_failure_0" operation_key="vm_severin_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="85:273:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:1;85:273:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="severin: live migration to ha-idg-2-private failed: 1" on_node="ha-idg-1" call-id="219" rc-code="1" op-status="0" interval="0" last-run="1559144036" last-rc-change="1559144036" exec-time="35560" queue-time="0" migrate_source="ha-idg-1" migrate_target="ha-idg-2" op-digest="76cbfd60c4831f62e13e997133576aa2"/>
+            <lrm_rsc_op id="vm_severin_last_0" operation_key="vm_severin_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="68:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;68:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-1" call-id="433" rc-code="0" op-status="0" interval="0" last-run="1559828500" last-rc-change="1559828500" exec-time="1964" queue-time="0" migrate_source="ha-idg-2" migrate_target="ha-idg-1" op-digest="76cbfd60c4831f62e13e997133576aa2"/>
+            <lrm_rsc_op id="vm_severin_monitor_30000" operation_key="vm_severin_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="66:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;66:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-1" call-id="437" rc-code="0" op-status="0" interval="30000" last-rc-change="1559828502" exec-time="199" queue-time="0" op-digest="6f1fd783ab2d52e9fb1565c166bf12a3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1084777492" uname="ha-idg-2" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <lrm id="1084777492">
+        <lrm_resources>
+          <lrm_resource id="fence_ilo_ha-idg-2" type="fence_ilo2" class="stonith">
+            <lrm_rsc_op id="fence_ilo_ha-idg-2_last_0" operation_key="fence_ilo_ha-idg-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="15:1177:7:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:7;15:1177:7:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1559811561" last-rc-change="1559811561" exec-time="1" queue-time="1" op-digest="d065315be62598c16e3f435f4add0e40" op-secure-params=" password  passwd " op-secure-digest="bddd7b99d0ff68fb24869b2682af58e1"/>
+          </lrm_resource>
+          <lrm_resource id="fence_ilo_ha-idg-1" type="fence_ilo4" class="stonith">
+            <lrm_rsc_op id="fence_ilo_ha-idg-1_last_0" operation_key="fence_ilo_ha-idg-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="22:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;22:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="96" rc-code="0" op-status="0" interval="0" last-run="1559828489" last-rc-change="1559828489" exec-time="1" queue-time="0" op-digest="3954a01b79da87e4607bb152bdb8fc12" op-secure-params=" password  passwd " op-secure-digest="ba60b2919b6ff526e7844689cbedee60"/>
+            <lrm_rsc_op id="fence_ilo_ha-idg-1_monitor_1800000" operation_key="fence_ilo_ha-idg-1_monitor_1800000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="18:1178:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;18:1178:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="69" rc-code="0" op-status="0" interval="1800000" last-rc-change="1559811638" exec-time="219" queue-time="0" op-digest="714126349f6efb14dbfd462f2b7c1158" op-secure-params=" password  passwd " op-secure-digest="ba60b2919b6ff526e7844689cbedee60"/>
+          </lrm_resource>
+          <lrm_resource id="vm_idcc_devel" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_idcc_devel_last_0" operation_key="vm_idcc_devel_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="53:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;53:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="107" rc-code="0" op-status="0" interval="0" last-run="1559828502" last-rc-change="1559828502" exec-time="63" queue-time="0" op-digest="006e1cb46abea81d42ca1f06bdcf2a15" migrate_source="ha-idg-2" migrate_target="ha-idg-1"/>
+            <lrm_rsc_op id="vm_idcc_devel_monitor_30000" operation_key="vm_idcc_devel_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="60:1179:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;60:1179:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="93" rc-code="0" op-status="0" interval="30000" last-rc-change="1559811666" exec-time="173" queue-time="0" op-digest="89602f284e214dd8243cc82b08200ead"/>
+          </lrm_resource>
+          <lrm_resource id="vm_severin" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_severin_last_0" operation_key="vm_severin_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="64:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;64:1199:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="108" rc-code="0" op-status="0" interval="0" last-run="1559828502" last-rc-change="1559828502" exec-time="60" queue-time="0" op-digest="76cbfd60c4831f62e13e997133576aa2" migrate_source="ha-idg-2" migrate_target="ha-idg-1"/>
+            <lrm_rsc_op id="vm_severin_last_failure_0" operation_key="vm_severin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:1177:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:7;28:1177:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="62" rc-code="7" op-status="0" interval="0" last-run="1559811563" last-rc-change="1559811563" exec-time="47" queue-time="105" op-digest="76cbfd60c4831f62e13e997133576aa2"/>
+            <lrm_rsc_op id="vm_severin_monitor_30000" operation_key="vm_severin_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="69:1179:0:6c7d62a8-ea9a-4082-bc13-489329277d66" transition-magic="0:0;69:1179:0:6c7d62a8-ea9a-4082-bc13-489329277d66" exit-reason="" on_node="ha-idg-2" call-id="88" rc-code="0" op-status="0" interval="30000" last-rc-change="1559811644" exec-time="185" queue-time="0" op-digest="6f1fd783ab2d52e9fb1565c166bf12a3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

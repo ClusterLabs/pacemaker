@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Connectivity_stop_0" -> "Connectivity_stopped_0" [ style = bold]
 "Connectivity_stop_0" -> "ping-1:0_stop_0 pcmk-1" [ style = bold]
 "Connectivity_stop_0" -> "ping-1:1_stop_0 pcmk-2" [ style = bold]

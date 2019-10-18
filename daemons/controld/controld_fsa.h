@@ -426,11 +426,7 @@ enum crmd_fsa_input {
 
 #  define R_IN_RECOVERY     0x80000000ULL
 
-/*
- * Magic RC used within the controller to indicate direct nacks
- * (operation is invalid in current state)
- */
-#define CRM_DIRECT_NACK_RC (99)
+#define CRM_DIRECT_NACK_RC (99) // Deprecated (see PCMK_LRM_OP_INVALID)
 
 enum crmd_fsa_cause {
     C_UNKNOWN = 0,
@@ -442,16 +438,6 @@ enum crmd_fsa_cause {
     C_TIMER_POPPED,
     C_SHUTDOWN,
     C_FSA_INTERNAL,
-};
-
-typedef struct fsa_timer_s fsa_timer_t;
-struct fsa_timer_s {
-    guint source_id;            /* timer source id */
-    int period_ms;              /* timer period */
-    enum crmd_fsa_input fsa_input;
-     gboolean(*callback) (gpointer data);
-    gboolean repeat;
-    int counter;
 };
 
 enum fsa_data_type {
@@ -488,14 +474,6 @@ extern char *fsa_our_dc_version;
 extern GListPtr fsa_message_queue;
 
 extern char *fsa_cluster_name;
-
-extern fsa_timer_t *election_trigger;
-extern fsa_timer_t *shutdown_escalation_timer;
-extern fsa_timer_t *transition_timer;
-extern fsa_timer_t *integration_timer;
-extern fsa_timer_t *finalization_timer;
-extern fsa_timer_t *wait_timer;
-extern fsa_timer_t *recheck_timer;
 
 extern crm_trigger_t *fsa_source;
 extern crm_trigger_t *config_read;
@@ -701,6 +679,4 @@ void do_exit(long long action, enum crmd_fsa_cause cause,
 void do_dc_join_final(long long action, enum crmd_fsa_cause cause,
                       enum crmd_fsa_state cur_state,
                       enum crmd_fsa_input current_input, fsa_data_t *msg_data);
-
-#  include <controld_utils.h>
 #endif

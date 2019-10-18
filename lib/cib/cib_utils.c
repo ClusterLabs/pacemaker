@@ -1,20 +1,11 @@
 /*
- * Copyright (c) 2004 International Business Machines
+ * Original copyright 2004 International Business Machines
+ * Later changes copyright 2008-2019 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #include <crm_internal.h>
 #include <unistd.h>
@@ -29,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 
@@ -442,14 +434,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      */
 
     if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
-        char *now_str = NULL;
-        time_t now = time(NULL);
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        now_str = ctime(&now);
-        now_str[24] = EOS;      /* replace the newline */
-        crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN, now_str);
-
+        crm_xml_add_last_written(scratch);
         if (schema) {
             static int minimum_schema = 0;
             int current_schema = get_schema_version(schema);
@@ -682,8 +669,8 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
     if (config) {
-        unpack_instance_attributes(current_cib, config, XML_CIB_TAG_PROPSET, NULL, options,
-                                   CIB_OPTIONS_FIRST, TRUE, now);
+        pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
+                          options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
     verify_cib_options(options);

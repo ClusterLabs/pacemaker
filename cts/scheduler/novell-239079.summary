@@ -2,13 +2,13 @@
 Current cluster status:
 Online: [ xen-1 xen-2 ]
 
- fs_1	(ocf::heartbeat:Filesystem):	Stopped 
+ fs_1	(ocf::heartbeat:Filesystem):	Stopped
  Clone Set: ms-drbd0 [drbd0] (promotable)
      Stopped: [ xen-1 xen-2 ]
 
 Transition Summary:
- * Start   drbd0:0	(xen-1)
- * Start   drbd0:1	(xen-2)
+ * Start      drbd0:0     ( xen-1 )  
+ * Start      drbd0:1     ( xen-2 )  
 
 Executing cluster transition:
  * Pseudo action:   ms-drbd0_pre_notify_start_0
@@ -25,7 +25,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ xen-1 xen-2 ]
 
- fs_1	(ocf::heartbeat:Filesystem):	Stopped 
+ fs_1	(ocf::heartbeat:Filesystem):	Stopped
  Clone Set: ms-drbd0 [drbd0] (promotable)
      Slaves: [ xen-1 xen-2 ]
 

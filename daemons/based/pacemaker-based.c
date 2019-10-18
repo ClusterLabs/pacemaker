@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <grp.h>
+#include <bzlib.h>
 #include <sys/types.h>
 
 #include <libxml/parser.h>
@@ -25,10 +26,6 @@
 #include <crm/common/mainloop.h>
 
 #include <pacemaker-based.h>
-
-#if HAVE_BZLIB_H
-#  include <bzlib.h>
-#endif
 
 extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;

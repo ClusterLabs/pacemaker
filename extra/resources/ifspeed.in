@@ -1,12 +1,20 @@
 #!@BASH_PATH@
 #
+# ocf:pacemaker:ifspeed resource agent
+#
+# Copyright 2011-2019 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+#
 # OCF resource agent which monitors state of network interface and records it
 # as a node attribute in the CIB based on the sum of speeds of its active (up,
 # link detected, not blocked) underlying interfaces.
 #
-# Copyright 2011-2018 the Pacemaker project contributors
-#
-# The version control history for this file may have further details.
 # Partially based on 'ping' RA by Andrew Beekhof
 #
 # Change on 2017 by Tomer Azran <tomerazran@gmail.com>:
@@ -19,21 +27,21 @@
 #    OCF_RESKEY_iface:        network interface to monitor
 #    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
 #                             bridge ports to consider.
-#                             Default is all ports which have designated_bridge=root_id 
+#                             Default is all ports which have designated_bridge=root_id
 #    OCF_RESKEY_weight_base:  Relative weight of 1Gbps. This can be used to tune
 #                             value of resulting CIB attribute.
 #
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 
 # If these aren't available, we can still show help,
 # which is all that is needed to build the man pages.
 [ -r "${OCF_FUNCTIONS}" ] && . "${OCF_FUNCTIONS}"
 [ -r "${OCF_FUNCTIONS_DIR}/findif.sh" ] && . "${OCF_FUNCTIONS_DIR}/findif.sh"
-: ${OCF_SUCCESS=0}
+: ${OCF_SUCCESS:=0}
 
-: ${__OCF_ACTION=$1}
+: ${__OCF_ACTION:=$1}
 
 FINDIF=findif
 
@@ -43,10 +51,10 @@ OCF_RESKEY_bridge_ports_default="detect"
 OCF_RESKEY_weight_base_default=1000
 OCF_RESKEY_dampen_default=5
 
-: ${OCF_RESKEY_name=${OCF_RESKEY_name_default}}
-: ${OCF_RESKEY_bridge_ports=${OCF_RESKEY_bridge_ports_default}}
-: ${OCF_RESKEY_weight_base=${OCF_RESKEY_weight_base_default}}
-: ${OCF_RESKEY_dampen=${OCF_RESKEY_dampen_default}}
+: ${OCF_RESKEY_name:=${OCF_RESKEY_name_default}}
+: ${OCF_RESKEY_bridge_ports:=${OCF_RESKEY_bridge_ports_default}}
+: ${OCF_RESKEY_weight_base:=${OCF_RESKEY_weight_base_default}}
+: ${OCF_RESKEY_dampen:=${OCF_RESKEY_dampen_default}}
 
 meta_data() {
         cat <<END
@@ -77,7 +85,7 @@ For balancing bonds this RA summs speeds of underlying "up" slave interfaces
 (and applies coefficient 0.8 to result).
 
 For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
-speed of the currently active slave is used. 
+speed of the currently active slave is used.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
@@ -176,14 +184,14 @@ start() {
 }
 
 stop() {
-    ha_pseudo_resource ${ha_pseudo_resource_name} stop
-    attrd_updater -D -n ${OCF_RESKEY_name} -d ${OCF_RESKEY_dampen} ${attrd_options}
+    ha_pseudo_resource "${ha_pseudo_resource_name}" stop
+    attrd_updater -D -n "${OCF_RESKEY_name}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
     return $OCF_SUCCESS
 }
 
 monitor() {
     local ret
-    ha_pseudo_resource ${ha_pseudo_resource_name} monitor
+    ha_pseudo_resource "${ha_pseudo_resource_name}" monitor
     ret=$?
     if [ ${ret} -eq $OCF_SUCCESS ] ; then
         update
@@ -196,7 +204,7 @@ get_nic_name_by_ip(){
     # $FINDIF takes its parameters from the environment.
     # Its output is as follows:
     # [NIC_NAME] netmask [NETMASK] broadcast [BROADCAST}
-    NICINFO=$( ${FINDIF} )
+    NICINFO=$( "${FINDIF}" )
     rc=$?
     if [ $rc -eq 0 ];then
         # Get NIC_NAME part of findif function output.
@@ -227,20 +235,20 @@ validate() {
 }
 
 iface_get_speed() {
-    local iface=$1
+    local iface="$1"
     local operstate
     local carrier
     local speed
 
     if [ ! -e "/sys/class/net/${iface}" ] ; then
         echo "0"
-    elif iface_is_bridge ${iface} ; then # bridges do not have operstate
+    elif iface_is_bridge "${iface}" ; then # bridges do not have operstate
         read carrier < "/sys/class/net/${iface}/carrier"
 
         if [ "${carrier}" != "1" ] ; then
             echo "0"
         else
-            bridge_get_speed ${iface}
+            bridge_get_speed "${iface}"
         fi
     else
         read operstate < "/sys/class/net/${iface}/operstate"
@@ -248,54 +256,54 @@ iface_get_speed() {
 
         if [ "${operstate}" != "up" ] || [ "${carrier}" != "1" ] ; then
             echo "0"
-        elif iface_is_bond ${iface} ; then
-            bond_get_speed ${iface}
-        elif iface_is_vlan ${iface} ; then
+        elif iface_is_bond "${iface}" ; then
+            bond_get_speed "${iface}"
+        elif iface_is_vlan "${iface}" ; then
             iface_get_speed "$(vlan_get_phy "${iface}")"
         elif iface_is_hfi1 "${iface}" ; then
             hfi1_get_speed "${iface}"
         else
             read speed < "/sys/class/net/${iface}/speed"
-            echo ${speed}
+            echo "${speed}"
         fi
     fi
 }
 
 iface_is_vlan() {
-    local iface=$1
+    local iface="$1"
     [ -e "/proc/net/vlan/${iface}" ] && return 0 || return 1
 }
 
 iface_is_bridge() {
-    local iface=$1
+    local iface="$1"
     [ -e "/sys/class/net/${iface}/bridge" ] && return 0 || return 1
 }
 
 iface_is_bond() {
-    local iface=$1
+    local iface="$1"
     [ -e "/sys/class/net/${iface}/bonding" ] && return 0 || return 1
 }
 
 iface_is_hfi1() {
-    local iface=$1
-    driver=$(readlink /sys/class/net/${iface}/device/driver)
-    [[ $(basename ${driver}) =~ "hfi1" ]] && return 0 || return 1
+    local iface="$1"
+    driver=$(readlink "/sys/class/net/${iface}/device/driver")
+    [[ $(basename "${driver}") =~ "hfi1" ]] && return 0 || return 1
 }
 
 vlan_get_phy() {
-    local iface=$1
+    local iface="$1"
     sed -ne "s/^${iface} .*| *//p" < /proc/net/vlan/config
 }
 
 bridge_is_stp_enabled() {
-    local iface=$1
+    local iface="$1"
     local stp
     read stp < "/sys/class/net/${iface}/bridge/stp_state"
     [ "${stp}" = "1" ] && return 0 || return 1
 }
 
 bridge_get_root_ports() {
-    local bridge=$1
+    local bridge="$1"
     local root_id
     local root_ports=""
     local bridge_id
@@ -311,7 +319,7 @@ bridge_get_root_ports() {
 
     root_ports=${root_ports# }
 
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${root_ports}"
     else # Expect sub-shell
         echo ${root_ports}
@@ -326,7 +334,7 @@ bridge_get_root_ports() {
 #define BR_STATE_BLOCKING 4
 
 bridge_get_active_ports() {
-    local bridge=$1
+    local bridge="$1"
     shift 1
     local ports="$*"
     local active_ports=""
@@ -334,11 +342,11 @@ bridge_get_active_ports() {
     local stp_state
     local warn=0
 
-    bridge_is_stp_enabled ${bridge}
+    bridge_is_stp_enabled "${bridge}"
     stp_state=$?
 
     if [ -z "${ports}" ] || [ "${ports}" = "detect" ] ; then
-        bridge_get_root_ports ${bridge} ports
+        bridge_get_root_ports "${bridge}" ports
     fi
 
     for port in $ports ; do
@@ -355,25 +363,25 @@ bridge_get_active_ports() {
         fi
     done
     if [ ${warn} -eq 1 ] ; then
-        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}" 
+        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}"
     fi
     echo "${active_ports# }"
 }
 
 bridge_get_speed() {
-    local iface=$1
+    local iface="$1"
     local aggregate_speed=0
 
-    if ! iface_is_bridge ${iface} ; then
+    if ! iface_is_bridge "${iface}" ; then
         echo 0
         return
     fi
 
     BGS_PORTS=$( bridge_get_active_ports "${iface}" "${OCF_RESKEY_bridge_ports}" )
     for port in ${BGS_PORTS} ; do
-        : $(( aggregate_speed += $( iface_get_speed ${port} ) ))
+        : $(( aggregate_speed += $( iface_get_speed "${port}" ) ))
     done
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -381,7 +389,7 @@ bridge_get_speed() {
 }
 
 hfi1_get_speed() {
-    local iface=$1
+    local iface="$1"
     local hfi1_speed
     local hfi1_value
     local hfi1_desc
@@ -391,18 +399,18 @@ hfi1_get_speed() {
     # method to get the speed. Example output:
     # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
     # 100 Gb/sec (4X EDR)
-    read hfi1_speed hfi1_value hfi1_desc < /sys/class/net/${iface}/device/infiniband/*/ports/*/rate
-    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected speed $hfi1_speed $hfi1_value $hfi1_desc" 
-    
+    read hfi1_speed hfi1_value hfi1_desc < "/sys/class/net/${iface}/device/infiniband"/*/ports/*/rate
+    ocf_is_true "${OCF_RESKEY_debug}" && ocf_log debug "Detected speed $hfi1_speed $hfi1_value $hfi1_desc"
+
     # hfi1_value always in Gb/sec, so we need to convert hfi1_speed in Mb/sec
     echo $(( hfi1_speed * 1000 ))
 }
 
 bond_get_slaves() {
-    local iface=$1
+    local iface="$1"
     local slaves
     read slaves < "/sys/class/net/${iface}/bonding/slaves"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${slaves}"
     else # Expect sub-shell
         echo ${slaves}
@@ -410,10 +418,10 @@ bond_get_slaves() {
 }
 
 bond_get_active_iface() {
-    local iface=$1
+    local iface="$1"
     local active
     read active < "/sys/class/net/${iface}/bonding/active_slave"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${active}"
     else # Expect sub-shell
         echo ${active}
@@ -421,10 +429,10 @@ bond_get_active_iface() {
 }
 
 bond_is_balancing() {
-    local iface=$1
+    local iface="$1"
     read mode mode_index < "/sys/class/net/${iface}/bonding/mode"
-    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected balancing $mode $mode_index"
-    case ${mode} in
+    ocf_is_true "${OCF_RESKEY_debug}" && ocf_log debug "Detected balancing $mode $mode_index"
+    case "${mode}" in
         "balance-rr"|"balance-xor"|"802.3ad"|"balance-tlb"|"balance-alb")
             return 0
             ;;
@@ -435,29 +443,29 @@ bond_is_balancing() {
 }
 
 bond_get_speed() {
-    local iface=$1
+    local iface="$1"
     local aggregate_speed=0
     local active_iface
     local bond_slaves
 
-    if ! iface_is_bond ${iface} ; then
+    if ! iface_is_bond "${iface}" ; then
         echo 0
         return
     fi
 
-    bond_get_slaves ${iface} bond_slaves
+    bond_get_slaves "${iface}" bond_slaves
 
-    if bond_is_balancing ${iface} ; then
+    if bond_is_balancing "${iface}" ; then
         for slave in ${bond_slaves} ; do
-            : $(( aggregate_speed += $( iface_get_speed ${slave} ) ))
+            : $(( aggregate_speed += $( iface_get_speed "${slave}" ) ))
         done
         # Bonding is unable to get speed*n
         : $(( aggregate_speed = aggregate_speed * 8 / 10 ))
     else
-        bond_get_active_iface ${iface} active_iface
-        aggregate_speed=$( iface_get_speed $active_iface )
+        bond_get_active_iface "${iface}" "active_iface"
+        aggregate_speed=$( iface_get_speed "$active_iface" )
     fi
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -466,7 +474,7 @@ bond_get_speed() {
 
 update() {
     local speed;
-    local nic=${OCF_RESKEY_iface};
+    local nic="${OCF_RESKEY_iface}";
     if [ -z "${OCF_RESKEY_iface}" ]; then
         nic=$( get_nic_name_by_ip )
         if [ -z "${nic}" ];then
@@ -474,18 +482,18 @@ update() {
             exit $OCF_ERR_GENERIC
         fi
     fi
-    speed=$( iface_get_speed ${nic} )
+    speed=$( iface_get_speed "${nic}" )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
     if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
-    else 
-        attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
+        attrd_updater -n "${OCF_RESKEY_name}" -B "${score}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
+    else
+        attrd_updater -n "${OCF_RESKEY_name}" -v "${score}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
     fi
     rc=$?
     case ${rc} in
         0)
-            ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Updated ${OCF_RESKEY_name} = ${score}"
+            ocf_is_true "${OCF_RESKEY_debug}" && ocf_log debug "Updated ${OCF_RESKEY_name} = ${score}"
             ;;
         *)
             ocf_log warn "Could not update ${OCF_RESKEY_name} = ${score}: rc=${rc}"
@@ -513,13 +521,13 @@ fi
 : ${ha_pseudo_resource_name:="ifspeed-${OCF_RESOURCE_INSTANCE}"}
 
 attrd_options='-q'
-if ocf_is_true ${OCF_RESKEY_debug} ; then
+if ocf_is_true "${OCF_RESKEY_debug}" ; then
     attrd_options=''
 fi
 
 validate || exit $?
 
-case $__OCF_ACTION in
+case "$__OCF_ACTION" in
     start)
         start
         ;;
@@ -538,3 +546,5 @@ case $__OCF_ACTION in
 esac
 
 exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

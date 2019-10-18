@@ -5,12 +5,12 @@ Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
 Online: [ hadev2 ]
 
  Resource Group: group1
-     child_DoFencing_1	(stonith:ssh):	Stopped 
-     child_DoFencing_2	(stonith:ssh):	Stopped 
+     child_DoFencing_1	(stonith:ssh):	Stopped
+     child_DoFencing_2	(stonith:ssh):	Stopped
 
 Transition Summary:
- * Start   child_DoFencing_1	(hadev2)
- * Start   child_DoFencing_2	(hadev2)
+ * Start      child_DoFencing_1     ( hadev2 )  
+ * Start      child_DoFencing_2     ( hadev2 )  
 
 Executing cluster transition:
  * Pseudo action:   group1_start_0

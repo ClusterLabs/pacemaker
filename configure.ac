@@ -52,33 +52,19 @@ dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
-AC_ARG_WITH(version,
-    [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
-    [ PACKAGE_VERSION="$withval" ])
-
-AC_ARG_WITH(pkg-name,
-    [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
-    [ PACKAGE_NAME="$withval" ])
-
 dnl 1.11:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
+dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
 dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
-AM_INIT_AUTOMAKE([1.11 foreign silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([1.11 foreign tar-ustar silent-rules subdir-objects])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
 dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
 
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
-                   [Current pacemaker version])
-
 dnl Versioned attributes implementation is not yet production-ready
 AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, [Enable versioned attributes])
-
-PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
-AC_SUBST(PACKAGE_SERIES)
-AC_SUBST(PACKAGE_VERSION)
 
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
@@ -135,40 +121,46 @@ dnl ===============================================
 dnl Configure Options
 dnl ===============================================
 
-dnl Some systems, like Solaris require a custom package name
-AC_ARG_WITH(pkgname,
-    [  --with-pkgname=name     name for pkg (typically for Solaris) ],
-    [ PKGNAME="$withval" ],
-    [ PKGNAME="LXHAhb" ],
-  )
-AC_SUBST(PKGNAME)
+
+dnl --enable-* options
 
 AC_ARG_ENABLE([ansi],
-    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
+    [AS_HELP_STRING([--enable-ansi],
+        [force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([fatal-warnings],
-    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc @<:@yes@:>@])
+    [AS_HELP_STRING([--enable-fatal-warnings],
+        [enable pedantic and fatal warnings for gcc @<:@yes@:>@])],
+)
 
 AC_ARG_ENABLE([quiet],
-    [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
+    [AS_HELP_STRING([--enable-quiet],
+        [suppress make output unless there is an error @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the scheduler and its requirements @<:@no@:>@])
+    [AS_HELP_STRING([--enable-no-stack],
+        [build only the scheduler and its requirements @<:@no@:>@])],
+)
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
+    [AS_HELP_STRING([--enable-upstart],
+        [enable support for managing resources via Upstart @<:@try@:>@])],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd  Enable support for managing resources via systemd @<:@try@:>@],
+    [AS_HELP_STRING([--enable-systemd],
+        [enable support for managing resources via systemd @<:@try@:>@])],
     [],
     [enable_systemd=try],
 )
 
-AC_ARG_ENABLE(hardening,
-    [  --enable-hardening  Harden the resulting executables/libraries @<:@try@:>@],
+AC_ARG_ENABLE([hardening],
+    [AS_HELP_STRING([--enable-hardening],
+        [harden the resulting executables/libraries @<:@try@:>@])],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
@@ -181,99 +173,194 @@ AC_ARG_ENABLE(hardening,
 # disable this option. Once the above use cases are no longer in wide use, we
 # can disable this option by default, and once we no longer want to support
 # them at all, we can drop the option altogether.
-AC_ARG_ENABLE(legacy-links,
-    [  --enable-legacy-links  Add symlinks for old daemon names @<:@yes@:>@],
+AC_ARG_ENABLE([legacy-links],
+    [AS_HELP_STRING([--enable-legacy-links],
+        [add symlinks for old daemon names @<:@yes@:>@])],
     [ LEGACY_LINKS="${enableval}" ],
     [ LEGACY_LINKS=yes ],
 )
 AM_CONDITIONAL(BUILD_LEGACY_LINKS, test "x${LEGACY_LINKS}" = "xyes")
 
-AC_ARG_WITH(corosync,
-    [  --with-corosync  Support the Corosync messaging and membership layer ],
+
+dnl --with-* options
+
+AC_DEFUN([VERSION_ARG],
+    [AC_ARG_WITH([version],
+        [AS_HELP_STRING([--with-version=VERSION],
+            [override package version @<:@$1@:>@])],
+        [ PACKAGE_VERSION="$withval" ])]
+)
+VERSION_ARG(VERSION_NUMBER)
+
+AC_ARG_WITH([corosync],
+    [AS_HELP_STRING([--with-corosync],
+        [support the Corosync messaging and membership layer])],
     [ SUPPORT_CS=$withval ],
     [ SUPPORT_CS=try ],
 )
 
-AC_ARG_WITH(nagios,
-    [  --with-nagios  Support nagios remote monitoring ],
+AC_ARG_WITH([nagios],
+    [AS_HELP_STRING([--with-nagios],
+        [support nagios remote monitoring])],
     [ SUPPORT_NAGIOS=$withval ],
     [ SUPPORT_NAGIOS=try ],
 )
 
-AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@],
+AC_ARG_WITH([nagios-plugin-dir],
+    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
+        [directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@])],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
-AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@],
+AC_ARG_WITH([nagios-metadata-dir],
+    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
+        [directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@])],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
-AC_ARG_WITH(acl,
-    [  --with-acl  Support CIB ACL ],
+AC_ARG_WITH([acl],
+    [AS_HELP_STRING([--with-acl],
+        [support CIB ACL])],
     [ SUPPORT_ACL=$withval ],
     [ SUPPORT_ACL=yes ],
 )
 
-AC_ARG_WITH(cibsecrets,
-    [  --with-cibsecrets  Support separate file for CIB secrets ],
+AC_ARG_WITH([cibsecrets],
+    [AS_HELP_STRING([--with-cibsecrets],
+        [support separate file for CIB secrets])],
     [ SUPPORT_CIBSECRETS=$withval ],
     [ SUPPORT_CIBSECRETS=no ],
 )
 
 PCMK_GNUTLS_PRIORITIES="NORMAL"
-AC_ARG_WITH(gnutls-priorities,
-    [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
-    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ])
+AC_ARG_WITH([gnutls-priorities],
+    [AS_HELP_STRING([--with-gnutls-priorities],
+        [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
+    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+)
 
 INITDIR=""
-AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR  Directory for init (rc) scripts],
-    [ INITDIR="$withval" ])
+AC_ARG_WITH([initdir],
+    [AS_HELP_STRING([--with-initdir=DIR],
+        [directory for init (rc) scripts])],
+    [ INITDIR="$withval" ]
+)
+
+systemdsystemunitdir="${systemdsystemunitdir-}"
+AC_ARG_WITH([systemdsystemunitdir],
+    [AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
+        [directory for systemd unit files (advanced option: must match what systemd uses)])],
+    [ systemdsystemunitdir="$withval" ]
+)
 
 SUPPORT_PROFILING=0
-AC_ARG_WITH(profiling,
-    [  --with-profiling  Disable optimizations for effective profiling ],
-    [ SUPPORT_PROFILING=$withval ])
+AC_ARG_WITH([profiling],
+    [AS_HELP_STRING([--with-profiling],
+        [disable optimizations for effective profiling])],
+    [ SUPPORT_PROFILING=$withval ]
+)
 
-AC_ARG_WITH(coverage,
-    [  --with-coverage   Disable optimizations for effective profiling ],
-    [ SUPPORT_COVERAGE=$withval ])
+AC_ARG_WITH([coverage],
+    [AS_HELP_STRING([--with-coverage],
+        [disable optimizations for effective profiling])],
+    [ SUPPORT_COVERAGE=$withval ]
+)
 
 PUBLICAN_BRAND="common"
-AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
-    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
+AC_ARG_WITH([brand],
+    [AS_HELP_STRING([--with-brand=brand],
+        [brand to use for generated documentation (set empty for no docs) @<:@common@:>@])],
+    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ]
+)
 AC_SUBST(PUBLICAN_BRAND)
 
 BUG_URL=""
-AC_ARG_WITH(bug-url,
-    [  --with-bug-url=DIR  Address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@],
+AC_ARG_WITH([bug-url],
+    [AS_HELP_STRING([--with-bug-url=DIR],
+        [address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@])],
     [ BUG_URL="$withval" ]
 )
 
 CONFIGDIR=""
-AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
+AC_ARG_WITH([configdir],
+    [AS_HELP_STRING([--with-configdir=DIR],
+        [directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@])],
     [ CONFIGDIR="$withval" ]
 )
 
 CRM_LOG_DIR=""
-AC_ARG_WITH(logdir,
-    [  --with-logdir=DIR  Directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@ ],
+AC_ARG_WITH([logdir],
+    [AS_HELP_STRING([--with-logdir=DIR],
+        [directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@])],
     [ CRM_LOG_DIR="$withval" ]
 )
 
 CRM_BUNDLE_DIR=""
-AC_ARG_WITH(bundledir,
-    [  --with-bundledir=DIR  Directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@ ],
+AC_ARG_WITH([bundledir],
+    [AS_HELP_STRING([--with-bundledir=DIR],
+        [directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@])],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
+
+dnl The not-yet-released autoconf 2.70 will have a --runstatedir option.
+dnl Until that's available, emulate it with our own --with-runstatedir.
+pcmk_runstatedir=""
+AC_ARG_WITH([runstatedir],
+    [AS_HELP_STRING([--with-runstatedir=DIR],
+        [modifiable per-process data @<:@LOCALSTATEDIR/run@:>@ (ignored if --runstatedir is available)])],
+    [ pcmk_runstatedir="$withval" ]
+)
+
+dnl This defaults to /usr/lib rather than libdir because it's determined by the
+dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
+dnl /usr/local or such, the OCF agents will be expected in their usual
+dnl location. However, we do give the user the option to override it.
+OCF_ROOT_DIR="/usr/lib/ocf"
+AC_ARG_WITH([ocfdir],
+    [AS_HELP_STRING([--with-ocfdir=DIR],
+        [OCF resource agent root directory (advanced option: changing this may break other cluster components unless similarly configured) @<:@/usr/lib/ocf@:>@])],
+    [ OCF_ROOT_DIR="$withval" ]
+)
+AC_SUBST(OCF_ROOT_DIR)
+
+CRM_DAEMON_USER=""
+AC_ARG_WITH([daemon-user],
+    [AS_HELP_STRING([--with-daemon-user=USER],
+        [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
+    [ CRM_DAEMON_USER="$withval" ]
+)
+
+CRM_DAEMON_GROUP=""
+AC_ARG_WITH([daemon-group],
+    [AS_HELP_STRING([--with-daemon-group=GROUP],
+        [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
+    [ CRM_DAEMON_GROUP="$withval" ]
+)
+
+
+dnl Deprecated options
+
+AC_ARG_WITH([pkg-name],
+    [AS_HELP_STRING([--with-pkg-name=name],
+        [deprecated and unused (will be removed in a future release)])],
+)
+
+AC_ARG_WITH([pkgname],
+    [AS_HELP_STRING([--with-pkgname=name],
+        [deprecated and unused (will be removed in a future release)])],
+)
+
 
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
+                   [Current pacemaker version])
+
+PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
+AC_SUBST(PACKAGE_SERIES)
+AC_SUBST(PACKAGE_VERSION)
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
@@ -378,6 +465,19 @@ eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
 
 dnl Home-grown variables
+
+if [ test "x${runstatedir}" = "x" ]; then
+    if [ test "x${pcmk_runstatedir}" = "x" ]; then
+        runstatedir="${localstatedir}/run"
+    else
+        runstatedir="${pcmk_runstatedir}"
+    fi
+fi
+eval runstatedir="$(eval echo ${runstatedir})"
+AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
+		   [Location for modifiable per-process data])
+AC_SUBST(runstatedir)
+
 eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
 if test x"${docdir}" = x""; then
@@ -584,7 +684,18 @@ AC_PATH_PROG([XSLTPROC], [xsltproc])
 AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
+
 PKG_PROG_PKG_CONFIG
+# PKG_NOARCH_INSTALLDIR not available prior to pkg-config 0.27 and
+# pkgconf 0.8.10, respectively (next line is to mimic that scenario)
+dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
+m4_ifndef([PKG_NOARCH_INSTALLDIR], [
+    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
+        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
+    ])
+])
+PKG_NOARCH_INSTALLDIR
+
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
@@ -710,10 +821,10 @@ dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
 dnl     strnlen: is a gnu function similar to strlen, but safer.
-dnl            We wrote a tolearably-fast replacement function for it.
+dnl            We wrote a tolerably-fast replacement function for it.
 dnl
 dnl     strndup: is a gnu function similar to strdup, but safer.
-dnl            We wrote a tolearably-fast replacement function for it.
+dnl            We wrote a tolerably-fast replacement function for it.
 
 AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
 
@@ -728,6 +839,12 @@ AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
 AC_CHECK_FUNCS([sched_setscheduler])
+if test "$ac_cv_func_sched_setscheduler" != yes; then
+	PC_LIBS_RT=""
+else
+	PC_LIBS_RT="-lrt"
+fi
+AC_SUBST(PC_LIBS_RT)
 
 AC_CHECK_LIB(uuid, uuid_parse)                  dnl load the library if necessary
 AC_CHECK_FUNCS(uuid_unparse)                    dnl OSX ships uuid_* as standard functions
@@ -923,28 +1040,34 @@ AC_CHECK_HEADERS(ncurses/ncurses.h)
 
 dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
+PC_NAME_CURSES=""
+PC_LIBS_CURSES=""
 if test "$ac_cv_header_ncurses_h" = "yes"; then
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    PC_NAME_CURSES="ncurses"
 fi
 
 if test "$ac_cv_header_ncurses_ncurses_h" = "yes"; then
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    PC_NAME_CURSES="ncurses"
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_h" = "yes"; then
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
+    PC_LIBS_CURSES="$CURSESLIBS"
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_curses_h" = "yes"; then
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
+    PC_LIBS_CURSES="$CURSESLIBS"
 fi
 
 if test "x$CURSESLIBS" != "x"; then
@@ -993,6 +1116,8 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
 fi
 
 AC_SUBST(CURSESLIBS)
+AC_SUBST(PC_NAME_CURSES)
+AC_SUBST(PC_LIBS_CURSES)
 
 dnl ========================================================================
 dnl    Profiling and GProf
@@ -1081,17 +1206,17 @@ CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_DAEMON_USER="hacluster"
+if test x"${CRM_DAEMON_USER}" = x""; then
+    CRM_DAEMON_USER="hacluster"
+fi
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP="haclient"
+if test x"${CRM_DAEMON_GROUP}" = x""; then
+    CRM_DAEMON_GROUP="haclient"
+fi
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
-
-CRM_STATE_DIR=${localstatedir}/run/crm
-AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
-AC_SUBST(CRM_STATE_DIR)
 
 CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
 AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
@@ -1117,23 +1242,18 @@ CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
 
-HA_STATE_DIR="${localstatedir}/run"
-AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where sbd keeps its PID file)
-AC_SUBST(HA_STATE_DIR)
+CRM_STATE_DIR="${runstatedir}/crm"
+AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
+		   [Where to keep state files and sockets])
+AC_SUBST(CRM_STATE_DIR)
 
-CRM_RSCTMP_DIR="${localstatedir}/run/resource-agents"
+CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-OCF_ROOT_DIR="/usr/lib/ocf"
-if test "X$OCF_ROOT_DIR" = X; then
-    AC_MSG_ERROR(Could not locate OCF directory)
-fi
-AC_SUBST(OCF_ROOT_DIR)
 
 OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
@@ -1173,6 +1293,12 @@ PKG_CHECK_MODULES([DBUS], [dbus-1],
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
+if test $HAVE_dbus = 0; then
+	PC_NAME_DBUS=""
+else
+	PC_NAME_DBUS="dbus-1"
+fi
+AC_SUBST(PC_NAME_DBUS)
 
 if test "x${enable_systemd}" != xno; then
     if test $HAVE_dbus = 0; then
@@ -1211,16 +1337,14 @@ if test "x${enable_systemd}" = xyes; then
     HAVE_systemd=1
     PCMK_FEATURES="$PCMK_FEATURES systemd"
 
-    AC_MSG_CHECKING([for systemd path for system unit files])
-    systemdunitdir="${systemdunitdir-}"
-    PKG_CHECK_VAR([systemdunitdir], [systemd],
-                  [systemdsystemunitdir], [], [systemdunitdir=no])
-    AC_MSG_RESULT([${systemdunitdir}])
-    if test "x${systemdunitdir}" = xno; then
-        AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+    AC_MSG_CHECKING([which system unit file directory to use])
+    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
+    AC_MSG_RESULT([${systemdsystemunitdir}])
+    if test "x${systemdsystemunitdir}" = x""; then
+        AC_MSG_FAILURE([cannot enable systemd when systemdsystemunitdir unresolved])
     fi
 fi
-AC_SUBST(systemdunitdir)
+AC_SUBST([systemdsystemunitdir])
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
@@ -1296,6 +1420,7 @@ AC_SUBST(NAGIOS_METADATA_DIR)
 
 STACKS=""
 CLUSTERLIBS=""
+PC_NAME_CLUSTER=""
 
 dnl ========================================================================
 dnl    Cluster stack - Corosync
@@ -1333,6 +1458,7 @@ else
     CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
     COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
+    PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
     STACKS="$STACKS corosync-native"
 fi
 
@@ -1358,6 +1484,7 @@ fi
 
 PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
+AC_SUBST(PC_NAME_CLUSTER)
 
 dnl ========================================================================
 dnl    ACL
@@ -1437,6 +1564,12 @@ AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
 if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
     AC_CHECK_HEADERS(gnutls/gnutls.h)
     AC_CHECK_FUNCS([gnutls_sec_param_to_pk_bits]) dnl since 2.12.0 (2011-03-24)
+    if test "$ac_cv_header_gnutls_gnutls_h" != "yes"; then
+        PC_NAME_GNUTLS=""
+    else
+        PC_NAME_GNUTLS="gnutls"
+    fi
+    AC_SUBST(PC_NAME_GNUTLS)
 fi
 
 dnl ========================================================================
@@ -1784,6 +1917,7 @@ AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
 AC_CONFIG_FILES([tools/crm_standby], [chmod +x tools/crm_standby])
 AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
+AC_CONFIG_FILES([tools/pcmk_simtimes], [chmod +x tools/pcmk_simtimes])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
@@ -1853,6 +1987,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
+                xml/pacemaker-schemas.pc                            \
 )
 
 dnl Now process the entire list of files added by previous

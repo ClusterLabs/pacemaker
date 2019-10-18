@@ -53,6 +53,7 @@ VALGRIND_OPTS="
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
 CRM_EX_ERROR=1
+CRM_EX_INVALID_PARAM=2
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
 CRM_EX_CONFIG=78
@@ -64,7 +65,6 @@ CRM_EX_EXISTS=108
 CRM_EX_MULTIPLE=109
 CRM_EX_EXPIRED=110
 CRM_EX_NOT_YET_IN_EFFECT=111
-CRM_EX_INDETERMINATE=112
 
 function test_assert() {
     target=$1; shift
@@ -252,7 +252,7 @@ function test_tools() {
     test_assert $CRM_EX_USAGE
 
     desc="Don't support migration to non-existent locations"
-    cmd="crm_resource -r dummy -M -N i.dont.exist"
+    cmd="crm_resource -r dummy -M -N i.do.not.exist"
     test_assert $CRM_EX_NOSUCH
 
     desc="Create a fencing resource"
@@ -399,6 +399,21 @@ function test_tools() {
     cmd="crm_resource -r test-primitive --meta -d is-managed"
     test_assert $CRM_EX_OK
 
+    cibadmin -C -o resources --xml-text '<group id="dummy-group"> \
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"\/> \
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"\/> \
+      </group>'
+
+    desc="Create a resource meta attribute in dummy1"
+    cmd="crm_resource -r dummy1 --meta -p is-managed -v true"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource meta attribute in dummy-group"
+    cmd="crm_resource -r dummy-group --meta -p is-managed -v false"
+    test_assert $CRM_EX_OK
+
+    cibadmin -D -o resource --xml-text '<group id="dummy-group">'
+
     desc="Specify a lifetime when moving a resource"
     cmd="crm_resource -r dummy --move --node node2 --lifetime=PT1H"
     test_assert $CRM_EX_OK
@@ -418,14 +433,55 @@ function test_tools() {
 
     unset CIB_shadow_dir
     rm -f "$TMPXML" "$TMPORIG"
+
+    desc="Create an XML patchset"
+    cmd="crm_diff -o $test_home/cli/crm_diff_old.xml -n $test_home/cli/crm_diff_new.xml"
+    test_assert $CRM_EX_ERROR 0
 }
 
+INVALID_PERIODS=(
+    "2019-01-01 00:00:00Z"              # Start with no end
+    "2019-01-01 00:00:00Z/"             # Start with only a trailing slash
+    "PT2S/P1M"                          # Two durations
+    "2019-13-01 00:00:00Z/P1M"          # Out-of-range month
+    "20191077T15/P1M"                   # Out-of-range day
+    "2019-10-01T25:00:00Z/P1M"          # Out-of-range hour
+    "2019-10-01T24:00:01Z/P1M"          # Hour 24 with anything but :00:00
+    "PT5H/20191001T007000Z"             # Out-of-range minute
+    "2019-10-01 00:00:80Z/P1M"          # Out-of-range second
+    "2019-10-01 00:00:10 +25:00/P1M"    # Out-of-range offset hour
+    "20191001T000010 -00:61/P1M"        # Out-of-range offset minute
+    "P1Y/2019-02-29 00:00:00Z"          # Feb. 29 in non-leap-year
+    "2019-01-01 00:00:00Z/P"            # Duration with no values
+    "P1Z/2019-02-20 00:00:00Z"          # Invalid duration unit
+    "P1YM/2019-02-20 00:00:00Z"         # No number for duration unit
+)
+        
 function test_dates() {
+    # Ensure invalid period specifications are rejected
+    for spec in '' "${INVALID_PERIODS[@]}"; do
+        desc="Invalid period - [$spec]"
+        cmd="iso8601 -p \"$spec\""
+        test_assert $CRM_EX_INVALID_PARAM 0
+    done
+
     desc="2014-01-01 00:30:00 - 1 Hour"
     cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
     test_assert $CRM_EX_OK 0
 
-    for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
+    desc="Valid date - Feb 29 in leap year"
+    cmd="iso8601 -d '2020-02-29 00:00:00Z' -E '2020-02-29 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="Valid date - using 'T' and offset"
+    cmd="iso8601 -d '20191201T131211 -05:00' -E '2019-12-01 18:12:11Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="24:00:00 equivalent to 00:00:00 of next day"
+    cmd="iso8601 -d '2019-12-31 24:00:00Z' -E '2020-01-01 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    for y in 06 07 08 09 10 11 12 13 14 15 16 17 18 40; do
         desc="20$y-W01-7"
         cmd="iso8601 -d '20$y-W01-7 00Z'"
         test_assert $CRM_EX_OK 0
@@ -447,8 +503,12 @@ function test_dates() {
     cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
+    desc="epoch + 2 Years 5 Months 6 Minutes"
+    cmd="iso8601 -d 'epoch' -D P2Y5MT6M -E '1972-06-01 00:06:00Z'"
+    test_assert $CRM_EX_OK 0
+
     desc="2009-01-31 + 1 Month"
-    cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P1M -E '2009-02-28 00:00:00Z'"
+    cmd="iso8601 -d '20090131T000000Z' -D P1M -E '2009-02-28 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
     desc="2009-01-31 + 2 Months"
@@ -460,7 +520,11 @@ function test_dates() {
     test_assert $CRM_EX_OK 0
 
     desc="2009-03-31 - 1 Month"
-    cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
+    cmd="iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="2038-01-01 + 3 Months"
+    cmd="iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 }
 
@@ -470,7 +534,7 @@ function test_acl_loop() {
     TMPXML="$1"
 
     # Make sure we're rejecting things for the right reasons
-    export PCMK_trace_functions=pcmk__check_acl,pcmk__post_process_acl
+    export PCMK_trace_functions=pcmk__check_acl,pcmk__apply_creation_acl
     export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'

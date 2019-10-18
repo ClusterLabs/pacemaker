@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -9,17 +11,12 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
-
-#include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_alerts.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
-#include <crm/transition.h>
-#include <crm/lrmd_alerts_internal.h>
+#include <crm/lrmd_internal.h>
+
+#include <pacemaker-internal.h>
+#include <pacemaker-controld.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -76,10 +73,10 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.user_data = op->user_data;
     event.timeout = 0;
     event.interval_ms = op->interval_ms;
-    event.rc = PCMK_OCF_CONNECTION_DIED;
-    event.op_status = PCMK_LRM_OP_ERROR;
-    event.t_run = op->start_time;
-    event.t_rcchange = op->start_time;
+    event.rc = PCMK_OCF_UNKNOWN_ERROR;
+    event.op_status = PCMK_LRM_OP_NOT_CONNECTED;
+    event.t_run = (unsigned int) op->start_time;
+    event.t_rcchange = (unsigned int) op->start_time;
 
     event.call_id = op->call_id;
     event.remote_nodename = lrm_state->node_name;
@@ -466,8 +463,8 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
-        unpack_instance_attributes(
-            output, output, XML_CIB_TAG_PROPSET, NULL, config_hash, CIB_OPTIONS_FIRST, FALSE, now);
+        pe_unpack_nvpairs(output, output, XML_CIB_TAG_PROPSET, NULL,
+                          config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
         /* Now send it to the remote peer */
         remote_proxy_check(lrmd, config_hash);

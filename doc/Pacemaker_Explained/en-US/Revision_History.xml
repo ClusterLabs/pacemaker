@@ -169,6 +169,31 @@
           </simplelist>
         </revdescription>
       </revision>
+      <revision>
+        <revnumber>12-2</revnumber>
+        <date>Wed Jun 19 2019</date>
+        <author><firstname>Ken</firstname><surname>Gaillot</surname><email>kgaillot@redhat.com</email></author>
+        <revdescription>
+          <simplelist>
+            <member>
+              Add chapter for ACLs
+            </member>
+          </simplelist>
+        </revdescription>
+      </revision>
+      <revision>
+        <revnumber>13-0</revnumber>
+        <date>Tue Oct 15 2019</date>
+        <author><firstname>Ken</firstname><surname>Gaillot</surname>
+                <email>kgaillot@redhat.com</email></author>
+        <revdescription>
+          <simplelist>
+            <member>Overhaul fencing, rules, and constraints chapters,
+                    elaborate on various options, and update for Pacemaker 2.0.3
+            </member>
+          </simplelist>
+        </revdescription>
+      </revision>
     </revhistory>
   </simpara>
 </appendix>

@@ -144,6 +144,7 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
+    rsc->st_probe_rc = -ENODEV; // if stonith, initialize to "not running"
     return rsc;
 }
 
@@ -445,7 +446,7 @@ time_diff_ms(struct timeb *now, struct timeb *old)
     if ((old == NULL) || (old->time == 0)) {
         return 0;
     }
-    return difftime(now->time, old->time) * 1000 + now->millitm - old->millitm;
+    return (now->time - old->time) * 1000 + now->millitm - old->millitm;
 }
 
 /*!
@@ -519,8 +520,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
 #ifdef HAVE_SYS_TIMEB_H
-    crm_xml_add_int(notify, F_LRMD_RSC_RUN_TIME, cmd->t_run.time);
-    crm_xml_add_int(notify, F_LRMD_RSC_RCCHANGE_TIME, cmd->t_rcchange.time);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.time);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.time);
     crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
@@ -1015,18 +1016,7 @@ stonith_rc2status(const char *action, guint interval_ms, int rc)
 
         case -ENODEV:
             // The device is not registered with the fencer
-
-            if (safe_str_neq(action, "monitor")) {
-                status = PCMK_LRM_OP_ERROR;
-
-            } else if (interval_ms > 0) {
-                /* If we get here, the fencer somehow lost the registration of a
-                 * previously active device (possibly due to crash and respawn). In
-                 * that case, we need to indicate that the recurring monitor needs
-                 * to be cancelled.
-                 */
-                status = PCMK_LRM_OP_CANCELLED;
-            }
+            status = PCMK_LRM_OP_ERROR;
             break;
 
         default:
@@ -1054,9 +1044,9 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         // Certain successful actions change the known state of the resource
         if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
             if (safe_str_eq(cmd->action, "start")) {
-                rsc->stonith_started = 1;
+                rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
             } else if (safe_str_eq(cmd->action, "stop")) {
-                rsc->stonith_started = 0;
+                rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
             }
         }
     }
@@ -1096,6 +1086,18 @@ stonith_connection_failed(void)
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
         if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+            /* If we registered this fence device, we don't know whether the
+             * fencer still has the registration or not. Cause future probes to
+             * return PCMK_OCF_UNKNOWN_ERROR until the resource is stopped or
+             * started successfully. This is especially important if the
+             * controller also went away (possibly due to a cluster layer
+             * restart) and won't receive our client notification of any
+             * monitors finalized below.
+             */
+            if (rsc->st_probe_rc == pcmk_ok) {
+                rsc->st_probe_rc = pcmk_err_generic;
+            }
+
             if (rsc->active) {
                 cmd_list = g_list_append(cmd_list, rsc->active);
             }
@@ -1190,23 +1192,7 @@ execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
 
 /*!
  * \internal
- * \brief Execute a one-time stonith resource "monitor" action
- *
- * Probe a stonith resource by checking whether we started it
- *
- * \param[in] rsc  Stonith resource to probe
- *
- * \return pcmk_ok if started, -errno otherwise
- */
-static inline int
-execd_stonith_probe(lrmd_rsc_t *rsc)
-{
-    return rsc->stonith_started? 0 : -ENODEV;
-}
-
-/*!
- * \internal
- * \brief Initiate a stonith resource agent "monitor" action
+ * \brief Initiate a stonith resource agent recurring "monitor" action
  *
  * \param[in] stonith_api  Connection to fencer
  * \param[in] rsc          Stonith resource to monitor
@@ -1256,7 +1242,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         if (cmd->interval_ms > 0) {
             do_monitor = TRUE;
         } else {
-            rc = execd_stonith_probe(rsc);
+            rc = rsc->st_probe_rc;
         }
     }
 
@@ -1491,17 +1477,13 @@ process_lrmd_rsc_register(crm_client_t * client, uint32_t id, xmlNode * request)
         safe_str_eq(rsc->class, dup->class) &&
         safe_str_eq(rsc->provider, dup->provider) && safe_str_eq(rsc->type, dup->type)) {
 
-        crm_warn("Can't add, RSC '%s' already present in the rsc list (%d active resources)",
-                 rsc->rsc_id, g_hash_table_size(rsc_list));
-
+        crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
         return rc;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
-    crm_info("Added '%s' to the rsc list (%d active resources)",
-             rsc->rsc_id, g_hash_table_size(rsc_list));
-
+    crm_info("Cached agent information for '%s'", rsc->rsc_id);
     return rc;
 }
 
@@ -1519,8 +1501,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Resource '%s' not found (%d active resources)",
-                     rsc_id, g_hash_table_size(rsc_list));
+            crm_info("Agent information for '%s' not in cache", rsc_id);
             rc = -ENODEV;
         }
     }
@@ -1547,15 +1528,17 @@ process_lrmd_rsc_unregister(crm_client_t * client, uint32_t id, xmlNode * reques
         return -ENODEV;
     }
 
-    if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
+    rsc = g_hash_table_lookup(rsc_list, rsc_id);
+    if (rsc == NULL) {
+        crm_info("Ignoring unregistration of resource '%s', which is not registered",
+                 rsc_id);
         return pcmk_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation still in progress: %p", rsc->active);
+        crm_trace("Operation (0x%p) still in progress for unregistered resource %s",
+                  rsc->active, rsc_id);
         rc = -EINPROGRESS;
     }
 

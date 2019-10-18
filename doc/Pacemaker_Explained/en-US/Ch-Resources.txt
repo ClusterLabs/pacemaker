@@ -186,7 +186,7 @@ indexterm:[Resource,STONITH]
 indexterm:[STONITH,Resources]
 
 The STONITH class is used exclusively for fencing-related resources.  This is
-discussed later in <<ch-stonith>>.
+discussed later in <<ch-fencing>>.
 
 === Nagios Plugins ===
 indexterm:[Resource,Nagios Plugins]
@@ -334,6 +334,15 @@ indexterm:[Resource,Option,target-role]
  indexterm:[is-managed,Resource Option]
  indexterm:[Resource,Option,is-managed]
 
+|maintenance
+|FALSE
+|Similar to the +maintenance-mode+ <<s-cluster-options,cluster option>>, but for
+ a single resource. If true, the resource will not be started, stopped, or
+ monitored on any node. This differs from +is-managed+ in that monitors will
+ not be run. Allowed values: +true+, +false+
+ indexterm:[maintenance,Resource Option]
+ indexterm:[Resource,Option,maintenance]
+
 |resource-stickiness
 |1 for individual clone instances, 0 for all other resources
 |A score that will be added to the current node when a resource is already
@@ -355,7 +364,7 @@ Allowed values:
   the configured nodes are active
 * +fencing:+ The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been <<ch-stonith,fenced>>
+  have been <<ch-fencing,fenced>>
 * +unfencing:+
   The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
@@ -383,9 +392,6 @@ indexterm:[Resource,Option,requires]
 |How many seconds to wait before acting as if the failure had not
  occurred, and potentially allowing the resource back to the node on
  which it failed. A value of 0 indicates that this feature is disabled.
- As with any time-based actions, this is not guaranteed to be checked more
- frequently than the value of +cluster-recheck-interval+ (see
- <<s-cluster-options>>).
  indexterm:[failure-timeout,Resource Option]
  indexterm:[Resource,Option,failure-timeout]
 
@@ -619,6 +625,13 @@ monitor the resource for failure).
 Pacemaker identifies operations by a combination of name and interval, so this
 combination must be unique for each resource. That is, you should not configure
 two operations for the same resource with the same name and interval.
+
+[[s-operation-properties]]
+=== Operation Properties ===
+
+Operation properties may be specified directly in the +op+ element as
+XML attributes, or in a separate +meta_attributes+ block as +nvpair+ elements.
+XML attributes take precedence over +nvpair+ elements if both are specified.
 
 .Properties of an Operation
 [width="95%",cols="2m,3,<6",options="header",align="center"]

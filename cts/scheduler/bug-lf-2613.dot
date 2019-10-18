@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "grpPostgreSQLDB1_running_0" [ style=bold color="green" fontcolor="orange"]
 "grpPostgreSQLDB1_start_0" -> "grpPostgreSQLDB1_running_0" [ style = bold]
 "grpPostgreSQLDB1_start_0" -> "prmApPostgreSQLDB1_start_0 sby1" [ style = bold]

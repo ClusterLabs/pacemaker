@@ -10,11 +10,8 @@
 #include <crm_internal.h>
 
 #include <glib.h>
-#include <unistd.h>
 #include <signal.h>
-
 #include <sys/types.h>
-#include <sys/wait.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -23,15 +20,12 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/common/remote_internal.h>
+#include <crm/lrmd_internal.h>
 
 #include "pacemaker-execd.h"
 
 #if defined(HAVE_GNUTLS_GNUTLS_H) && defined(SUPPORT_REMOTE)
 #  define ENABLE_PCMK_REMOTE
-
-// Hidden in liblrmd
-extern int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id,
-                             const char *msg_type);
 #endif
 
 static GMainLoop *mainloop = NULL;
@@ -65,28 +59,24 @@ get_stonith_connection(void)
         stonith_api = NULL;
     }
 
-    if (!stonith_api) {
-        int rc = 0;
-        int tries = 10;
+    if (stonith_api == NULL) {
+        int rc = pcmk_ok;
 
         stonith_api = stonith_api_new();
-        do {
-            rc = stonith_api->cmds->connect(stonith_api, "pacemaker-execd", NULL);
-            if (rc == pcmk_ok) {
-                stonith_api->cmds->register_notification(stonith_api,
-                                                         T_STONITH_NOTIFY_DISCONNECT,
-                                                         stonith_connection_destroy_cb);
-                break;
-            }
-            sleep(1);
-            tries--;
-        } while (tries);
-
-        if (rc) {
-            crm_err("Unable to connect to stonith daemon to execute command. error: %s",
-                    pcmk_strerror(rc));
+        if (stonith_api == NULL) {
+            crm_err("Could not connect to fencer: API memory allocation failed");
+            return NULL;
+        }
+        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 10);
+        if (rc != pcmk_ok) {
+            crm_err("Could not connect to fencer in 10 attempts: %s "
+                    CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             stonith_api_delete(stonith_api);
             stonith_api = NULL;
+        } else {
+            stonith_api->cmds->register_notification(stonith_api,
+                                                     T_STONITH_NOTIFY_DISCONNECT,
+                                                     stonith_connection_destroy_cb);
         }
     }
     return stonith_api;
@@ -390,119 +380,6 @@ void handle_shutdown_nack()
     crm_debug("Ignoring unexpected shutdown nack");
 }
 
-
-static pid_t main_pid = 0;
-static void
-sigdone(void)
-{
-    exit(CRM_EX_OK);
-}
-
-static void
-sigreap(void)
-{
-    pid_t pid = 0;
-    int status;
-    do {
-        /*
-         * Opinions seem to differ as to what to put here:
-         *  -1, any child process
-         *  0,  any child process whose process group ID is equal to that of the calling process
-         */
-        pid = waitpid(-1, &status, WNOHANG);
-        if(pid == main_pid) {
-            /* Exit when pacemaker-remote exits and use the same return code */
-            if (WIFEXITED(status)) {
-                exit(WEXITSTATUS(status));
-            }
-            exit(CRM_EX_ERROR);
-        }
-
-    } while (pid > 0);
-}
-
-static struct {
-	int sig;
-	void (*handler)(void);
-} sigmap[] = {
-	{ SIGCHLD, sigreap },
-	{ SIGINT,  sigdone },
-};
-
-static void spawn_pidone(int argc, char **argv, char **envp)
-{
-    sigset_t set;
-
-    if (getpid() != 1) {
-        return;
-    }
-
-    sigfillset(&set);
-    sigprocmask(SIG_BLOCK, &set, 0);
-
-    main_pid = fork();
-    switch (main_pid) {
-	case 0:
-            sigprocmask(SIG_UNBLOCK, &set, NULL);
-            setsid();
-            setpgid(0, 0);
-
-            /* Child remains as pacemaker-remoted */
-            return;
-	case -1:
-            perror("fork");
-    }
-
-    /* Parent becomes the reaper of zombie processes */
-    /* Safe to initialize logging now if needed */
-
-#ifdef HAVE___PROGNAME
-    /* Differentiate ourselves in the 'ps' output */
-    {
-        char *p;
-        int i, maxlen;
-        char *LastArgv = NULL;
-        const char *name = "pcmk-init";
-
-	for(i = 0; i < argc; i++) {
-		if(!i || (LastArgv + 1 == argv[i]))
-			LastArgv = argv[i] + strlen(argv[i]);
-	}
-
-	for(i = 0; envp[i] != NULL; i++) {
-		if((LastArgv + 1) == envp[i]) {
-			LastArgv = envp[i] + strlen(envp[i]);
-		}
-	}
-
-        maxlen = (LastArgv - argv[0]) - 2;
-
-        i = strlen(name);
-        /* We can overwrite individual argv[] arguments */
-        snprintf(argv[0], maxlen, "%s", name);
-
-        /* Now zero out everything else */
-        p = &argv[0][i];
-        while(p < LastArgv)
-            *p++ = '\0';
-        argv[1] = NULL;
-    }
-#endif /* HAVE___PROGNAME */
-
-    while (1) {
-	int sig;
-	size_t i;
-
-        sigwait(&set, &sig);
-        for (i = 0; i < DIMOF(sigmap); i++) {
-            if (sigmap[i].sig == sig) {
-                sigmap[i].handler();
-                break;
-            }
-        }
-    }
-}
-
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -533,14 +410,14 @@ main(int argc, char **argv, char **envp)
     int bump_log_num = 0;
     const char *option = NULL;
 
-    /* If necessary, create PID1 now before any FDs are opened */
-    spawn_pidone(argc, argv, envp);
-
 #ifndef ENABLE_PCMK_REMOTE
     crm_log_preinit("pacemaker-execd", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Resource agent executor daemon for cluster nodes");
 #else
+    // If necessary, create PID 1 now before any file descriptors are opened
+    remoted_spawn_pidone(argc, argv, envp);
+
     crm_log_preinit("pacemaker-remoted", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Resource agent executor daemon for Pacemaker Remote nodes");
@@ -580,7 +457,8 @@ main(int argc, char **argv, char **envp)
     }
 
     option = daemon_option("logfacility");
-    if(option && safe_str_neq(option, "none")) {
+    if (option && safe_str_neq(option, "none")
+        && safe_str_neq(option, "/dev/null")) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 

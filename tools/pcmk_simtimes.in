@@ -1,0 +1,101 @@
+#!@PYTHON@
+""" Timing comparisons for crm_simulate profiling output
+"""
+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright 2019 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import io
+import re
+import sys
+import errno
+import argparse
+
+DESC = """Compare timings from crm_simulate profiling output"""
+
+# These values must be kept in sync with include/crm/crm.h
+class CrmExit(object):
+    OK                   =    0
+
+BEFORE_HELP = """Output of "crm_simulate --profile cts/scheduler --repeat <N>" from earlier Pacemaker build"""
+
+# line like: * Testing cts/scheduler/1360.xml ... 0.07 secs
+PATTERN = r"""^\s*\*\s+Testing\s+.*/([^/]+)\.xml\s+\.+\s+([.0-9]+)\s+secs\s*$"""
+
+def parse_args(argv=sys.argv):
+    """ Parse command-line arguments """
+
+    parser = argparse.ArgumentParser(description=DESC)
+
+    parser.add_argument('-V', '--verbose', action='count',
+                        help='Increase verbosity')
+
+    parser.add_argument('-p', '--threshold-percent', type=float, default=0,
+                        help="Don't show tests with less than this percentage difference in times")
+
+    parser.add_argument('-s', '--threshold-seconds', type=float, default=0,
+                        help="Don't show tests with less than this seconds difference in times")
+
+    parser.add_argument('before_file', metavar='BEFORE',
+                        type=argparse.FileType('r'),
+                        help=BEFORE_HELP)
+
+    parser.add_argument('after_file', metavar='AFTER',
+                        type=argparse.FileType('r'),
+                        help='Output of same command from later Pacemaker build')
+
+    return parser.parse_args(argv[1:])
+
+
+def extract_times(infile):
+    """ Extract test names and times into hash table from file """
+
+    result = {}
+    for line in infile:
+        match = re.search(PATTERN, line)
+        if match is not None:
+            result[match.group(1)] = match.group(2)
+    return result
+
+
+def compare_test(test, before, after, args):
+    """ Compare one test's timings """
+
+    try:
+        before_time = float(before[test])
+    except KeyError:
+        if args.verbose > 0:
+            print("No previous test " + test + " to compare")
+        return
+
+    after_time = float(after[test])
+
+    time_diff = after_time - before_time
+    time_diff_percent = (time_diff / before_time) * 100
+
+    if ((abs(time_diff) >= args.threshold_seconds)
+        and (abs(time_diff_percent) >= args.threshold_percent)):
+        print("%-40s %.2fs vs %.2fs (%+.2fs = %+6.2f%%)" % (test, before_time,
+              after_time, time_diff, time_diff_percent))
+
+
+if __name__ == "__main__":
+
+    try:
+        args = parse_args()
+        before = extract_times(args.before_file)
+        after = extract_times(args.after_file)
+        for test in after.keys():
+            compare_test(test, before, after, args)
+    except KeyboardInterrupt:
+        pass
+    except IOError as e:
+        if e.errno != errno.EPIPE:
+            raise
+
+    sys.exit(CrmExit.OK)
+
+# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:

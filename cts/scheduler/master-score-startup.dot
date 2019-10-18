@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "pgsql-ha_confirmed-post_notify_promoted_0" -> "pgsql-master-ip_start_0 srv1" [ style = bold]
 "pgsql-ha_confirmed-post_notify_promoted_0" -> "pgsqld:0_monitor_15000 srv1" [ style = bold]
 "pgsql-ha_confirmed-post_notify_promoted_0" -> "pgsqld:1_monitor_16000 srv2" [ style = bold]

@@ -10,8 +10,8 @@ Transition Summary:
  * Fence (reboot) node2 'deadman ticket was lost'
  * Fence (reboot) node1 'deadman ticket was lost'
  * Stop       rsc_stonith     ( node1 )   due to node availability
- * Stop    rsc1:0	(node1)  	due to node availability
- * Stop    rsc1:1	(node2)  	due to node availability
+ * Stop       rsc1:0          ( node1 )   due to node availability
+ * Stop       rsc1:1          ( node2 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   rsc_stonith_stop_0
@@ -25,7 +25,7 @@ Executing cluster transition:
 Revised cluster status:
 OFFLINE: [ node1 node2 ]
 
- rsc_stonith	(stonith:null):	Stopped 
+ rsc_stonith	(stonith:null):	Stopped
  Clone Set: clone1 [rsc1]
      Stopped: [ node1 node2 ]
 

@@ -3,7 +3,7 @@
 Current cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
 
- ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0 
+ ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0
  Clone Set: haproxy-clone [haproxy]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: galera-master [galera] (promotable)
@@ -17,7 +17,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: redis-master [redis] (promotable)
      Masters: [ overcloud-controller-1 ]
      Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
- ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1 
+ ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1
  Clone Set: mongod-clone [mongod]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-aodh-evaluator-clone [openstack-aodh-evaluator]
@@ -30,7 +30,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped 
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped
  Clone Set: openstack-heat-engine-clone [openstack-heat-engine]
      Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-ceilometer-api-clone [openstack-ceilometer-api]
@@ -92,7 +92,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
 
- ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0 
+ ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0
  Clone Set: haproxy-clone [haproxy]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: galera-master [galera] (promotable)
@@ -106,7 +106,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: redis-master [redis] (promotable)
      Masters: [ overcloud-controller-1 ]
      Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
- ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1 
+ ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1
  Clone Set: mongod-clone [mongod]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-aodh-evaluator-clone [openstack-aodh-evaluator]
@@ -119,7 +119,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped 
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped
  Clone Set: openstack-heat-engine-clone [openstack-heat-engine]
      Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-ceilometer-api-clone [openstack-ceilometer-api]

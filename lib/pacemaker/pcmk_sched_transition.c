@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -17,9 +19,9 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
+#include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_free_event()
 #include <crm/cib.h>
 #include <crm/common/util.h>
-#include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -85,7 +87,7 @@ update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
 
     } else {
         char *name = NULL;
-        char *now = crm_itoa(time(NULL));
+        char *now = crm_ttoa(time(NULL));
 
         name = crm_failcount_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, "value++");
@@ -138,11 +140,13 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     op->rc = outcome;
     op->op_status = 0;
     op->params = NULL;          /* TODO: Fill me in */
-    op->t_run = time(NULL);
+    op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;
 
     op->call_id = 0;
-    for (xop = __xml_first_child(cib_resource); xop != NULL; xop = __xml_next(xop)) {
+    for (xop = __xml_first_child_element(cib_resource); xop != NULL;
+         xop = __xml_next_element(xop)) {
+
         int tmp = 0;
 
         crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
@@ -158,8 +162,9 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
 static xmlNode *
 inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc,
-                                   NULL, crm_system_name, LOG_TRACE);
+    return pcmk__create_history_xml(cib_resource, op, CRM_FEATURE_SET,
+                                    target_rc, NULL, crm_system_name,
+                                    LOG_TRACE);
 }
 
 static xmlNode *
@@ -654,7 +659,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
 
-        if (pe_find_resource(fake_resource_list, longname)) {
+        if (longname && pe_find_resource(fake_resource_list, longname)) {
             resource = longname;
         }
     }

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel galera_monitor_10000 galera-bundle-0" -> "galera_demote_0 galera-bundle-0" [ style = bold]
 "Cancel galera_monitor_10000 galera-bundle-0" [ style=bold color="green" fontcolor="black"]
 "Cancel redis_monitor_20000 redis-bundle-0" -> "redis_demote_0 redis-bundle-0" [ style = bold]

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "fence1_monitor_0 overcloud-controller-0" -> "fence1_start_0 overcloud-controller-0" [ style = bold]
 "fence1_monitor_0 overcloud-controller-0" [ style=bold color="green" fontcolor="black"]
 "fence1_monitor_0 overcloud-controller-1" -> "fence1_start_0 overcloud-controller-0" [ style = bold]

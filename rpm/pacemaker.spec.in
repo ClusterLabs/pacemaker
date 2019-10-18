@@ -8,7 +8,11 @@
 %if 0%{?suse_version} > 0
 %global pcmk_docdir %{_docdir}/%{name}-%{version}
 %else
+%if 0%{?rhel} > 7
+%global pcmk_docdir %{_docdir}/%{name}-doc
+%else
 %global pcmk_docdir %{_docdir}/%{name}
+%endif
 %endif
 
 ## GitHub entity that distributes source (for ease of using a fork)
@@ -17,7 +21,7 @@
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
-%global pcmkversion 2.0.2
+%global pcmkversion 2.0.3
 %global specversion 1
 
 ## Upstream commit (or git tag, such as "Pacemaker-" plus the
@@ -76,14 +80,26 @@
 %define gnutls_priorities %{?pcmk_gnutls_priorities}%{!?pcmk_gnutls_priorities:@SYSTEM}
 %endif
 
+%if !%{defined _rundir}
+%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?suse_version} >= 1200
+%define _rundir /run
+%else
+%define _rundir /var/run
+%endif
+%endif
+
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+%global supports_recommends 1
+%endif
+
 ## Different distros name certain packages differently
+## (note: corosync libraries also differ, but all provide corosync-devel)
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
 %global pkgname_gnutls_devel libgnutls-devel
 %global pkgname_shadow_utils shadow
 %global pkgname_procps procps
-%global pkgname_corosync_lib libcorosync
 %global pkgname_glue_libs libglue
 %global pkgname_pcmk_libs lib%{name}3
 %global hacluster_id 90
@@ -96,7 +112,6 @@
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
 %global pkgname_publican publican
-%global pkgname_corosync_lib corosynclib
 %global pkgname_glue_libs cluster-glue-libs
 %global pkgname_pcmk_libs %{name}-libs
 %global hacluster_id 189
@@ -265,7 +280,7 @@ BuildRequires: pkgconfig(systemd)
 %endif
 
 Requires:      corosync >= 2.0.0
-BuildRequires: %{pkgname_corosync_lib}-devel >= 2.0.0
+BuildRequires: corosync-devel >= 2.0.0
 
 %if %{with stonithd}
 BuildRequires: %{pkgname_glue_libs}-devel
@@ -307,7 +322,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
-%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+%if 0%{?supports_recommends}
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
 # For crm_report
 Recommends:    tar
@@ -393,7 +408,7 @@ Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
-Requires:      %{pkgname_corosync_lib}-devel%{?_isa} >= 2.0.0
+Requires:      corosync-devel >= 2.0.0
 
 %description -n %{pkgname_pcmk_libs}-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -459,7 +474,7 @@ manager.
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
-export systemdunitdir=%{?_unitdir}%{!?_unitdir:no}
+export systemdsystemunitdir=%{?_unitdir}%{!?_unitdir:no}
 
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
@@ -484,6 +499,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_doc:          --with-brand=}                                   \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}                                            \
+        --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                                                 \
         --with-version=%{version}-%{release}
 
@@ -867,6 +883,7 @@ exit 0
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
 %{_datadir}/pacemaker/api
+%{_datadir}/pkgconfig/pacemaker-schemas.pc
 
 %changelog
 

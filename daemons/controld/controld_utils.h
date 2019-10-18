@@ -11,11 +11,10 @@
 #  define CRMD_UTILS__H
 
 #  include <crm/crm.h>
-#  include <crm/transition.h>
 #  include <crm/common/xml.h>
-#  include <crm/cib/internal.h> /* For CIB_OP_MODIFY */
-#  include "controld_fsa.h"     // For fsa_cib_conn
-#  include "controld_alerts.h"
+#  include <crm/cib/internal.h>     // CIB_OP_MODIFY
+#  include <controld_fsa.h>         // fsa_cib_conn
+#  include <controld_alerts.h>
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
@@ -55,14 +54,12 @@ enum node_update_flags {
     node_update_all = node_update_cluster|node_update_peer|node_update_join|node_update_expected,
 };
 
-gboolean crm_timer_stop(fsa_timer_t * timer);
-gboolean crm_timer_start(fsa_timer_t * timer);
-gboolean crm_timer_popped(gpointer data);
-gboolean is_timer_started(fsa_timer_t * timer);
-
 crm_exit_t crmd_exit(crm_exit_t exit_code);
 _Noreturn void crmd_fast_exit(crm_exit_t exit_code);
 void pe_subsystem_free(void);
+void controld_stop_sched_timer(void);
+void controld_free_sched_timer(void);
+void controld_expect_sched_reply(xmlNode *msg);
 
 void fsa_dump_actions(long long action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);
@@ -84,16 +81,13 @@ void update_attrd_clear_failures(const char *host, const char *rsc,
 int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
 
-const char *get_timer_desc(fsa_timer_t * timer);
-void st_fail_count_reset(const char * target);
-void st_fail_count_increment(const char *target);
-void abort_for_stonith_failure(enum transition_action abort_action,
-                               const char *target, xmlNode *reason);
 void crmd_peer_down(crm_node_t *peer, bool full);
 unsigned int cib_op_timeout(void);
 
 bool feature_set_compatible(const char *dc_version, const char *join_version);
 bool controld_action_is_recordable(const char *action);
+
+const char *get_node_id(xmlNode *lrm_rsc_op);
 
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())

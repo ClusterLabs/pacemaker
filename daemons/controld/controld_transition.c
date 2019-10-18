@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,13 +14,8 @@
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_transition.h>
-
 
 extern crm_graph_functions_t te_graph_fns;
-stonith_t *stonith_api = NULL;
 
 static void
 global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
@@ -203,6 +200,11 @@ do_te_invoke(long long action,
         if (value) {
             free(failed_start_offset);
             failed_start_offset = strdup(value);
+        }
+
+        if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)
+            != pcmk_ok) || (recheck_by < 0)) {
+            recheck_by = 0;
         }
 
         trigger_graph();

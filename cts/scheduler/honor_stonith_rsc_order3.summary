@@ -6,14 +6,14 @@ Online: [ fc16-builder ]
      Stopped: [ fc16-builder ]
  Clone Set: S_CLONE2 [S_GROUP]
      Stopped: [ fc16-builder ]
- A	(ocf::pacemaker:Dummy):	Stopped 
+ A	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   S_A:0	(fc16-builder)
- * Start   S_B:0	(fc16-builder)
- * Start   S_C:0	(fc16-builder)
- * Start   S_D:0	(fc16-builder)
- * Start   A	(fc16-builder)
+ * Start      S_A:0   ( fc16-builder )  
+ * Start      S_B:0   ( fc16-builder )  
+ * Start      S_C:0   ( fc16-builder )  
+ * Start      S_D:0   ( fc16-builder )  
+ * Start      A       ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: S_A:0           monitor on fc16-builder

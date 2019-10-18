@@ -5,7 +5,7 @@
 "evmsdclone:1_monitor_5000 node1" [ style=bold color="green" fontcolor="black"]
 "imagestoreclone:0_monitor_20000 node2" [ style=bold color="green" fontcolor="black"]
 "imagestoreclone:1_monitor_20000 node1" [ style=bold color="green" fontcolor="black"]
-"sles10_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
+"sles10_stop_0 node2" [ style=bold color="green" fontcolor="black"]
 "stonithclone:0_monitor_5000 node2" [ style=bold color="green" fontcolor="black"]
 "stonithclone:1_monitor_5000 node1" [ style=bold color="green" fontcolor="black"]
 }

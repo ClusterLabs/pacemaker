@@ -10,6 +10,11 @@
 default: build
 .PHONY: default
 
+# The toplevel "clean" targets are generated from Makefile.am, not this file.
+# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
+# define this target, which Makefile.am can use as a dependency of clean-local.
+EXTRA_CLEAN_TARGETS	= ancillary-clean
+
 -include Makefile
 
 # The main purpose of this GNUmakefile is that its targets can be invoked
@@ -83,9 +88,6 @@ export:
 	    echo "`date`: Using existing tarball: $(TARFILE)";			\
 	fi
 
-export-clean:
-	-rm -f $(abs_builddir)/$(PACKAGE)-*.tar.gz
-
 ## RPM-related targets
 
 # Where to put RPM artifacts; possible values:
@@ -94,7 +96,7 @@ export-clean:
 #   directory (everything else uses the usual defaults)
 #
 # - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
-#   everything else in dedicated "rpmbuild" subdirectory of build tree
+#   everything else in dedicated "rpm" subdirectory of build tree
 RPMDEST         	?= toplevel
 
 RPM_SPEC_DIR_toplevel	= $(abs_builddir)
@@ -167,7 +169,8 @@ rpmbuild-with = \
 	CMD="$${CMD} $(3)"; \
 	eval "$${CMD}"
 
-$(RPM_SPEC_DIR)/$(PACKAGE).spec: rpm/pacemaker.spec.in
+# Depend on spec-clean so it gets rebuilt every time
+$(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
 	$(AM_V_GEN)if [ x != x"`git ls-files -m rpm/pacemaker.spec.in 2>/dev/null`" ]; then	\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
@@ -326,7 +329,7 @@ $(COVHTML): $(COVEMACS)
 coverity-corp: $(COVHTML)
 	$(MAKE) $(AM_MAKEFLAGS) core-clean
 	@echo "Done. See:"
-	@echo "  file://$(abs_builddir)/$(COVHTML)/index.html"
+	@echo "  file://$(COVHTML)/index.html"
 	@echo "When no longer needed, make coverity-clean"
 
 # Remove all outputs regardless of tag
@@ -341,8 +344,8 @@ coverity-clean:
 
 summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
-	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:      "
+	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
+	@printf "\n- Diff:\n"
 	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
 
 rc-changes:
@@ -410,8 +413,5 @@ gnulib-update:
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 
-# The toplevel "clean" targets are generated from Makefile.am, not this file.
-# We can't use autotools' CLEANFILES, clean-local, etc. here. Instead, we
-# define this target, which Makefile.am can call from clean-local.
-ancillary-clean: export-clean spec-clean srpm-clean mock-clean coverity-clean
+ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean
 	-rm -f $(TARFILE)

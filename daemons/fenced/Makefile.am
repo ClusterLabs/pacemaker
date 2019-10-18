@@ -1,6 +1,9 @@
 #
-# Copyright 2004-2018 International Business Machines
-# Author: Sun Jiang Dong <sunjd@cn.ibm.com>
+# Original Author: Sun Jiang Dong <sunjd@cn.ibm.com>
+# Copyright 2004 International Business Machines
+#
+# with later changes copyright 2004-2019 the Pacemaker project contributors.
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -19,6 +22,8 @@ noinst_HEADERS	= pacemaker-fenced.h
 if BUILD_XML_HELP
 man7_MANS	= pacemaker-fenced.7
 endif
+
+EXTRA_DIST	= README.md
 
 cts_fence_helper_SOURCES	= cts-fence-helper.c
 cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\

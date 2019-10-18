@@ -1,5 +1,7 @@
 #
-# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2004-2018 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,7 +14,7 @@ lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 ## SOURCES
 noinst_HEADERS		= unpack.h variant.h pe_status_private.h
 
-libpe_rules_la_LDFLAGS	= -version-info 26:2:0
+libpe_rules_la_LDFLAGS	= -version-info 27:0:1
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -20,7 +22,7 @@ libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules.c rules_alerts.c common.c
 
-libpe_status_la_LDFLAGS	= -version-info 28:2:0
+libpe_status_la_LDFLAGS	= -version-info 29:0:1
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -40,6 +42,7 @@ libpe_status_la_SOURCES	+= rules.c
 libpe_status_la_SOURCES	+= status.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
+libpe_status_la_SOURCES	+= pe_output.c
 
 clean-generic:
 	rm -f *.log *.debug *~

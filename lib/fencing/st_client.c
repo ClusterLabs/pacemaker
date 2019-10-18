@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -9,6 +11,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <libgen.h>
@@ -66,6 +69,8 @@ typedef struct stonith_private_s {
     mainloop_io_t *source;
     GHashTable *stonith_op_callback_table;
     GList *notify_list;
+    int notify_refcnt;
+    bool notify_deletes;
 
     void (*op_callback) (stonith_t * st, stonith_callback_data_t * data);
 
@@ -76,6 +81,7 @@ typedef struct stonith_notify_client_s {
     const char *obj_id;         /* implement one day */
     const char *obj_type;       /* implement one day */
     void (*notify) (stonith_t * st, stonith_event_t * e);
+    bool delete;
 
 } stonith_notify_client_t;
 
@@ -107,8 +113,9 @@ typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
 bool stonith_dispatch(stonith_t * st);
 xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                            int call_options);
-int stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data,
-                         xmlNode ** output_data, int call_options, int timeout);
+static int stonith_send_command(stonith_t *stonith, const char *op,
+                                xmlNode *data, xmlNode **output_data,
+                                int call_options, int timeout);
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
@@ -210,6 +217,38 @@ log_action(stonith_action_t *action, pid_t pid)
     }
 }
 
+/* when cycling through the list we don't want to delete items
+   so just mark them and when we know nobody is using the list
+   loop over it to remove the marked items
+ */
+static void
+foreach_notify_entry (stonith_private_t *private,
+                GFunc func,
+                gpointer user_data)
+{
+    private->notify_refcnt++;
+    g_list_foreach(private->notify_list, func, user_data);
+    private->notify_refcnt--;
+    if ((private->notify_refcnt == 0) &&
+        private->notify_deletes) {
+        GList *list_item = private->notify_list;
+
+        private->notify_deletes = FALSE;
+        while (list_item != NULL)
+        {
+            stonith_notify_client_t *list_client = list_item->data;
+            GList *next = g_list_next(list_item);
+
+            if (list_client->delete) {
+                free(list_client);
+                private->notify_list =
+                    g_list_delete_link(private->notify_list, list_item);
+            }
+            list_item = next;
+        }
+    }
+}
+
 static void
 stonith_connection_destroy(gpointer user_data)
 {
@@ -225,11 +264,12 @@ stonith_connection_destroy(gpointer user_data)
     native->ipc = NULL;
     native->source = NULL;
 
+    free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
 
-    g_list_foreach(native->notify_list, stonith_send_notification, &blob);
+    foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
 }
 
@@ -483,7 +523,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         value = g_hash_table_lookup(device_args, buffer);
     }
     if (value) {
-        crm_info("Substituting action '%s' for requested operation '%s'", value, action);
+        crm_debug("Substituting action '%s' for requested operation '%s'", value, action);
         action = value;
     }
 
@@ -526,7 +566,7 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
 
         /* Don't overwrite explictly set values for $param */
         if (value == NULL || safe_str_eq(value, "dynamic")) {
-            crm_debug("Performing %s action for node '%s' as '%s=%s'", action, victim, param,
+            crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
                       alias);
             append_arg(param, alias, &arg_list);
         }
@@ -771,6 +811,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
+    set_bit(svc_action->flags, SVC_ACTION_NON_BLOCKED);
 
     /* keep retries from executing out of control and free previous results */
     if (is_retry) {
@@ -833,7 +874,7 @@ stonith_action_execute_async(stonith_action_t * action,
                              void (*fork_cb) (GPid pid, gpointer user_data))
 {
     if (!action) {
-        return -1;
+        return -EINVAL;
     }
 
     action->userdata = userdata;
@@ -917,13 +958,11 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 #endif
 
         default:
-            errno = EINVAL;
-            crm_perror(LOG_ERR,
-                       "Agent %s not found or does not support meta-data",
-                       agent);
+            crm_err("Can't get fence agent '%s' meta-data: No such agent",
+                    agent);
             break;
     }
-    return -EINVAL;
+    return -ENODEV;
 }
 
 static int
@@ -1139,6 +1178,10 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
     const stonith_notify_client_t *a_client = a;
     const stonith_notify_client_t *b_client = b;
 
+    if (a_client->delete || b_client->delete) {
+        /* make entries marked for deletion not findable */
+        return -1;
+    }
     CRM_CHECK(a_client->event != NULL && b_client->event != NULL, return 0);
     rc = strcmp(a_client->event, b_client->event);
     if (rc == 0) {
@@ -1393,7 +1436,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         stonith_perform_callback(st, blob.xml, 0, 0);
 
     } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
-        g_list_foreach(private->notify_list, stonith_send_notification, &blob);
+        foreach_notify_entry(private, stonith_send_notification, &blob);
     } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
         int call_id = 0;
         int timeout = 0;
@@ -1415,14 +1458,21 @@ static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
     int rc = pcmk_ok;
-    stonith_private_t *native = stonith->st_private;
+    stonith_private_t *native = NULL;
+    const char *display_name = name? name : "client";
 
     static struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
         .destroy = stonith_connection_destroy
     };
 
-    crm_trace("Connecting command channel");
+    CRM_CHECK(stonith != NULL, return -EINVAL);
+
+    native = stonith->st_private;
+    CRM_ASSERT(native != NULL);
+
+    crm_debug("Attempting fencer connection by %s with%s mainloop",
+              display_name, (stonith_fd? "out" : ""));
 
     stonith->state = stonith_connected_command;
     if (stonith_fd) {
@@ -1432,8 +1482,9 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to fencer failed");
-            rc = -ENOTCONN;
+            crm_ipc_close(native->ipc);
+            crm_ipc_destroy(native->ipc);
+            native->ipc = NULL;
         }
 
     } else {
@@ -1444,11 +1495,8 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     }
 
     if (native->ipc == NULL) {
-        crm_debug("Could not connect to the Stonith API");
         rc = -ENOTCONN;
-    }
-
-    if (rc == pcmk_ok) {
+    } else {
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
@@ -1458,30 +1506,35 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if (rc < 0) {
-            crm_perror(LOG_DEBUG, "Couldn't complete registration with the fencing API: %d", rc);
+            crm_debug("Couldn't register with the fencer: %s "
+                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             rc = -ECOMM;
 
         } else if (reply == NULL) {
-            crm_err("Did not receive registration reply");
+            crm_debug("Couldn't register with the fencer: no reply");
             rc = -EPROTO;
 
         } else {
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
-            const char *tmp_ticket = crm_element_value(reply, F_STONITH_CLIENTID);
 
+            native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
-                crm_err("Invalid registration message: %s", msg_type);
-                crm_log_xml_err(reply, "Bad reply");
+                crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
+                          (msg_type? msg_type : "(missing)"));
+                crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
-            } else if (tmp_ticket == NULL) {
-                crm_err("No registration token provided");
-                crm_log_xml_err(reply, "Bad reply");
+            } else if (native->token == NULL) {
+                crm_debug("Couldn't register with the fencer: no token in reply");
+                crm_log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else {
-                crm_trace("Obtained registration token: %s", tmp_ticket);
-                native->token = strdup(tmp_ticket);
+#if HAVE_MSGFROMIPC_TIMEOUT
+                stonith->call_timeout = MAX_IPC_DELAY;
+#endif
+                crm_debug("Connection to fencer by %s succeeded (registration token: %s)",
+                          display_name, native->token);
                 rc = pcmk_ok;
             }
         }
@@ -1490,16 +1543,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         free_xml(hello);
     }
 
-    if (rc == pcmk_ok) {
-#if HAVE_MSGFROMIPC_TIMEOUT
-        stonith->call_timeout = MAX_IPC_DELAY;
-#endif
-        crm_debug("Connection to fencer successful");
-        return pcmk_ok;
+    if (rc != pcmk_ok) {
+        crm_debug("Connection attempt to fencer by %s failed: %s "
+                  CRM_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
+        stonith->cmds->disconnect(stonith);
     }
-
-    crm_debug("Connection to fencer failed: %s", pcmk_strerror(rc));
-    stonith->cmds->disconnect(stonith);
     return rc;
 }
 
@@ -1585,8 +1633,13 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
     if (list_item != NULL) {
         stonith_notify_client_t *list_client = list_item->data;
 
-        private->notify_list = g_list_remove(private->notify_list, list_client);
-        free(list_client);
+        if (private->notify_refcnt) {
+            list_client->delete = TRUE;
+            private->notify_deletes = TRUE;
+        } else {
+            private->notify_list = g_list_remove(private->notify_list, list_client);
+            free(list_client);
+        }
 
         crm_trace("Removed callback");
 
@@ -1747,6 +1800,10 @@ stonith_send_notification(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback client");
         return;
 
+    } else if (entry->delete) {
+        crm_trace("Skipping callback - marked for deletion");
+        return;
+
     } else if (entry->notify == NULL) {
         crm_warn("Skipping callback - NULL callback");
         return;
@@ -1765,47 +1822,51 @@ stonith_send_notification(gpointer data, gpointer user_data)
     event_free(st_event);
 }
 
-int
+/*!
+ * \internal
+ * \brief Create and send an API request
+ *
+ * \param[in]  stonith       Stonith connection
+ * \param[in]  op            API operation to request
+ * \param[in]  data          Data to attach to request
+ * \param[out] output_data   If not NULL, will be set to reply if synchronous
+ * \param[in]  call_options  Bitmask of stonith_call_options to use
+ * \param[in]  timeout       Error if not completed within this many seconds
+ *
+ * \return pcmk_ok (for synchronous requests) or positive call ID
+ *         (for asynchronous requests) on success, -errno otherwise
+ */
+static int
 stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNode ** output_data,
                      int call_options, int timeout)
 {
     int rc = 0;
     int reply_id = -1;
-    enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
+    stonith_private_t *native = NULL;
 
-    stonith_private_t *native = stonith->st_private;
-
-    if (stonith->state == stonith_disconnected) {
-        return -ENOTCONN;
-    }
+    CRM_ASSERT(stonith && stonith->st_private && op);
+    native = stonith->st_private;
 
     if (output_data != NULL) {
         *output_data = NULL;
     }
 
-    if (op == NULL) {
-        crm_err("No operation specified");
-        return -EINVAL;
+    if ((stonith->state == stonith_disconnected) || (native->token == NULL)) {
+        return -ENOTCONN;
     }
 
-    if (call_options & st_opt_sync_call) {
-        ipc_flags |= crm_ipc_client_response;
-    }
-
-    stonith->call_id++;
-    /* prevent call_id from being negative (or zero) and conflicting
-     *    with the stonith_errors enum
-     * use 2 because we use it as (stonith->call_id - 1) below
+    /* Increment the call ID, which must be positive to avoid conflicting with
+     * error codes. This shouldn't be a problem unless the client mucked with
+     * it or the counter wrapped around.
      */
+    stonith->call_id++;
     if (stonith->call_id < 1) {
         stonith->call_id = 1;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
     op_msg = stonith_create_op(stonith->call_id, native->token, op, data, call_options);
     if (op_msg == NULL) {
         return -EINVAL;
@@ -1814,7 +1875,15 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
-    rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, 1000 * (timeout + 60), &op_reply);
+    {
+        enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
+
+        if (call_options & st_opt_sync_call) {
+            ipc_flags |= crm_ipc_client_response;
+        }
+        rc = crm_ipc_send(native->ipc, op_msg, ipc_flags,
+                          1000 * (timeout + 60), &op_reply);
+    }
     free_xml(op_msg);
 
     if (rc < 0) {
@@ -1827,9 +1896,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     if (!(call_options & st_opt_sync_call)) {
         crm_trace("Async call %d, returning", stonith->call_id);
-        CRM_CHECK(stonith->call_id != 0, return -EPROTO);
         free_xml(op_reply);
-
         return stonith->call_id;
     }
 
@@ -1867,6 +1934,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
   done:
     if (crm_ipc_connected(native->ipc) == FALSE) {
         crm_err("Fencer disconnected");
+        free(native->token); native->token = NULL;
         stonith->state = stonith_disconnected;
     }
 
@@ -2024,17 +2092,32 @@ stonith_api_new(void)
     stonith_private_t *private = NULL;
 
     new_stonith = calloc(1, sizeof(stonith_t));
+    if (new_stonith == NULL) {
+        return NULL;
+    }
+
     private = calloc(1, sizeof(stonith_private_t));
+    if (private == NULL) {
+        free(new_stonith);
+        return NULL;
+    }
     new_stonith->st_private = private;
 
     private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                                                NULL, stonith_destroy_op_callback);
     private->notify_list = NULL;
+    private->notify_refcnt = 0;
+    private->notify_deletes = FALSE;
 
     new_stonith->call_id = 1;
     new_stonith->state = stonith_disconnected;
 
     new_stonith->cmds = calloc(1, sizeof(stonith_api_operations_t));
+    if (new_stonith->cmds == NULL) {
+        free(new_stonith->st_private);
+        free(new_stonith);
+        return NULL;
+    }
 
 /* *INDENT-OFF* */
     new_stonith->cmds->free       = stonith_api_free;
@@ -2069,6 +2152,36 @@ stonith_api_new(void)
 /* *INDENT-ON* */
 
     return new_stonith;
+}
+
+/*!
+ * \brief Make a blocking connection attempt to the fencer
+ *
+ * \param[in,out] st            Fencer API object
+ * \param[in]     name          Client name to use with fencer
+ * \param[in]     max_attempts  Return error if this many attempts fail
+ *
+ * \return pcmk_ok on success, result of last attempt otherwise
+ */
+int
+stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
+{
+    int rc = -EINVAL; // if max_attempts is not positive
+
+    for (int attempt = 1; attempt <= max_attempts; attempt++) {
+        rc = st->cmds->connect(st, name, NULL);
+        if (rc == pcmk_ok) {
+            return pcmk_ok;
+        } else if (attempt < max_attempts) {
+            crm_notice("Fencer connection attempt %d of %d failed (retrying in 2s): %s "
+                       CRM_XS " rc=%d",
+                       attempt, max_attempts, pcmk_strerror(rc), rc);
+            sleep(2);
+        }
+    }
+    crm_notice("Could not connect to fencer: %s " CRM_XS " rc=%d",
+               pcmk_strerror(rc), rc);
+    return rc;
 }
 
 stonith_key_value_t *
@@ -2122,85 +2235,78 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 int
 stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
-    char *name = NULL;
-    const char *action = "reboot";
-
-    int rc = -EPROTO;
-    stonith_t *st = NULL;
-    enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
+    int rc = pcmk_ok;
+    stonith_t *st = stonith_api_new();
+    const char *action = off? "off" : "reboot";
 
     api_log_open();
-    st = stonith_api_new();
-    if (st) {
-        rc = st->cmds->connect(st, "stonith-api", NULL);
-        if(rc != pcmk_ok) {
-            api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+    if (st == NULL) {
+        api_log(LOG_ERR, "API initialization failed, could not kick (%s) node %u/%s",
+                action, nodeid, uname);
+        return -EPROTO;
+    }
+
+    rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (rc != pcmk_ok) {
+        api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)",
+                action, nodeid, uname, pcmk_strerror(rc), rc);
+    } else {
+        char *name = NULL;
+        enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
+
+        if (uname != NULL) {
+            name = strdup(uname);
+        } else if (nodeid > 0) {
+            opts |= st_opt_cs_nodeid;
+            name = crm_itoa(nodeid);
         }
-    }
-
-    if (uname != NULL) {
-        name = strdup(uname);
-
-    } else if (nodeid > 0) {
-        opts |= st_opt_cs_nodeid;
-        name = crm_itoa(nodeid);
-    }
-
-    if (off) {
-        action = "off";
-    }
-
-    if (rc == pcmk_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout, 0);
-        if(rc != pcmk_ok) {
-            api_log(LOG_ERR, "Could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+        free(name);
+
+        if (rc != pcmk_ok) {
+            api_log(LOG_ERR, "Could not kick (%s) node %u/%s : %s (%d)",
+                    action, nodeid, uname, pcmk_strerror(rc), rc);
         } else {
-            api_log(LOG_NOTICE, "Node %u/%s kicked: %s ", nodeid, uname, action);
+            api_log(LOG_NOTICE, "Node %u/%s kicked: %s", nodeid, uname, action);
         }
     }
 
-    if (st) {
-        st->cmds->disconnect(st);
-        stonith_api_delete(st);
-    }
-
-    free(name);
+    stonith_api_delete(st);
     return rc;
 }
 
 time_t
 stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 {
-    int rc = 0;
-    char *name = NULL;
-
+    int rc = pcmk_ok;
     time_t when = 0;
-    stonith_t *st = NULL;
+    stonith_t *st = stonith_api_new();
     stonith_history_t *history = NULL, *hp = NULL;
-    enum stonith_call_options opts = st_opt_sync_call;
 
-    st = stonith_api_new();
-    if (st) {
-        rc = st->cmds->connect(st, "stonith-api", NULL);
-        if(rc != pcmk_ok) {
-            api_log(LOG_NOTICE, "Connection failed: %s (%d)", pcmk_strerror(rc), rc);
-        }
+    if (st == NULL) {
+        api_log(LOG_ERR, "Could not retrieve fence history for %u/%s: "
+                "API initialization failed", nodeid, uname);
+        return when;
     }
 
-    if (uname != NULL) {
-        name = strdup(uname);
-
-    } else if (nodeid > 0) {
-        opts |= st_opt_cs_nodeid;
-        name = crm_itoa(nodeid);
-    }
-
-    if (st && rc == pcmk_ok) {
+    rc = st->cmds->connect(st, "stonith-api", NULL);
+    if (rc != pcmk_ok) {
+        api_log(LOG_NOTICE, "Connection failed: %s (%d)", pcmk_strerror(rc), rc);
+    } else {
         int entries = 0;
         int progress = 0;
         int completed = 0;
+        char *name = NULL;
+        enum stonith_call_options opts = st_opt_sync_call;
 
+        if (uname != NULL) {
+            name = strdup(uname);
+        } else if (nodeid > 0) {
+            opts |= st_opt_cs_nodeid;
+            name = crm_itoa(nodeid);
+        }
         rc = st->cmds->history(st, opts, name, &history, 120);
+        free(name);
 
         for (hp = history; hp; hp = hp->next) {
             entries++;
@@ -2227,15 +2333,11 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         }
     }
 
-    if (st) {
-        st->cmds->disconnect(st);
-        stonith_api_delete(st);
-    }
+    stonith_api_delete(st);
 
     if(when) {
         api_log(LOG_INFO, "Node %u/%s last kicked at: %ld", nodeid, uname, (long int)when);
     }
-    free(name);
     return when;
 }
 
@@ -2252,6 +2354,10 @@ stonith_agent_exists(const char *agent, int timeout)
     }
 
     st = stonith_api_new();
+    if (st == NULL) {
+        crm_err("Could not list fence agents: API memory allocation failed");
+        return FALSE;
+    }
     st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
 
     for (dIter = devices; dIter != NULL; dIter = dIter->next) {
@@ -2278,4 +2384,214 @@ stonith_action_str(const char *action)
     } else {
         return action;
     }
+}
+
+/*!
+ * \internal
+ * \brief Parse a target name from one line of a target list string
+ *
+ * \param[in]     line    One line of a target list string
+ * \parma[in]     len     String length of line
+ * \param[in,out] output  List to add newly allocated target name to
+ */
+static void
+parse_list_line(const char *line, int len, GList **output)
+{
+    size_t i = 0;
+    size_t entry_start = 0;
+
+    /* Skip complaints about additional parameters device doesn't understand
+     *
+     * @TODO Document or eliminate the implied restriction of target names
+     */
+    if (strstr(line, "invalid") || strstr(line, "variable")) {
+        crm_debug("Skipping list output line: %s", line);
+        return;
+    }
+
+    // Process line content, character by character
+    for (i = 0; i <= len; i++) {
+
+        if (isspace(line[i]) || (line[i] == ',') || (line[i] == ';')
+            || (line[i] == '\0')) {
+            // We've found a separator (i.e. the end of an entry)
+
+            int rc = 0;
+            char *entry = NULL;
+
+            if (i == entry_start) {
+                // Skip leading and sequential separators
+                entry_start = i + 1;
+                continue;
+            }
+
+            entry = calloc(i - entry_start + 1, sizeof(char));
+            CRM_ASSERT(entry != NULL);
+
+            /* Read entry, stopping at first separator
+             *
+             * @TODO Document or eliminate these character restrictions
+             */
+            rc = sscanf(line + entry_start, "%[a-zA-Z0-9_-.]", entry);
+            if (rc != 1) {
+                crm_warn("Could not parse list output entry: %s "
+                         CRM_XS " entry_start=%d position=%d",
+                         line + entry_start, entry_start, i);
+                free(entry);
+
+            } else if (safe_str_eq(entry, "on") || safe_str_eq(entry, "off")) {
+                /* Some agents print the target status in the list output,
+                 * though none are known now (the separate list-status command
+                 * is used for this, but it can also print "UNKNOWN"). To handle
+                 * this possibility, skip such entries.
+                 *
+                 * @TODO Document or eliminate the implied restriction of target
+                 * names.
+                 */
+                free(entry);
+
+            } else {
+                // We have a valid entry
+                *output = g_list_append(*output, entry);
+            }
+            entry_start = i + 1;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Parse a list of targets from a string
+ *
+ * \param[in] list_output  Target list as a string
+ *
+ * \return List of target names
+ * \note The target list string format is flexible, to allow for user-specified
+ *       lists such pcmk_host_list and the output of an agent's list action
+ *       (whether direct or via the API, which escapes newlines). There may be
+ *       multiple lines, separated by either a newline or an escaped newline
+ *       (backslash n). Each line may have one or more target names, separated
+ *       by any combination of whitespace, commas, and semi-colons. Lines
+ *       containing "invalid" or "variable" will be ignored entirely. Target
+ *       names "on" or "off" (case-insensitive) will be ignored. Target names
+ *       may contain only alphanumeric characters, underbars (_), dashes (-),
+ *       and dots (.) (if any other character occurs in the name, it and all
+ *       subsequent characters in the name will be ignored).
+ * \note The caller is responsible for freeing the result with
+ *       g_list_free_full(result, free).
+ */
+GList *
+stonith__parse_targets(const char *target_spec)
+{
+    GList *targets = NULL;
+
+    if (target_spec != NULL) {
+        size_t out_len = strlen(target_spec);
+        size_t line_start = 0; // Starting index of line being processed
+
+        for (size_t i = 0; i <= out_len; ++i) {
+            if ((target_spec[i] == '\n') || (target_spec[i] == '\0')
+                || ((target_spec[i] == '\\') && (target_spec[i + 1] == 'n'))) {
+                // We've reached the end of one line of output
+
+                int len = i - line_start;
+
+                if (len > 0) {
+                    char *line = strndup(target_spec + line_start, len);
+
+                    line[len] = '\0'; // Because it might be a newline
+                    parse_list_line(line, len, &targets);
+                    free(line);
+                }
+                if (target_spec[i] == '\\') {
+                    ++i; // backslash-n takes up two positions
+                }
+                line_start = i + 1;
+            }
+        }
+    }
+    return targets;
+}
+
+/*!
+ * \internal
+ * \brief Determine if a later stonith event succeeded.
+ *
+ * \note Before calling this function, use stonith__sort_history() to sort the
+ *       top_history argument.
+ */
+gboolean
+stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
+{
+     gboolean ret = FALSE;
+
+     for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
+        if (prev_hp == event) {
+            break;
+        }
+
+         if ((prev_hp->state == st_done) &&
+            safe_str_eq(event->target, prev_hp->target) &&
+            safe_str_eq(event->action, prev_hp->action) &&
+            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            (event->completed < prev_hp->completed)) {
+            ret = TRUE;
+            break;
+        }
+    }
+    return ret;
+}
+
+/*!
+ * \internal
+ * \brief Sort the stonith-history
+ *        sort by competed most current on the top
+ *        pending actions lacking a completed-stamp are gathered at the top
+ *
+ * \param[in] history    List of stonith actions
+ *
+ */
+stonith_history_t *
+stonith__sort_history(stonith_history_t *history)
+{
+    stonith_history_t *new = NULL, *pending = NULL, *hp, *np, *tmp;
+
+    for (hp = history; hp; ) {
+        tmp = hp->next;
+        if ((hp->state == st_done) || (hp->state == st_failed)) {
+            /* sort into new */
+            if ((!new) || (hp->completed > new->completed)) {
+                hp->next = new;
+                new = hp;
+            } else {
+                np = new;
+                do {
+                    if ((!np->next) || (hp->completed > np->next->completed)) {
+                        hp->next = np->next;
+                        np->next = hp;
+                        break;
+                    }
+                    np = np->next;
+                } while (1);
+            }
+        } else {
+            /* put into pending */
+            hp->next = pending;
+            pending = hp;
+        }
+        hp = tmp;
+    }
+
+    /* pending actions don't have a completed-stamp so make them go front */
+    if (pending) {
+        stonith_history_t *last_pending = pending;
+
+        while (last_pending->next) {
+            last_pending = last_pending->next;
+        }
+
+        last_pending->next = new;
+        new = pending;
+    }
+    return new;
 }

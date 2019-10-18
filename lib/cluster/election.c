@@ -307,8 +307,7 @@ election_vote(election_t *e)
     crm_xml_add_int(vote, F_CRM_ELECTION_ID, e->count);
 
     crm_uptime(&age);
-    crm_xml_add_int(vote, F_CRM_ELECTION_AGE_S, age.tv_sec);
-    crm_xml_add_int(vote, F_CRM_ELECTION_AGE_US, age.tv_usec);
+    crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
 
     send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
     free_xml(vote);

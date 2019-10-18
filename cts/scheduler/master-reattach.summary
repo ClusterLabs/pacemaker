@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ dktest1 dktest2 ]
 
  Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged)
-     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
-     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
+     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)
@@ -23,8 +23,8 @@ Revised cluster status:
 Online: [ dktest1 dktest2 ]
 
  Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged)
-     drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
-     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
+     drbd1	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
+     drbd1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)

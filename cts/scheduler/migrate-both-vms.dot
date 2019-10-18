@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "c-fs-bind-libvirt-VM-cvmh_stop_0" -> "c-fs-bind-libvirt-VM-cvmh_stopped_0" [ style = bold]
 "c-fs-bind-libvirt-VM-cvmh_stop_0" -> "fs-bind-libvirt-VM-cvmh_stop_0 cvmh03" [ style = bold]
 "c-fs-bind-libvirt-VM-cvmh_stop_0" -> "fs-bind-libvirt-VM-cvmh_stop_0 cvmh04" [ style = bold]

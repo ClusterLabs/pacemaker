@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!-- list_item() method -->
+    <start>
+        <ref name="element-item"/>
+    </start>
+
+    <define name="element-item">
+        <element name="item">
+            <optional>
+                <attribute name="name"> <text /> </attribute>
+            </optional>
+            <data type="string"/>
+        </element>
+    </define>
+
+</grammar>

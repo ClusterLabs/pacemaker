@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "B_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
 "B_stop_0 fc16-builder" -> "B_start_0 <none>" [ style = dashed]
 "B_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]

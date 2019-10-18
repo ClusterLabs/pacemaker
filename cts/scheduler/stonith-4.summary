@@ -11,7 +11,7 @@ Node pcmk-11 (111): pending
 Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 pcmk-6 ]
 
- Fencing	(stonith:fence_xvm):	Stopped 
+ Fencing	(stonith:fence_xvm):	Stopped
 
 Transition Summary:
  * Fence (reboot) pcmk-10 'peer process is no longer available'
@@ -34,5 +34,5 @@ Node pcmk-11 (111): pending
 Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 pcmk-5 pcmk-6 pcmk-7 pcmk-8 pcmk-10 ]
 
- Fencing	(stonith:fence_xvm):	Stopped 
+ Fencing	(stonith:fence_xvm):	Stopped
 

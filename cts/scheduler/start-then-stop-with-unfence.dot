@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ip1_monitor_10000 rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]
 "ip1_start_0 rhel7-node1.example.com" -> "ip1_monitor_10000 rhel7-node1.example.com" [ style = bold]
 "ip1_start_0 rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]

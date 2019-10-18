@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,15 +14,11 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/crm.h>
+
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_transition.h>
 
 static election_t *fsa_election = NULL;
 
@@ -51,12 +49,6 @@ controld_remove_voter(const char *uname)
 }
 
 void
-controld_stop_election_timeout()
-{
-    election_timeout_stop(fsa_election);
-}
-
-void
 controld_election_fini()
 {
     election_fini(fsa_election);
@@ -66,7 +58,7 @@ controld_election_fini()
 void
 controld_set_election_period(const char *value)
 {
-    election_timeout_set_period(fsa_election, crm_get_msec(value));
+    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 
 void
@@ -250,6 +242,7 @@ do_dc_release(long long action,
     if (action & A_DC_RELEASE) {
         crm_debug("Releasing the role of DC");
         clear_bit(fsa_input_register, R_THE_DC);
+        controld_expect_sched_reply(NULL);
 
     } else if (action & A_DC_RELEASED) {
         crm_info("DC role released");

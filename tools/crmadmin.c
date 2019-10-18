@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -448,7 +448,9 @@ do_find_node_list(xmlNode * xml_node)
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
-    for (node = __xml_first_child(nodes); node != NULL; node = __xml_next(node)) {
+    for (node = __xml_first_child_element(nodes); node != NULL;
+         node = __xml_next_element(node)) {
+
         if (crm_str_eq((const char *)node->name, XML_CIB_TAG_NODE, TRUE)) {
 
             if (BASH_EXPORT) {

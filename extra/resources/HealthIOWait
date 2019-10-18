@@ -1,21 +1,24 @@
 #!/bin/sh
 #
-# IOWait RA
-# Measures CPU iowait % via top and writes #health-iowait status into the CIB
+# ocf:pacemaker:HealthIOWait resource agent
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # (GPLv2) WITHOUT ANY WARRANTY.
 #
+
+#
+# Measures CPU iowait % via top and writes #health-iowait status into the CIB
+#
 #######################################################################
 # Initialization:
 
-: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
-: ${__OCF_ACTION=$1}
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
 
 #######################################################################
 
@@ -27,7 +30,7 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-Systhem health agent that measures the CPU iowait via top and updates the #health-iowait attribute.
+System health agent that measures the CPU iowait via top and updates the #health-iowait attribute.
 </longdesc>
 <shortdesc lang="en">System health based on CPU iowait measurement</shortdesc>
 
@@ -83,7 +86,7 @@ END
 
 agent_start() {
     agent_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
+    if [ $? -eq $OCF_SUCCESS ]; then
       return $OCF_SUCCESS
     fi
     touch "${OCF_RESKEY_state}"
@@ -91,8 +94,8 @@ agent_start() {
 
 agent_stop() {
     agent_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
-        rm ${OCF_RESKEY_state}
+    if [ $? -eq $OCF_SUCCESS ]; then
+        rm "${OCF_RESKEY_state}"
     fi
     return $OCF_SUCCESS
 }
@@ -101,8 +104,8 @@ agent_monitor() {
         # Monitor _MUST!_ differentiate correctly between running
         # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
         # That is THREE states, not just yes/no.
-        if [ -f ${OCF_RESKEY_state} ]; then
-          WAIT=`top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }'`
+        if [ -f "${OCF_RESKEY_state}" ]; then
+          WAIT=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }')
           # echo "System iowait: " $WAIT
           # echo $OCF_RESKEY_yellow_limit
           if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
@@ -125,31 +128,31 @@ agent_monitor() {
 
 agent_validate() {
     # Is the state directory writable?
-    state_dir=`dirname "$OCF_RESKEY_state"`
+    state_dir=$(dirname "$OCF_RESKEY_state")
     if [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]; then
       return $OCF_ERR_ARGS
     fi
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
-if [ "x$OCF_RESKEY_state" = "x" ]; then
-    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+if [ -z "$OCF_RESKEY_state" ]; then
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
       state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
       #Strip off the trailing clone marker
-      OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+      OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
     else
       OCF_RESKEY_state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi
 
-if [ "x${OCF_RESKEY_red_limit}" = "x" ] ; then
+if [ -z "${OCF_RESKEY_red_limit}" ] ; then
   OCF_RESKEY_red_limit=15
 fi
 
-if [ "x${OCF_RESKEY_yellow_limit}" = "x" ] ; then
+if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
   OCF_RESKEY_yellow_limit=10
 fi
 
@@ -171,3 +174,5 @@ esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
 exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

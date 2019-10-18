@@ -18,7 +18,7 @@ Online: [ node1 node2 ]
 Transition Summary:
  * Move       child_rsc1:2     ( node1 -> node2 )  
  * Move       child_rsc1:3     ( node1 -> node2 )  
- * Stop    child_rsc1:4	(node1)  	due to node availability
+ * Stop       child_rsc1:4     (          node1 )   due to node availability
  * Move       child_rsc2:3     ( node2 -> node1 )  
  * Move       child_rsc2:4     ( node2 -> node1 )  
 

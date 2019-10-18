@@ -10,28 +10,17 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <crm/crm.h>
-
 #include <crm/msg_xml.h>
-
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <controld_fsa.h>
-#include <controld_messages.h>
-#include <controld_callbacks.h>
-#include <controld_lrm.h>
-#include <controld_alerts.h>
-#include <controld_metadata.h>
-#include <controld_transition.h>
-#include <controld_throttle.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 qb_ipcs_service_t *ipcs = NULL;
 
@@ -112,14 +101,7 @@ do_shutdown(long long action,
 {
     /* just in case */
     set_bit(fsa_input_register, R_SHUTDOWN);
-
-    if (stonith_api) {
-        /* Prevent it from coming up again */
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
-
-        crm_info("Disconnecting from fencer");
-        stonith_api->cmds->disconnect(stonith_api);
-    }
+    controld_disconnect_fencer(FALSE);
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -147,7 +129,6 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
-extern char *te_client_id;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
@@ -201,12 +182,7 @@ crmd_exit(crm_exit_t exit_code)
 
     controld_close_attrd_ipc();
     pe_subsystem_free();
-
-    if(stonith_api) {
-        crm_trace("Disconnecting fencing API");
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
-        stonith_api->cmds->free(stonith_api); stonith_api = NULL;
-    }
+    controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
         crm_debug("No mainloop detected");
@@ -258,27 +234,14 @@ crmd_exit(crm_exit_t exit_code)
     mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
 
     mainloop_destroy_trigger(config_read); config_read = NULL;
-    mainloop_destroy_trigger(stonith_reconnect); stonith_reconnect = NULL;
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
     crm_client_cleanup();
     crm_peer_destroy();
 
-    crm_timer_stop(transition_timer);
-    crm_timer_stop(integration_timer);
-    crm_timer_stop(finalization_timer);
-    crm_timer_stop(election_trigger);
-    crm_timer_stop(shutdown_escalation_timer);
-    crm_timer_stop(wait_timer);
-    crm_timer_stop(recheck_timer);
-
-    free(transition_timer); transition_timer = NULL;
-    free(integration_timer); integration_timer = NULL;
-    free(finalization_timer); finalization_timer = NULL;
-    free(election_trigger); election_trigger = NULL;
-    free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
-    free(wait_timer); wait_timer = NULL;
-    free(recheck_timer); recheck_timer = NULL;
+    controld_free_fsa_timers();
+    te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_free_sched_timer();
 
     free(fsa_our_dc_version); fsa_our_dc_version = NULL;
     free(fsa_our_uname); fsa_our_uname = NULL;
@@ -288,8 +251,6 @@ crmd_exit(crm_exit_t exit_code)
     free(fsa_cluster_name); fsa_cluster_name = NULL;
 
     free(te_uuid); te_uuid = NULL;
-    free(te_client_id); te_client_id = NULL;
-    free(fsa_pe_ref); fsa_pe_ref = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 
@@ -375,8 +336,6 @@ do_startup(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int was_error = 0;
-
     crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
@@ -389,101 +348,7 @@ do_startup(long long action,
     fsa_cib_conn = cib_new();
 
     lrm_state_init_local();
-
-    /* set up the timers */
-    transition_timer = calloc(1, sizeof(fsa_timer_t));
-    integration_timer = calloc(1, sizeof(fsa_timer_t));
-    finalization_timer = calloc(1, sizeof(fsa_timer_t));
-    election_trigger = calloc(1, sizeof(fsa_timer_t));
-    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
-    wait_timer = calloc(1, sizeof(fsa_timer_t));
-    recheck_timer = calloc(1, sizeof(fsa_timer_t));
-
-    if (election_trigger != NULL) {
-        election_trigger->source_id = 0;
-        election_trigger->period_ms = -1;
-        election_trigger->fsa_input = I_DC_TIMEOUT;
-        election_trigger->callback = crm_timer_popped;
-        election_trigger->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (transition_timer != NULL) {
-        transition_timer->source_id = 0;
-        transition_timer->period_ms = -1;
-        transition_timer->fsa_input = I_PE_CALC;
-        transition_timer->callback = crm_timer_popped;
-        transition_timer->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (integration_timer != NULL) {
-        integration_timer->source_id = 0;
-        integration_timer->period_ms = -1;
-        integration_timer->fsa_input = I_INTEGRATED;
-        integration_timer->callback = crm_timer_popped;
-        integration_timer->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (finalization_timer != NULL) {
-        finalization_timer->source_id = 0;
-        finalization_timer->period_ms = -1;
-        finalization_timer->fsa_input = I_FINALIZED;
-        finalization_timer->callback = crm_timer_popped;
-        finalization_timer->repeat = FALSE;
-        /* for possible enabling... a bug in the join protocol left
-         *    a slave in S_PENDING while we think it's in S_NOT_DC
-         *
-         * raising I_FINALIZED put us into a transition loop which is
-         *    never resolved.
-         * in this loop we continually send probes which the node
-         *    NACK's because it's in S_PENDING
-         *
-         * if we have nodes where the cluster layer is active but the
-         *    CRM is not... then this will be handled in the
-         *    integration phase
-         */
-        finalization_timer->fsa_input = I_ELECTION;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (shutdown_escalation_timer != NULL) {
-        shutdown_escalation_timer->source_id = 0;
-        shutdown_escalation_timer->period_ms = -1;
-        shutdown_escalation_timer->fsa_input = I_STOP;
-        shutdown_escalation_timer->callback = crm_timer_popped;
-        shutdown_escalation_timer->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (wait_timer != NULL) {
-        wait_timer->source_id = 0;
-        wait_timer->period_ms = 2000;
-        wait_timer->fsa_input = I_NULL;
-        wait_timer->callback = crm_timer_popped;
-        wait_timer->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (recheck_timer != NULL) {
-        recheck_timer->source_id = 0;
-        recheck_timer->period_ms = -1;
-        recheck_timer->fsa_input = I_PE_CALC;
-        recheck_timer->callback = crm_timer_popped;
-        recheck_timer->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (was_error) {
+    if (controld_init_fsa_timers() == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -626,17 +491,11 @@ do_started(long long action,
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    } else {
+        crm_notice("Pacemaker controller successfully started and accepting connections");
     }
+    controld_trigger_fencer_connect();
 
-    if (stonith_reconnect == NULL) {
-        int dummy;
-
-        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW, te_connect_stonith, &dummy);
-    }
-    set_bit(fsa_input_register, R_ST_REQUIRED);
-    mainloop_set_trigger(stonith_reconnect);
-
-    crm_notice("Pacemaker controller successfully started and accepting connections");
     clear_bit(fsa_input_register, R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
@@ -663,6 +522,13 @@ static pe_cluster_option crmd_opts[] = {
 	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
           "The messaging stack on which Pacemaker is currently running.",
           "Used for informational and diagnostic purposes." },
+    { "cluster-name", NULL, "string", NULL, NULL, NULL,
+        "An arbitrary name for the cluster",
+        "This optional value is mostly for users' convenience as desired "
+        "in administration, but may also be used in Pacemaker configuration "
+        "rules via the #cluster-name node attribute, and by higher-level tools "
+        "and resource agents."
+    },
 	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "20s", &check_time,
           "How long to wait for a response from other nodes during startup.",
           "The \"correct\" value will depend on the speed/load of your network and the type of switches used."
@@ -682,6 +548,14 @@ static pe_cluster_option crmd_opts[] = {
         },
 	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
+    { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
+        "How a cluster node should react if notified of its own fencing",
+        "A cluster node may receive notification of its own fencing if fencing "
+        "is misconfigured, or if fabric fencing is in use that doesn't cut "
+        "cluster communication. Allowed values are \"stop\" to attempt to "
+        "immediately stop pacemaker and stay stopped, or \"panic\" to attempt "
+        "to immediately reboot the local node, falling back to stop on failure."
+    },
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
@@ -777,13 +651,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = crm_str_table_new();
-    unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, now);
+    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
+                      config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     verify_crmd_options(config_hash);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_trigger->period_ms = crm_get_msec(value);
+    election_trigger->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
     throttle_update_job_max(value);
@@ -798,29 +672,31 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         no_quorum_suicide_escalation = TRUE;
     }
 
+    set_fence_reaction(crmd_pref(config_hash, XML_CONFIG_ATTR_FENCE_REACTION));
+
     value = crmd_pref(config_hash,"stonith-max-attempts");
     update_stonith_max_attempts(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_get_msec(value);
-    /* How long to declare an election over - even if not everyone voted */
-    crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
+    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
+              shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_timer->period_ms = crm_get_msec(value);
-    crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
+    recheck_interval_ms = crm_parse_interval_spec(value);
+    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 
     value = crmd_pref(config_hash, "transition-delay");
-    transition_timer->period_ms = crm_get_msec(value);
+    transition_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-integration-timeout");
-    integration_timer->period_ms = crm_get_msec(value);
+    integration_timer->period_ms = crm_parse_interval_spec(value);
 
     value = crmd_pref(config_hash, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_get_msec(value);
+    finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;
@@ -878,18 +754,16 @@ crm_shutdown(int nsig)
             set_bit(fsa_input_register, R_SHUTDOWN);
             register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
-            if (shutdown_escalation_timer->period_ms < 1) {
+            if (shutdown_escalation_timer->period_ms == 0) {
                 const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
-                int msec = crm_get_msec(value);
 
-                crm_debug("Using default shutdown escalation: %dms", msec);
-                shutdown_escalation_timer->period_ms = msec;
+                shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
             }
 
             /* can't rely on this... */
             crm_notice("Shutting down cluster resource manager " CRM_XS
-                       " limit=%dms", shutdown_escalation_timer->period_ms);
-            crm_timer_start(shutdown_escalation_timer);
+                       " limit=%ums", shutdown_escalation_timer->period_ms);
+            controld_start_timer(shutdown_escalation_timer);
         }
 
     } else {

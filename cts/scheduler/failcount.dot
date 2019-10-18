@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "re-named-lsb:0_monitor_10000 dresproddns02" [ style=bold color="green" fontcolor="black"]
 "re-named-lsb:1_monitor_10000 dresproddns01" [ style=bold color="green" fontcolor="black"]
 "re-openfire-lsb:0_clear_failcount_0 dresproddns01" [ style=bold color="green" fontcolor="black"]

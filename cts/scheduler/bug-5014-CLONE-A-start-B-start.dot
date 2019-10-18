@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ClusterIP2:0_monitor_0 fc16-builder" -> "clone2_start_0" [ style = bold]
 "ClusterIP2:0_monitor_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 "ClusterIP2:0_monitor_30000 fc16-builder" [ style=bold color="green" fontcolor="black"]

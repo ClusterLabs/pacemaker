@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -40,7 +42,7 @@ typedef struct lrmd_rsc_s {
      * that have been handed off from the pending ops list. */
     GList *recurring_ops;
 
-    int stonith_started;
+    int st_probe_rc; // What value should be returned for a probe if stonith
 
     crm_trigger_t *work;
 } lrmd_rsc_t;
@@ -90,6 +92,7 @@ void ipc_proxy_remove_provider(crm_client_t *client);
 void ipc_proxy_forward_client(crm_client_t *client, xmlNode *xml);
 crm_client_t *ipc_proxy_get_provider(void);
 int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
+void remoted_spawn_pidone(int argc, char **argv, char **envp);
 #endif
 
 int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);

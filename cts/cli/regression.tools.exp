@@ -2970,10 +2970,124 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 </cib>
 =#=#=#= End test: Delete resource child meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Delete resource child meta attribute
+=#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
+Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
+=#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
+<cib epoch="43" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+      <group id="dummy-group">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="dummy1-meta_attributes">
+            <nvpair id="dummy1-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute in dummy1 - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in dummy1
+=#=#=#= Begin test: Create a resource meta attribute in dummy-group =#=#=#=
+Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
+Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
+=#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
+<cib epoch="45" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+      <group id="dummy-group">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="dummy1-meta_attributes">
+            <nvpair id="dummy1-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+        </primitive>
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="dummy-group-meta_attributes">
+          <nvpair id="dummy-group-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create a resource meta attribute in dummy-group - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in dummy-group
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="43" num_updates="0" admin_epoch="1">
+<cib epoch="48" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3024,7 +3138,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="45" num_updates="0" admin_epoch="1">
+<cib epoch="50" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3074,7 +3188,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will be the case even if node1 is the last node in the cluster
 Migration will take effect until:
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="46" num_updates="0" admin_epoch="1">
+<cib epoch="51" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3127,7 +3241,7 @@ Migration will take effect until:
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="47" num_updates="0" admin_epoch="1">
+<cib epoch="52" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3171,3 +3285,66 @@ Removing constraint: cli-ban-dummy-on-node1
 </cib>
 =#=#=#= End test: Remove expired constraints - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove expired constraints
+=#=#=#= Begin test: Create an XML patchset =#=#=#=
+<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="1" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-start-0&apos;]"/>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id=&apos;cib-bootstrap-options&apos;]/nvpair[@id=&apos;cib-bootstrap-options-cluster-name&apos;]">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/instance_attributes[@id=&apos;Fencing-params&apos;]/nvpair[@id=&apos;Fencing-pcmk_host_list&apos;]">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-monitor-120s&apos;]">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-op_sleep&apos;]" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-fake&apos;]" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/operations/op[@id=&apos;dummy-monitor-5s&apos;]">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+
+=#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
+* Passed: crm_diff       - Create an XML patchset

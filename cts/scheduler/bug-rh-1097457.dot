@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "FAKE1-IP_monitor_0 lamaVM3" [ style=bold color="green" fontcolor="black"]
 "FAKE1_monitor_0 lamaVM3" [ style=bold color="green" fontcolor="black"]
 "FAKE2-IP_monitor_0 lamaVM3" [ style=bold color="green" fontcolor="black"]

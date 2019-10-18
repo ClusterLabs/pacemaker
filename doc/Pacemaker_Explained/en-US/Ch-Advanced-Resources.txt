@@ -963,12 +963,10 @@ ways:
 
 [[s-resource-bundle]]
 == Bundles - Isolated Environments ==
-indexterm:[bundle]
-indexterm:[Resource,bundle]
-indexterm:[container,bundle]
-indexterm:[Docker,bundle]
-indexterm:[podman,bundle]
-indexterm:[rkt,bundle]
+indexterm:[Resource,Bundle]
+indexterm:[Container,Docker,Bundle]
+indexterm:[Container,podman,Bundle]
+indexterm:[Container,rkt,Bundle]
 
 Pacemaker supports a special syntax for launching a
 https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
@@ -999,11 +997,11 @@ association with Docker, Inc. is implied.]
       <storage-mapping id="httpd-root"
                        source-dir="/srv/html"
                        target-dir="/var/www/html"
-                       options="rw"/>
+                       options="rw,Z"/>
       <storage-mapping id="httpd-logs"
                        source-dir-root="/var/log/pacemaker/bundles"
                        target-dir="/etc/httpd/logs"
-                       options="rw"/>
+                       options="rw,Z"/>
    </storage>
    <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
 </bundle>
@@ -1011,7 +1009,7 @@ association with Docker, Inc. is implied.]
 ====
 
 === Bundle Prerequisites ===
-indexterm:[bundle,prerequisites]
+indexterm:[Resource,Bundle,Prerequisites]
 
 Before configuring a bundle in Pacemaker, the user must install the appropriate
 container launch technology (Docker, podman, or rkt), and supply a fully
@@ -1024,89 +1022,119 @@ installed on every node allowed to run the bundle.
 
 === Bundle Properties ===
 
-.Properties of a Bundle
+indexterm:[XML element,bundle element]
+
+.XML Attributes of a bundle Element
 [width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Description
 
 |id
 |A unique name for the bundle (required)
- indexterm:[id,bundle]
- indexterm:[bundle,Property,id]
+ indexterm:[XML attribute,id attribute,bundle element]
+ indexterm:[XML element,bundle element,id attribute]
 
 |description
 |Arbitrary text (not used by Pacemaker)
- indexterm:[description,bundle]
- indexterm:[bundle,Property,description]
+ indexterm:[XML attribute,description attribute,bundle element]
+ indexterm:[XML element,bundle element,description attribute]
 
 |=========================================================
 
-A bundle must contain exactly one +<docker>+, +<podman>+, or +<rkt>+ element.
+A bundle must contain exactly one +docker+, +podman+, or +rkt+ element.
 
 === Bundle Container Properties ===
-indexterm:[container,Properties]
-indexterm:[Docker,Properties]
-indexterm:[podman,Properties]
-indexterm:[rkt,Properties]
+indexterm:[XML element,docker element]
+indexterm:[XML element,podman element]
+indexterm:[XML element,rkt element]
+indexterm:[Resource,Bundle,Container]
 
-.Properties of a Bundle's docker, podman, or rkt Element
+.XML attributes of a docker, podman, or rkt Element
 [width="95%",cols="3m,4,<5",options="header",align="center"]
 |====
 
-|Field
+|Attribute
 |Default
 |Description
 
 |image
 |
 |Container image tag (required)
- indexterm:[image,container]
- indexterm:[container,Property,image]
+ indexterm:[XML attribute,image attribute,docker element]
+ indexterm:[XML element,docker element,image attribute]
+ indexterm:[XML attribute,image attribute,podman element]
+ indexterm:[XML element,podman element,image attribute]
+ indexterm:[XML attribute,image attribute,rkt element]
+ indexterm:[XML element,rkt element,image attribute]
 
 |replicas
 |Value of +promoted-max+ if that is positive, else 1
 |A positive integer specifying the number of container instances to launch
- indexterm:[replicas,container]
- indexterm:[container,Property,replicas]
+ indexterm:[XML attribute,replicas attribute,docker element]
+ indexterm:[XML element,docker element,replicas attribute]
+ indexterm:[XML attribute,replicas attribute,podman element]
+ indexterm:[XML element,podman element,replicas attribute]
+ indexterm:[XML attribute,replicas attribute,rkt element]
+ indexterm:[XML element,rkt element,replicas attribute]
 
 |replicas-per-host
 |1
 |A positive integer specifying the number of container instances allowed to run
  on a single node
- indexterm:[replicas-per-host,container]
- indexterm:[container,Property,replicas-per-host]
+ indexterm:[XML attribute,replicas-per-host attribute,docker element]
+ indexterm:[XML element,docker element,replicas-per-host attribute]
+ indexterm:[XML attribute,replicas-per-host attribute,podman element]
+ indexterm:[XML element,podman element,replicas-per-host attribute]
+ indexterm:[XML attribute,replicas-per-host attribute,rkt element]
+ indexterm:[XML element,rkt element,replicas-per-host attribute]
 
 |promoted-max
 |0
 |A non-negative integer that, if positive, indicates that the containerized
  service should be treated as a promotable service, with this many replicas
  allowed to run the service in the master role
- indexterm:[promoted-max,container]
- indexterm:[container,Property,promoted-max]
+ indexterm:[XML attribute,promoted-max attribute,docker element]
+ indexterm:[XML element,docker element,promoted-max attribute]
+ indexterm:[XML attribute,promoted-max attribute,podman element]
+ indexterm:[XML element,podman element,promoted-max attribute]
+ indexterm:[XML attribute,promoted-max attribute,rkt element]
+ indexterm:[XML element,rkt element,promoted-max attribute]
 
 |network
 |
 |If specified, this will be passed to the `docker run`, `podman run`, or
  `rkt run` command as the network setting for the container.
- indexterm:[network,container]
- indexterm:[container,Property,network]
+ indexterm:[XML attribute,network attribute,docker element]
+ indexterm:[XML element,docker element,network attribute]
+ indexterm:[XML attribute,network attribute,podman element]
+ indexterm:[XML element,podman element,network attribute]
+ indexterm:[XML attribute,network attribute,rkt element]
+ indexterm:[XML element,rkt element,network attribute]
 
 |run-command
 |`/usr/sbin/pacemaker-remoted` if bundle contains a +primitive+, otherwise none
 |This command will be run inside the container when launching it ("PID 1"). If
  the bundle contains a +primitive+, this command 'must' start pacemaker-remoted
  (but could, for example, be a script that does other stuff, too).
- indexterm:[run-command,container]
- indexterm:[container,Property,run-command]
+ indexterm:[XML attribute,run-command attribute,docker element]
+ indexterm:[XML element,docker element,run-command attribute]
+ indexterm:[XML attribute,run-command attribute,podman element]
+ indexterm:[XML element,podman element,run-command attribute]
+ indexterm:[XML attribute,run-command attribute,rkt element]
+ indexterm:[XML element,rkt element,run-command attribute]
 
 |options
 |
 |Extra command-line options to pass to the `docker run`, `podman run`, or
  `rkt run` command
- indexterm:[options,container]
- indexterm:[container,Property,options]
+ indexterm:[XML attribute,options attribute,docker element]
+ indexterm:[XML element,docker element,options attribute]
+ indexterm:[XML attribute,options attribute,podman element]
+ indexterm:[XML element,podman element,options attribute]
+ indexterm:[XML attribute,options attribute,rkt element]
+ indexterm:[XML element,rkt element,options attribute]
 
 |====
 
@@ -1125,13 +1153,14 @@ to +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
 === Bundle Network Properties ===
 
 A bundle may optionally contain one +<network>+ element.
-indexterm:[bundle,network]
+indexterm:[XML element,network element]
+indexterm:[Resource,Bundle,Networking]
 
-.Properties of a Bundle's Network Element
+.XML attributes of a network Element
 [width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Default
 |Description
 
@@ -1140,8 +1169,8 @@ indexterm:[bundle,network]
 |If TRUE, and +ip-range-start+ is used, Pacemaker will automatically ensure
  that +/etc/hosts+ inside the containers has entries for each
  <<s-resource-bundle-note-replica-names,replica name>> and its assigned IP.
- indexterm:[add-host,network]
- indexterm:[network,Property,add-host]
+ indexterm:[XML element,add-host attribute,network element]
+ indexterm:[XML attribute,network element,add-host attribute]
 
 |ip-range-start
 |
@@ -1151,22 +1180,22 @@ indexterm:[bundle,network]
  from the host's network to reach the service inside the container, though
  it is not visible within the container itself. Only IPv4 addresses are
  currently supported.
- indexterm:[ip-range-start,network]
- indexterm:[network,Property,ip-range-start]
+ indexterm:[XML element,ip-range-start attribute,network element]
+ indexterm:[XML attribute,network element,ip-range-start attribute]
 
 |host-netmask
 |32
 |If +ip-range-start+ is specified, the IP addresses are created with this
  CIDR netmask (as a number of bits).
- indexterm:[host-netmask,network]
- indexterm:[network,Property,host-netmask]
+ indexterm:[XML element,host-netmask attribute,network element]
+ indexterm:[XML attribute,network element,host-netmask attribute]
 
 |host-interface
 |
 |If +ip-range-start+ is specified, the IP addresses are created on this
  host interface (by default, it will be determined from the IP address).
- indexterm:[host-interface,network]
- indexterm:[network,Property,host-interface]
+ indexterm:[XML element,host-interface attribute,network element]
+ indexterm:[XML attribute,network element,host-interface attribute]
 
 |control-port
 |3121
@@ -1178,8 +1207,8 @@ indexterm:[bundle,network]
  bundle may run on a Pacemaker Remote node that is already listening on the
  default port. Any PCMK_remote_port environment variable set on the host or in
  the container is ignored for bundle connections.
- indexterm:[control-port,network]
- indexterm:[network,Property,control-port]
+ indexterm:[XML element,control-port attribute,network element]
+ indexterm:[XML attribute,network element,control-port attribute]
 
 |=========================================================
 
@@ -1191,23 +1220,23 @@ with zero. For example, if a bundle named +httpd-bundle+ has +replicas=2+, its
 containers will be named +httpd-bundle-0+ and +httpd-bundle-1+.
 ====
 
-Additionally, a +<network>+ element may optionally contain one or more
-+<port-mapping>+ elements.
-indexterm:[bundle,network,port-mapping]
+Additionally, a +network+ element may optionally contain one or more
++port-mapping+ elements.
+indexterm:[XML element,port-mapping]
 
-.Properties of a Bundle's Port-Mapping Element
+.Attributes of a port-mapping Element
 [width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Default
 |Description
 
 |id
 |
 |A unique name for the port mapping (required)
- indexterm:[id,port-mapping]
- indexterm:[port-mapping,Property,id]
+ indexterm:[XML attribute,id attribute,port-mapping element]
+ indexterm:[XML element,port-mapping element,id attribute]
 
 |port
 |
@@ -1215,15 +1244,15 @@ indexterm:[bundle,network,port-mapping]
  (on the container's assigned IP address, if +ip-range-start+ is specified)
  will be forwarded to the container network. Exactly one of +port+ or +range+
  must be specified in a +port-mapping+.
- indexterm:[port,port-mapping]
- indexterm:[port-mapping,Property,port]
+ indexterm:[XML attribute,port attribute,port-mapping element]
+ indexterm:[XML element,port-mapping element,port attribute]
 
 |internal-port
 |value of +port+
 |If +port+ and this are specified, connections to +port+ on the host's network
  will be forwarded to this port on the container network.
- indexterm:[internal-port,port-mapping]
- indexterm:[port-mapping,Property,internal-port]
+ indexterm:[XML attribute,internal-port attribute,port-mapping element]
+ indexterm:[XML element,port-mapping element,internal-port attribute]
 
 |range
 |
@@ -1232,8 +1261,8 @@ indexterm:[bundle,network,port-mapping]
  address, if +ip-range-start+ is specified) will be forwarded to the same ports
  in the container network. Exactly one of +port+ or +range+ must be specified
  in a +port-mapping+.
- indexterm:[range,port-mapping]
- indexterm:[port-mapping,Property,range]
+ indexterm:[XML attribute,range attribute,port-mapping element]
+ indexterm:[XML element,port-mapping element,range attribute]
 
 |=========================================================
 
@@ -1244,34 +1273,37 @@ If the bundle contains a +primitive+, Pacemaker will automatically map the
 +port-mapping+.
 ====
 
+[[s-bundle-storage]]
 === Bundle Storage Properties ===
 
-A bundle may optionally contain one +<storage>+ element. A +<storage>+ element
-has no properties of its own, but may contain one or more +<storage-mapping>+
+A bundle may optionally contain one +storage+ element. A +storage+ element
+has no properties of its own, but may contain one or more +storage-mapping+
 elements.
-indexterm:[bundle,storage,storage-mapping]
+indexterm:[XML element,storage element]
+indexterm:[XML element,storage-mapping element]
+indexterm:[Resource,Bundle,Storage]
 
-.Properties of a Bundle's Storage-Mapping Element
+.Attributes of a storage-mapping Element
 [width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
-|Field
+|Attribute
 |Default
 |Description
 
 |id
 |
 |A unique name for the storage mapping (required)
- indexterm:[id,storage-mapping]
- indexterm:[storage-mapping,Property,id]
+ indexterm:[XML attribute,id attribute,storage-mapping element]
+ indexterm:[XML element,storage-mapping element,id attribute]
 
 |source-dir
 |
 |The absolute path on the host's filesystem that will be mapped into the
  container. Exactly one of +source-dir+ and +source-dir-root+ must be specified
  in a +storage-mapping+.
- indexterm:[source-dir,storage-mapping]
- indexterm:[storage-mapping,Property,source-dir]
+ indexterm:[XML attribute,source-dir attribute,storage-mapping element]
+ indexterm:[XML element,storage-mapping element,source-dir attribute]
 
 |source-dir-root
 |
@@ -1281,21 +1313,22 @@ indexterm:[bundle,storage,storage-mapping]
  <<s-resource-bundle-note-replica-names,replica name>>.
  Exactly one of +source-dir+ and +source-dir-root+ must be specified in a
  +storage-mapping+.
- indexterm:[source-dir-root,storage-mapping]
- indexterm:[storage-mapping,Property,source-dir-root]
+ indexterm:[XML attribute,source-dir-root attribute,storage-mapping element]
+ indexterm:[XML element,storage-mapping element,source-dir-root attribute]
 
 |target-dir
 |
 |The path name within the container where the host storage will be mapped
  (required)
- indexterm:[target-dir,storage-mapping]
- indexterm:[storage-mapping,Property,target-dir]
+ indexterm:[XML attribute,target-dir attribute,storage-mapping element]
+ indexterm:[XML element,storage-mapping element,target-dir attribute]
 
 |options
 |
-|File system mount options to use when mapping the storage
- indexterm:[options,storage-mapping]
- indexterm:[storage-mapping,Property,options]
+|A comma-separated list of file system mount options to use when mapping the
+ storage
+ indexterm:[XML attribute,options attribute,storage-mapping element]
+ indexterm:[XML element,storage-mapping element,options attribute]
 
 |=========================================================
 
@@ -1322,11 +1355,21 @@ The +PCMK_authkey_location+ environment variable must not be set to anything
 other than the default of `/etc/pacemaker/authkey` on any node in the cluster.
 ====
 
+[IMPORTANT]
+====
+If SELinux is used in enforcing mode on the host, you must ensure the container
+is allowed to use any storage you mount into it. For Docker and podman bundles,
+adding "Z" to the mount options will create a container-specific label for the
+mount that allows the container access.
+====
+
 === Bundle Primitive ===
 
-A bundle may optionally contain one +<primitive>+ resource
-(see <<s-resource-primitive>>). The primitive may have operations,
-instance attributes and meta-attributes defined, as usual.
+indexterm:[Resource,Bundle,Primitive]
+
+A bundle may optionally contain one <<s-resource-primitive,primitive>>
+resource. The primitive may have operations, instance attributes, and
+meta-attributes defined, as usual.
 
 If a bundle contains a primitive resource, the container image must include
 the Pacemaker Remote daemon, and at least one of +ip-range-start+ or
@@ -1336,25 +1379,44 @@ Pacemaker Remote within the container, and monitor and manage the primitive
 resource via Pacemaker Remote.
 
 If the bundle has more than one container instance (replica), the primitive
-resource will function as an implicit clone (see <<s-resource-clone>>) --
-a promotable clone if the bundle has +masters+ greater than zero
-(see <<s-resource-promotable>>).
+resource will function as an implicit <<s-resource-clone,clone>> -- a
+<<s-resource-promotable,promotable clone>> if the bundle has +masters+ greater
+than zero.
  
+[NOTE]
+====
+If you want to pass environment variables to a bundle's Pacemaker Remote
+connection or primitive, you have two options:
+
+* Environment variables whose value is the same regardless of the underlying host
+  may be set using the container element's +options+ attribute.
+* If you want variables to have host-specific values, you can use the
+  <<s-bundle-storage,+storage-mapping+>> element to map a file on the host as
+  +/etc/pacemaker/pcmk-init.env+ in the container. Pacemaker Remote will parse
+  this file as a shell-like format, with variables set as NAME=VALUE, ignoring
+  blank lines and comments starting with "#".
+====
+
 [IMPORTANT]
 ====
-Containers in bundles with a +primitive+ must have an accessible networking
-environment, so that Pacemaker on the cluster nodes can contact
-Pacemaker Remote inside the container. For example, the Docker option
-`--net=none` should not be used with a +primitive+. The default (using a
-distinct network space inside the container) works in combination with
-+ip-range-start+. If the Docker option `--net=host` is used (making the
-container share the host's network space), a unique +control-port+ should be
-specified for each bundle. Any firewall must allow access to the
-+control-port+.
+When a bundle has a +primitive+, Pacemaker on all cluster nodes must be able to
+contact Pacemaker Remote inside the bundle's containers.
+
+* The containers must have an accessible network (for example, +network+ should
+  not be set to "none" with a +primitive+).
+* The default, using a distinct network space inside the container, works in
+  combination with +ip-range-start+. Any firewall must allow access from all
+  cluster nodes to the +control-port+ on the container IPs.
+* If the container shares the host's network space (for example, by setting
+  +network+ to "host"), a unique +control-port+ should be specified for each
+  bundle. Any firewall must allow access from all cluster nodes to the
+  +control-port+ on all cluster and remote node IPs.
 ====
 
 [[s-bundle-attributes]]
 === Bundle Node Attributes ===
+
+indexterm:[Resource,Bundle,Node Attributes]
 
 If the bundle has a +primitive+, the primitive's resource agent may want to set
 node attributes such as <<s-promotion-scores,promotion scores>>. However, with
@@ -1384,12 +1446,14 @@ underlying host).
 
 [NOTE]
 ====
-When called by a resource agent, the attrd_updater and crm_attribute commands
-will automatically check those environment variables and set attributes
-appropriately.
+When called by a resource agent, the `attrd_updater` and `crm_attribute`
+commands will automatically check those environment variables and set
+attributes appropriately.
 ====
 
 === Bundle Meta-Attributes ===
+
+indexterm:[Resource,Bundle,Meta-attributes]
 
 Any meta-attribute set on a bundle will be inherited by the bundle's
 primitive and any resources implicitly created by Pacemaker for the bundle.

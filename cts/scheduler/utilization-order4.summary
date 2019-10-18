@@ -5,9 +5,9 @@ Node deglxen002: standby
 Online: [ deglxen001 ]
 
  degllx62-vm	(ocf::heartbeat:Xen):	Started deglxen002
- degllx63-vm	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ degllx63-vm	(ocf::heartbeat:Xen):	Stopped (disabled)
  degllx61-vm	(ocf::heartbeat:Xen):	Started deglxen001
- degllx64-vm	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ degllx64-vm	(ocf::heartbeat:Xen):	Stopped (disabled)
  stonith_sbd	(stonith:external/sbd):	Started deglxen001
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 deglxen002 ]
@@ -17,10 +17,10 @@ Online: [ deglxen001 ]
 Transition Summary:
  * Migrate    degllx62-vm             ( deglxen002 -> deglxen001 )  
  * Stop       degllx61-vm             (               deglxen001 )   due to node availability
- * Stop    nfs-xen_config:1	(deglxen002)  	due to node availability
- * Stop    nfs-xen_swapfiles:1	(deglxen002)  	due to node availability
- * Stop    nfs-xen_images:1	(deglxen002)  	due to node availability
- * Stop    prim-ping:1	(deglxen002)  	due to node availability
+ * Stop       nfs-xen_config:1        (               deglxen002 )   due to node availability
+ * Stop       nfs-xen_swapfiles:1     (               deglxen002 )   due to node availability
+ * Stop       nfs-xen_images:1        (               deglxen002 )   due to node availability
+ * Stop       prim-ping:1             (               deglxen002 )   due to node availability
 
 Executing cluster transition:
  * Resource action: degllx61-vm     stop on deglxen001
@@ -47,9 +47,9 @@ Node deglxen002: standby
 Online: [ deglxen001 ]
 
  degllx62-vm	(ocf::heartbeat:Xen):	Started deglxen001
- degllx63-vm	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ degllx63-vm	(ocf::heartbeat:Xen):	Stopped (disabled)
  degllx61-vm	(ocf::heartbeat:Xen):	Stopped deglxen002
- degllx64-vm	(ocf::heartbeat:Xen):	Stopped ( disabled ) 
+ degllx64-vm	(ocf::heartbeat:Xen):	Stopped (disabled)
  stonith_sbd	(stonith:external/sbd):	Started deglxen001
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 ]

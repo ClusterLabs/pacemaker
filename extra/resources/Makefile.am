@@ -1,50 +1,34 @@
-# Makefile.am for OCF RAs
 #
-# Author: Andrew Beekhof
-# Copyright 2008-2018 the Pacemaker project contributors
+# Copyright 2008-2019 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
 include $(top_srcdir)/Makefile.common
 
-EXTRA_DIST		= $(ocf_SCRIPTS)
-
-
-ocfdir		    = @OCF_RA_DIR@/pacemaker
-
-ocf_SCRIPTS	     =  ClusterMon 	\
-			controld	\
-			Dummy		\
-			HealthCPU	\
-                        HealthIOWait    \
-			HealthSMART	\
-			ifspeed		\
-			o2cb		\
-			ping		\
-			pingd		\
-			Stateful	\
-			SysInfo		\
-			SystemHealth \
-			attribute	\
-			remote
+ocfdir			= @OCF_RA_DIR@/pacemaker
+dist_ocf_SCRIPTS	= attribute	\
+			  controld	\
+			  Dummy		\
+			  HealthCPU	\
+			  HealthIOWait	\
+			  ping		\
+			  pingd		\
+			  remote	\
+			  Stateful	\
+			  SystemHealth
+ocf_SCRIPTS		= ClusterMon	\
+			  HealthSMART	\
+			  ifspeed	\
+			  o2cb		\
+			  SysInfo
 
 if BUILD_XML_HELP
 
-man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
+man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7) $(dist_ocf_SCRIPTS:%=ocf_pacemaker_%.7)
 DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7
 
 ocf_pacemaker_%.xml:  %
@@ -53,5 +37,4 @@ ocf_pacemaker_%.xml:  %
 endif
 
 clean-generic:
-	rm -f $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) *~
-
+	rm -f $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) $(dist_ocf_SCRIPTS:%=%.xml) *~

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "rabbitmq-bundle-0_monitor_0 overcloud-controller-0" -> "rabbitmq-bundle-0_start_0 overcloud-controller-0" [ style = bold]
 "rabbitmq-bundle-0_monitor_0 overcloud-controller-0" [ style=bold color="green" fontcolor="black"]
 "rabbitmq-bundle-0_monitor_0 overcloud-controller-1" -> "rabbitmq-bundle-0_start_0 overcloud-controller-0" [ style = bold]
