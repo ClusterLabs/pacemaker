@@ -1159,6 +1159,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "failed-action", "html", failed_action_html },
     { "failed-action", "text", failed_action_text },
     { "failed-action", "xml", failed_action_xml },
+    { "group", "console", pe__group_text },
     { "node", "console", node_text },
     { "node", "html", node_html },
     { "node", "text", node_text },
