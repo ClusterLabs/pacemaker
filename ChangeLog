@@ -1,3 +1,41 @@
+* Tue Oct 22 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22
+- Changesets: 198
+- Diff:       95 files changed, 3047 insertions(+), 1245 deletions(-)
+
+- Features added since Pacemaker-1.1.21
+  + crmd: new 'fence-reaction' cluster option specifies whether local node
+          should 'stop' or 'panic' if notified of own fencing
+  + Pacemaker Remote: allow file for environment variables when used in bundle
+  + Pacemaker Remote: allow configurable listen address and TLS priorities
+  + tools: crm_simulate --repeat option to repeat profiling tests
+  + tools: new pcmk_simtimes tool to compare crm_simulate profiling output
+
+- Changes since Pacemaker-1.1.21
+  + fencing: do not block concurrent fencing actions on a device
+             (regression since 1.1.21)
+  + crmd: set timeout on scheduler responses to avoid infinite wait
+  + crmd: confirm cancel of failed monitors, to avoid transition timeout
+  + lrmd: let controller cancel monitors, to avoid transition timeout
+  + lrmd: return error for stonith probes if stonith connection was lost
+  + fencing: ensure concurrent fencing commands always get triggered to execute
+  + fencing: fail pending actions and re-sync history after crash and restart
+  + fencing: don't let command with long delay block other pending commands
+  + fencing: allow functioning even if CIB updates arrive unceasingly
+  + pengine: calculate secure digests for unfencing, for replaying saved CIBs
+  + pengine: properly detect dangling migrations, to avoid restart loop
+  + pengine: avoid delay in recovery of failed remote connections
+  + pengine: avoid scheduling actions on remote node that is shutting down
+  + pengine: wait for probe actions to complete to prevent unnecessary
+             restart/re-promote of dependent resources
+  + libcrmcommon: avoid possible use-of-NULL when applying XML diffs
+  + libcrmcommon: correctly apply XML diffs with multiple move/create changes
+  + libcrmcommon: return error when applying XML diffs containing unknown operations
+  + tools: fail if tar is not available when running crm_report
+  + tools: correct crm_report argument parsing
+  + tools: crm_report: don't ignore log if unrelated file is too large
+  + agents: calculate #health_disk correctly in SysInfo
+  + agents: handle run-as-user properly in ClusterMon
+
 * Thu Jun 6 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.21
 - Changesets: 64
 - Diff:       39 files changed, 1985 insertions(+), 843 deletions(-)
