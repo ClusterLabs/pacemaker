@@ -42,6 +42,8 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
+#include "crmcommon_private.h"  /* pcmk__user_config */
+
 #ifndef MAXLINE
 #  define MAXLINE 512
 #endif
@@ -1203,4 +1205,26 @@ pcmk_hostname()
     struct utsname hostinfo;
 
     return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
+}
+
+char *
+pcmk__user_config(const char *basename)
+{
+    struct passwd *pw;
+
+    const char *envstore = getenv("XDG_CONFIG_HOME");
+    if (envstore != NULL) {
+        return crm_strdup_printf("%s/pacemaker/%s", envstore, basename);
+    }
+    envstore = getenv("HOME");
+    if (envstore != NULL) {
+        return crm_strdup_printf("%s/.config/pacemaker/%s", envstore, basename);
+    }
+
+    if ((pw = getpwuid(geteuid())) == NULL || pw->pw_name == NULL
+            || *pw->pw_name == '\0') {
+        return NULL;
+    }
+
+    return crm_strdup_printf("/home/%s/.config/pacemaker/%s", pw->pw_name, basename);
 }

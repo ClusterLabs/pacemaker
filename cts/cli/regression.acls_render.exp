@@ -1,0 +1,151 @@
+Created new pacemaker configuration
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Configure some ACLs =#=#=#=
+=#=#=#= Current cib after: Configure some ACLs =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Configure some ACLs - OK (0) =#=#=#=
+* Passed: cibadmin       - Configure some ACLs
+=#=#=#= Begin test: Enable ACLs =#=#=#=
+=#=#=#= Current cib after: Enable ACLs =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Enable ACLs - OK (0) =#=#=#=
+* Passed: crm_attribute  - Enable ACLs
+=#=#=#= Begin test: An instance of ACLs render (into color) =#=#=#=
+The supplied command can provide skewed result since it is run under user that also gets guarded per ACLs on their own right. Continuing since --force flag was provided.
+<!-- ACLs as evaluated for user tony -->
+\x1b[34m<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>\x1b[34m
+      </cluster_property_set>\x1b[34m
+    </crm_config>\x1b[34m
+    <nodes/>\x1b[34m
+    <resources/>\x1b[34m
+    <constraints/>\x1b[34m
+    \x1b[31m<acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>\x1b[31m
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>\x1b[31m
+      </acl_role>\x1b[31m
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>\x1b[31m
+      </acl_target>\x1b[31m
+    </acls>\x1b[34m
+  </configuration>\x1b[34m
+  <status/>\x1b[34m
+</cib>\x1b[0m
+=#=#=#= Current cib after: An instance of ACLs render (into color) =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: An instance of ACLs render (into color) - OK (0) =#=#=#=
+* Passed: cibadmin       - An instance of ACLs render (into color)
+=#=#=#= Begin test: An instance of ACLs render (into full namespacing) =#=#=#=
+The supplied command can provide skewed result since it is run under user that also gets guarded per ACLs on their own right. Continuing since --force flag was provided.
+<pcmk-acl-readable:cib xmlns:pcmk-acl-readable="http://clusterlabs.org/ns/pacemaker/acl-2-readable" xmlns:pcmk-acl-denied="http://clusterlabs.org/ns/pacemaker/acl-2-denied" pcmk-acl-readable:pcmk-acl-readable:pcmk-acl-readable:epoch="2" pcmk-acl-readable:num_updates="0" pcmk-acl-readable:admin_epoch="0">
+  <pcmk-acl-readable:configuration>
+    <pcmk-acl-readable:crm_config>
+      <pcmk-acl-readable:cluster_property_set pcmk-acl-readable:id="cib-bootstrap-options">
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:id="cib-bootstrap-options-enable-acl" pcmk-acl-readable:name="enable-acl" pcmk-acl-readable:value="true"/>
+      </pcmk-acl-readable:cluster_property_set>
+    </pcmk-acl-readable:crm_config>
+    <pcmk-acl-readable:nodes/>
+    <pcmk-acl-readable:resources/>
+    <pcmk-acl-readable:constraints/>
+    <pcmk-acl-denied:acls>
+      <pcmk-acl-denied:acl_role pcmk-acl-denied:id="role-deny-acls">
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="deny-acls" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/acls"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="read-rest" pcmk-acl-denied:kind="read" pcmk-acl-denied:xpath="/cib"/>
+      </pcmk-acl-denied:acl_role>
+      <pcmk-acl-denied:acl_target pcmk-acl-denied:id="tony">
+        <pcmk-acl-denied:role pcmk-acl-denied:id="role-deny-acls"/>
+      </pcmk-acl-denied:acl_target>
+    </pcmk-acl-denied:acls>
+  </pcmk-acl-readable:configuration>
+  <pcmk-acl-readable:status/>
+</pcmk-acl-readable:cib>
+=#=#=#= Current cib after: An instance of ACLs render (into full namespacing) =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: An instance of ACLs render (into full namespacing) - OK (0) =#=#=#=
+* Passed: cibadmin       - An instance of ACLs render (into full namespacing)

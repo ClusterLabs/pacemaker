@@ -22,6 +22,18 @@ contributor role, which is detailed in other chapters of this guide.
 Therefore, if you think you will not benefit from any such details
 in the scope of this chapter, feel free to skip it.
 
+For a lack of better placeholder throughout this document for such
+a generic pointer, anyone interested in serious work on the project
+shall not miss where the design level/conceptual writeups on various
+topics are kept.  These fulfill a rather unique role of getting down
+to nitty-gritty, which may deliver way more than what casual user
+would want to know, while at the same time, concentrates lateral
+knowledge that would otherwise be hard to grasp in such an entirety
+when just interspersed across the source files.  Without further
+ado, you can go check
+https://github.com/ClusterLabs/pacemaker/tree/master/doc/design[`doc/design`]
+subdirectory in the project tree.
+
 == Debugging ==
 
 In the GNU userland tradition, preferred way of debugging is based

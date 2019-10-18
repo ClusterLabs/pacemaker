@@ -270,6 +270,7 @@ BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
+BuildRequires: xml-common
 
 # Enables optional functionality
 BuildRequires: ncurses-devel %{pkgname_docbook_xsl}
@@ -447,6 +448,10 @@ Test framework for cluster-related technologies like Pacemaker
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+## for cts-cli -t acls
+Recommends:    nss_wrapper
+%endif
 BuildArch:     noarch
 
 %description   doc
@@ -459,6 +464,8 @@ manager.
 License:       GPLv2+
 Summary:       Schemas and upgrade stylesheets for Pacemaker
 BuildArch:     noarch
+Requires(post):%{_sysconfdir}/xml/catalog
+Requires(post):libxml2
 
 %description   schemas
 Schemas and upgrade stylesheets for Pacemaker
@@ -691,6 +698,19 @@ exit 0
 %postun cluster-libs -p /sbin/ldconfig
 %endif
 
+%post schemas
+xmlcatalog --noout --add delegateURI \
+  http://clusterlabs.org/nsredir/pacemaker/ \
+  file://%{_datadir}/xml/pacemaker.xml \
+  %{_sysconfdir}/xml/catalog
+
+%postun schemas
+if test "$1" = 0; then
+    xmlcatalog --noout --del \
+      http://clusterlabs.org/nsredir/pacemaker/ \
+      %{_sysconfdir}/xml/catalog || :
+fi
+
 %files
 ###########################################################
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
@@ -743,7 +763,6 @@ exit 0
 %endif
 
 %files cli
-%dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
@@ -880,9 +899,13 @@ exit 0
 %files schemas
 %license licenses/GPLv2
 %dir %{_datadir}/pacemaker
+%{_datadir}/xml/pacemaker.xml
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
 %{_datadir}/pacemaker/api
+%{_datadir}/pacemaker/base
+%dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
+%config %{_sysconfdir}/pacemaker/acls-render-cfg.xsl
 %{_datadir}/pkgconfig/pacemaker-schemas.pc
 
 %changelog

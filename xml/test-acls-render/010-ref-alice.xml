@@ -1,0 +1,162 @@
+<pcmk-acl-readable:cib
+  xmlns:pcmk-acl-readable="http://clusterlabs.org/ns/pacemaker/acl-2-readable"
+  xmlns:pcmk-acl-denied="http://clusterlabs.org/ns/pacemaker/acl-2-denied"
+  pcmk-acl-readable:crm_feature_set="3.0.14" pcmk-acl-readable:validate-with="pacemaker-3.0" pcmk-acl-readable:epoch="6815" pcmk-acl-readable:num_updates="15" pcmk-acl-readable:admin_epoch="2" pcmk-acl-readable:cib-last-written="Thu Jun  6 15:41:29 2019" pcmk-acl-readable:update-origin="ha-idg-2" pcmk-acl-readable:update-client="crm_attribute" pcmk-acl-readable:update-user="root" pcmk-acl-readable:have-quorum="1" pcmk-acl-readable:dc-uuid="1084777482" pcmk-acl-readable:execution-date="1559829405">
+  <pcmk-acl-readable:configuration>
+    <pcmk-acl-readable:crm_config>
+      <pcmk-acl-readable:cluster_property_set pcmk-acl-readable:id="cib-bootstrap-options">
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="have-watchdog" pcmk-acl-readable:value="false" pcmk-acl-readable:id="cib-bootstrap-options-have-watchdog"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="dc-version" pcmk-acl-readable:value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" pcmk-acl-readable:id="cib-bootstrap-options-dc-version"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cluster-infrastructure" pcmk-acl-readable:value="corosync" pcmk-acl-readable:id="cib-bootstrap-options-cluster-infrastructure"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="last-lrm-refresh" pcmk-acl-readable:value="1559146053" pcmk-acl-readable:id="cib-bootstrap-options-last-lrm-refresh"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="cluster-name" pcmk-acl-readable:value="ha-idg" pcmk-acl-readable:id="cib-bootstrap-options-cluster-name"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="no-quorum-policy" pcmk-acl-readable:value="ignore" pcmk-acl-readable:id="cib-bootstrap-options-no-quorum-policy"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="stonith-enabled" pcmk-acl-readable:value="true" pcmk-acl-readable:id="cib-bootstrap-options-stonith-enabled"/>
+        <pcmk-acl-readable:nvpair pcmk-acl-readable:name="stonith-action" pcmk-acl-readable:value="Off" pcmk-acl-readable:id="cib-bootstrap-options-stonith-action"/>
+      </pcmk-acl-readable:cluster_property_set>
+    </pcmk-acl-readable:crm_config>
+    <pcmk-acl-readable:nodes>
+      <pcmk-acl-readable:node pcmk-acl-readable:id="1084777492" pcmk-acl-readable:uname="ha-idg-2">
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="nodes-1084777492">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777492-maintenance" pcmk-acl-readable:name="maintenance" pcmk-acl-readable:value="off"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777492-standby" pcmk-acl-readable:name="standby" pcmk-acl-readable:value="on"/>
+        </pcmk-acl-denied:instance_attributes>
+      </pcmk-acl-readable:node>
+      <pcmk-acl-readable:node pcmk-acl-readable:id="1084777482" pcmk-acl-readable:uname="ha-idg-1">
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="nodes-1084777482">
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777482-maintenance" pcmk-acl-readable:name="maintenance" pcmk-acl-readable:value="off"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:id="nodes-1084777482-standby" pcmk-acl-readable:name="standby" pcmk-acl-readable:value="off"/>
+        </pcmk-acl-denied:instance_attributes>
+      </pcmk-acl-readable:node>
+    </pcmk-acl-readable:nodes>
+    <pcmk-acl-denied:acls>
+      <pcmk-acl-denied:acl_role pcmk-acl-denied:id="read_all">
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="read_all-cib" pcmk-acl-denied:kind="read" pcmk-acl-denied:xpath="/cib"/>
+      </pcmk-acl-denied:acl_role>
+      <pcmk-acl-denied:acl_role pcmk-acl-denied:id="operator">
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="operator-maintenance" pcmk-acl-denied:kind="write" pcmk-acl-denied:xpath="//crm_config//nvpair[@name='maintenance-mode']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="operator-target-role" pcmk-acl-denied:kind="write" pcmk-acl-denied:xpath="//crm_config//nvpair[@name='target-role']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="operator-is-managed" pcmk-acl-denied:kind="write" pcmk-acl-denied:xpath="//resources//nvpair[@name='is-managed']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="operator-rsc_location" pcmk-acl-denied:kind="write" pcmk-acl-denied:object-type="rsc_location"/>
+      </pcmk-acl-denied:acl_role>
+      <pcmk-acl-denied:acl_role pcmk-acl-denied:id="administrator">
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="administrator-cib" pcmk-acl-denied:kind="write" pcmk-acl-denied:xpath="/cib"/>
+      </pcmk-acl-denied:acl_role>
+      <pcmk-acl-denied:acl_role pcmk-acl-denied:id="minimal">
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-standby" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading standby node attribute (permanent or transient)" pcmk-acl-denied:xpath="//instance_attributes/nvpair[@name='standby']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-maintenance" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading maintenance node attribute (permanent or transient)" pcmk-acl-denied:xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-target-role" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading resource target roles" pcmk-acl-denied:xpath="//meta_attributes/nvpair[@name='target-role']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-is-managed" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading resource managed status" pcmk-acl-denied:xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-instance-attributes" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="//instance_attributes"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-meta-attributes" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="//meta_attributes"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-operations" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="//operations"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-utilization" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="//utilization"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-nodes" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading node names/IDs (attributes are denied separately)" pcmk-acl-denied:xpath="/cib/configuration/nodes"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-resources" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading resource names/agents (parameters are denied separately)" pcmk-acl-denied:xpath="/cib/configuration/resources"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-constraints" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/constraints"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-topology" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/fencing-topology"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-op_defaults" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/op_defaults"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-rsc_defaults" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/rsc_defaults"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-alerts" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/alerts"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-deny-acls" pcmk-acl-denied:kind="deny" pcmk-acl-denied:xpath="/cib/configuration/acls"/>
+        <pcmk-acl-denied:acl_permission pcmk-acl-denied:id="minimal-cib" pcmk-acl-denied:kind="read" pcmk-acl-denied:description="allow reading cib element and crm_config/status sections" pcmk-acl-denied:xpath="/cib"/>
+      </pcmk-acl-denied:acl_role>
+      <pcmk-acl-denied:acl_target pcmk-acl-denied:id="alice">
+        <pcmk-acl-denied:role pcmk-acl-denied:id="minimal"/>
+      </pcmk-acl-denied:acl_target>
+      <pcmk-acl-denied:acl_target pcmk-acl-denied:id="bob">
+        <pcmk-acl-denied:role pcmk-acl-denied:id="read_all"/>
+      </pcmk-acl-denied:acl_target>
+      <pcmk-acl-denied:acl_target pcmk-acl-denied:id="carol">
+        <pcmk-acl-denied:role pcmk-acl-denied:id="read_all"/>
+        <pcmk-acl-denied:role pcmk-acl-denied:id="operator"/>
+      </pcmk-acl-denied:acl_target>
+      <pcmk-acl-denied:acl_target pcmk-acl-denied:id="dave">
+        <pcmk-acl-denied:role pcmk-acl-denied:id="administrator"/>
+      </pcmk-acl-denied:acl_target>
+    </pcmk-acl-denied:acls>
+    <pcmk-acl-readable:resources>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="fence_ilo_ha-idg-2" pcmk-acl-readable:class="stonith" pcmk-acl-readable:type="fence_ilo2" pcmk-acl-readable:description="fenct ha-idg-2 mit ILO">
+        <pcmk-acl-denied:operations>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="monitor" pcmk-acl-denied:interval="30m" pcmk-acl-denied:timeout="120s" pcmk-acl-denied:id="fence_ha-idg-2-monitor-30m"/>
+        </pcmk-acl-denied:operations>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="fence_ilo_ha-idg-1" pcmk-acl-readable:class="stonith" pcmk-acl-readable:type="fence_ilo4" pcmk-acl-readable:description="fenct ha-idg-1 mit ILO">
+        <pcmk-acl-denied:operations>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="monitor" pcmk-acl-denied:interval="30m" pcmk-acl-denied:timeout="120s" pcmk-acl-denied:id="fence_ha-idg-1-monitor-30m"/>
+        </pcmk-acl-denied:operations>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="vm_idcc_devel" pcmk-acl-readable:class="ocf" pcmk-acl-readable:provider="heartbeat" pcmk-acl-readable:type="VirtualDomain">
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_idcc-devel-instance_attributes">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="config" pcmk-acl-denied:value="/mnt/share/idcc_devel.xml" pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-config"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-0">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="hypervisor" pcmk-acl-denied:value="qemu:///system" pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-1">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="migration_transport" pcmk-acl-denied:value="ssh" pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-2">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="migration_network_suffix" pcmk-acl-denied:value="-private" pcmk-acl-denied:id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:operations>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="start" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="120" pcmk-acl-denied:id="vm_idcc-devel-start-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="stop" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="130" pcmk-acl-denied:id="vm_idcc-devel-stop-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="monitor" pcmk-acl-denied:interval="30" pcmk-acl-denied:timeout="25" pcmk-acl-denied:id="vm_idcc-devel-monitor-30"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="migrate_from" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="300" pcmk-acl-denied:id="vm_idcc-devel-migrate_from-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="migrate_to" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="300" pcmk-acl-denied:id="vm_idcc-devel-migrate_to-0"/>
+        </pcmk-acl-denied:operations>
+        <pcmk-acl-denied:meta_attributes pcmk-acl-denied:id="vm_idcc-devel-meta_attributes">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="allow-migrate" pcmk-acl-denied:value="true" pcmk-acl-denied:id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="target-role" pcmk-acl-readable:value="Started" pcmk-acl-readable:id="vm_idcc-devel-meta_attributes-target-role"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="is-managed" pcmk-acl-readable:value="true" pcmk-acl-readable:id="vm_idcc-devel-meta_attributes-is-managed"/>
+        </pcmk-acl-denied:meta_attributes>
+        <pcmk-acl-denied:utilization pcmk-acl-denied:id="vm_idcc-devel-utilization">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="cpu" pcmk-acl-denied:value="1" pcmk-acl-denied:id="vm_idcc-devel-utilization-cpu"/>
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="hv_memory" pcmk-acl-denied:value="1020" pcmk-acl-denied:id="vm_idcc-devel-utilization-hv_memory"/>
+        </pcmk-acl-denied:utilization>
+      </pcmk-acl-readable:primitive>
+      <pcmk-acl-readable:primitive pcmk-acl-readable:id="vm_severin" pcmk-acl-readable:class="ocf" pcmk-acl-readable:provider="heartbeat" pcmk-acl-readable:type="VirtualDomain">
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_severin-instance_attributes">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="config" pcmk-acl-denied:value="/mnt/share/severin.xml" pcmk-acl-denied:id="vm_severin-instance_attributes-config"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_severin-instance_attributes-0">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="hypervisor" pcmk-acl-denied:value="qemu:///system" pcmk-acl-denied:id="vm_severin-instance_attributes-0-hypervisor"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_severin-instance_attributes-1">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="migration_transport" pcmk-acl-denied:value="ssh" pcmk-acl-denied:id="vm_severin-instance_attributes-1-migration_transport"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:instance_attributes pcmk-acl-denied:id="vm_severin-instance_attributes-2">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="migration_network_suffix" pcmk-acl-denied:value="-private" pcmk-acl-denied:id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-acl-denied:instance_attributes>
+        <pcmk-acl-denied:operations>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="start" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="120" pcmk-acl-denied:id="vm_severin-start-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="stop" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="130" pcmk-acl-denied:id="vm_severin-stop-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="monitor" pcmk-acl-denied:interval="30" pcmk-acl-denied:timeout="25" pcmk-acl-denied:id="vm_severin-monitor-30"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="migrate_from" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="300" pcmk-acl-denied:id="vm_severin-migrate_from-0"/>
+          <pcmk-acl-denied:op pcmk-acl-denied:name="migrate_to" pcmk-acl-denied:interval="0" pcmk-acl-denied:timeout="300" pcmk-acl-denied:id="vm_severin-migrate_to-0"/>
+        </pcmk-acl-denied:operations>
+        <pcmk-acl-denied:meta_attributes pcmk-acl-denied:id="vm_severin-meta_attributes">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="allow-migrate" pcmk-acl-denied:value="true" pcmk-acl-denied:id="vm_severin-meta_attributes-allow-migrate"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="target-role" pcmk-acl-readable:value="Started" pcmk-acl-readable:id="vm_severin-meta_attributes-target-role"/>
+          <pcmk-acl-readable:nvpair pcmk-acl-readable:name="is-managed" pcmk-acl-readable:value="true" pcmk-acl-readable:id="vm_severin-meta_attributes-is-managed"/>
+        </pcmk-acl-denied:meta_attributes>
+        <pcmk-acl-denied:utilization pcmk-acl-denied:id="vm_severin-utilization">
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="cpu" pcmk-acl-denied:value="2" pcmk-acl-denied:id="vm_severin-utilization-cpu"/>
+          <pcmk-acl-denied:nvpair pcmk-acl-denied:name="hv_memory" pcmk-acl-denied:value="2176" pcmk-acl-denied:id="vm_severin-utilization-hv_memory"/>
+        </pcmk-acl-denied:utilization>
+      </pcmk-acl-readable:primitive>
+    </pcmk-acl-readable:resources>
+    <pcmk-acl-denied:constraints>
+      <pcmk-acl-denied:rsc_location pcmk-acl-denied:id="loc_fence_ilo_ha-idg-2" pcmk-acl-denied:rsc="fence_ilo_ha-idg-2" pcmk-acl-denied:score="-INFINITY" pcmk-acl-denied:node="ha-idg-2"/>
+      <pcmk-acl-denied:rsc_location pcmk-acl-denied:id="loc_fence_ilo_ha-idg-1" pcmk-acl-denied:rsc="fence_ilo_ha-idg-1" pcmk-acl-denied:score="-INFINITY" pcmk-acl-denied:node="ha-idg-1"/>
+    </pcmk-acl-denied:constraints>
+    <pcmk-acl-denied:rsc_defaults>
+      <pcmk-acl-denied:meta_attributes pcmk-acl-denied:id="rsc-options">
+        <pcmk-acl-denied:nvpair pcmk-acl-denied:name="resource-stickiness" pcmk-acl-denied:value="200" pcmk-acl-denied:id="rsc-options-resource-stickiness"/>
+      </pcmk-acl-denied:meta_attributes>
+    </pcmk-acl-denied:rsc_defaults>
+    <pcmk-acl-denied:alerts/>
+  </pcmk-acl-readable:configuration>
+  <pcmk-acl-readable:status/>
+</pcmk-acl-readable:cib>

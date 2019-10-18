@@ -20,6 +20,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlIO.h>  /* xmlAllocOutputBuffer */
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -210,7 +211,7 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 
 static int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
-#define XML_PRIVATE_MAGIC (long) 0x81726354
+#define XML_PRIVATE_MAGIC 0x81720000L
 
 static void
 __xml_deleted_obj_free(void *data)
@@ -227,10 +228,12 @@ static void
 __xml_private_clean(xml_private_t *p)
 {
     if(p) {
-        CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
+        /* there may have been group selector assigned, but not 0xFFFF */
+        CRM_ASSERT((p->check & ~0xFFFFL) == XML_PRIVATE_MAGIC);
+        CRM_ASSERT((p->check & 0xFFFFL) != 0xFFFFL);
 
-        free(p->user);
-        p->user = NULL;
+        pcmk__selected_creds_free(p->selected_creds);
+        p->selected_creds = NULL;
 
         if(p->acls) {
             pcmk__free_acls(p->acls);
@@ -1842,6 +1845,10 @@ copy_in_properties(xmlNode * target, xmlNode * src)
             const char *p_value = pcmk__xml_attr_value(pIter);
 
             expand_plus_plus(target, p_name, p_value);
+            if (xml_acl_denied(target)) {
+                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
+                return;
+            }
         }
     }
 
@@ -2476,6 +2483,14 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \param[in] compress  Whether to compress XML before writing
  *
  * \return Number of bytes written on success, -errno otherwise
+ *
+ * \note Compress-less cases shall eventually switch to use
+ *       #pcmk__xml_serialize_fd_formatted for streaming vs.
+ *       memory inefficient full-buffer gather-then-print
+ *       round-trip (perhaps lbzip2 allows for streaming as well;
+ *       note that this might open new problems regarding "atomic"
+ *       writes, perhaps requiring a temporary file intermediate step
+ *       or an explicit locking -- still might be worth it, though)
  */
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
@@ -3166,6 +3181,8 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
     }
 }
 
+#define PCMK__XMLDUMP_STATS 0
+
 void
 crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
@@ -3174,58 +3191,58 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         *max = 0;
         return;
     }
-#if 0
-    if (is_not_set(options, xml_log_option_filtered)) {
-        /* Turning this code on also changes the scheduler tests for some reason
-         * (not just newlines).  Figure out why before considering to
-         * enable this permanently.
-         *
-         * It exists to help debug slowness in xmlNodeDump() and
-         * potentially if we ever want to go back to it.
-         *
-         * In theory it's a good idea (reuse) but our custom version does
-         * better for the filtered case and avoids the final strdup() for
-         * everything
-         */
 
-        time_t now, next;
-        xmlDoc *doc = NULL;
-        xmlBuffer *xml_buffer = NULL;
+    if (is_not_set(options, xml_log_option_filtered)
+            && is_set(options, xml_log_option_full_fledged)) {
+        /* libxml's serialization reuse is a good idea, sadly we cannot
+           apply it for the filtered cases (preceding filtering pass
+           would preclude further reuse of such in-situ modified XML
+           in generic context and is likely not a win performance-wise),
+           and there's also a historically unstable throughput argument
+           (likely stemming from memory allocation overhead, eventhough
+           that shall be minimized with defaults preset in crm_xml_init) */
+#if (PCMK__XMLDUMP_STATS - 0)
+        time_t next, new = time(NULL);
+#endif
+        xmlDoc *doc;
+        xmlOutputBuffer *xml_buffer;
 
-        *buffer = NULL;
         doc = getDocPtr(data);
         /* doc will only be NULL if data is */
         CRM_CHECK(doc != NULL, return);
 
-        now = time(NULL);
-        xml_buffer = xmlBufferCreate();
+        xml_buffer = xmlAllocOutputBuffer(NULL);
         CRM_ASSERT(xml_buffer != NULL);
 
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
-         *
-         * We could also use xmlBufferCreateSize() to start with a
-         * sane-ish initial size and avoid the first few doubles.
-         */
-        xmlBufferSetAllocationScheme(xml_buffer, XML_BUFFER_ALLOC_DOUBLEIT);
+        /* XXX we could setup custom allocation scheme for the particular
+               buffer, but it's subsumed with crm_xml_init that needs to
+               be invoked prior to entering this function as such, since
+               its other branch vitally depends on it -- what can be done
+               about this all is to have a facade parsing functions that
+               would 100% mark entering libxml code for us, since we don't
+               do anything as crazy as swapping out the binary form of the
+               parsed tree (but those would need to be strictly used as
+               opposed to libxml's raw functions) */
 
-        *max = xmlNodeDump(xml_buffer, doc, data, 0, (options & xml_log_option_formatted));
-        if (*max > 0) {
-            *buffer = strdup((char *)xml_buffer->content);
+        xmlNodeDumpOutput(xml_buffer, doc, data, 0,
+                          (options & xml_log_option_formatted), NULL);
+        xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");  /* final NL */
+        if (xml_buffer->buffer != NULL) {
+            buffer_print(*buffer, *max, *offset, "%s",
+                         (char *) xmlBufContent(xml_buffer->buffer));
         }
 
+#if (PCMK__XMLDUMP_STATS - 0)
         next = time(NULL);
         if ((now + 1) < next) {
             crm_log_xml_trace(data, "Long time");
             crm_err("xmlNodeDump() -> %dbytes took %ds", *max, next - now);
         }
+#endif
 
-        xmlBufferFree(xml_buffer);
+        xmlOutputBufferClose(xml_buffer);
         return;
     }
-#endif
 
     switch(data->type) {
         case XML_ELEMENT_NODE:
@@ -3283,7 +3300,9 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    crm_xml_dump(an_xml_node, xml_log_option_formatted|xml_log_option_text, &buffer, &offset, &max, 0);
+    crm_xml_dump(an_xml_node,
+                 xml_log_option_formatted|xml_log_option_full_fledged,
+                 &buffer, &offset, &max, 0);
     return buffer;
 }
 
@@ -3305,6 +3324,17 @@ dump_xml_unformatted(xmlNode * an_xml_node)
 
     crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
     return buffer;
+}
+
+void
+pcmk__xml_serialize_fd_formatted(int fd, xmlNode *cur)
+{
+    xmlOutputBuffer *fd_out = xmlOutputBufferCreateFd(fd, NULL);
+    CRM_ASSERT(fd_out != NULL);
+    xmlNodeDumpOutput(fd_out, cur->doc, cur, 0, 1, NULL);
+    xmlOutputBufferWrite(fd_out, sizeof("\n") - 1, "\n");  /* final NL */
+    xmlOutputBufferClose(fd_out);
+    fdatasync(fd);
 }
 
 gboolean
@@ -4485,4 +4515,54 @@ void
 crm_destroy_xml(gpointer data)
 {
     free_xml(data);
+}
+
+char *
+pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
+{
+    static const char *base = NULL;
+    char *ret = NULL;
+
+    if (base == NULL) {
+        base = getenv("PCMK_schema_directory");
+    }
+    if (base == NULL || base[0] == '\0') {
+        base = CRM_SCHEMA_DIRECTORY;
+    }
+
+    switch (ns) {
+        case pcmk__xml_artefact_ns_legacy_rng:
+        case pcmk__xml_artefact_ns_legacy_xslt:
+            ret = strdup(base);
+            break;
+        case pcmk__xml_artefact_ns_base_rng:
+        case pcmk__xml_artefact_ns_base_xslt:
+            ret = crm_strdup_printf("%s/base", base);
+            break;
+        default:
+            crm_err("XML artefact family specified as %u not recognized", ns);
+    }
+    return ret;
+}
+
+char *
+pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
+{
+    char *base = pcmk__xml_artefact_root(ns), *ret = NULL;
+
+    switch (ns) {
+        case pcmk__xml_artefact_ns_legacy_rng:
+        case pcmk__xml_artefact_ns_base_rng:
+            ret = crm_strdup_printf("%s/%s.rng", base, filespec);
+            break;
+        case pcmk__xml_artefact_ns_legacy_xslt:
+        case pcmk__xml_artefact_ns_base_xslt:
+            ret = crm_strdup_printf("%s/%s.xsl", base, filespec);
+            break;
+        default:
+            crm_err("XML artefact family specified as %u not recognized", ns);
+    }
+    free(base);
+
+    return ret;
 }

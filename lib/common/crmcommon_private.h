@@ -36,12 +36,50 @@ enum xml_private_flags {
      xpf_lazy        = 0x4000,
 };
 
+/*!
+ * \internal
+ * \brief Custom, per-base-document annotations
+ *
+ * \var long xml_private_s::check
+ * First two bytes (out of at least 4) are allocated to denote which
+ * (per index, 0 if none) of the groups in #selected_creds was used
+ * to evaluate the overall access label like it ended up being
+ * (can be used to iteratively scratch out all the enablers if need
+ * be); value \c 0xFFFF is reserved there.
+ *
+ * \var char** xml_private_s::selected_creds
+ * List of (abstract at this point) credentials that are relevant
+ * to the currently selected subject.  It is a simple array with
+ * \c NULL as a sentinel.  First item, which is always present,
+ * is a the user name.
+ *
+ * \var GListPtr xml_private_s::acls
+ * Doubly-linked list maintaining ordered lists of two kinds of entries:
+ * - user entries, these, in reverse order, follow (inclusively) #acls_pivot
+ *   iterator within the list
+ * - group entries, these, in reverse order, extend from the beginning
+ *   until (not inclusively) #acls_pivot iterator within the list
+ * Note, however, the above describes the construction phase of the list.
+ * Then, the list gets reversed, meaning the iterations have this to work with:
+ * - first, users go in order until (inclusively) the #acls_pivot,
+ *   then, groups follow likewise in order
+ * This arrangement accommodates various technical constrainsts:
+ * - GList of GLib is costly at append
+ * - one list to combine to disjunct sets of data, without introducing
+ *   too much hassles, static and dynamic overheads, and retaining
+ *   great deal of the original approach from when only users mattered
+ *
+ * \var GListPtr xml_private_s::acls_pivot
+ * This points to what's effectively a delimiter between user and group entries
+ * within #acls, see the respective documentation
+ */
 typedef struct xml_private_s {
         long check;
         uint32_t flags;
-        char *user;
+        char **selected_creds;
         GListPtr acls;
         GListPtr deleted_objs;
+        GListPtr acls_pivot;
 } xml_private_t;
 
 G_GNUC_INTERNAL
@@ -85,5 +123,23 @@ pcmk__xml_attr_value(const xmlAttr *attr)
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
 }
+
+/*!
+ * \internal
+ * \brief Derive full path to where the pacemaker's user config is expected
+ *
+ * Priorities:
+ * - $XDG_CONFIG_HOME/pacemaker if $XDG_CONFIG_HOME defined
+ * - $HOME/.config/pacemaker if $HOME defined
+ * - /home/$(id -nu)/.config/pacemaker otherwise
+ *
+ * See also:
+ * https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ *
+ * \param[in] basename  final path segment for the configuration file
+ *                      in question
+ * \return full path (dynamically allocated!) or \c NULL in case of error
+ */
+char *pcmk__user_config(const char *basename);
 
 #endif  // CRMCOMMON_PRIVATE__H

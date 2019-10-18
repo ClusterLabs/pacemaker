@@ -63,6 +63,7 @@ enum crm_client_flags
 struct crm_client_s {
     uint pid;
 
+    /* this pair valid for CRM_CLIENT_IPC kind only (authentic AF_UNIX data) */
     uid_t uid;
     gid_t gid;
 

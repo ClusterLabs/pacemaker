@@ -76,5 +76,12 @@ nodist_libcrmcommon_la_SOURCES	= md5.c
 md5.c: ../gnu/md5.c
 	cp "$<" "$@"
 
+## programs
+
+noinst_PROGRAMS = acl_test
+
+acl_test_SOURCES = acl_test.c
+acl_test_LDADD = $(top_builddir)/lib/common/libcrmcommon.la
+
 clean-generic:
 	rm -f *.log *.debug *.xml *~

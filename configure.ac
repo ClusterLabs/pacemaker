@@ -302,6 +302,13 @@ AC_ARG_WITH([bundledir],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
+PCMK_XML_CATALOG_DIR=""
+AC_ARG_WITH([detachedxmlcatalogdir],
+    [AS_HELP_STRING([--with-detachedxmlcatalogdir=DIR],
+        [directory for detached Pacemaker XML catalog @<:@DATADIR/xml@:>@])],
+    [ PCMK_XML_CATALOG_DIR="$withval" ]
+)
+
 dnl The not-yet-released autoconf 2.70 will have a --runstatedir option.
 dnl Until that's available, emulate it with our own --with-runstatedir.
 pcmk_runstatedir=""
@@ -488,6 +495,11 @@ if test x"${CONFIGDIR}" = x""; then
     CONFIGDIR="${sysconfdir}/sysconfig"
 fi
 AC_SUBST(CONFIGDIR)
+
+if test "x${PCMK_XML_CATALOG_DIR}" = x; then
+    PCMK_XML_CATALOG_DIR="${datadir}/xml"
+fi
+AC_SUBST([PCMK_XML_CATALOG_DIR])
 
 if test x"${CRM_LOG_DIR}" = x""; then
     CRM_LOG_DIR="${localstatedir}/log/pacemaker"
@@ -747,6 +759,8 @@ AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
 if test "x${ASCIIDOC_CONV}" != x; then
     PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
+
+AM_CONDITIONAL([HAVE_xmlcatalog], [test "x${XMLCATALOG}" != x])
 
 publican_intree_brand=no
 if test x"${PUBLICAN_BRAND}" != x"" \
@@ -2011,6 +2025,7 @@ AC_MSG_RESULT([  Header files             = ${includedir}])
 AC_MSG_RESULT([  Arch-independent files   = ${datadir}])
 AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
+AC_MSG_RESULT([  Detached XML catalog dir = ${PCMK_XML_CATALOG_DIR}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])

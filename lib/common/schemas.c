@@ -21,6 +21,7 @@
 #if HAVE_LIBXSLT
 #  include <libxslt/xslt.h>
 #  include <libxslt/transform.h>
+#  include <libxslt/security.h>
 #  include <libxslt/xsltutils.h>
 #endif
 
@@ -53,7 +54,6 @@ enum schema_validator_e {
 
 struct schema_s {
     char *name;
-    char *location;
     char *transform;
     void *cache;
     enum schema_validator_e validator;
@@ -115,36 +115,6 @@ const char *
 xml_latest_schema(void)
 {
     return get_schema_name(xml_latest_schema_index());
-}
-
-static const char *
-get_schema_root(void)
-{
-    static const char *base = NULL;
-
-    if (base == NULL) {
-        base = getenv("PCMK_schema_directory");
-    }
-    if (base == NULL || strlen(base) == 0) {
-        base = CRM_SCHEMA_DIRECTORY;
-    }
-    return base;
-}
-
-static char *
-get_schema_path(const char *name, const char *file)
-{
-    const char *base = get_schema_root();
-    char *ret = NULL;
-
-    if (file) {
-        ret = crm_strdup_printf("%s/%s", base, file);
-
-    } else if (name) {
-        ret = crm_strdup_printf("%s/%s.rng", base, name);
-    }
-
-    return ret;
 }
 
 static inline bool
@@ -209,7 +179,7 @@ schema_sort(const struct dirent **a, const struct dirent **b)
  */
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
-           const char *name, const char *location, const char *transform,
+           const char *name, const char *transform,
            const char *transform_enter, bool transform_onleave,
            int after_transform)
 {
@@ -232,14 +202,10 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     }
     if (have_version) {
         known_schemas[last].name = schema_strdup_printf("pacemaker-", *version, "");
-        known_schemas[last].location = crm_strdup_printf("%s.rng",
-                                                         known_schemas[last].name);
     } else {
         CRM_ASSERT(name);
-        CRM_ASSERT(location);
         schema_scanf(name, "%*[^-]-", known_schemas[last].version, "");
         known_schemas[last].name = strdup(name);
-        known_schemas[last].location = strdup(location);
     }
 
     if (transform) {
@@ -255,18 +221,18 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     known_schemas[last].after_transform = after_transform;
 
     if (known_schemas[last].after_transform < 0) {
-        crm_debug("Added supported schema %d: %s (%s)",
-                  last, known_schemas[last].name, known_schemas[last].location);
+        crm_debug("Added supported schema %d: %s",
+                  last, known_schemas[last].name);
 
     } else if (known_schemas[last].transform) {
-        crm_debug("Added supported schema %d: %s (%s upgrades to %d with %s)",
-                  last, known_schemas[last].name, known_schemas[last].location,
+        crm_debug("Added supported schema %d: %s (upgrades to %d with %s.xsl)",
+                  last, known_schemas[last].name,
                   known_schemas[last].after_transform,
                   known_schemas[last].transform);
 
     } else {
-        crm_debug("Added supported schema %d: %s (%s upgrades to %d)",
-                  last, known_schemas[last].name, known_schemas[last].location,
+        crm_debug("Added supported schema %d: %s (upgrades to %d)",
+                  last, known_schemas[last].name,
                   known_schemas[last].after_transform);
     }
 }
@@ -312,8 +278,9 @@ add_schema_by_version(const schema_version_t *version, int next,
     /* prologue for further transform_expected handling */
     if (transform_expected) {
         /* check if there's suitable "upgrade" stylesheet */
-        transform_upgrade = schema_strdup_printf("upgrade-", *version, ".xsl");
-        xslt = get_schema_path(NULL, transform_upgrade);
+        transform_upgrade = schema_strdup_printf("upgrade-", *version, );
+        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+                                       transform_upgrade);
     }
 
     if (!transform_expected) {
@@ -321,18 +288,20 @@ add_schema_by_version(const schema_version_t *version, int next,
 
     } else if (stat(xslt, &s) == 0) {
         /* perhaps there's also a targeted "upgrade-enter" stylesheet */
-        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter.xsl");
+        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter");
         free(xslt);
-        xslt = get_schema_path(NULL, transform_enter);
+        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+                                       transform_enter);
         if (stat(xslt, &s) != 0) {
             /* or initially, at least a generic one */
-            crm_debug("Upgrade-enter transform %s not found", xslt);
+            crm_debug("Upgrade-enter transform %s.xsl not found", xslt);
             free(xslt);
             free(transform_enter);
-            transform_enter = strdup("upgrade-enter.xsl");
-            xslt = get_schema_path(NULL, transform_enter);
+            transform_enter = strdup("upgrade-enter");
+            xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+                                           transform_enter);
             if (stat(xslt, &s) != 0) {
-                crm_debug("Upgrade-enter transform %s not found, either", xslt);
+                crm_debug("Upgrade-enter transform %s.xsl not found, either", xslt);
                 free(xslt);
                 xslt = NULL;
             }
@@ -357,7 +326,7 @@ add_schema_by_version(const schema_version_t *version, int next,
         rc = -ENOENT;
     }
 
-    add_schema(schema_validator_rng, version, NULL, NULL,
+    add_schema(schema_validator_rng, version, NULL,
                transform_upgrade, transform_enter, transform_onleave, next);
 
     free(transform_upgrade);
@@ -366,23 +335,64 @@ add_schema_by_version(const schema_version_t *version, int next,
     return rc;
 }
 
+static int
+wrap_libxslt(bool finalize)
+{
+    static xsltSecurityPrefsPtr secprefs;
+    int ret = 0;
+
+    /* security framework preferences */
+    if (!finalize) {
+        CRM_ASSERT(secprefs == NULL);
+        secprefs = xsltNewSecurityPrefs();
+        ret = xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_FILE,
+                                   xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_CREATE_DIRECTORY,
+                                     xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_READ_NETWORK,
+                                     xsltSecurityForbid)
+              | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_NETWORK,
+                                     xsltSecurityForbid);
+        if (ret != 0) {
+            return -1;
+        }
+    } else {
+        xsltFreeSecurityPrefs(secprefs);
+        secprefs = NULL;
+    }
+
+    /* cleanup only */
+    if (finalize) {
+        xsltCleanupGlobals();
+    }
+
+    return ret;
+}
+
 /*!
  * \internal
  * \brief Load pacemaker schemas into cache
+ *
+ * \note This currently also serves as an entry point for the
+ *       generic initialization of the libxslt library.
  */
 void
 crm_schema_init(void)
 {
     int lpc, max;
-    const char *base = get_schema_root();
+    char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
     struct dirent **namelist = NULL;
     const schema_version_t zero = SCHEMA_ZERO;
+
+    wrap_libxslt(false);
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
+        free(base);
 
     } else {
+        free(base);
         for (lpc = 0; lpc < max; lpc++) {
             bool transform_expected = FALSE;
             int next = 0;
@@ -418,10 +428,9 @@ crm_schema_init(void)
     }
 
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
-               "pacemaker-next.rng", NULL, NULL, FALSE, -1);
+               NULL, NULL, FALSE, -1);
 
-    add_schema(schema_validator_none, &zero, "none",
-               "N/A", NULL, NULL, FALSE, -1);
+    add_schema(schema_validator_none, &zero, "none", NULL, NULL, FALSE, -1);
 }
 
 #if 0
@@ -572,17 +581,13 @@ crm_schema_cleanup(void)
                 break;
         }
         free(known_schemas[lpc].name);
-        free(known_schemas[lpc].location);
         free(known_schemas[lpc].transform);
         free(known_schemas[lpc].transform_enter);
     }
     free(known_schemas);
     known_schemas = NULL;
 
-    xsltCleanupGlobals();  /* XXX proper, explicit reshaking regarding
-                                  init/fini routines is pending (pair
-                                  of facade functions to express the
-                                  intentions in a clean way) */
+    wrap_libxslt(true);
 }
 
 static gboolean
@@ -602,8 +607,8 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    file = get_schema_path(known_schemas[method].name,
-                           known_schemas[method].location);
+    file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
+                                   known_schemas[method].name);
 
     crm_trace("Validating with: %s (type=%d)",
               crm_str(file), known_schemas[method].validator);
@@ -910,7 +915,8 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    xform = get_schema_path(NULL, transform);
+    xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+                                    transform);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
@@ -967,11 +973,11 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
             *final = NULL;
 
     if (schema->transform_enter) {
-        crm_debug("Upgrading %s-style configuration, pre-upgrade phase with %s",
+        crm_debug("Upgrading %s-style configuration, pre-upgrade phase with %s.xsl",
                   schema->name, schema->transform_enter);
         upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
         if (upgrade == NULL) {
-            crm_warn("Upgrade-enter transformation %s failed",
+            crm_warn("Upgrade-enter transformation %s.xsl failed",
                      schema->transform_enter);
             transform_onleave = FALSE;
         }
@@ -980,7 +986,7 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
         upgrade = xml;
     }
 
-    crm_debug("Upgrading %s-style configuration, main phase with %s",
+    crm_debug("Upgrading %s-style configuration, main phase with %s.xsl",
               schema->name, schema->transform);
     final = apply_transformation(upgrade, schema->transform, to_logs);
     if (upgrade != xml) {
@@ -995,11 +1001,11 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
         transform_leave = strdup(schema->transform_enter);
         /* enter -> leave */
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
-        crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s",
+        crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s.xsl",
                   schema->name, transform_leave);
         final = apply_transformation(upgrade, transform_leave, to_logs);
         if (final == NULL) {
-            crm_warn("Upgrade-leave transformation %s failed", transform_leave);
+            crm_warn("Upgrade-leave transformation %s.xsl failed", transform_leave);
             final = upgrade;
         } else {
             free_xml(upgrade);
@@ -1137,7 +1143,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 lpc = next;
 
             } else {
-                crm_debug("Upgrading %s-style configuration to %s with %s",
+                crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
                            known_schemas[lpc].name, known_schemas[next].name,
                            known_schemas[lpc].transform);
 
@@ -1145,12 +1151,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
 #endif
                 if (upgrade == NULL) {
-                    crm_err("Transformation %s failed",
+                    crm_err("Transformation %s.xsl failed",
                             known_schemas[lpc].transform);
                     rc = -pcmk_err_transform_failed;
 
                 } else if (validate_with(upgrade, next, to_logs)) {
-                    crm_info("Transformation %s successful",
+                    crm_info("Transformation %s.xsl successful",
                              known_schemas[lpc].transform);
                     lpc = next;
                     *best = next;
@@ -1159,7 +1165,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     rc = pcmk_ok;
 
                 } else {
-                    crm_err("Transformation %s did not produce a valid configuration",
+                    crm_err("Transformation %s.xsl did not produce a valid configuration",
                             known_schemas[lpc].transform);
                     crm_log_xml_info(upgrade, "transform:bad");
                     free_xml(upgrade);

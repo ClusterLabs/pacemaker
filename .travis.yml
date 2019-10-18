@@ -45,7 +45,7 @@ install:
       libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
       libquorum-dev libsam-dev libtotem-pg-dev libvotequorum-dev
-      cluster-glue-dev resource-agents
+      cluster-glue-dev resource-agents libnss-wrapper
  - test $MAINT_EXTRA -eq 0 || sudo apt-get install -qq libxml2-utils xsltproc
 
 before_script:
@@ -55,6 +55,8 @@ before_script:
 
 script: 
 # Create directories needed by commands used by regression tests
+# XXX stop filtering out pacemaker-acls-* when libxml2 fixed in the wild:
+#     https://gitlab.gnome.org/GNOME/libxml2/merge_requests/31
 - sudo make install-exec-local || true
 - make
 - ./cts/cts-regression -V cli scheduler exec
@@ -67,7 +69,8 @@ script:
       cd xml;
       ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
         schemas=; for schema in *.rng; do
-          case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
+          case ${schema} in *cibtr*|pacemaker-acls-*);;
+                            *)schemas="${schemas} ${schema}";; esac;
         done;
         test -s .relaxng.org/relaxng.rng 2>/dev/null
           || curl --create-dirs -SsLo .relaxng.org/relaxng.rng

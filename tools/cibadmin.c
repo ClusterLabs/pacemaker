@@ -12,8 +12,13 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml_serialize_fd_formatted */
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
+
+#define local_barf(...) \
+  do { (void)(fprintf(stderr, __VA_ARGS__) > 0 && fflush(stderr)); } while (0)
+#define local_const_barf(_s) local_barf("%s\n", _s);
 
 static int message_timeout_ms = 30;
 static int command_options = 0;
@@ -24,6 +29,9 @@ static const char *host = NULL;
 static const char *cib_user = NULL;
 static const char *cib_action = NULL;
 static const char *obj_type = NULL;
+
+/* merely for pointer comparison with run-time set cib_action */
+static const char *cib_action_EMPTYCIB = "__emptycib__";
 
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
@@ -56,6 +64,17 @@ static struct crm_option long_options[] = {
     {"empty",       0, 0, 'a', "\tOutput an empty CIB"},
     {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},
     {"md5-sum-versioned",  0, 0, '6', "Calculate an on-the-wire versioned CIB digest"},
+#if ENABLE_ACL
+    {"acls-render", optional_argument, 0, 'L',
+                               "Like -Q + evaluate ACLs for --user specified user, presented in particular way"},
+    {"-spacer-",    0, 0, '-', "\n\tThat amounts to one of \"color\" (default for terminal),"
+                               " \"text\" (otherwise), \"ns-full\", \"ns-simple\", or \"auto\""
+                               " (per former defaults).\n"},
+    {"-spacer-",    0, 0, '-', "\n\tParticular appearance for \"color\" can be administratively modified in"
+                               " /etc/pacemaker/acls-render-cfg.xsl file (or equivalent), which can also"
+                               " be overridden per user in XDG_CONFIG_HOME/pacemaker/acls-render-cfg.xsl,"
+                               " where XDG_CONFIG_HOME is to be understood as ~/.config by default.\n"},
+#endif
     {"blank",       0, 0, '-', NULL, 1},
 
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
@@ -115,6 +134,11 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " $EDITOR $HOME/local.xml", pcmk_option_example},
     {"-spacer-",    0, 0, '-', " cibadmin --replace --xml-file $HOME/local.xml", pcmk_option_example},
 
+#if ENABLE_ACL
+    {"-spacer-",    0, 0, '-', "Render configuration in color per respective ACLs as evaluated for user tony:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin -L -U tony", pcmk_option_example},
+#endif
+
     {"-spacer-",    0, 0, '-', "SEE ALSO:"},
     {"-spacer-",    0, 0, '-', " crm(8), pcs(8), crm_shadow(8), crm_diff(8)"},
 
@@ -128,8 +152,6 @@ static struct crm_option long_options[] = {
 static void
 print_xml_output(xmlNode * xml)
 {
-    char *buffer;
-
     if (!xml) {
         return;
     } else if (xml->type != XML_ELEMENT_NODE) {
@@ -151,9 +173,7 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", crm_str(buffer));
-        free(buffer);
+        pcmk__xml_serialize_fd_formatted(STDOUT_FILENO, xml);
     }
 }
 
@@ -177,10 +197,23 @@ main(int argc, char **argv)
     const char *source = NULL;
     const char *admin_input_xml = NULL;
     const char *admin_input_file = NULL;
+    const char *cib_action_old = cib_action;
     gboolean dangerous_cmd = FALSE;
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
+#if ENABLE_ACL
+    char *username = NULL;
+    const char *acl_cred = NULL;
+    enum acl_eval_how {
+        acl_eval_unused,
+        acl_eval_auto,
+        acl_eval_ns_full,
+        acl_eval_ns_simple,
+        acl_eval_text,
+        acl_eval_color,
+    } acl_eval_how = acl_eval_unused;
+#endif
 
     int option_index = 0;
 
@@ -223,6 +256,34 @@ main(int argc, char **argv)
                 cib_action = CIB_OP_ERASE;
                 dangerous_cmd = TRUE;
                 break;
+#if ENABLE_ACL
+            case 'L':
+                if (optarg != NULL) {
+                    if (!strcmp(optarg, "auto")) {
+                        acl_eval_how = acl_eval_auto;
+                    } else if (!strcmp(optarg, "ns-full")) {
+                        acl_eval_how = acl_eval_ns_full;
+                    } else if (!strcmp(optarg, "ns-simple")) {
+                        acl_eval_how = acl_eval_ns_simple;
+                    } else if (!strcmp(optarg, "text")) {
+                        acl_eval_how = acl_eval_text;
+                    } else if (!strcmp(optarg, "color")) {
+                        acl_eval_how = acl_eval_color;
+                    } else {
+                        printf("Unrecognized option for --acls-render: \"%s\"\n",
+                               optarg);
+                        ++argerr;
+                    }
+                } else {
+                    acl_eval_how = acl_eval_auto;
+                }
+                /* XXX this is a workaround until we unify happy paths for
+                       both a/sync handling; the respective extra code is
+                       only in sync path now, but does it matter at all for
+                       query-like request wrt. what blackbox users observe? */
+                command_options |= cib_sync_call;
+                /* fall-through */
+#endif
             case 'Q':
                 cib_action = CIB_OP_QUERY;
                 break;
@@ -313,19 +374,19 @@ main(int argc, char **argv)
                 crm_log_args(argc, argv);
                 break;
             case 'a':
-                output = createEmptyCib(1);
-                if (optind < argc) {
-                    crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
-                }
-                admin_input_xml = dump_xml_formatted(output);
-                fprintf(stdout, "%s\n", crm_str(admin_input_xml));
-                crm_exit(CRM_EX_OK);
+                cib_action = cib_action_EMPTYCIB;
                 break;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
                 ++argerr;
                 break;
         }
+        if (cib_action_old != NULL && cib_action != cib_action_old) {
+            printf("Combining multiple commands into one go not supported\n");
+            ++argerr;
+            break;
+        }
+        cib_action_old = cib_action;
     }
 
     while (bump_log_num > 0) {
@@ -368,6 +429,42 @@ main(int argc, char **argv)
     } else if (admin_input_stdin) {
         source = "STDIN";
         input = stdin2xml();
+
+#if ENABLE_ACL
+    } else if (acl_eval_how != acl_eval_unused) {
+        username = uid2username(geteuid());
+        if (pcmk_acl_required(username)) {
+            if (force_flag == TRUE) {
+                local_const_barf("The supplied command can provide skewed"
+                                 " result since it is run under user that also"
+                                 " gets guarded per ACLs on their own right."
+                                 " Continuing since --force flag was"
+                                 " provided.");
+
+            } else {
+                local_const_barf("The supplied command can provide skewed"
+                                 " result since it is run under user that also"
+                                 " gets guarded per ACLs in their own right."
+                                 " To accept the risk of such a possible"
+                                 " distortion (without even knowing it at this"
+                                 " time), use the --force flag.");
+                crm_exit(CRM_EX_UNSAFE);
+            }
+
+        }
+        free(username);
+        username = NULL;
+
+        if (cib_user == NULL) {
+            local_const_barf("The supplied command requires -U user specified.");
+            crm_exit(CRM_EX_USAGE);
+        }
+
+        /* we already stopped/warned ACL-controlled users about consequences */
+        acl_cred = cib_user;
+        cib_user = NULL;  /* XXX CRM_DAEMON_USER as it's IPC guarded anyway? */
+        /* XXX should likely differenciate per admin_input_* */
+#endif
     }
 
     if (input != NULL) {
@@ -378,7 +475,16 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_CONFIG);
     }
 
-    if (safe_str_eq(cib_action, "md5-sum")) {
+    if (cib_action == cib_action_EMPTYCIB  /* pointer comparison */) {
+        output = createEmptyCib(1);
+        if (optind < argc) {
+            crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
+        }
+        pcmk__xml_serialize_fd_formatted(STDOUT_FILENO, output);
+        xmlFreeDoc(output->doc);
+        crm_exit(CRM_EX_OK);
+
+    } else if (safe_str_eq(cib_action, "md5-sum")) {
         char *digest = NULL;
 
         if (input == NULL) {
@@ -460,6 +566,47 @@ main(int argc, char **argv)
         }
         exit_code = crm_errno2exit(rc);
     }
+
+#if ENABLE_ACL
+    if (output != NULL && acl_eval_how != acl_eval_unused) {
+        xmlDoc *acl_evaled_doc;
+        rc = pcmk_acl_evaled_as_namespaces(PCMK_ACL_CRED_USER, acl_cred,
+                                           output->doc, &acl_evaled_doc);
+        if (rc > 0) {
+            free_xml(output);
+            if (acl_eval_how != acl_eval_ns_full) {
+                xmlChar *rendered = NULL;
+                int rendered_len = 0;
+                enum pcmk__acl_render_how how = (acl_eval_how == acl_eval_ns_simple)
+                                                ? pcmk__acl_render_ns_simple
+                                                : (acl_eval_how == acl_eval_text)
+                                                ? pcmk__acl_render_text
+                                                : (acl_eval_how == acl_eval_color)
+                                                ? pcmk__acl_render_color
+                                                : /*acl_eval_auto*/ isatty(STDOUT_FILENO)
+                                                ? pcmk__acl_render_color
+                                                : pcmk__acl_render_text;
+                if (!pcmk__acl_evaled_render(acl_evaled_doc, how,
+                                             &rendered, &rendered_len)) {
+                    printf("%s\n", (char *) rendered);
+                    free(rendered);
+                } else {
+                    local_const_barf("Could not render evaluated ACLs");
+                    crm_exit(CRM_EX_CONFIG);
+                }
+                output = NULL;
+            } else {
+                output = xmlDocGetRootElement(acl_evaled_doc);
+            }
+        } else if (rc == 0) {
+
+        } else if (rc < 0) {
+            local_barf("Could not evaluate ACLs per request (%s, rc=%d)\n",
+                       acl_cred, rc);
+            crm_exit(CRM_EX_CONFIG);
+        }
+    }
+#endif
 
     if (output != NULL) {
         print_xml_output(output);
