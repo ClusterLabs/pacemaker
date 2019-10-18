@@ -404,6 +404,20 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Increment the internal counter of the current list's length.
+     *
+     * Typically, this counter is maintained behind the scenes as a side effect
+     * of calling list_item().  However, custom functions that maintain lists
+     * some other way will need to manage this counter manually.  This is
+     * useful for implementing custom message functions and should not be
+     * needed otherwise.
+     *
+     * \param[in,out] out The output functions structure.
+     */
+    void (*increment_list) (pcmk__output_t *out);
+
+    /*!
+     * \internal
      * \brief Conclude a list.
      *
      * \note If begin_list was called with non-NULL for both the singular_noun
@@ -666,6 +680,25 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out);
 xmlNodePtr
 pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
                               const char *class_name, const char *text);
+
+/*!
+ * \internal
+ * \brief Add an HTML tag to the <head> section.
+ *
+ * The arguments after name are a NULL-terminated list of keys and values,
+ * all of which will be added as attributes to the given tag.  For instance,
+ * the following code would generate the tag "<meta http-equiv='refresh' content='19'>":
+ *
+ * \code
+ * pcmk__html_add_header(parent, "meta", "http-equiv", "refresh", "content", "19", NULL);
+ * \endcode
+ *
+ * \param[in,out] parent The node that will be the parent of the new node.
+ * \param[in]     name   The HTML tag for the new node.
+ * \param[in]     ...    A NULL-terminated key/value list of attributes.
+ */
+void
+pcmk__html_add_header(xmlNodePtr parent, const char *name, ...);
 
 #ifdef __cplusplus
 }

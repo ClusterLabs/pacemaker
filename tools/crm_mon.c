@@ -101,6 +101,8 @@ static pcmk__supported_format_t formats[] = {
 #define MON_STATUS_CRIT    CRM_EX_INVALID_PARAM
 #define MON_STATUS_UNKNOWN CRM_EX_UNIMPLEMENT_FEATURE
 
+#define RECONNECT_MSECS 5000
+
 struct {
     int reconnect_msec;
     int fence_history_level;
@@ -111,7 +113,7 @@ struct {
     char *external_recipient;
     unsigned int mon_ops;
 } options = {
-    .reconnect_msec = 5000,
+    .reconnect_msec = RECONNECT_MSECS,
     .fence_history_level = 1,
     .mon_ops = mon_op_default
 };
@@ -317,15 +319,11 @@ watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency in seconds",
+      "Update frequency in seconds (default is 5)",
       "SECONDS" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
       "Display the cluster status once on the console and exit",
-      NULL },
-
-    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
-      "Disable the use of ncurses",
       NULL },
 
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
@@ -412,24 +410,32 @@ static GOptionEntry display_entries[] = {
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
+    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
+      "Display the cluster status once as a simple one line output (suitable for nagios)",
+      NULL },
+
     { NULL }
 };
 
-static GOptionEntry mode_entries[] = {
+static GOptionEntry deprecated_entries[] = {
     { "as-html", 'h', G_OPTION_FLAG_FILENAME, G_OPTION_ARG_CALLBACK, as_html_cb,
-      "Write cluster status to the named HTML file",
+      "Write cluster status to the named HTML file.\n"
+      INDENT "Use --output-as=html --output-to=FILE instead.",
       "FILE" },
 
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
-      "Write cluster status as XML to stdout. This will enable one-shot mode.",
+      "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
+      INDENT "Use --output-as=xml instead.",
+      NULL },
+
+    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
+      "Disable the use of ncurses.\n"
+      INDENT "Use --output-as=text instead.",
       NULL },
 
     { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
-      "Web mode with output suitable for CGI (preselected when run as *.cgi)",
-      NULL },
-
-    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
-      "Display the cluster status once as a simple one line output (suitable for nagios)",
+      "Web mode with output suitable for CGI (preselected when run as *.cgi).\n"
+      INDENT "Use --output-as=html --output-cgi instead.",
       NULL },
 
     { NULL }
@@ -776,12 +782,12 @@ build_arg_context(pcmk__common_args_t *args) {
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, examples);
 
-    pcmk__add_arg_group(context, "mode", "Mode Options (mutually exclusive):",
-                        "Show mode options", mode_entries);
     pcmk__add_arg_group(context, "display", "Display Options:",
                         "Show display options", display_entries);
     pcmk__add_arg_group(context, "additional", "Additional Options:",
                         "Show additional options", addl_entries);
+    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
+                        "Show deprecated options", deprecated_entries);
 
     return context;
 }
@@ -800,8 +806,8 @@ add_output_args() {
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-meta-refresh %d --output-title \"Cluster Status\"",
-                              g_get_prgname(), options.reconnect_msec/1000)) {
+        if (!pcmk__force_args(context, &error, "%s --output-title \"Cluster Status\"",
+                              g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
@@ -825,7 +831,7 @@ add_output_args() {
 }
 
 /* Which output format to use could come from two places:  The --as-xml
- * style arguments we gave in mode_entries above, or the formatted output
+ * style arguments we gave in deprecated_entries above, or the formatted output
  * arguments added by pcmk__register_formats.  If the latter were used,
  * output_format will be mon_output_unset.
  *
@@ -963,7 +969,6 @@ main(int argc, char **argv)
                 default:
                     /* something is odd */
                     rc = -EINVAL;
-                    crm_err("Invalid cib-source");
                     break;
             }
         }
@@ -1026,6 +1031,12 @@ main(int argc, char **argv)
             printf("You need to have curses available at compile time to enable console mode\n");
 #endif
         }
+    }
+
+    if (rc != pcmk_ok) {
+        // Shouldn't really be possible
+        fprintf(stderr, "Invalid CIB source\n");
+        return clean_up(CRM_EX_ERROR);
     }
 
     reconcile_output_format(args);
@@ -1622,11 +1633,6 @@ mon_refresh_display(gpointer user_data)
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
 
-    /* stdout for everything except the HTML case, which does a bunch of file
-     * renaming.  We'll handle changing stream in print_html_status.
-     */
-    mon_state_t state = { .stream = stdout, .output_format = output_format, .out = out };
-
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
@@ -1686,9 +1692,8 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(&state, mon_data_set, stonith_history,
-                                  options.mon_ops, show, print_neg_location_prefix,
-                                  options.reconnect_msec) != 0) {
+            if (print_html_status(out, output_format, mon_data_set, stonith_history,
+                                  options.mon_ops, show, print_neg_location_prefix) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1697,8 +1702,8 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_legacy_xml:
         case mon_output_xml:
-            print_xml_status(&state, mon_data_set, stonith_history,
-                             options.mon_ops, show, print_neg_location_prefix);
+            print_xml_status(out, mon_data_set, stonith_history, options.mon_ops,
+                             show, print_neg_location_prefix);
             break;
 
         case mon_output_monitor:
@@ -1709,9 +1714,20 @@ mon_refresh_display(gpointer user_data)
             }
             break;
 
-        case mon_output_plain:
         case mon_output_console:
-            print_status(&state, mon_data_set, stonith_history, options.mon_ops,
+            /* If curses is not enabled, this will just fall through to the plain
+             * text case.
+             */
+#if CURSES_ENABLED
+            blank_screen();
+            print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
+                         show, print_neg_location_prefix);
+            refresh();
+            break;
+#endif
+
+        case mon_output_plain:
+            print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
                          show, print_neg_location_prefix);
             break;
 
@@ -1808,6 +1824,16 @@ clean_up_connections(void)
     }
 }
 
+static void
+handle_html_output(crm_exit_t exit_code) {
+    xmlNodePtr html = NULL;
+
+    out->finish(out, exit_code, false, (void **) &html);
+    pcmk__html_add_header(html, "meta", "http-equiv", "refresh", "content",
+                          crm_itoa(options.reconnect_msec/1000), NULL);
+    htmlDocDump(out->dest, html->doc);
+}
+
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
@@ -1846,7 +1872,12 @@ clean_up(crm_exit_t exit_code)
     g_option_context_free(context);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        if (output_format == mon_output_cgi || output_format == mon_output_html) {
+            handle_html_output(exit_code);
+        } else {
+            out->finish(out, exit_code, true, NULL);
+        }
+
         pcmk__output_free(out);
     }
 

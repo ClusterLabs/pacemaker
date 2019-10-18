@@ -12,12 +12,12 @@ Online: [ node1 node2 ]
      child_rsc6	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
- * Start   child_rsc1	(node1)
- * Start   child_rsc2	(node1)
- * Start   child_rsc3	(node1)
- * Start   child_rsc4	(node2)
- * Start   child_rsc5	(node2)
- * Start   child_rsc6	(node2)
+ * Start      child_rsc1     ( node1 )  
+ * Start      child_rsc2     ( node1 )  
+ * Start      child_rsc3     ( node1 )  
+ * Start      child_rsc4     ( node2 )  
+ * Start      child_rsc5     ( node2 )  
+ * Start      child_rsc6     ( node2 )  
 
 Executing cluster transition:
  * Pseudo action:   rsc1_start_0

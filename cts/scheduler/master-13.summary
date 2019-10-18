@@ -6,14 +6,14 @@ Online: [ frigg odin ]
      Masters: [ frigg ]
      Slaves: [ odin ]
  Resource Group: group
-     IPaddr0	(ocf::heartbeat:IPaddr):	Stopped 
-     MailTo	(ocf::heartbeat:MailTo):	Stopped 
+     IPaddr0	(ocf::heartbeat:IPaddr):	Stopped
+     MailTo	(ocf::heartbeat:MailTo):	Stopped
 
 Transition Summary:
- * Promote drbd0:0	(Slave -> Master odin)
- * Demote  drbd0:1	(Master -> Slave frigg)
- * Start   IPaddr0	(odin)
- * Start   MailTo	(odin)
+ * Promote    drbd0:0     (  Slave -> Master odin )  
+ * Demote     drbd0:1     ( Master -> Slave frigg )  
+ * Start      IPaddr0     (                  odin )  
+ * Start      MailTo      (                  odin )  
 
 Executing cluster transition:
  * Resource action: drbd0:1         cancel=12000 on odin

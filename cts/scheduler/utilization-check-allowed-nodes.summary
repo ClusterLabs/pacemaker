@@ -6,7 +6,7 @@ Online: [ node1 node2 ]
  rsc2	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   rsc1	(node2)
+ * Start      rsc1    ( node2 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node2

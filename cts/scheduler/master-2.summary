@@ -3,16 +3,16 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (promotable) (unique)
-     child_rsc1:0	(ocf::heartbeat:apache):	Stopped 
-     child_rsc1:1	(ocf::heartbeat:apache):	Stopped 
-     child_rsc1:2	(ocf::heartbeat:apache):	Stopped 
-     child_rsc1:3	(ocf::heartbeat:apache):	Stopped 
-     child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Stopped
+     child_rsc1:1	(ocf::heartbeat:apache):	Stopped
+     child_rsc1:2	(ocf::heartbeat:apache):	Stopped
+     child_rsc1:3	(ocf::heartbeat:apache):	Stopped
+     child_rsc1:4	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
- * Promote child_rsc1:0	(Stopped -> Master node1)
- * Start   child_rsc1:1	(node2)
- * Start   child_rsc1:2	(node1)
+ * Promote    child_rsc1:0     ( Stopped -> Master node1 )  
+ * Start      child_rsc1:1     (                   node2 )  
+ * Start      child_rsc1:2     (                   node1 )  
  * Promote    child_rsc1:3     ( Stopped -> Master node2 )  
 
 Executing cluster transition:
@@ -62,8 +62,8 @@ Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (promotable) (unique)
      child_rsc1:0	(ocf::heartbeat:apache):	Master node1
-     child_rsc1:1	(ocf::heartbeat:apache):	Slave node2 
-     child_rsc1:2	(ocf::heartbeat:apache):	Slave node1 
+     child_rsc1:1	(ocf::heartbeat:apache):	Slave node2
+     child_rsc1:2	(ocf::heartbeat:apache):	Slave node1
      child_rsc1:3	(ocf::heartbeat:apache):	Master node2
-     child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:4	(ocf::heartbeat:apache):	Stopped
 

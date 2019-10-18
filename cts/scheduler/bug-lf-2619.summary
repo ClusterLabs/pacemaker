@@ -24,7 +24,7 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
      prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
  Clone Set: clnPingd [prmPingd]
-     prmPingd	(ocf::pacemaker:ping):	FAILED act1 
+     prmPingd	(ocf::pacemaker:ping):	FAILED act1
      Started: [ act2 act3 sby1 sby2 ]
 
 Transition Summary:
@@ -34,7 +34,7 @@ Transition Summary:
  * Move       prmFsPostgreSQLDB1-3   ( act1 -> sby1 )  
  * Move       prmIpPostgreSQLDB1     ( act1 -> sby1 )  
  * Move       prmApPostgreSQLDB1     ( act1 -> sby1 )  
- * Stop    prmPingd:0	(act1)  	due to node availability
+ * Stop       prmPingd:0             (         act1 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   grpPostgreSQLDB1_stop_0

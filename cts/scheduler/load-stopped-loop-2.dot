@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "load_stopped_xfc0 xfc0" -> "xu-test3_migrate_to_0 xfc1" [ style = bold]
 "load_stopped_xfc0 xfc0" -> "xu-test3_start_0 xfc0" [ style = bold]
 "load_stopped_xfc0 xfc0" -> "xu-test7_start_0 xfc0" [ style = bold]

@@ -31,18 +31,18 @@ Online: [ wc01 ]
      stonith_rackpdu:1	(stonith:external/rackpdu):	Started wc02
 
 Transition Summary:
- * Promote drbd_mysql:0	(Slave -> Master wc01)
+ * Promote    drbd_mysql:0          ( Slave -> Master wc01 )  
  * Stop       drbd_mysql:1          (          Master wc02 )   due to node availability
  * Move       fs_mysql              (         wc02 -> wc01 )  
  * Move       intip_sql             (         wc02 -> wc01 )  
  * Move       mysql-server          (         wc02 -> wc01 )  
  * Stop       drbd_www:1            (           Slave wc02 )   due to node availability
- * Stop    nfs-common:1	(wc02)  	due to node availability
- * Stop    mysql-proxy:1	(wc02)  	due to node availability
- * Stop    fs_www:1	(wc02)  	due to node availability
- * Stop    apache2:1	(wc02)  	due to node availability
+ * Stop       nfs-common:1          (                 wc02 )   due to node availability
+ * Stop       mysql-proxy:1         (                 wc02 )   due to node availability
+ * Stop       fs_www:1              (                 wc02 )   due to node availability
+ * Stop       apache2:1             (                 wc02 )   due to node availability
  * Restart    stonith_rackpdu:0     (                 wc01 )  
- * Stop    stonith_rackpdu:1	(wc02)  	due to node availability
+ * Stop       stonith_rackpdu:1     (                 wc02 )   due to node availability
 
 Executing cluster transition:
  * Resource action: drbd_mysql:0    cancel=10000 on wc01
@@ -157,5 +157,5 @@ Online: [ wc01 ]
      pure-ftpd	(ocf::heartbeat:Pure-FTPd):	Started wc01
  Clone Set: DoFencing [stonith_rackpdu] (unique)
      stonith_rackpdu:0	(stonith:external/rackpdu):	Started wc01
-     stonith_rackpdu:1	(stonith:external/rackpdu):	Stopped 
+     stonith_rackpdu:1	(stonith:external/rackpdu):	Stopped
 

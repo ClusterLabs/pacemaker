@@ -1,4 +1,4 @@
-digraph "g" {
-"dom0-iscsi1-cnx1:0_monitor_0 cardhu" [ style=bold color="green" fontcolor="black" ]
-"domU-test01_monitor_0 cardhu" [ style=bold color="green" fontcolor="black" ]
+ digraph "g" {
+"dom0-iscsi1-cnx1:0_monitor_0 cardhu" [ style=bold color="green" fontcolor="black"]
+"domU-test01_monitor_0 cardhu" [ style=bold color="green" fontcolor="black"]
 }

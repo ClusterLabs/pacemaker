@@ -6,10 +6,10 @@ Online: [ node1 node2 ]
      Stopped: [ node1 node2 ]
 
 Transition Summary:
- * Start   rsc1:0	(node1)
- * Start   rsc2:0	(node1)
- * Start   rsc1:1	(node2)
- * Start   rsc2:1	(node2)
+ * Start      rsc1:0     ( node1 )  
+ * Start      rsc2:0     ( node1 )  
+ * Start      rsc1:1     ( node2 )  
+ * Start      rsc2:1     ( node2 )  
 
 Executing cluster transition:
  * Resource action: rsc1:0          monitor on node1

@@ -6,8 +6,8 @@ Online: [ fs1 fs2 web1 web2 ]
      Stopped: [ fs1 fs2 web1 web2 ]
 
 Transition Summary:
- * Start   test:0	(web1)
- * Start   test:1	(web2)
+ * Start      test:0     (  web1 )  
+ * Start      test:1     (  web2 )  
 
 Executing cluster transition:
  * Pseudo action:   cl-test_start_0

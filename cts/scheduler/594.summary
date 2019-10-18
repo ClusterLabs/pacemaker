@@ -17,8 +17,8 @@ Transition Summary:
  * Fence (reboot) hadev3 'peer is no longer part of the cluster'
  * Move       DcIPaddr              ( hadev2 -> hadev1 )  
  * Move       rsc_hadev2            ( hadev2 -> hadev1 )  
- * Stop    child_DoFencing:0	(hadev2)  	due to node availability
- * Stop    child_DoFencing:2	(hadev1)  	due to node availability
+ * Stop       child_DoFencing:0     (           hadev2 )   due to node availability
+ * Stop       child_DoFencing:2     (           hadev1 )   due to node availability
 
 Executing cluster transition:
  * Resource action: DcIPaddr        stop on hadev2
@@ -48,7 +48,7 @@ OFFLINE: [ hadev3 ]
  rsc_hadev2	(ocf::heartbeat:IPaddr):	Started hadev1
  rsc_hadev1	(ocf::heartbeat:IPaddr):	Started hadev1
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Stopped 
+     child_DoFencing:0	(stonith:ssh):	Stopped
      child_DoFencing:1	(stonith:ssh):	Started hadev1
-     child_DoFencing:2	(stonith:ssh):	Stopped 
+     child_DoFencing:2	(stonith:ssh):	Stopped
 

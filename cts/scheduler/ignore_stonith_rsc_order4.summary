@@ -8,9 +8,9 @@ Online: [ fc16-builder ]
      Stopped: [ fc16-builder ]
 
 Transition Summary:
- * Start   S_A:0	(fc16-builder)
- * Start   A:0	(fc16-builder)
- * Start   S_B:0	(fc16-builder)
+ * Start      S_A:0   ( fc16-builder )  
+ * Start      A:0     ( fc16-builder )  
+ * Start      S_B:0   ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: S_A:0           monitor on fc16-builder

@@ -1,34 +1,34 @@
- <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
-   <synapse id="0">
-     <action_set>
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
       <crm_event id="3" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3">
         <attributes CRM_meta_on_node="node3" CRM_meta_on_node_uuid="uuid3" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="uuid3"/>
         </downed>
-       </crm_event>
-     </action_set>
+      </crm_event>
+    </action_set>
     <inputs>
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
-   </synapse>
+  </synapse>
   <synapse id="1">
-     <action_set>
+    <action_set>
       <crm_event id="2" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2">
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="uuid2"/>
         </downed>
       </crm_event>
-     </action_set>
-     <inputs>
-       <trigger>
+    </action_set>
+    <inputs>
+      <trigger>
         <crm_event id="3" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
-       </trigger>
-     </inputs>
-   </synapse>
+      </trigger>
+    </inputs>
+  </synapse>
   <synapse id="2">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
@@ -37,7 +37,7 @@
           <node id="uuid1"/>
         </downed>
       </crm_event>
-     </action_set>
+    </action_set>
     <inputs/>
-   </synapse>
- </transition_graph>
+  </synapse>
+</transition_graph>

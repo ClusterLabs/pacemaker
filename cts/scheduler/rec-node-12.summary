@@ -3,27 +3,27 @@ Current cluster status:
 Node c001n02 (e9bdfde9-01b0-421f-acd8-8a65a53e775f): UNCLEAN (offline)
 Online: [ c001n01 c001n03 c001n08 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_c001n03	(ocf::heartbeat:IPaddr):	Stopped 
- rsc_c001n01	(ocf::heartbeat:IPaddr):	Stopped 
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	Stopped
+ rsc_c001n01	(ocf::heartbeat:IPaddr):	Stopped
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Stopped 
-     child_DoFencing:1	(stonith:ssh):	Stopped 
-     child_DoFencing:2	(stonith:ssh):	Stopped 
-     child_DoFencing:3	(stonith:ssh):	Stopped 
+     child_DoFencing:0	(stonith:ssh):	Stopped
+     child_DoFencing:1	(stonith:ssh):	Stopped
+     child_DoFencing:2	(stonith:ssh):	Stopped
+     child_DoFencing:3	(stonith:ssh):	Stopped
 
 Transition Summary:
  * Fence (reboot) c001n02 'node is unclean'
- * Start   DcIPaddr	(c001n08)
- * Start   rsc_c001n08	(c001n08)
- * Start   rsc_c001n02	(c001n01)
- * Start   rsc_c001n03	(c001n03)
- * Start   rsc_c001n01	(c001n01)
- * Start   child_DoFencing:0	(c001n03)
- * Start   child_DoFencing:1	(c001n01)
- * Start   child_DoFencing:2	(c001n08)
+ * Start      DcIPaddr              ( c001n08 )  
+ * Start      rsc_c001n08           ( c001n08 )  
+ * Start      rsc_c001n02           ( c001n01 )  
+ * Start      rsc_c001n03           ( c001n03 )  
+ * Start      rsc_c001n01           ( c001n01 )  
+ * Start      child_DoFencing:0     ( c001n03 )  
+ * Start      child_DoFencing:1     ( c001n01 )  
+ * Start      child_DoFencing:2     ( c001n08 )  
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n08
@@ -86,5 +86,5 @@ OFFLINE: [ c001n02 ]
      child_DoFencing:0	(stonith:ssh):	Started c001n03
      child_DoFencing:1	(stonith:ssh):	Started c001n01
      child_DoFencing:2	(stonith:ssh):	Started c001n08
-     child_DoFencing:3	(stonith:ssh):	Stopped 
+     child_DoFencing:3	(stonith:ssh):	Stopped
 

@@ -3,15 +3,15 @@ Current cluster status:
 Node hs21d (737318c6-0f92-4592-9754-45967d45aff7): UNCLEAN (offline)
 Online: [ hs21c ]
 
- stonith-1	(stonith:dummy):	Stopped 
- apache_1	(ocf::heartbeat:apache):	Stopped 
- nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
+ stonith-1	(stonith:dummy):	Stopped
+ apache_1	(ocf::heartbeat:apache):	Stopped
+ nfs_1	(ocf::heartbeat:Filesystem):	Stopped
 
 Transition Summary:
  * Fence (reboot) hs21d 'node is unclean'
- * Start   stonith-1	(hs21c)
- * Start   apache_1	(hs21c)
- * Start   nfs_1	(hs21c)
+ * Start      stonith-1     ( hs21c )  
+ * Start      apache_1      ( hs21c )  
+ * Start      nfs_1         ( hs21c )  
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on hs21c

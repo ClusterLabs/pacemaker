@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "ClusterIP_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
 "ClusterIP_stop_0 fc16-builder" -> "ClusterIP_start_0 <none>" [ style = dashed]
 "ClusterIP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]

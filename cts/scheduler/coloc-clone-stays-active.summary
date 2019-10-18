@@ -41,7 +41,7 @@ Online: [ s01-0 s01-1 ]
      Stopped (disabled): [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
-     nginx	(lsb:nginx):	Stopped ( disabled ) 
+     nginx	(lsb:nginx):	Stopped (disabled)
  Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
@@ -50,8 +50,8 @@ Online: [ s01-0 s01-1 ]
      vip-234	(ocf::heartbeat:IPaddr2):	Started s01-1
      syslog-ng	(ocf::heartbeat:syslog-ng):	Started s01-1
  Resource Group: tftp-server
-     vip-232	(ocf::heartbeat:IPaddr2):	Stopped 
-     tftpd	(ocf::heartbeat:Xinetd):	Stopped 
+     vip-232	(ocf::heartbeat:IPaddr2):	Stopped
+     tftpd	(ocf::heartbeat:Xinetd):	Stopped
  Clone Set: cl-xinetd [xinetd]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-ospf-routing [ospf-routing]
@@ -59,11 +59,11 @@ Online: [ s01-0 s01-1 ]
  Clone Set: connected-outer [ping-bmc-and-switch]
      Started: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-target-all
-     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped ( disabled ) 
-     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped ( disabled ) 
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped (disabled)
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped (disabled)
  Resource Group: iscsi-vds-dom0-stateless-0-vips
-     vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
-     vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
+     vip-227	(ocf::heartbeat:IPaddr2):	Stopped
+     vip-228	(ocf::heartbeat:IPaddr2):	Stopped
  Clone Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
@@ -148,7 +148,7 @@ Online: [ s01-0 s01-1 ]
      Stopped (disabled): [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
-     nginx	(lsb:nginx):	Stopped ( disabled ) 
+     nginx	(lsb:nginx):	Stopped (disabled)
  Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
@@ -157,8 +157,8 @@ Online: [ s01-0 s01-1 ]
      vip-234	(ocf::heartbeat:IPaddr2):	Started s01-1
      syslog-ng	(ocf::heartbeat:syslog-ng):	Started s01-1
  Resource Group: tftp-server
-     vip-232	(ocf::heartbeat:IPaddr2):	Stopped 
-     tftpd	(ocf::heartbeat:Xinetd):	Stopped 
+     vip-232	(ocf::heartbeat:IPaddr2):	Stopped
+     tftpd	(ocf::heartbeat:Xinetd):	Stopped
  Clone Set: cl-xinetd [xinetd]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-ospf-routing [ospf-routing]
@@ -166,11 +166,11 @@ Online: [ s01-0 s01-1 ]
  Clone Set: connected-outer [ping-bmc-and-switch]
      Started: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-target-all
-     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped ( disabled ) 
-     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped ( disabled ) 
+     iscsi-vds-dom0-stateless-0-target	(ocf::vds-ok:iSCSITarget):	Stopped (disabled)
+     iscsi-vds-dom0-stateless-0-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Stopped (disabled)
  Resource Group: iscsi-vds-dom0-stateless-0-vips
-     vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
-     vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
+     vip-227	(ocf::heartbeat:IPaddr2):	Stopped
+     vip-228	(ocf::heartbeat:IPaddr2):	Stopped
  Clone Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]

@@ -8,7 +8,7 @@ Online: [ node1 ]
  rsc4	(ocf::heartbeat:apache):	Started node1
 
 Transition Summary:
- * Start   rsc1	(node1)
+ * Start      rsc1    ( node1 )  
  * Restart    rsc2    ( node1 )   due to required rsc1 start
  * Stop       rsc4    ( node1 )   due to unrunnable rsc3 start
 

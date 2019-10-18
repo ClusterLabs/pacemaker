@@ -17,6 +17,7 @@ import shlex
 import shutil
 import argparse
 import subprocess
+import platform
 
 DESC = """Regression tests for Pacemaker's scheduler"""
 
@@ -603,7 +604,6 @@ TESTS = [
         [ "asymmetrical-order-restart", "Respect asymmetrical ordering when restarting dependent resource" ],
         [ "start-then-stop-with-unfence", "Avoid graph loop with start-then-stop constraint plus unfencing" ],
         [ "order-expired-failure", "Order failcount cleanup after remote fencing" ],
-        [ "year-2038", "Check handling of timestamps beyond 2038-01-19 03:14:08 UTC" ],
     
         [ "ignore_stonith_rsc_order1",
           "cl#5056- Ignore order constraint between stonith and non-stonith rsc" ],
@@ -971,6 +971,11 @@ TESTS = [
     #],
 ]
 
+TESTS_64BIT = [
+    [
+        [ "year-2038", "Check handling of timestamps beyond 2038-01-19 03:14:08 UTC" ],
+    ],
+]
 
 # Constants substituted in the build process
 class BuildVars(object):
@@ -1380,6 +1385,9 @@ class CtsScheduler(object):
 
     def run_all(self):
         """ Run all defined tests """
+
+        if platform.architecture()[0] == "64bit":
+            TESTS.extend(TESTS_64BIT)
 
         for group in TESTS:
             for test in group:

@@ -4,15 +4,15 @@ Node TCS-1: OFFLINE (standby)
 Online: [ TCS-2 ]
 
  Resource Group: svc
-     ip_trf	(ocf::heartbeat:IPaddr2):	Started TCS-2 
-     ip_mgmt	(ocf::heartbeat:IPaddr2):	Started TCS-2 
+     ip_trf	(ocf::heartbeat:IPaddr2):	Started TCS-2
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Started TCS-2
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
-     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 ( blocked ) 
+     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 (blocked)
      Stopped: [ TCS-1 ]
 
 Transition Summary:
- * Stop    ip_trf	(TCS-2)  	due to node availability
- * Stop    ip_mgmt	(TCS-2)  	due to node availability
+ * Stop       ip_trf     ( TCS-2 )   due to node availability
+ * Stop       ip_mgmt    ( TCS-2 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   svc_stop_0
@@ -25,9 +25,9 @@ Node TCS-1: OFFLINE (standby)
 Online: [ TCS-2 ]
 
  Resource Group: svc
-     ip_trf	(ocf::heartbeat:IPaddr2):	Stopped 
-     ip_mgmt	(ocf::heartbeat:IPaddr2):	Stopped 
+     ip_trf	(ocf::heartbeat:IPaddr2):	Stopped
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Stopped
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
-     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 ( blocked ) 
+     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 (blocked)
      Stopped: [ TCS-1 ]
 

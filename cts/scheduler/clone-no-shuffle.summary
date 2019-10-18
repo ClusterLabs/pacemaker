@@ -2,16 +2,16 @@
 Current cluster status:
 Online: [ dktest1sles10 dktest2sles10 ]
 
- stonith-1	(stonith:dummy):	Stopped 
+ stonith-1	(stonith:dummy):	Stopped
  Clone Set: ms-drbd1 [drbd1] (promotable)
      Masters: [ dktest2sles10 ]
      Stopped: [ dktest1sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Started dktest2sles10
 
 Transition Summary:
- * Start   stonith-1	(dktest1sles10)
+ * Start      stonith-1     (        dktest1sles10 )  
  * Stop       drbd1:0       ( Master dktest2sles10 )   due to node availability
- * Start   drbd1:1	(dktest1sles10)
+ * Start      drbd1:1       (        dktest1sles10 )  
  * Stop       testip        (        dktest2sles10 )   due to node availability
 
 Executing cluster transition:
@@ -55,5 +55,5 @@ Online: [ dktest1sles10 dktest2sles10 ]
  Clone Set: ms-drbd1 [drbd1] (promotable)
      Slaves: [ dktest1sles10 ]
      Stopped: [ dktest2sles10 ]
- testip	(ocf::heartbeat:IPaddr2):	Stopped 
+ testip	(ocf::heartbeat:IPaddr2):	Stopped
 

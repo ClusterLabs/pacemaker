@@ -1,5 +1,5 @@
-digraph "g" {
+ digraph "g" {
 "rsc1_monitor_0 node3" -> "rsc1_monitor_20000 node3" [ style = bold]
-"rsc1_monitor_0 node3" [ style=bold color="green" fontcolor="black" ]
-"rsc1_monitor_20000 node3" [ style=bold color="green" fontcolor="black" ]
+"rsc1_monitor_0 node3" [ style=bold color="green" fontcolor="black"]
+"rsc1_monitor_20000 node3" [ style=bold color="green" fontcolor="black"]
 }

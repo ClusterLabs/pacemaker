@@ -13,9 +13,9 @@ Online: [ dom0-01 dom0-02 ]
 Transition Summary:
  * Move       top                    ( dom0-02 -> dom0-01 )  
  * Migrate    domU-test01            ( dom0-02 -> dom0-01 )  
- * Start   dom0-iscsi1-cnx1:1	(dom0-01)
- * Start   bottom:0	(dom0-01)
- * Start   bottom:1	(dom0-02)
+ * Start      dom0-iscsi1-cnx1:1     (            dom0-01 )  
+ * Start      bottom:0               (            dom0-01 )  
+ * Start      bottom:1               (            dom0-02 )  
 
 Executing cluster transition:
  * Resource action: top             stop on dom0-02

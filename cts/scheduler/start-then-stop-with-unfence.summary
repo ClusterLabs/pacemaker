@@ -12,9 +12,9 @@ Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
 
 Transition Summary:
  * Fence (on) rhel7-node1.example.com 'required by mpath-node2 monitor'
- * Start   mpath-node1	(rhel7-node1.example.com)
+ * Start      mpath-node1     (                            rhel7-node1.example.com )  
  * Move       ip1             ( rhel7-node2.example.com -> rhel7-node1.example.com )  
- * Start   jrummy:1	(rhel7-node1.example.com)
+ * Start      jrummy:1        (                            rhel7-node1.example.com )  
 
 Executing cluster transition:
  * Pseudo action:   jrummy-clone_start_0

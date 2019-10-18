@@ -11,7 +11,7 @@ Online: [ c7auto3 c7auto4 ]
 
 Transition Summary:
  * Move       shooter         ( c7auto1 -> c7auto3 )  
- * Start   FAKECLONE:0	(c7auto3)
+ * Start      FAKECLONE:0     (            c7auto3 )  
  * Start      FAKE            (            c7auto4 )   due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKE-mandatory (blocked)
 
 Executing cluster transition:

@@ -2,20 +2,20 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ rsc1	(ocf::pacemaker:Dummy):	Stopped
  Resource Group: group1
-     rsc2	(ocf::pacemaker:Dummy):	Stopped 
-     rsc3	(ocf::pacemaker:Dummy):	Stopped 
+     rsc2	(ocf::pacemaker:Dummy):	Stopped
+     rsc3	(ocf::pacemaker:Dummy):	Stopped
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	Stopped 
-     rsc5	(ocf::pacemaker:Dummy):	Stopped 
+     rsc4	(ocf::pacemaker:Dummy):	Stopped
+     rsc5	(ocf::pacemaker:Dummy):	Stopped
 
 Transition Summary:
- * Start   rsc1	(node2)
- * Start   rsc2	(node2)
- * Start   rsc3	(node2)
- * Start   rsc4	(node2)
- * Start   rsc5	(node2)
+ * Start      rsc1    ( node2 )  
+ * Start      rsc2    ( node2 )  
+ * Start      rsc3    ( node2 )  
+ * Start      rsc4    ( node2 )  
+ * Start      rsc5    ( node2 )  
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node2
@@ -43,11 +43,11 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node2 
+ rsc1	(ocf::pacemaker:Dummy):	Started node2
  Resource Group: group1
-     rsc2	(ocf::pacemaker:Dummy):	Started node2 
-     rsc3	(ocf::pacemaker:Dummy):	Started node2 
+     rsc2	(ocf::pacemaker:Dummy):	Started node2
+     rsc3	(ocf::pacemaker:Dummy):	Started node2
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	Started node2 
-     rsc5	(ocf::pacemaker:Dummy):	Started node2 
+     rsc4	(ocf::pacemaker:Dummy):	Started node2
+     rsc5	(ocf::pacemaker:Dummy):	Started node2
 

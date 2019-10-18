@@ -9,7 +9,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Demote     MS_RSC_NATIVE:0     ( Master -> Slave node2 )  
- * Promote MS_RSC_NATIVE:1	(Slave -> Master node1)
+ * Promote    MS_RSC_NATIVE:1     ( Slave -> Master node1 )  
 
 Executing cluster transition:
  * Resource action: MS_RSC_NATIVE:1 cancel=15000 on node1

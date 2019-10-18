@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel redis_monitor_45000 redis-bundle-1" -> "redis_promote_0 redis-bundle-1" [ style = bold]
 "Cancel redis_monitor_45000 redis-bundle-1" [ style=bold color="green" fontcolor="black"]
 "Cancel redis_monitor_60000 redis-bundle-1" -> "redis_promote_0 redis-bundle-1" [ style = bold]

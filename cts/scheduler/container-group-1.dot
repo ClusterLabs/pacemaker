@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "container-group_running_0" [ style=bold color="green" fontcolor="orange"]
 "container-group_start_0" -> "container-group_running_0" [ style = bold]
 "container-group_start_0" -> "container1_start_0 node1" [ style = bold]

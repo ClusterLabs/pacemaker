@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "grpStonith1_running_0" [ style=bold color="green" fontcolor="orange"]
 "grpStonith1_start_0" -> "grpStonith1_running_0" [ style = bold]
 "grpStonith1_start_0" -> "prmStonith1-2_start_0 bl460g8n4" [ style = bold]

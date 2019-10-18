@@ -12,7 +12,7 @@ Online: [ node1 node2 ]
      Started: [ node2 ]
      Stopped: [ node1 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     imagestoreclone	(ocf::heartbeat:Filesystem):	FAILED node2 
+     imagestoreclone	(ocf::heartbeat:Filesystem):	FAILED node2
      Stopped: [ node1 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node2 ]
@@ -20,12 +20,12 @@ Online: [ node1 node2 ]
  sles10	(ocf::heartbeat:Xen):	Started node2
 
 Transition Summary:
- * Start   stonithclone:1	(node1)
- * Start   evmsdclone:1	(node1)
- * Start   evmsclone:1	(node1)
+ * Start      stonithclone:1        (          node1 )  
+ * Start      evmsdclone:1          (          node1 )  
+ * Start      evmsclone:1           (          node1 )  
  * Recover    imagestoreclone:0     ( node2 -> node1 )  
- * Start   imagestoreclone:1	(node2)
- * Start   configstoreclone:1	(node1)
+ * Start      imagestoreclone:1     (          node2 )  
+ * Start      configstoreclone:1    (          node1 )  
  * Migrate    sles10                ( node2 -> node1 )  
 
 Executing cluster transition:

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "DcIPaddr_monitor_0 hadev3" [ style=bold color="green" fontcolor="black"]
 "DoFencing_running_0" [ style=bold color="green" fontcolor="orange"]
 "DoFencing_start_0" -> "DoFencing_running_0" [ style = bold]

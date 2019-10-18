@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel drbd:1_monitor_31000 asttest2" -> "drbd:1_promote_0 asttest2" [ style = bold]
 "Cancel drbd:1_monitor_31000 asttest2" [ style=bold color="green" fontcolor="black"]
 "asterisk_monitor_1000 asttest2" [ style=bold color="green" fontcolor="black"]

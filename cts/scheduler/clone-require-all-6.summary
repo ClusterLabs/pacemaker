@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1
  Clone Set: A-clone [A]
      Started: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
      Stopped: [ rhel7-auto4 ]
@@ -11,8 +11,8 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
      Stopped: [ rhel7-auto2 ]
 
 Transition Summary:
- * Stop    A:0	(rhel7-auto1)  	due to node availability
- * Stop    A:2	(rhel7-auto3)  	due to node availability
+ * Stop       A:0     ( rhel7-auto1 )   due to node availability
+ * Stop       A:2     ( rhel7-auto3 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   A-clone_stop_0
@@ -25,7 +25,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1
  Clone Set: A-clone [A]
      Started: [ rhel7-auto2 ]
      Stopped: [ rhel7-auto1 rhel7-auto3 rhel7-auto4 ]

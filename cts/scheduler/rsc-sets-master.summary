@@ -12,7 +12,7 @@ Online: [ node2 ]
 
 Transition Summary:
  * Stop       rsc:0   (          Master node1 )   due to node availability
- * Promote rsc:1	(Slave -> Master node2)
+ * Promote    rsc:1   ( Slave -> Master node2 )  
  * Move       rsc1    (        node1 -> node2 )  
  * Move       rsc2    (        node1 -> node2 )  
  * Move       rsc3    (        node1 -> node2 )  

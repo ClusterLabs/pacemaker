@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel rsc1_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
 "Cancel rsc2_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
 }

@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "container1_start_0 rhel7-2" -> "lxc-ms_promote_0 lxc1" [ style = bold]
 "container1_start_0 rhel7-2" -> "lxc-ms_start_0 lxc1" [ style = bold]
 "container1_start_0 rhel7-2" -> "lxc1_start_0 rhel7-2" [ style = bold]

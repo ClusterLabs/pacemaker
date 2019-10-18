@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "c09-h08-r630_monitor_0 c09-h05-r630" -> "c09-h08-r630_start_0 c09-h05-r630" [ style = bold]
 "c09-h08-r630_monitor_0 c09-h05-r630" [ style=bold color="green" fontcolor="black"]
 "c09-h08-r630_monitor_0 c09-h06-r630" -> "c09-h08-r630_start_0 c09-h05-r630" [ style = bold]

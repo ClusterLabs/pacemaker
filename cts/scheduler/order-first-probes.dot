@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "grpDummy_running_0" [ style=bold color="green" fontcolor="orange"]
 "grpDummy_start_0" -> "grpDummy_running_0" [ style = bold]
 "grpDummy_start_0" -> "prmDummy1_start_0 rh72-02" [ style = bold]

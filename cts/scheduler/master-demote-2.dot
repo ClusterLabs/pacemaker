@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "Cancel stateful-1:0_monitor_15000 pcmk-2" -> "stateful-1:0_promote_0 pcmk-2" [ style = bold]
 "Cancel stateful-1:0_monitor_15000 pcmk-2" [ style=bold color="green" fontcolor="black"]
 "group-1_running_0" -> "lsb-dummy_start_0 pcmk-2" [ style = bold]

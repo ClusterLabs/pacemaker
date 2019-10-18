@@ -12,7 +12,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
  rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
  rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-2
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-1
- migrator	(ocf::pacemaker:Dummy):	Stopped 
+ migrator	(ocf::pacemaker:Dummy):	Stopped
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]
@@ -42,7 +42,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
  rsc_pcmk-3	(ocf::heartbeat:IPaddr):	Started pcmk-3
  rsc_pcmk-4	(ocf::heartbeat:IPaddr):	Started pcmk-2
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started pcmk-1
- migrator	(ocf::pacemaker:Dummy):	Stopped 
+ migrator	(ocf::pacemaker:Dummy):	Stopped
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]

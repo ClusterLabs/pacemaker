@@ -110,6 +110,9 @@ int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_html(pcmk__output_t *out, va_list args);
 int pe__clone_text(pcmk__output_t *out, va_list args);
+int pe__group_xml(pcmk__output_t *out, va_list args);
+int pe__group_html(pcmk__output_t *out, va_list args);
+int pe__group_text(pcmk__output_t *out, va_list args);
 int pe__bundle_xml(pcmk__output_t *out, va_list args);
 int pe__bundle_html(pcmk__output_t *out, va_list args);
 int pe__bundle_text(pcmk__output_t *out, va_list args);

@@ -26,7 +26,7 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
 noinst_HEADERS		= crmcommon_private.h
 
-libcrmcommon_la_LDFLAGS	= -version-info 36:0:2
+libcrmcommon_la_LDFLAGS	= -version-info 37:0:3
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

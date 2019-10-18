@@ -2,17 +2,17 @@
 Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1
  Clone Set: A-clone [A]
      Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
  Clone Set: B-clone [B]
      Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
 Transition Summary:
- * Start   A:0	(rhel7-auto2)
- * Start   A:1	(rhel7-auto1)
- * Start   B:0	(rhel7-auto3)
- * Start   B:1	(rhel7-auto4)
+ * Start      A:0     ( rhel7-auto2 )  
+ * Start      A:1     ( rhel7-auto1 )  
+ * Start      B:0     ( rhel7-auto3 )  
+ * Start      B:1     ( rhel7-auto4 )  
 
 Executing cluster transition:
  * Resource action: A:0             monitor on rhel7-auto4
@@ -36,7 +36,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1 
+ shooter	(stonith:fence_xvm):	Started rhel7-auto1
  Clone Set: A-clone [A]
      Started: [ rhel7-auto1 rhel7-auto2 ]
      Stopped: [ rhel7-auto3 rhel7-auto4 ]

@@ -11,8 +11,8 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
      Started: [ c7auto1 c7auto2 c7auto3 ]
 
 Transition Summary:
- * Stop    FAKE1:0	(c7auto3)  	due to node availability
- * Stop    FAKE1:2	(c7auto2)  	due to node availability
+ * Stop       FAKE1:0     ( c7auto3 )   due to node availability
+ * Stop       FAKE1:2     ( c7auto2 )   due to node availability
  * Stop       FAKE2:0     ( c7auto3 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
  * Stop       FAKE2:1     ( c7auto1 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory
  * Stop       FAKE2:2     ( c7auto2 )   due to unrunnable clone-one-or-more:order-FAKE1-clone-FAKE2-clone-mandatory

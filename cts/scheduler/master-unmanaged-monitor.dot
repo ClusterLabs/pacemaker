@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "lsb-dummy_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
 "migrator_monitor_10000 pcmk-4" [ style=bold color="green" fontcolor="black"]
 "ping-1:0_monitor_60000 pcmk-1" [ style=bold color="green" fontcolor="black"]

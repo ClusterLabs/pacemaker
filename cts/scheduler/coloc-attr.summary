@@ -3,13 +3,13 @@ Current cluster status:
 Online: [ power720-1 power720-2 power720-3 power720-4 ]
 
  Resource Group: group_test1
-     resource_t11	(lsb:nfsserver):	Stopped 
+     resource_t11	(lsb:nfsserver):	Stopped
  Resource Group: group_test2
-     resource_t21	(ocf::heartbeat:Dummy):	Stopped 
+     resource_t21	(ocf::heartbeat:Dummy):	Stopped
 
 Transition Summary:
- * Start   resource_t11	(power720-3)
- * Start   resource_t21	(power720-4)
+ * Start      resource_t11     ( power720-3 )  
+ * Start      resource_t21     ( power720-4 )  
 
 Executing cluster transition:
  * Pseudo action:   group_test1_start_0

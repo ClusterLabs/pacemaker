@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "g_stateful:0_promote_0" -> "p_stateful1:0_promote_0 gluster01.h" [ style = bold]
 "g_stateful:0_promote_0" -> "p_stateful2:0_promote_0 gluster01.h" [ style = bold]
 "g_stateful:0_promote_0" [ style=bold color="green" fontcolor="orange"]

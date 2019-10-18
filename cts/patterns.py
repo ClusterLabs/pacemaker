@@ -62,8 +62,8 @@ class BasePatterns(object):
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
-            "Pat:Fencing_start"   : r"(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
+            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s on .* for .*@.*: OK",
             "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover %s",
             "Pat:Fencing_active"  : r"pacemaker-schedulerd.*: Resource %s is active on .* nodes",
             "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",

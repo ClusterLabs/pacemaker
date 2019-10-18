@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "database-0_monitor_20000 controller-0" [ style=bold color="green" fontcolor="black"]
 "database-0_start_0 controller-0" -> "database-0_monitor_20000 controller-0" [ style = bold]
 "database-0_start_0 controller-0" -> "galera-bundle-docker-0_monitor_60000 database-0" [ style = bold]

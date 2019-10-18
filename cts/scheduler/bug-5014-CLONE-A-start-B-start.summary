@@ -8,8 +8,8 @@ Online: [ fc16-builder ]
      Stopped: [ fc16-builder ]
 
 Transition Summary:
- * Start   ClusterIP:0	(fc16-builder)
- * Start   ClusterIP2:0	(fc16-builder)
+ * Start      ClusterIP:0     ( fc16-builder )  
+ * Start      ClusterIP2:0    ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: ClusterIP:0     monitor on fc16-builder

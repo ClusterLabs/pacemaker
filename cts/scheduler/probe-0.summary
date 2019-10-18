@@ -10,8 +10,8 @@ Online: [ x32c47 x32c48 ]
      Stopped: [ x32c47 x32c48 ]
 
 Transition Summary:
- * Start   configstoreclone:0	(x32c47)
- * Start   configstoreclone:1	(x32c48)
+ * Start      configstoreclone:0     ( x32c47 )  
+ * Start      configstoreclone:1     ( x32c48 )  
 
 Executing cluster transition:
  * Resource action: configstoreclone:0 monitor on x32c47

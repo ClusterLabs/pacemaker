@@ -1,15 +1,15 @@
-digraph "g" {
-"clone1_running_0" [ style=bold color="green" fontcolor="orange" ]
+ digraph "g" {
+"clone1_running_0" [ style=bold color="green" fontcolor="orange"]
 "clone1_start_0" -> "clone1_running_0" [ style = bold]
 "clone1_start_0" -> "rsc1:0_start_0 node2" [ style = bold]
 "clone1_start_0" -> "rsc1:1_start_0 node1" [ style = bold]
-"clone1_start_0" [ style=bold color="green" fontcolor="orange" ]
-"rsc1:0_monitor_5000 node2" [ style=bold color="green" fontcolor="black" ]
+"clone1_start_0" [ style=bold color="green" fontcolor="orange"]
+"rsc1:0_monitor_5000 node2" [ style=bold color="green" fontcolor="black"]
 "rsc1:0_start_0 node2" -> "clone1_running_0" [ style = bold]
 "rsc1:0_start_0 node2" -> "rsc1:0_monitor_5000 node2" [ style = bold]
-"rsc1:0_start_0 node2" [ style=bold color="green" fontcolor="black" ]
-"rsc1:1_monitor_5000 node1" [ style=bold color="green" fontcolor="black" ]
+"rsc1:0_start_0 node2" [ style=bold color="green" fontcolor="black"]
+"rsc1:1_monitor_5000 node1" [ style=bold color="green" fontcolor="black"]
 "rsc1:1_start_0 node1" -> "clone1_running_0" [ style = bold]
 "rsc1:1_start_0 node1" -> "rsc1:1_monitor_5000 node1" [ style = bold]
-"rsc1:1_start_0 node1" [ style=bold color="green" fontcolor="black" ]
+"rsc1:1_start_0 node1" [ style=bold color="green" fontcolor="black"]
 }

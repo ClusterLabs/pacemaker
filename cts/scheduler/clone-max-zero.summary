@@ -4,8 +4,8 @@ Online: [ c001n11 c001n12 ]
 
  fencing	(stonith:external/ssh):	Started c001n11
  Clone Set: dlm-clone [dlm]
-     dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n12 
-     dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n11 
+     dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n12
+     dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n11
  Clone Set: o2cb-clone [o2cb]
      Started: [ c001n11 c001n12 ]
  Clone Set: clone-drbd0 [drbd0]
@@ -14,12 +14,12 @@ Online: [ c001n11 c001n12 ]
      Started: [ c001n11 c001n12 ]
 
 Transition Summary:
- * Stop    dlm:0	(c001n12)  	due to node availability
- * Stop    dlm:1	(c001n11)  	due to node availability
- * Stop    o2cb:0	(c001n12)  	due to node availability
- * Stop    o2cb:1	(c001n11)  	due to node availability
- * Stop    ocfs2-1:0	(c001n12)  	due to node availability
- * Stop    ocfs2-1:1	(c001n11)  	due to node availability
+ * Stop       dlm:0         ( c001n12 )   due to node availability
+ * Stop       dlm:1         ( c001n11 )   due to node availability
+ * Stop       o2cb:0        ( c001n12 )   due to node availability
+ * Stop       o2cb:1        ( c001n11 )   due to node availability
+ * Stop       ocfs2-1:0     ( c001n12 )   due to node availability
+ * Stop       ocfs2-1:1     ( c001n11 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   c-ocfs2-1_stop_0

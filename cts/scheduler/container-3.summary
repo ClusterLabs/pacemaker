@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Restart    container1     ( node1 )  
- * Start   rsc1	(node1)
+ * Start      rsc1           ( node1 )  
  * Restart    rsc2           ( node1 )   due to required container1 start
 
 Executing cluster transition:

@@ -182,6 +182,77 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     free(child_text);
 }
 
+int
+pe__group_xml(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    GListPtr gIter = rsc->children;
+    char *count = crm_itoa(g_list_length(gIter));
+
+    int rc = pe__name_and_nvpairs_xml(out, true, "group", 2
+                                      , "id", rsc->id
+                                      , "number_resources", count);
+    free(count);
+    CRM_ASSERT(rc == 0);
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return rc;
+}
+
+int
+pe__group_html(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
+
+    if (options & pe_print_brief) {
+        pe__rscs_brief_output(out, rsc->children, options, TRUE);
+
+    } else {
+        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+        }
+    }
+
+    out->end_list(out);
+
+    return 0;
+}
+
+int
+pe__group_text(pcmk__output_t *out, va_list args)
+{
+    long options = va_arg(args, long);
+    resource_t *rsc = va_arg(args, resource_t *);
+
+    out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
+
+    if (options & pe_print_brief) {
+        pe__rscs_brief_output(out, rsc->children, options, TRUE);
+
+    } else {
+        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+
+            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+        }
+    }
+    out->end_list(out);
+
+    return 0;
+}
+
 void
 group_free(resource_t * rsc)
 {

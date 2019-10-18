@@ -2,14 +2,14 @@
 Current cluster status:
 Online: [ star world ]
 
- p1	(ocf::heartbeat:Xen):	Stopped 
+ p1	(ocf::heartbeat:Xen):	Stopped
  Resource Group: gr1
      test1	(ocf::heartbeat:Xen):	Started star
      test2	(ocf::heartbeat:Xen):	Started star
 
 Transition Summary:
  * Shutdown star
- * Start   p1	(world)
+ * Start      p1      (         world )  
  * Migrate    test1   ( star -> world )  
  * Migrate    test2   ( star -> world )  
 

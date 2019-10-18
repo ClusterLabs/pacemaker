@@ -1,4 +1,4 @@
-digraph "g" {
+ digraph "g" {
 "compute-unfence-trigger-clone_stop_0" -> "compute-unfence-trigger-clone_stopped_0" [ style = bold]
 "compute-unfence-trigger-clone_stop_0" -> "compute-unfence-trigger_stop_0 overcloud-novacompute-1" [ style = bold]
 "compute-unfence-trigger-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
