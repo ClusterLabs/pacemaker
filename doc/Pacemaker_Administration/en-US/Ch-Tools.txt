@@ -1,6 +1,37 @@
 :compat-mode: legacy
 = Using Pacemaker Command-Line Tools =
 
+[[s-cmdline-output]]
+== Controlling Command Line Output ==
+Some of the pacemaker command line utilities have been converted to a new output
+system.  Among these tools are `crm_mon` and `stonith_admin`.  This is an ongoing
+project, and more tools will be converted over time.  This system lets you
+control the formatting of output with `--output-as=` and the destination of output
+with `--output-to=`.
+
+The available formats vary by tool, but at least plain text, HTML, and XML are
+supported by all tools.  The default format is plain text.  The default
+destination is stdout but can be redirected to any file.  Some formats support
+command line options for changing the style of the output.  For instance:
+
+======
+-------
+# crm_mon --help-output-html
+Usage:
+  crm_mon [OPTION?]
+
+Provides a summary of cluster's current state.
+
+Outputs varying levels of detail in a number of different formats.
+
+Output Options (html):
+  --output-cgi                      Add text needed to use output in a CGI program
+  --output-meta-refresh=SECONDS     How often to refresh
+  --output-stylesheet-link=URI      Link to an external CSS stylesheet
+  --output-title=TITLE              Page title
+-------
+======
+
 [[s-crm_mon]]
 == Monitor a Cluster with crm_mon ==
 indexterm:[Command-line tool,crm_mon]
@@ -19,41 +50,42 @@ its many options.
 .Sample output from crm_mon -1
 ======
 -------
-Stack: corosync
-Current DC: node2 (version 2.0.0-1) - partition with quorum
-Last updated: Mon Jan 29 12:18:42 2018
-Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: node2 (version 2.0.0-1) - partition with quorum
+  * Last updated: Mon Jan 29 12:18:42 2018
+  * Last change:  Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+  * 5 nodes configured
+  * 2 resources configured
 
-5 nodes configured
-2 resources configured
+Node List:
+  * Online: [ node1 node2 node3 node4 node5 ]
 
-Online: [ node1 node2 node3 node4 node5 ]
-
-Active resources:
-
-Fencing (stonith:fence_xvm):    Started node1
-IP	(ocf:heartbeat:IPaddr2):	Started node2
+* Active resources:
+  * Fencing (stonith:fence_xvm):    Started node1
+  * IP	(ocf:heartbeat:IPaddr2):	Started node2
 -------
 ======
       
 .Sample output from crm_mon -n -1
 ======
 -------
-Stack: corosync
-Current DC: node2 (version 2.0.0-1) - partition with quorum
-Last updated: Mon Jan 29 12:21:48 2018
-Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: node2 (version 2.0.0-1) - partition with quorum
+  * Last updated: Mon Jan 29 12:21:48 2018
+  * Last change:  Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+  * 5 nodes configured
+  * 2 resources configured
 
-5 nodes configured
-2 resources configured
-
-Node node1: online
-        Fencing (stonith:fence_xvm):    Started
-Node node2: online
-	IP	(ocf:heartbeat:IPaddr2):	Started
-Node node3: online
-Node node4: online
-Node node5: online
+* Node List:
+  * Node node1: online
+    * Fencing (stonith:fence_xvm):    Started
+  * Node node2: online
+    * IP	(ocf:heartbeat:IPaddr2):	Started
+  * Node node3: online
+  * Node node4: online
+  * Node node5: online
 -------
 ======
 
@@ -62,6 +94,49 @@ made. The cluster elects a node to be DC as needed. The only significance of
 the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
 
+[[s-crm_mon-css]]
+=== Styling crm_mon output ===
+indexterm:[Command-line tool,crm_mon,css]
+
+Various parts of `crm_mon`'s HTML output have a CSS class associated with them.
+Not everything does, but some of the most interesting portions do.  In the following
+example, the status of each node has an "online" class and the details of each
+resource have an "rsc-ok" class.
+
+======
+-------
+<h2>Node List</h2>
+<ul>
+<li>
+<span>Node: cluster01</span><span class="online"> online</span>
+</li>
+<li><ul><li><span class="rsc-ok">ping   (ocf::pacemaker:ping):   Started</span></li></ul></li>
+<li>
+<span>Node: cluster02</span><span class="online"> online</span>
+</li>
+<li><ul><li><span class="rsc-ok">ping   (ocf::pacemaker:ping):   Started</span></li></ul></li>
+</ul>
+-------
+======
+
+By default, a stylesheet for styling these classes is included in the head of
+the HTML output.  The relevant portions of this stylesheet that would be used
+in the above example is:
+
+======
+-------
+<style>
+.online { color: green }
+.rsc-ok { color: green }
+</style>
+-------
+======
+
+If you want to override some or all of the styling, simply create your own
+stylesheet, place it on a web server, and pass `--output-stylesheet-link=<URL>`
+to `crm_mon`.  The link is added after the default stylesheet, so your
+changes take precedence.  You don't need to duplicate the entire default.
+Only include what you want to change.
 
 [[s-cibadmin]]
 == Edit the CIB XML with cibadmin ==
