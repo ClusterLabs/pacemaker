@@ -423,6 +423,7 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
+Requires:      %{name}-cli = %{version}-%{release}
 Requires:      %{pkgname_procps}
 Requires:      psmisc
 BuildArch:     noarch
