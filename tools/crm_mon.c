@@ -260,7 +260,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
-        options.reconnect_msec = crm_get_msec(optarg);
+        options.reconnect_msec = crm_parse_interval_spec(optarg);
     }
 
     return TRUE;
@@ -319,8 +319,8 @@ watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency in seconds (default is 5)",
-      "SECONDS" },
+      "Update frequency (default is 5 seconds)",
+      "TIMESPEC" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
       "Display the cluster status once on the console and exit",
