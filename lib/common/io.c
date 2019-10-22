@@ -16,6 +16,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/resource.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -500,4 +501,75 @@ crm_get_tmpdir()
     const char *dir = getenv("TMPDIR");
 
     return (dir && (*dir == '/'))? dir : "/tmp";
+}
+
+/*!
+ * \internal
+ * \brief Close open file descriptors
+ *
+ * Close all file descriptors (except optionally stdin, stdout, and stderr),
+ * which is a best practice for a new child process forked for the purpose of
+ * executing an external program.
+ *
+ * \param[in] bool  If true, close stdin, stdout, and stderr as well
+ */
+void
+pcmk__close_fds_in_child(bool all)
+{
+    DIR *dir;
+    struct rlimit rlim;
+    rlim_t max_fd;
+    int min_fd = (all? 0 : (STDERR_FILENO + 1));
+
+    /* Find the current process's (soft) limit for open files. getrlimit()
+     * should always work, but have a fallback just in case.
+     */
+    if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+        max_fd = rlim.rlim_cur - 1;
+    } else {
+        long conf_max = sysconf(_SC_OPEN_MAX);
+
+        max_fd = (conf_max > 0)? conf_max : 1024;
+    }
+
+    /* /proc/self/fd (on Linux) or /dev/fd (on most OSes) contains symlinks to
+     * all open files for the current process, named as the file descriptor.
+     * Use this if available, because it's more efficient than a shotgun
+     * approach to closing descriptors.
+     */
+#if SUPPORT_PROCFS
+    dir = opendir("/proc/self/fd");
+    if (dir == NULL) {
+        dir = opendir("/dev/fd");
+    }
+#else
+    dir = opendir("/dev/fd");
+#endif
+    if (dir != NULL) {
+        struct dirent *entry;
+        int dir_fd = dirfd(dir);
+
+        while ((entry = readdir(dir)) != NULL) {
+            int lpc = atoi(entry->d_name);
+
+            /* How could one of these entries be higher than max_fd, you ask?
+             * It isn't possible in normal operation, but when run under
+             * valgrind, valgrind can open high-numbered file descriptors for
+             * its own use that are higher than the process's soft limit.
+             * These will show up in the fd directory but aren't closable.
+             */
+            if ((lpc >= min_fd) && (lpc <= max_fd) && (lpc != dir_fd)) {
+                close(lpc);
+            }
+        }
+        closedir(dir);
+        return;
+    }
+
+    /* If no fd directory is available, iterate over all possible descriptors.
+     * This is less efficient due to the overhead of many system calls.
+     */
+    for (int lpc = max_fd; lpc >= min_fd; lpc--) {
+        close(lpc);
+    }
 }
