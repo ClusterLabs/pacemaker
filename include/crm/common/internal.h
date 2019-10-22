@@ -23,6 +23,7 @@
 #include <glib.h>       /* for gboolean */
 #include <dirent.h>     /* for struct dirent */
 #include <unistd.h>     /* for getpid() */
+#include <stdbool.h>    /* for bool */
 #include <sys/types.h>  /* for uid_t and gid_t */
 
 #include <crm/common/logging.h>
@@ -41,6 +42,8 @@ void crm_sync_directory(const char *name);
 char *crm_read_contents(const char *filename);
 int crm_write_sync(int fd, const char *contents);
 int crm_set_nonblocking(int fd);
+
+void pcmk__close_fds_in_child(bool);
 
 
 /* internal procfs utilities (from procfs.c) */
