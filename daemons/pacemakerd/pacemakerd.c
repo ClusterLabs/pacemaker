@@ -13,6 +13,8 @@
 #include <pwd.h>
 #include <grp.h>
 #include <poll.h>
+#include <stdio.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -290,10 +292,8 @@ static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 static gboolean
 start_child(pcmk_child_t * child)
 {
-    int lpc = 0;
     uid_t uid = 0;
     gid_t gid = 0;
-    struct rlimit oflimits;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
     const char *devnull = "/dev/null";
@@ -396,11 +396,7 @@ start_child(pcmk_child_t * child)
             crm_perror(LOG_ERR, "Could not set user to %d (%s)", uid, child->uid);
         }
 
-        /* Close all open file descriptors */
-        getrlimit(RLIMIT_NOFILE, &oflimits);
-        for (lpc = 0; lpc < oflimits.rlim_cur; lpc++) {
-            close(lpc);
-        }
+        pcmk__close_fds_in_child(true);
 
         (void)open(devnull, O_RDONLY);  /* Stdin:  fd 0 */
         (void)open(devnull, O_WRONLY);  /* Stdout: fd 1 */
