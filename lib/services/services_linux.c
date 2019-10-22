@@ -536,9 +536,12 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
     int wait_rc = 0;
 
 #ifdef HAVE_SYS_SIGNALFD_H
-    sfd = signalfd(-1, mask, SFD_NONBLOCK);
-    if (sfd < 0) {
-        crm_perror(LOG_ERR, "signalfd() failed");
+    // mask is always non-NULL in practice, but this makes static analysis happy
+    if (mask) {
+        sfd = signalfd(-1, mask, SFD_NONBLOCK);
+        if (sfd < 0) {
+            crm_perror(LOG_ERR, "signalfd() failed");
+        }
     }
 #else
     sfd = sigchld_pipe[0];
