@@ -260,7 +260,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
-        options.reconnect_msec = crm_get_msec(optarg);
+        options.reconnect_msec = crm_parse_interval_spec(optarg);
     }
 
     return TRUE;
@@ -319,8 +319,8 @@ watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency in seconds (default is 5)",
-      "SECONDS" },
+      "Update frequency (default is 5 seconds)",
+      "TIMESPEC" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
       "Display the cluster status once on the console and exit",
@@ -764,21 +764,25 @@ build_arg_context(pcmk__common_args_t *args) {
         { NULL }
     };
 
-    const char *examples = "Examples:\n\n"
-                           "Display the cluster status on the console with updates as they occur:\n\n"
-                           "\tcrm_mon\n\n"
-                           "Display the cluster status on the console just once then exit:\n\n"
-                           "\tcrm_mon -1\n\n"
-                           "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
-                           "\tcrm_mon --group-by-node --inactive\n\n"
-                           "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
-                           "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
-                           "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
-                           "\tcrm_mon --output-as xml\n";
+    const char *description = "*Examples*\n\n"
+                              "Display the cluster status on the console with updates as they occur:\n\n"
+                              "\tcrm_mon\n\n"
+                              "Display the cluster status on the console just once then exit:\n\n"
+                              "\tcrm_mon -1\n\n"
+                              "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
+                              "\tcrm_mon --group-by-node --inactive\n\n"
+                              "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
+                              "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
+                              "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
+                              "\tcrm_mon --output-as xml\n\n"
+                              "*Time Specification*\n\n"
+                              "The TIMESPEC in any command line option can be specified in many different\n"
+                              "formats.  It can be just an integer number of seconds, a number plus units\n"
+                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n";
 
     context = pcmk__build_arg_context(args, "console (default), html, text, xml");
     pcmk__add_main_args(context, extra_prog_entries);
-    g_option_context_set_description(context, examples);
+    g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "display", "Display Options:",
                         "Show display options", display_entries);

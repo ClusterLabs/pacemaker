@@ -80,7 +80,7 @@ last_changed_string(const char *last_written, const char *user,
                                  user ? user : "",
                                  client ? " via " : "",
                                  client ? client : "",
-                                 origin ? " origin " : "",
+                                 origin ? " on " : "",
                                  origin ? origin : "");
     } else {
         return strdup("");
