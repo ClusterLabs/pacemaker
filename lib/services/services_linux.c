@@ -444,9 +444,6 @@ services_handle_exec_error(svc_action_t * op, int error)
 static void
 action_launch_child(svc_action_t *op)
 {
-    int lpc;
-    DIR *dir;
-
     /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
      * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
      * We do not want this to be inherited by the child process. By resetting this the signal
@@ -476,31 +473,7 @@ action_launch_child(svc_action_t *op)
      */
     setpgid(0, 0);
 
-    // Close all file descriptors except stdin/stdout/stderr
-#if SUPPORT_PROCFS
-    dir = opendir("/proc/self/fd");
-#else
-    dir = opendir("/dev/fd");
-#endif
-    if (dir == NULL) { /* /proc or /dev/fd not available */
-	/* Iterate over all possible fds, might be slow */
-        for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
-            close(lpc);
-        }
-    } else {
-        /* Iterate over fds obtained from /proc or /dev/fd */
-        struct dirent *entry;
-        int dir_fd = dirfd(dir);
-
-        while ((entry = readdir(dir)) != NULL) {
-            lpc = atoi(entry->d_name);
-            if (lpc > STDERR_FILENO && lpc != dir_fd) {
-                close(lpc);
-            }
-        }
-
-        closedir(dir);
-    }
+    pcmk__close_fds_in_child(false);
 
 #if SUPPORT_CIBSECRETS
     if (replace_secret_params(op->rsc, op->params) < 0) {
