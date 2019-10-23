@@ -783,7 +783,8 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, history);
+            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+                         stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
     }
@@ -818,12 +819,12 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
         /* Print section heading */
         out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
 
-        history = stonith__sort_history(history);
         for (hp = history; hp; hp = hp->next) {
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
+            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+                         stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
 
@@ -858,10 +859,10 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history, unsigned 
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Fencing History");
 
-    stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
         if (hp->state != st_failed) {
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
+            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+                         stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
     }
@@ -894,9 +895,9 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Fencing History");
 
-    stonith__sort_history(history);
     for (hp = history; hp; hp = hp->next) {
-        out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history, NULL);
+        out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+                     stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
 
