@@ -443,8 +443,6 @@ services_handle_exec_error(svc_action_t * op, int error)
 static void
 action_launch_child(svc_action_t *op)
 {
-    int lpc;
-
     /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
      * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
      * We do not want this to be inherited by the child process. By resetting this the signal
@@ -474,10 +472,7 @@ action_launch_child(svc_action_t *op)
      */
     setpgid(0, 0);
 
-    /* close all descriptors except stdin/out/err and channels to logd */
-    for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
-        close(lpc);
-    }
+    pcmk__close_fds_in_child(false);
 
 #if SUPPORT_CIBSECRETS
     if (replace_secret_params(op->rsc, op->params) < 0) {
