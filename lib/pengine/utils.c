@@ -92,36 +92,49 @@ pe_free_rsc_action_details(pe_action_t *action)
  * \param[in] data_set  Working set for cluster
  * \param[in] node      Name of node to check
  *
- * \return TRUE if node can be fenced, FALSE otherwise
- *
- * \note This function should only be called for cluster nodes and baremetal
- *       remote nodes; guest nodes are fenced by stopping their container
- *       resource, so fence execution requirements do not apply to them.
+ * \return true if node can be fenced, false otherwise
  */
-bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
+bool
+pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
 {
-    if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-        return FALSE; /* Turned off */
+    if (is_container_remote_node(node)) {
+        /* Guest nodes are fenced by stopping their container resource. We can
+         * do that if the container's host is either online or fenceable.
+         */
+        pe_resource_t *rsc = node->details->remote_rsc->container;
+
+        for (GList *n = rsc->running_on; n != NULL; n = n->next) {
+            pe_node_t *container_node = n->data;
+
+            if (!container_node->details->online
+                && !pe_can_fence(data_set, container_node)) {
+                return false;
+            }
+        }
+        return true;
+
+    } else if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+        return false; /* Turned off */
 
     } else if (is_not_set(data_set->flags, pe_flag_have_stonith_resource)) {
-        return FALSE; /* No devices */
+        return false; /* No devices */
 
     } else if (is_set(data_set->flags, pe_flag_have_quorum)) {
-        return TRUE;
+        return true;
 
     } else if (data_set->no_quorum_policy == no_quorum_ignore) {
-        return TRUE;
+        return true;
 
     } else if(node == NULL) {
-        return FALSE;
+        return false;
 
     } else if(node->details->online) {
         crm_notice("We can fence %s without quorum because they're in our membership", node->details->uname);
-        return TRUE;
+        return true;
     }
 
     crm_trace("Cannot fence %s", node->details->uname);
-    return FALSE;
+    return false;
 }
 
 node_t *
@@ -576,7 +589,19 @@ custom_action(resource_t * rsc, char *key, const char *task,
         } else if (action->needs == rsc_req_nothing) {
             pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
             pe_action_set_reason(action, NULL, TRUE);
-            pe_set_action_bit(action, pe_action_runnable);
+            if (is_container_remote_node(action->node)
+                && !pe_can_fence(data_set, action->node)) {
+                /* An action that requires nothing usually does not require any
+                 * fencing in order to be runnable. However, there is an
+                 * exception: an action cannot be completed if it is on a guest
+                 * node whose host is unclean and cannot be fenced.
+                 */
+                pe_clear_action_bit(action, pe_action_runnable);
+                crm_debug("%s\t%s (cancelled : host cannot be fenced)",
+                          action->node->details->uname, action->uuid);
+            } else {
+                pe_set_action_bit(action, pe_action_runnable);
+            }
 #if 0
             /*
              * No point checking this
