@@ -354,7 +354,7 @@ main(int argc, char **argv)
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Error connecting to the CIB manager: %s\n",
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
         crm_exit(crm_errno2exit(rc));
     }

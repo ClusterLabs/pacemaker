@@ -295,11 +295,11 @@ main(int argc, char **argv)
             goto bail;
         }
     } else {
-        /* Establish a connection to the CIB manager */
+        // Establish a connection to the CIB
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
-            CMD_ERR("Error connecting to the CIB manager: %s", pcmk_strerror(rc));
+            CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
             goto bail;
         }

@@ -568,15 +568,15 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
+        crm_debug("Opened connection to local file '%s' for %s",
+                  private->filename, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
-                name, private->filename, pcmk_strerror(rc));
+        crm_info("Connection to local file '%s' for %s failed: %s\n",
+                 private->filename, name, pcmk_strerror(rc));
     }
-
     return rc;
 }
 

@@ -862,7 +862,7 @@ main(int argc, char **argv)
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+        CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
         goto bail;
     }
