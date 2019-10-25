@@ -204,8 +204,8 @@ static int
 validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -228,8 +228,8 @@ static int
 validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -257,8 +257,8 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
 
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent);
