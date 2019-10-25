@@ -60,6 +60,13 @@ pe__is_guest_or_remote_node(pe_node_t *node)
     return (node != NULL) && (node->details->type == node_remote);
 }
 
+bool
+pe__is_bundle_node(pe_node_t *node)
+{
+    return pe__is_guest_node(node)
+           && pe_rsc_is_bundled(node->details->remote_rsc);
+}
+
 /*!
  * \internal
  * \brief Check whether a resource creates a guest node
