@@ -1497,7 +1497,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = 0;
@@ -1579,7 +1579,7 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
@@ -1669,7 +1669,7 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;

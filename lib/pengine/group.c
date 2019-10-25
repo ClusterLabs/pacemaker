@@ -186,7 +186,7 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, long);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     GListPtr gIter = rsc->children;
@@ -211,7 +211,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 int
 pe__group_html(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, long);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
@@ -234,7 +234,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
 int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, long);
+    unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
