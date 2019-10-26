@@ -61,6 +61,7 @@ void pcmk__write_series_sequence(const char *directory, const char *series,
 int pcmk__chown_series_sequence(const char *directory, const char *series,
                                 uid_t uid, gid_t gid);
 
+int pcmk__build_path(const char *path_c, mode_t mode);
 bool pcmk__daemon_can_write(const char *dir, const char *file);
 void pcmk__sync_directory(const char *name);
 

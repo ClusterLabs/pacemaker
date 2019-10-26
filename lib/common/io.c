@@ -33,6 +33,41 @@
 #include <crm/common/util.h>
 
 /*!
+ * \internal
+ * \brief Create a directory, including any parent directories needed
+ *
+ * \param[in] path_c Pathname of the directory to create
+ * \param[in] mode Permissions to be used (with current umask) when creating
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__build_path(const char *path_c, mode_t mode)
+{
+    int offset = 1, len = 0;
+    int rc = pcmk_rc_ok;
+    char *path = strdup(path_c);
+
+    CRM_CHECK(path != NULL, return -ENOMEM);
+    for (len = strlen(path); offset < len; offset++) {
+        if (path[offset] == '/') {
+            path[offset] = 0;
+            if ((mkdir(path, mode) < 0) && (errno != EEXIST)) {
+                rc = errno;
+                goto done;
+            }
+            path[offset] = '/';
+        }
+    }
+    if ((mkdir(path, mode) < 0) && (errno != EEXIST)) {
+        rc = errno;
+    }
+done:
+    free(path);
+    return rc;
+}
+
+/*!
  * \brief Create a directory, including any parent directories needed
  *
  * \param[in] path_c Pathname of the directory to create
@@ -43,25 +78,12 @@
 void
 crm_build_path(const char *path_c, mode_t mode)
 {
-    int offset = 1, len = 0;
-    char *path = strdup(path_c);
+    int rc = pcmk__build_path(path_c, mode);
 
-    CRM_CHECK(path != NULL, return);
-    for (len = strlen(path); offset < len; offset++) {
-        if (path[offset] == '/') {
-            path[offset] = 0;
-            if (mkdir(path, mode) < 0 && errno != EEXIST) {
-                crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-                break;
-            }
-            path[offset] = '/';
-        }
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not create directory '%s': %s",
+                path_c, pcmk_rc_str(rc));
     }
-    if (mkdir(path, mode) < 0 && errno != EEXIST) {
-        crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-    }
-
-    free(path);
 }
 
 /*!
