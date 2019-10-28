@@ -373,6 +373,25 @@ class ClusterManager(UserDict):
             self.rsh.cp(file_with_path, "root@%s:%s/%s" % (node, destdir, filename))
         return file_with_path
 
+    def uninstall_helper(self, filename, dir=None, nodes=None):
+        if not nodes:
+            nodes = self.Env["nodes"]
+
+        if not dir:
+            dir = CTSvars.CTS_home
+
+        for node in nodes:
+            self.debug("Uninstalling %s from %s on %s" % (filename, dir, repr(node)))
+            self.rsh(node, "rm -rf %s/%s" % (dir, filename))
+
+    def systemctl_daemon_reload(self, nodes=None):
+        if not nodes:
+            nodes = self.Env["nodes"]
+
+        for node in nodes:
+            self.debug("Reloading the system manager configuration on %s" % (repr(node)))
+            self.rsh(node, "systemctl daemon-reload")
+
     def install_config(self, node):
         return None
 
