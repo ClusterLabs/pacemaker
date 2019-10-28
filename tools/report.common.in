@@ -59,7 +59,7 @@ kernel-default kernel-pae kernel-xen
 glibc
 "
 
-# Potential locations of system log files
+# Potential locations of system log and cluster daemon logs
 SYSLOGS="
     /var/log/*
     /var/logs/*
@@ -67,6 +67,7 @@ SYSLOGS="
     /var/adm/*
     /var/log/ha/*
     /var/log/cluster/*
+    /var/log/pacemaker/*
 "
 
 # Whether pacemaker-remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
