@@ -2320,8 +2320,8 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
             long digests_all_offset = 0;
             long digests_secure_offset = 0;
 
-            char *digests_all = malloc(max);
-            char *digests_secure = malloc(max);
+            char *digests_all = calloc(max, sizeof(char));
+            char *digests_secure = calloc(max, sizeof(char));
             GListPtr matches = find_unfencing_devices(data_set->resources, NULL);
 
             for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
