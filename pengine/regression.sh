@@ -862,6 +862,7 @@ do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc wh
 do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
 do_test guest-node-host-dies "Verify guest node is recovered if host goes away"
 do_test guest-node-cleanup "Order guest node connection recovery after container probe"
+do_test guest-host-not-fenceable "Actions on guest node are unrunnable if host is unclean and cannot be fenced"
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
