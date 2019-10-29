@@ -915,6 +915,7 @@ TESTS = [
         [ "whitebox-nested-group", "Verify guest remote-node works nested in a group" ],
         [ "guest-node-host-dies", "Verify guest node is recovered if host goes away" ],
         [ "guest-node-cleanup", "Order guest node connection recovery after container probe" ],
+        [ "guest-host-not-fenceable", "Actions on guest node are unrunnable if host is unclean and cannot be fenced" ],
     ],
     [
         [ "remote-startup-probes", "Baremetal remote-node startup probes" ],
