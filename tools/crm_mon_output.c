@@ -804,7 +804,7 @@ node_text(pcmk__output_t *out, va_list args) {
 static int
 node_xml(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
-    unsigned int mon_ops __attribute__((unused)) = va_arg(args, unsigned int);
+    unsigned int mon_ops G_GNUC_UNUSED = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
 
     if (full) {
