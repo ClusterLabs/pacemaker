@@ -1,4 +1,14 @@
-* Thu Oct 17 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3
+* Wed Oct 30 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc2
+- Changesets: 20
+- Diff: 14 files changed, 333 insertions(+), 219 deletions(-)
+
+- Changes since Pacemaker-2.0.3-rc1
+  + rpm: pacemaker-cts package now explicitly requires pacemaker-cli
+  + scheduler: avoid invalid transition when guest node host is not fenceable
+  + tools: minor rc1 regression fixes in crm_mon
+  + tools: crm_mon --interval now accepts ISO 8601 and has correct help
+
+* Thu Oct 17 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc1
 - Changesets: 549
 - Diff: 224 files changed, 17186 insertions(+), 10145 deletions(-)
 
