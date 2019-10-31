@@ -50,6 +50,7 @@ free_common_args(gpointer data) {
     free(common_args->summary);
     free(common_args->output_ty);
     free(common_args->output_dest);
+    free(common_args);
 }
 
 GOptionContext *

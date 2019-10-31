@@ -1556,7 +1556,8 @@ stage6(pe_working_set_t * data_set)
          * so handle them separately.
          */
         if (pe__is_guest_node(node)) {
-            if (node->details->remote_requires_reset && need_stonith) {
+            if (node->details->remote_requires_reset && need_stonith
+                && pe_can_fence(data_set, node)) {
                 fence_guest(node, data_set);
             }
             continue;
