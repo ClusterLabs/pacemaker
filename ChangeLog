@@ -1,4 +1,11 @@
-* Tue Oct 22 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22
+* Thu Oct 31 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22-rc2
+- Changesets: 6
+- Diff:       4 files changed, 128 insertions(+), 75 deletions(-)
+
+- Changes since Pacemaker-1.1.22-rc1
+  + pengine: avoid invalid transition when guest node host is not fenceable
+
+* Tue Oct 22 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22-rc1
 - Changesets: 198
 - Diff:       95 files changed, 3047 insertions(+), 1245 deletions(-)
 
