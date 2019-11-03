@@ -704,6 +704,33 @@ crm_priority2int(const char *name)
     return crm_log_priority;
 }
 
+const char *
+crm_int2priority(int priority)
+{
+    struct syslog_names {
+        const char *name;
+        int priority;
+    };
+    static struct syslog_names p_names[] = {
+       {"emerg", LOG_EMERG},
+        {"alert", LOG_ALERT},
+        {"crit", LOG_CRIT},
+        {"error", LOG_ERR},
+        {"warning", LOG_WARNING},
+        {"notice", LOG_NOTICE},
+        {"info", LOG_INFO},
+        {"debug", LOG_DEBUG},
+        {NULL, -1}
+    };
+    int lpc;
+
+    for (lpc = 0; p_names[lpc].name != NULL; lpc++) {
+        if (p_names[lpc].priority == priority) {
+            return p_names[lpc].name;
+        }
+    }
+    return NULL;
+}
 
 static void
 crm_identity(const char *entity, int argc, char **argv) 
