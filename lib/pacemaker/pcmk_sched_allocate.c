@@ -58,7 +58,7 @@ state2text(enum remote_connection_state state)
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
-     native_merge_weights,
+     pcmk__native_merge_weights,
      native_color,
      native_create_actions,
      native_create_probe,
@@ -72,7 +72,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      native_append_meta,
      },
     {
-     group_merge_weights,
+     pcmk__group_merge_weights,
      group_color,
      group_create_actions,
      native_create_probe,
@@ -86,7 +86,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
-     clone_merge_weights,
+     pcmk__native_merge_weights,
      clone_color,
      clone_create_actions,
      clone_create_probe,
@@ -100,7 +100,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_append_meta,
      },
     {
-     pcmk__bundle_merge_weights,
+     pcmk__native_merge_weights,
      pcmk__bundle_color,
      pcmk__bundle_create_actions,
      pcmk__bundle_create_probe,
@@ -1205,14 +1205,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    r1_nodes = rsc_merge_weights(convert_const_pointer(resource1),
-                                 resource1->id, NULL, NULL, 1,
-                                 pe_weights_forward | pe_weights_init);
+    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
+                                          resource1->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
     dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
 
-    r2_nodes = rsc_merge_weights(convert_const_pointer(resource2),
-                                 resource2->id, NULL, NULL, 1,
-                                 pe_weights_forward | pe_weights_init);
+    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
+                                          resource2->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
     dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
 
     /* Current location score */

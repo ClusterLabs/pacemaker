@@ -294,15 +294,9 @@ node_hash_dup(GHashTable * hash)
 }
 
 GHashTable *
-native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                     float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
-}
-
-GHashTable *
-rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                  float factor, enum pe_weights flags)
+pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
+                           GHashTable *nodes, const char *attr, float factor,
+                           uint32_t flags)
 {
     GHashTable *work = NULL;
     int multiplier = 1;
@@ -327,7 +321,8 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
             }
 
             pe_rsc_trace(rsc, "Merging %s as a group %p %p", rsc->id, rsc->children, last);
-            work = rsc_merge_weights(last->data, rhs, NULL, attr, factor, flags);
+            work = pcmk__native_merge_weights(last->data, rhs, NULL, attr,
+                                              factor, flags);
 
         } else {
             work = node_hash_dup(rsc->allowed_nodes);
@@ -340,7 +335,8 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
         pe_rsc_trace(rsc, "%s: Combining scores from %d children of %s", rhs, g_list_length(iter), rsc->id);
         work = node_hash_dup(nodes);
         for(iter = rsc->children; iter->next != NULL; iter = iter->next) {
-            work = rsc_merge_weights(iter->data, rhs, work, attr, factor, flags);
+            work = pcmk__native_merge_weights(iter->data, rhs, work, attr,
+                                              factor, flags);
         }
 
     } else {
@@ -391,11 +387,12 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
             }
 
             pe_rsc_trace(rsc, "Applying %s (%s)", constraint->id, other->id);
-            work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
-                                     multiplier * (float)constraint->score / INFINITY, flags|pe_weights_rollback);
+            work = pcmk__native_merge_weights(other, rhs, work,
+                                              constraint->node_attribute,
+                                              multiplier * constraint->score / (float) INFINITY,
+                                              flags|pe_weights_rollback);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
-
     }
 
     if (is_set(flags, pe_weights_positive)) {

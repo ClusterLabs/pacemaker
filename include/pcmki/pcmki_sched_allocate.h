@@ -43,21 +43,13 @@ struct resource_alloc_functions_s {
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
 };
 
-extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
-
-extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                       const char *attr, float factor, enum pe_weights flags);
-
-GHashTable *pcmk__bundle_merge_weights(pe_resource_t *rsc, const char *rhs,
+GHashTable *pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                                        GHashTable *nodes, const char *attr,
-                                       float factor, enum pe_weights flags);
+                                       float factor, uint32_t flags);
 
-extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                        const char *attr, float factor, enum pe_weights flags);
-
-extern GHashTable *group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                       const char *attr, float factor, enum pe_weights flags);
+GHashTable *pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
+                                      GHashTable *nodes, const char *attr,
+                                      float factor, uint32_t flags);
 
 extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);

@@ -241,9 +241,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
-                hash1 = native_merge_weights(constraint->rsc_rh, resource1->id, hash1,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, 0);
+                hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
+                                                   resource1->id, hash1,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   0);
             }
 
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -251,9 +253,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
-                hash1 = native_merge_weights(constraint->rsc_lh, resource1->id, hash1,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, pe_weights_positive);
+                hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
+                                                   resource1->id, hash1,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   pe_weights_positive);
             }
         }
 
@@ -263,9 +267,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
-                hash2 = native_merge_weights(constraint->rsc_rh, resource2->id, hash2,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, 0);
+                hash2 = pcmk__native_merge_weights(constraint->rsc_rh,
+                                                   resource2->id, hash2,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   0);
             }
 
             for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -273,9 +279,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
-                hash2 = native_merge_weights(constraint->rsc_lh, resource2->id, hash2,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, pe_weights_positive);
+                hash2 = pcmk__native_merge_weights(constraint->rsc_lh,
+                                                   resource2->id, hash2,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   pe_weights_positive);
             }
         }
 
@@ -1466,11 +1474,4 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
     }
-}
-
-GHashTable *
-clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }

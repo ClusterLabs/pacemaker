@@ -1043,14 +1043,6 @@ pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 {
 }
 
-GHashTable *
-pcmk__bundle_merge_weights(pe_resource_t *rsc, const char *rhs,
-                           GHashTable *nodes, const char *attr,
-                           float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
-}
-
 void
 pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
                          gboolean terminal)
