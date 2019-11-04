@@ -251,45 +251,51 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
         float weight_f = 0;
         int weight = 0;
 
-        CRM_LOG_ASSERT(node != NULL);
-        if(node == NULL) { continue; };
-
         score = node_list_attr_score(list2, attr, pe_node_attribute_raw(node, attr));
 
+        if ((factor < 0) && (score < 0)) {
+            /* Negative preference for a node with a negative score
+             * should not become a positive preference.
+             *
+             * @TODO Consider filtering only if weight == -INFINITY
+             */
+            crm_trace("%s: Filtering %d + %f * %d (double negative disallowed)",
+                      node->details->uname, node->weight, factor, score);
+            continue;
+        }
+
+        if (node->weight == INFINITY_HACK) {
+            crm_trace("%s: Filtering %d + %f * %d (node marked unusable)",
+                      node->details->uname, node->weight, factor, score);
+            continue;
+        }
+
         weight_f = factor * score;
-        /* Round the number */
-        /* http://c-faq.com/fp/round.html */
-        weight = (int)(weight_f < 0 ? weight_f - 0.5 : weight_f + 0.5);
+
+        // Round the number; see http://c-faq.com/fp/round.html
+        weight = (int) ((weight_f < 0)? (weight_f - 0.5) : (weight_f + 0.5));
 
         new_score = merge_weights(weight, node->weight);
 
-        if (factor < 0 && score < 0) {
-            /* Negative preference for a node with a negative score
-             * should not become a positive preference
-             *
-             * TODO - Decide if we want to filter only if weight == -INFINITY
-             *
-             */
-            crm_trace("%s: Filtering %d + %f*%d (factor * score)",
-                      node->details->uname, node->weight, factor, score);
-
-        } else if (node->weight == INFINITY_HACK) {
-            crm_trace("%s: Filtering %d + %f*%d (node < 0)",
-                      node->details->uname, node->weight, factor, score);
-
-        } else if (only_positive && new_score < 0 && node->weight > 0) {
+        if (only_positive && (new_score < 0) && (node->weight > 0)) {
+            crm_trace("%s: Filtering %d + %f * %d = %d "
+                      "(negative disallowed, marking node unusable)",
+                      node->details->uname, node->weight, factor, score,
+                      new_score);
             node->weight = INFINITY_HACK;
-            crm_trace("%s: Filtering %d + %f*%d (score > 0)",
-                      node->details->uname, node->weight, factor, score);
-
-        } else if (only_positive && new_score < 0 && node->weight == 0) {
-            crm_trace("%s: Filtering %d + %f*%d (score == 0)",
-                      node->details->uname, node->weight, factor, score);
-
-        } else {
-            crm_trace("%s: %d + %f*%d", node->details->uname, node->weight, factor, score);
-            node->weight = new_score;
+            continue;
         }
+
+        if (only_positive && (new_score < 0) && (node->weight == 0)) {
+            crm_trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
+                      node->details->uname, node->weight, factor, score,
+                      new_score);
+            continue;
+        }
+
+        crm_trace("%s: %d + %f * %d = %d", node->details->uname,
+                  node->weight, factor, score, new_score);
+        node->weight = new_score;
     }
 }
 
@@ -304,83 +310,96 @@ node_hash_dup(GHashTable * hash)
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Incorporate colocation constraint scores into node weights
+ *
+ * \param[in,out] rsc    Resource being placed
+ * \param[in]     rhs    ID of 'with' resource
+ * \param[in,out] nodes  Nodes, with scores as of this point
+ * \param[in]     attr   Colocation attribute (ID by default)
+ * \param[in]     factor Incorporate scores multiplied by this factor
+ * \param[in]     flags  Bitmask of enum pe_weights values
+ *
+ * \return Nodes, with scores modified by this constraint
+ * \note This function assumes ownership of the nodes argument. The caller
+ *       should free the returned copy rather than the original.
+ */
 GHashTable *
 pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                            GHashTable *nodes, const char *attr, float factor,
                            uint32_t flags)
 {
     GHashTable *work = NULL;
-    int multiplier = 1;
 
-    if (factor < 0) {
-        multiplier = -1;
-    }
-
+    // Avoid infinite recursion
     if (is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "%s: Breaking dependency loop at %s", rhs, rsc->id);
         return nodes;
     }
-
     set_bit(rsc->flags, pe_rsc_merging);
 
     if (is_set(flags, pe_weights_init)) {
-        if (rsc->variant == pe_group && rsc->children) {
+        if ((rsc->variant == pe_group) && (rsc->children != NULL)) {
             GList *last = g_list_last(rsc->children);
+            pe_resource_t *last_rsc = last->data;
 
-            pe_rsc_trace(rsc, "Merging %s as a group %p %p", rsc->id, rsc->children, last);
-            work = pcmk__native_merge_weights(last->data, rhs, NULL, attr,
-                                              factor, flags);
-
+            pe_rsc_trace(rsc, "%s: Merging scores from group %s "
+                         "using last member %s (at %.6f)",
+                         rhs, rsc->id, last_rsc->id, factor);
+            work = pcmk__native_merge_weights(last_rsc, rhs, NULL, attr, factor,
+                                              flags);
         } else {
             work = node_hash_dup(rsc->allowed_nodes);
         }
         clear_bit(flags, pe_weights_init);
 
-    } else if (rsc->variant == pe_group && rsc->children) {
-        GListPtr iter = rsc->children;
-
-        pe_rsc_trace(rsc, "%s: Combining scores from %d children of %s", rhs, g_list_length(iter), rsc->id);
+    } else if ((rsc->variant == pe_group) && (rsc->children != NULL)) {
+        pe_rsc_trace(rsc, "%s: Merging scores from %d members of group %s (at %.6f)",
+                     rhs, g_list_length(rsc->children), rsc->id, factor);
         work = node_hash_dup(nodes);
-        for(iter = rsc->children; iter->next != NULL; iter = iter->next) {
+        for (GList *iter = rsc->children; iter->next != NULL;
+             iter = iter->next) {
             work = pcmk__native_merge_weights(iter->data, rhs, work, attr,
                                               factor, flags);
         }
 
     } else {
-        pe_rsc_trace(rsc, "%s: Combining scores from %s", rhs, rsc->id);
+        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
+                     rhs, rsc->id, factor);
         work = node_hash_dup(nodes);
         node_hash_update(work, rsc->allowed_nodes, attr, factor,
                          is_set(flags, pe_weights_positive));
     }
 
-    if (is_set(flags, pe_weights_rollback) && can_run_any(work) == FALSE) {
-        pe_rsc_info(rsc, "%s: Rolling back scores from %s", rhs, rsc->id);
-        g_hash_table_destroy(work);
-        clear_bit(rsc->flags, pe_rsc_merging);
-        return nodes;
-    }
-
     if (can_run_any(work)) {
         GListPtr gIter = NULL;
+        int multiplier = (factor < 0)? -1 : 1;
 
         if (is_set(flags, pe_weights_forward)) {
             gIter = rsc->rsc_cons;
-            crm_trace("Checking %d additional colocation constraints", g_list_length(gIter));
+            pe_rsc_trace(rsc,
+                         "Checking additional %d optional '%s with' constraints",
+                         g_list_length(gIter), rsc->id);
 
-        } else if(rsc->variant == pe_group && rsc->children) {
+        } else if ((rsc->variant == pe_group) && (rsc->children != NULL)) {
             GList *last = g_list_last(rsc->children);
+            pe_resource_t *last_rsc = last->data;
 
-            gIter = ((resource_t*)last->data)->rsc_cons_lhs;
-            crm_trace("Checking %d additional optional group colocation constraints from %s",
-                      g_list_length(gIter), ((resource_t*)last->data)->id);
+            gIter = last_rsc->rsc_cons_lhs;
+            pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
+                         "constraints using last member %s",
+                         g_list_length(gIter), rsc->id, last_rsc->id);
 
         } else {
             gIter = rsc->rsc_cons_lhs;
-            crm_trace("Checking %d additional optional colocation constraints %s", g_list_length(gIter), rsc->id);
+            pe_rsc_trace(rsc,
+                         "Checking additional %d optional 'with %s' constraints",
+                         g_list_length(gIter), rsc->id);
         }
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *other = NULL;
+            pe_resource_t *other = NULL;
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
             if (constraint->score == 0) {
@@ -393,14 +412,24 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                 other = constraint->rsc_lh;
             }
 
-            pe_rsc_trace(rsc, "Applying %s (%s)", constraint->id, other->id);
+            pe_rsc_trace(rsc, "Optionally merging score of '%s' constraint (%s with %s)",
+                         constraint->id, constraint->rsc_lh->id,
+                         constraint->rsc_rh->id);
             work = pcmk__native_merge_weights(other, rhs, work,
                                               constraint->node_attribute,
                                               multiplier * constraint->score / (float) INFINITY,
                                               flags|pe_weights_rollback);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
+
+    } else if (is_set(flags, pe_weights_rollback)) {
+        pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
+                    rhs, rsc->id);
+        g_hash_table_destroy(work);
+        clear_bit(rsc->flags, pe_rsc_merging);
+        return nodes;
     }
+
 
     if (is_set(flags, pe_weights_positive)) {
         node_t *node = NULL;
@@ -500,6 +529,9 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         if (constraint->score == 0) {
             continue;
         }
+        pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
+                     constraint->id, constraint->rsc_lh->id,
+                     constraint->rsc_rh->id);
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
