@@ -266,7 +266,7 @@ GHashTable *
 master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
                      float factor, enum pe_weights flags)
 {
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+    return pcmk__native_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
 static void

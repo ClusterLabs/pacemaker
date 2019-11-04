@@ -953,13 +953,6 @@ container_append_meta(resource_t * rsc, xmlNode * xml)
 {
 }
 
-GHashTable *
-container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
-}
-
 void container_LogActions(
     resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 {
