@@ -296,6 +296,9 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         pe_err("rsc_rh was NULL for %s", constraint->id);
         return;
     }
+    if (constraint->score == 0) {
+        return;
+    }
 
     gIter = rsc_lh->children;
     pe_rsc_trace(rsc_lh, "Processing constraints from %s", rsc_lh->id);
@@ -333,6 +336,9 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
+    if (constraint->score == 0) {
+        return;
+    }
     pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
                  rsc_rh->id, constraint->id, rsc_lh->id);
 
@@ -505,6 +511,9 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
         nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
                                            constraint->node_attribute,
                                            constraint->score / (float) INFINITY,

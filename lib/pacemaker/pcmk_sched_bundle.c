@@ -473,6 +473,9 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
     CRM_ASSERT(rsc_lh->variant == pe_native);
 
+    if (constraint->score == 0) {
+        return;
+    }
     if (is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;

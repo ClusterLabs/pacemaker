@@ -239,6 +239,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
                 rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+                if (constraint->score == 0) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
                 hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
@@ -251,6 +254,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
                 rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+                if (constraint->score == 0) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
                 hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
@@ -489,6 +495,9 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
 
+        if (cons->score == 0) {
+            continue;
+        }
         if (all || cons->score < 0 || cons->score == INFINITY) {
             child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
         }
@@ -498,6 +507,9 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
 
+        if (cons->score == 0) {
+            continue;
+        }
         if (all || cons->score < 0) {
             child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
         }
@@ -626,6 +638,9 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
         pe_rsc_trace(rsc, "%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
@@ -633,6 +648,9 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
@@ -1050,6 +1068,9 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
+    if (constraint->score == 0) {
+        return;
+    }
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
