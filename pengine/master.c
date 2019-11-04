@@ -320,6 +320,10 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
+
         /* (re-)adds location preferences of resources that the
          * master instance should/must be colocated with
          */
@@ -339,6 +343,10 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     gIter = rsc->rsc_cons_lhs;
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+
+        if (constraint->score == 0) {
+            continue;
+        }
 
         /* (re-)adds location preferences of resource that wish to be
          * colocated with the master instance
@@ -744,6 +752,9 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
 
+            if (cons->score == 0) {
+                continue;
+            }
             child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
         }
 
@@ -992,6 +1003,9 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     GListPtr gIter = NULL;
 
     CRM_CHECK(rsc_rh != NULL, return);
+    if (constraint->score == 0) {
+        return;
+    }
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return;
 

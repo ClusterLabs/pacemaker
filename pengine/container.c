@@ -451,6 +451,9 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
     CRM_ASSERT(rsc_lh->variant == pe_native);
 
+    if (constraint->score == 0) {
+        return;
+    }
     if (is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;

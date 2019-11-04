@@ -383,6 +383,10 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
             resource_t *other = NULL;
             rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+            if (constraint->score == 0) {
+                continue;
+            }
+
             if (is_set(flags, pe_weights_forward)) {
                 other = constraint->rsc_rh;
             } else {
@@ -464,6 +468,10 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         GHashTable *archive = NULL;
         resource_t *rsc_rh = constraint->rsc_rh;
 
+        if (constraint->score == 0) {
+            continue;
+        }
+
         pe_rsc_trace(rsc, "%s: Pre-Processing %s (%s, %d, %s)",
                      rsc->id, constraint->id, rsc_rh->id,
                      constraint->score, role2text(constraint->role_lh));
@@ -489,6 +497,9 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
@@ -1607,6 +1618,9 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
         return;
     }
 
+    if (constraint->score == 0) {
+        return;
+    }
     pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
                  rsc_rh->id);
 
@@ -1700,12 +1714,15 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
     const char *attribute = CRM_ATTR_ID;
     int score_multiplier = 1;
 
-    if (constraint->node_attribute != NULL) {
-        attribute = constraint->node_attribute;
+    if (constraint->score == 0) {
+        return;
     }
-
     if (!rsc_rh->allocated_to || !rsc_lh->allocated_to) {
         return;
+    }
+
+    if (constraint->node_attribute != NULL) {
+        attribute = constraint->node_attribute;
     }
 
     lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
@@ -1742,6 +1759,9 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
     GHashTableIter iter;
     node_t *node = NULL;
 
+    if (constraint->score == 0) {
+        return;
+    }
     if (constraint->node_attribute != NULL) {
         attribute = constraint->node_attribute;
     }
