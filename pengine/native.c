@@ -325,11 +325,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     if (is_set(flags, pe_weights_init)) {
         if (rsc->variant == pe_group && rsc->children) {
-            GListPtr last = rsc->children;
-
-            while (last->next != NULL) {
-                last = last->next;
-            }
+            GList *last = g_list_last(rsc->children);
 
             pe_rsc_trace(rsc, "Merging %s as a group %p %p", rsc->id, rsc->children, last);
             work = pcmk__native_merge_weights(last->data, rhs, NULL, attr,
@@ -372,11 +368,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
             crm_trace("Checking %d additional colocation constraints", g_list_length(gIter));
 
         } else if(rsc->variant == pe_group && rsc->children) {
-            GListPtr last = rsc->children;
-
-            while (last->next != NULL) {
-                last = last->next;
-            }
+            GList *last = g_list_last(rsc->children);
 
             gIter = ((resource_t*)last->data)->rsc_cons_lhs;
             crm_trace("Checking %d additional optional group colocation constraints from %s",
