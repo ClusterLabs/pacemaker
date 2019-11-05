@@ -753,7 +753,7 @@ avoid_zombies()
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -780,7 +780,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "formats.  It can be just an integer number of seconds, a number plus units\n"
                               "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n";
 
-    context = pcmk__build_arg_context(args, "console (default), html, text, xml");
+    context = pcmk__build_arg_context(args, "console (default), html, text, xml", group);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -896,12 +896,13 @@ main(int argc, char **argv)
 {
     int rc = pcmk_ok;
     char **processed_args = NULL;
+    GOptionGroup *output_group = NULL;
 
     GError *error = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
-    context = build_arg_context(args);
-    pcmk__register_formats(context, formats);
+    context = build_arg_context(args, &output_group);
+    pcmk__register_formats(output_group, formats);
 
     options.pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
