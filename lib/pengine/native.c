@@ -764,6 +764,7 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
     }
 
     s = native_output_string(rsc, name, node, options, target_role);
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->list_item(out, NULL, "%s", s);
     free(s);
 
@@ -774,6 +775,7 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
         out->begin_list(out, NULL, NULL, "Options");
         g_hash_table_iter_init(&iter, rsc->parameters);
         while (g_hash_table_iter_next(&iter, &key, &value)) {
+            out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
             out->list_item(out, NULL, "Option: %s = %s", (char *) key, (char *) value);
         }
         out->end_list(out);
@@ -786,6 +788,7 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
         out->begin_list(out, NULL, NULL, "Allowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
+            out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
             out->list_item(out, NULL, "%s %d", n->details->uname, n->weight);
         }
         out->end_list(out);

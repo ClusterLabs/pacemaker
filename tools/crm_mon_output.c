@@ -317,24 +317,29 @@ cluster_counts_text(pcmk__output_t *out, va_list args) {
     unsigned int ndisabled = va_arg(args, unsigned int);
     unsigned int nblocked = va_arg(args, unsigned int);
 
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->list_item(out, NULL, "%d node%s configured", nnodes, s_if_plural(nnodes));
 
     if (ndisabled && nblocked) {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d DISABLED, %d BLOCKED from "
                                   "further action due to failure)",
                        nresources, s_if_plural(nresources), ndisabled,
                        nblocked);
     } else if (ndisabled && !nblocked) {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d DISABLED)",
                        nresources, s_if_plural(nresources), ndisabled);
     } else if (!ndisabled && nblocked) {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d BLOCKED from further action "
                                   "due to failure)",
                        nresources, s_if_plural(nresources), nblocked);
     } else {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, NULL, "%d resource instance%s configured",
                        nresources, s_if_plural(nresources));
     }
@@ -412,10 +417,12 @@ cluster_dc_text(pcmk__output_t *out, va_list args) {
     const char *dc_name = va_arg(args, const char *);
 
     if (dc) {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, "Current DC", "%s (version %s) - partition %s quorum",
                        dc_name, dc_version_s ? dc_version_s : "unknown",
                        crm_is_true(quorum) ? "with" : "WITHOUT");
     } else {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, "Current DC", "NONE");
     }
 
@@ -555,6 +562,7 @@ cluster_stack_html(pcmk__output_t *out, va_list args) {
 static int
 cluster_stack_text(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->list_item(out, "Stack", "%s", stack_s);
     return 0;
 }
@@ -620,7 +628,9 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
 
     char *buf = last_changed_string(last_written, user, client, origin);
 
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->list_item(out, "Last updated", "%s", crm_now_string(NULL));
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->list_item(out, "Last change", " %s", buf);
 
     free(buf);
@@ -1154,22 +1164,27 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-counts", "console", cluster_counts_text },
     { "cluster-counts", "html", cluster_counts_html },
     { "cluster-counts", "text", cluster_counts_text },
+    { "cluster-counts", "log", cluster_counts_text },
     { "cluster-counts", "xml", cluster_counts_xml },
     { "cluster-dc", "console", cluster_dc_text },
     { "cluster-dc", "html", cluster_dc_html },
     { "cluster-dc", "text", cluster_dc_text },
+    { "cluster-dc", "log", cluster_dc_text },
     { "cluster-dc", "xml", cluster_dc_xml },
     { "cluster-options", "console", cluster_options_text },
     { "cluster-options", "html", cluster_options_html },
     { "cluster-options", "text", cluster_options_text },
+    { "cluster-options", "log", cluster_options_text },
     { "cluster-options", "xml", cluster_options_xml },
     { "cluster-stack", "console", cluster_stack_text },
     { "cluster-stack", "html", cluster_stack_html },
     { "cluster-stack", "text", cluster_stack_text },
+    { "cluster-stack", "log", cluster_stack_text },
     { "cluster-stack", "xml", cluster_stack_xml },
     { "cluster-times", "console", cluster_times_text },
     { "cluster-times", "html", cluster_times_html },
     { "cluster-times", "text", cluster_times_text },
+    { "cluster-times", "log", cluster_times_text },
     { "cluster-times", "xml", cluster_times_xml },
     { "failed-action", "console", failed_action_console },
     { "failed-action", "html", failed_action_html },

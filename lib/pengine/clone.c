@@ -801,6 +801,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     get_clone_variant_data(clone_data, rsc);
 
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
                     is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
@@ -889,6 +890,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
+        out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
         out->list_item(out, "Masters", "[%s ]", list_text);
         g_list_free(master_list);
         free(list_text);
@@ -909,11 +911,14 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
+                out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
                 out->list_item(out, "Slaves (target-role)", "[%s ]", list_text);
             } else {
+                out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
                 out->list_item(out, "Slaves", "[%s ]", list_text);
             }
         } else {
+            out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
             out->list_item(out, "Started", "[%s ]", list_text);
         }
 
@@ -959,6 +964,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (stopped_list != NULL) {
+            out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
             out->list_item(out, state, "[%s ]", stopped_list);
             free(stopped_list);
         }

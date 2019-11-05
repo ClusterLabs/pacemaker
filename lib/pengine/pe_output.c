@@ -101,22 +101,38 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
+static int
+pe__set_file_func_line_log(pcmk__output_t *out, va_list args) {
+    const char *filename = va_arg(args, char *);
+    const char *function = va_arg(args, char *);
+    uint32_t lineno = va_arg(args, uint32_t);
+    pcmk__output_set_file_func_line(out, filename, function, lineno);
+    return 0;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
     { "bundle", "text",  pe__bundle_text },
+    { "bundle", "log",  pe__bundle_text },
     { "clone", "xml",  pe__clone_xml },
     { "clone", "html",  pe__clone_html },
     { "clone", "text",  pe__clone_text },
+    { "clone", "log",  pe__clone_text },
     { "group", "xml",  pe__group_xml },
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
+    { "group", "log",  pe__group_text },
     { "primitive", "xml",  pe__resource_xml },
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
+    { "primitive", "log",  pe__resource_text },
     { "ticket", "html", pe__ticket_html },
     { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", pe__ticket_xml },
+    /* set_file_func_line is exclusively for the LOG format.
+     * Other formats may safely call without any effect. */
+    { "set_file_func_line", "log", pe__set_file_func_line_log },
 
     { NULL, NULL, NULL }
 };

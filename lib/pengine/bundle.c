@@ -1678,6 +1678,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     get_bundle_variant_data(bundle_data, rsc);
 
+    out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
     out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
                     (bundle_data->nreplicas > 1)? " set" : "",
                     rsc->id, bundle_data->image,
@@ -1692,6 +1693,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
         if (is_set(options, pe_print_implicit)) {
             if(g_list_length(bundle_data->replicas) > 1) {
+                out->message(out, "set_file_func_line", __FILE__, __func__, __LINE__+1);
                 out->list_item(out, NULL, "Replica[%d]", replica->offset);
             }
 
