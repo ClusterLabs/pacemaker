@@ -37,7 +37,6 @@
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 gboolean show_scores = FALSE;
-int scores_log_level = LOG_DEBUG_2;
 gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_DEBUG_2;
 extern int transition_id;

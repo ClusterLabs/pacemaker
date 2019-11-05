@@ -649,7 +649,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                                                     (pe_weights_rollback | pe_weights_positive));
     }
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);

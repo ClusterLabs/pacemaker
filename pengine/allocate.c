@@ -1138,12 +1138,12 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
                                           resource1->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes);
 
     r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
                                           resource2->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes);
 
     /* Current location score */
     reason = "current location";

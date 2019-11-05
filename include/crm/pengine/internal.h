@@ -190,15 +190,16 @@ extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
 
-extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
-                                    resource_t * rsc, const char *comment, GHashTable * nodes);
-
 extern void dump_node_capacity(int level, const char *comment, node_t * node);
 extern void dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node);
 
-#  define dump_node_scores(level, rsc, text, nodes) do {		\
-        dump_node_scores_worker(level, __FILE__, __FUNCTION__, __LINE__, rsc, text, nodes); \
-    } while(0)
+void pe__show_node_weights_as(const char *file, const char *function,
+                              int line, bool to_log, pe_resource_t *rsc,
+                              const char *comment, GHashTable *nodes);
+
+#define pe__show_node_weights(level, rsc, text, nodes)              \
+        pe__show_node_weights_as(__FILE__, __FUNCTION__, __LINE__,  \
+                                 (level), (rsc), (text), (nodes))
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
