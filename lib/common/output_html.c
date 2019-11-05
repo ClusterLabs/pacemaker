@@ -38,15 +38,15 @@ static char *stylesheet_link = NULL;
 static char *title = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
-    { "output-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
+    { "html-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
       "Add text needed to use output in a CGI program",
       NULL },
 
-    { "output-stylesheet-link", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
+    { "html-stylesheet", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
       "Link to an external CSS stylesheet",
       "URI" },
 
-    { "output-title", 0, 0, G_OPTION_ARG_STRING, &title,
+    { "html-title", 0, 0, G_OPTION_ARG_STRING, &title,
       "Page title",
       "TITLE" },
 
@@ -144,7 +144,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     /* Stylesheets are included two different ways.  The first is via a built-in
      * default (see the stylesheet_default const above).  The second is via the
-     * "stylesheet-link" option, and this should obviously be a link to a
+     * html-stylesheet option, and this should obviously be a link to a
      * stylesheet.  The second can override the first.  At least one should be
      * given.
      */

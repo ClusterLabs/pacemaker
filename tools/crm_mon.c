@@ -435,7 +435,7 @@ static GOptionEntry deprecated_entries[] = {
 
     { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
       "Web mode with output suitable for CGI (preselected when run as *.cgi).\n"
-      INDENT "Use --output-as=html --output-cgi instead.",
+      INDENT "Use --output-as=html --html-cgi instead.",
       NULL },
 
     { NULL }
@@ -803,29 +803,29 @@ add_output_args() {
     GError *error = NULL;
 
     if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-title \"Cluster Status\"",
+        if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
                               g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --xml-legacy", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
