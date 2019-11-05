@@ -327,8 +327,8 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    pe_rsc_trace(rsc_rh, "Processing RH of constraint %s", constraint->id);
-    print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
+    pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
+                 rsc_rh->id, constraint->id, rsc_lh->id);
 
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return;

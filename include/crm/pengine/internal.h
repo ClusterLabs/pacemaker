@@ -187,8 +187,6 @@ extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
 
-extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
-
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
 
