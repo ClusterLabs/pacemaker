@@ -129,6 +129,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         CRM_ASSERT(replica);
         if (replica->ip) {
+            pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
+                         rsc->id, replica->ip->id);
             replica->ip->cmds->allocate(replica->ip, prefer, data_set);
         }
 
@@ -145,6 +147,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
 
         if (replica->remote) {
+            pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
+                         rsc->id, replica->remote->id);
             replica->remote->cmds->allocate(replica->remote, prefer,
                                             data_set);
         }
@@ -165,6 +169,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             }
 
             set_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
+                         rsc->id, replica->child->id);
             replica->child->cmds->allocate(replica->child, replica->node,
                                            data_set);
             clear_bit(replica->child->parent->flags, pe_rsc_allocating);
@@ -182,6 +188,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                 node->weight = -INFINITY;
             }
         }
+        pe_rsc_trace(rsc, "Allocating bundle %s child %s",
+                     rsc->id, bundle_data->child->id);
         bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
     }
 
