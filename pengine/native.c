@@ -501,13 +501,15 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             continue;
         }
 
-        pe_rsc_trace(rsc, "%s: Pre-Processing %s (%s, %d, %s)",
-                     rsc->id, constraint->id, rsc_rh->id,
-                     constraint->score, role2text(constraint->role_lh));
         if (constraint->role_lh >= RSC_ROLE_MASTER
             || (constraint->score < 0 && constraint->score > -INFINITY)) {
             archive = node_hash_dup(rsc->allowed_nodes);
         }
+
+        pe_rsc_trace(rsc,
+                     "%s: Allocating %s first (constraint=%s score=%d role=%s)",
+                     rsc->id, rsc_rh->id, constraint->id,
+                     constraint->score, role2text(constraint->role_lh));
         rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
         rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);
         if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {

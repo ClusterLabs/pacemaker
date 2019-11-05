@@ -445,6 +445,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
     can_run_instance(rsc, NULL, limit);
 
     backup = node_hash_dup(rsc->allowed_nodes);
+    pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen) {
         node_t *local_node = parent_node_instance(rsc, chosen);
@@ -620,7 +621,6 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     set_bit(rsc->flags, pe_rsc_allocating);
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
 
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances

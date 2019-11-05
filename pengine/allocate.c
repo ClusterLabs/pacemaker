@@ -1231,18 +1231,17 @@ allocate_resources(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
-        /* Force remote connection resources to be allocated first. This
-         * also forces any colocation dependencies to be allocated as well */
+        /* Allocate remote connection resources first (which will also allocate
+         * any colocation dependencies). If the connection is migrating, always
+         * prefer the partial migration target.
+         */
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
             if (rsc->is_remote_node == FALSE) {
                 continue;
             }
-            pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            /* For remote node connection resources, always prefer the partial
-             * migration target during resource allocation, if the rsc is in the
-             * middle of a migration.
-             */
+            pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                         rsc->id);
             rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
@@ -1253,7 +1252,7 @@ allocate_resources(pe_working_set_t * data_set)
         if (rsc->is_remote_node == TRUE) {
             continue;
         }
-        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
+        pe_rsc_trace(rsc, "Allocating resource '%s'", rsc->id);
         rsc->cmds->allocate(rsc, NULL, data_set);
     }
 }

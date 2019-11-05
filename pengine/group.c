@@ -30,7 +30,6 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
     if (is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
@@ -59,6 +58,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
+        pe_rsc_trace(rsc, "Allocating group %s member %s",
+                     rsc->id, child_rsc->id);
         node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
         if (group_node == NULL) {
             group_node = node;
