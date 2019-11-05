@@ -98,8 +98,8 @@ migration_threshold_reached(resource_t *rsc, node_t *node,
 }
 
 pe_node_t *
-pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
-                   pe_working_set_t *data_set)
+pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                      pe_working_set_t *data_set)
 {
     GListPtr containers = NULL;
     GListPtr nodes = NULL;

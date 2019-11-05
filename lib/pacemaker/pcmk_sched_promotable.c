@@ -638,8 +638,8 @@ set_role_master(resource_t * rsc)
     }
 }
 
-node_t *
-color_promotable(resource_t *rsc, pe_working_set_t *data_set)
+pe_node_t *
+pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;

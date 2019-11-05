@@ -455,8 +455,9 @@ is_unfence_device(resource_t *rsc, pe_working_set_t *data_set)
            && is_set(data_set->flags, pe_flag_enable_unfencing);
 }
 
-node_t *
-native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                      pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     int alloc_details = scores_log_level + 1;

@@ -418,8 +418,9 @@ can_run_instance(resource_t * rsc, node_t * node, int limit)
     return NULL;
 }
 
-static node_t *
-color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit, pe_working_set_t * data_set)
+static pe_node_t *
+allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
+                  int limit, pe_working_set_t *data_set)
 {
     node_t *chosen = NULL;
     GHashTable *backup = NULL;
@@ -570,7 +571,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
                              "Not pre-allocating because %s already allocated optimal instances",
                              child_node->details->uname);
 
-            } else if (color_instance(child, child_node, max < available_nodes, per_host_max, data_set)) {
+            } else if (allocate_instance(child, child_node,
+                                         max < available_nodes, per_host_max,
+                                         data_set)) {
                 pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
                              child_node->details->uname);
                 allocated++;
@@ -596,9 +599,10 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
         if (is_not_set(child->flags, pe_rsc_provisional)) {
         } else if (allocated >= max) {
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
-            resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
+            resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
         } else {
-            if (color_instance(child, NULL, max < available_nodes, per_host_max, data_set)) {
+            if (allocate_instance(child, NULL, max < available_nodes,
+                                  per_host_max, data_set)) {
                 allocated++;
             }
         }
@@ -609,8 +613,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
 }
 
 
-node_t *
-clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
+pe_node_t *
+pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                     pe_working_set_t *data_set)
 {
     GListPtr nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -641,7 +646,8 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
         if (constraint->score == 0) {
             continue;
         }
-        pe_rsc_trace(rsc, "%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
+        pe_rsc_trace(rsc, "%s: Allocating %s first",
+                     rsc->id, constraint->rsc_rh->id);
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
 
@@ -668,7 +674,7 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     g_list_free(nodes);
 
     if (is_set(rsc->flags, pe_rsc_promotable)) {
-        color_promotable(rsc, data_set);
+        pcmk__set_instance_roles(rsc, data_set);
     }
 
     clear_bit(rsc->flags, pe_rsc_provisional);
