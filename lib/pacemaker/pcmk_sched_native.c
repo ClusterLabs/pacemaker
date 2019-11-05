@@ -264,6 +264,18 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
         // Round the number; see http://c-faq.com/fp/round.html
         weight = (int) ((weight_f < 0)? (weight_f - 0.5) : (weight_f + 0.5));
 
+        /* Small factors can obliterate the small scores that are often actually
+         * used in configurations. If the score and factor are nonzero, ensure
+         * that the result is nonzero as well.
+         */
+        if ((weight == 0) && (score != 0)) {
+            if (factor > 0.0) {
+                weight = 1;
+            } else if (factor < 0.0) {
+                weight = -1;
+            }
+        }
+
         new_score = merge_weights(weight, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
