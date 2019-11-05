@@ -16,8 +16,9 @@
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
-node_t *
-group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                     pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     node_t *group_node = NULL;

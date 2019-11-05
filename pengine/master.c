@@ -655,8 +655,8 @@ set_role_master(resource_t * rsc)
     }
 }
 
-node_t *
-master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__set_instance_roles(pe_resource_t *rsc, pe_node_t *prefer, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;
@@ -684,7 +684,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     apply_master_prefs(rsc);
 
-    clone_color(rsc, prefer, data_set);
+    pcmk__clone_allocate(rsc, prefer, data_set);
 
     set_bit(rsc->flags, pe_rsc_allocating);
 

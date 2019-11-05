@@ -59,7 +59,7 @@ state2text(enum remote_connection_state state)
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
      pcmk__native_merge_weights,
-     native_color,
+     pcmk__native_allocate,
      native_create_actions,
      native_create_probe,
      native_internal_constraints,
@@ -73,7 +73,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      },
     {
      pcmk__group_merge_weights,
-     group_color,
+     pcmk__group_allocate,
      group_create_actions,
      native_create_probe,
      group_internal_constraints,
@@ -87,7 +87,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      },
     {
      pcmk__native_merge_weights,
-     clone_color,
+     pcmk__clone_allocate,
      clone_create_actions,
      clone_create_probe,
      clone_internal_constraints,
@@ -101,7 +101,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      },
     {
      master_merge_weights,
-     master_color,
+     pcmk__set_instance_roles,
      master_create_actions,
      clone_create_probe,
      master_internal_constraints,
@@ -115,7 +115,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      },
     {
      pcmk__native_merge_weights,
-     container_color,
+     pcmk__bundle_allocate,
      container_create_actions,
      container_create_probe,
      container_internal_constraints,
@@ -1010,10 +1010,11 @@ rsc_discover_filter(resource_t *rsc, node_t *node)
 }
 
 /*
- * Count how many valid nodes we have (so we know the maximum number of
- *  colors we can resolve).
+ * \internal
+ * \brief Stage 2 of cluster status: apply node-specific criteria
  *
- * Apply node constraints (i.e. filter the "allowed_nodes" part of resources)
+ * Count known nodes, and apply location constraints, stickiness, and exclusive
+ * resource discovery.
  */
 gboolean
 stage2(pe_working_set_t * data_set)

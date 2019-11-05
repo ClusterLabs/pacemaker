@@ -57,7 +57,8 @@ GHashTable *pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                                       GHashTable *nodes, const char *attr,
                                       float factor, uint32_t flags);
 
-extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                 pe_working_set_t *data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void native_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
@@ -76,7 +77,8 @@ extern gboolean native_create_probe(resource_t * rsc, node_t * node, action_t * 
 extern void native_append_meta(resource_t * rsc, xmlNode * xml);
 
 extern int group_num_allowed_nodes(resource_t * rsc);
-extern node_t *group_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                pe_working_set_t *data_set);
 extern void group_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
@@ -89,7 +91,8 @@ extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(resource_t * rsc, xmlNode * xml);
 
 extern int container_num_allowed_nodes(resource_t * rsc);
-extern node_t *container_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                 pe_working_set_t *data_set);
 extern void container_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void container_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
@@ -104,7 +107,8 @@ extern gboolean container_create_probe(resource_t * rsc, node_t * node, action_t
 extern void container_append_meta(resource_t * rsc, xmlNode * xml);
 
 extern int clone_num_allowed_nodes(resource_t * rsc);
-extern node_t *clone_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
@@ -119,7 +123,8 @@ extern gboolean clone_create_probe(resource_t * rsc, node_t * node, action_t * c
 extern void clone_append_meta(resource_t * rsc, xmlNode * xml);
 
 extern gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern node_t *master_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc, pe_node_t *preferred,
+                                    pe_working_set_t *data_set);
 extern void master_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void master_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
