@@ -23,7 +23,6 @@
 #include <crm/common/ipcs_internal.h>
 
 gboolean show_scores = FALSE;
-int scores_log_level = LOG_TRACE;
 gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_TRACE;
 

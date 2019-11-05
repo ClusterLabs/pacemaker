@@ -408,7 +408,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                                               constraint->node_attribute,
                                               multiplier * constraint->score / (float) INFINITY,
                                               flags|pe_weights_rollback);
-            dump_node_scores(LOG_TRACE, NULL, rhs, work);
+            pe__show_node_weights(true, NULL, rhs, work);
         }
 
     } else if (is_set(flags, pe_weights_rollback)) {
@@ -460,7 +460,6 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                       pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
-    int alloc_details = scores_log_level + 1;
 
     if (rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
         /* never allocate children on their own */
@@ -479,7 +478,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     set_bit(rsc->flags, pe_rsc_allocating);
-    dump_node_scores(alloc_details, rsc, "Pre-alloc", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
@@ -511,7 +510,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
@@ -542,8 +541,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         rsc->next_role = rsc->role;
     }
 
-    dump_node_scores((show_scores? LOG_STDOUT : scores_log_level), rsc,
-                     __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
         clear_bit(rsc->flags, pe_rsc_managed);

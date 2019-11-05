@@ -330,8 +330,6 @@ find_colocated_rscs(GListPtr colocated_rscs, resource_t * rsc, resource_t * orig
 void
 process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set)
 {
-    int alloc_details = scores_log_level + 1;
-
     CRM_CHECK(rsc && prefer && data_set, return);
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
@@ -408,7 +406,7 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
                 }
             }
         }
-        dump_node_scores(alloc_details, rsc, "Post-utilization", rsc->allowed_nodes);
+        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes);
     }
 }
 
