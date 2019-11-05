@@ -608,6 +608,8 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     for (int i = 0; i < args->verbosity; i++) {
@@ -655,7 +657,11 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    g_option_context_free(context);
+
+    if (context != NULL) {
+        g_option_context_free(context);
+    }
+
     crm_node_exit(exit_code);
     return exit_code;
 }

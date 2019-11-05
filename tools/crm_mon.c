@@ -1884,7 +1884,9 @@ clean_up(crm_exit_t exit_code)
         }
     }
 
-    g_option_context_free(context);
+    if (context != NULL) {
+        g_option_context_free(context);
+    }
 
     if (out != NULL) {
         if (output_format == mon_output_cgi || output_format == mon_output_html) {
