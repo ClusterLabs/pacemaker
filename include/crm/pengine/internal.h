@@ -194,9 +194,6 @@ extern void print_node(const char *pre_text, node_t * node, gboolean details);
 extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
 extern void pe__output_node(node_t * node, gboolean details, pcmk__output_t *out);
 
-extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
-extern void pe__output_resource(int log_level, resource_t * rsc, gboolean details, pcmk__output_t *out);
-
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
 
