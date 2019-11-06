@@ -1092,18 +1092,19 @@ stage2(pe_working_set_t * data_set)
         }
     }
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+    if (is_not_set(data_set->flags, pe_flag_no_compat)) {
+        // @COMPAT API backward compatibility
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node == NULL) {
-            /* error */
-
-        } else if (node->weight >= 0.0  /* global weight */
-                   && node->details->online && node->details->type != node_ping) {
-            data_set->max_valid_nodes++;
+            if (node && (node->weight >= 0) && node->details->online
+                && (node->details->type != node_ping)) {
+                data_set->max_valid_nodes++;
+            }
         }
     }
 
+    crm_trace("Applying placement constraints");
     apply_placement_constraints(data_set);
 
     gIter = data_set->nodes;

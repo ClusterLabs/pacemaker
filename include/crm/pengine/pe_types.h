@@ -157,7 +157,7 @@ struct pe_working_set_s {
 
     /* stats */
     int num_synapse;
-    int max_valid_nodes;
+    int max_valid_nodes;    //! Deprecated (will be removed in a future release)
     int order_id;
     int action_id;
 
