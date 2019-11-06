@@ -1009,25 +1009,6 @@ main(int argc, char **argv)
 	has_warnings = TRUE;			\
     } while(0)
 
-static int
-count_resources(pe_working_set_t * data_set, resource_t * rsc)
-{
-    int count = 0;
-    GListPtr gIter = NULL;
-
-    if (rsc == NULL) {
-        gIter = data_set->resources;
-    } else if (rsc->children) {
-        gIter = rsc->children;
-    } else {
-        return is_not_set(rsc->flags, pe_rsc_orphan);
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        count += count_resources(data_set, gIter->data);
-    }
-    return count;
-}
 
 /*!
  * \internal
@@ -1067,7 +1048,6 @@ print_simple_status(pe_working_set_t * data_set,
     }
 
     if (!has_warnings) {
-        int nresources = count_resources(data_set, NULL);
 
         print_as("CLUSTER OK: %d node%s online", nodes_online, s_if_plural(nodes_online));
         if (nodes_standby > 0) {
@@ -1076,7 +1056,8 @@ print_simple_status(pe_working_set_t * data_set,
         if (nodes_maintenance > 0) {
             print_as(", %d maintenance node%s", nodes_maintenance, s_if_plural(nodes_maintenance));
         }
-        print_as(", %d resource%s configured", nresources, s_if_plural(nresources));
+        print_as(", %d resource instance%s configured",
+                 data_set->ninstances, s_if_plural(data_set->ninstances));
     }
 
     print_as("\n");
@@ -2622,7 +2603,6 @@ static void
 print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack_s)
 {
     int nnodes = g_list_length(data_set->nodes);
-    int nresources = count_resources(data_set, NULL);
     xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
                                             data_set->input, LOG_DEBUG);
     const char *quorum_votes = quorum_node?
@@ -2639,8 +2619,8 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
             }
             print_as("\n");
 
-            print_as("%d resource%s configured",
-                     nresources, s_if_plural(nresources));
+            print_as("%d resource instance%s configured",
+                     data_set->ninstances, s_if_plural(data_set->ninstances));
             if(data_set->disabled_resources || data_set->blocked_resources) {
                 print_as(" (");
                 if (data_set->disabled_resources) {
@@ -2650,7 +2630,7 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
                     print_as(", ");
                 }
                 if (data_set->blocked_resources) {
-                    print_as("%d BLOCKED from starting due to failure",
+                    print_as("%d BLOCKED from further action due to failure",
                              data_set->blocked_resources);
                 }
                 print_as(")");
@@ -2668,8 +2648,8 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
             }
             fprintf(stream, "<br/>\n");
 
-            fprintf(stream, " %d resource%s configured",
-                    nresources, s_if_plural(nresources));
+            fprintf(stream, " %d resource instance%s configured",
+                    data_set->ninstances, s_if_plural(data_set->ninstances));
             if (data_set->disabled_resources || data_set->blocked_resources) {
                 fprintf(stream, " (");
                 if (data_set->disabled_resources) {
@@ -2681,7 +2661,7 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
                 }
                 if (data_set->blocked_resources) {
                     fprintf(stream,
-                            "%d <strong>BLOCKED</strong> from starting due to failure",
+                            "%d <strong>BLOCKED</strong> from further action due to failure",
                             data_set->blocked_resources);
                 }
                 fprintf(stream, ")");
@@ -2695,7 +2675,7 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
                     g_list_length(data_set->nodes), quorum_votes);
             fprintf(stream,
                     "        <resources_configured number=\"%d\" disabled=\"%d\" blocked=\"%d\" />\n",
-                    count_resources(data_set, NULL),
+                    data_set->ninstances,
                     data_set->disabled_resources, data_set->blocked_resources);
             break;
 

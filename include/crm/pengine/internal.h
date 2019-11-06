@@ -115,6 +115,9 @@ enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
 
+void pe__count_common(pe_resource_t *rsc);
+void pe__count_bundle(pe_resource_t *rsc);
+
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
 void common_free(resource_t * rsc);

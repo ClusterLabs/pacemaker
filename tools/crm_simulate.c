@@ -589,26 +589,6 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
     return lpc;
 }
 
-static int
-count_resources(pe_working_set_t * data_set, resource_t * rsc)
-{
-    int count = 0;
-    GListPtr gIter = NULL;
-
-    if (rsc == NULL) {
-        gIter = data_set->resources;
-    } else if (rsc->children) {
-        gIter = rsc->children;
-    } else {
-        return is_not_set(rsc->flags, pe_rsc_orphan);
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        count += count_resources(data_set, gIter->data);
-    }
-    return count;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -844,9 +824,9 @@ main(int argc, char **argv)
         }
 
         if (data_set->disabled_resources || data_set->blocked_resources) {
-            quiet_log("%d of %d resources DISABLED and %d BLOCKED from being started due to failures\n",
-                      data_set->disabled_resources,
-                      count_resources(data_set, NULL),
+            quiet_log("%d of %d resource instances DISABLED and %d BLOCKED "
+                      "from further action due to failure\n",
+                      data_set->disabled_resources, data_set->ninstances,
                       data_set->blocked_resources);
         }
 

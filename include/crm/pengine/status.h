@@ -92,6 +92,9 @@ enum pe_find {
 #  define pe_flag_sanitized             0x00200000ULL
 #  define pe_flag_stdout                0x00400000ULL
 
+//! Don't count total, disabled and blocked resource instances
+#  define pe_flag_no_counts             0x00800000ULL
+
 typedef struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
@@ -144,6 +147,7 @@ typedef struct pe_working_set_s {
 
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
+    int ninstances;     // Total number of resource instances
 } pe_working_set_t;
 
 enum pe_check_parameters {

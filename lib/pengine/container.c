@@ -1448,3 +1448,27 @@ pe_bundle_replicas(const resource_t *rsc)
         return container_data->replicas;
     }
 }
+
+void
+pe__count_bundle(pe_resource_t *rsc)
+{
+    container_variant_data_t *bundle_data = NULL;
+
+    get_container_variant_data(bundle_data, rsc);
+    for (GList *item = bundle_data->tuples; item != NULL; item = item->next) {
+        container_grouping_t *replica = item->data;
+
+        if (replica->ip) {
+            replica->ip->fns->count(replica->ip);
+        }
+        if (replica->child) {
+            replica->child->fns->count(replica->child);
+        }
+        if (replica->docker) {
+            replica->docker->fns->count(replica->docker);
+        }
+        if (replica->remote) {
+            replica->remote->fns->count(replica->remote);
+        }
+    }
+}

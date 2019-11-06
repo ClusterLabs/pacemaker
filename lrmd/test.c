@@ -364,6 +364,7 @@ generate_params(void)
         crm_crit("Could not allocate working set");
         return -ENOMEM;
     }
+    set_bit(data_set->flags, pe_flag_no_counts);
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "lrmd_test", cib_query);
