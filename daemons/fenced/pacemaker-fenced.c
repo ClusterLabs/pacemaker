@@ -607,8 +607,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     }
 
     /* If this STONITH resource is disabled, just remove it. */
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
-    if (safe_str_eq(value, RSC_STOPPED)) {
+    if (pe__resource_is_disabled(rsc)) {
         crm_info("Device %s has been disabled", rsc->id);
         goto update_done;
     }

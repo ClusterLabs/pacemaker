@@ -395,4 +395,6 @@ void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
                                 const char *always_first, gboolean overwrite,
                                 pe_working_set_t *data_set);
 
+bool pe__resource_is_disabled(pe_resource_t *rsc);
+
 #endif
