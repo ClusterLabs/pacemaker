@@ -834,10 +834,7 @@ main(int argc, char **argv)
 
   done:
     g_strfreev(processed_args);
-
-    if (context != NULL) {
-        g_option_context_free(context);
-    }
+    pcmk__free_arg_context(context);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);

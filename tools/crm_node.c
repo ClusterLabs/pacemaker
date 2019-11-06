@@ -658,11 +658,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-
-    if (context != NULL) {
-        g_option_context_free(context);
-    }
-
+    pcmk__free_arg_context(context);
     crm_node_exit(exit_code);
     return exit_code;
 }

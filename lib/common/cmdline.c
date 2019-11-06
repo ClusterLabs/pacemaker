@@ -50,6 +50,11 @@ free_common_args(gpointer data) {
     free(common_args->summary);
     free(common_args->output_ty);
     free(common_args->output_dest);
+
+    if (common_args->output_as_descr != NULL) {
+        free(common_args->output_as_descr);
+    }
+
     free(common_args);
 }
 
@@ -94,7 +99,8 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
             *output_group = g_option_group_new("output", "Output Options:", "Show output help", NULL, NULL);
         }
 
-        output_entries[0].description = crm_strdup_printf("Specify output format as one of: %s", fmts);
+        common_args->output_as_descr = crm_strdup_printf("Specify output format as one of: %s", fmts);
+        output_entries[0].description = common_args->output_as_descr;
         g_option_group_add_entries(*output_group, output_entries);
         g_option_context_add_group(context, *output_group);
     }
@@ -102,6 +108,15 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
     free(desc);
 
     return context;
+}
+
+void
+pcmk__free_arg_context(GOptionContext *context) {
+    if (context == NULL) {
+        return;
+    }
+
+    g_option_context_free(context);
 }
 
 void

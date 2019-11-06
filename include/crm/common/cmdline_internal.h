@@ -18,6 +18,7 @@ extern "C" {
 
 typedef struct {
     char *summary;
+    char *output_as_descr;
 
     gboolean version;
     gboolean quiet;
@@ -61,6 +62,16 @@ pcmk__new_common_args(const char *summary);
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
                         GOptionGroup **output_group);
+
+/*!
+ * \internal
+ * \brief Clean up after pcmk__build_arg_context().  This should be called
+ *        instead of ::g_option_context_free at program termination.
+ *
+ * \param[in,out] context Argument context to free
+ */
+void
+pcmk__free_arg_context(GOptionContext *context);
 
 /*!
  * \internal
