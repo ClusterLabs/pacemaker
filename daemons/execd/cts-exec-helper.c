@@ -370,6 +370,7 @@ generate_params(void)
         return -ENOMEM;
     }
     set_bit(data_set->flags, pe_flag_no_counts);
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);

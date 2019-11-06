@@ -778,6 +778,7 @@ main(int argc, char **argv)
         rc = -ENOMEM;
         goto done;
     }
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     if (test_dir != NULL) {
         if (repeat_s != NULL) {

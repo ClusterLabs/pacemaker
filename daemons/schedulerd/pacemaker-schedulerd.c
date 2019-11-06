@@ -97,6 +97,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             sched_data_set = pe_new_working_set();
             CRM_ASSERT(sched_data_set != NULL);
             set_bit(sched_data_set->flags, pe_flag_no_counts);
+            set_bit(sched_data_set->flags, pe_flag_no_compat);
         }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
