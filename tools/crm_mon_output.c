@@ -266,7 +266,9 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
     free(nnodes_str);
 
     if (ndisabled && nblocked) {
-        char *s = crm_strdup_printf("%d resource%s configured (%d ", nresources, s_if_plural(nresources), ndisabled);
+        char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
+                                    nresources, s_if_plural(nresources),
+                                    ndisabled);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
 
@@ -279,21 +281,26 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(resources_node, "span", NULL, "bold", "BLOCKED");
         pcmk_create_html_node(resources_node, "span", NULL, NULL, " from starting due to failure)");
     } else if (ndisabled && !nblocked) {
-        char *s = crm_strdup_printf("%d resource%s configured (%d ", nresources, s_if_plural(nresources), ndisabled);
+        char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
+                                    nresources, s_if_plural(nresources),
+                                    ndisabled);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
 
         pcmk_create_html_node(resources_node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(resources_node, "span", NULL, NULL, ")");
     } else if (!ndisabled && nblocked) {
-        char *s = crm_strdup_printf("%d resource%s configured (%d ", nresources, s_if_plural(nresources), nblocked);
+        char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
+                                    nresources, s_if_plural(nresources),
+                                    nblocked);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
 
         pcmk_create_html_node(resources_node, "span", NULL, "bold", "BLOCKED");
         pcmk_create_html_node(resources_node, "span", NULL, NULL, " from starting due to failure)");
     } else {
-        char *s = crm_strdup_printf("%d resource%s configured", nresources, s_if_plural(nresources));
+        char *s = crm_strdup_printf("%d resource instance%s configured",
+                                    nresources, s_if_plural(nresources));
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
     }
@@ -311,16 +318,23 @@ cluster_counts_text(pcmk__output_t *out, va_list args) {
     out->list_item(out, NULL, "%d node%s configured", nnodes, s_if_plural(nnodes));
 
     if (ndisabled && nblocked) {
-        out->list_item(out, NULL, "%d resource%s configured (%d DISABLED, %d BLOCKED from starting due to failure",
-                       nresources, s_if_plural(nresources), ndisabled, nblocked);
+        out->list_item(out, NULL, "%d resource instance%s configured "
+                                  "(%d DISABLED, %d BLOCKED from "
+                                  "further action due to failure)",
+                       nresources, s_if_plural(nresources), ndisabled,
+                       nblocked);
     } else if (ndisabled && !nblocked) {
-        out->list_item(out, NULL, "%d resource%s configured (%d DISABLED)",
+        out->list_item(out, NULL, "%d resource instance%s configured "
+                                  "(%d DISABLED)",
                        nresources, s_if_plural(nresources), ndisabled);
     } else if (!ndisabled && nblocked) {
-        out->list_item(out, NULL, "%d resource%s configured (%d BLOCKED from starting due to failure)",
+        out->list_item(out, NULL, "%d resource instance%s configured "
+                                  "(%d BLOCKED from further action "
+                                  "due to failure)",
                        nresources, s_if_plural(nresources), nblocked);
     } else {
-        out->list_item(out, NULL, "%d resource%s configured", nresources, s_if_plural(nresources));
+        out->list_item(out, NULL, "%d resource instance%s configured",
+                       nresources, s_if_plural(nresources));
     }
 
     return 0;

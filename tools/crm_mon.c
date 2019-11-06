@@ -1217,7 +1217,6 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
                   offline ? offline_nodes : "");
         free(offline_nodes);
     } else {
-        int nresources = count_resources(data_set, NULL);
         char *nodes_standby_s = NULL;
         char *nodes_maint_s = NULL;
 
@@ -1227,15 +1226,17 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         }
 
         if (nodes_maintenance > 0) {
-            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s", nresources,
-                                              s_if_plural(nresources));
+            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
+                                              data_set->ninstances,
+                                              s_if_plural(data_set->ninstances));
         }
 
-        out->info(out, "CLUSTER OK: %dnode%s online%s%s, %d resource%s configured",
+        out->info(out, "CLUSTER OK: %dnode%s online%s%s, "
+                       "%d resource instance%s configured",
                   nodes_online, s_if_plural(nodes_online),
                   nodes_standby_s != NULL ? nodes_standby_s : "",
                   nodes_maint_s != NULL ? nodes_maint_s : "",
-                  nresources, s_if_plural(nresources));
+                  data_set->ninstances, s_if_plural(data_set->ninstances));
 
         free(nodes_standby_s);
         free(nodes_maint_s);

@@ -706,7 +706,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
             header_printed = TRUE;
         }
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
-                     count_resources(data_set, NULL), data_set->disabled_resources,
+                     data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 
