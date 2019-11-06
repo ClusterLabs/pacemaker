@@ -362,4 +362,6 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
 void pe__free_param_checks(pe_working_set_t *data_set);
 
 bool pe__shutdown_requested(pe_node_t *node);
+bool pe__resource_is_disabled(pe_resource_t *rsc);
+
 #endif

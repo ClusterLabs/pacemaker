@@ -2547,3 +2547,22 @@ pe__shutdown_requested(pe_node_t *node)
 
     return shutdown && strcmp(shutdown, "0");
 }
+
+bool
+pe__resource_is_disabled(pe_resource_t *rsc)
+{
+    const char *target_role = NULL;
+
+    CRM_CHECK(rsc != NULL, return false);
+    target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    if (target_role) {
+        enum rsc_role_e target_role_e = text2role(target_role);
+
+        if ((target_role_e == RSC_ROLE_STOPPED)
+            || ((target_role_e == RSC_ROLE_SLAVE)
+                && (uber_parent(rsc)->variant == pe_master))) {
+            return true;
+        }
+    }
+    return false;
+}
