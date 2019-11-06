@@ -16,7 +16,7 @@
 static gboolean fancy = FALSE;
 
 GOptionEntry pcmk__text_output_entries[] = {
-    { "output-fancy", 0, 0, G_OPTION_ARG_NONE, &fancy,
+    { "text-fancy", 0, 0, G_OPTION_ARG_NONE, &fancy,
       "Use more highly formatted output",
       NULL },
 

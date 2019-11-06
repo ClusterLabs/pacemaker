@@ -25,10 +25,10 @@ static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
-    { "output-legacy-xml", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
+    { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
       NULL,
       NULL },
-    { "output-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
+    { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
       NULL,
       NULL },
 

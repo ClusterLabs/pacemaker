@@ -435,7 +435,7 @@ static GOptionEntry deprecated_entries[] = {
 
     { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
       "Web mode with output suitable for CGI (preselected when run as *.cgi).\n"
-      INDENT "Use --output-as=html --output-cgi instead.",
+      INDENT "Use --output-as=html --html-cgi instead.",
       NULL },
 
     { NULL }
@@ -753,7 +753,7 @@ avoid_zombies()
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -780,7 +780,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "formats.  It can be just an integer number of seconds, a number plus units\n"
                               "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n";
 
-    context = pcmk__build_arg_context(args, "console (default), html, text, xml");
+    context = pcmk__build_arg_context(args, "console (default), html, text, xml", group);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -803,29 +803,29 @@ add_output_args() {
     GError *error = NULL;
 
     if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &error, "%s --output-fancy", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --output-title \"Cluster Status\"",
+        if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
                               g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --output-cgi --output-title \"Cluster Status\"", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &error, "%s --output-simple-list", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &error, "%s --output-legacy-xml", g_get_prgname())) {
+        if (!pcmk__force_args(context, &error, "%s --xml-legacy", g_get_prgname())) {
             fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
             clean_up(CRM_EX_USAGE);
         }
@@ -896,12 +896,13 @@ main(int argc, char **argv)
 {
     int rc = pcmk_ok;
     char **processed_args = NULL;
+    GOptionGroup *output_group = NULL;
 
     GError *error = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
-    context = build_arg_context(args);
-    pcmk__register_formats(context, formats);
+    context = build_arg_context(args, &output_group);
+    pcmk__register_formats(output_group, formats);
 
     options.pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
@@ -1884,9 +1885,7 @@ clean_up(crm_exit_t exit_code)
         }
     }
 
-    if (context != NULL) {
-        g_option_context_free(context);
-    }
+    pcmk__free_arg_context(context);
 
     if (out != NULL) {
         if (output_format == mon_output_cgi || output_format == mon_output_html) {
