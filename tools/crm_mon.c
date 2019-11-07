@@ -1231,7 +1231,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
                                               s_if_plural(data_set->ninstances));
         }
 
-        out->info(out, "CLUSTER OK: %dnode%s online%s%s, "
+        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
                        "%d resource instance%s configured",
                   nodes_online, s_if_plural(nodes_online),
                   nodes_standby_s != NULL ? nodes_standby_s : "",
