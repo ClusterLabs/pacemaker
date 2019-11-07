@@ -183,7 +183,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         if (printed_resource == FALSE) {
             printed_resource = TRUE;
         }
-        out->message(out, crm_element_name(rsc->xml), print_opts, rsc);
+        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc);
     }
 
     if (print_summary && !printed_resource) {

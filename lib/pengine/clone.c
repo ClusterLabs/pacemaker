@@ -590,7 +590,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -689,7 +689,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 
@@ -876,7 +876,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 
