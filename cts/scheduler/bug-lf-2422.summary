@@ -1,4 +1,4 @@
-8 of 21 resources DISABLED and 0 BLOCKED from being started due to failures
+4 of 21 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]

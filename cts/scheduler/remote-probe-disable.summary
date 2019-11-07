@@ -1,4 +1,4 @@
-2 of 6 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 6 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ 18builder 18node1 18node2 ]
