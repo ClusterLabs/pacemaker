@@ -39,15 +39,15 @@ static char *title = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
     { "html-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
-      "Add text needed to use output in a CGI program",
+      "Add CGI headers (requires --output-as=html)",
       NULL },
 
     { "html-stylesheet", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
-      "Link to an external CSS stylesheet",
+      "Link to an external stylesheet (requires --output-as=html)",
       "URI" },
 
     { "html-title", 0, 0, G_OPTION_ARG_STRING, &title,
-      "Page title",
+      "Specify a page title (requires --output-as=html)",
       "TITLE" },
 
     { NULL }
