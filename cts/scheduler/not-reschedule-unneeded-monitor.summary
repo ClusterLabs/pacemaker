@@ -1,4 +1,4 @@
-1 of 11 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 11 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ castor kimball ]

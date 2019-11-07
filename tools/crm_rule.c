@@ -235,6 +235,7 @@ main(int argc, char **argv)
         exit_code = crm_errno2exit(ENOMEM);
         goto bail;
     }
+    set_bit(data_set->flags, pe_flag_no_counts);
 
     data_set->input = input;
     data_set->now = rule_date;

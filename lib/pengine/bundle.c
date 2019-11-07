@@ -1913,3 +1913,27 @@ pe_bundle_replicas(const resource_t *rsc)
         return bundle_data->nreplicas;
     }
 }
+
+void
+pe__count_bundle(pe_resource_t *rsc)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+    for (GList *item = bundle_data->replicas; item != NULL; item = item->next) {
+        pe__bundle_replica_t *replica = item->data;
+
+        if (replica->ip) {
+            replica->ip->fns->count(replica->ip);
+        }
+        if (replica->child) {
+            replica->child->fns->count(replica->child);
+        }
+        if (replica->container) {
+            replica->container->fns->count(replica->container);
+        }
+        if (replica->remote) {
+            replica->remote->fns->count(replica->remote);
+        }
+    }
+}

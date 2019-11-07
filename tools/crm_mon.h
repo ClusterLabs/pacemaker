@@ -107,7 +107,6 @@ int print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
 
 GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
-int count_resources(pe_working_set_t *data_set, resource_t *rsc);
 void crm_mon_get_parameters(resource_t *rsc, pe_working_set_t *data_set);
 const char *get_cluster_stack(pe_working_set_t *data_set);
 char *get_node_display_name(node_t *node, unsigned int mon_ops);

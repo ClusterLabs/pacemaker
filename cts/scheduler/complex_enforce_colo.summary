@@ -1,4 +1,4 @@
-3 of 132 resources DISABLED and 0 BLOCKED from being started due to failures
+3 of 132 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]

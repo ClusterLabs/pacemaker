@@ -1,6 +1,7 @@
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
+0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ bl460g6a bl460g6b ]

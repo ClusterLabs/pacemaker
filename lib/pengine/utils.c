@@ -1279,6 +1279,8 @@ print_node(const char *pre_text, node_t * node, gboolean details)
               node->details->uname, node->weight, node->fixed ? "True" : "False");
 
     if (details) {
+        int log_level = LOG_TRACE;
+
         char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
 
@@ -1289,9 +1291,10 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         crm_trace("\t\t=== Resources");
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-            print_resource(LOG_TRACE, "\t\t", rsc, FALSE);
+            rsc->fns->print(rsc, "\t\t", pe_print_log|pe_print_pending,
+                            &log_level);
         }
     }
 }
@@ -1305,22 +1308,6 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
     crm_trace("%s%s %s ==> %s",
               user_data == NULL ? "" : (char *)user_data,
               user_data == NULL ? "" : ": ", (char *)key, (char *)value);
-}
-
-void
-print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details)
-{
-    long options = pe_print_log | pe_print_pending;
-
-    if (rsc == NULL) {
-        do_crm_log(log_level - 1, "%s%s: <NULL>",
-                   pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
-        return;
-    }
-    if (details) {
-        options |= pe_print_details;
-    }
-    rsc->fns->print(rsc, pre_text, options, &log_level);
 }
 
 void
@@ -2583,4 +2570,23 @@ pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
         pe__update_recheck_time(recheck, data_set);
     }
     crm_time_free(next_change);
+}
+
+bool
+pe__resource_is_disabled(pe_resource_t *rsc)
+{
+    const char *target_role = NULL;
+
+    CRM_CHECK(rsc != NULL, return false);
+    target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    if (target_role) {
+        enum rsc_role_e target_role_e = text2role(target_role);
+
+        if ((target_role_e == RSC_ROLE_STOPPED)
+            || ((target_role_e == RSC_ROLE_SLAVE)
+                && is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
+            return true;
+        }
+    }
+    return false;
 }

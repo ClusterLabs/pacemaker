@@ -1,4 +1,4 @@
-90 of 337 resources DISABLED and 0 BLOCKED from being started due to failures
+90 of 337 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ mgmt01 v03-a v03-b ]
