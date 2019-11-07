@@ -169,5 +169,5 @@ pe__output_resource(int log_level, resource_t *rsc, gboolean details, pcmk__outp
     if (details) {
         options |= pe_print_details;
     }
-    out->message(out, crm_element_name(rsc->xml), options, rsc);
+    out->message(out, crm_map_element_name(rsc->xml), options, rsc);
 }
