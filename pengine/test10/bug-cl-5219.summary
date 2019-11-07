@@ -1,4 +1,4 @@
-1 of 9 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 9 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]

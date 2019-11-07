@@ -1,4 +1,4 @@
-2 of 5 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]

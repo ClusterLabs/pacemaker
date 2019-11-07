@@ -1,4 +1,4 @@
-9 of 28 resources DISABLED and 0 BLOCKED from being started due to failures
+5 of 28 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ hex-0 hex-9 ]
