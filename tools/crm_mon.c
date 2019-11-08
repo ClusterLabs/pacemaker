@@ -764,7 +764,10 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-    const char *description = "*Examples*\n\n"
+    const char *description = "*Notes*\n\n"
+                              "If this program is called as crm_mon.cgi, --output-as=html --html-cgi will\n"
+                              "automatically be added to the command line arguments.\n\n"
+                              "*Examples*\n\n"
                               "Display the cluster status on the console with updates as they occur:\n\n"
                               "\tcrm_mon\n\n"
                               "Display the cluster status on the console just once then exit:\n\n"
@@ -1227,11 +1230,11 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
 
         if (nodes_maintenance > 0) {
             nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              data_set->ninstances,
-                                              s_if_plural(data_set->ninstances));
+                                              nodes_maintenance,
+                                              s_if_plural(nodes_maintenance));
         }
 
-        out->info(out, "CLUSTER OK: %dnode%s online%s%s, "
+        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
                        "%d resource instance%s configured",
                   nodes_online, s_if_plural(nodes_online),
                   nodes_standby_s != NULL ? nodes_standby_s : "",
