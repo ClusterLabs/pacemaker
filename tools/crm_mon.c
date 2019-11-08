@@ -1230,8 +1230,8 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
 
         if (nodes_maintenance > 0) {
             nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              data_set->ninstances,
-                                              s_if_plural(data_set->ninstances));
+                                              nodes_maintenance,
+                                              s_if_plural(nodes_maintenance));
         }
 
         out->info(out, "CLUSTER OK: %d node%s online%s%s, "
