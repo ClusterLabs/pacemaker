@@ -279,7 +279,8 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         free(s);
 
         pcmk_create_html_node(resources_node, "span", NULL, "bold", "BLOCKED");
-        pcmk_create_html_node(resources_node, "span", NULL, NULL, " from starting due to failure)");
+        pcmk_create_html_node(resources_node, "span", NULL, NULL,
+                              " from further action due to failure)");
     } else if (ndisabled && !nblocked) {
         char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
                                     nresources, s_if_plural(nresources),
@@ -297,7 +298,8 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         free(s);
 
         pcmk_create_html_node(resources_node, "span", NULL, "bold", "BLOCKED");
-        pcmk_create_html_node(resources_node, "span", NULL, NULL, " from starting due to failure)");
+        pcmk_create_html_node(resources_node, "span", NULL, NULL,
+                              " from further action due to failure)");
     } else {
         char *s = crm_strdup_printf("%d resource instance%s configured",
                                     nresources, s_if_plural(nresources));
