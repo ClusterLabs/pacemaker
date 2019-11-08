@@ -13,6 +13,10 @@
         <revnumber>1-0</revnumber>
         <date>Tue Jan 23 2018</date>
         <author>
+          <firstname>Andrew</firstname><surname>Beekhof</surname>
+          <email>andrew@beekhof.net</email>
+        </author>
+        <author>
           <firstname>Ken</firstname><surname>Gaillot</surname>
           <email>kgaillot@redhat.com</email>
         </author>
@@ -61,6 +65,20 @@
         </author>
         <revdescription>
           <simplelist><member>Add Tools chapter</member></simplelist>
+        </revdescription>
+      </revision>
+
+      <revision>
+        <revnumber>2-0</revnumber>
+        <date>Tue Nov 5 2019</date>
+        <author>
+          <firstname>Chris</firstname><surname>Lumens</surname>
+          <email>clumens@redhat.com</email>
+        </author>
+        <revdescription>
+          <simplelist>
+            <member>Update for crm_mon changes in 2.0.3</member>
+          </simplelist>
         </revdescription>
       </revision>
 
