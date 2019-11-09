@@ -69,6 +69,8 @@ class BasePatterns(object):
             "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
+            "Pat:RscOpFail"     : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
+            "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
             "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
             "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
@@ -150,7 +152,7 @@ class crm_corosync(BasePatterns):
         ]
 
         self.BadNews = [
-            r"error:",
+            r"[^(]error:",
             r"crit:",
             r"ERROR:",
             r"CRIT:",
