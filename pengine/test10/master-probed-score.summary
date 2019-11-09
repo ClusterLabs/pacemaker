@@ -1,4 +1,4 @@
-2 of 60 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 60 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]

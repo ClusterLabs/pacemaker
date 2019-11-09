@@ -1,4 +1,4 @@
-3 of 6 resources DISABLED and 0 BLOCKED from being started due to failures
+3 of 6 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]

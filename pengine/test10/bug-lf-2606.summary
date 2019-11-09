@@ -1,4 +1,4 @@
-1 of 5 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Node node2: UNCLEAN (online)

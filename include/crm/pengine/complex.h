@@ -39,6 +39,7 @@ typedef struct resource_object_functions_s {
     enum rsc_role_e (*state) (const resource_t *, gboolean);
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (resource_t *);
+    void (*count) (pe_resource_t*);
 } resource_object_functions_t;
 
 extern resource_object_functions_t resource_class_functions[];

@@ -115,6 +115,9 @@ enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
 
+void pe__count_common(pe_resource_t *rsc);
+void pe__count_bundle(pe_resource_t *rsc);
+
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
 void common_free(resource_t * rsc);
@@ -186,8 +189,6 @@ extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
-
-extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
 
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
@@ -364,4 +365,6 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
 void pe__free_param_checks(pe_working_set_t *data_set);
 
 bool pe__shutdown_requested(pe_node_t *node);
+bool pe__resource_is_disabled(pe_resource_t *rsc);
+
 #endif
