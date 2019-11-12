@@ -34,6 +34,8 @@
 #  include "crm/common/cib_secrets.h"
 #endif
 
+static void close_pipe(int fildes[]);
+
 /* We have two alternative ways of handling SIGCHLD when synchronously waiting
  * for spawned processes to complete. Both rely on polling a file descriptor to
  * discover SIGCHLD events.
@@ -55,7 +57,7 @@ struct sigchld_data_s {
 };
 
 // Initialize SIGCHLD data and prepare for use
-static void
+static bool
 sigchld_setup(struct sigchld_data_s *data)
 {
     sigemptyset(&(data->mask));
@@ -67,7 +69,9 @@ sigchld_setup(struct sigchld_data_s *data)
     if (sigprocmask(SIG_BLOCK, &(data->mask), &(data->old_mask)) < 0) {
         crm_err("Wait for child process completion failed: %s "
                 CRM_XS " source=sigprocmask", pcmk_strerror(errno));
+        return false;
     }
+    return true;
 }
 
 // Get a file descriptor suitable for polling for SIGCHLD events
@@ -102,6 +106,9 @@ sigchld_received(int fd)
     struct signalfd_siginfo fdsi;
     ssize_t s;
 
+    if (fd < 0) {
+        return false;
+    }
     s = read(fd, &fdsi, sizeof(struct signalfd_siginfo));
     if (s != sizeof(struct signalfd_siginfo)) {
         crm_err("Wait for child process completion failed: %s "
@@ -150,7 +157,7 @@ sigchld_handler()
     }
 }
 
-static void
+static bool
 sigchld_setup(struct sigchld_data_s *data)
 {
     int rc;
@@ -160,6 +167,7 @@ sigchld_setup(struct sigchld_data_s *data)
     if (pipe(data->pipe_fd) == -1) {
         crm_err("Wait for child process completion failed: %s "
                 CRM_XS " source=pipe", pcmk_strerror(errno));
+        return false;
     }
 
     rc = crm_set_nonblocking(data->pipe_fd[0]);
@@ -184,6 +192,7 @@ sigchld_setup(struct sigchld_data_s *data)
 
     // Remember data for use in signal handler
     last_sigchld_data = data;
+    return true;
 }
 
 static int
@@ -205,6 +214,10 @@ sigchld_received(int fd)
 {
     char ch;
 
+    if (fd < 0) {
+        return false;
+    }
+
     // Clear out the self-pipe
     while (read(fd, &ch, 1) == 1) /*omit*/;
     return true;
@@ -219,18 +232,29 @@ sigchld_cleanup(struct sigchld_data_s *data)
                  pcmk_strerror(errno));
     }
 
-    // Close the pipe
-    if (data->pipe_fd[0] >= 0) {
-        close(data->pipe_fd[0]);
-        data->pipe_fd[0] = -1;
-    }
-    if (data->pipe_fd[1] >= 0) {
-        close(data->pipe_fd[1]);
-        data->pipe_fd[1] = -1;
-    }
+    close_pipe(data->pipe_fd);
 }
 
 #endif
+
+/*!
+ * \internal
+ * \brief Close the two file descriptors of a pipe
+ *
+ * \param[in] fildes  Array of file descriptors opened by pipe()
+ */
+static void
+close_pipe(int fildes[])
+{
+    if (fildes[0] >= 0) {
+        close(fildes[0]);
+        fildes[0] = -1;
+    }
+    if (fildes[1] >= 0) {
+        close(fildes[1]);
+        fildes[1] = -1;
+    }
+}
 
 static gboolean
 svc_read_output(int fd, svc_action_t * op, bool is_stderr)
@@ -892,8 +916,7 @@ services_os_action_execute(svc_action_t * op)
     if (pipe(stderr_fd) < 0) {
         rc = errno;
 
-        close(stdout_fd[0]);
-        close(stdout_fd[1]);
+        close_pipe(stdout_fd);
 
         crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
                 op->opaque->exec, pcmk_strerror(rc), rc);
@@ -908,10 +931,8 @@ services_os_action_execute(svc_action_t * op)
         if (pipe(stdin_fd) < 0) {
             rc = errno;
 
-            close(stdout_fd[0]);
-            close(stdout_fd[1]);
-            close(stderr_fd[0]);
-            close(stderr_fd[1]);
+            close_pipe(stdout_fd);
+            close_pipe(stderr_fd);
 
             crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
@@ -923,23 +944,21 @@ services_os_action_execute(svc_action_t * op)
         }
     }
 
-    if (op->synchronous) {
-        sigchld_setup(&data);
+    if (op->synchronous && !sigchld_setup(&data)) {
+        close_pipe(stdin_fd);
+        close_pipe(stdout_fd);
+        close_pipe(stderr_fd);
+        sigchld_cleanup(&data);
+        return FALSE;
     }
 
     op->pid = fork();
     switch (op->pid) {
         case -1:
             rc = errno;
-
-            close(stdout_fd[0]);
-            close(stdout_fd[1]);
-            close(stderr_fd[0]);
-            close(stderr_fd[1]);
-            if (stdin_fd[0] >= 0) {
-                close(stdin_fd[0]);
-                close(stdin_fd[1]);
-            }
+            close_pipe(stdin_fd);
+            close_pipe(stdout_fd);
+            close_pipe(stderr_fd);
 
             crm_err("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
