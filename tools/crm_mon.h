@@ -71,7 +71,6 @@ typedef enum mon_output_format_e {
 
 #define mon_show_summary        (mon_show_stack | mon_show_dc | mon_show_times | \
                                  mon_show_counts | mon_show_options)
-#define mon_show_default        (mon_show_summary | mon_show_nodes | mon_show_resources)
 #define mon_show_all            (mon_show_summary | mon_show_nodes | mon_show_resources | \
                                  mon_show_attributes | mon_show_failcounts | mon_show_operations | \
                                  mon_show_fencing | mon_show_tickets | mon_show_bans)
