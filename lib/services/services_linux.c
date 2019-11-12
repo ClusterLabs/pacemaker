@@ -22,10 +22,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#ifdef HAVE_SYS_SIGNALFD_H
-#include <sys/signalfd.h>
-#endif
-
 #include "crm/crm.h"
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
@@ -34,6 +30,196 @@
 
 #if SUPPORT_CIBSECRETS
 #  include "crm/common/cib_secrets.h"
+#endif
+
+/* We have two alternative ways of handling SIGCHLD when synchronously waiting
+ * for spawned processes to complete. Both rely on polling a file descriptor to
+ * discover SIGCHLD events.
+ *
+ * If sys/signalfd.h is available (e.g. on Linux), we call signalfd() to
+ * generate the file descriptor. Otherwise, we use the "self-pipe trick"
+ * (opening a pipe and writing a byte to it when SIGCHLD is received).
+ */
+#ifdef HAVE_SYS_SIGNALFD_H
+
+// signalfd() implementation
+
+#include <sys/signalfd.h>
+
+// Everything needed to manage SIGCHLD handling
+struct sigchld_data_s {
+    sigset_t mask;      // Signals to block now (including SIGCHLD)
+    sigset_t old_mask;  // Previous set of blocked signals
+};
+
+// Initialize SIGCHLD data and prepare for use
+static void
+sigchld_setup(struct sigchld_data_s *data)
+{
+    sigemptyset(&(data->mask));
+    sigaddset(&(data->mask), SIGCHLD);
+
+    sigemptyset(&(data->old_mask));
+
+    // Block SIGCHLD (saving previous set of blocked signals to restore later)
+    if (sigprocmask(SIG_BLOCK, &(data->mask), &(data->old_mask)) < 0) {
+        crm_perror(LOG_ERR, "sigprocmask() failed to block sigchld");
+    }
+}
+
+// Get a file descriptor suitable for polling for SIGCHLD events
+static int
+sigchld_open(struct sigchld_data_s *data)
+{
+    int fd;
+
+    CRM_CHECK(data != NULL, return -1);
+
+    fd = signalfd(-1, &(data->mask), SFD_NONBLOCK);
+    if (fd < 0) {
+        crm_perror(LOG_ERR, "signalfd() failed");
+    }
+    return fd;
+}
+
+// Close a file descriptor returned by sigchld_open()
+static void
+sigchld_close(int fd)
+{
+    if (fd > 0) {
+        close(fd);
+    }
+}
+
+// Return true if SIGCHLD was received from polled fd
+static bool
+sigchld_received(int fd)
+{
+    struct signalfd_siginfo fdsi;
+    ssize_t s;
+
+    s = read(fd, &fdsi, sizeof(struct signalfd_siginfo));
+    if (s != sizeof(struct signalfd_siginfo)) {
+        crm_perror(LOG_ERR, "Read from signal fd %d failed", fd);
+
+    } else if (fdsi.ssi_signo == SIGCHLD) {
+        return true;
+    }
+    return false;
+}
+
+// Do anything needed after done waiting for SIGCHLD
+static void
+sigchld_cleanup(struct sigchld_data_s *data)
+{
+    // Restore the original set of blocked signals
+    if ((sigismember(&(data->old_mask), SIGCHLD) == 0)
+        && (sigprocmask(SIG_UNBLOCK, &(data->mask), NULL) < 0)) {
+        crm_perror(LOG_ERR, "sigprocmask() failed to unblock sigchld");
+    }
+}
+
+#else // HAVE_SYS_SIGNALFD_H not defined
+
+// Self-pipe implementation (see above for function descriptions)
+
+struct sigchld_data_s {
+    int pipe_fd[2];             // Pipe file descriptors
+    struct sigaction sa;        // Signal handling info (with SIGCHLD)
+    struct sigaction old_sa;    // Previous signal handling info
+};
+
+// We need a global to use in the signal handler
+volatile struct sigchld_data_s *last_sigchld_data = NULL;
+
+static void
+sigchld_handler()
+{
+    // We received a SIGCHLD, so trigger pipe polling
+    if ((last_sigchld_data != NULL)
+        && (last_sigchld_data->pipe_fd[1] >= 0)
+        && (write(last_sigchld_data->pipe_fd[1], "", 1) == -1)) {
+        crm_perror(LOG_TRACE, "Could not poke SIGCHLD self-pipe");
+    }
+}
+
+static void
+sigchld_setup(struct sigchld_data_s *data)
+{
+    int rc;
+
+    data->pipe_fd[0] = data->pipe_fd[1] = -1;
+
+    if (pipe(data->pipe_fd) == -1) {
+        crm_perror(LOG_ERR, "pipe() failed");
+    }
+
+    rc = crm_set_nonblocking(data->pipe_fd[0]);
+    if (rc < 0) {
+        crm_warn("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+    }
+    rc = crm_set_nonblocking(data->pipe_fd[1]);
+    if (rc < 0) {
+        crm_warn("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+    }
+
+    // Set SIGCHLD handler
+    data->sa.sa_handler = sigchld_handler;
+    data->sa.sa_flags = 0;
+    sigemptyset(&(data->sa.sa_mask));
+    if (sigaction(SIGCHLD, &(data->sa), &(data->old_sa)) < 0) {
+        crm_perror(LOG_ERR, "sigaction() failed to set sigchld handler");
+    }
+
+    // Remember data for use in signal handler
+    last_sigchld_data = data;
+}
+
+static int
+sigchld_open(struct sigchld_data_s *data)
+{
+    CRM_CHECK(data != NULL, return -1);
+    return data->pipe_fd[0];
+}
+
+static void
+sigchld_close(int fd)
+{
+    // Pipe will be closed in sigchld_cleanup()
+    return;
+}
+
+static bool
+sigchld_received(int fd)
+{
+    char ch;
+
+    // Clear out the self-pipe
+    while (read(fd, &ch, 1) == 1) /*omit*/;
+    return true;
+}
+
+static void
+sigchld_cleanup(struct sigchld_data_s *data)
+{
+    // Restore the previous SIGCHLD handler
+    if (sigaction(SIGCHLD, &(data->old_sa), NULL) < 0) {
+        crm_perror(LOG_ERR, "sigaction() failed to remove sigchld handler");
+    }
+
+    // Close the pipe
+    if (data->pipe_fd[0] >= 0) {
+        close(data->pipe_fd[0]);
+        data->pipe_fd[0] = -1;
+    }
+    if (data->pipe_fd[1] >= 0) {
+        close(data->pipe_fd[1]);
+        data->pipe_fd[1] = -1;
+    }
+}
+
 #endif
 
 static gboolean
@@ -524,39 +710,14 @@ action_launch_child(svc_action_t *op)
     _exit(op->rc);
 }
 
-#ifndef HAVE_SYS_SIGNALFD_H
-static int sigchld_pipe[2] = { -1, -1 };
-
 static void
-sigchld_handler()
-{
-    if ((sigchld_pipe[1] >= 0) && (write(sigchld_pipe[1], "", 1) == -1)) {
-        crm_perror(LOG_TRACE, "Could not poke SIGCHLD self-pipe");
-    }
-}
-#endif
-
-static void
-action_synced_wait(svc_action_t * op, sigset_t *mask)
+action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
 {
     int status = 0;
     int timeout = op->timeout;
-    int sfd = -1;
     time_t start = -1;
     struct pollfd fds[3];
     int wait_rc = 0;
-
-#ifdef HAVE_SYS_SIGNALFD_H
-    // mask is always non-NULL in practice, but this makes static analysis happy
-    if (mask) {
-        sfd = signalfd(-1, mask, SFD_NONBLOCK);
-        if (sfd < 0) {
-            crm_perror(LOG_ERR, "signalfd() failed");
-        }
-    }
-#else
-    sfd = sigchld_pipe[0];
-#endif
 
     fds[0].fd = op->opaque->stdout_fd;
     fds[0].events = POLLIN;
@@ -566,7 +727,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
     fds[1].events = POLLIN;
     fds[1].revents = 0;
 
-    fds[2].fd = sfd;
+    fds[2].fd = sigchld_open(data);
     fds[2].events = POLLIN;
     fds[2].revents = 0;
 
@@ -584,38 +745,22 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
                 svc_read_output(op->opaque->stderr_fd, op, TRUE);
             }
 
-            if (fds[2].revents & POLLIN) {
-#ifdef HAVE_SYS_SIGNALFD_H
-                struct signalfd_siginfo fdsi;
-                ssize_t s;
+            if ((fds[2].revents & POLLIN) && sigchld_received(fds[2].fd)) {
+                wait_rc = waitpid(op->pid, &status, WNOHANG);
 
-                s = read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
-                if (s != sizeof(struct signalfd_siginfo)) {
-                    crm_perror(LOG_ERR, "Read from signal fd %d failed", sfd);
+                if (wait_rc > 0) {
+                    break;
 
-                } else if (fdsi.ssi_signo == SIGCHLD) {
-#else
-                if (1) {
-                    /* Clear out the sigchld pipe. */
-                    char ch;
-                    while (read(sfd, &ch, 1) == 1) /*omit*/;
-#endif
-                    wait_rc = waitpid(op->pid, &status, WNOHANG);
+                } else if (wait_rc < 0) {
+                    if (errno == ECHILD) {
+                            /* Here, don't dare to kill and bail out... */
+                            break;
 
-                    if (wait_rc > 0) {
-                        break;
-
-                    } else if (wait_rc < 0){
-                        if (errno == ECHILD) {
-                                /* Here, don't dare to kill and bail out... */
-                                break;
-
-                        } else {
-                                /* ...otherwise pretend process still runs. */
-                                wait_rc = 0;
-                        }
-                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
+                    } else {
+                            /* ...otherwise pretend process still runs. */
+                            wait_rc = 0;
                     }
+                    crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
                 }
             }
 
@@ -681,10 +826,7 @@ action_synced_wait(svc_action_t * op, sigset_t *mask)
     if (op->opaque->stdin_fd >= 0) {
         close(op->opaque->stdin_fd);
     }
-
-#ifdef HAVE_SYS_SIGNALFD_H
-    close(sfd);
-#endif
+    sigchld_close(fds[2].fd);
 }
 
 /* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
@@ -697,30 +839,7 @@ services_os_action_execute(svc_action_t * op)
     int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
-    sigset_t *pmask = NULL;
-
-#ifdef HAVE_SYS_SIGNALFD_H
-    sigset_t mask;
-    sigset_t old_mask;
-#define sigchld_cleanup() do {                                                \
-    if (sigismember(&old_mask, SIGCHLD) == 0) {                               \
-        if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {                      \
-            crm_perror(LOG_ERR, "sigprocmask() failed to unblock sigchld");   \
-        }                                                                     \
-    }                                                                         \
-} while (0)
-#else
-    struct sigaction sa;
-    struct sigaction old_sa;
-#define sigchld_cleanup() do {                                                \
-    if (sigaction(SIGCHLD, &old_sa, NULL) < 0) {                              \
-        crm_perror(LOG_ERR, "sigaction() failed to remove sigchld handler");  \
-    }                                                                         \
-    close(sigchld_pipe[0]);                                                   \
-    close(sigchld_pipe[1]);                                                   \
-    sigchld_pipe[0] = sigchld_pipe[1] = -1;                                   \
-} while(0)
-#endif
+    struct sigchld_data_s data;
 
     /* Fail fast */
     if(stat(op->opaque->exec, &st) != 0) {
@@ -780,41 +899,7 @@ services_os_action_execute(svc_action_t * op)
     }
 
     if (op->synchronous) {
-#ifdef HAVE_SYS_SIGNALFD_H
-        sigemptyset(&mask);
-        sigaddset(&mask, SIGCHLD);
-        sigemptyset(&old_mask);
-
-        if (sigprocmask(SIG_BLOCK, &mask, &old_mask) < 0) {
-            crm_perror(LOG_ERR, "sigprocmask() failed to block sigchld");
-        }
-
-        pmask = &mask;
-#else
-        if(pipe(sigchld_pipe) == -1) {
-            crm_perror(LOG_ERR, "pipe() failed");
-        }
-
-        rc = crm_set_nonblocking(sigchld_pipe[0]);
-        if (rc < 0) {
-            crm_warn("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
-                     pcmk_strerror(rc), rc);
-        }
-        rc = crm_set_nonblocking(sigchld_pipe[1]);
-        if (rc < 0) {
-            crm_warn("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
-                     pcmk_strerror(rc), rc);
-        }
-
-        sa.sa_handler = sigchld_handler;
-        sa.sa_flags = 0;
-        sigemptyset(&sa.sa_mask);
-        if (sigaction(SIGCHLD, &sa, &old_sa) < 0) {
-            crm_perror(LOG_ERR, "sigaction() failed to set sigchld handler");
-        }
-
-        pmask = NULL;
-#endif
+        sigchld_setup(&data);
     }
 
     op->pid = fork();
@@ -837,7 +922,7 @@ services_os_action_execute(svc_action_t * op)
                 return operation_finalize(op);
             }
 
-            sigchld_cleanup();
+            sigchld_cleanup(&data);
             return FALSE;
 
         case 0:                /* Child */
@@ -867,7 +952,7 @@ services_os_action_execute(svc_action_t * op)
             }
 
             if (op->synchronous) {
-                sigchld_cleanup();
+                sigchld_cleanup(&data);
             }
 
             action_launch_child(op);
@@ -919,8 +1004,8 @@ services_os_action_execute(svc_action_t * op)
     }
 
     if (op->synchronous) {
-        action_synced_wait(op, pmask);
-        sigchld_cleanup();
+        action_synced_wait(op, &data);
+        sigchld_cleanup(&data);
     } else {
 
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
