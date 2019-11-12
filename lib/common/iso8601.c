@@ -1686,10 +1686,12 @@ crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt)
 
 /*!
  * \internal
- * \brief Return human-friendly string representing current time
+ * \brief Return human-friendly string corresponding to a time
  *
- * \return Current time as string (as by ctime() but without newline) on success
- *         or "Could not determine current time" on error
+ * \param[in] when   Pointer to epoch time value (or NULL for current time)
+ *
+ * \return Current time as string (as by ctime() but without newline) on
+ *         success, NULL otherwise
  * \note The return value points to a statically allocated string which might be
  *       overwritten by subsequent calls to any of the C library date and time functions.
  */

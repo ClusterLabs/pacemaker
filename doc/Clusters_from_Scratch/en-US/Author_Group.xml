@@ -3,9 +3,8 @@
 ]>
 <authorgroup>
   <author>
-    <firstname>Andrew</firstname><surname>Beekhof</surname>
-    <affiliation><orgname>Red Hat</orgname></affiliation>
-    <contrib>Primary author</contrib>
-    <email>andrew@beekhof.net</email>
+    <affiliation>
+      <orgname>Written by the Pacemaker project contributors</orgname>
+    </affiliation>
   </author>
 </authorgroup>
