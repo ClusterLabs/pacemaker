@@ -382,8 +382,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show &= ~mon_show_summary;
-    return TRUE;
+    return include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
@@ -425,8 +424,7 @@ print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_timing;
-    show |= mon_show_operations;
-    return TRUE;
+    return include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
@@ -445,37 +443,31 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_attributes;
-    return TRUE;
+    return include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_bans;
-
     if (optarg != NULL) {
         print_neg_location_prefix = optarg;
     }
 
-    return TRUE;
+    return include_exclude_cb("--include", "bans", data, err);
 }
 
 static gboolean
 show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_failcounts;
-    return TRUE;
+    return include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
 show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_operations;
-    return TRUE;
+    return include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
 show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_tickets;
-    return TRUE;
+    return include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
@@ -1132,7 +1124,7 @@ main(int argc, char **argv)
 
     if (!args->version) {
         if (args->quiet) {
-            show &= ~mon_show_times;
+            include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
         if (is_set(options.mon_ops, mon_op_watch_fencing)) {
