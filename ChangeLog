@@ -1,3 +1,13 @@
+* Tue Nov 12 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc3
+- Changesets: 23
+- Diff: 39 files changed, 472 insertions(+), 316 deletions(-)
+
+- Changes since Pacemaker-2.0.3-rc2
+  + logging: Clarify action failure messages by including failure time
+  + tools: Fix several minor crm_mon regressions introduced in 2.0.3-rc1
+  + tools: Rename new crm_mon options introduced in 2.0.3-rc1 for clarity
+  + tools: Count disabled/blocked resources correctly in crm_mon/crm_simulate
+
 * Wed Oct 30 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc2
 - Changesets: 20
 - Diff: 14 files changed, 333 insertions(+), 219 deletions(-)
