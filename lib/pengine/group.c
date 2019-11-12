@@ -59,6 +59,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 if (new_rsc != NULL && new_rsc->fns != NULL) {
                     new_rsc->fns->free(new_rsc);
                 }
+                continue;
             }
 
             group_data->num_children++;
