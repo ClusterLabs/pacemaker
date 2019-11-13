@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 the Pacemaker project contributors
+ * Copyright 2017-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -132,6 +132,15 @@ do {                                                                            
         free(CXLB_buf);                                                         \
     }                                                                           \
 } while (0)
+
+/*!
+ * \internal
+ * \brief Serialize XML (using libxml) into provided descriptor
+ *
+ * \param[in] fd  File descriptor to (piece-wise) write to
+ * \param[in] cur XML subtree to proceed
+ */
+void pcmk__xml_serialize_fd_formatted(int fd, xmlNode *cur);
 
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,

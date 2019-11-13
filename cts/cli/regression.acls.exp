@@ -22,8 +22,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -59,8 +59,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -97,8 +97,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -135,8 +135,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -176,8 +176,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -220,8 +220,8 @@ A new shadow instance was created.  To begin using it paste the following into y
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -303,8 +303,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -356,8 +356,8 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -407,8 +407,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -453,8 +453,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -501,8 +501,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -571,8 +571,8 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -627,8 +627,8 @@ Stopped
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -681,8 +681,8 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -738,8 +738,8 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -844,8 +844,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -899,8 +899,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -953,8 +953,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -1007,8 +1007,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -1061,8 +1061,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -1112,8 +1112,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -1159,8 +1159,8 @@ Call failed: Permission denied
       </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <write id="observer-write-1" xpath="//nvpair[@name='stonith-enabled']"/>
+        <write id="observer-write-2" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
@@ -1236,8 +1236,8 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <acl_permission> with id
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1329,8 +1329,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1390,8 +1390,8 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1450,8 +1450,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1505,8 +1505,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1562,8 +1562,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1641,8 +1641,8 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1706,8 +1706,8 @@ Stopped
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1769,8 +1769,8 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1835,8 +1835,8 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -1950,8 +1950,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2014,8 +2014,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2077,8 +2077,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2140,8 +2140,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2203,8 +2203,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2263,8 +2263,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
@@ -2319,8 +2319,8 @@ Call failed: Permission denied
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
         <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
