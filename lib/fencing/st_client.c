@@ -1162,15 +1162,6 @@ void stonith_history_free(stonith_history_t *history)
     }
 }
 
-/*!
- * \brief Deprecated (use stonith_get_namespace() instead)
- */
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
-}
-
 static gint
 stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
@@ -2594,4 +2585,16 @@ stonith__sort_history(stonith_history_t *history)
         new = pending;
     }
     return new;
+}
+
+// Deprecated functions kept only for backward API compatibility
+const char *get_stonith_provider(const char *agent, const char *provider);
+
+/*!
+ * \brief Deprecated (use stonith_get_namespace() instead)
+ */
+const char *
+get_stonith_provider(const char *agent, const char *provider)
+{
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }

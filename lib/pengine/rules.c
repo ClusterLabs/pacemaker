@@ -60,29 +60,6 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
 }
 
 gboolean
-test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
-{
-    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
-}
-
-gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
-}
-
-gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
@@ -125,30 +102,6 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 
     crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
     return passed;
-}
-
-gboolean
-pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-                  crm_time_t *now, pe_match_data_t *match_data)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
-}
-
-gboolean
-test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
 }
 
 /*!
@@ -222,14 +175,6 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     crm_trace("Expression %s %s on %s",
               ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
-}
-
-gboolean
-pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                        enum rsc_role_e role, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
 }
 
 enum expression_type
@@ -1059,16 +1004,6 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                          overwrite, now, next_change, unpack_attr_set);
 }
 
-void
-unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                           GHashTable *node_hash, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           crm_time_t *now)
-{
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, NULL, unpack_attr_set);
-}
-
 #if ENABLE_VERSIONED_ATTRS
 void
 pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
@@ -1162,3 +1097,91 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
     return hash;
 }
 #endif
+
+// Deprecated functions kept only for backward API compatibility
+gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
+gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now);
+gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now,
+                         pe_re_match_data_t *re_match_data);
+gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
+                           enum rsc_role_e role, crm_time_t *now,
+                           pe_match_data_t *match_data);
+gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now);
+gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
+                               enum rsc_role_e role, crm_time_t *now,
+                               pe_re_match_data_t *re_match_data);
+gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                                 enum rsc_role_e role, crm_time_t *now,
+                                 pe_match_data_t *match_data);
+void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
+                                const char *set_name, GHashTable *node_hash,
+                                GHashTable *hash, const char *always_first,
+                                gboolean overwrite, crm_time_t *now);
+
+gboolean
+test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
+{
+    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
+}
+
+gboolean
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
+}
+
+gboolean
+pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
+}
+
+gboolean
+pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                  crm_time_t *now, pe_match_data_t *match_data)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
+test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
+}
+
+gboolean
+pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
+}
+
+gboolean
+pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                        enum rsc_role_e role, crm_time_t *now,
+                        pe_match_data_t *match_data)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
+}
+
+void
+unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           crm_time_t *now)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, NULL, unpack_attr_set);
+}

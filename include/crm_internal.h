@@ -22,6 +22,11 @@
 #  include <crm/common/ipcs.h>
 #  include <crm/common/internal.h>
 
+/* This symbol allows us to deprecate public API and prevent internal code from
+ * using it while still keeping it for backward compatibility.
+ */
+#define PCMK__NO_COMPAT
+
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
 

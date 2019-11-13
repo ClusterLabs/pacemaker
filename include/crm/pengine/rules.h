@@ -72,6 +72,11 @@ GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
 //! \deprecated Use pe_evaluate_rules() instead
 gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 
@@ -108,6 +113,7 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
                                 const char *set_name, GHashTable *node_hash,
                                 GHashTable *hash, const char *always_first,
                                 gboolean overwrite, crm_time_t *now);
+#endif
 
 #ifdef __cplusplus
 }
