@@ -292,7 +292,7 @@ crm_add_logfile(const char *filename)
             return FALSE;
         }
 
-        if(crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) == 0) {
+        if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) == 0) {
             if (st.st_gid != pcmk_gid) {
                 /* Wrong group */
                 fix = TRUE;

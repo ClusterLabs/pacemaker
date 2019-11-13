@@ -195,6 +195,7 @@ char *crm_generate_uuid(void);
 bool crm_is_daemon_name(const char *name);
 
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
+int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 void crm_gnutls_global_init(void);

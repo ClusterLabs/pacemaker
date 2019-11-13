@@ -267,7 +267,7 @@ mcp_read_config(void)
 
     if(local_handle){
         gid_t gid = 0;
-        if (crm_user_lookup(CRM_DAEMON_USER, NULL, &gid) < 0) {
+        if (pcmk_daemon_user(NULL, &gid) < 0) {
             crm_warn("Could not authorize group with corosync " CRM_XS
                      " No group found for user %s", CRM_DAEMON_USER);
 

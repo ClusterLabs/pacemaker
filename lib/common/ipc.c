@@ -364,22 +364,20 @@ crm_client_alloc(void *key)
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 {
-    static gid_t uid_cluster = 0;
-    static gid_t gid_cluster = 0;
+    gid_t uid_cluster = 0;
+    gid_t gid_cluster = 0;
 
     crm_client_t *client = NULL;
 
     CRM_CHECK(c != NULL, return NULL);
 
-    if (uid_cluster == 0) {
-        if (crm_user_lookup(CRM_DAEMON_USER, &uid_cluster, &gid_cluster) < 0) {
-            static bool need_log = TRUE;
+    if (pcmk_daemon_user(&uid_cluster, &gid_cluster) < 0) {
+        static bool need_log = TRUE;
 
-            if (need_log) {
-                crm_warn("Could not find user and group IDs for user %s",
-                         CRM_DAEMON_USER);
-                need_log = FALSE;
-            }
+        if (need_log) {
+            crm_warn("Could not find user and group IDs for user %s",
+                     CRM_DAEMON_USER);
+            need_log = FALSE;
         }
     }
 
@@ -955,8 +953,8 @@ crm_ipc_new(const char *name, size_t max_size)
 bool
 crm_ipc_connect(crm_ipc_t * client)
 {
-    static uid_t cl_uid = 0;
-    static gid_t cl_gid = 0;
+    uid_t cl_uid = 0;
+    gid_t cl_gid = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
     int rv;
 
@@ -977,9 +975,8 @@ crm_ipc_connect(crm_ipc_t * client)
         return FALSE;
     }
 
-    if (!cl_uid && !cl_gid
-            && (rv = crm_user_lookup(CRM_DAEMON_USER, &cl_uid, &cl_gid)) < 0) {
-        errno = -rv;
+    rv = pcmk_daemon_user(&cl_uid, &cl_gid);
+    if (rv < 0) {
         /* message already omitted */
         crm_ipc_close(client);
         errno = -rv;
