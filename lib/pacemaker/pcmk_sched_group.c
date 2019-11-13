@@ -34,7 +34,7 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     if (group_data->first_child == NULL) {
-        /* nothign to allocate */
+        // Nothing to allocate
         clear_bit(rsc->flags, pe_rsc_provisional);
         return NULL;
     }
