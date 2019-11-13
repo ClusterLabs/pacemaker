@@ -397,7 +397,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             /*
              * Low(er) priority actions
              * Make sure the CIB is always updated before invoking the
-             * PE, and the PE before the TE
+             * scheduler, and the scheduler before the transition engine.
              */
         } else if (fsa_actions & A_TE_HALT) {
             do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);

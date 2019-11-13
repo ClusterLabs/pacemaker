@@ -261,8 +261,8 @@ do_dc_join_offer_one(long long action,
         join_make_offer(NULL, member, NULL);
     }
 
-    /* this was a genuine join request, cancel any existing
-     * transition and invoke the PE
+    /* This was a genuine join request; cancel any existing transition and
+     * invoke the scheduler.
      */
     abort_transition(INFINITY, tg_restart, "Node join", NULL);
 

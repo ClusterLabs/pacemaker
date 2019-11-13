@@ -164,7 +164,7 @@ pe_subsystem_new()
 
 /*!
  * \internal
- * \brief Send an XML message to the PE
+ * \brief Send an XML message to the scheduler
  *
  * \param[in] cmd  XML message to send
  *
