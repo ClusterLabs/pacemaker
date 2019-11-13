@@ -82,8 +82,7 @@ extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *
 extern gboolean shutdown_constraints(node_t * node, action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
-extern gboolean stonith_constraints(node_t * node, action_t * stonith_op,
-                                    pe_working_set_t * data_set);
+void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 extern int custom_action_order(resource_t * lh_rsc, char *lh_task, action_t * lh_action,
                                resource_t * rh_rsc, char *rh_task, action_t * rh_action,

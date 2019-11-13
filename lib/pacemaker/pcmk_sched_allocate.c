@@ -1516,7 +1516,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     }
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
-    stonith_constraints(node, stonith_op, data_set);
+    pcmk__order_vs_fence(stonith_op, data_set);
 }
 
 /*
@@ -1571,7 +1571,7 @@ stage6(pe_working_set_t * data_set)
             stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_constraints(node, stonith_op, data_set);
+            pcmk__order_vs_fence(stonith_op, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being fenced
