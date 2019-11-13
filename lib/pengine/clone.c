@@ -99,8 +99,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-
-    print_resource(LOG_TRACE, "Added ", child_rsc, FALSE);
+    pe_rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
     free(inc_num);
@@ -590,7 +589,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -689,7 +688,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 
@@ -876,7 +875,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 

@@ -351,7 +351,7 @@ gboolean services_alert_async(svc_action_t *action,
             case PCMK_OCF_OK:
                 return "ok";
             case PCMK_OCF_UNKNOWN_ERROR:
-                return "unknown error";
+                return "error";
             case PCMK_OCF_INVALID_PARAM:
                 return "invalid parameter";
             case PCMK_OCF_UNIMPLEMENT_FEATURE:

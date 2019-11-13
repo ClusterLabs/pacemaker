@@ -480,8 +480,9 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  * \brief Register a new output formatter, making it available for use
  *        the same as a base formatter.
  *
- * \param[in,out] context A context to add any format-specific options to.  This
- *                        can be NULL for use outside of command line programs.
+ * \param[in,out] group   A ::GOptionGroup that formatted output related command
+ *                        line arguments should be added to.  This can be NULL
+ *                        for use outside of command line programs.
  * \param[in]     name    The name of the format.  This will be used to select a
  *                        format from command line options and for displaying help.
  * \param[in]     create  A function that creates a ::pcmk__output_t.
@@ -491,21 +492,22 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  * \return 0 on success or an error code on error.
  */
 int
-pcmk__register_format(GOptionContext *context, const char *name,
+pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create, GOptionEntry *options);
 
 /*!
  * \internal
  * \brief Register an entire table of output formatters at once.
  *
- * \param[in,out] context A context to add any format-specific options to.  This
- *                        can be NULL for use outside of command line programs.
+ * \param[in,out] group A ::GOptionGroup that formatted output related command
+ *                      line arguments should be added to.  This can be NULL
+ *                      for use outside of command line programs.
  * \param[in]     table An array of ::pcmk__supported_format_t which should
  *                      all be registered.  This array must be NULL-terminated.
  *
  */
 void
-pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *table);
+pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *table);
 
 /*!
  * \internal

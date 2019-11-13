@@ -152,22 +152,9 @@ pe__output_node(node_t *node, gboolean details, pcmk__output_t *out)
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
 
-            pe__output_resource(LOG_TRACE, rsc, FALSE, out);
+            // @TODO pe_print_log probably doesn't belong here
+            out->message(out, crm_map_element_name(rsc->xml),
+                         pe_print_log|pe_print_pending, rsc);
         }
     }
-}
-
-void
-pe__output_resource(int log_level, resource_t *rsc, gboolean details, pcmk__output_t  *out)
-{
-    long options = pe_print_log | pe_print_pending;
-
-    if (rsc == NULL) {
-        do_crm_log(log_level - 1, "<NULL>");
-        return;
-    }
-    if (details) {
-        options |= pe_print_details;
-    }
-    out->message(out, crm_element_name(rsc->xml), options, rsc);
 }

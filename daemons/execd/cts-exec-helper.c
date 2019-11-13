@@ -1,5 +1,7 @@
 /*
- * Copyright 2012-2019 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -367,6 +369,7 @@ generate_params(void)
         crm_crit("Could not allocate working set");
         return -ENOMEM;
     }
+    set_bit(data_set->flags, pe_flag_no_counts);
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);

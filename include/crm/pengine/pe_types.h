@@ -52,6 +52,7 @@ typedef struct resource_object_functions_s {
     enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
+    void (*count) (pe_resource_t*);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -110,6 +111,9 @@ enum pe_find {
 #  define pe_flag_sanitized             0x00200000ULL
 #  define pe_flag_stdout                0x00400000ULL
 
+//! Don't count total, disabled and blocked resource instances
+#  define pe_flag_no_counts             0x00800000ULL
+
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
@@ -162,6 +166,7 @@ struct pe_working_set_s {
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
+    int ninstances;     // Total number of resource instances
 };
 
 enum pe_check_parameters {

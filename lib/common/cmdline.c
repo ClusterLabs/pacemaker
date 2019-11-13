@@ -50,11 +50,17 @@ free_common_args(gpointer data) {
     free(common_args->summary);
     free(common_args->output_ty);
     free(common_args->output_dest);
+
+    if (common_args->output_as_descr != NULL) {
+        free(common_args->output_as_descr);
+    }
+
     free(common_args);
 }
 
 GOptionContext *
-pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
+pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
+                        GOptionGroup **output_group) {
     char *desc = crm_strdup_printf("Report bugs to %s\n", PACKAGE_BUGREPORT);
     GOptionContext *context;
     GOptionGroup *main_group;
@@ -79,7 +85,7 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
     g_option_context_set_main_group(context, main_group);
 
     if (fmts != NULL) {
-        GOptionEntry output_main_entries[3] = {
+        GOptionEntry output_entries[3] = {
             { "output-as", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_ty),
               NULL,
               "FORMAT" },
@@ -89,13 +95,28 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts) {
             { NULL }
         };
 
-        output_main_entries[0].description = crm_strdup_printf("Specify output format as one of: %s", fmts);
-        g_option_context_add_main_entries(context, output_main_entries, NULL);
+        if (*output_group == NULL) {
+            *output_group = g_option_group_new("output", "Output Options:", "Show output help", NULL, NULL);
+        }
+
+        common_args->output_as_descr = crm_strdup_printf("Specify output format as one of: %s", fmts);
+        output_entries[0].description = common_args->output_as_descr;
+        g_option_group_add_entries(*output_group, output_entries);
+        g_option_context_add_group(context, *output_group);
     }
 
     free(desc);
 
     return context;
+}
+
+void
+pcmk__free_arg_context(GOptionContext *context) {
+    if (context == NULL) {
+        return;
+    }
+
+    g_option_context_free(context);
 }
 
 void

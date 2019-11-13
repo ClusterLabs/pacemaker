@@ -16,7 +16,7 @@ command line options for changing the style of the output.  For instance:
 
 ======
 -------
-# crm_mon --help-output-html
+# crm_mon --help-output
 Usage:
   crm_mon [OPTION?]
 
@@ -24,11 +24,13 @@ Provides a summary of cluster's current state.
 
 Outputs varying levels of detail in a number of different formats.
 
-Output Options (html):
-  --output-cgi                      Add text needed to use output in a CGI program
-  --output-meta-refresh=SECONDS     How often to refresh
-  --output-stylesheet-link=URI      Link to an external CSS stylesheet
-  --output-title=TITLE              Page title
+Output Options:
+  --output-as=FORMAT                Specify output format as one of: console (default), html, text, xml
+  --output-to=DEST                  Specify file name for output (or "-" for stdout)
+  --html-cgi                        Add text needed to use output in a CGI program
+  --html-stylesheet=URI             Link to an external CSS stylesheet
+  --html-title=TITLE                Page title
+  --text-fancy                      Use more highly formatted output
 -------
 ======
 
@@ -133,7 +135,7 @@ in the above example is:
 ======
 
 If you want to override some or all of the styling, simply create your own
-stylesheet, place it on a web server, and pass `--output-stylesheet-link=<URL>`
+stylesheet, place it on a web server, and pass `--html-stylesheet=<URL>`
 to `crm_mon`.  The link is added after the default stylesheet, so your
 changes take precedence.  You don't need to duplicate the entire default.
 Only include what you want to change.

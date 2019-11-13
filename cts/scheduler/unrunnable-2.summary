@@ -1,4 +1,4 @@
-6 of 117 resources DISABLED and 0 BLOCKED from being started due to failures
+6 of 117 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]

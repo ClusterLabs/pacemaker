@@ -181,10 +181,8 @@ a|Older versions used this to override the default period to wait for a STONITH 
 
 |pcmk_host_check
 |string
-|static-list if either +pcmk_host_list+ or +pcmk_host_map+ is set,
- otherwise dynamic-list if the fence device supports the list action,
- otherwise status if the fence device supports the status action,
- otherwise none
+|A value appropriate to other configuration options and
+ device capabilities (see note below)
 a|How to determine which machines are controlled by the device.
  Allowed values:
 
@@ -396,6 +394,15 @@ to alter the number of times Pacemaker retries before giving up.
  indexterm:[Fencing,Property,pcmk_status_retries]
 
 |=========================================================
+
+[NOTE]
+====
+The default value for +pcmk_host_check+ is +static-list+ if either
++pcmk_host_list+ or +pcmk_host_map+ is configured. If neither of those are
+configured, the default is +dynamic-list+ if the fence device supports the list
+action, or +status+ if the fence device supports the status action but not the
+list action. If none of those conditions apply, the default is +none+.
+====
 
 [[s-unfencing]]
 == Unfencing ==

@@ -30,6 +30,56 @@
         </revdescription>
       </revision>
       <revision>
+        <revnumber>3-1</revnumber>
+        <date>Tue Nov 12 2009</date>
+        <author>
+          <firstname>Tanja</firstname><surname>Roth</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>taroth@suse.com</email>
+        </author>
+        <author>
+          <firstname>Lars</firstname><surname>Marowsky-Bree</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>lmb@suse.com</email>
+        </author>
+        <author>
+          <firstname>Yan</firstname><surname>Gao</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>ygao@suse.com</email>
+        </author>
+        <author>
+          <firstname>Thomas</firstname><surname>Schraitle</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>toms@suse.com</email>
+        </author>
+        <author>
+          <firstname>Dejan</firstname><surname>Muhamedagic</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>dmuhamedagic@suse.com</email>
+        </author>
+        <revdescription>
+          <simplelist>
+            <member>Utilization chapter</member>
+            <member>Resource Templates chapter</member>
+            <member>Multi-Site Clusters chapter</member>
+          </simplelist>
+        </revdescription>
+      </revision>
+      <revision>
+        <revnumber>3-2</revnumber>
+        <date>Fri Nov 4 2011</date>
+        <author>
+          <firstname>Philipp</firstname><surname>Marek</surname>
+          <affiliation><orgname>LINBit</orgname></affiliation>
+          <email>philipp.marek@linbit.com</email>
+        </author>
+        <revdescription>
+          <simplelist>
+            <member>Extensive style, formatting, and indexing updates</member>
+          </simplelist>
+        </revdescription>
+      </revision>
+      <revision>
         <revnumber>4-0</revnumber>
         <date>Mon Oct 8 2012</date>
         <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>

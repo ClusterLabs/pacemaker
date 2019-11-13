@@ -121,6 +121,13 @@ cluster_status(pe_working_set_t * data_set)
         unpack_status(cib_status, data_set);
     }
 
+    if (is_not_set(data_set->flags, pe_flag_no_counts)) {
+        for (GList *item = data_set->resources; item != NULL;
+             item = item->next) {
+            ((pe_resource_t *) (item->data))->fns->count(item->data);
+        }
+    }
+
     set_bit(data_set->flags, pe_flag_have_status);
     return TRUE;
 }

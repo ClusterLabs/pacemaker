@@ -38,16 +38,16 @@ static char *stylesheet_link = NULL;
 static char *title = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
-    { "output-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
-      "Add text needed to use output in a CGI program",
+    { "html-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
+      "Add CGI headers (requires --output-as=html)",
       NULL },
 
-    { "output-stylesheet-link", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
-      "Link to an external CSS stylesheet",
+    { "html-stylesheet", 0, 0, G_OPTION_ARG_STRING, &stylesheet_link,
+      "Link to an external stylesheet (requires --output-as=html)",
       "URI" },
 
-    { "output-title", 0, 0, G_OPTION_ARG_STRING, &title,
-      "Page title",
+    { "html-title", 0, 0, G_OPTION_ARG_STRING, &title,
+      "Specify a page title (requires --output-as=html)",
       "TITLE" },
 
     { NULL }
@@ -144,7 +144,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     /* Stylesheets are included two different ways.  The first is via a built-in
      * default (see the stylesheet_default const above).  The second is via the
-     * "stylesheet-link" option, and this should obviously be a link to a
+     * html-stylesheet option, and this should obviously be a link to a
      * stylesheet.  The second can override the first.  At least one should be
      * given.
      */
@@ -260,6 +260,7 @@ G_GNUC_PRINTF(4, 5)
 static void
 html_begin_list(pcmk__output_t *out, const char *singular_noun,
                 const char *plural_noun, const char *format, ...) {
+    int q_len = 0;
     private_data_t *priv = out->priv;
     xmlNodePtr node = NULL;
 
@@ -269,7 +270,8 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
      * one because of the <html> element), first create a <li> element
      * to hold the <h2> and the new list.
      */
-    if (g_queue_get_length(priv->parent_q) > 2) {
+    q_len = g_queue_get_length(priv->parent_q);
+    if (q_len > 2) {
         pcmk__output_xml_create_parent(out, "li");
     }
 
@@ -283,7 +285,12 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         va_end(ap);
         CRM_ASSERT(len >= 0);
 
-        pcmk__output_create_xml_text_node(out, "h2", buf);
+        if (q_len > 2) {
+            pcmk__output_create_xml_text_node(out, "h3", buf);
+        } else {
+            pcmk__output_create_xml_text_node(out, "h2", buf);
+        }
+
         free(buf);
     }
 

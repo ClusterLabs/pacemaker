@@ -682,6 +682,7 @@ main(int argc, char **argv)
         exit_code = CRM_EX_OSERR;
         goto bail;
     }
+    set_bit(data_set->flags, pe_flag_no_counts);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
