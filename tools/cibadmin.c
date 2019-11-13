@@ -12,6 +12,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
@@ -72,8 +73,6 @@ void cibadmin_op_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 static void
 print_xml_output(xmlNode * xml)
 {
-    char *buffer;
-
     if (!xml) {
         return;
     } else if (xml->type != XML_ELEMENT_NODE) {
@@ -95,9 +94,7 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", pcmk__s(buffer, "<null>\n"));
-        free(buffer);
+        pcmk__xml2fd(STDOUT_FILENO, xml);
     }
 }
 
@@ -569,13 +566,9 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
-        char *buf = NULL;
-
         output = createEmptyCib(1);
         crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
-        buf = dump_xml_formatted(output);
-        fprintf(stdout, "%s", pcmk__s(buf, "<null>\n"));
-        free(buf);
+        pcmk__xml2fd(STDOUT_FILENO, output);
         goto done;
     }
 
@@ -726,7 +719,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (strcmp(options.cib_action, "md5-sum") == 0) {
+    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_casei)) {
         char *digest = NULL;
 
         if (input == NULL) {

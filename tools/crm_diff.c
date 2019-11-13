@@ -106,10 +106,7 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 static void
 print_patch(xmlNode *patch)
 {
-    char *buffer = dump_xml_formatted(patch);
-
-    printf("%s", pcmk__s(buffer, "<null>\n"));
-    free(buffer);
+    pcmk__xml2fd(STDOUT_FILENO, patch);
     fflush(stdout);
 }
 
