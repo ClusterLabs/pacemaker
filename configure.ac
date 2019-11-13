@@ -1885,8 +1885,6 @@ CFLAGS_COPY="$CFLAGS"
 AC_SUBST(CFLAGS_COPY)
 
 AC_SUBST(LIBADD_DL)        dnl extra flags for dynamic linking libraries
-AC_SUBST(LIBADD_INTL)        dnl extra flags for GNU gettext stuff...
-
 AC_SUBST(LOCALE)
 
 dnl Options for cleaning up the compiler output
