@@ -36,6 +36,10 @@
 #  include <systemd.h>
 #endif
 
+#if SUPPORT_NAGIOS
+#  include <services_nagios.h>
+#endif
+
 /* TODO: Develop a rollover strategy */
 
 static int operations = 0;
@@ -827,57 +831,6 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
-#if SUPPORT_NAGIOS
-static int
-nagios_get_metadata(const char *type, char **output)
-{
-    int rc = pcmk_ok;
-    FILE *file_strm = NULL;
-    int start = 0, length = 0, read_len = 0;
-    char *metadata_file = crm_strdup_printf("%s/%s.xml",
-                                            NAGIOS_METADATA_DIR, type);
-
-    file_strm = fopen(metadata_file, "r");
-    if (file_strm == NULL) {
-        crm_err("Metadata file %s does not exist", metadata_file);
-        free(metadata_file);
-        return -EIO;
-    }
-
-    /* see how big the file is */
-    start = ftell(file_strm);
-    fseek(file_strm, 0L, SEEK_END);
-    length = ftell(file_strm);
-    fseek(file_strm, 0L, start);
-
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(file_strm));
-
-    if (length <= 0) {
-        crm_info("%s was not valid", metadata_file);
-        free(*output);
-        *output = NULL;
-        rc = -EIO;
-
-    } else {
-        crm_trace("Reading %d bytes from file", length);
-        *output = calloc(1, (length + 1));
-        read_len = fread(*output, 1, length, file_strm);
-        if (read_len != length) {
-            crm_err("Calculated and read bytes differ: %d vs. %d",
-                    length, read_len);
-            free(*output);
-            *output = NULL;
-            rc = -EIO;
-        }
-    }
-
-    fclose(file_strm);
-    free(metadata_file);
-    return rc;
-}
-#endif
-
 static gboolean
 action_get_metadata(svc_action_t *op)
 {
@@ -910,7 +863,7 @@ action_get_metadata(svc_action_t *op)
 
 #if SUPPORT_NAGIOS
     if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
-        return (nagios_get_metadata(op->agent, &op->stdout_data) >= 0);
+        return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
     }
 #endif
 
@@ -987,7 +940,7 @@ resources_list_standards(void)
 #endif
 
 #if SUPPORT_NAGIOS
-    agents = resources_os_list_nagios_agents();
+    agents = services__list_nagios_agents();
     if (agents) {
         standards = g_list_append(standards,
                                   strdup(PCMK_RESOURCE_CLASS_NAGIOS));
@@ -1057,7 +1010,7 @@ resources_list_agents(const char *standard, const char *provider)
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        return resources_os_list_nagios_agents();
+        return services__list_nagios_agents();
 #endif
     }
 
