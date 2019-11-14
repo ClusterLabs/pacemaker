@@ -131,6 +131,9 @@ enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e pe__bundle_resource_state(const pe_resource_t *rsc,
                                           gboolean current);
 
+void pe__count_common(pe_resource_t *rsc);
+void pe__count_bundle(pe_resource_t *rsc);
+
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
                        pe_working_set_t * data_set);
 void common_free(resource_t * rsc);
@@ -193,9 +196,6 @@ GHashTable *node_hash_dup(GHashTable * hash);
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
 extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
 extern void pe__output_node(node_t * node, gboolean details, pcmk__output_t *out);
-
-extern void print_resource(int log_level, const char *pre_text, resource_t * rsc, gboolean details);
-extern void pe__output_resource(int log_level, resource_t * rsc, gboolean details, pcmk__output_t *out);
 
 extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
                                     resource_t * rsc, const char *comment, GHashTable * nodes);
@@ -397,5 +397,7 @@ void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
                                 GHashTable *node_hash, GHashTable *hash,
                                 const char *always_first, gboolean overwrite,
                                 pe_working_set_t *data_set);
+
+bool pe__resource_is_disabled(pe_resource_t *rsc);
 
 #endif

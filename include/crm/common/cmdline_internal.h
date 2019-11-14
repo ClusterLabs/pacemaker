@@ -18,6 +18,7 @@ extern "C" {
 
 typedef struct {
     char *summary;
+    char *output_as_descr;
 
     gboolean version;
     gboolean quiet;
@@ -52,12 +53,25 @@ pcmk__new_common_args(const char *summary);
  *       pcmk__register_formats() as that function adds its own command line
  *       options.
  *
- * \param[in,out] common_args A ::pcmk__common_args_t structure where the
- *                            results of handling command options will be written.
- * \param[in]     fmts        The help string for which formats are supported.
+ * \param[in,out] common_args  A ::pcmk__common_args_t structure where the
+ *                             results of handling command options will be written.
+ * \param[in]     fmts         The help string for which formats are supported.
+ * \param[in,out] output_group A ::GOptionGroup that formatted output related
+ *                             command line arguments should be added to.
  */
 GOptionContext *
-pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts);
+pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
+                        GOptionGroup **output_group);
+
+/*!
+ * \internal
+ * \brief Clean up after pcmk__build_arg_context().  This should be called
+ *        instead of ::g_option_context_free at program termination.
+ *
+ * \param[in,out] context Argument context to free
+ */
+void
+pcmk__free_arg_context(GOptionContext *context);
 
 /*!
  * \internal

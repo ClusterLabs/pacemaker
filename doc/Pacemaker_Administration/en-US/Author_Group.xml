@@ -3,15 +3,8 @@
 ]>
 <authorgroup>
   <author>
-    <firstname>Andrew</firstname><surname>Beekhof</surname>
-    <affiliation><orgname>Red Hat</orgname></affiliation>
-    <contrib>Co-author</contrib>
-    <email>andrew@beekhof.net</email>
-  </author>
-  <author>
-    <firstname>Ken</firstname><surname>Gaillot</surname>
-    <affiliation><orgname>Red Hat</orgname></affiliation>
-    <contrib>Co-author</contrib>
-    <email>kgaillot@redhat.com</email>
+    <affiliation>
+      <orgname>Written by the Pacemaker project contributors</orgname>
+    </affiliation>
   </author>
 </authorgroup>

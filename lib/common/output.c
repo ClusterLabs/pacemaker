@@ -74,7 +74,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
 }
 
 int
-pcmk__register_format(GOptionContext *context, const char *name,
+pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create, GOptionEntry *options) {
     if (create == NULL) {
         return -EINVAL;
@@ -84,20 +84,8 @@ pcmk__register_format(GOptionContext *context, const char *name,
         formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
     }
 
-    if (options != NULL && context != NULL) {
-        char *group_name = crm_strdup_printf("output-%s", name);
-        char *group_desc = crm_strdup_printf("Output Options (%s):", name);
-        char *group_help = crm_strdup_printf("Show %s output help", name);
-
-        GOptionGroup *group = g_option_group_new(group_name, group_desc,
-                                                 group_help, NULL, NULL);
-
+    if (options != NULL && group != NULL) {
         g_option_group_add_entries(group, options);
-        g_option_context_add_group(context, group);
-
-        free(group_name);
-        free(group_desc);
-        free(group_help);
     }
 
     g_hash_table_insert(formatters, strdup(name), create);
@@ -105,7 +93,7 @@ pcmk__register_format(GOptionContext *context, const char *name,
 }
 
 void
-pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *formats) {
+pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *formats) {
     pcmk__supported_format_t *entry = NULL;
 
     if (formats == NULL) {
@@ -113,7 +101,7 @@ pcmk__register_formats(GOptionContext *context, pcmk__supported_format_t *format
     }
 
     for (entry = formats; entry->name != NULL; entry++) {
-        pcmk__register_format(context, entry->name, entry->create, entry->options);
+        pcmk__register_format(group, entry->name, entry->create, entry->options);
     }
 }
 

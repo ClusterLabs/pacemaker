@@ -566,7 +566,7 @@ run_pacemakerd_mainloop()
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -577,7 +577,7 @@ build_arg_context(pcmk__common_args_t *args) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL);
+    context = pcmk__build_arg_context(args, NULL, &group);
 
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.
@@ -598,9 +598,10 @@ main(int argc, char **argv)
 
     GError *error = NULL;
     GOptionContext *context = NULL;
+    GOptionGroup *output_group = NULL;
     gchar **processed_args = NULL;
 
-    context = build_arg_context(args);
+    context = build_arg_context(args, output_group);
 
     crm_log_cli_init("crm_node");
 
@@ -608,6 +609,8 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     for (int i = 0; i < args->verbosity; i++) {
@@ -655,7 +658,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    g_option_context_free(context);
+    pcmk__free_arg_context(context);
     crm_node_exit(exit_code);
     return exit_code;
 }

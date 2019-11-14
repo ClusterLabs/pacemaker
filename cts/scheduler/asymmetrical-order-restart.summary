@@ -1,5 +1,5 @@
 Using the original execution date of: 2018-08-09 18:55:41Z
-1 of 3 resources DISABLED and 0 BLOCKED from being started due to failures
+1 of 3 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ cesr105-p16 cesr109-p16 ]

@@ -173,6 +173,18 @@ crm_element_name(const xmlNode *xml)
     return xml? (const char *)(xml->name) : NULL;
 }
 
+static inline const char *
+crm_map_element_name(const xmlNode *xml)
+{
+    const char *name = crm_element_name(xml);
+
+    if (crm_str_eq(name, "master", TRUE)) {
+        return "clone";
+    } else {
+        return name;
+    }
+}
+
 gboolean xml_has_children(const xmlNode * root);
 
 char *calculate_on_disk_digest(xmlNode * local_cib);

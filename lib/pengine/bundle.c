@@ -1527,17 +1527,17 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == 0);
 
         if (replica->ip != NULL) {
-            out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip);
         }
 
         if (replica->child != NULL) {
-            out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child);
         }
 
-        out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container);
 
         if (replica->remote != NULL) {
-            out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1611,17 +1611,17 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child);
             }
 
-            out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote);
             }
 
             out->end_list(out);
@@ -1698,17 +1698,17 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_element_name(replica->ip->xml), options, replica->ip);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_element_name(replica->child->xml), options, replica->child);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child);
             }
 
-            out->message(out, crm_element_name(replica->container->xml), options, replica->container);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_element_name(replica->remote->xml), options, replica->remote);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote);
             }
 
             out->end_list(out);
@@ -1911,5 +1911,29 @@ pe_bundle_replicas(const resource_t *rsc)
 
         get_bundle_variant_data(bundle_data, rsc);
         return bundle_data->nreplicas;
+    }
+}
+
+void
+pe__count_bundle(pe_resource_t *rsc)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+    for (GList *item = bundle_data->replicas; item != NULL; item = item->next) {
+        pe__bundle_replica_t *replica = item->data;
+
+        if (replica->ip) {
+            replica->ip->fns->count(replica->ip);
+        }
+        if (replica->child) {
+            replica->child->fns->count(replica->child);
+        }
+        if (replica->container) {
+            replica->container->fns->count(replica->container);
+        }
+        if (replica->remote) {
+            replica->remote->fns->count(replica->remote);
+        }
     }
 }

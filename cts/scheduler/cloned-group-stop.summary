@@ -1,4 +1,4 @@
-2 of 20 resources DISABLED and 0 BLOCKED from being started due to failures
+2 of 20 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
 Online: [ rhos4-node3 rhos4-node4 ]

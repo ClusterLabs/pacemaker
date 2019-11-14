@@ -59,6 +59,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 if (new_rsc != NULL && new_rsc->fns != NULL) {
                     new_rsc->fns->free(new_rsc);
                 }
+                continue;
             }
 
             group_data->num_children++;
@@ -68,7 +69,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 group_data->first_child = new_rsc;
             }
             group_data->last_child = new_rsc;
-            print_resource(LOG_TRACE, "Added ", new_rsc, FALSE);
+            pe_rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
         }
     }
 
@@ -200,7 +201,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -221,7 +222,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
 
@@ -245,7 +246,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            out->message(out, crm_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
     out->end_list(out);

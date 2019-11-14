@@ -183,7 +183,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         if (printed_resource == FALSE) {
             printed_resource = TRUE;
         }
-        out->message(out, crm_element_name(rsc->xml), print_opts, rsc);
+        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc);
     }
 
     if (print_summary && !printed_resource) {
@@ -706,7 +706,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
             header_printed = TRUE;
         }
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
-                     count_resources(data_set, NULL), data_set->disabled_resources,
+                     data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 

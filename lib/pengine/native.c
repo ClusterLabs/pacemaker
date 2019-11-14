@@ -528,18 +528,15 @@ flags_string(pe_resource_t *rsc, pe_node_t *node, long options,
          * Show if target role limits our abilities. */
         if (target_role_e == RSC_ROLE_STOPPED) {
             flags[ndx++] = strdup("disabled");
-            rsc->cluster->disabled_resources++;
 
         } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_SLAVE) {
             flags[ndx++] = crm_strdup_printf("target-role:%s", target_role);
-            rsc->cluster->disabled_resources++;
         }
     }
 
     if (is_set(rsc->flags, pe_rsc_block)) {
         flags[ndx++] = strdup("blocked");
-        rsc->cluster->blocked_resources++;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
         flags[ndx++] = strdup("unmanaged");
@@ -917,20 +914,17 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
         if (target_role_e == RSC_ROLE_STOPPED) {
             flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
                                    "%sdisabled", comma_if(flagOffset));
-            rsc->cluster->disabled_resources++;
 
         } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_SLAVE) {
             flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
                                    "%starget-role:%s", comma_if(flagOffset), target_role);
-            rsc->cluster->disabled_resources++;
         }
     }
 
     if (is_set(rsc->flags, pe_rsc_block)) {
         flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
                                "%sblocked", comma_if(flagOffset));
-        rsc->cluster->blocked_resources++;
 
     } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
         flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,

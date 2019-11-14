@@ -19,44 +19,48 @@ void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs,
 
 resource_object_functions_t resource_class_functions[] = {
     {
-     native_unpack,
-     native_find_rsc,
-     native_parameter,
-     native_print,
-     native_active,
-     native_resource_state,
-     native_location,
-     native_free
+         native_unpack,
+         native_find_rsc,
+         native_parameter,
+         native_print,
+         native_active,
+         native_resource_state,
+         native_location,
+         native_free,
+         pe__count_common,
     },
     {
-     group_unpack,
-     native_find_rsc,
-     native_parameter,
-     group_print,
-     group_active,
-     group_resource_state,
-     native_location,
-     group_free
+         group_unpack,
+         native_find_rsc,
+         native_parameter,
+         group_print,
+         group_active,
+         group_resource_state,
+         native_location,
+         group_free,
+         pe__count_common,
     },
     {
-     clone_unpack,
-     native_find_rsc,
-     native_parameter,
-     clone_print,
-     clone_active,
-     clone_resource_state,
-     native_location,
-     clone_free
+         clone_unpack,
+         native_find_rsc,
+         native_parameter,
+         clone_print,
+         clone_active,
+         clone_resource_state,
+         native_location,
+         clone_free,
+         pe__count_common,
     },
     {
-     pe__unpack_bundle,
-     native_find_rsc,
-     native_parameter,
-     pe__print_bundle,
-     pe__bundle_active,
-     pe__bundle_resource_state,
-     native_location,
-     pe__free_bundle
+         pe__unpack_bundle,
+         native_find_rsc,
+         native_parameter,
+         pe__print_bundle,
+         pe__bundle_active,
+         pe__bundle_resource_state,
+         native_location,
+         pe__free_bundle,
+         pe__count_bundle,
     }
 };
 
@@ -939,4 +943,24 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
         return pe__find_active_on(rsc, NULL, count);
     }
     return pe__find_active_on(rsc, count, NULL);
+}
+
+void
+pe__count_common(pe_resource_t *rsc)
+{
+    if (rsc->children != NULL) {
+        for (GList *item = rsc->children; item != NULL; item = item->next) {
+            ((pe_resource_t *) item->data)->fns->count(item->data);
+        }
+
+    } else if (is_not_set(rsc->flags, pe_rsc_orphan)
+               || (rsc->role > RSC_ROLE_STOPPED)) {
+        rsc->cluster->ninstances++;
+        if (pe__resource_is_disabled(rsc)) {
+            rsc->cluster->disabled_resources++;
+        }
+        if (is_set(rsc->flags, pe_rsc_block)) {
+            rsc->cluster->blocked_resources++;
+        }
+    }
 }
