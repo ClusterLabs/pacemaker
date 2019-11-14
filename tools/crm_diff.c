@@ -19,44 +19,103 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",           0, 0, '?', "\t\tThis text"},
-    {"version",        0, 0, '$', "\t\tVersion information"  },
-    {"verbose",        0, 0, 'V', "\t\tIncrease debug output\n"},
+#define SUMMARY "Compare two Pacemaker configurations (in XML format) to produce a custom diff-like output, " \
+                "or apply such an output as a patch"
 
-    {"-spacer-",	1, 0, '-', "\nOriginal XML:"},
-    {"original",	1, 0, 'o', "\tXML is contained in the named file"},
-    {"original-string", 1, 0, 'O', "XML is contained in the supplied string"},
+struct {
+    gboolean apply;
+    gboolean as_cib;
+    gboolean no_version;
+    gboolean raw_1;
+    gboolean raw_2;
+    gboolean use_stdin;
+    char *xml_file_1;
+    char *xml_file_2;
+} options;
 
-    {"-spacer-",	1, 0, '-', "\nOperation:"},
-    {"new",		1, 0, 'n', "\tCompare the original XML to the contents of the named file"},
-    {"new-string",      1, 0, 'N', "\tCompare the original XML to the contents of the supplied string"},
-    {"patch",		1, 0, 'p', "\tPatch the original XML with the contents of the named file"},
+gboolean new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
-    {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
-    {"cib",	 0, 0, 'c', "\t\tCompare/patch the inputs as a CIB (includes versions details)"},
-    {"stdin",	 0, 0, 's', NULL, 1},
-    {"no-version", 0, 0, 'u', "\tGenerate the difference without versions details"},
-    {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " cibadmin --query > cib-old.xml", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', " cibadmin --query > cib-new.xml", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Calculate and save the difference between the two files:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_diff --original cib-old.xml --new cib-new.xml > patch.xml", pcmk_option_example },
-    {"-spacer-", 1, 0, '-', "Apply the patch to the original file:", pcmk_option_paragraph },
-    {"-spacer-", 1, 0, '-', " crm_diff --original cib-old.xml --patch patch.xml > updated.xml", pcmk_option_example },
-    {"-spacer-", 1, 0, '-', "Apply the patch to the running cluster:", pcmk_option_paragraph },
-    {"-spacer-", 1, 0, '-', " cibadmin --patch patch.xml", pcmk_option_example },
+static GOptionEntry original_xml_entries[] = {
+    { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_1,
+      "XML is contained in the named file",
+      "FILE" },
+    { "original-string", 'O', 0, G_OPTION_ARG_CALLBACK, original_string_cb,
+      "XML is contained in the supplied string",
+      "STRING" },
 
-    {0, 0, 0, 0}
+    { NULL }
 };
-/* *INDENT-ON* */
+
+static GOptionEntry operation_entries[] = {
+    { "new", 'n', 0, G_OPTION_ARG_STRING, &options.xml_file_2,
+      "Compare the original XML to the contents of the named file",
+      "FILE" },
+    { "new-string", 'N', 0, G_OPTION_ARG_CALLBACK, new_string_cb,
+      "Compare the original XML with the contents of the supplied string",
+      "STRING" },
+    { "patch", 'p', 0, G_OPTION_ARG_CALLBACK, patch_cb,
+      "Patch the original XML with the contents of the named file",
+      "FILE" },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "cib", 'c', 0, G_OPTION_ARG_NONE, &options.as_cib,
+      "Compare/patch the inputs as a CIB (includes versions details)",
+      NULL },
+    { "stdin", 's', 0, G_OPTION_ARG_NONE, &options.use_stdin,
+      "",
+      NULL },
+    { "no-version", 'u', 0, G_OPTION_ARG_NONE, &options.no_version,
+      "Generate the difference without versions details",
+      NULL },
+
+    { NULL }
+};
+
+gboolean
+new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.raw_2 = TRUE;
+
+    if (options.xml_file_2 != NULL) {
+        free(options.xml_file_2);
+    }
+
+    options.xml_file_2 = strdup(optarg);
+    return TRUE;
+}
+
+gboolean
+original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.raw_1 = TRUE;
+
+    if (options.xml_file_1 != NULL) {
+        free(options.xml_file_1);
+    }
+
+    options.xml_file_1 = strdup(optarg);
+    return TRUE;
+}
+
+gboolean
+patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.apply = TRUE;
+
+    if (options.xml_file_2 != NULL) {
+        free(options.xml_file_2);
+    }
+
+    options.xml_file_2 = strdup(optarg);
+    return TRUE;
+}
 
 static void
 print_patch(xmlNode *patch)
@@ -211,140 +270,124 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     return -pcmk_err_generic;
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    const char *description = "*Examples*\n\n"
+                              "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:\n\n"
+                              "\tcibadmin --query > cib-old.xml\n"
+                              "\tcibadmin --query > cib-new.xml\n\n"
+                              "Calculate and save the difference between the two files:\n\n"
+                              "\tcrm_diff --original cib-old.xml --new cib-new.xml > patch.xml\n\n"
+                              "Apply the patch to the original file:\n\n"
+                              "\tcrm_diff --original cib-old.xml --patch patch.xml > updated.xml\n\n"
+                              "Apply the patch to the running cluster:\n\n"
+                              "\tcibadmin --patch patch.xml\n";
+
+    context = pcmk__build_arg_context(args, NULL, NULL);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "xml", "Original XML:",
+                        "Show original XML options", original_xml_entries);
+    pcmk__add_arg_group(context, "operation", "Operation:",
+                        "Show operation options", operation_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    gboolean apply = FALSE;
-    gboolean raw_1 = FALSE;
-    gboolean raw_2 = FALSE;
-    gboolean use_stdin = FALSE;
-    gboolean as_cib = FALSE;
-    gboolean no_version = FALSE;
-    int argerr = 0;
-    int flag;
     int rc = pcmk_ok;
     xmlNode *object_1 = NULL;
     xmlNode *object_2 = NULL;
-    const char *xml_file_1 = NULL;
-    const char *xml_file_2 = NULL;
 
-    int option_index = 0;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
 
     crm_log_cli_init("crm_diff");
-    crm_set_options(NULL, "original_xml operation [options]", long_options,
-                    "crm_diff can compare two Pacemaker configurations (in XML format) to\n"
-                    "produce a custom diff-like output, or apply such an output as a patch\n");
 
-    if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+    processed_args = pcmk__cmdline_preproc(argc, argv, "nopNO");
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        rc = CRM_EX_USAGE;
+        goto done;
     }
 
-    while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'o':
-                xml_file_1 = optarg;
-                break;
-            case 'O':
-                xml_file_1 = optarg;
-                raw_1 = TRUE;
-                break;
-            case 'n':
-                xml_file_2 = optarg;
-                break;
-            case 'N':
-                xml_file_2 = optarg;
-                raw_2 = TRUE;
-                break;
-            case 'p':
-                xml_file_2 = optarg;
-                apply = TRUE;
-                break;
-            case 's':
-                use_stdin = TRUE;
-                break;
-            case 'c':
-                as_cib = TRUE;
-                break;
-            case 'u':
-                no_version = TRUE;
-                break;
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '?':
-            case '$':
-                crm_help(flag, CRM_EX_OK);
-                break;
-            default:
-                printf("Argument %c (0%o) is not (yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
-        }
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
     }
 
-    if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
+    if (args->version) {
+        /* FIXME:  When crm_diff is converted to use formatted output, this can go. */
+        crm_help('v', CRM_EX_USAGE);
     }
 
     if (optind > argc) {
-        ++argerr;
+        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
+        rc = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
-    }
-
-    if (apply && no_version) {
+    if (options.apply && options.no_version) {
         fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
-    } else if (as_cib && no_version) {
+    } else if (options.as_cib && options.no_version) {
         fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
-        return CRM_EX_USAGE;
+        rc = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (raw_1) {
-        object_1 = string2xml(xml_file_1);
+    if (options.raw_1) {
+        object_1 = string2xml(options.xml_file_1);
 
-    } else if (use_stdin) {
+    } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
         object_1 = stdin2xml();
 
-    } else if (xml_file_1 != NULL) {
-        object_1 = filename2xml(xml_file_1);
+    } else if (options.xml_file_1 != NULL) {
+        object_1 = filename2xml(options.xml_file_1);
     }
 
-    if (raw_2) {
-        object_2 = string2xml(xml_file_2);
+    if (options.raw_2) {
+        object_2 = string2xml(options.xml_file_2);
 
-    } else if (use_stdin) {
+    } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
         object_2 = stdin2xml();
 
-    } else if (xml_file_2 != NULL) {
-        object_2 = filename2xml(xml_file_2);
+    } else if (options.xml_file_2 != NULL) {
+        object_2 = filename2xml(options.xml_file_2);
     }
 
     if (object_1 == NULL) {
         fprintf(stderr, "Could not parse the first XML fragment\n");
-        return CRM_EX_DATAERR;
+        rc = CRM_EX_DATAERR;
+        goto done;
     }
     if (object_2 == NULL) {
         fprintf(stderr, "Could not parse the second XML fragment\n");
-        return CRM_EX_DATAERR;
+        rc = CRM_EX_DATAERR;
+        goto done;
     }
 
-    if (apply) {
-        rc = apply_patch(object_1, object_2, as_cib);
+    if (options.apply) {
+        rc = apply_patch(object_1, object_2, options.as_cib);
     } else {
-        rc = generate_patch(object_1, object_2, xml_file_2, as_cib, no_version);
+        rc = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
     }
 
+done:
+    pcmk__free_arg_context(context);
+    free(options.xml_file_1);
+    free(options.xml_file_2);
     free_xml(object_1);
     free_xml(object_2);
     return crm_errno2exit(rc);

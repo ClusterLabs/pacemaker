@@ -23,7 +23,8 @@ sbin_SCRIPTS		+= cibsecret
 endif
 noinst_SCRIPTS		= pcmk_simtimes
 
-EXTRA_DIST		= crm_mon.sysconfig		\
+EXTRA_DIST		= crm_diff.8.inc \
+			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
 			  stonith_admin.8.inc
