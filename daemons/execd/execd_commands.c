@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,8 +19,6 @@
 
 #ifdef PCMK__TIME_USE_CGT
 #  include <time.h>  /* clock_gettime */
-#elif defined(HAVE_SYS_TIMEB_H)
-#  include <sys/timeb.h>
 #endif
 
 #include <unistd.h>
@@ -66,22 +64,16 @@ typedef struct lrmd_cmd_s {
     char *output;
     char *userdata_str;
 
+#ifdef PCMK__TIME_USE_CGT
     /* Recurring and systemd operations may involve more than one executor
      * command per operation, so they need info about the original and the most
      * recent.
      */
-#ifdef PCMK__TIME_USE_CGT
     struct timespec t_first_run;   /* Timestamp of when op first ran */
     struct timespec t_run;         /* Timestamp of when op most recently ran */
     struct timespec t_first_queue; /* Timestamp of when op first was queued */
     struct timespec t_queue;       /* Timestamp of when op most recently was queued */
     struct timespec t_rcchange;    /* Timestamp of last rc change */
-#elif defined(HAVE_SYS_TIMEB_H)
-    struct timeb t_first_run;   /* Timestamp of when op first ran */
-    struct timeb t_run;         /* Timestamp of when op most recently ran */
-    struct timeb t_first_queue; /* Timestamp of when op first was queued */
-    struct timeb t_queue;       /* Timestamp of when op most recently was queued */
-    struct timeb t_rcchange;    /* Timestamp of last rc change */
 #endif
 
     int first_notify_sent;
@@ -109,7 +101,7 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
     }
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     do_crm_log(log_level,
                "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d exec-time:%dms queue-time:%dms",
                cmd->rsc_id, cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str,
@@ -253,11 +245,6 @@ stonith_recurring_op_helper(gpointer data)
     if (cmd->t_first_queue.tv_sec == 0) {
         cmd->t_first_queue = cmd->t_queue;
     }
-#elif defined(HAVE_SYS_TIMEB_H)
-    ftime(&cmd->t_queue);
-    if (cmd->t_first_queue.time == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -385,11 +372,6 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (cmd->t_first_queue.tv_sec == 0) {
         cmd->t_first_queue = cmd->t_queue;
     }
-#elif defined(HAVE_SYS_TIMEB_H)
-    ftime(&cmd->t_queue);
-    if (cmd->t_first_queue.time == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -449,7 +431,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
                client->name, client->id, msg, rc);
 }
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
 /*!
  * \internal
  * \brief Return difference between two times in milliseconds
@@ -457,44 +439,25 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
  * \param[in] now  More recent time (or NULL to use current time)
  * \param[in] old  Earlier time
  *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec/time zero)
+ * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
  *
  * \note Can overflow on 32bit machines when the differences is around
  *       24 days or more.
  */
 static int
-#ifdef PCMK__TIME_USE_CGT
 time_diff_ms(struct timespec *now, struct timespec *old)
 {
     struct timespec local_now = { 0, };
-#else
-time_diff_ms(struct timeb *now, struct timeb *old)
-{
-    struct timeb local_now = { 0, };
-#endif
 
     if (now == NULL) {
-#ifdef PCMK__TIME_USE_CGT
         clock_gettime(CLOCK_MONOTONIC, &local_now);
-#else
-        ftime(&local_now);
-#endif
         now = &local_now;
     }
-    if ((old == NULL)
-#ifdef PCMK__TIME_USE_CGT
-            || (old->tv_sec == 0)) {
-#else
-            || (old->time == 0)) {
-#endif
+    if ((old == NULL) || (old->tv_sec == 0)) {
         return 0;
     }
-#ifdef PCMK__TIME_USE_CGT
     return (now->tv_sec - old->tv_sec) * 1000
             + (now->tv_nsec - old->tv_nsec) / 1000;
-#else
-    return (now->time - old->time) * 1000 + now->millitm - old->millitm;
-#endif
 }
 
 /*!
@@ -532,7 +495,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     int queue_time = 0;
     xmlNode *notify = NULL;
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     exec_time = time_diff_ms(NULL, &cmd->t_run);
     queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
 #endif
@@ -567,14 +530,9 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
 #ifdef PCMK__TIME_USE_CGT
     crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.tv_sec);
     crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.tv_sec);
-#else
-    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.time);
-    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.time);
-#endif
     crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
@@ -645,7 +603,7 @@ cmd_reset(lrmd_cmd_t * cmd)
 {
     cmd->lrmd_op_status = 0;
     cmd->last_pid = 0;
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     memset(&cmd->t_run, 0, sizeof(cmd->t_run));
     memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
 #endif
@@ -877,7 +835,7 @@ action_complete(svc_action_t * action)
     lrmd_cmd_t *cmd = action->cb_data;
     const char *rclass = NULL;
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     bool goagain = false;
 #endif
 
@@ -890,10 +848,6 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->exec_rc != action->rc) {
         clock_gettime(CLOCK_MONOTONIC, &cmd->t_rcchange);
-    }
-#elif defined(HAVE_SYS_TIMEB_H)
-    if (cmd->exec_rc != action->rc) {
-        ftime(&cmd->t_rcchange);
     }
 #endif
 
@@ -919,14 +873,14 @@ action_complete(svc_action_t * action)
              * report 'complete' to the rest of pacemaker until, you know,
              * it's actually done.
              */
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
             cmd->real_action = cmd->action;
             cmd->action = strdup("monitor");
 
         } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "stop")) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
             cmd->real_action = cmd->action;
@@ -935,16 +889,16 @@ action_complete(svc_action_t * action)
         } else if(cmd->real_action) {
             /* Ok, so this is the follow up monitor action to check if start actually completed */
             if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
                 goagain = true;
 #endif
             } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->real_action, "stop")) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
                 goagain = true;
 #endif
 
             } else {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
                 int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
                 int timeout_left = cmd->timeout_orig - time_sum;
 
@@ -975,23 +929,17 @@ action_complete(svc_action_t * action)
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
         } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_OCF_OK) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
         }
     }
 #endif
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-    /* Wrapping this section in ifdef implies that systemd resources... */
 #ifdef PCMK__TIME_USE_CGT
-    /* .... are not fully supported on platforms without CLOCK_MONOTONIC,
+    /* Wrapping this section in ifdef implies that systemd resources
+       are not fully supported on platforms without CLOCK_MONOTONIC,
        which is most likely contradiction, but for completeness... */
-#elif defined(HAVE_SYS_TIMEB_H)
-    /* ... are not fully supported on platforms without sys/timeb.h.
-       Since timeb is obsolete, we should eventually prefer a clock_gettime()
-       implementation (wrapped in its own ifdef) with timeb as a fallback. */
-#endif
     if (goagain) {
         int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
         int timeout_left = cmd->timeout_orig - time_sum;
@@ -1423,11 +1371,6 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
             clock_gettime(CLOCK_MONOTONIC, &cmd->t_first_run);
         }
         clock_gettime(CLOCK_MONOTONIC, &cmd->t_run);
-#elif defined(HAVE_SYS_TIMEB_H)
-        if (cmd->t_first_run.time == 0) {
-            ftime(&cmd->t_first_run);
-        }
-        ftime(&cmd->t_run);
 #endif
     }
 

@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2019 the Pacemaker project contributors
+dnl Copyright 2009-2020 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -875,19 +875,15 @@ else
     LIBADD_DL=${lt_cv_dlopen_libs}
 fi
 
-dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
-AC_CHECK_LIB([compat], [ftime], [COMPAT_LIBS='-lcompat'])
-AC_SUBST(COMPAT_LIBS)
-
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
 
-dnl Some distributions insert #warnings into deprecated headers such as
-dnl timeb.h. If we will enable fatal warnings for the build, then enable
-dnl them for the header checks as well, otherwise the build could fail
-dnl even though the header check succeeds. (We should probably be doing
-dnl this in more places.)
+# Some distributions insert #warnings into deprecated headers such as
+# timeb.h used at some point in past. If we will enable fatal warnings
+# for the build, then enable them for the header checks as well, otherwise
+# the build could fail even though the header check succeeds.
+# (We should probably be doing this in more places.)
 if test "x${enable_fatal_warnings}" = xyes ; then
     cc_temp_flags "$CFLAGS $WERROR"
 fi
@@ -923,7 +919,6 @@ AC_CHECK_HEADERS(sys/signalfd.h)
 AC_CHECK_HEADERS(sys/sockio.h)
 AC_CHECK_HEADERS(sys/stat.h)
 AC_CHECK_HEADERS(sys/time.h)
-AC_CHECK_HEADERS(sys/timeb.h)
 AC_CHECK_HEADERS(sys/types.h)
 AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/wait.h)
@@ -969,20 +964,13 @@ AC_CHECK_DECLS([CLOCK_MONOTONIC], [], [], [[
     #include <time.h>
 ]])
 
-# the above alone could allow using clock_gettime(CLOCK_MONOTONIC, ...)
-# in daemons/execd/execd_commands.c, but due to discovery of ftime causing
-# buildability problems in an out-of-the-box procedure with very recent glibc
-# snapshots (for which the above is meant to be a definitive solution)
-# coming very late prior to release, it is intentionally kept as opt-in,
-# with the line below (export CPPFLAGS="$CPPFLAGS -UPCMK_TIME_EMERGENCY_CGT"
-# or comment it out to revert this conservative delay of the roll out, e.g.,
-# when you hit said problems we eventually want to resolve, as already
-# materialized in Fedora Rawhide at this time), with the plan this
-# will only be applied in 2.0.3 release and will become opt-out since
-# (which hopefully explains the name of the macro as it will start to
-# make more sense then, and the continuity is important)
-CPPFLAGS="-DPCMK_TIME_EMERGENCY_CGT $CPPFLAGS"
-
+# the above alone will allow using clock_gettime(CLOCK_MONOTONIC, ...),
+# but in case there are any discrepancies found with the move onto that
+# where ftime(3) was originally used -- the callsites make do without
+# any such timestamp grabbing at this time -- so to revert that effect
+# (trigger such omission), line below can be uncommented for that intent
+# (alternatively, propagate equivalent variable assignment from outside)
+#CPPFLAGS="-DPCMK_TIME_EMERGENCY_CGT $CPPFLAGS"
 
 dnl ========================================================================
 dnl Structures
@@ -1331,6 +1319,10 @@ if test "x${enable_systemd}" != xno; then
             enable_systemd=no
         fi
     fi
+    if test $(echo "$CPPFLAGS" | grep -q PCMK_TIME_EMERGENCY_CGT) \
+            || test "x$ac_cv_have_decl_CLOCK_MONOTONIC" = xno; then
+        AC_MSG_FAILURE([cannot enable systemd without clock_gettime(CLOCK_MONOTONIC, ...)])
+    fi
     if test "x${enable_systemd}" = xtry; then
         AC_MSG_CHECKING([for systemd version query result via dbus-send])
         ret=$({ dbus-send --system --print-reply \
@@ -1412,9 +1404,21 @@ AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
 case $SUPPORT_NAGIOS in
-    1|yes|true|try)
+    1|yes|true)
+        if test $(echo "CPPFLAGS" | grep -q PCMK_TIME_EMERGENCY_CGT) \
+            || test "x$ac_cv_have_decl_CLOCK_MONOTONIC" = xno; then
+                AC_MSG_FAILURE([cannot enable nagios without clock_gettime(CLOCK_MONOTONIC, ...)])
+        fi
         SUPPORT_NAGIOS=1
         ;;
+    try)
+        if test $(echo "CPPFLAGS" | grep -q PCMK_TIME_EMERGENCY_CGT) \
+                || test "x$ac_cv_have_decl_CLOCK_MONOTONIC" = xno; then
+            SUPPORT_NAGIOS=0
+        else
+            SUPPORT_NAGIOS=1
+        fi
+        ``
     *)
         SUPPORT_NAGIOS=0
         ;;
@@ -1885,6 +1889,7 @@ CFLAGS_COPY="$CFLAGS"
 AC_SUBST(CFLAGS_COPY)
 
 AC_SUBST(LIBADD_DL)        dnl extra flags for dynamic linking libraries
+
 AC_SUBST(LOCALE)
 
 dnl Options for cleaning up the compiler output
