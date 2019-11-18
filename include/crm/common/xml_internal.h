@@ -184,10 +184,11 @@ enum pcmk__acl_render_how {
  *
  * This function is vitally coupled with externalized material:
  * - access-render-2.xsl
+ * - access-render.cfg.xsl (referred to from the former in an abstracted way)
  *
  * In fact, it's just a wrapper for a graceful conducting of such
  * transformation, in particular, it cares about converting values of some
- * configuration parameters directly in said stylesheet since the desired
+ * configuration parameters directly in said stylesheet(s) since the desired
  * ANSI colors at the output are not expressible directly (alternative approach
  * to this preprocessing: eventual postprocessing, which is less handy here).
  *

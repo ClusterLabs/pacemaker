@@ -11,22 +11,18 @@
 
 <xsl:output method="text" encoding="UTF-8"/>
 
-<!--
- see https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bith;
- note that we need to retain XML 1.0 (as opposed to 1.1, which in turn
- is not supported in libxml) compatibility in this very template, meaning
- we cannot output a superset of what's expressible in the template itself
- (escaped or not), hence we are forced to work that around for \x1b (ESC,
- unavoidable for ANSI colorized output) character with encoding it in some
- way (here using "\x1b" literal notation) and requiring a trivial
- "xsltproc ... | sed 's/\\x1b/\x1b/'" postprocessing;
- the above, however, only applies when used directly (which may be the
- reason to pay attention to this comment to begin with), but fortunately
- it is conveniently avoidable when XSLT triggered programatically (see
- pcmk__acl_evaled_render), since libxslt allows for passing raw (further
- unchecked) parameter strings, in which case the actual content of those
- parameters is decoded on the fly, meaning that this file is still open
- to compilation-free customizations if there's an irresistible need...
+<!-- for direct use, you may want to stick with:
+     PATH-TO-PCMK-CHECKOUT/xml/base/access-render.cfg.xsl,
+     all should work automagically from within code (cibadmin) -->
+<xsl:include href="http://clusterlabs.org/nsredir/pacemaker/cfg/access-render.cfg.xsl"/>
+
+<!-- see access-render.cfg.xsl;
+ Regarding said client-side specific preprocessing as a way to avoid
+ full-string postprocessing, fortunately libxslt allows for passing raw
+ (further unchecked) parameter strings, in which case the actual content
+ of those parameters (regardless is from here or from the above include)
+ is decoded on the fly, allowing for compilation-free customizations if
+ there's any need...
 -->
 <xsl:param name="accessrendercfg:c-writable"><!-- green -->\x1b[32m</xsl:param>
 <xsl:param name="accessrendercfg:c-readable"><!-- blue  -->\x1b[34m</xsl:param>

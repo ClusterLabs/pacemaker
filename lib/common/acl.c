@@ -810,6 +810,7 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
     return requested_user;
 }
 
+#define ACL_NS_CFG "http://clusterlabs.org/ns/pacemaker/access/render/cfg"
 #define ACL_NS_PREFIX "http://clusterlabs.org/ns/pacemaker/access/"
 #define ACL_NS_Q_PREFIX  "pcmk-access-"
 #define ACL_NS_Q_WRITABLE (const xmlChar *) ACL_NS_Q_PREFIX   "writable"
@@ -986,30 +987,57 @@ pcmk_acl_evaled_as_namespaces(enum pcmk_acl_cred_type cred_type,
     return ret;
 }
 
+static xsltStackElemPtr
+reversed_copy_of_stack_elems(xsltStackElemPtr to_reverse)
+{
+    xsltStackElemPtr iter = to_reverse, prev_head = NULL, head = NULL;
+    while (iter != NULL) {
+        head = malloc(sizeof(*iter));
+        CRM_ASSERT(head != NULL);
+        memcpy(head, iter, sizeof(*iter));
+        head->next = prev_head;
+
+        /* so that we can stick with completely shallow copy,
+           otherwise risk of double free */
+        head->level = -1;
+
+        prev_head = head;
+        iter = iter->next;
+    }
+    return head;
+}
+
 /* this is used to dynamically adapt to user-modified stylesheet */
 static const char **
-parse_params(xmlDoc *doc, const char **fallback)
-{
-    xmlXPathContext *xpath_ctxt;
+parse_params(xsltTransformContext *transform_ctxt, const char **fallback,
+             xsltStackElemPtr *cleanup_stack)
+        {
     xmlXPathObject *xpath_obj;
     const char **ret = NULL;
     size_t ret_cnt = 0, ret_iter = 0;
+    xsltStackElemPtr reversed;
 
-    if (doc == NULL) {
+    if (transform_ctxt == NULL) {
         return fallback;
     }
 
-    xpath_ctxt = xmlXPathNewContext(doc);
-    CRM_ASSERT(xpath_ctxt != NULL);
+    /* needed so as to not fail the lookup in xsltValueOf
+       (it requires, like many other XSL instructions, a context
+       node, despite it not being useful in this very case...) */
+    transform_ctxt->node = (xmlNodePtr) transform_ctxt->document->doc;
 
-    if (xmlXPathRegisterNs(xpath_ctxt, (pcmkXmlStr) "xsl",
-                           (pcmkXmlStr) "http://www.w3.org/1999/XSL/Transform") != 0) {
-        return fallback;
-    }
+    /* there's several needs for this:
+       - stack, as the name suggests, is LIFO, and since the source is
+         already n the right order (highest priority comes first), we need
+         to flip that order when pushing onto the stack
+       - we cannot link the object as-were since these are expected brand
+         new and the cleanup functions would otherwise trigger double free */
+    reversed = reversed_copy_of_stack_elems(transform_ctxt->style->variables);
+    xsltAddStackElemList(transform_ctxt, reversed);
 
     while (*fallback != NULL) {
-        char xpath_query[1024];
         const char *key = *fallback++;
+        char *dynkey;
         const char *value = *fallback++;
         CRM_ASSERT(value != NULL);
 
@@ -1021,24 +1049,23 @@ parse_params(xmlDoc *doc, const char **fallback)
             CRM_ASSERT(ret != NULL);
         }
 
-        key = strdup(key);
-        CRM_ASSERT(key != NULL);
-        ret[ret_iter++] = key;
+        dynkey = strdup(key);
+        CRM_ASSERT(dynkey != NULL);
+        ret[ret_iter++] = dynkey;
+        dynkey = strchr(dynkey, ':');
+        CRM_ASSERT(dynkey != NULL);
 
-        snprintf(xpath_query, sizeof(xpath_query),
-                 "substring("
-                   "/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select,"
-                   "2,"
-                   "string-length(/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select) - 2"
-                 ")",
-                 key, key);
-        xpath_obj = xmlXPathEvalExpression((pcmkXmlStr) xpath_query, xpath_ctxt);
-        if (xpath_obj != NULL && xpath_obj->type == XPATH_STRING
-                && *xpath_obj->stringval != '\0') {
-            /* XXX convert first! */
-            char *origval = strdup((const char *) xpath_obj->stringval);
+        xpath_obj = xsltVariableLookup(transform_ctxt,
+                                       (pcmkXmlStr) dynkey + 1,
+                                       (pcmkXmlStr) ACL_NS_CFG);
+
+        if (xpath_obj != NULL && xpath_obj->type == XPATH_XSLT_TREE
+                && xpath_obj->nodesetval->nodeNr > 0
+                && xpath_obj->nodesetval->nodeTab[0]->children != NULL
+                && xpath_obj->nodesetval->nodeTab[0]->children->content != NULL) {
+            char *origval = strdup((const char *)
+                                   xpath_obj->nodesetval->nodeTab[0]->children->content);
             size_t reminder = strlen(origval) + 1;
-            xmlXPathFreeObject(xpath_obj);
             value = origval;
             /* reconcile "\x1b" (3 chars) -> '\x1b' (single char) */
             while ((origval = strstr(origval, "\\x1b")) != NULL) {
@@ -1049,10 +1076,15 @@ parse_params(xmlDoc *doc, const char **fallback)
         } else {
             value = strdup(value);
         }
+        xmlXPathFreeObject(xpath_obj);
         CRM_ASSERT(value != NULL);
         ret[ret_iter++] = value;
     }
     ret[ret_iter] = NULL;
+
+    if (cleanup_stack != NULL) {
+        *cleanup_stack = reversed;
+    }
 
     return ret;
 }
@@ -1096,6 +1128,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     const char **params;
     int ret;
     xmlParserCtxtPtr parser_ctxt;
+    xsltStackElemPtr cleanup_stack = NULL, cleanup_next;
 
     /* unfortunately, the input (coming from CIB originally) was parsed with
        blanks ignored, and since the output is a conversion of XML to text
@@ -1137,7 +1170,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
              ? params_ns_simple
              : (how == pcmk__acl_render_text)
              ? params_noansi
-             : parse_params(xslt_doc, params_useansi);
+             : parse_params(xslt_ctxt, params_useansi, &cleanup_stack);
 
     xsltQuoteUserParams(xslt_ctxt, params);
 
@@ -1155,6 +1188,12 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
             free(*param_i);
         } while (*param_i++ != NULL);
         free(params);
+
+        while (cleanup_stack != NULL) {
+            cleanup_next = cleanup_stack->next;
+            free(cleanup_stack);
+            cleanup_stack = cleanup_next;
+        }
     }
 
     if (res == NULL) {
