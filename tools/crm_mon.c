@@ -233,6 +233,16 @@ apply_include(const gchar *includes, GError **error) {
 
         if (crm_str_eq(*s, "all", TRUE)) {
             show = all_includes(output_format);
+        } else if (pcmk__starts_with(*s, "bans")) {
+            show |= mon_show_bans;
+            if (options.neg_location_prefix != NULL) {
+                free(options.neg_location_prefix);
+                options.neg_location_prefix = NULL;
+            }
+
+            if (strlen(*s) > 4 && (*s)[4] == ':') {
+                options.neg_location_prefix = strdup(*s+5);
+            }
         } else if (crm_str_eq(*s, "default", TRUE) || crm_str_eq(*s, "defaults", TRUE)) {
             show |= default_includes(output_format);
         } else if (crm_str_eq(*s, "none", TRUE)) {
@@ -241,8 +251,8 @@ apply_include(const gchar *includes, GError **error) {
             show |= bit;
         } else {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
-                        "--include options: all, attributes, bans, counts, dc, default, "
-                        "defaults, failcounts, fencing, nodes, none, operations, options, "
+                        "--include options: all, attributes, bans[:PREFIX], counts, dc, "
+                        "default, failcounts, fencing, nodes, none, operations, options, "
                         "resources, stack, summary, tickets, times");
             return FALSE;
         }
@@ -447,14 +457,13 @@ show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
-        if (options.neg_location_prefix != NULL) {
-            free(options.neg_location_prefix);
-        }
-
-        options.neg_location_prefix = strdup(optarg);
+        char *s = crm_strdup_printf("bans:%s", optarg);
+        gboolean rc = include_exclude_cb("--include", s, data, err);
+        free(s);
+        return rc;
+    } else {
+        return include_exclude_cb("--include", "bans", data, err);
     }
-
-    return include_exclude_cb("--include", "bans", data, err);
 }
 
 static gboolean
@@ -2085,6 +2094,7 @@ clean_up(crm_exit_t exit_code)
 
     clean_up_connections();
     free(options.pid_file);
+    free(options.neg_location_prefix);
     g_slist_free_full(options.includes_excludes, free);
 
     pe_free_working_set(mon_data_set);
