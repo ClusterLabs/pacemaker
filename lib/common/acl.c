@@ -16,10 +16,12 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <libxml/catalog.h>  /* xmlCatalogLoadCatalog */
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #if HAVE_LIBXSLT
+#  include <libxslt/documents.h>
 #  include <libxslt/transform.h>
 #  include <libxslt/variables.h>
 #  include <libxslt/xsltutils.h>
@@ -810,6 +812,9 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
     return requested_user;
 }
 
+#define ACL_CFG_REDIRNS_PREFIX "http://clusterlabs.org/nsredir/pacemaker/cfg/"
+#define ACL_CFG_RADIX "access-render.cfg"
+
 #define ACL_NS_CFG "http://clusterlabs.org/ns/pacemaker/access/render/cfg"
 #define ACL_NS_PREFIX "http://clusterlabs.org/ns/pacemaker/access/"
 #define ACL_NS_Q_PREFIX  "pcmk-access-"
@@ -1089,6 +1094,97 @@ parse_params(xsltTransformContext *transform_ctxt, const char **fallback,
     return ret;
 }
 
+static char *
+prioritized_checked_config_dir(const char *basename, char* override_dir)
+{
+    int f;
+    char *path, *dpath;
+
+    /* extra override */
+    if (override_dir != NULL) {
+        path = crm_strdup_printf("%s/%s", override_dir, basename);
+        if (path != NULL && (f = open(path, O_RDONLY)) != -1) {
+            close(f);
+            crm_debug("Sticking with override configuration: %s", path);
+            free(path);
+            return override_dir;  /* check ret == override_dir prior to free */
+        }
+        free(path);
+    }
+
+    /* does the user have a preference? */
+    path = pcmk__user_config(basename);
+    if (path != NULL && (f = open(path, O_RDONLY)) != -1) {
+        close(f);
+        crm_debug("Sticking with user's configuration: %s", path);
+        dpath = g_path_get_dirname(path);
+        free(path);
+        return dpath;
+    }
+    free(path);
+    crm_debug("Attempt to follow user's configuration failed");
+
+    /* in development mode? */
+    if (getenv("PCMK_schema_directory") != NULL) {
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_base_xslt,
+                                       ACL_CFG_RADIX);
+        if (path != NULL && (f = open(path, O_RDONLY)) != -1) {
+            close(f);
+            crm_debug("Sticking with developmental configuration: %s", path);
+            dpath = g_path_get_dirname(path);
+            free(path);
+            return dpath;
+        }
+        free(path);
+        crm_debug("Attempt to follow developmental configuration failed");
+    }
+
+    /* we'll go the standard path then */
+    return NULL;
+}
+
+static const char *override_redir_target;
+static xsltDocLoaderFunc xslt_doc_loader_remember;
+
+static xmlDocPtr override_redir_doc_loader(const xmlChar *URI, xmlDictPtr dict,
+                                           int options, void *ctxt,
+                                           xsltLoadType type)
+{
+    char *URI_use = (char *) URI;
+    xmlDocPtr ret = NULL;
+    CRM_ASSERT(xslt_doc_loader_remember != NULL);
+
+    if (override_redir_target != NULL
+            && crm_starts_with((const char *) URI, ACL_CFG_REDIRNS_PREFIX)) {
+        URI_use = crm_strdup_printf("file://%s/%s", override_redir_target,
+                                    URI + sizeof(ACL_CFG_REDIRNS_PREFIX) - 1);
+    }
+    ret = xslt_doc_loader_remember((pcmkXmlStr) URI_use, dict, options, ctxt,
+                                   type);
+    if (URI_use != (const char *) URI) {
+        free(URI_use);
+    }
+    return ret;
+}
+
+
+static void divert_xslt_doc_loader(char *acquired_cfg_dir, bool enable)
+{
+    if (enable && acquired_cfg_dir != NULL) {
+        CRM_ASSERT(xslt_doc_loader_remember == NULL);
+        CRM_ASSERT(override_redir_target == NULL);
+        xslt_doc_loader_remember = xsltDocDefaultLoader;
+        override_redir_target = acquired_cfg_dir;
+        xsltSetLoaderFunc(override_redir_doc_loader);
+
+    } else if (!enable && override_redir_target != NULL) {
+        xsltSetLoaderFunc(*xslt_doc_loader_remember);
+        xslt_doc_loader_remember = NULL;
+        free((char *) override_redir_target);
+        override_redir_target = NULL;
+    }
+}
+
 int
 pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
                         xmlChar **doc_txt_ptr, int *doc_txt_len)
@@ -1098,7 +1194,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xsltStylesheet *xslt;
     xsltTransformContext *xslt_ctxt;
     xmlDoc *res;
-    char *sfile;
+    char *sfile, *cfgdir_candidate, *cfgdir_chosen;
     static const char *params_ns_simple[] = {
         "accessrendercfg:c-writable",           ACL_NS_Q_PREFIX "writable:",
         "accessrendercfg:c-readable",           ACL_NS_Q_PREFIX "readable:",
@@ -1137,6 +1233,23 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
        only to subsequently reparse it -- this time with blanks honoured */
     xmlChar *annotated_dump;
     int dump_size;
+
+    /* satisfying the respective xsl:include is an imperative */
+    if ((cfgdir_candidate = getenv("PCMK_config_directory")) != NULL) {
+        cfgdir_candidate = strdup(cfgdir_candidate);
+    }
+    if ((cfgdir_chosen = prioritized_checked_config_dir(ACL_CFG_RADIX ".xsl",
+                                                        cfgdir_candidate))
+            != cfgdir_candidate) {
+        free(cfgdir_candidate);  /* otherwise acquired */
+    }
+    divert_xslt_doc_loader(cfgdir_chosen, true);
+
+    /* note: libxslt security framework ought to be initialized the intended
+             way (with network access disabled) already, just in case that
+             XML catalog URI rewriting did not work out, for whatever
+             unlikely reason */
+
     xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);
@@ -1157,6 +1270,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
         crm_crit("Problem in parsing %s", sfile);
+        divert_xslt_doc_loader(NULL, false);
         return -1;
     }
     free(sfile);
@@ -1203,6 +1317,9 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
         xmlFreeDoc(res);
     }
     xsltFreeStylesheet(xslt);
+
+    divert_xslt_doc_loader(NULL, false);
+
     return ret;
 #else
     return -1;
