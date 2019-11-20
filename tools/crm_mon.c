@@ -764,10 +764,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-    const char *description = "*Notes*\n\n"
+    const char *description = "Notes:\n\n"
                               "If this program is called as crm_mon.cgi, --output-as=html --html-cgi will\n"
                               "automatically be added to the command line arguments.\n\n"
-                              "*Examples*\n\n"
+                              "Time Specification:\n\n"
+                              "The TIMESPEC in any command line option can be specified in many different\n"
+                              "formats.  It can be just an integer number of seconds, a number plus units\n"
+                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
+                              "Examples:\n\n"
                               "Display the cluster status on the console with updates as they occur:\n\n"
                               "\tcrm_mon\n\n"
                               "Display the cluster status on the console just once then exit:\n\n"
@@ -777,11 +781,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
                               "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
                               "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
-                              "\tcrm_mon --output-as xml\n\n"
-                              "*Time Specification*\n\n"
-                              "The TIMESPEC in any command line option can be specified in many different\n"
-                              "formats.  It can be just an integer number of seconds, a number plus units\n"
-                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n";
+                              "\tcrm_mon --output-as xml\n\n";
 
     context = pcmk__build_arg_context(args, "console (default), html, text, xml", group);
     pcmk__add_main_args(context, extra_prog_entries);
