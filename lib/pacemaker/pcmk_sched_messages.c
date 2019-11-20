@@ -40,7 +40,14 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                        crm_time_t *now)
 {
     GListPtr gIter = NULL;
-    int rsc_log_level = LOG_INFO;
+    int rc = pcmk_ok;
+    pcmk__output_t *out = NULL;
+    const char* argv[] = { "", NULL };
+    GOptionGroup *output_group = NULL;
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
 
 /*	pe_debug_on(); */
 
@@ -62,6 +69,14 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     crm_trace("Calculate cluster status");
     stage0(data_set);
 
+    pcmk__register_formats(output_group, formats);
+    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
+    if ((rc != 0) || (out == NULL)) {
+        fprintf(stderr, "Error creating log output format: %s\n", pcmk_strerror(rc));
+        exit(CRM_EX_ERROR);
+    }
+    pe__register_messages(out);
+
     if(is_not_set(data_set->flags, pe_flag_quick_location)) {
         gIter = data_set->resources;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -70,9 +85,11 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
             if (is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
                 continue;
             }
-            rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
+            out->message(out, crm_map_element_name(rsc->xml), pe_print_log, rsc);
         }
     }
+
+    pcmk__output_free(out);
 
     crm_trace("Applying placement constraints");
     stage2(data_set);
