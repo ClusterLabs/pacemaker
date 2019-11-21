@@ -154,6 +154,7 @@ node_html(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
+    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
 
     char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
     char *buf = crm_strdup_printf("Node: %s", node_name);
@@ -211,10 +212,9 @@ node_text(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
+    const char *node_mode = va_arg(args, const char *);
 
     if (full) {
-        const char *node_mode = va_arg(args, const char *);
-
         char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
         unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
         char *buf = NULL;
@@ -265,6 +265,7 @@ node_xml(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
     unsigned int mon_ops G_GNUC_UNUSED = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
+    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
 
     if (full) {
         const char *node_type = "unknown";

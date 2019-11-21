@@ -320,7 +320,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                     if (failcount > 0) {
                         if (printed_header == FALSE) {
                             printed_header = TRUE;
-                            out->message(out, "node", node, mon_ops, FALSE);
+                            out->message(out, "node", node, mon_ops, FALSE, NULL);
                         }
 
                         out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -332,7 +332,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
 
                     if (printed_header == FALSE) {
                         printed_header = TRUE;
-                        out->message(out, "node", node, mon_ops, FALSE);
+                        out->message(out, "node", node, mon_ops, FALSE, NULL);
                     }
 
                     if (g_list_length(op_list) > 0) {
@@ -599,7 +599,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
 
-            out->message(out, "node", data.node, mon_ops, FALSE);
+            out->message(out, "node", data.node, mon_ops, FALSE, NULL);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             out->end_list(out);
@@ -1155,7 +1155,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     out->begin_list(out, NULL, NULL, "nodes");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE);
+        out->message(out, "node", node, mon_ops, TRUE, NULL);
     }
     out->end_list(out);
 
@@ -1222,7 +1222,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     out->begin_list(out, NULL, NULL, "Node List");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE);
+        out->message(out, "node", node, mon_ops, TRUE, NULL);
     }
     out->end_list(out);
 
