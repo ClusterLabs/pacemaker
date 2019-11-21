@@ -1,5 +1,5 @@
 :compat-mode: legacy
-= Convert Cluster to Active/Active =
+= Convert Storage to Active/Active =
 
 The primary requirement for an Active/Active cluster is that the data
 required for your services is available, simultaneously, on both
@@ -21,8 +21,9 @@ Distributed Lock Manager (DLM) required by cluster filesystems:
 
 == Configure the Cluster for the DLM ==
 
-The DLM needs to run on both nodes, so we'll start by creating a resource for
-it (using the *ocf:pacemaker:controld* resource script), and clone it:
+The DLM control daemon needs to run on both nodes, so we'll start by creating a
+resource for it (using the *ocf:pacemaker:controld* resource script), and clone
+it:
 ----
 [root@pcmk-1 ~]# pcs cluster cib dlm_cfg
 [root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm \
@@ -204,129 +205,27 @@ and ordering constraints for it:
 Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
 ----
 
-== Clone the IP address ==
+== Clone the Filesystem Resource ==
 
-There's no point making the services active on both locations if we can't
-reach them both, so let's clone the IP address.
+Now that we have a cluster filesystem ready to go, we can configure the cluster
+so both nodes mount the filesystem.
 
-The *IPaddr2* resource agent has built-in intelligence for when it is configured
-as a clone. It will utilize a multicast MAC address to have the local switch
-send the relevant packets to all nodes in the cluster, together with *iptables
-clusterip* rules on the nodes so that any given packet will be grabbed by
-exactly one node. This will give us a simple but effective form of
-load-balancing requests between our two nodes.
-
-Let's start a new config, and clone our IP:
-----
-[root@pcmk-1 ~]# pcs cluster cib loadbalance_cfg
-[root@pcmk-1 ~]# pcs -f loadbalance_cfg resource clone ClusterIP \
-     clone-max=2 clone-node-max=2 globally-unique=true
-----
-
-* `clone-max=2` tells the resource agent to split packets this many ways. This
-should equal the number of nodes that can host the IP.
-* `clone-node-max=2` says that one node can run up to 2 instances
-of the clone. This should also equal the number of nodes that can
-host the IP, so that if any node goes down, another node can take over
-the failed node's "request bucket". Otherwise, requests intended for
-the failed node would be discarded.
-* `globally-unique=true` tells the cluster that one clone isn't identical
-to another (each handles a different "bucket"). This also tells the resource
-agent to insert *iptables* rules so each host only processes packets in its
-bucket(s).
-
-Notice that when the ClusterIP becomes a clone, the constraints
-referencing ClusterIP now reference the clone.  This is
-done automatically by pcs.
-----
-[root@pcmk-1 ~]# pcs -f loadbalance_cfg constraint
-Location Constraints:
-Ordering Constraints:
-  start ClusterIP-clone then start WebSite (kind:Mandatory)
-  promote WebDataClone then start WebFS (kind:Mandatory)
-  start WebFS then start WebSite (kind:Mandatory)
-  start dlm-clone then start WebFS (kind:Mandatory)
-Colocation Constraints:
-  WebSite with ClusterIP-clone (score:INFINITY)
-  WebFS with WebDataClone (score:INFINITY) (with-rsc-role:Master)
-  WebSite with WebFS (score:INFINITY)
-  WebFS with dlm-clone (score:INFINITY)
-Ticket Constraints:
-----
-
-Now we must tell the resource how to decide which requests are
-processed by which hosts. To do this, we specify the *clusterip_hash* parameter.
-The value of *sourceip* means that the source IP address of incoming packets
-will be hashed; each node will process a certain range of hashes.
-
-----
-[root@pcmk-1 ~]# pcs -f loadbalance_cfg resource update ClusterIP clusterip_hash=sourceip
-----
-
-Load our configuration to the cluster, and see how it responds.
------
-[root@pcmk-1 ~]# pcs cluster cib-push loadbalance_cfg --config
-CIB updated
-[root@pcmk-1 ~]# pcs status
-Cluster name: mycluster
-Stack: corosync
-Current DC: pcmk-1 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-Last updated: Tue Sep 11 10:36:38 2018
-Last change: Tue Sep 11 10:36:33 2018 by root via cibadmin on pcmk-1
-
-2 nodes configured
-9 resources configured (1 DISABLED)
-
-Online: [ pcmk-1 pcmk-2 ]
-
-Full list of resources:
-
- ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1 
- WebSite	(ocf::heartbeat:apache):	Stopped
- Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-1 ]
-     Slaves: [ pcmk-2 ]
- WebFS	(ocf::heartbeat:Filesystem):	Stopped (disabled)
- Clone Set: dlm-clone [dlm]
-     Started: [ pcmk-1 pcmk-2 ]
- Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-
-Daemon Status:
-  corosync: active/disabled
-  pacemaker: active/disabled
-  pcsd: active/enabled
------
-
-If desired, you can demonstrate that all request buckets are working
-by using a tool such as `arping` from several source hosts
-to see which host responds to each.
-
-== Clone the Filesystem and Apache Resources ==
-
-Now that we have a cluster filesystem ready to go,
-and our nodes can load-balance requests to a shared IP address,
-we can configure the cluster so both nodes mount the filesystem
-and respond to web requests.
-
-Clone the filesystem and Apache resources in a new configuration.
+Clone the filesystem resource in a new configuration.
 Notice how pcs automatically updates the relevant constraints again.
 ----
 [root@pcmk-1 ~]# pcs cluster cib active_cfg
 [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
-[root@pcmk-1 ~]# pcs -f active_cfg resource clone WebSite
 [root@pcmk-1 ~]# pcs -f active_cfg constraint
 Location Constraints:
 Ordering Constraints:
-  start ClusterIP-clone then start WebSite-clone (kind:Mandatory)
+  start ClusterIP then start WebSite (kind:Mandatory)
   promote WebDataClone then start WebFS-clone (kind:Mandatory)
-  start WebFS-clone then start WebSite-clone (kind:Mandatory)
+  start WebFS-clone then start WebSite (kind:Mandatory)
   start dlm-clone then start WebFS-clone (kind:Mandatory)
 Colocation Constraints:
-  WebSite-clone with ClusterIP-clone (score:INFINITY)
+  WebSite with ClusterIP (score:INFINITY)
   WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
-  WebSite-clone with WebFS-clone (score:INFINITY)
+  WebSite with WebFS-clone (score:INFINITY)
   WebFS-clone with dlm-clone (score:INFINITY)
 Ticket Constraints:
 ----
@@ -353,31 +252,21 @@ After all the processes are started, the status should look similar to this.
      Masters: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: WebSite-clone [WebSite]
-     Started: [ pcmk-1 pcmk-2 ]
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 -----
 
 == Test Failover ==
 
 Testing failover is left as an exercise for the reader.
-For example, you can put one node into standby mode,
-use `pcs status` to confirm that its ClusterIP clone was
-moved to the other node, and use `arping` to verify that
-packets are not being lost from any source host.
 
-[NOTE]
-====
-You may find that when a failed node rejoins the cluster,
-both ClusterIP clones stay on one node, due to the
-resource stickiness. While this works fine, it effectively eliminates
-load-balancing and returns the cluster to an active-passive setup again.
-You can avoid this by disabling stickiness for the IP address resource:
-----
-[root@pcmk-1 ~]# pcs resource meta ClusterIP resource-stickiness=0
-----
-====
+With this configuration, the data is now active/active. The website
+administrator could change HTML files on either node, and the live website will
+show the changes even if it is running on the opposite node.
+
+If the web server is configured to listen on all IP addresses, it is possible
+to remove the constraints between the WebSite and ClusterIP resources, and
+clone the WebSite resource. The web server would always be ready to serve web
+pages, and only the IP address would need to be moved in a failover.

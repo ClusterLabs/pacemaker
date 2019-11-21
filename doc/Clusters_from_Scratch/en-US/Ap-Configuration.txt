@@ -10,13 +10,10 @@
      Masters: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: WebSite-clone [WebSite]
-     Started: [ pcmk-1 pcmk-2 ]
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 ----
 
 ----
@@ -33,14 +30,14 @@ timeout: 240s
 [root@pcmk-1 ~]# pcs constraint
 Location Constraints:
 Ordering Constraints:
-  start ClusterIP-clone then start WebSite-clone (kind:Mandatory)
+  start ClusterIP then start WebSite (kind:Mandatory)
   promote WebDataClone then start WebFS-clone (kind:Mandatory)
-  start WebFS-clone then start WebSite-clone (kind:Mandatory)
+  start WebFS-clone then start WebSite (kind:Mandatory)
   start dlm-clone then start WebFS-clone (kind:Mandatory)
 Colocation Constraints:
-  WebSite-clone with ClusterIP-clone (score:INFINITY)
+  WebSite with ClusterIP (score:INFINITY)
   WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
-  WebSite-clone with WebFS-clone (score:INFINITY)
+  WebSite with WebFS-clone (score:INFINITY)
   WebFS-clone with dlm-clone (score:INFINITY)
 Ticket Constraints:
 ----
@@ -65,13 +62,10 @@ Full list of resources:
      Masters: [ pcmk-1 pcmk-2 ]
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
- Clone Set: WebSite-clone [WebSite]
-     Started: [ pcmk-1 pcmk-2 ]
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
@@ -147,28 +141,21 @@ Daemon Status:
         <nvpair id="dlm-clone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
       </meta_attributes>
     </clone>
-    <clone id="ClusterIP-clone">
-      <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
-        <instance_attributes id="ClusterIP-instance_attributes">
-          <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
-          <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.120"/>
-          <nvpair id="ClusterIP-instance_attributes-clusterip_hash" name="clusterip_hash" value="sourceip"/>
-        </instance_attributes>
-        <operations>
-          <op id="ClusterIP-monitor-interval-30s" interval="30s" name="monitor"/>
-          <op id="ClusterIP-start-interval-0s" interval="0s" name="start" timeout="20s"/>
-          <op id="ClusterIP-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
-        </operations>
-        <meta_attributes id="ClusterIP-meta_attributes">
-          <nvpair id="ClusterIP-meta_attributes-resource-stickiness" name="resource-stickiness" value="0"/>
-        </meta_attributes>
-      </primitive>
-      <meta_attributes id="ClusterIP-clone-meta_attributes">
-        <nvpair id="ClusterIP-clone-meta_attributes-clone-max" name="clone-max" value="2"/>
-        <nvpair id="ClusterIP-clone-meta_attributes-clone-node-max" name="clone-node-max" value="2"/>
-        <nvpair id="ClusterIP-clone-meta_attributes-globally-unique" name="globally-unique" value="true"/>
+    <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
+      <instance_attributes id="ClusterIP-instance_attributes">
+        <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+        <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.120"/>
+        <nvpair id="ClusterIP-instance_attributes-clusterip_hash" name="clusterip_hash" value="sourceip"/>
+      </instance_attributes>
+      <operations>
+        <op id="ClusterIP-monitor-interval-30s" interval="30s" name="monitor"/>
+        <op id="ClusterIP-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+        <op id="ClusterIP-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+      </operations>
+      <meta_attributes id="ClusterIP-meta_attributes">
+        <nvpair id="ClusterIP-meta_attributes-resource-stickiness" name="resource-stickiness" value="0"/>
       </meta_attributes>
-    </clone>
+    </primitive>
     <clone id="WebFS-clone">
       <primitive class="ocf" id="WebFS" provider="heartbeat" type="Filesystem">
         <instance_attributes id="WebFS-instance_attributes">
@@ -184,28 +171,25 @@ Daemon Status:
         </operations>
       </primitive>
     </clone>
-    <clone id="WebSite-clone">
-      <primitive class="ocf" id="WebSite" provider="heartbeat" type="apache">
-        <instance_attributes id="WebSite-instance_attributes">
-          <nvpair id="WebSite-instance_attributes-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
-          <nvpair id="WebSite-instance_attributes-statusurl" name="statusurl" value="http://localhost/server-status"/>
-        </instance_attributes>
-        <operations>
-          <op id="WebSite-monitor-interval-1min" interval="1min" name="monitor"/>
-          <op id="WebSite-start-interval-0s" interval="0s" name="start" timeout="40s"/>
-          <op id="WebSite-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
-        </operations>
-      </primitive>
-      <meta_attributes id="WebSite-clone-meta_attributes"/>
-    </clone>
+    <primitive class="ocf" id="WebSite" provider="heartbeat" type="apache">
+      <instance_attributes id="WebSite-instance_attributes">
+        <nvpair id="WebSite-instance_attributes-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
+        <nvpair id="WebSite-instance_attributes-statusurl" name="statusurl" value="http://localhost/server-status"/>
+      </instance_attributes>
+      <operations>
+        <op id="WebSite-monitor-interval-1min" interval="1min" name="monitor"/>
+        <op id="WebSite-start-interval-0s" interval="0s" name="start" timeout="40s"/>
+        <op id="WebSite-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
+      </operations>
+    </primitive>
   </resources>
   <constraints>
-    <rsc_colocation id="colocation-WebSite-ClusterIP-INFINITY" rsc="WebSite-clone" score="INFINITY" with-rsc="ClusterIP-clone"/>
-    <rsc_order first="ClusterIP-clone" first-action="start" id="order-ClusterIP-WebSite-mandatory" then="WebSite-clone" then-action="start"/>
+    <rsc_colocation id="colocation-WebSite-ClusterIP-INFINITY" rsc="WebSite" score="INFINITY" with-rsc="ClusterIP"/>
+    <rsc_order first="ClusterIP" first-action="start" id="order-ClusterIP-WebSite-mandatory" then="WebSite" then-action="start"/>
     <rsc_colocation id="colocation-WebFS-WebDataClone-INFINITY" rsc="WebFS-clone" score="INFINITY" with-rsc="WebDataClone" with-rsc-role="Master"/>
     <rsc_order first="WebDataClone" first-action="promote" id="order-WebDataClone-WebFS-mandatory" then="WebFS-clone" then-action="start"/>
-    <rsc_colocation id="colocation-WebSite-WebFS-INFINITY" rsc="WebSite-clone" score="INFINITY" with-rsc="WebFS-clone"/>
-    <rsc_order first="WebFS-clone" first-action="start" id="order-WebFS-WebSite-mandatory" then="WebSite-clone" then-action="start"/>
+    <rsc_colocation id="colocation-WebSite-WebFS-INFINITY" rsc="WebSite" score="INFINITY" with-rsc="WebFS-clone"/>
+    <rsc_order first="WebFS-clone" first-action="start" id="order-WebFS-WebSite-mandatory" then="WebSite" then-action="start"/>
     <rsc_colocation id="colocation-WebFS-dlm-clone-INFINITY" rsc="WebFS-clone" score="INFINITY" with-rsc="dlm-clone"/>
     <rsc_order first="dlm-clone" first-action="start" id="order-dlm-clone-WebFS-mandatory" then="WebFS-clone" then-action="start"/>
   </constraints>
@@ -291,24 +275,16 @@ explicitly set the option itself. Above:
 ==== Service Address ====
 
 Users of the services provided by the cluster require an unchanging
-address with which to access it. Additionally, we cloned the address so
-it will be active on both nodes. An iptables rule (created as part of the
-resource agent) is used to ensure that each request only gets processed by one
-of the two clone instances. The additional meta options tell the cluster
-that we want two instances of the clone (one "request bucket" for each
-node) and that if one node fails, then the remaining node should hold
-both.
+address with which to access it.
 
 ----
-[root@pcmk-1 ~]# pcs resource show ClusterIP-clone
- Clone: ClusterIP-clone
-  Meta Attrs: clone-max=2 clone-node-max=2 globally-unique=true 
-  Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
-   Attributes: cidr_netmask=24 ip=192.168.122.120 clusterip_hash=sourceip
-   Meta Attrs: resource-stickiness=0 
-   Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
-               start interval=0s timeout=20s (ClusterIP-start-interval-0s)
-               stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
+[root@pcmk-1 ~]# pcs resource show ClusterIP
+Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
+ Attributes: cidr_netmask=24 ip=192.168.122.120 clusterip_hash=sourceip
+ Meta Attrs: resource-stickiness=0 
+ Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
+             start interval=0s timeout=20s (ClusterIP-start-interval-0s)
+             stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
 ----
 
 ==== DRBD - Shared Storage ====
@@ -369,18 +345,17 @@ Resource: WebFS-clone
 
 Lastly, we have the actual service, Apache. We need only tell the cluster
 where to find its main configuration file and restrict it to running on
-nodes that have the required filesystem mounted and the IP address active.
+a node that has the required filesystem mounted and the IP address active.
 
 ----
-[root@pcmk-1 ~]# pcs resource show WebSite-clone
- Clone: WebSite-clone
-  Resource: WebSite (class=ocf provider=heartbeat type=apache)
-   Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
-   Operations: monitor interval=1min (WebSite-monitor-interval-1min)
-               start interval=0s timeout=40s (WebSite-start-interval-0s)
-               stop interval=0s timeout=60s (WebSite-stop-interval-0s)
-[root@pcmk-1 ~]# pcs constraint ref WebSite-clone
-Resource: WebSite-clone
+[root@pcmk-1 ~]# pcs resource show WebSite
+Resource: WebSite (class=ocf provider=heartbeat type=apache)
+ Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
+ Operations: monitor interval=1min (WebSite-monitor-interval-1min)
+             start interval=0s timeout=40s (WebSite-start-interval-0s)
+             stop interval=0s timeout=60s (WebSite-stop-interval-0s)
+[root@pcmk-1 ~]# pcs constraint ref WebSite
+Resource: WebSite
   colocation-WebSite-ClusterIP-INFINITY
   colocation-WebSite-WebFS-INFINITY
   order-ClusterIP-WebSite-mandatory
