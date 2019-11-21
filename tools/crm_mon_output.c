@@ -393,16 +393,6 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    /* Kind of a hack - close the list started by print_cluster_summary so we
-     * can put all the options in their own list, but just for HTML output.
-     */
-    out->end_list(out);
-
-    /* And then this list will be closed by print_cluster_summary since it
-     * wants to close the list it created unconditionally.
-     */
-    out->begin_list(out, NULL, NULL, "Config Options");
-
     out->list_item(out, NULL, "STONITH of failed nodes %s",
                    is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 

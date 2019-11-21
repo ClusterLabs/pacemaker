@@ -52,7 +52,8 @@ static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
 static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
                              unsigned int mon_ops);
 static void print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                                  unsigned int mon_ops, unsigned int show);
+                                  unsigned int mon_ops, unsigned int show,
+                                  mon_output_format_t fmt);
 static gboolean print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
 static gboolean print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
                                              unsigned int mon_ops);
@@ -667,7 +668,7 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
  */
 static void
 print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                      unsigned int mon_ops, unsigned int show)
+                      unsigned int mon_ops, unsigned int show, mon_output_format_t fmt)
 {
     const char *stack_s = get_cluster_stack(data_set);
     gboolean header_printed = FALSE;
@@ -714,6 +715,18 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
      * stack for now; a separate option could be added if there is demand
      */
     if (show & mon_show_stack) {
+        if (fmt == mon_output_html || fmt == mon_output_cgi) {
+            /* Kind of a hack - close the list we may have opened earlier in this
+             * function so we can put all the options into their own list.  We
+             * only want to do this on HTML output, though.
+             */
+            if (header_printed == TRUE) {
+                out->end_list(out);
+            }
+
+            out->begin_list(out, NULL, NULL, "Config Options");
+        }
+
         out->message(out, "cluster-options", data_set);
     }
 
@@ -934,7 +947,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     if (is_set(show, mon_show_headers)) {
         out->info(out, "%s", "");
@@ -1129,14 +1142,14 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                 stonith_history_t *stonith_history, unsigned int mon_ops,
-                 unsigned int show, const char *prefix)
+print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
+                 pe_working_set_t *data_set, stonith_history_t *stonith_history,
+                 unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
     int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODES ***/
     out->begin_list(out, NULL, NULL, "nodes");
@@ -1203,7 +1216,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     GListPtr gIter = NULL;
     int print_opts = get_resource_display_options(mon_ops, output_format);
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODE LIST ***/
     out->begin_list(out, NULL, NULL, "Node List");
