@@ -202,7 +202,7 @@ ban_html(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
 
-    char *node_name = get_node_display_name(pe_node, mon_ops);
+    char *node_name = pe__node_display_name(pe_node, is_set(mon_ops, mon_op_print_clone_detail));
     char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
                                   location->id, location->rsc_lh->id,
                                   location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
@@ -221,7 +221,7 @@ ban_text(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     unsigned int mon_ops = va_arg(args, unsigned int);
 
-    char *node_name = get_node_display_name(pe_node, mon_ops);
+    char *node_name = pe__node_display_name(pe_node, is_set(mon_ops, mon_op_print_clone_detail));
     out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
                    location->id, location->rsc_lh->id,
                    location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
@@ -712,7 +712,7 @@ node_html(pcmk__output_t *out, va_list args) {
     unsigned int mon_ops = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
 
-    char *node_name = get_node_display_name(node, mon_ops);
+    char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
     char *buf = crm_strdup_printf("Node: %s", node_name);
     int print_opts = get_resource_display_options(mon_ops, mon_output_html);
 
@@ -772,7 +772,7 @@ node_text(pcmk__output_t *out, va_list args) {
     if (full) {
         const char *node_mode = va_arg(args, const char *);
 
-        char *node_name = get_node_display_name(node, mon_ops);
+        char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
         int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
         char *buf = NULL;
 
@@ -811,7 +811,7 @@ node_text(pcmk__output_t *out, va_list args) {
         free(buf);
         free(node_name);
     } else {
-        out->begin_list(out, NULL, NULL, "Node: %s", get_node_display_name(node, mon_ops));
+        out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail)));
     }
 
     return 0;

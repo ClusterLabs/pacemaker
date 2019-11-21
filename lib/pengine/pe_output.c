@@ -11,6 +11,58 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/pengine/internal.h>
 
+char *
+pe__node_display_name(node_t *node, bool print_detail)
+{
+    char *node_name;
+    const char *node_host = NULL;
+    const char *node_id = NULL;
+    int name_len;
+
+    CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
+
+    /* Host is displayed only if this is a guest node */
+    if (pe__is_guest_node(node)) {
+        node_t *host_node = pe__current_node(node->details->remote_rsc);
+
+        if (host_node && host_node->details) {
+            node_host = host_node->details->uname;
+        }
+        if (node_host == NULL) {
+            node_host = ""; /* so we at least get "uname@" to indicate guest */
+        }
+    }
+
+    /* Node ID is displayed if different from uname and detail is requested */
+    if (print_detail && safe_str_neq(node->details->uname, node->details->id)) {
+        node_id = node->details->id;
+    }
+
+    /* Determine name length */
+    name_len = strlen(node->details->uname) + 1;
+    if (node_host) {
+        name_len += strlen(node_host) + 1; /* "@node_host" */
+    }
+    if (node_id) {
+        name_len += strlen(node_id) + 3; /* + " (node_id)" */
+    }
+
+    /* Allocate and populate display name */
+    node_name = malloc(name_len);
+    CRM_ASSERT(node_name != NULL);
+    strcpy(node_name, node->details->uname);
+    if (node_host) {
+        strcat(node_name, "@");
+        strcat(node_name, node_host);
+    }
+    if (node_id) {
+        strcat(node_name, " (");
+        strcat(node_name, node_id);
+        strcat(node_name, ")");
+    }
+    return node_name;
+}
+
 int
 pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...)

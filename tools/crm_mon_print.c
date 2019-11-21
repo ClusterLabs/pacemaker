@@ -650,7 +650,7 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
                                crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                : NULL;
     const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-    char *dc_name = dc? get_node_display_name(dc, mon_ops) : NULL;
+    char *dc_name = dc? pe__node_display_name(dc, is_set(mon_ops, mon_op_print_clone_detail)) : NULL;
 
     out->message(out, "cluster-dc", dc, quorum, dc_version_s, dc_name);
     free(dc_name);
@@ -945,7 +945,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
-        char *node_name = get_node_display_name(node, mon_ops);
+        char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
 
         /* Get node mode */
         if (node->details->unclean) {

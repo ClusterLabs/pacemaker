@@ -106,6 +106,7 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
 
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
+char *pe__node_display_name(node_t *node, bool print_detail);
 
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_html(pcmk__output_t *out, va_list args);
