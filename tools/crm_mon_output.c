@@ -67,31 +67,11 @@ failed_action_string(xmlNodePtr xml_op) {
 }
 
 static int
-failed_action_console(pcmk__output_t *out, va_list args) {
-    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-    char *s = failed_action_string(xml_op);
-
-    curses_indented_printf(out, "%s\n", s);
-    free(s);
-    return 0;
-}
-
-static int
-failed_action_html(pcmk__output_t *out, va_list args) {
-    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-    char *s = failed_action_string(xml_op);
-
-    pcmk__output_create_html_node(out, "li", NULL, NULL, s);
-    free(s);
-    return 0;
-}
-
-static int
 failed_action_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     char *s = failed_action_string(xml_op);
 
-    pcmk__indented_printf(out, "%s\n", s);
+    out->list_item(out, NULL, "%s", s);
     free(s);
     return 0;
 }
@@ -222,8 +202,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-options", "console", pe__cluster_options_text },
     { "cluster-stack", "console", pe__cluster_stack_text },
     { "cluster-times", "console", pe__cluster_times_text },
-    { "failed-action", "console", failed_action_console },
-    { "failed-action", "html", failed_action_html },
+    { "failed-action", "console", failed_action_text },
+    { "failed-action", "html", failed_action_text },
     { "failed-action", "text", failed_action_text },
     { "failed-action", "xml", failed_action_xml },
     { "group", "console", pe__group_text },

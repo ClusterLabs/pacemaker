@@ -764,7 +764,6 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
     for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
         out->message(out, "failed-action", xml_op);
-        out->increment_list(out);
     }
 
     /* End section */
