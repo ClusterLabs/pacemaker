@@ -109,8 +109,7 @@ GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
 void crm_mon_get_parameters(resource_t *rsc, pe_working_set_t *data_set);
 const char *get_cluster_stack(pe_working_set_t *data_set);
-unsigned int get_resource_display_options(unsigned int mon_ops,
-                                          mon_output_format_t output_format);
+unsigned int get_resource_display_options(unsigned int mon_ops);
 
 void crm_mon_register_messages(pcmk__output_t *out);
 

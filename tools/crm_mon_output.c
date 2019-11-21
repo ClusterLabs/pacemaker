@@ -152,13 +152,15 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 static int
 node_html(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
-    unsigned int mon_ops = va_arg(args, unsigned int);
+    unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
 
-    char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
+    char *node_name = pe__node_display_name(node, print_clone_detail);
     char *buf = crm_strdup_printf("Node: %s", node_name);
-    unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_html);
 
     if (full) {
         xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
@@ -182,13 +184,13 @@ node_html(pcmk__output_t *out, va_list args) {
         } else {
             pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
         }
-        if (is_set(mon_ops, mon_op_print_brief) && is_set(mon_ops, mon_op_group_by_node)) {
+        if (print_brief && group_by_node) {
             out->begin_list(out, NULL, NULL, NULL);
             pe__rscs_brief_output(out, node->details->running_rsc, print_opts | pe_print_rsconly,
                                   FALSE);
             out->end_list(out);
 
-        } else if (is_set(mon_ops, mon_op_group_by_node)) {
+        } else if (group_by_node) {
             GListPtr lpc2 = NULL;
 
             out->begin_list(out, NULL, NULL, NULL);
@@ -210,13 +212,15 @@ node_html(pcmk__output_t *out, va_list args) {
 static int
 node_text(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
-    unsigned int mon_ops = va_arg(args, unsigned int);
+    unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode = va_arg(args, const char *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
 
     if (full) {
-        char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
-        unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+        char *node_name = pe__node_display_name(node, print_clone_detail);
         char *buf = NULL;
 
         /* Print the node name and status */
@@ -229,11 +233,11 @@ node_text(pcmk__output_t *out, va_list args) {
         }
 
         /* If we're grouping by node, print its resources */
-        if (is_set(mon_ops, mon_op_group_by_node)) {
+        if (group_by_node) {
             out->begin_list(out, NULL, NULL, "%s", buf);
             out->begin_list(out, NULL, NULL, "Resources");
 
-            if (is_set(mon_ops, mon_op_print_brief)) {
+            if (print_brief) {
                 pe__rscs_brief_output(out, node->details->running_rsc,
                                       print_opts | pe_print_rsconly, FALSE);
             } else {
@@ -254,7 +258,7 @@ node_text(pcmk__output_t *out, va_list args) {
         free(buf);
         free(node_name);
     } else {
-        out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail)));
+        out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, print_clone_detail));
     }
 
     return 0;
@@ -263,13 +267,15 @@ node_text(pcmk__output_t *out, va_list args) {
 static int
 node_xml(pcmk__output_t *out, va_list args) {
     node_t *node = va_arg(args, node_t *);
-    unsigned int mon_ops G_GNUC_UNUSED = va_arg(args, unsigned int);
+    unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
+    gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean print_brief G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
 
     if (full) {
         const char *node_type = "unknown";
-        unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
         char *length_s = crm_itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {
@@ -304,7 +310,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  (pcmkXmlStr) node->details->remote_rsc->container->id);
         }
 
-        if (is_set(mon_ops, mon_op_group_by_node)) {
+        if (group_by_node) {
             GListPtr lpc = NULL;
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {

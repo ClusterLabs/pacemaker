@@ -102,28 +102,10 @@ get_cluster_stack(pe_working_set_t *data_set)
  * \return Bitmask of pe_print_options suitable for resource print functions
  */
 unsigned int
-get_resource_display_options(unsigned int mon_ops, mon_output_format_t output_format)
+get_resource_display_options(unsigned int mon_ops)
 {
-    int print_opts;
+    int print_opts = 0;
 
-    /* Determine basic output format */
-    switch (output_format) {
-        case mon_output_console:
-            print_opts = pe_print_ncurses;
-            break;
-        case mon_output_html:
-        case mon_output_cgi:
-            print_opts = pe_print_html;
-            break;
-        case mon_output_xml:
-            print_opts = pe_print_xml;
-            break;
-        default:
-            print_opts = pe_print_printf;
-            break;
-    }
-
-    /* Add optional display elements */
     if (is_set(mon_ops, mon_op_print_pending)) {
         print_opts |= pe_print_pending;
     }

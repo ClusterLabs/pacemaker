@@ -320,7 +320,9 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                     if (failcount > 0) {
                         if (printed_header == FALSE) {
                             printed_header = TRUE;
-                            out->message(out, "node", node, mon_ops, FALSE, NULL);
+                            out->message(out, "node", node, get_resource_display_options(mon_ops),
+                                         FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                         }
 
                         out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -332,7 +334,9 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
 
                     if (printed_header == FALSE) {
                         printed_header = TRUE;
-                        out->message(out, "node", node, mon_ops, FALSE, NULL);
+                        out->message(out, "node", node, get_resource_display_options(mon_ops),
+                                     FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                     }
 
                     if (g_list_length(op_list) > 0) {
@@ -599,7 +603,9 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
 
-            out->message(out, "node", data.node, mon_ops, FALSE, NULL);
+            out->message(out, "node", data.node, get_resource_display_options(mon_ops),
+                         FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             out->end_list(out);
@@ -937,7 +943,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
              unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    unsigned int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
     gboolean printed = FALSE;
 
     /* space-separated lists of node names */
@@ -1026,7 +1032,9 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
         }
 
         /* If we get here, node is in bad state, or we're grouping by node */
-        out->message(out, "node", node, mon_ops, TRUE, node_mode);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     node_mode, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
         free(node_name);
     }
 
@@ -1147,7 +1155,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
                  unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
 
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
@@ -1155,7 +1163,9 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     out->begin_list(out, NULL, NULL, "nodes");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE, NULL);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
     }
     out->end_list(out);
 
@@ -1214,7 +1224,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                   unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    unsigned int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
 
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
@@ -1222,7 +1232,9 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     out->begin_list(out, NULL, NULL, "Node List");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE, NULL);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
     }
     out->end_list(out);
 
