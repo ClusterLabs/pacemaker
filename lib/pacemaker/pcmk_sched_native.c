@@ -509,8 +509,8 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         rsc->next_role = rsc->role;
     }
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__,
-                     rsc->allowed_nodes);
+    dump_node_scores((show_scores? LOG_STDOUT : scores_log_level), rsc,
+                     __FUNCTION__, rsc->allowed_nodes);
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
         clear_bit(rsc->flags, pe_rsc_managed);

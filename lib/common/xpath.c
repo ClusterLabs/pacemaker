@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -234,25 +225,32 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     max = numXpathResults(xpathObj);
 
     if (max < 1) {
-        do_crm_log(error_level, "No match for %s in %s", xpath, crm_str(nodePath));
-        crm_log_xml_explicit(xml_obj, "Unexpected Input");
+        if (error_level < LOG_NEVER) {
+            do_crm_log(error_level, "No match for %s in %s",
+                       xpath, crm_str(nodePath));
+            crm_log_xml_explicit(xml_obj, "Unexpected Input");
+        }
 
     } else if (max > 1) {
-        int lpc = 0;
+        if (error_level < LOG_NEVER) {
+            int lpc = 0;
 
-        do_crm_log(error_level, "Too many matches for %s in %s", xpath, crm_str(nodePath));
+            do_crm_log(error_level, "Too many matches for %s in %s",
+                       xpath, crm_str(nodePath));
 
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            for (lpc = 0; lpc < max; lpc++) {
+                xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            CRM_LOG_ASSERT(match != NULL);
-            if(match != NULL) {
-                matchNodePath = (char *)xmlGetNodePath(match);
-                do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
-                free(matchNodePath);
+                CRM_LOG_ASSERT(match != NULL);
+                if (match != NULL) {
+                    matchNodePath = (char *) xmlGetNodePath(match);
+                    do_crm_log(error_level, "%s[%d] = %s",
+                               xpath, lpc, crm_str(matchNodePath));
+                    free(matchNodePath);
+                }
             }
+            crm_log_xml_explicit(xml_obj, "Bad Input");
         }
-        crm_log_xml_explicit(xml_obj, "Bad Input");
 
     } else {
         result = getXpathResult(xpathObj, 0);

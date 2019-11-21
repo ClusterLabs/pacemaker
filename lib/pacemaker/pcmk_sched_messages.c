@@ -118,7 +118,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("=#=#=#=#= Summary =#=#=#=#=");
     crm_trace("\t========= Set %d (Un-runnable) =========", -1);
-    if (get_crm_log_level() >= LOG_TRACE) {
+    if (get_crm_log_level() == LOG_TRACE) {
         gIter = data_set->actions;
         for (; gIter != NULL; gIter = gIter->next) {
             action_t *action = (action_t *) gIter->data;

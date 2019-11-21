@@ -257,7 +257,7 @@ crm_time_log_alias(int log_level, const char *file, const char *function, int li
 {
     char *date_s = crm_time_as_string(date_time, flags);
 
-    if (log_level < LOG_CRIT) {
+    if (log_level == LOG_STDOUT) {
         printf("%s%s%s\n",
                (prefix? prefix : ""), (prefix? ": " : ""), date_s);
     } else {

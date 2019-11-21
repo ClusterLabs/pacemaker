@@ -281,7 +281,8 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
     chosen->details->num_resources++;
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
-    dump_rsc_utilization(show_utilization ? 0 : utilization_log_level, __FUNCTION__, rsc, chosen);
+    dump_rsc_utilization((show_utilization? LOG_STDOUT : utilization_log_level),
+                         __FUNCTION__, rsc, chosen);
 
     return TRUE;
 }

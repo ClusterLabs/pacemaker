@@ -54,13 +54,9 @@ log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
     char *start = crm_time_as_string(dtp->start, flags);
     char *end = crm_time_as_string(dtp->end, flags);
-    CRM_ASSERT(start != NULL && end != NULL);
 
-    if (log_level < LOG_CRIT) {
-        printf("Period: %s to %s\n", start, end);
-    } else {
-        do_crm_log(log_level, "Period: %s to %s", start, end);
-    }
+    CRM_ASSERT(start != NULL && end != NULL);
+    do_crm_log(log_level, "Period: %s to %s", start, end);
     free(start);
     free(end);
 }
@@ -145,7 +141,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Current date/time", date_time,
+        crm_time_log(LOG_STDOUT, "Current date/time", date_time,
                      print_options | crm_time_log_date | crm_time_log_timeofday);
 
     } else if (date_time_s) {
@@ -157,7 +153,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Date", date_time,
+        crm_time_log(LOG_STDOUT, "Date", date_time,
                      print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
@@ -169,7 +165,8 @@ main(int argc, char **argv)
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
-        crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
+        crm_time_log(LOG_STDOUT, "Duration", duration,
+                     print_options | crm_time_log_duration);
     }
 
     if (period_s) {
@@ -181,7 +178,7 @@ main(int argc, char **argv)
         }
         log_time_period(LOG_TRACE, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
-        log_time_period(-1, period,
+        log_time_period(LOG_STDOUT, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
         crm_time_free_period(period);
     }
@@ -196,7 +193,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Duration ends at", later,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Duration ends at", later,
+        crm_time_log(LOG_STDOUT, "Duration ends at", later,
                      print_options | crm_time_log_date | crm_time_log_timeofday |
                      crm_time_log_with_timezone);
         if (expected_s) {
