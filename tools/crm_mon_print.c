@@ -537,7 +537,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
                     out->begin_list(out, NULL, NULL, "Negative Location Constraints");
                 }
 
-                out->message(out, "ban", node, location, mon_ops);
+                out->message(out, "ban", node, location, is_set(mon_ops, mon_op_print_clone_detail));
             }
         }
     }

@@ -94,6 +94,60 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     return 0;
 }
 
+int
+pe__ban_html(pcmk__output_t *out, va_list args) {
+    pe_node_t *pe_node = va_arg(args, pe_node_t *);
+    pe__location_t *location = va_arg(args, pe__location_t *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+
+    char *node_name = pe__node_display_name(pe_node, print_clone_detail);
+    char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
+                                  location->id, location->rsc_lh->id,
+                                  location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                                  node_name);
+
+    pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
+
+    free(node_name);
+    free(buf);
+    return 0;
+}
+
+int
+pe__ban_text(pcmk__output_t *out, va_list args) {
+    pe_node_t *pe_node = va_arg(args, pe_node_t *);
+    pe__location_t *location = va_arg(args, pe__location_t *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+
+    char *node_name = pe__node_display_name(pe_node, print_clone_detail);
+    out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
+                   location->id, location->rsc_lh->id,
+                   location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                   node_name);
+
+    free(node_name);
+    return 0;
+}
+
+int
+pe__ban_xml(pcmk__output_t *out, va_list args) {
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "ban");
+    pe_node_t *pe_node = va_arg(args, pe_node_t *);
+    pe__location_t *location = va_arg(args, pe__location_t *);
+
+    char *weight_s = crm_itoa(pe_node->weight);
+
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) location->id);
+    xmlSetProp(node, (pcmkXmlStr) "resource", (pcmkXmlStr) location->rsc_lh->id);
+    xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) pe_node->details->uname);
+    xmlSetProp(node, (pcmkXmlStr) "weight", (pcmkXmlStr) weight_s);
+    xmlSetProp(node, (pcmkXmlStr) "master_only",
+               (pcmkXmlStr) (location->role_filter == RSC_ROLE_MASTER ? "true" : "false"));
+
+    free(weight_s);
+    return 0;
+}
+
 static int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
@@ -154,6 +208,10 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "ban", "html", pe__ban_html },
+    { "ban", "log", pe__ban_text },
+    { "ban", "text", pe__ban_text },
+    { "ban", "xml", pe__ban_xml },
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
     { "bundle", "text",  pe__bundle_text },
