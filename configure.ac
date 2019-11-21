@@ -962,6 +962,29 @@ if test "$pf_cv_var_progname" = "yes"; then
 fi
 
 dnl ========================================================================
+dnl Generic declarations
+dnl ========================================================================
+
+AC_CHECK_DECLS([CLOCK_MONOTONIC], [], [], [[
+    #include <time.h>
+]])
+
+# the above alone could allow using clock_gettime(CLOCK_MONOTONIC, ...)
+# in daemons/execd/execd_commands.c, but due to discovery of ftime causing
+# buildability problems in an out-of-the-box procedure with very recent glibc
+# snapshots (for which the above is meant to be a definitive solution)
+# coming very late prior to release, it is intentionally kept as opt-in,
+# with the line below (export CPPFLAGS="$CPPFLAGS -UPCMK_TIME_EMERGENCY_CGT"
+# or comment it out to revert this conservative delay of the roll out, e.g.,
+# when you hit said problems we eventually want to resolve, as already
+# materialized in Fedora Rawhide at this time), with the plan this
+# will only be applied in 2.0.3 release and will become opt-out since
+# (which hopefully explains the name of the macro as it will start to
+# make more sense then, and the continuity is important)
+CPPFLAGS="-DPCMK_TIME_EMERGENCY_CGT $CPPFLAGS"
+
+
+dnl ========================================================================
 dnl Structures
 dnl ========================================================================
 
