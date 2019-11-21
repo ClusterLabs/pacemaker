@@ -645,6 +645,187 @@ pe__cluster_times_text(pcmk__output_t *out, va_list args) {
 }
 
 int
+pe__node_html(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean full = va_arg(args, gboolean);
+    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    char *node_name = pe__node_display_name(node, print_clone_detail);
+    char *buf = crm_strdup_printf("Node: %s", node_name);
+
+    if (full) {
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+
+        pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
+
+        if (node->details->standby_onfail && node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "standby", " standby (on-fail)");
+        } else if (node->details->standby && node->details->online) {
+            char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
+            pcmk_create_html_node(item_node, "span", NULL, " standby", s);
+            free(s);
+        } else if (node->details->standby) {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (standby)");
+        } else if (node->details->maintenance && node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "maint", " maintenance");
+        } else if (node->details->maintenance) {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (maintenance)");
+        } else if (node->details->online) {
+            pcmk_create_html_node(item_node, "span", NULL, "online", " online");
+        } else {
+            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
+        }
+        if (print_brief && group_by_node) {
+            out->begin_list(out, NULL, NULL, NULL);
+            pe__rscs_brief_output(out, node->details->running_rsc, print_opts | pe_print_rsconly,
+                                  FALSE);
+            out->end_list(out);
+
+        } else if (group_by_node) {
+            GListPtr lpc2 = NULL;
+
+            out->begin_list(out, NULL, NULL, NULL);
+            for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
+                resource_t *rsc = (resource_t *) lpc2->data;
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+            }
+            out->end_list(out);
+        }
+    } else {
+        out->begin_list(out, NULL, NULL, "%s", buf);
+    }
+
+    free(buf);
+    free(node_name);
+    return 0;
+}
+
+int
+pe__node_text(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean full = va_arg(args, gboolean);
+    const char *node_mode = va_arg(args, const char *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    if (full) {
+        char *node_name = pe__node_display_name(node, print_clone_detail);
+        char *buf = NULL;
+
+        /* Print the node name and status */
+        if (pe__is_guest_node(node)) {
+            buf = crm_strdup_printf("GuestNode %s: %s", node_name, node_mode);
+        } else if (pe__is_remote_node(node)) {
+            buf = crm_strdup_printf("RemoteNode %s: %s", node_name, node_mode);
+        } else {
+            buf = crm_strdup_printf("Node %s: %s", node_name, node_mode);
+        }
+
+        /* If we're grouping by node, print its resources */
+        if (group_by_node) {
+            out->begin_list(out, NULL, NULL, "%s", buf);
+            out->begin_list(out, NULL, NULL, "Resources");
+
+            if (print_brief) {
+                pe__rscs_brief_output(out, node->details->running_rsc,
+                                      print_opts | pe_print_rsconly, FALSE);
+            } else {
+                GListPtr gIter2 = NULL;
+
+                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+                    resource_t *rsc = (resource_t *) gIter2->data;
+                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+                }
+            }
+
+            out->end_list(out);
+            out->end_list(out);
+        } else {
+            out->list_item(out, NULL, "%s", buf);
+        }
+
+        free(buf);
+        free(node_name);
+    } else {
+        out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, print_clone_detail));
+    }
+
+    return 0;
+}
+
+int
+pe__node_xml(pcmk__output_t *out, va_list args) {
+    node_t *node = va_arg(args, node_t *);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean full = va_arg(args, gboolean);
+    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
+    gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean print_brief G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    if (full) {
+        const char *node_type = "unknown";
+        char *length_s = crm_itoa(g_list_length(node->details->running_rsc));
+
+        switch (node->details->type) {
+            case node_member:
+                node_type = "member";
+                break;
+            case node_remote:
+                node_type = "remote";
+                break;
+            case node_ping:
+                node_type = "ping";
+                break;
+        }
+        pe__name_and_nvpairs_xml(out, true, "node", 13,
+                                 "name", node->details->uname,
+                                 "id", node->details->id,
+                                 "online", node->details->online ? "true" : "false",
+                                 "standby", node->details->standby ? "true" : "false",
+                                 "standby_onfail", node->details->standby_onfail ? "true" : "false",
+                                 "maintenance", node->details->maintenance ? "true" : "false",
+                                 "pending", node->details->pending ? "true" : "false",
+                                 "unclean", node->details->unclean ? "true" : "false",
+                                 "shutdown", node->details->shutdown ? "true" : "false",
+                                 "expected_up", node->details->expected_up ? "true" : "false",
+                                 "is_dc", node->details->is_dc ? "true" : "false",
+                                 "resources_running", length_s,
+                                 "type", node_type);
+
+        if (pe__is_guest_node(node)) {
+            xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
+            xmlSetProp(xml_node, (pcmkXmlStr) "id_as_resource",
+                                 (pcmkXmlStr) node->details->remote_rsc->container->id);
+        }
+
+        if (group_by_node) {
+            GListPtr lpc = NULL;
+
+            for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
+                resource_t *rsc = (resource_t *) lpc->data;
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+            }
+        }
+
+        free(length_s);
+
+        out->end_list(out);
+    } else {
+        xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
+        xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+    }
+
+    return 0;
+}
+
+int
 pe__node_attribute_text(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
@@ -945,6 +1126,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "group", "log",  pe__group_text },
+    { "node", "html", pe__node_html },
+    { "node", "log", pe__node_text },
+    { "node", "text", pe__node_text },
+    { "node", "xml", pe__node_xml },
     { "node-attribute", "html", pe__node_attribute_html },
     { "node-attribute", "log", pe__node_attribute_text },
     { "node-attribute", "text", pe__node_attribute_text },
