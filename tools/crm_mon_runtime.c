@@ -101,7 +101,7 @@ get_cluster_stack(pe_working_set_t *data_set)
  *
  * \return Bitmask of pe_print_options suitable for resource print functions
  */
-int
+unsigned int
 get_resource_display_options(unsigned int mon_ops, mon_output_format_t output_format)
 {
     int print_opts;

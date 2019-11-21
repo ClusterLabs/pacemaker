@@ -157,7 +157,7 @@ node_html(pcmk__output_t *out, va_list args) {
 
     char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
     char *buf = crm_strdup_printf("Node: %s", node_name);
-    int print_opts = get_resource_display_options(mon_ops, mon_output_html);
+    unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_html);
 
     if (full) {
         xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
@@ -216,7 +216,7 @@ node_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = va_arg(args, const char *);
 
         char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
-        int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+        unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
         char *buf = NULL;
 
         /* Print the node name and status */
@@ -268,7 +268,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
     if (full) {
         const char *node_type = "unknown";
-        int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+        unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
         char *length_s = crm_itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {

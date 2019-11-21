@@ -937,7 +937,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
              unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops, output_format);
     gboolean printed = FALSE;
 
     /* space-separated lists of node names */
@@ -1147,7 +1147,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
                  unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+    unsigned int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
 
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
@@ -1214,7 +1214,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                   unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops, output_format);
 
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
