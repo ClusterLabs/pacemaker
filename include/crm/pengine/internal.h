@@ -138,6 +138,8 @@ int pe__bundle_text(pcmk__output_t *out, va_list args);
 int pe__node_attribute_html(pcmk__output_t *out, va_list args);
 int pe__node_attribute_text(pcmk__output_t *out, va_list args);
 int pe__node_attribute_xml(pcmk__output_t *out, va_list args);
+int pe__op_history_text(pcmk__output_t *out, va_list args);
+int pe__op_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_history_text(pcmk__output_t *out, va_list args);
 int pe__resource_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);

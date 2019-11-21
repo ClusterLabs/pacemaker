@@ -70,92 +70,6 @@ failed_action_string(xmlNodePtr xml_op) {
     }
 }
 
-static char *
-op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
-                  int rc, unsigned int mon_ops) {
-    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    char *interval_str = NULL;
-    char *buf = NULL;
-
-    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-        char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
-        interval_str = crm_strdup_printf(" %s", pair);
-        free(pair);
-    }
-
-    if (is_set(mon_ops, mon_op_print_timing)) {
-        char *last_change_str = NULL;
-        char *last_run_str = NULL;
-        char *exec_str = NULL;
-        char *queue_str = NULL;
-
-        const char *value = NULL;
-
-        time_t epoch = 0;
-
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE, &epoch) == pcmk_ok)
-            && (epoch > 0)) {
-            char *time = pcmk_format_named_time(XML_RSC_OP_LAST_CHANGE, epoch);
-            last_change_str = crm_strdup_printf(" %s", time);
-            free(time);
-        }
-
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_RUN, &epoch) == pcmk_ok)
-            && (epoch > 0)) {
-            char *time = pcmk_format_named_time(XML_RSC_OP_LAST_RUN, epoch);
-            last_run_str = crm_strdup_printf(" %s", time);
-            free(time);
-        }
-
-        value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
-        if (value) {
-            char *pair = pcmk_format_nvpair(XML_RSC_OP_T_EXEC, value, "ms");
-            exec_str = crm_strdup_printf(" %s", pair);
-            free(pair);
-        }
-
-        value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
-        if (value) {
-            char *pair = pcmk_format_nvpair(XML_RSC_OP_T_QUEUE, value, "ms");
-            queue_str = crm_strdup_printf(" %s", pair);
-            free(pair);
-        }
-
-        buf = crm_strdup_printf("(%s) %s:%s%s%s%s%s rc=%d (%s)", call, task,
-                                interval_str ? interval_str : "",
-                                last_change_str ? last_change_str : "",
-                                last_run_str ? last_run_str : "",
-                                exec_str ? exec_str : "",
-                                queue_str ? queue_str : "",
-                                rc, services_ocf_exitcode_str(rc));
-
-        if (last_change_str) {
-            free(last_change_str);
-        }
-
-        if (last_run_str) {
-            free(last_run_str);
-        }
-
-        if (exec_str) {
-            free(exec_str);
-        }
-
-        if (queue_str) {
-            free(queue_str);
-        }
-    } else {
-        buf = crm_strdup_printf("(%s) %s:%s", call, task,
-                                interval_str ? interval_str : "");
-    }
-
-    if (interval_str) {
-        free(interval_str);
-    }
-
-    return buf;
-}
-
 static int
 failed_action_console(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
@@ -410,86 +324,6 @@ node_xml(pcmk__output_t *out, va_list args) {
 }
 
 static int
-op_history_text(pcmk__output_t *out, va_list args) {
-    xmlNode *xml_op = va_arg(args, xmlNode *);
-    const char *task = va_arg(args, const char *);
-    const char *interval_ms_s = va_arg(args, const char *);
-    int rc = va_arg(args, int);
-    unsigned int mon_ops = va_arg(args, unsigned int);
-
-    char *buf = op_history_string(xml_op, task, interval_ms_s, rc, mon_ops);
-
-    out->list_item(out, NULL, "%s", buf);
-
-    free(buf);
-    return 0;
-}
-
-static int
-op_history_xml(pcmk__output_t *out, va_list args) {
-    xmlNode *xml_op = va_arg(args, xmlNode *);
-    const char *task = va_arg(args, const char *);
-    const char *interval_ms_s = va_arg(args, const char *);
-    int rc = va_arg(args, int);
-    unsigned int mon_ops = va_arg(args, unsigned int);
-
-    char *rc_s = NULL;
-
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history");
-
-    xmlSetProp(node, (pcmkXmlStr) "call",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "task", (pcmkXmlStr) task);
-
-    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-        char *s = crm_strdup_printf("%sms", interval_ms_s);
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
-        free(s);
-    }
-
-    if (is_set(mon_ops, mon_op_print_timing)) {
-        const char *value = NULL;
-
-        value = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
-        if (value) {
-            time_t int_value = (time_t) crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
-                           (pcmkXmlStr) crm_now_string(&int_value));
-            }
-        }
-
-        value = crm_element_value(xml_op, XML_RSC_OP_LAST_RUN);
-        if (value) {
-            time_t int_value = (time_t) crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_RUN,
-                           (pcmkXmlStr) crm_now_string(&int_value));
-            }
-        }
-
-        value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
-        if (value) {
-            char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC, (pcmkXmlStr) s);
-            free(s);
-        }
-        value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
-        if (value) {
-            char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_QUEUE, (pcmkXmlStr) s);
-            free(s);
-        }
-    }
-
-    rc_s = crm_itoa(rc);
-    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) rc_s);
-    xmlSetProp(node, (pcmkXmlStr) "rc_text", (pcmkXmlStr) services_ocf_exitcode_str(rc));
-    free(rc_s);
-    return 0;
-}
-
-static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     int full_history = va_arg(args, int);
@@ -567,10 +401,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node", "text", node_text },
     { "node", "xml", node_xml },
     { "node-attribute", "console", pe__node_attribute_text },
-    { "op-history", "console", op_history_text },
-    { "op-history", "html", op_history_text },
-    { "op-history", "text", op_history_text },
-    { "op-history", "xml", op_history_xml },
+    { "op-history", "console", pe__op_history_text },
     { "primitive", "console", pe__resource_text },
     { "resource-history", "console", pe__resource_history_text },
     { "stonith-event", "console", stonith_event_console },

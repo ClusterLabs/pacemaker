@@ -270,7 +270,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
 
         /* Print the operation */
         out->message(out, "op-history", xml_op, task, interval_ms_s,
-                     rc, mon_ops);
+                     rc, is_set(mon_ops, mon_op_print_timing));
     }
 
     /* Free the list we created (no need to free the individual items) */
