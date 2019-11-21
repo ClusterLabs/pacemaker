@@ -102,6 +102,7 @@ enum pe_find {
 #  define pe_flag_start_failure_fatal   0x00001000ULL
 #  define pe_flag_remove_after_stop     0x00002000ULL
 #  define pe_flag_startup_fencing       0x00004000ULL
+#  define pe_flag_shutdown_lock         0x00008000ULL
 
 #  define pe_flag_startup_probes        0x00010000ULL
 #  define pe_flag_have_status           0x00020000ULL
@@ -167,6 +168,7 @@ struct pe_working_set_s {
     GList *stop_needed; // Containers that need stop actions
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
     int ninstances;     // Total number of resource instances
+    guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
 };
 
 enum pe_check_parameters {

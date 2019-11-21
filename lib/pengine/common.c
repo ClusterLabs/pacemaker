@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -85,6 +87,26 @@ static pe_cluster_option pe_opts[] = {
 	  "When set to TRUE, the cluster will immediately ban a resource from a node if it fails to start there. When FALSE, the cluster will instead check the resource's fail count against its migration-threshold." },
 	{ "enable-startup-probes", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster check for active resources during startup", NULL },
+    {
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+        NULL, "boolean", NULL, "false", &check_boolean,
+        "Whether to lock resources to a cleanly shut down node",
+        "When true, resources active on a node when it is cleanly shut down "
+            "are kept \"locked\" to that node (not allowed to run elsewhere) "
+            "until they start again on that node after it rejoins (or for at "
+            "most shutdown-lock-limit, if set). Stonith resources and "
+            "Pacemaker Remote connections are never locked. Clone and bundle "
+            "instances and the master role of promotable clones are currently "
+            "never locked, though support could be added in a future release."
+    },
+    {
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT,
+        NULL, "time", NULL, "0", &check_timer,
+        "Do not lock resources to a cleanly shut down node longer than this",
+        "If shutdown-lock is true and this is set to a nonzero time duration, "
+            "shutdown locks will expire after this much time has passed since "
+            "the shutdown was initiated, even if the node has not rejoined."
+    },
 
 	/* Stonith Options */
 	{ "stonith-enabled", NULL, "boolean", NULL, "true", &check_boolean,

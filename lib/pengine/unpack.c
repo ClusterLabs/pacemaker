@@ -319,6 +319,16 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
     crm_trace("Placement strategy: %s", data_set->placement_strategy);
 
+    set_config_flag(data_set, "shutdown-lock", pe_flag_shutdown_lock);
+    crm_trace("Resources will%s be locked to cleanly shut down nodes",
+              (is_set(data_set->flags, pe_flag_shutdown_lock)? "" : " not"));
+    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        value = pe_pref(data_set->config_hash,
+                        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
+        data_set->shutdown_lock = crm_parse_interval_spec(value) / 1000;
+        crm_trace("Shutdown locks expire after %us", data_set->shutdown_lock);
+    }
+
     return TRUE;
 }
 
