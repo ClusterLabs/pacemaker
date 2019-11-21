@@ -24,17 +24,6 @@
 #include "crm_mon.h"
 
 static char *
-time_t_string(time_t when) {
-    crm_time_t *crm_when = crm_time_new(NULL);
-    char *buf = NULL;
-
-    crm_time_set_timet(crm_when, &when);
-    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_free(crm_when);
-    return buf;
-}
-
-static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
@@ -45,19 +34,26 @@ failed_action_string(xmlNodePtr xml_op) {
     
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
-        char *time = time_t_string(last_change);
-        char *buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', exitreason='%s', last-rc-change='%s', queued=%sms, exec=%sms",
-                                      op_key ? op_key : ID(xml_op),
-                                      crm_element_value(xml_op, XML_ATTR_UNAME),
-                                      services_ocf_exitcode_str(rc), rc,
-                                      crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                      services_lrm_status_str(status),
-                                      exit_reason ? exit_reason : "none",
-                                      time,
-                                      crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                                      crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+        crm_time_t *crm_when = crm_time_new(NULL);
+        char *time_s = NULL;
+        char *buf = NULL;
 
-        free(time);
+        crm_time_set_timet(crm_when, &last_change);
+        time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+
+        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', exitreason='%s', last-rc-change='%s', queued=%sms, exec=%sms",
+                                op_key ? op_key : ID(xml_op),
+                                crm_element_value(xml_op, XML_ATTR_UNAME),
+                                services_ocf_exitcode_str(rc), rc,
+                                crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                services_lrm_status_str(status),
+                                exit_reason ? exit_reason : "none",
+                                time_s,
+                                crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                                crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+
+        crm_time_free(crm_when);
+        free(time_s);
         return buf;
     } else {
         return crm_strdup_printf("%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
@@ -129,7 +125,12 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 
     if (last) {
         char *s = crm_itoa(crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)));
-        char *rc_change = time_t_string(crm_parse_int(last, "0"));
+        time_t when = crm_parse_int(last, "0");
+        crm_time_t *crm_when = crm_time_new(NULL);
+        char *rc_change = NULL;
+
+        crm_time_set_timet(crm_when, &when);
+        rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
         xmlSetProp(node, (pcmkXmlStr) "last-rc-change", (pcmkXmlStr) rc_change);
         xmlSetProp(node, (pcmkXmlStr) "queued",
@@ -142,6 +143,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 
         free(s);
         free(rc_change);
+        crm_time_free(crm_when);
     }
 
     free(reason_s);
@@ -155,9 +157,11 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     int full_history = va_arg(args, int);
     gboolean later_succeeded = va_arg(args, gboolean);
 
+    crm_time_t *crm_when = crm_time_new(NULL);
     char *buf = NULL;
 
-    buf = time_t_string(event->completed);
+    crm_time_set_timet(crm_when, &(event->completed));
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
     switch (event->state) {
         case st_failed:
@@ -185,6 +189,7 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     }
 
     free(buf);
+    crm_time_free(crm_when);
     return 0;
 }
 
