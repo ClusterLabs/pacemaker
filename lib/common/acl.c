@@ -327,7 +327,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
     } else if (p->acls == NULL) {
         xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
-                                         source, LOG_TRACE);
+                                         source, LOG_NEVER);
 
         free(p->user);
         p->user = strdup(user);

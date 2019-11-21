@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -398,7 +400,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
 {
     int rc = 0;
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
@@ -439,8 +441,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         NULL);
         } else if (remote_peer &&
                    !safe_str_eq(remote_peer, stonith_our_uname)) {
-            xmlNode *history =
-                get_xpath_object("//" F_STONITH_HISTORY_LIST, msg, LOG_TRACE);
+            xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
+                                                msg, LOG_NEVER);
             GHashTable *received_history =
                 history?stonith_xml_history_to_list(history):NULL;
 

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -71,7 +73,8 @@ cluster_status(pe_working_set_t * data_set)
     xmlNode *cib_nodes = get_xpath_object("//"XML_CIB_TAG_NODES, data_set->input, LOG_TRACE);
     xmlNode *cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
     xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
-    xmlNode *cib_tags = get_xpath_object("//"XML_CIB_TAG_TAGS, data_set->input, LOG_TRACE);
+    xmlNode *cib_tags = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
+                                         LOG_NEVER);
     const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
     crm_trace("Beginning unpack");
@@ -97,8 +100,10 @@ cluster_status(pe_working_set_t * data_set)
         set_bit(data_set->flags, pe_flag_have_quorum);
     }
 
-    data_set->op_defaults = get_xpath_object("//"XML_CIB_TAG_OPCONFIG, data_set->input, LOG_TRACE);
-    data_set->rsc_defaults = get_xpath_object("//"XML_CIB_TAG_RSCCONFIG, data_set->input, LOG_TRACE);
+    data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
+                                             data_set->input, LOG_NEVER);
+    data_set->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+                                              data_set->input, LOG_NEVER);
 
     unpack_config(config, data_set);
 

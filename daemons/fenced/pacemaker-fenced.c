@@ -885,7 +885,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                  "/" XML_CIB_TAG_NODE "[@uname='%s']/" XML_TAG_ATTR_SETS
                  "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
                  node, name, value);
-    match = get_xpath_object(xpath, local_cib, LOG_TRACE);
+    match = get_xpath_object(xpath, local_cib, LOG_NEVER);
 
     CRM_CHECK(n < XPATH_MAX, return FALSE);
     return (match != NULL);
@@ -1051,7 +1051,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 
     crm_peer_caches_refresh(local_cib);
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']", local_cib, LOG_TRACE);
+    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
+                                           local_cib, LOG_NEVER);
     if (stonith_enabled_xml) {
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
@@ -1060,7 +1061,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         long timeout_ms = 0;
         const char *value = NULL;
 
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
+        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
+                                                local_cib, LOG_NEVER);
         if (stonith_watchdog_xml) {
             value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
         }
