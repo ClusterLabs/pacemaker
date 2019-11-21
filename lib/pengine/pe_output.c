@@ -148,6 +148,80 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
+int
+pe__node_attribute_text(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+
+    if (add_extra) {
+        int v = crm_parse_int(value, "0");
+
+        if (v <= 0) {
+            out->list_item(out, NULL, "%-32s\t: %-10s\t: Connectivity is lost", name, value);
+        } else if (v < expected_score) {
+            out->list_item(out, NULL, "%-32s\t: %-10s\t: Connectivity is degraded (Expected=%d)", name, value, expected_score);
+        } else {
+            out->list_item(out, NULL, "%-32s\t: %-10s", name, value);
+        }
+    } else {
+        out->list_item(out, NULL, "%-32s\t: %-10s", name, value);
+    }
+
+    return 0;
+}
+
+int
+pe__node_attribute_html(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+    if (add_extra) {
+        int v = crm_parse_int(value, "0");
+        char *s = crm_strdup_printf("%s: %s", name, value);
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+
+        pcmk_create_html_node(item_node, "span", NULL, NULL, s);
+        free(s);
+
+        if (v <= 0) {
+            pcmk_create_html_node(item_node, "span", NULL, "bold", "(connectivity is lost)");
+        } else if (v < expected_score) {
+            char *buf = crm_strdup_printf("(connectivity is degraded -- expected %d", expected_score);
+            pcmk_create_html_node(item_node, "span", NULL, "bold", buf);
+            free(buf);
+        }
+    } else {
+        out->list_item(out, NULL, "%s: %s", name, value);
+    }
+
+    return 0;
+}
+
+int
+pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    gboolean add_extra = va_arg(args, gboolean);
+    int expected_score = va_arg(args, int);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute");
+    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    xmlSetProp(node, (pcmkXmlStr) "value", (pcmkXmlStr) value);
+
+    if (add_extra) {
+        char *buf = crm_itoa(expected_score);
+        xmlSetProp(node, (pcmkXmlStr) "expected", (pcmkXmlStr) buf);
+        free(buf);
+    }
+
+    return 0;
+}
+
 static int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
@@ -224,6 +298,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "group", "log",  pe__group_text },
+    { "node-attribute", "html", pe__node_attribute_html },
+    { "node-attribute", "log", pe__node_attribute_text },
+    { "node-attribute", "text", pe__node_attribute_text },
+    { "node-attribute", "xml", pe__node_attribute_xml },
     { "primitive", "xml",  pe__resource_xml },
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
