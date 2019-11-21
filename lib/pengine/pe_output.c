@@ -30,6 +30,29 @@ last_changed_string(const char *last_written, const char *user,
     }
 }
 
+static char *
+resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
+                        int failcount, time_t last_failure) {
+    char *buf = NULL;
+
+    if (rsc == NULL) {
+        buf = crm_strdup_printf("%s: orphan", rsc_id);
+    } else if (all || failcount || last_failure > 0) {
+        char *failcount_s = failcount > 0 ? crm_strdup_printf(" %s=%d", CRM_FAIL_COUNT_PREFIX, failcount) : strdup("");
+        char *lastfail_s = last_failure > 0 ? crm_strdup_printf(" %s=%s", CRM_LAST_FAILURE_PREFIX,
+                                                                crm_now_string(&last_failure)) : strdup("");
+
+        buf = crm_strdup_printf("%s: migration-threshold=%d%s%s",
+                                rsc_id, rsc->migration_threshold, failcount_s, lastfail_s);
+        free(failcount_s);
+        free(lastfail_s);
+    } else {
+        buf = crm_strdup_printf("%s:", rsc_id);
+    }
+
+    return buf;
+}
+
 char *
 pe__node_display_name(node_t *node, bool print_detail)
 {
@@ -608,6 +631,57 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
+int
+pe__resource_history_text(pcmk__output_t *out, va_list args) {
+    resource_t *rsc = va_arg(args, resource_t *);
+    const char *rsc_id = va_arg(args, const char *);
+    gboolean all = va_arg(args, gboolean);
+    int failcount = va_arg(args, int);
+    time_t last_failure = va_arg(args, int);
+
+    char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
+
+    out->begin_list(out, NULL, NULL, "%s", buf);
+    free(buf);
+    return 0;
+}
+
+int
+pe__resource_history_xml(pcmk__output_t *out, va_list args) {
+    resource_t *rsc = va_arg(args, resource_t *);
+    const char *rsc_id = va_arg(args, const char *);
+    gboolean all = va_arg(args, gboolean);
+    int failcount = va_arg(args, int);
+    time_t last_failure = va_arg(args, int);
+
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
+
+    if (rsc == NULL) {
+        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "true");
+    } else if (all || failcount || last_failure > 0) {
+        char *migration_s = crm_itoa(rsc->migration_threshold);
+
+        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "false");
+        xmlSetProp(node, (pcmkXmlStr) "migration-threshold",
+                   (pcmkXmlStr) migration_s);
+        free(migration_s);
+
+        if (failcount > 0) {
+            char *s = crm_itoa(failcount);
+            xmlSetProp(node, (pcmkXmlStr) CRM_FAIL_COUNT_PREFIX, (pcmkXmlStr) s);
+            free(s);
+        }
+
+        if (last_failure > 0) {
+            xmlSetProp(node, (pcmkXmlStr) CRM_LAST_FAILURE_PREFIX,
+                       (pcmkXmlStr) crm_now_string(&last_failure));
+        }
+    }
+
+    return 0;
+}
+
 static int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
@@ -712,6 +786,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
+    { "resource-history", "html", pe__resource_history_text },
+    { "resource-history", "log", pe__resource_history_text },
+    { "resource-history", "text", pe__resource_history_text },
+    { "resource-history", "xml", pe__resource_history_xml },
     { "ticket", "html", pe__ticket_html },
     { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", pe__ticket_xml },
