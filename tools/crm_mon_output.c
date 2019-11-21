@@ -23,114 +23,6 @@
 
 #include "crm_mon.h"
 
-static char *
-failed_action_string(xmlNodePtr xml_op) {
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
-    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-
-    time_t last_change = 0;
-    
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                &last_change) == pcmk_ok) {
-        crm_time_t *crm_when = crm_time_new(NULL);
-        char *time_s = NULL;
-        char *buf = NULL;
-
-        crm_time_set_timet(crm_when, &last_change);
-        time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-
-        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', exitreason='%s', last-rc-change='%s', queued=%sms, exec=%sms",
-                                op_key ? op_key : ID(xml_op),
-                                crm_element_value(xml_op, XML_ATTR_UNAME),
-                                services_ocf_exitcode_str(rc), rc,
-                                crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                services_lrm_status_str(status),
-                                exit_reason ? exit_reason : "none",
-                                time_s,
-                                crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                                crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-
-        crm_time_free(crm_when);
-        free(time_s);
-        return buf;
-    } else {
-        return crm_strdup_printf("%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                                 op_key ? op_key : ID(xml_op),
-                                 crm_element_value(xml_op, XML_ATTR_UNAME),
-                                 services_ocf_exitcode_str(rc), rc,
-                                 crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                 services_lrm_status_str(status),
-                                 exit_reason ? exit_reason : "none");
-    }
-}
-
-static int
-failed_action_text(pcmk__output_t *out, va_list args) {
-    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-    char *s = failed_action_string(xml_op);
-
-    out->list_item(out, NULL, "%s", s);
-    free(s);
-    return 0;
-}
-
-static int
-failed_action_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
-    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
-    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-
-    char *rc_s = crm_itoa(rc);
-    char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "failure");
-
-    xmlSetProp(node, (pcmkXmlStr) (op_key ? "op_key" : "id"),
-               (pcmkXmlStr) (op_key ? op_key : "id"));
-    xmlSetProp(node, (pcmkXmlStr) "node",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
-    xmlSetProp(node, (pcmkXmlStr) "exitstatus",
-               (pcmkXmlStr) services_ocf_exitcode_str(rc));
-    xmlSetProp(node, (pcmkXmlStr) "exitreason", (pcmkXmlStr) reason_s);
-    xmlSetProp(node, (pcmkXmlStr) "exitcode", (pcmkXmlStr) rc_s);
-    xmlSetProp(node, (pcmkXmlStr) "call",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "status",
-               (pcmkXmlStr) services_lrm_status_str(status));
-
-    if (last) {
-        char *s = crm_itoa(crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)));
-        time_t when = crm_parse_int(last, "0");
-        crm_time_t *crm_when = crm_time_new(NULL);
-        char *rc_change = NULL;
-
-        crm_time_set_timet(crm_when, &when);
-        rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-
-        xmlSetProp(node, (pcmkXmlStr) "last-rc-change", (pcmkXmlStr) rc_change);
-        xmlSetProp(node, (pcmkXmlStr) "queued",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
-        xmlSetProp(node, (pcmkXmlStr) "exec",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
-        xmlSetProp(node, (pcmkXmlStr) "task",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_TASK));
-
-        free(s);
-        free(rc_change);
-        crm_time_free(crm_when);
-    }
-
-    free(reason_s);
-    free(rc_s);
-    return 0;
-}
-
 static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -202,10 +94,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-options", "console", pe__cluster_options_text },
     { "cluster-stack", "console", pe__cluster_stack_text },
     { "cluster-times", "console", pe__cluster_times_text },
-    { "failed-action", "console", failed_action_text },
-    { "failed-action", "html", failed_action_text },
-    { "failed-action", "text", failed_action_text },
-    { "failed-action", "xml", failed_action_xml },
+    { "failed-action", "console", pe__failed_action_text },
     { "group", "console", pe__group_text },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },

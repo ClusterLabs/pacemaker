@@ -129,6 +129,8 @@ int pe__cluster_stack_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_times_html(pcmk__output_t *out, va_list args);
 int pe__cluster_times_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_times_text(pcmk__output_t *out, va_list args);
+int pe__failed_action_text(pcmk__output_t *out, va_list args);
+int pe__failed_action_xml(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
 int pe__group_html(pcmk__output_t *out, va_list args);
 int pe__group_text(pcmk__output_t *out, va_list args);
