@@ -44,8 +44,8 @@ static int delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int ca
 
 static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
                                        const char *rsc_id, const char *operation);
-static void do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation,
-                          xmlNode * msg, xmlNode * request);
+static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+                          const char *operation, xmlNode *msg);
 
 void send_direct_ack(const char *to_host, const char *to_sys,
                      lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, const char *rsc_id);
@@ -1851,7 +1851,7 @@ do_lrm_invoke(long long action,
                           crm_rsc_delete, user_name);
 
         } else {
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, input->msg);
+            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
         }
 
         lrmd_free_rsc_info(rsc);
@@ -2167,8 +2167,8 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 }
 
 static void
-do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg,
-              xmlNode * request)
+do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+              const char *operation, xmlNode *msg)
 {
     int call_id = 0;
     char *op_id = NULL;
