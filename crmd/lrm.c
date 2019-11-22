@@ -1159,18 +1159,17 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
     if (pending) {
-        if (remove && pending->remove == FALSE) {
-            pending->remove = TRUE;
+        if (remove && is_not_set(pending->flags, active_op_remove)) {
+            set_bit(pending->flags, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
-        if (pending->cancelled) {
+        if (is_set(pending->flags, active_op_cancelled)) {
             crm_debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
         }
-
-        pending->cancelled = TRUE;
+        set_bit(pending->flags, active_op_cancelled);
 
     } else {
         crm_info("No pending op found for %s", key);
@@ -2636,7 +2635,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         crm_err("Recurring operation %s was cancelled without transition information",
                 op_key);
 
-    } else if (pending->remove) {
+    } else if (is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we
          * have been waiting for it to finish.
          */
