@@ -33,12 +33,16 @@ typedef struct resource_history_s {
 
 void history_free(gpointer data);
 
+enum active_op_e {
+    active_op_remove    = (1 << 0),
+    active_op_cancelled = (1 << 1),
+};
+
 // In-flight action (recurring or pending)
 typedef struct active_op_s {
     guint interval_ms;
     int call_id;
-    gboolean remove;
-    gboolean cancelled;
+    uint32_t flags; // bitmask of active_op_e
     time_t start_time;
     char *rsc_id;
     char *op_type;
