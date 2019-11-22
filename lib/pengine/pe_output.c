@@ -1138,7 +1138,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
-static int
+int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
 
@@ -1158,7 +1158,7 @@ pe__ticket_html(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
-static int
+int
 pe__ticket_text(pcmk__output_t *out, va_list args) {
     ticket_t *ticket = va_arg(args, ticket_t *);
 
@@ -1178,7 +1178,7 @@ pe__ticket_text(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
-static int
+int
 pe__ticket_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
 

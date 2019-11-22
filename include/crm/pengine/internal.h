@@ -150,6 +150,9 @@ int pe__resource_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);
 int pe__resource_html(pcmk__output_t *out, va_list args);
 int pe__resource_text(pcmk__output_t *out, va_list args);
+int pe__ticket_html(pcmk__output_t *out, va_list args);
+int pe__ticket_text(pcmk__output_t *out, va_list args);
+int pe__ticket_xml(pcmk__output_t *out, va_list args);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);

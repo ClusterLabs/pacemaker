@@ -12,6 +12,7 @@
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
 #include <crm/common/output.h>
+#include <crm/pengine/internal.h>
 #include <glib.h>
 
 #include "crm_mon.h"
@@ -281,6 +282,76 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     curses_indented_vprintf(out, format, ap);
     va_end(ap);
 }
+
+static int
+stonith_event_console(pcmk__output_t *out, va_list args) {
+    stonith_history_t *event = va_arg(args, stonith_history_t *);
+    int full_history = va_arg(args, int);
+    gboolean later_succeeded = va_arg(args, gboolean);
+
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
+
+    crm_time_set_timet(crm_when, &(event->completed));
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+
+    switch (event->state) {
+        case st_failed:
+            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s %s'\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-failed", buf,
+                                   later_succeeded ? "(a later attempt succeeded)" : "");
+            break;
+
+        case st_done:
+            curses_indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-successful", buf);
+            break;
+
+        default:
+            curses_indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->client, event->origin);
+            break;
+    }
+
+    free(buf);
+    crm_time_free(crm_when);
+    return 0;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "ban", "console", pe__ban_text },
+    { "bundle", "console", pe__bundle_text },
+    { "clone", "console", pe__clone_text },
+    { "cluster-counts", "console", pe__cluster_counts_text },
+    { "cluster-dc", "console", pe__cluster_dc_text },
+    { "cluster-options", "console", pe__cluster_options_text },
+    { "cluster-stack", "console", pe__cluster_stack_text },
+    { "cluster-times", "console", pe__cluster_times_text },
+    { "failed-action", "console", pe__failed_action_text },
+    { "group", "console", pe__group_text },
+    { "node", "console", pe__node_text },
+    { "node-attribute", "console", pe__node_attribute_text },
+    { "op-history", "console", pe__op_history_text },
+    { "primitive", "console", pe__resource_text },
+    { "resource-history", "console", pe__resource_history_text },
+    { "stonith-event", "console", stonith_event_console },
+    { "ticket", "console", pe__ticket_text },
+
+    { NULL, NULL, NULL }
+};
+
+void
+crm_mon_register_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
+}
+
 #else
 
 pcmk__output_t *
@@ -298,6 +369,11 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 G_GNUC_PRINTF(2, 3)
 void
 curses_indented_printf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
+void
+crm_mon_register_messages(pcmk__output_t *out) {
     return;
 }
 
