@@ -400,7 +400,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     GHashTableIter gIter;
     const char *key = NULL;
     rsc_history_t *entry = NULL;
-    struct recurring_op_s *pending = NULL;
+    active_op_t *pending = NULL;
 
     crm_debug("Checking for active resources before exit");
 
@@ -917,7 +917,7 @@ static gboolean
 lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
 {
     const char *rsc = user_data;
-    struct recurring_op_s *pending = value;
+    active_op_t *pending = value;
 
     if (crm_str_eq(rsc, pending->rsc_id, TRUE)) {
         crm_info("Removing op %s:%d for deleted resource %s",
@@ -1148,7 +1148,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 {
     int rc = pcmk_ok;
     char *local_key = NULL;
-    struct recurring_op_s *pending = NULL;
+    active_op_t *pending = NULL;
 
     CRM_CHECK(op != 0, return FALSE);
     CRM_CHECK(rsc_id != NULL, return FALSE);
@@ -1213,7 +1213,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     struct cancel_data *data = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (crm_str_eq(op->op_key, data->key, TRUE)) {
         data->done = TRUE;
@@ -2104,7 +2104,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     struct stop_recurring_action_s *event = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (op->interval != 0 && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
@@ -2119,7 +2119,7 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     lrm_state_t *lrm_state = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (op->interval != 0) {
         crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
@@ -2294,9 +2294,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
          * for them to complete during shutdown
          */
         char *call_id_s = make_stop_id(rsc->id, call_id);
-        struct recurring_op_s *pending = NULL;
+        active_op_t *pending = NULL;
 
-        pending = calloc(1, sizeof(struct recurring_op_s));
+        pending = calloc(1, sizeof(active_op_t));
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
@@ -2517,7 +2517,7 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
 
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                  struct recurring_op_s *pending, xmlNode *action_xml)
+                  active_op_t *pending, xmlNode *action_xml)
 {
     char *op_id = NULL;
     char *op_key = NULL;
