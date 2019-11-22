@@ -46,6 +46,7 @@ typedef struct active_op_s {
     int call_id;
     uint32_t flags; // bitmask of active_op_e
     time_t start_time;
+    time_t lock_time;
     char *rsc_id;
     char *op_type;
     char *op_key;

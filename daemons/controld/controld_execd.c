@@ -44,7 +44,8 @@ static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
-static int do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op);
+static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
+                              lrmd_event_data_t *op, time_t lock_time);
 
 static void
 lrm_connection_destroy(void)
@@ -2171,7 +2172,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     crm_debug("Recording pending op " CRM_OP_FMT " on %s in the CIB",
               op->rsc_id, op->op_type, op->interval_ms, node_name);
 
-    do_update_resource(node_name, rsc, op);
+    do_update_resource(node_name, rsc, op, 0);
 }
 
 static void
@@ -2313,6 +2314,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
         pending->user_data = op->user_data? strdup(op->user_data) : NULL;
+        if (crm_element_value_epoch(msg, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                                    &(pending->lock_time)) != pcmk_ok) {
+            pending->lock_time = 0;
+        }
         g_hash_table_replace(lrm_state->pending_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)
@@ -2356,8 +2361,28 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
     }
 }
 
+/* Only successful stops, and probes that found the resource inactive, get locks
+ * recorded in the history. This ensures the resource stays locked to the node
+ * until it is active there again after the node comes back up.
+ */
+static bool
+should_preserve_lock(lrmd_event_data_t *op)
+{
+    if (!controld_shutdown_lock_enabled) {
+        return false;
+    }
+    if (!strcmp(op->op_type, RSC_STOP) && (op->rc == PCMK_OCF_OK)) {
+        return true;
+    }
+    if (!strcmp(op->op_type, RSC_STATUS) && (op->rc == PCMK_OCF_NOT_RUNNING)) {
+        return true;
+    }
+    return false;
+}
+
 static int
-do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
+do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
+                   lrmd_event_data_t *op, time_t lock_time)
 {
 /*
   <status>
@@ -2412,6 +2437,16 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
         crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->standard);
         crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER, rsc->provider);
+        if (lock_time != 0) {
+            /* Actions on a locked resource should either preserve the lock by
+             * recording it with the action result, or clear it.
+             */
+            if (!should_preserve_lock(op)) {
+                lock_time = 0;
+            }
+            crm_xml_add_ll(iter, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                           (long long) lock_time);
+        }
 
         if (op->params) {
             container = g_hash_table_lookup(op->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
@@ -2616,7 +2651,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
                 // We should record the result, and happily, we can
-                update_id = do_update_resource(node_name, rsc, op);
+                update_id = do_update_resource(node_name, rsc, op,
+                                               pending? pending->lock_time : 0);
                 need_direct_ack = FALSE;
 
             } else if (op->rsc_deleted) {

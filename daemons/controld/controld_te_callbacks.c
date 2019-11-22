@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,6 +27,17 @@ crm_trigger_t *transition_trigger = NULL;
 
 /* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
+
+// An explicit shutdown-lock of 0 means the lock has been cleared
+static bool
+shutdown_lock_cleared(xmlNode *lrm_resource)
+{
+    time_t shutdown_lock = 0;
+
+    return (crm_element_value_epoch(lrm_resource, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                                    &shutdown_lock) == pcmk_ok)
+           && (shutdown_lock == 0);
+}
 
 static void
 te_update_diff_v1(const char *event, xmlNode *diff)
@@ -106,33 +117,42 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
     freeXpathObject(xpathObj);
 
+    // Check for lrm_resource entries
+    xpathObj = xpath_search(diff,
+                            "//" F_CIB_UPDATE_RESULT
+                            "//" XML_TAG_DIFF_ADDED
+                            "//" XML_LRM_TAG_RESOURCE);
+    max = numXpathResults(xpathObj);
+
     /*
-     * Updates by, or in response to, TE actions will never contain updates
-     * for more than one resource at a time, so such updates indicate an
-     * LRM refresh.
-     *
-     * In that case, start a new transition rather than check each result
-     * individually, which can result in _huge_ speedups in large clusters.
+     * Updates by, or in response to, graph actions will never affect more than
+     * one resource at a time, so such updates indicate an LRM refresh. In that
+     * case, start a new transition rather than check each result individually,
+     * which can result in _huge_ speedups in large clusters.
      *
      * Unfortunately, we can only do so when there are no pending actions.
      * Otherwise, we could mistakenly throw away those results here, and
      * the cluster will stall waiting for them and time out the operation.
      */
-    if (transition_graph->pending == 0) {
-        xpathObj = xpath_search(diff,
-                                "//" F_CIB_UPDATE_RESULT
-                                "//" XML_TAG_DIFF_ADDED
-                                "//" XML_LRM_TAG_RESOURCE);
-        max = numXpathResults(xpathObj);
-        if (max > 1) {
-            crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
-                      max);
-            crm_log_xml_trace(diff, "lrm-refresh");
-            abort_transition(INFINITY, tg_restart, "History refresh", NULL);
-            goto bail;
-        }
-        freeXpathObject(xpathObj);
+    if ((transition_graph->pending == 0) && (max > 1)) {
+        crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
+                  max);
+        crm_log_xml_trace(diff, "lrm-refresh");
+        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
+        goto bail;
     }
+
+    if (max == 1) {
+        xmlNode *lrm_resource = getXpathResult(xpathObj, 0);
+
+        if (shutdown_lock_cleared(lrm_resource)) {
+            // @TODO would be more efficient to abort once after transition done
+            abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
+                             lrm_resource);
+            // Still process results, so we stop timers and update failcounts
+        }
+    }
+    freeXpathObject(xpathObj);
 
     /* Process operation updates */
     xpathObj =
@@ -204,6 +224,11 @@ process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
     for (xmlNode *rsc_op = __xml_first_child(lrm_resource); rsc_op != NULL;
          rsc_op = __xml_next(rsc_op)) {
         process_graph_event(rsc_op, node);
+    }
+    if (shutdown_lock_cleared(lrm_resource)) {
+        // @TODO would be more efficient to abort once after transition done
+        abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
+                         lrm_resource);
     }
 }
 
