@@ -33,8 +33,8 @@ typedef struct resource_history_s {
 
 void history_free(gpointer data);
 
-/* TODO - Replace this with lrmd_event_data_t */
-struct recurring_op_s {
+// In-flight action (recurring or pending)
+typedef struct active_op_s {
     guint interval_ms;
     int call_id;
     gboolean remove;
@@ -45,7 +45,7 @@ struct recurring_op_s {
     char *op_key;
     char *user_data;
     GHashTable *params;
-};
+} active_op_t;
 
 typedef struct lrm_state_s {
     const char *node_name;
@@ -164,4 +164,4 @@ void remote_ra_process_maintenance_nodes(xmlNode *xml);
 gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
 
 void process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                       struct recurring_op_s *pending, xmlNode *action_xml);
+                       active_op_t *pending, xmlNode *action_xml);

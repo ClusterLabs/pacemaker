@@ -44,7 +44,7 @@ free_deletion_op(gpointer value)
 static void
 free_recurring_op(gpointer value)
 {
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     free(op->user_data);
     free(op->rsc_id);
@@ -61,7 +61,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 {
     lrmd_event_data_t event = { 0, };
     lrm_state_t *lrm_state = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval_ms,
