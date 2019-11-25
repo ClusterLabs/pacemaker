@@ -1,13 +1,6 @@
-* Thu Oct 31 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22-rc2
-- Changesets: 6
-- Diff:       4 files changed, 128 insertions(+), 75 deletions(-)
-
-- Changes since Pacemaker-1.1.22-rc1
-  + pengine: avoid invalid transition when guest node host is not fenceable
-
-* Tue Oct 22 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22-rc1
-- Changesets: 198
-- Diff:       95 files changed, 3047 insertions(+), 1245 deletions(-)
+* Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22
+- Changesets: 216
+- Diff:       106 files changed, 3386 insertions(+), 1493 deletions(-)
 
 - Features added since Pacemaker-1.1.21
   + crmd: new 'fence-reaction' cluster option specifies whether local node
@@ -28,6 +21,7 @@
   + fencing: fail pending actions and re-sync history after crash and restart
   + fencing: don't let command with long delay block other pending commands
   + fencing: allow functioning even if CIB updates arrive unceasingly
+  + pengine: avoid invalid transition when guest node host is not fenceable
   + pengine: calculate secure digests for unfencing, for replaying saved CIBs
   + pengine: properly detect dangling migrations, to avoid restart loop
   + pengine: avoid delay in recovery of failed remote connections
