@@ -1,45 +1,27 @@
-* Tue Nov 12 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc3
-- Changesets: 23
-- Diff: 39 files changed, 472 insertions(+), 316 deletions(-)
-
-- Changes since Pacemaker-2.0.3-rc2
-  + logging: Clarify action failure messages by including failure time
-  + tools: Fix several minor crm_mon regressions introduced in 2.0.3-rc1
-  + tools: Rename new crm_mon options introduced in 2.0.3-rc1 for clarity
-  + tools: Count disabled/blocked resources correctly in crm_mon/crm_simulate
-
-* Wed Oct 30 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc2
-- Changesets: 20
-- Diff: 14 files changed, 333 insertions(+), 219 deletions(-)
-
-- Changes since Pacemaker-2.0.3-rc1
-  + rpm: pacemaker-cts package now explicitly requires pacemaker-cli
-  + scheduler: avoid invalid transition when guest node host is not fenceable
-  + tools: minor rc1 regression fixes in crm_mon
-  + tools: crm_mon --interval now accepts ISO 8601 and has correct help
-
-* Thu Oct 17 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3-rc1
-- Changesets: 549
-- Diff: 224 files changed, 17186 insertions(+), 10145 deletions(-)
+* Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3
+- Changesets: 601
+- Diff: 227 files changed, 17862 insertions(+), 10471 deletions(-)
 
 - Features added since Pacemaker-2.0.2
   + controller: new 'fence-reaction' cluster option specifies whether local node
                 should 'stop' or 'panic' if notified of own fencing
-  + controller: allow more cluster properties to take ISO 8601 specification
+  + controller: more cluster properties support ISO 8601 time specifications
   + controller: calculate cluster recheck interval dynamically when possible
   + Pacemaker Remote: allow file for environment variables when used in bundle
   + Pacemaker Remote: allow configurable listen address and TLS priorities
   + tools: crm_mon now supports standard --output-as/--output-to options
-  + tools: crm_mon HTML output supports user-defined title and CSS stylesheet
-  + tools: stonith_admin now supports HTML output in addition to text and XML
-  + tools: crm_simulate --repeat option to repeat profiling tests
-  + tools: new pcmk_simtimes tool to compare crm_simulate profiling output
+  + tools: crm_mon HTML output supports user-defined CSS stylesheet
+  + tools: stonith_admin supports HTML output in addition to text and XML
+  + tools: crm_simulate supports --repeat option to repeat profiling tests
+  + tools: new pcmk_simtimes tool compares crm_simulate profiling output
+  + agents: SysInfo supports K, T, and P units in addition to Kb and G
 
 - Changes since Pacemaker-2.0.2
   + fencer: do not block concurrent fencing actions on a device
             (regression since 2.0.2)
   + all: avoid Year 2038 issues
   + all: allow ISO 8601 strings of form "<date>T<time> <offset>"
+  + rpm: pacemaker-cts package now explicitly requires pacemaker-cli
   + controller: set timeout on scheduler responses to avoid infinite wait
   + controller: confirm cancel of failed monitors, to avoid transition timeout
   + executor: let controller cancel monitors, to avoid transition timeout
@@ -48,24 +30,27 @@
   + fencer: fail pending actions and re-sync history after crash and restart
   + fencer: don't let command with long delay block other pending commands
   + fencer: allow functioning even if CIB updates arrive unceasingly
-  + scheduler: calculate secure digests for unfencing, for replaying saved CIBs
-  + scheduler: properly detect dangling migrations, to avoid restart loop
-  + scheduler: avoid delay in recovery of failed remote connections
-  + scheduler: avoid scheduling actions on remote node that is shutting down
   + scheduler: wait for probe actions to complete to prevent unnecessary
                restart/re-promote of dependent resources
+  + scheduler: avoid invalid transition when guest node host is not fenceable
+  + scheduler: properly detect dangling migrations, to avoid restart loop
+  + scheduler: avoid scheduling actions on remote node that is shutting down
+  + scheduler: avoid delay in recovery of failed remote connections
+  + scheduler: clarify action failure log messages by including failure time
+  + scheduler: calculate secure digests for unfencing, for replaying saved CIBs
   + libcrmcommon: avoid possible use-of-NULL when applying XML diffs
   + libcrmcommon: correctly apply XML diffs with multiple move/create changes
   + libcrmcommon: return error when applying XML diffs with unknown operations
   + tools: avoid duplicate lines between nodes in crm_simulate dot graph
+  + tools: count disabled/blocked resources correctly in crm_mon/crm_simulate
+  + tools: crm_mon --interval now accepts ISO 8601 and has correct help
   + tools: organize crm_mon text output with list headings, indents, bullets
-  + tools: fail if tar is not available when running crm_report
-  + tools: correct crm_report argument parsing
+  + tools: crm_report: fail if tar is not available
+  + tools: crm_report: correct argument parsing
   + tools: crm_report: don't ignore log if unrelated file is too large
   + tools: stonith_admin --list-targets should show what fencer would use
   + agents: calculate #health_disk correctly in SysInfo
   + agents: handle run-as-user properly in ClusterMon
-  + agents: SysInfo support for K, T, and P units in addition to Kb and G
 
 * Tue Jun 04 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2
 - Changesets: 288
