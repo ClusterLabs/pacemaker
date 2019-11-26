@@ -530,7 +530,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         pe__location_t *location = gIter->data;
-        if (!g_str_has_prefix(location->id, prefix))
+        if (prefix != NULL && !g_str_has_prefix(location->id, prefix))
             continue;
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_node_t *node = (pe_node_t *) gIter2->data;
@@ -933,7 +933,7 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
 void
 print_status(pcmk__output_t *out, mon_output_format_t output_format,
              pe_working_set_t *data_set, stonith_history_t *stonith_history,
-             unsigned int mon_ops, unsigned int show, const char *prefix)
+             unsigned int mon_ops, unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
@@ -1157,7 +1157,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
 void
 print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
                  pe_working_set_t *data_set, stonith_history_t *stonith_history,
-                 unsigned int mon_ops, unsigned int show, const char *prefix)
+                 unsigned int mon_ops, unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
@@ -1229,7 +1229,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
 int
 print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                   pe_working_set_t *data_set, stonith_history_t *stonith_history,
-                  unsigned int mon_ops, unsigned int show, const char *prefix)
+                  unsigned int mon_ops, unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);

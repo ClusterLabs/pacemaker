@@ -78,9 +78,6 @@ static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
 static gchar **processed_args = NULL;
 
-/* FIXME allow, detect, and correctly interpret glob pattern or regex? */
-const char *print_neg_location_prefix = "";
-
 static time_t last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
@@ -113,6 +110,7 @@ struct {
     char *pid_file;
     char *external_agent;
     char *external_recipient;
+    char *neg_location_prefix;
     unsigned int mon_ops;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
@@ -449,7 +447,11 @@ show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
-        print_neg_location_prefix = optarg;
+        if (options.neg_location_prefix != NULL) {
+            free(options.neg_location_prefix);
+        }
+
+        options.neg_location_prefix = strdup(optarg);
     }
 
     return include_exclude_cb("--include", "bans", data, err);
@@ -1921,7 +1923,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(out, output_format, mon_data_set, stonith_history,
-                                  options.mon_ops, show, print_neg_location_prefix) != 0) {
+                                  options.mon_ops, show, options.neg_location_prefix) != 0) {
                 out->err(out, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1931,7 +1933,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(out, output_format, mon_data_set, stonith_history,
-                             options.mon_ops, show, print_neg_location_prefix);
+                             options.mon_ops, show, options.neg_location_prefix);
             break;
 
         case mon_output_monitor:
@@ -1949,14 +1951,14 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
-                         show, print_neg_location_prefix);
+                         show, options.neg_location_prefix);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
-                         show, print_neg_location_prefix);
+                         show, options.neg_location_prefix);
             break;
 
         case mon_output_unset:
