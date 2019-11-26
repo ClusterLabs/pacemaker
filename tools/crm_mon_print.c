@@ -30,7 +30,7 @@
 static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
 static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
 static gboolean print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
-                                int print_opts, unsigned int mon_ops, gboolean brief_output,
+                                unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
                                 gboolean print_summary);
 static void print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
@@ -129,7 +129,7 @@ print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
  */
 static gboolean
 print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
-                int print_opts, unsigned int mon_ops, gboolean brief_output,
+                unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
                 gboolean print_summary)
 {
     GListPtr rsc_iter;
@@ -801,7 +801,7 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
     /* Print each failed stonith action */
     for (hp = history; hp; hp = hp->next) {
         if (hp->state == st_failed) {
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
                          stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
@@ -841,7 +841,7 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
             if ((hp->state == st_failed) || (hp->state == st_done)) {
                 break;
             }
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
                          stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
@@ -879,7 +879,7 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history, unsigned 
 
     for (hp = history; hp; hp = hp->next) {
         if (hp->state != st_failed) {
-            out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
                          stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
@@ -914,7 +914,7 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
     out->begin_list(out, NULL, NULL, "Fencing History");
 
     for (hp = history; hp; hp = hp->next) {
-        out->message(out, "stonith-event", hp, mon_ops & mon_op_fence_full_history,
+        out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
                      stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
