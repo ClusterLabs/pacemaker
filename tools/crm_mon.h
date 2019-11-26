@@ -98,9 +98,9 @@ typedef enum mon_output_format_e {
 void print_status(pcmk__output_t *out, mon_output_format_t output_format,
                   pe_working_set_t *data_set, stonith_history_t *stonith_history,
                   unsigned int mon_ops, unsigned int show, const char *prefix);
-void print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int show, const char *prefix);
+void print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
+                      pe_working_set_t *data_set, stonith_history_t *stonith_history,
+                      unsigned int mon_ops, unsigned int show, const char *prefix);
 int print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                       pe_working_set_t *data_set, stonith_history_t *stonith_history,
                       unsigned int mon_ops, unsigned int show, const char *prefix);
@@ -109,9 +109,7 @@ GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
 void crm_mon_get_parameters(resource_t *rsc, pe_working_set_t *data_set);
 const char *get_cluster_stack(pe_working_set_t *data_set);
-char *get_node_display_name(node_t *node, unsigned int mon_ops);
-int get_resource_display_options(unsigned int mon_ops,
-                                 mon_output_format_t output_format);
+unsigned int get_resource_display_options(unsigned int mon_ops);
 
 void crm_mon_register_messages(pcmk__output_t *out);
 

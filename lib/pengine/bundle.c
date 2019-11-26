@@ -11,11 +11,11 @@
 
 #include <ctype.h>
 
-#include <crm/common/curses_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
+#include <pe_status_private.h>
 
 #define PE__VARIANT_BUNDLE 1
 #include "./variant.h"

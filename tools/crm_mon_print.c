@@ -52,7 +52,8 @@ static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
 static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
                              unsigned int mon_ops);
 static void print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                                  unsigned int mon_ops, unsigned int show);
+                                  unsigned int mon_ops, unsigned int show,
+                                  mon_output_format_t fmt);
 static gboolean print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
 static gboolean print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
                                              unsigned int mon_ops);
@@ -269,7 +270,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
 
         /* Print the operation */
         out->message(out, "op-history", xml_op, task, interval_ms_s,
-                     rc, mon_ops);
+                     rc, is_set(mon_ops, mon_op_print_timing));
     }
 
     /* Free the list we created (no need to free the individual items) */
@@ -319,7 +320,9 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                     if (failcount > 0) {
                         if (printed_header == FALSE) {
                             printed_header = TRUE;
-                            out->message(out, "node", node, mon_ops, FALSE);
+                            out->message(out, "node", node, get_resource_display_options(mon_ops),
+                                         FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                         }
 
                         out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -331,7 +334,9 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
 
                     if (printed_header == FALSE) {
                         printed_header = TRUE;
-                        out->message(out, "node", node, mon_ops, FALSE);
+                        out->message(out, "node", node, get_resource_display_options(mon_ops),
+                                     FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                     }
 
                     if (g_list_length(op_list) > 0) {
@@ -537,7 +542,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
                     out->begin_list(out, NULL, NULL, "Negative Location Constraints");
                 }
 
-                out->message(out, "ban", node, location, mon_ops);
+                out->message(out, "ban", node, location, is_set(mon_ops, mon_op_print_clone_detail));
             }
         }
     }
@@ -598,7 +603,9 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
 
-            out->message(out, "node", data.node, mon_ops, FALSE);
+            out->message(out, "node", data.node, get_resource_display_options(mon_ops),
+                         FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             out->end_list(out);
@@ -650,7 +657,7 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
                                crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                : NULL;
     const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-    char *dc_name = dc? get_node_display_name(dc, mon_ops) : NULL;
+    char *dc_name = dc? pe__node_display_name(dc, is_set(mon_ops, mon_op_print_clone_detail)) : NULL;
 
     out->message(out, "cluster-dc", dc, quorum, dc_version_s, dc_name);
     free(dc_name);
@@ -667,7 +674,7 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
  */
 static void
 print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                      unsigned int mon_ops, unsigned int show)
+                      unsigned int mon_ops, unsigned int show, mon_output_format_t fmt)
 {
     const char *stack_s = get_cluster_stack(data_set);
     gboolean header_printed = FALSE;
@@ -714,6 +721,18 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
      * stack for now; a separate option could be added if there is demand
      */
     if (show & mon_show_stack) {
+        if (fmt == mon_output_html || fmt == mon_output_cgi) {
+            /* Kind of a hack - close the list we may have opened earlier in this
+             * function so we can put all the options into their own list.  We
+             * only want to do this on HTML output, though.
+             */
+            if (header_printed == TRUE) {
+                out->end_list(out);
+            }
+
+            out->begin_list(out, NULL, NULL, "Config Options");
+        }
+
         out->message(out, "cluster-options", data_set);
     }
 
@@ -745,7 +764,6 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
     for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
         out->message(out, "failed-action", xml_op);
-        out->increment_list(out);
     }
 
     /* End section */
@@ -924,7 +942,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
              unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
     gboolean printed = FALSE;
 
     /* space-separated lists of node names */
@@ -934,7 +952,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     if (is_set(show, mon_show_headers)) {
         out->info(out, "%s", "");
@@ -945,7 +963,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
-        char *node_name = get_node_display_name(node, mon_ops);
+        char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
 
         /* Get node mode */
         if (node->details->unclean) {
@@ -1013,7 +1031,9 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
         }
 
         /* If we get here, node is in bad state, or we're grouping by node */
-        out->message(out, "node", node, mon_ops, TRUE, node_mode);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     node_mode, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
         free(node_name);
     }
 
@@ -1129,20 +1149,22 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                 stonith_history_t *stonith_history, unsigned int mon_ops,
-                 unsigned int show, const char *prefix)
+print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
+                 pe_working_set_t *data_set, stonith_history_t *stonith_history,
+                 unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, mon_output_xml);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODES ***/
     out->begin_list(out, NULL, NULL, "nodes");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
     }
     out->end_list(out);
 
@@ -1201,15 +1223,17 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                   unsigned int mon_ops, unsigned int show, const char *prefix)
 {
     GListPtr gIter = NULL;
-    int print_opts = get_resource_display_options(mon_ops, output_format);
+    unsigned int print_opts = get_resource_display_options(mon_ops);
 
-    print_cluster_summary(out, data_set, mon_ops, show);
+    print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODE LIST ***/
     out->begin_list(out, NULL, NULL, "Node List");
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, mon_ops, TRUE);
+        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
     }
     out->end_list(out);
 

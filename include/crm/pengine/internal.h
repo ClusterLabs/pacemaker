@@ -106,19 +106,53 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
 
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
+char *pe__node_display_name(node_t *node, bool print_detail);
 
+int pe__ban_html(pcmk__output_t *out, va_list args);
+int pe__ban_text(pcmk__output_t *out, va_list args);
+int pe__ban_xml(pcmk__output_t *out, va_list args);
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_html(pcmk__output_t *out, va_list args);
 int pe__clone_text(pcmk__output_t *out, va_list args);
+int pe__cluster_counts_html(pcmk__output_t *out, va_list args);
+int pe__cluster_counts_text(pcmk__output_t *out, va_list args);
+int pe__cluster_counts_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_dc_html(pcmk__output_t *out, va_list args);
+int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
+int pe__cluster_dc_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_options_html(pcmk__output_t *out, va_list args);
+int pe__cluster_options_text(pcmk__output_t *out, va_list args);
+int pe__cluster_options_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_stack_html(pcmk__output_t *out, va_list args);
+int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
+int pe__cluster_stack_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_times_html(pcmk__output_t *out, va_list args);
+int pe__cluster_times_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_times_text(pcmk__output_t *out, va_list args);
+int pe__failed_action_text(pcmk__output_t *out, va_list args);
+int pe__failed_action_xml(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
 int pe__group_html(pcmk__output_t *out, va_list args);
 int pe__group_text(pcmk__output_t *out, va_list args);
 int pe__bundle_xml(pcmk__output_t *out, va_list args);
 int pe__bundle_html(pcmk__output_t *out, va_list args);
 int pe__bundle_text(pcmk__output_t *out, va_list args);
+int pe__node_html(pcmk__output_t *out, va_list args);
+int pe__node_text(pcmk__output_t *out, va_list args);
+int pe__node_xml(pcmk__output_t *out, va_list args);
+int pe__node_attribute_html(pcmk__output_t *out, va_list args);
+int pe__node_attribute_text(pcmk__output_t *out, va_list args);
+int pe__node_attribute_xml(pcmk__output_t *out, va_list args);
+int pe__op_history_text(pcmk__output_t *out, va_list args);
+int pe__op_history_xml(pcmk__output_t *out, va_list args);
+int pe__resource_history_text(pcmk__output_t *out, va_list args);
+int pe__resource_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);
 int pe__resource_html(pcmk__output_t *out, va_list args);
 int pe__resource_text(pcmk__output_t *out, va_list args);
+int pe__ticket_html(pcmk__output_t *out, va_list args);
+int pe__ticket_text(pcmk__output_t *out, va_list args);
+int pe__ticket_xml(pcmk__output_t *out, va_list args);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);

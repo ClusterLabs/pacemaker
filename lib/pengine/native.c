@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <crm/common/curses_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
