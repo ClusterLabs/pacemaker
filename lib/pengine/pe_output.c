@@ -798,7 +798,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
             out->begin_list(out, NULL, NULL, NULL);
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
-                resource_t *rsc = (resource_t *) lpc2->data;
+                pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
                 out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
             }
             out->end_list(out);
@@ -847,7 +847,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
                 GListPtr gIter2 = NULL;
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                    resource_t *rsc = (resource_t *) gIter2->data;
+                    pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
                     out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
                 }
             }
@@ -917,7 +917,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
             GListPtr lpc = NULL;
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
-                resource_t *rsc = (resource_t *) lpc->data;
+                pe_resource_t *rsc = (pe_resource_t *) lpc->data;
                 out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
             }
         }

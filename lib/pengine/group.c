@@ -187,7 +187,7 @@ int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     GListPtr gIter = rsc->children;
     char *count = crm_itoa(g_list_length(gIter));
@@ -199,7 +199,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     CRM_ASSERT(rc == 0);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
     }
@@ -212,7 +212,7 @@ int
 pe__group_html(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
@@ -221,7 +221,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
 
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
             out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }
     }
@@ -235,7 +235,7 @@ int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, long);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
@@ -244,7 +244,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
 
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
         }

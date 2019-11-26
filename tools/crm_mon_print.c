@@ -153,7 +153,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* For each resource, display it if appropriate */
     for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
-        resource_t *rsc = (resource_t *) rsc_iter->data;
+        pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
         /* Complex resources may have some sub-resources active and some inactive */
         gboolean is_active = rsc->fns->active(rsc, TRUE);
@@ -534,7 +534,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
         if (!g_str_has_prefix(location->id, prefix))
             continue;
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
-            node_t *node = (node_t *) gIter2->data;
+            pe_node_t *node = (pe_node_t *) gIter2->data;
 
             if (node->weight < 0) {
                 if (printed_header == FALSE) {

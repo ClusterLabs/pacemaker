@@ -1498,7 +1498,7 @@ int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = 0;
 
@@ -1580,7 +1580,7 @@ int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
 
@@ -1670,7 +1670,7 @@ int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
 
