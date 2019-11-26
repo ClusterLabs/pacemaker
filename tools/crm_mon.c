@@ -207,7 +207,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show &= ~mon_show_headers;
+    show &= ~mon_show_summary;
     return TRUE;
 }
 
@@ -652,7 +652,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                         mon_cib_connection_destroy(NULL);
                     }
                 }
-                show ^= mon_show_fence_history;
+                show ^= mon_show_fencing;
                 break;
             case 'c':
                 show ^= mon_show_tickets;
@@ -689,10 +689,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (show & mon_show_headers) {
-                    show &= ~mon_show_headers;
+                if (show & mon_show_summary) {
+                    show &= ~mon_show_summary;
                 } else {
-                    show |= mon_show_headers;
+                    show |= mon_show_summary;
                 }
                 break;
             case 'b':
@@ -722,11 +722,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 't', is_set(options.mon_ops, mon_op_print_timing));
         print_option_help(out, 'A', show & mon_show_attributes);
         print_option_help(out, 'L', show & mon_show_bans);
-        print_option_help(out, 'D', (show & mon_show_headers) == 0);
+        print_option_help(out, 'D', (show & mon_show_summary) == 0);
         print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', (show & mon_show_fence_history));
+        print_option_help(out, 'm', (show & mon_show_fencing));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -989,7 +989,7 @@ main(int argc, char **argv)
                 options.mon_ops |= mon_op_fence_full_history;
                 /* fall through to next lower level */
             case 2:
-                show |= mon_show_fence_history;
+                show |= mon_show_fencing;
                 /* fall through to next lower level */
             case 1:
                 options.mon_ops |= mon_op_fence_history;

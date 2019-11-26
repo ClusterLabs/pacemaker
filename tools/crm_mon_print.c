@@ -705,7 +705,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(data_set->flags, pe_flag_maintenance_mode)
         || data_set->disabled_resources
         || data_set->blocked_resources
-        || is_set(show, mon_show_count)) {
+        || is_set(show, mon_show_counts)) {
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
@@ -952,7 +952,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
 
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
-    if (is_set(show, mon_show_headers)) {
+    if (is_set(show, mon_show_summary)) {
         out->info(out, "%s", "");
     }
 
@@ -1130,7 +1130,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             out->info(out, "%s", "");
         }
 
-        if (show & mon_show_fence_history) {
+        if (show & mon_show_fencing) {
             print_stonith_history(out, stonith_history, mon_ops);
         } else {
             print_stonith_pending(out, stonith_history, mon_ops);
@@ -1267,7 +1267,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        if (show & mon_show_fence_history) {
+        if (is_set(show, mon_show_fencing)) {
             print_stonith_history(out, stonith_history, mon_ops);
         } else {
             print_stonith_pending(out, stonith_history, mon_ops);
