@@ -448,7 +448,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     node_t *dc = va_arg(args, node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
-    const char *dc_name = va_arg(args, const char *);
+    char *dc_name = va_arg(args, char *);
 
     pcmk_create_html_node(node, "span", NULL, "bold", "Current DC: ");
 
@@ -479,7 +479,7 @@ pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
     node_t *dc = va_arg(args, node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
-    const char *dc_name = va_arg(args, const char *);
+    char *dc_name = va_arg(args, char *);
 
     if (dc) {
         out->list_item(out, "Current DC", "%s (version %s) - partition %s quorum",
