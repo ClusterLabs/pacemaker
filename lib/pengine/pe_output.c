@@ -326,9 +326,9 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "li");
 
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     char *nnodes_str = crm_strdup_printf("%d node%s configured", nnodes, s_if_plural(nnodes));
 
@@ -383,9 +383,9 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
 int
 pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     out->list_item(out, NULL, "%d node%s configured", nnodes, s_if_plural(nnodes));
 
@@ -418,9 +418,9 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured");
 
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     char *s = crm_itoa(nnodes);
     xmlSetProp(nodes_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
