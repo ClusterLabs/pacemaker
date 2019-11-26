@@ -9,8 +9,7 @@
 include $(top_srcdir)/Makefile.common
 
 # Deprecated plaintext documents (also dynamically converted to HTML)
-ascii		= acls.txt			\
-		  crm_fencing.txt
+ascii		= crm_fencing.txt
 generated_docs	=
 if BUILD_ASCIIDOC
 generated_docs	+= $(ascii:%.txt=%.html)
