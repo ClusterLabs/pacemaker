@@ -42,7 +42,9 @@ RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 RSYNC_OPTS      = -rlptvzxS --progress
 
 LAST_RELEASE	?= Pacemaker-$(VERSION)
-TAG		?= $(shell git log --pretty=format:%H -n 1 HEAD)
+TAG		?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]	\
+		           && ( git tag --points-at HEAD | head -1 )		\
+			   || git log --pretty=format:%H -n 1 HEAD)
 
 # What formats to build by default: pdf,html,html-single,html-desktop,epub
 DOCBOOK_FORMATS := html-desktop
@@ -127,6 +129,19 @@ endif
 	  $@-t  # We just want the appendix tag (asciidoctor adds non-empty book-level title)
 	$(AM_V_at)sed -i 's/book>/chapter>/g' $@-t   # Rename to chapter (won't trigger if previous sed did)
 	$(AM_V_GEN)mv $@-t $@
+
+# For Makefile debugging
+.PHONY: vars
+vars:
+	@echo ascii=\'$(ascii)\'
+	@echo generated_docs=\'$(generated_docs)\'
+	@echo docbook=\'$(docbook)\'
+	@echo docbook_build=\'$(docbook_build)\'
+	@echo doc_DATA=\'$(doc_DATA)\'
+	@echo noinst_SCRIPTS=\'$(noinst_SCRIPTS)\'
+	@echo LAST_RELEASE=\'$(LAST_RELEASE)\'
+	@echo TAG=\'$(TAG)\'
+
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based
