@@ -677,7 +677,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
     const char *stack_s = get_cluster_stack(data_set);
     gboolean header_printed = FALSE;
 
-    if (show & mon_show_stack) {
+    if (is_set(show, mon_show_stack)) {
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
@@ -686,7 +686,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     /* Always print DC if none, even if not requested */
-    if ((data_set->dc_node == NULL) || (show & mon_show_dc)) {
+    if ((data_set->dc_node == NULL) || is_set(show, mon_show_dc)) {
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
@@ -694,7 +694,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
         print_cluster_dc(out, data_set, mon_ops);
     }
 
-    if (show & mon_show_times) {
+    if (is_set(show, mon_show_times)) {
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
@@ -715,10 +715,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
                      data_set->blocked_resources);
     }
 
-    /* There is not a separate option for showing cluster options, so show with
-     * stack for now; a separate option could be added if there is demand
-     */
-    if (show & mon_show_stack) {
+    if (is_set(show, mon_show_options)) {
         if (fmt == mon_output_html || fmt == mon_output_cgi) {
             /* Kind of a hack - close the list we may have opened earlier in this
              * function so we can put all the options into their own list.  We
@@ -1068,7 +1065,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
                               is_set(mon_ops, mon_op_print_brief), TRUE);
 
     /* print Node Attributes section if requested */
-    if (show & mon_show_attributes) {
+    if (is_set(show, mon_show_attributes)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1079,13 +1076,13 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (show & (mon_show_operations | mon_show_failcounts)) {
+    if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
         if (printed) {
             out->info(out, "%s", "");
         }
 
         printed = print_node_summary(out, data_set,
-                                     ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
+                                     is_set(show, mon_show_operations), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -1107,7 +1104,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print tickets if requested */
-    if (show & mon_show_tickets) {
+    if (is_set(show, mon_show_tickets)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1116,7 +1113,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print negative location constraints if requested */
-    if (show & mon_show_bans) {
+    if (is_set(show, mon_show_bans)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1130,7 +1127,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             out->info(out, "%s", "");
         }
 
-        if (show & mon_show_fencing) {
+        if (is_set(show, mon_show_fencing)) {
             print_stonith_history(out, stonith_history, mon_ops);
         } else {
             print_stonith_pending(out, stonith_history, mon_ops);
@@ -1173,16 +1170,15 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE);
 
     /* print Node Attributes section if requested */
-    if (show & mon_show_attributes) {
+    if (is_set(show, mon_show_attributes)) {
         print_node_attributes(out, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (show & (mon_show_operations | mon_show_failcounts)) {
-        print_node_summary(out, data_set,
-                           ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
+    if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
+        print_node_summary(out, data_set, is_set(show, mon_show_operations), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -1196,12 +1192,12 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print tickets if requested */
-    if (show & mon_show_tickets) {
+    if (is_set(show, mon_show_tickets)) {
         print_cluster_tickets(out, data_set);
     }
 
     /* Print negative location constraints if requested */
-    if (show & mon_show_bans) {
+    if (is_set(show, mon_show_bans)) {
         print_neg_locations(out, data_set, mon_ops, prefix);
     }
 }
@@ -1243,16 +1239,15 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
                     is_set(mon_ops, mon_op_print_brief), TRUE);
 
     /* print Node Attributes section if requested */
-    if (show & mon_show_attributes) {
+    if (is_set(show, mon_show_attributes)) {
         print_node_attributes(out, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (show & (mon_show_operations | mon_show_failcounts)) {
-        print_node_summary(out, data_set,
-                           ((show & mon_show_operations)? TRUE : FALSE), mon_ops);
+    if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
+        print_node_summary(out, data_set, is_set(show, mon_show_operations), mon_ops);
     }
 
     /* If there were any failed actions, print them */
@@ -1275,12 +1270,12 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print tickets if requested */
-    if (show & mon_show_tickets) {
+    if (is_set(show, mon_show_tickets)) {
         print_cluster_tickets(out, data_set);
     }
 
     /* Print negative location constraints if requested */
-    if (show & mon_show_bans) {
+    if (is_set(show, mon_show_bans)) {
         print_neg_locations(out, data_set, mon_ops, prefix);
     }
 
