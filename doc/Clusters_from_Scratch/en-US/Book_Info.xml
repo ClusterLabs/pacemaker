@@ -15,7 +15,7 @@
     simple textual changes (corrections, translations, etc.).
   -->
   <edition>11</edition>
-  <pubsnumber>0</pubsnumber>
+  <pubsnumber>1</pubsnumber>
   <abstract>
     <para>
       This document provides a step-by-step guide to building a simple high-availability cluster using Pacemaker.

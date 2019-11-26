@@ -237,6 +237,16 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
 # crm_attribute --name maintenance-mode --delete
 ----
 
+[NOTE]
+====
+While the goal of the detach-and-reattach method is to avoid disturbing running
+services, resources may still move after the upgrade if any resource's location
+is governed by a rule based on transient node attributes. Transient node
+attributes are erased when the node leaves the cluster. A common example is
+using the *ocf:pacemaker:ping* resource to set a node attribute used to locate
+other resources.
+====
+
 == Upgrading the Configuration ==
 
 indexterm:[upgrade,Configuration]

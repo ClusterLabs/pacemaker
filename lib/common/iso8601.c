@@ -1386,16 +1386,16 @@ crm_time_compare(crm_time_t *a, crm_time_t *b)
     crm_time_t *t2 = crm_get_utc_time(b);
 
     if ((t1 == NULL) && (t2 == NULL)) {
-        return 0;
+        rc = 0;
     } else if (t1 == NULL) {
-        return -1;
+        rc = -1;
     } else if (t2 == NULL) {
-        return 1;
+        rc = 1;
+    } else {
+        do_cmp_field(t1, t2, years);
+        do_cmp_field(t1, t2, days);
+        do_cmp_field(t1, t2, seconds);
     }
-
-    do_cmp_field(t1, t2, years);
-    do_cmp_field(t1, t2, days);
-    do_cmp_field(t1, t2, seconds);
 
     crm_time_free(t1);
     crm_time_free(t2);
