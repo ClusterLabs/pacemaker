@@ -211,6 +211,8 @@ resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
     return buf;
 }
 
+PCMK__OUTPUT_ARGS("cluster-summary", "struct pe_working_set_t *", "gboolean", "gboolean", "gboolean",
+            "gboolean", "gboolean", "gboolean")
 int
 pe__cluster_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -278,6 +280,8 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("cluster-summary", "struct pe_working_set_t *", "gboolean", "gboolean", "gboolean",
+            "gboolean", "gboolean", "gboolean")
 int
 pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -436,6 +440,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ban", "struct pe_node_t *", "struct pe__location_t *", "gboolean")
 int
 pe__ban_html(pcmk__output_t *out, va_list args) {
     pe_node_t *pe_node = va_arg(args, pe_node_t *);
@@ -455,6 +460,7 @@ pe__ban_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ban", "struct pe_node_t *", "struct pe__location_t *", "gboolean")
 int
 pe__ban_text(pcmk__output_t *out, va_list args) {
     pe_node_t *pe_node = va_arg(args, pe_node_t *);
@@ -471,6 +477,7 @@ pe__ban_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ban", "struct pe_node_t *", "struct pe__location_t *", "gboolean")
 int
 pe__ban_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "ban");
@@ -491,6 +498,7 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 int
 pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "li");
@@ -552,6 +560,7 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 int
 pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
     unsigned int nnodes = va_arg(args, unsigned int);
@@ -585,6 +594,7 @@ pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 int
 pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "nodes_configured");
@@ -614,6 +624,7 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-dc", "struct pe_node_t *", "const char *", "const char *", "char *")
 int
 pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
@@ -647,6 +658,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-dc", "struct pe_node_t *", "const char *", "const char *", "char *")
 int
 pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
     pe_node_t *dc = va_arg(args, pe_node_t *);
@@ -665,6 +677,7 @@ pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-dc", "struct pe_node_t *", "const char *", "const char *", "char *")
 int
 pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "current_dc");
@@ -687,6 +700,7 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("maint-mode")
 int
 pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
@@ -695,6 +709,7 @@ pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-options", "struct pe_working_set_t *")
 int
 pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -737,6 +752,7 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-options", "struct pe_working_set_t *")
 int
 pe__cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -749,6 +765,7 @@ pe__cluster_options_log(pcmk__output_t *out, va_list args) {
     }
 }
 
+PCMK__OUTPUT_ARGS("cluster-options", "struct pe_working_set_t *")
 int
 pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -780,6 +797,7 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-options", "struct pe_working_set_t *")
 int
 pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "cluster_options");
@@ -814,6 +832,7 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
 int
 pe__cluster_stack_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
@@ -825,6 +844,7 @@ pe__cluster_stack_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
 int
 pe__cluster_stack_text(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
@@ -832,6 +852,7 @@ pe__cluster_stack_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
 int
 pe__cluster_stack_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "stack");
@@ -842,6 +863,7 @@ pe__cluster_stack_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
 int
 pe__cluster_times_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "li");
@@ -865,6 +887,7 @@ pe__cluster_times_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
 int
 pe__cluster_times_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "last_update");
@@ -885,6 +908,7 @@ pe__cluster_times_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
 int
 pe__cluster_times_text(pcmk__output_t *out, va_list args) {
     const char *last_written = va_arg(args, const char *);
@@ -901,6 +925,7 @@ pe__cluster_times_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
 int
 pe__failed_action_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
@@ -911,6 +936,7 @@ pe__failed_action_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
 int
 pe__failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
@@ -970,6 +996,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node", "struct pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
 int
 pe__node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1031,6 +1058,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node", "struct pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
 int
 pe__node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1087,6 +1115,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node", "struct pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
 int
 pe__node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1154,6 +1183,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
 int
 pe__node_attribute_text(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
@@ -1179,6 +1209,7 @@ pe__node_attribute_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
 int
 pe__node_attribute_html(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
@@ -1208,6 +1239,7 @@ pe__node_attribute_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
 int
 pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
@@ -1228,6 +1260,7 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_html(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
@@ -1262,6 +1295,7 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_text(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
@@ -1400,6 +1434,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_xml(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
@@ -1425,6 +1460,7 @@ pe__node_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("op-history", "struct xmlNode *", "const char *", "const char *", "int", "gboolean")
 int
 pe__op_history_text(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = va_arg(args, xmlNode *);
@@ -1441,6 +1477,7 @@ pe__op_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("op-history", "struct xmlNode *", "const char *", "const char *", "int", "gboolean")
 int
 pe__op_history_xml(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = va_arg(args, xmlNode *);
@@ -1505,6 +1542,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-history", "struct pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
 int
 pe__resource_history_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -1526,6 +1564,7 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-history", "struct pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
 int
 pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -1569,6 +1608,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket", "struct pe_ticket_t *")
 int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
@@ -1589,6 +1629,7 @@ pe__ticket_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket", "struct pe_ticket_t *")
 int
 pe__ticket_text(pcmk__output_t *out, va_list args) {
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
@@ -1609,6 +1650,7 @@ pe__ticket_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket", "struct pe_ticket_t *")
 int
 pe__ticket_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;

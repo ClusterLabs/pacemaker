@@ -171,4 +171,10 @@ const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
+#if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
+#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
+#else
+#  define PCMK__OUTPUT_ARGS(ARGS...)
+#endif
+
 #endif                          /* CRM_INTERNAL__H */

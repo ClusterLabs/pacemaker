@@ -1493,6 +1493,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
@@ -1583,6 +1584,7 @@ pe__bundle_replica_output_html(pcmk__output_t *out, GListPtr only_show,
     }
 }
 
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
@@ -1681,6 +1683,7 @@ pe__bundle_replica_output_text(pcmk__output_t *out, GListPtr only_show,
     }
 }
 
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {

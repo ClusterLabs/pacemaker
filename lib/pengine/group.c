@@ -177,6 +177,7 @@ group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
+PCMK__OUTPUT_ARGS("group", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
@@ -203,6 +204,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("group", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__group_html(pcmk__output_t *out, va_list args)
 {
@@ -227,6 +229,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("group", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
