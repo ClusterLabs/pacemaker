@@ -51,9 +51,9 @@ static gboolean print_node_attributes(pcmk__output_t *out, pe_working_set_t *dat
 static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set);
 static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
                              unsigned int mon_ops);
-static void print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                                  unsigned int mon_ops, unsigned int show,
-                                  mon_output_format_t fmt);
+static gboolean print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
+                                      unsigned int mon_ops, unsigned int show,
+                                      mon_output_format_t fmt);
 static gboolean print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
 static gboolean print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
                                              unsigned int mon_ops);
@@ -670,7 +670,7 @@ print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int m
  * \param[in] mon_ops  Bitmask of mon_op_options.
  * \param[in] show     Bitmask of mon_show_options.
  */
-static void
+static gboolean
 print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
                       unsigned int mon_ops, unsigned int show, mon_output_format_t fmt)
 {
@@ -702,10 +702,7 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
         print_cluster_times(out, data_set);
     }
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)
-        || data_set->disabled_resources
-        || data_set->blocked_resources
-        || is_set(show, mon_show_counts)) {
+    if (is_set(show, mon_show_counts)) {
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
@@ -734,6 +731,8 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
     if (header_printed) {
         out->end_list(out);
     }
+
+    return header_printed;
 }
 
 /*!
@@ -947,122 +946,131 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    print_cluster_summary(out, data_set, mon_ops, show, output_format);
+    printed = print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
-    if (is_set(show, mon_show_summary)) {
+    if (printed) {
         out->info(out, "%s", "");
+        printed = FALSE;
     }
 
     /* Gather node information (and print if in bad state or grouping by node) */
-    out->begin_list(out, NULL, NULL, "Node List");
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
-        const char *node_mode = NULL;
-        char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
+    if (is_set(show, mon_show_nodes)) {
+        out->begin_list(out, NULL, NULL, "Node List");
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            node_t *node = (node_t *) gIter->data;
+            const char *node_mode = NULL;
+            char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
 
-        /* Get node mode */
-        if (node->details->unclean) {
-            if (node->details->online) {
-                node_mode = "UNCLEAN (online)";
+            /* Get node mode */
+            if (node->details->unclean) {
+                if (node->details->online) {
+                    node_mode = "UNCLEAN (online)";
+
+                } else if (node->details->pending) {
+                    node_mode = "UNCLEAN (pending)";
+
+                } else {
+                    node_mode = "UNCLEAN (offline)";
+                }
 
             } else if (node->details->pending) {
-                node_mode = "UNCLEAN (pending)";
+                node_mode = "pending";
+
+            } else if (node->details->standby_onfail && node->details->online) {
+                node_mode = "standby (on-fail)";
+
+            } else if (node->details->standby) {
+                if (node->details->online) {
+                    if (node->details->running_rsc) {
+                        node_mode = "standby (with active resources)";
+                    } else {
+                        node_mode = "standby";
+                    }
+                } else {
+                    node_mode = "OFFLINE (standby)";
+                }
+
+            } else if (node->details->maintenance) {
+                if (node->details->online) {
+                    node_mode = "maintenance";
+                } else {
+                    node_mode = "OFFLINE (maintenance)";
+                }
+
+            } else if (node->details->online) {
+                node_mode = "online";
+                if (is_not_set(mon_ops, mon_op_group_by_node)) {
+                    if (pe__is_guest_node(node)) {
+                        online_guest_nodes = pcmk__add_word(online_guest_nodes,
+                                                           node_name);
+                    } else if (pe__is_remote_node(node)) {
+                        online_remote_nodes = pcmk__add_word(online_remote_nodes,
+                                                             node_name);
+                    } else {
+                        online_nodes = pcmk__add_word(online_nodes, node_name);
+                    }
+                    free(node_name);
+                    continue;
+                }
 
             } else {
-                node_mode = "UNCLEAN (offline)";
-            }
-
-        } else if (node->details->pending) {
-            node_mode = "pending";
-
-        } else if (node->details->standby_onfail && node->details->online) {
-            node_mode = "standby (on-fail)";
-
-        } else if (node->details->standby) {
-            if (node->details->online) {
-                if (node->details->running_rsc) {
-                    node_mode = "standby (with active resources)";
-                } else {
-                    node_mode = "standby";
+                node_mode = "OFFLINE";
+                if (is_not_set(mon_ops, mon_op_group_by_node)) {
+                    if (pe__is_remote_node(node)) {
+                        offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
+                                                              node_name);
+                    } else if (pe__is_guest_node(node)) {
+                        /* ignore offline guest nodes */
+                    } else {
+                        offline_nodes = pcmk__add_word(offline_nodes, node_name);
+                    }
+                    free(node_name);
+                    continue;
                 }
-            } else {
-                node_mode = "OFFLINE (standby)";
             }
 
-        } else if (node->details->maintenance) {
-            if (node->details->online) {
-                node_mode = "maintenance";
-            } else {
-                node_mode = "OFFLINE (maintenance)";
-            }
-
-        } else if (node->details->online) {
-            node_mode = "online";
-            if (is_not_set(mon_ops, mon_op_group_by_node)) {
-                if (pe__is_guest_node(node)) {
-                    online_guest_nodes = pcmk__add_word(online_guest_nodes,
-                                                        node_name);
-                } else if (pe__is_remote_node(node)) {
-                    online_remote_nodes = pcmk__add_word(online_remote_nodes,
-                                                         node_name);
-                } else {
-                    online_nodes = pcmk__add_word(online_nodes, node_name);
-                }
-                free(node_name);
-                continue;
-            }
-
-        } else {
-            node_mode = "OFFLINE";
-            if (is_not_set(mon_ops, mon_op_group_by_node)) {
-                if (pe__is_remote_node(node)) {
-                    offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
-                                                          node_name);
-                } else if (pe__is_guest_node(node)) {
-                    /* ignore offline guest nodes */
-                } else {
-                    offline_nodes = pcmk__add_word(offline_nodes, node_name);
-                }
-                free(node_name);
-                continue;
-            }
+            /* If we get here, node is in bad state, or we're grouping by node */
+            out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                         node_mode, is_set(mon_ops, mon_op_print_clone_detail),
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+            free(node_name);
         }
 
-        /* If we get here, node is in bad state, or we're grouping by node */
-        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
-                     node_mode, is_set(mon_ops, mon_op_print_clone_detail),
-                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
-        free(node_name);
-    }
+        /* If we're not grouping by node, summarize nodes by status */
+        if (online_nodes) {
+            out->list_item(out, "Online", "[%s ]", online_nodes);
+            free(online_nodes);
+        }
+        if (offline_nodes) {
+            out->list_item(out, "OFFLINE", "[%s ]", offline_nodes);
+            free(offline_nodes);
+        }
+        if (online_remote_nodes) {
+            out->list_item(out, "RemoteOnline", "[%s ]", online_remote_nodes);
+            free(online_remote_nodes);
+        }
+        if (offline_remote_nodes) {
+            out->list_item(out, "RemoteOFFLINE", "[%s ]", offline_remote_nodes);
+            free(offline_remote_nodes);
+        }
+        if (online_guest_nodes) {
+            out->list_item(out, "GuestOnline", "[%s ]", online_guest_nodes);
+            free(online_guest_nodes);
+        }
 
-    /* If we're not grouping by node, summarize nodes by status */
-    if (online_nodes) {
-        out->list_item(out, "Online", "[%s ]", online_nodes);
-        free(online_nodes);
+        printed = TRUE;
+        out->end_list(out);
     }
-    if (offline_nodes) {
-        out->list_item(out, "OFFLINE", "[%s ]", offline_nodes);
-        free(offline_nodes);
-    }
-    if (online_remote_nodes) {
-        out->list_item(out, "RemoteOnline", "[%s ]", online_remote_nodes);
-        free(online_remote_nodes);
-    }
-    if (offline_remote_nodes) {
-        out->list_item(out, "RemoteOFFLINE", "[%s ]", offline_remote_nodes);
-        free(offline_remote_nodes);
-    }
-    if (online_guest_nodes) {
-        out->list_item(out, "GuestOnline", "[%s ]", online_guest_nodes);
-        free(online_guest_nodes);
-    }
-
-    out->end_list(out);
-    out->info(out, "%s", "");
 
     /* Print resources section, if needed */
-    printed = print_resources(out, data_set, print_opts, mon_ops,
-                              is_set(mon_ops, mon_op_print_brief), TRUE);
+    if (is_set(show, mon_show_resources)) {
+        if (printed) {
+            out->info(out, "%s", "");
+        }
+
+        printed = print_resources(out, data_set, print_opts, mon_ops,
+                                  is_set(mon_ops, mon_op_print_brief), TRUE);
+    }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
@@ -1095,7 +1103,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print failed stonith actions */
-    if (is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1157,17 +1165,21 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODES ***/
-    out->begin_list(out, NULL, NULL, "nodes");
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
-                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+    if (is_set(show, mon_show_nodes)) {
+        out->begin_list(out, NULL, NULL, "nodes");
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            node_t *node = (node_t *) gIter->data;
+            out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                         NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+        }
+        out->end_list(out);
     }
-    out->end_list(out);
 
     /* Print resources section, if needed */
-    print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE);
+    if (is_set(show, mon_show_resources)) {
+        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE);
+    }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
@@ -1187,7 +1199,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print stonith history */
-    if (is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
         print_stonith_history_full(out, stonith_history, mon_ops);
     }
 
@@ -1225,18 +1237,22 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
     /*** NODE LIST ***/
-    out->begin_list(out, NULL, NULL, "Node List");
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
-        out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
-                     NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+    if (is_set(show, mon_show_nodes)) {
+        out->begin_list(out, NULL, NULL, "Node List");
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            node_t *node = (node_t *) gIter->data;
+            out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
+                         NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+        }
+        out->end_list(out);
     }
-    out->end_list(out);
 
     /* Print resources section, if needed */
-    print_resources(out, data_set, print_opts, mon_ops,
-                    is_set(mon_ops, mon_op_print_brief), TRUE);
+    if (is_set(show, mon_show_resources)) {
+        print_resources(out, data_set, print_opts, mon_ops,
+                        is_set(mon_ops, mon_op_print_brief), TRUE);
+    }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
@@ -1256,7 +1272,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print failed stonith actions */
-    if (is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
         print_failed_stonith_actions(out, stonith_history, mon_ops);
     }
 
