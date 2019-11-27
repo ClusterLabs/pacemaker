@@ -1,0 +1,33 @@
+# Because tools/*.8.inc include a synopsis, the following line removes
+# a redundant Usage: header from the man page and the couple lines after
+# it.
+/.SS "Usage:"/,+3d
+
+# The tools/*.8.inc files also include some additional section headers
+# on a per-tool basis.  These section headers will get printed out as
+# .SH lines, but then the header from the --help-all output will also
+# get turned into groff.  For instance, the following will be in the
+# man page for NOTES:
+#
+# .SH NOTES
+# .PP
+# Notes:
+# .PP
+#
+# The following block looks for any of those additional headers.  The
+# 'n' command puts the next line in the pattern space, the two 'N'
+# commands append the next two lines, and then the 'd' command deletes
+# them.  So basically, this just deletes
+#
+# .PP
+#  Notes:
+# .PP
+#
+# This leaves the --help-all output looking good and removes redundant
+# stuff from the man page.  Feel free to add additional headers here.
+# Not all tools will have all headers.
+/.SH NOTES\|.SH TIME SPECIFICATION/{ n
+N
+N
+d
+}

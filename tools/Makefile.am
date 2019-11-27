@@ -27,6 +27,7 @@ EXTRA_DIST		= crm_diff.8.inc \
 			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
+			  fix-manpages \
 			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
