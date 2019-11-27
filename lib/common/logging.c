@@ -349,8 +349,8 @@ crm_add_logfile(const char *filename)
     /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
 
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
-        // Longer than default, for logging long XML lines
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 800);
+    // Longer than default, for logging long XML lines
+    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
 #endif
 
     /* Enable callsites */
