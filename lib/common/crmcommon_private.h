@@ -36,13 +36,18 @@ enum xml_private_flags {
      xpf_lazy        = 0x4000,
 };
 
-typedef struct xml_private_s {
+typedef struct xml_node_private_s {
+        long check;
+        uint32_t flags;
+} xml_node_private_t;
+
+typedef struct xml_doc_private_s {
         long check;
         uint32_t flags;
         char *user;
         GListPtr acls;
         GListPtr deleted_objs;
-} xml_private_t;
+} xml_doc_private_t;
 
 G_GNUC_INTERNAL
 void pcmk__set_xml_flag(xmlNode *xml, enum xml_private_flags flag);
