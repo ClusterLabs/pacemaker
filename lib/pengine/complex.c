@@ -530,7 +530,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
             set_bit((*rsc)->flags, pe_rsc_maintenance);
         }
 
-    } else if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    }
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         clear_bit((*rsc)->flags, pe_rsc_managed);
         set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
