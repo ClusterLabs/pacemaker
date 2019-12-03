@@ -658,6 +658,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
+    g_clear_error(&error);
     pcmk__free_arg_context(context);
     crm_node_exit(exit_code);
     return exit_code;

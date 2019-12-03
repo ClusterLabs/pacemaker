@@ -385,6 +385,7 @@ main(int argc, char **argv)
     }
 
 done:
+    g_clear_error(&error);
     pcmk__free_arg_context(context);
     free(options.xml_file_1);
     free(options.xml_file_2);
