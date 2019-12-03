@@ -286,7 +286,7 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
 static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    int full_history = va_arg(args, int);
+    gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
 
     crm_time_t *crm_when = crm_time_new(NULL);

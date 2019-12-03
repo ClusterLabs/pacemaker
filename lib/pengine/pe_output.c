@@ -326,9 +326,9 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "li");
 
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     char *nnodes_str = crm_strdup_printf("%d node%s configured", nnodes, s_if_plural(nnodes));
 
@@ -383,9 +383,9 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
 int
 pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     out->list_item(out, NULL, "%d node%s configured", nnodes, s_if_plural(nnodes));
 
@@ -418,9 +418,9 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured");
 
     unsigned int nnodes = va_arg(args, unsigned int);
-    unsigned int nresources = va_arg(args, unsigned int);
-    unsigned int ndisabled = va_arg(args, unsigned int);
-    unsigned int nblocked = va_arg(args, unsigned int);
+    int nresources = va_arg(args, int);
+    int ndisabled = va_arg(args, int);
+    int nblocked = va_arg(args, int);
 
     char *s = crm_itoa(nnodes);
     xmlSetProp(nodes_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
@@ -448,7 +448,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     node_t *dc = va_arg(args, node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
-    const char *dc_name = va_arg(args, const char *);
+    char *dc_name = va_arg(args, char *);
 
     pcmk_create_html_node(node, "span", NULL, "bold", "Current DC: ");
 
@@ -479,7 +479,7 @@ pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
     node_t *dc = va_arg(args, node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
-    const char *dc_name = va_arg(args, const char *);
+    char *dc_name = va_arg(args, char *);
 
     if (dc) {
         out->list_item(out, "Current DC", "%s (version %s) - partition %s quorum",
@@ -798,7 +798,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
             out->begin_list(out, NULL, NULL, NULL);
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
-                resource_t *rsc = (resource_t *) lpc2->data;
+                pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
                 out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
             }
             out->end_list(out);
@@ -847,7 +847,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
                 GListPtr gIter2 = NULL;
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                    resource_t *rsc = (resource_t *) gIter2->data;
+                    pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
                     out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
                 }
             }
@@ -917,7 +917,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
             GListPtr lpc = NULL;
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
-                resource_t *rsc = (resource_t *) lpc->data;
+                pe_resource_t *rsc = (pe_resource_t *) lpc->data;
                 out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
             }
         }

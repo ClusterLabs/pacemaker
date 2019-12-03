@@ -76,7 +76,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 static int
 stonith_event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    int full_history = va_arg(args, int);
+    gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
 
     switch(event->state) {
@@ -123,7 +123,7 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
 static int
 stonith_event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    int full_history = va_arg(args, int);
+    gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
 
     char *buf = time_t_string(event->completed);
@@ -161,6 +161,8 @@ static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
+    gboolean full_history G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean later_succeeded G_GNUC_UNUSED = va_arg(args, gboolean);
 
     char *buf = NULL;
 
@@ -204,8 +206,8 @@ static int
 validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -228,8 +230,8 @@ static int
 validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -257,8 +259,8 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
 
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    const char *output = va_arg(args, const char *);
-    const char *error_output = va_arg(args, const char *);
+    char *output = va_arg(args, char *);
+    char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
     xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent);

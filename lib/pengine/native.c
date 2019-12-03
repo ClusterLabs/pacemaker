@@ -1072,8 +1072,8 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    unsigned int options = va_arg(args, unsigned int);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -1139,8 +1139,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    unsigned int options = va_arg(args, unsigned int);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
@@ -1156,8 +1156,8 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
-    long options = va_arg(args, int);
-    resource_t *rsc = va_arg(args, resource_t *);
+    unsigned int options = va_arg(args, unsigned int);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     node_t *node = pe__current_node(rsc);
 
