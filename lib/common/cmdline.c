@@ -140,12 +140,16 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
 }
 
 char **
-pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
+pcmk__cmdline_preproc(char **argv, const char *special) {
     char **retval = NULL;
     GPtrArray *arr = g_ptr_array_new();
     bool saw_dash_dash = false;
 
-    for (int i = 0; i < argc; i++) {
+    if (argv == NULL) {
+        return retval;
+    }
+
+    for (int i = 0; argv[i] != NULL; i++) {
         /* If this is the first time we saw "--" in the command line, set
          * a flag so we know to just copy everything after it over.  We also
          * want to copy the "--" over so whatever actually parses the command

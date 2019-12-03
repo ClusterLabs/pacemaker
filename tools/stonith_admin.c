@@ -583,7 +583,7 @@ main(int argc, char **argv)
 
     async_fence_data.name = strdup(crm_system_name);
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "adehilorstvBCDFHQRTU");
+    processed_args = pcmk__cmdline_preproc(argv, "adehilorstvBCDFHQRTU");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);

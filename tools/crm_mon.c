@@ -918,7 +918,7 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_one_shot;
     }
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "ehimpxEL");
+    processed_args = pcmk__cmdline_preproc(argv, "ehimpxEL");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);

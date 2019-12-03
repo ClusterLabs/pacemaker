@@ -314,7 +314,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_diff");
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "nopNO");
+    processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
