@@ -135,7 +135,7 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  * \param[in] special Single-letter command line arguments that take a value.
  *                    These letters will all have pre-processing applied.
  */
-char **
+gchar **
 pcmk__cmdline_preproc(char **argv, const char *special);
 
 /*!

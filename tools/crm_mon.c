@@ -76,6 +76,7 @@ static GError *error = NULL;
 static pcmk__common_args_t *args = NULL;
 static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
+static gchar **processed_args = NULL;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
@@ -905,7 +906,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_ok;
-    char **processed_args = NULL;
     GOptionGroup *output_group = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
@@ -1908,5 +1908,6 @@ clean_up(crm_exit_t exit_code)
         pcmk__output_free(out);
     }
 
+    g_strfreev(processed_args);
     crm_exit(exit_code);
 }
