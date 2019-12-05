@@ -238,7 +238,7 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
     GListPtr lpc = NULL;
 
     if (graph == NULL || graph->num_actions == 0) {
-        if (log_level > LOG_DEBUG) {
+        if (log_level == LOG_TRACE) {
             crm_debug("Empty transition graph");
         }
         return;

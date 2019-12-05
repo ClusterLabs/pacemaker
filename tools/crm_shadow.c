@@ -417,7 +417,7 @@ main(int argc, char **argv)
         xml_accept_changes(new_config);
 
         if (diff != NULL) {
-            xml_log_patchset(0, "  ", diff);
+            xml_log_patchset(LOG_STDOUT, "  ", diff);
             exit_code = CRM_EX_ERROR;
         }
         goto done;

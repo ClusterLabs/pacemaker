@@ -1297,6 +1297,7 @@ gboolean
 stage5(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
+    int log_prio = show_utilization? LOG_STDOUT : utilization_log_level;
 
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GListPtr nodes = g_list_copy(data_set->nodes);
@@ -1312,7 +1313,7 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Original", node);
+        dump_node_capacity(log_prio, "Original", node);
     }
 
     crm_trace("Allocating services");
@@ -1324,7 +1325,7 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Remaining", node);
+        dump_node_capacity(log_prio, "Remaining", node);
     }
 
     // Process deferred action checks
@@ -1516,7 +1517,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     }
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
-    stonith_constraints(node, stonith_op, data_set);
+    pcmk__order_vs_fence(stonith_op, data_set);
 }
 
 /*
@@ -1571,7 +1572,7 @@ stage6(pe_working_set_t * data_set)
             stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_constraints(node, stonith_op, data_set);
+            pcmk__order_vs_fence(stonith_op, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being fenced

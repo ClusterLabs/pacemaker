@@ -1,4 +1,0 @@
-Pacemaker Access Control Lists
-==============================
-This document has been retired. See the Access Control Lists chapter of the
-Pacemaker Explained documentation instead.

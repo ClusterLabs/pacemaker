@@ -49,7 +49,6 @@ typedef void (*sighandler_t)(int);
 #  endif
 
 sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
-gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
 
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
@@ -151,6 +150,13 @@ void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
                           bool (*check)(guint));
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
+#endif
 
 #ifdef __cplusplus
 }

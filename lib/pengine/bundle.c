@@ -730,9 +730,9 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
         /* This sets replica->container as replica->remote's container, which is
-         * similar to what happens with guest nodes. This is how the PE knows
-         * that the bundle node is fenced by recovering the container, and that
-         * remote should be ordered relative to the container.
+         * similar to what happens with guest nodes. This is how the scheduler
+         * knows that the bundle node is fenced by recovering the container, and
+         * that remote should be ordered relative to the container.
          */
         xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
                                           NULL, NULL, NULL,

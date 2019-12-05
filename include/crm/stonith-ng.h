@@ -420,9 +420,6 @@ void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
 
-// deprecated (use stonith_get_namespace() instead)
-const char *get_stonith_provider(const char *agent, const char *provider);
-
 bool stonith_dispatch(stonith_t * st);
 
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
@@ -547,6 +544,16 @@ bool stonith_agent_exists(const char *agent, int timeout);
  * \param action Stonith action
  */
 const char *stonith_action_str(const char *action);
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
+//! \deprecated Use stonith_get_namespace() instead
+const char *get_stonith_provider(const char *agent, const char *provider);
+
+#endif
 
 #ifdef __cplusplus
 }

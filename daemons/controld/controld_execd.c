@@ -762,9 +762,7 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
 
     } else if (entry->last->rc == PCMK_OCF_OK
                && safe_str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE)) {
-        /* a stricter check is too complex...
-         * leave that to the PE
-         */
+        // A stricter check is too complex ... leave that to the scheduler
         return FALSE;
 
     } else if (entry->last->rc == PCMK_OCF_NOT_RUNNING) {

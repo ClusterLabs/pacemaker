@@ -56,12 +56,6 @@ G_GNUC_INTERNAL
 gboolean services__ocf_agent_exists(const char *provider, const char *agent);
 
 G_GNUC_INTERNAL
-GList *resources_os_list_nagios_agents(void);
-
-G_GNUC_INTERNAL
-gboolean services__nagios_agent_exists(const char *agent);
-
-G_GNUC_INTERNAL
 gboolean cancel_recurring_action(svc_action_t * op);
 
 G_GNUC_INTERNAL

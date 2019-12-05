@@ -496,7 +496,8 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     }
 
     if (!op->delegate && data && rc != -ENODEV && rc != -EHOSTUNREACH) {
-        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data, LOG_TRACE);
+        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data,
+                                          LOG_NEVER);
         if(ndata) {
             op->delegate = crm_element_value_copy(ndata, F_STONITH_DELEGATE);
         } else { 
@@ -963,7 +964,7 @@ void *
 create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_NEVER);
     int call_options = 0;
 
     init_stonith_remote_op_hash_table(&stonith_remote_op_list);

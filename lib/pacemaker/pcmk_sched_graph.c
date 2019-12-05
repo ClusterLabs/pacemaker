@@ -754,20 +754,16 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
  * imply stop and demote operations of affected resources by marking them as
  * pseudo-actions, etc.
  *
- * \param[in]     node        Node to be fenced
  * \param[in]     stonith_op  Fencing operation
  * \param[in,out] data_set    Working set of cluster
  */
-gboolean
-stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * data_set)
+void
+pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
 {
-    GListPtr r = NULL;
-
-    CRM_CHECK(stonith_op != NULL, return FALSE);
-    for (r = data_set->resources; r != NULL; r = r->next) {
-        rsc_stonith_ordering((resource_t *) r->data, stonith_op, data_set);
+    CRM_CHECK(stonith_op && data_set, return);
+    for (GList *r = data_set->resources; r != NULL; r = r->next) {
+        rsc_stonith_ordering((pe_resource_t *) r->data, stonith_op, data_set);
     }
-    return TRUE;
 }
 
 static node_t *

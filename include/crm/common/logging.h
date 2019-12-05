@@ -20,10 +20,28 @@ extern "C" {
 #ifndef CRM_LOGGING__H
 #  define CRM_LOGGING__H
 
+#  include <stdio.h>
 #  include <qb/qblog.h>
 
+/* Define custom log priorities.
+ *
+ * syslog(3) uses int for priorities, but libqb's struct qb_log_callsite uses
+ * uint8_t, so make sure they fit in the latter.
+ */
+
+// Define something even less desired than debug
 #  ifndef LOG_TRACE
-#    define LOG_TRACE    LOG_DEBUG+1
+#    define LOG_TRACE   (LOG_DEBUG+1)
+#  endif
+
+// Print message to stdout instead of logging it
+#  ifndef LOG_STDOUT
+#    define LOG_STDOUT  254
+#  endif
+
+// Don't send message anywhere
+#  ifndef LOG_NEVER
+#    define LOG_NEVER   255
 #  endif
 
 /* "Extended information" logging support */
@@ -82,6 +100,8 @@ gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
 void crm_log_args(int argc, char **argv);
 void crm_log_output_fn(const char *file, const char *function, int line, int level,
                        const char *prefix, const char *output);
+
+// Log a block of text line by line
 #  define crm_log_output(level, prefix, output) crm_log_output_fn(__FILE__, __FUNCTION__, __LINE__, level, prefix, output)
 
 gboolean crm_add_logfile(const char *filename);
@@ -112,33 +132,61 @@ unsigned int get_crm_log_level(void);
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 #endif
 
+/* Using "switch" instead of "if" in these macro definitions keeps
+ * static analysis from complaining about constant evaluations
+ */
+
 /*!
  * \brief Log a message
  *
- * \param[in] level  Severity at which to log the message
- * \param[in] fmt    printf-style format string for message
+ * \param[in] level  Priority at which to log the message
+ * \param[in] fmt    printf-style format string literal for message
  * \param[in] args   Any arguments needed by format string
+ *
+ * \note This is a macro, and \p level may be evaluated more than once.
  */
-#  define do_crm_log(level, fmt, args...) \
-    qb_log_from_external_source(__func__, __FILE__, fmt, level, __LINE__, 0 , ##args)
+#  define do_crm_log(level, fmt, args...) do {                              \
+        switch (level) {                                                    \
+            case LOG_STDOUT:                                                \
+                printf(fmt "\n" , ##args);                                  \
+                break;                                                      \
+            case LOG_NEVER:                                                 \
+                break;                                                      \
+            default:                                                        \
+                qb_log_from_external_source(__func__, __FILE__, fmt,        \
+                    (level),   __LINE__, 0 , ##args);                       \
+                break;                                                      \
+        }                                                                   \
+    } while (0)
 
 /*!
  * \brief Log a message that is likely to be filtered out
  *
- * \param[in] level  Severity at which to log the message
+ * \param[in] level  Priority at which to log the message
  * \param[in] fmt    printf-style format string for message
  * \param[in] args   Any arguments needed by format string
+ *
+ * \note This is a macro, and \p level may be evaluated more than once.
+ *       This does nothing when level is LOG_STDOUT.
  */
-#  define do_crm_log_unlikely(level, fmt, args...) do {               \
-        static struct qb_log_callsite *trace_cs = NULL;                 \
-        if(trace_cs == NULL) {                                          \
-            trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
-        }                                                               \
-        if (crm_is_callsite_active(trace_cs, level, 0)) {            \
-            qb_log_from_external_source(                                \
-                __func__, __FILE__, fmt, level, __LINE__, 0 , ##args); \
-        }                                                               \
-    } while(0)
+#  define do_crm_log_unlikely(level, fmt, args...) do {                     \
+        switch (level) {                                                    \
+            case LOG_STDOUT: case LOG_NEVER:                                \
+                break;                                                      \
+            default: {                                                      \
+                static struct qb_log_callsite *trace_cs = NULL;             \
+                if (trace_cs == NULL) {                                     \
+                    trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, \
+                                                   (level), __LINE__, 0);   \
+                }                                                           \
+                if (crm_is_callsite_active(trace_cs, (level), 0)) {         \
+                    qb_log_from_external_source(__func__, __FILE__, fmt,    \
+                        (level), __LINE__, 0 , ##args);                     \
+                }                                                           \
+            }                                                               \
+            break;                                                          \
+        }                                                                   \
+    } while (0)
 
 #  define CRM_LOG_ASSERT(expr) do {					\
         if(__unlikely((expr) == FALSE)) {				\
@@ -166,76 +214,141 @@ unsigned int get_crm_log_level(void);
 	}								\
     } while(0)
 
-#  define do_crm_log_xml(level, text, xml) do {                       \
-        static struct qb_log_callsite *xml_cs = NULL;                   \
-        if(xml_cs == NULL) {                                            \
-            xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob", level, __LINE__, 0); \
-        }                                                               \
-        if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
-            log_data_element(level, __FILE__, __FUNCTION__, __LINE__, text, xml, 1, xml_log_option_formatted); \
-        }                                                               \
+/*!
+ * \brief Log XML line-by-line in a formatted fashion
+ *
+ * \param[in] level  Priority at which to log the messages
+ * \param[in] text   Prefix for each line
+ * \param[in] xml    XML to log
+ *
+ * \note This is a macro, and \p level may be evaluated more than once.
+ *       This does nothing when level is LOG_STDOUT.
+ */
+#  define do_crm_log_xml(level, text, xml) do {                             \
+        switch (level) {                                                    \
+            case LOG_STDOUT: case LOG_NEVER:                                \
+                break;                                                      \
+            default: {                                                      \
+                static struct qb_log_callsite *xml_cs = NULL;               \
+                if (xml_cs == NULL) {                                       \
+                    xml_cs = qb_log_callsite_get(__func__, __FILE__,        \
+                                        "xml-blob", (level), __LINE__, 0);  \
+                }                                                           \
+                if (crm_is_callsite_active(xml_cs, (level), 0)) {           \
+                    log_data_element((level), __FILE__, __FUNCTION__,       \
+                         __LINE__, text, xml, 1, xml_log_option_formatted); \
+                }                                                           \
+            }                                                               \
+            break;                                                          \
+        }                                                                   \
     } while(0)
 
 /*!
  * \brief Log a message as if it came from a different code location
  *
- * \param[in] level     Severity at which to log the message
+ * \param[in] level     Priority at which to log the message
  * \param[in] file      Source file name to use instead of __FILE__
  * \param[in] function  Source function name to use instead of __func__
  * \param[in] line      Source line number to use instead of __line__
- * \param[in] fmt       printf-style format string for message
- * \param[in] args      Any arguments needed by format string
- */
-#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-        if(level > 0) {                                                 \
-            qb_log_from_external_source(function, file, fmt, level, line, 0 , ##args); \
-        } else {                                                        \
-            printf(fmt "\n" , ##args);                                    \
-        }                                                               \
-    } while(0)
-
-/*!
- * \brief Log a message using constant severity
- *
- * \param[in] level     Severity at which to log the message
- * \param[in] fmt       printf-style format string for message
+ * \param[in] fmt       printf-style format string literal for message
  * \param[in] args      Any arguments needed by format string
  *
- * \note level and fmt /MUST/ be constants else compilation may fail
+ * \note This is a macro, and \p level may be evaluated more than once.
  */
-#  define do_crm_log_always(level, fmt, args...) qb_log(level, fmt , ##args)
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do {  \
+        switch (level) {                                                    \
+            case LOG_STDOUT:                                                \
+                printf(fmt "\n" , ##args);                                  \
+                break;                                                      \
+            case LOG_NEVER:                                                 \
+                break;                                                      \
+            default:                                                        \
+                qb_log_from_external_source(function, file, fmt, (level),   \
+                                            line, 0 , ##args);              \
+                break;                                                      \
+        }                                                                   \
+    } while (0)
 
 /*!
- * \brief Log a system error message
+ * \brief Log a message using constant priority
  *
- * \param[in] level  Severity at which to log the message
+ * \param[in] level     Priority at which to log the message
+ * \param[in] fmt       printf-style format string literal for message
+ * \param[in] args      Any arguments needed by format string
+ *
+ * \note This is a macro, and \p level may be evaluated more than once.
+ *       This does nothing when level is LOG_STDOUT.
+ */
+#  define do_crm_log_always(level, fmt, args...) do {                       \
+        switch (level) {                                                    \
+            case LOG_STDOUT: case LOG_NEVER:                                \
+                break;                                                      \
+            default:                                                        \
+                qb_log((level), fmt , ##args);                              \
+                break;                                                      \
+        }                                                                   \
+    } while (0)
+
+/*!
+ * \brief Send a system error message to both the log and stderr
+ *
+ * \param[in] level  Priority at which to log the message
  * \param[in] fmt    printf-style format string for message
  * \param[in] args   Any arguments needed by format string
  *
+ * \deprecated One of the other logging functions should be used with
+ *             pcmk_strerror() instead.
+ * \note This is a macro, and \p level may be evaluated more than once.
  * \note Because crm_perror() adds the system error message and error number
  *       onto the end of fmt, that information will become extended information
  *       if CRM_XS is used inside fmt and will not show up in syslog.
  */
-#  define crm_perror(level, fmt, args...) do {				\
-        const char *err = strerror(errno);                              \
-        /* cast to int makes coverity happy when level == 0 */          \
-        if (level <= (int)crm_log_level) {                              \
-            fprintf(stderr, fmt ": %s (%d)\n" , ##args, err, errno);    \
-        }                                                               \
-        do_crm_log(level, fmt ": %s (%d)" , ##args, err, errno);        \
-    } while(0)
+#  define crm_perror(level, fmt, args...) do {                              \
+        switch (level) {                                                    \
+            case LOG_NEVER:                                                 \
+                break;                                                      \
+            default: {                                                      \
+                const char *err = strerror(errno);                          \
+                /* cast to int makes coverity happy when level == 0 */      \
+                if ((level) <= (int) crm_log_level) {                       \
+                    fprintf(stderr, fmt ": %s (%d)\n" , ##args, err, errno);\
+                }                                                           \
+                do_crm_log((level), fmt ": %s (%d)" , ##args, err, errno);  \
+            }                                                               \
+            break;                                                          \
+        }                                                                   \
+    } while (0)
 
-#  define crm_log_tag(level, tag, fmt, args...)    do {               \
-        static struct qb_log_callsite *trace_tag_cs = NULL;                 \
-        int converted_tag = g_quark_try_string(tag);                   \
-        if(trace_tag_cs == NULL) {                                          \
-            trace_tag_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, converted_tag); \
-        }                                                               \
-        if (crm_is_callsite_active(trace_tag_cs, level, converted_tag)) {               \
-            qb_log_from_external_source(__func__, __FILE__, fmt, level,     \
-                                        __LINE__, converted_tag , ##args);  \
-        }                                                               \
-      } while(0)
+/*!
+ * \brief Log a message with a tag (for use with PCMK_trace_tags)
+ *
+ * \param[in] level  Priority at which to log the message
+ * \param[in] tag    String to tag message with
+ * \param[in] fmt    printf-style format string for message
+ * \param[in] args   Any arguments needed by format string
+ *
+ * \note This is a macro, and \p level may be evaluated more than once.
+ *       This does nothing when level is LOG_STDOUT.
+ */
+#  define crm_log_tag(level, tag, fmt, args...)    do {                     \
+        switch (level) {                                                    \
+            case LOG_STDOUT: case LOG_NEVER:                                \
+                break;                                                      \
+            default: {                                                      \
+                static struct qb_log_callsite *trace_tag_cs = NULL;         \
+                int converted_tag = g_quark_try_string(tag);                \
+                if (trace_tag_cs == NULL) {                                 \
+                    trace_tag_cs = qb_log_callsite_get(__func__, __FILE__,  \
+                                    fmt, (level), __LINE__, converted_tag); \
+                }                                                           \
+                if (crm_is_callsite_active(trace_tag_cs, (level),           \
+                                           converted_tag)) {                \
+                    qb_log_from_external_source(__func__, __FILE__, fmt,    \
+                                (level), __LINE__, converted_tag , ##args); \
+                }                                                           \
+            }                                                               \
+        }                                                                   \
+    } while (0)
 
 #  define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
 #  define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)

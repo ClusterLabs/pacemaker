@@ -287,6 +287,9 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
     GHashTableIter iter;
     node_t *node = NULL;
 
+    if (level == LOG_NEVER) {
+        return;
+    }
     if (rsc) {
         hash = rsc->allowed_nodes;
     }
@@ -296,7 +299,7 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
         return;
     }
 
-    if (level == 0) {
+    if (level == LOG_STDOUT) {
         char score[128];
         int len = sizeof(score);
         /* For now we want this in sorted order to keep the regression tests happy */
@@ -371,7 +374,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
 
-    if (level == 0) {
+    if (level == LOG_STDOUT) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
         crm_trace("%s", dump_text);
@@ -387,13 +390,15 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
                                         comment, rsc->id, node->details->uname);
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
-
-    if (level == 0) {
-        fprintf(stdout, "%s\n", dump_text);
-    } else {
-        crm_trace("%s", dump_text);
+    switch (level) {
+        case LOG_STDOUT:
+            fprintf(stdout, "%s\n", dump_text);
+            break;
+        case LOG_NEVER:
+            break;
+        default:
+            crm_trace("%s", dump_text);
     }
-
     free(dump_text);
 }
 

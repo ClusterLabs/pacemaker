@@ -779,8 +779,8 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
  */
 static int
 pcmk_child_active(pcmk_child_t *child) {
-    static uid_t cl_uid = 0;
-    static gid_t cl_gid = 0;
+    uid_t cl_uid = 0;
+    gid_t cl_gid = 0;
     const uid_t root_uid = 0;
     const gid_t root_gid = 0;
     const uid_t *ref_uid;
@@ -799,8 +799,7 @@ pcmk_child_active(pcmk_child_t *child) {
         ref_uid = (child->uid != NULL) ? &cl_uid : &root_uid;
         ref_gid = (child->uid != NULL) ? &cl_gid : &root_gid;
 
-        if (child->uid != NULL && !cl_uid && !cl_gid
-                && crm_user_lookup(CRM_DAEMON_USER, &cl_uid, &cl_gid) < 0) {
+        if ((child->uid != NULL) && (pcmk_daemon_user(&cl_uid, &cl_gid) < 0)) {
             crm_err("Could not find user and group IDs for user %s",
                     CRM_DAEMON_USER);
             ret = -1;
@@ -1309,7 +1308,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
+    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
         crm_exit(CRM_EX_NOUSER);
     }

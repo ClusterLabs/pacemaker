@@ -112,7 +112,8 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
     set_bit(rsc->flags, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
+    dump_node_scores((show_scores? LOG_STDOUT : scores_log_level), rsc,
+                     __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);

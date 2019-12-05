@@ -530,7 +530,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
              * Unfortunately, the controller doesn't have a simple, reliable way
              * to map hosts to guests. It might be possible to track this in the
              * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
-             * on the PE creating fence pseudo-events for the guests.
+             * on the scheduler creating fence pseudo-events for the guests.
              */
 
             if (st_event->client_origin

@@ -1119,7 +1119,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (rc == 0) {
         xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_TRACE);
+        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output,
+                                          LOG_NEVER);
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
@@ -1160,15 +1161,6 @@ void stonith_history_free(stonith_history_t *history)
         free(hp->delegate);
         free(hp->client);
     }
-}
-
-/*!
- * \brief Deprecated (use stonith_get_namespace() instead)
- */
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
 static gint
@@ -2594,4 +2586,16 @@ stonith__sort_history(stonith_history_t *history)
         new = pending;
     }
     return new;
+}
+
+// Deprecated functions kept only for backward API compatibility
+const char *get_stonith_provider(const char *agent, const char *provider);
+
+/*!
+ * \brief Deprecated (use stonith_get_namespace() instead)
+ */
+const char *
+get_stonith_provider(const char *agent, const char *provider)
+{
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }

@@ -838,6 +838,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
 
     static struct qb_log_callsite *patchset_cs = NULL;
 
+    if (log_level == LOG_NEVER) {
+        return;
+    }
     if (patchset_cs == NULL) {
         patchset_cs = qb_log_callsite_get(function, __FILE__, "xml-patchset", log_level, __LINE__, 0);
     }
@@ -846,9 +849,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         crm_trace("Empty patch");
         return;
 
-    } else if (log_level == 0) {
-        /* Log to stdout */
-    } else if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
+    } else if ((log_level != LOG_STDOUT)
+               && !crm_is_callsite_active(patchset_cs, log_level, 0)) {
         return;
     }
 
@@ -980,6 +982,10 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
 {
     GListPtr gIter = NULL;
     xml_private_t *doc = NULL;
+
+    if (log_level == LOG_NEVER) {
+        return;
+    }
 
     CRM_ASSERT(xml);
     CRM_ASSERT(xml->doc);
@@ -2760,7 +2766,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
 
-    if(data == NULL) {
+    if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
     }
 
@@ -2852,7 +2858,7 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
 
-    if(data == NULL) {
+    if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
     }
 
@@ -2946,6 +2952,10 @@ log_data_element(int log_level, const char *file, const char *function, int line
     xmlNode *a_child = NULL;
 
     char *prefix_m = NULL;
+
+    if (log_level == LOG_NEVER) {
+        return;
+    }
 
     if (prefix == NULL) {
         prefix = "";

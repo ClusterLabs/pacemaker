@@ -118,9 +118,6 @@ int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
 
-// deprecated
-#define crm_get_interval crm_parse_interval_spec
-
 /* public operation functions (from operations.c) */
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
@@ -154,7 +151,6 @@ char *crm_generate_ra_key(const char *standard, const char *provider,
                           const char *type);
 int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
-bool crm_provider_required(const char *standard); // deprecated
 
 
 int compare_version(const char *version1, const char *version2);
@@ -199,6 +195,7 @@ char *crm_generate_uuid(void);
 bool crm_is_daemon_name(const char *name);
 
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
+int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 void crm_gnutls_global_init(void);
@@ -207,6 +204,18 @@ void crm_gnutls_global_init(void);
 bool pcmk_acl_required(const char *user);
 
 char *pcmk_hostname(void);
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
+//! \deprecated Use crm_parse_interval_spec() instead
+#define crm_get_interval crm_parse_interval_spec
+#endif
+
+//! \deprecated Use pcmk_get_ra_caps() instead
+bool crm_provider_required(const char *standard);
 
 #ifdef __cplusplus
 }

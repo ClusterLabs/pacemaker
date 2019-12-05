@@ -674,7 +674,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
  * A remote node's online status is reflected by the state
  * of the remote node's connection resource. We need to link
  * the remote node to this connection resource so we can have
- * easy access to the connection resource during the PE calculations.
+ * easy access to the connection resource during the scheduler calculations.
  */
 static void
 link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
@@ -1167,7 +1167,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 && this_node->details->online
                 && (data_set->no_quorum_policy == no_quorum_suicide)) {
                 /* Everything else should flow from this automatically
-                 * At least until the PE becomes able to migrate off healthy resources
+                 * (at least until the scheduler becomes able to migrate off
+                 * healthy resources)
                  */
                 pe_fence_node(data_set, this_node, "cluster does not have quorum");
             }
@@ -2813,11 +2814,10 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
             rsc->role = RSC_ROLE_STOPPED;
 
         } else {
-            /*
-             * Staying in master role would put the PE/TE into a loop. Setting
-             * slave role is not dangerous because the resource will be stopped
-             * as part of recovery, and any master promotion will be ordered
-             * after that stop.
+            /* Staying in master role would put the scheduler and controller
+             * into a loop. Setting slave role is not dangerous because the
+             * resource will be stopped as part of recovery, and any master
+             * promotion will be ordered after that stop.
              */
             rsc->role = RSC_ROLE_SLAVE;
         }
