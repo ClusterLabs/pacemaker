@@ -1015,8 +1015,23 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
         return;
     }
 
+    if (rsc->lock_node != NULL) {
+        // The lock was obtained from resource history
+
+        if (rsc->running_on != NULL) {
+            /* The resource was started elsewhere even though it is now
+             * considered locked. This shouldn't be possible, but as a
+             * failsafe, we don't want to disturb the resource now.
+             */
+            pe_rsc_info(rsc,
+                        "Cancelling shutdown lock because %s is already active",
+                        rsc->id);
+            rsc->lock_node = NULL;
+            rsc->lock_time = 0;
+        }
+
     // Only a resource active on exactly one node can be locked
-    if (pcmk__list_of_1(rsc->running_on)) {
+    } else if (pcmk__list_of_1(rsc->running_on)) {
         pe_node_t *node = rsc->running_on->data;
 
         if (node->details->shutdown) {
