@@ -225,7 +225,7 @@ pcmk__mk_log_output(char **argv) {
     }
 
     retval->fmt_name = "log";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = false;
 
     retval->init = log_init;

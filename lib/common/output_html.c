@@ -352,7 +352,7 @@ pcmk__mk_html_output(char **argv) {
     }
 
     retval->fmt_name = "html";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = false;
 
     retval->init = html_init;

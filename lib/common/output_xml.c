@@ -312,7 +312,7 @@ pcmk__mk_xml_output(char **argv) {
     }
 
     retval->fmt_name = "xml";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = false;
 
     retval->init = xml_init;

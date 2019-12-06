@@ -224,7 +224,7 @@ crm_mon_mk_curses_output(char **argv) {
     }
 
     retval->fmt_name = "console";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
     retval->init = curses_init;
