@@ -354,6 +354,8 @@ struct pe_resource_s {
     GListPtr fillers;
 
     pe_node_t *pending_node;    // Node on which pending_task is happening
+    pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+    time_t lock_time;           // When shutdown lock started
 
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
