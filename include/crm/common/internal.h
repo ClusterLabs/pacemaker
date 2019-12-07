@@ -126,6 +126,20 @@ crm_getpid_s()
     return crm_strdup_printf("%lu", (unsigned long) getpid());
 }
 
+// More efficient than g_list_length(list) == 1
+static inline bool
+pcmk__list_of_1(GList *list)
+{
+    return list && (list->next == NULL);
+}
+
+// More efficient than g_list_length(list) > 1
+static inline bool
+pcmk__list_of_multiple(GList *list)
+{
+    return list && (list->next != NULL);
+}
+
 /* convenience functions for failure-related node attributes */
 
 #define CRM_FAIL_COUNT_PREFIX   "fail-count"
