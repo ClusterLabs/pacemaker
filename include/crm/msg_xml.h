@@ -123,6 +123,13 @@ extern "C" {
 #  define XML_PING_ATTR_STATUS		"result"
 #  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
 #  define XML_PING_ATTR_CRMDSTATE   "crmd_state"
+#  define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
 
 #  define XML_TAG_FRAGMENT		"cib_fragment"
 

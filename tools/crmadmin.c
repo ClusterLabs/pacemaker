@@ -23,6 +23,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/iso8601.h>
 
 #include <crm/common/mainloop.h>
 
@@ -32,8 +33,9 @@ static int message_timer_id = -1;
 static int message_timeout_ms = 30 * 1000;
 
 static GMainLoop *mainloop = NULL;
-static crm_ipc_t *crmd_channel = NULL;
+static crm_ipc_t *ipc_channel = NULL;
 static char *admin_uuid = NULL;
+static char *ipc_name = NULL;
 
 gboolean do_init(void);
 int do_work(void);
@@ -46,6 +48,7 @@ static gboolean BE_VERBOSE = FALSE;
 static int expected_responses = 1;
 static gboolean BASH_EXPORT = FALSE;
 static gboolean DO_HEALTH = FALSE;
+static gboolean DO_PACEMAKERD_HEALTH = FALSE;
 static gboolean DO_RESET = FALSE;
 static gboolean DO_RESOURCE = FALSE;
 static gboolean DO_ELECT_DC = FALSE;
@@ -70,18 +73,17 @@ static struct crm_option long_options[] = {
     /* daemon options */
     {"status",    1, 0, 'S', "Display the status of the specified node." },
     {"-spacer-",  1, 0, '-', "\n\tResult is the node's internal FSM state which can be useful for debugging\n"},
+    {"pacemakerd",0, 0, 'P', "Display the status of local pacemakerd."},
+    {"-spacer-",  1, 0, '-', "\n\tResult is the state of the sub-daemons watched by pacemakerd\n"},
     {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster."},
     {"-spacer-",  1, 0, '-', "\n\tThis is an internal detail and is rarely useful to administrators except when deciding on which node to examine the logs.\n"},
     {"nodes",     0, 0, 'N', "\tDisplay the uname of all member nodes"},
     {"election",  0, 0, 'E', "(Advanced) Start an election for the cluster co-ordinator"},
-    {
-        "kill",      1, 0, 'K',
-        "(Advanced) Stop the controller (not the rest of the cluster stack) on specified node"
-    },
+    {"kill",      1, 0, 'K', "(Advanced) Stop the controller (not the rest of the cluster stack) on specified node"},
     {"health",    0, 0, 'H', NULL, 1},
-    
-    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"-spacer-",  1, 0, '-', "\nAdditional Options:"},
     {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
+    {"ipc-name",  1, 0, 'i', "Name to use for ipc instead of 'crmadmin'"},
     {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
 
     {"-spacer-",  1, 0, '-', "Notes:"},
@@ -122,7 +124,9 @@ main(int argc, char **argv)
                     message_timeout_ms = 30 * 1000;
                 }
                 break;
-
+            case 'i':
+                ipc_name = strdup(optarg);
+                break;
             case '$':
             case '?':
                 crm_help(flag, CRM_EX_OK);
@@ -141,6 +145,9 @@ main(int argc, char **argv)
                 break;
             case 'q':
                 BE_SILENT = TRUE;
+                break;
+            case 'P':
+                DO_PACEMAKERD_HEALTH = TRUE;
                 break;
             case 'S':
                 DO_HEALTH = TRUE;
@@ -215,7 +222,7 @@ do_work(void)
     xmlNode *msg_data = NULL;
     gboolean all_is_good = TRUE;
 
-    if (DO_HEALTH == TRUE) {
+    if (DO_HEALTH) {
         crm_trace("Querying the system");
 
         sys_to = CRM_SYSTEM_DC;
@@ -231,6 +238,16 @@ do_work(void)
         } else {
             crm_info("Cluster-wide health not available yet");
             all_is_good = FALSE;
+        }
+
+    } else if (DO_PACEMAKERD_HEALTH) {
+        crm_trace("Querying pacemakerd state");
+
+        sys_to = CRM_SYSTEM_MCP;
+        crmd_operation = CRM_OP_PING;
+
+        if (BE_VERBOSE) {
+            expected_responses = 1;
         }
 
     } else if (DO_ELECT_DC) {
@@ -251,7 +268,8 @@ do_work(void)
         cib_t *the_cib = cib_new();
         xmlNode *output = NULL;
 
-        int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+        int rc = the_cib->cmds->signon(the_cib,
+            ipc_name?ipc_name:crm_system_name, cib_command);
 
         if (rc != pcmk_ok) {
             return -1;
@@ -286,7 +304,7 @@ do_work(void)
     }
 
 /* send it */
-    if (crmd_channel == NULL) {
+    if (ipc_channel == NULL) {
         crm_err("The IPC connection is not valid, cannot send anything");
         return -1;
     }
@@ -300,10 +318,10 @@ do_work(void)
     }
 
     {
-        xmlNode *cmd = create_request(crmd_operation, msg_data, dest_node, sys_to,
-                                      crm_system_name, admin_uuid);
+        xmlNode *cmd = create_request(crmd_operation, msg_data, dest_node,
+            sys_to, ipc_name?ipc_name:crm_system_name, admin_uuid);
 
-        crm_ipc_send(crmd_channel, cmd, 0, 0, NULL);
+        crm_ipc_send(ipc_channel, cmd, 0, 0, NULL);
         free_xml(cmd);
     }
 
@@ -329,20 +347,23 @@ struct ipc_client_callbacks crm_callbacks = {
 gboolean
 do_init(void)
 {
-    mainloop_io_t *source =
-        mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
+    mainloop_io_t *ipc_source =
+        mainloop_add_ipc_client(
+            DO_PACEMAKERD_HEALTH?CRM_SYSTEM_MCP:CRM_SYSTEM_CRMD,
+            G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
 
     admin_uuid = crm_getpid_s();
 
-    crmd_channel = mainloop_get_ipc_client(source);
+    ipc_channel = mainloop_get_ipc_client(ipc_source);
 
-    if (DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
+    if (DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_PACEMAKERD_HEALTH) {
         return TRUE;
 
-    } else if (crmd_channel != NULL) {
-        xmlNode *xml = create_hello_message(admin_uuid, crm_system_name, "0", "1");
+    } else if (ipc_channel != NULL) {
+        xmlNode *xml = create_hello_message(admin_uuid,
+            ipc_name?ipc_name:crm_system_name, "0", "1");
 
-        crm_ipc_send(crmd_channel, xml, 0, 0, NULL);
+        crm_ipc_send(ipc_channel, xml, 0, 0, NULL);
         return TRUE;
     }
     return FALSE;
@@ -392,8 +413,10 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     if (xml == NULL) {
         crm_info("XML in IPC message was not valid... " "discarding.");
 
-    } else if (validate_crm_message(xml, crm_system_name, admin_uuid, XML_ATTR_RESPONSE) == FALSE) {
+    } else if (validate_crm_message(xml, ipc_name?ipc_name:crm_system_name,
+                                    admin_uuid, XML_ATTR_RESPONSE) == FALSE) {
         crm_trace("Message was not a CRM response. Discarding.");
+        printf("Validation of response failed\n");
 
     } else if (DO_HEALTH) {
         xmlNode *data = get_message_xml(xml, F_CRM_DATA);
@@ -403,6 +426,33 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
                crm_element_value(data, XML_PING_ATTR_SYSFROM),
                crm_element_value(xml, F_CRM_HOST_FROM),
                state, crm_element_value(data, XML_PING_ATTR_STATUS));
+
+        if (BE_SILENT && state != NULL) {
+            fprintf(stderr, "%s\n", state);
+        }
+
+    } else if (DO_PACEMAKERD_HEALTH) {
+        xmlNode *data = get_message_xml(xml, F_CRM_DATA);
+        const char *state =
+            crm_element_value(data, XML_PING_ATTR_PACEMAKERDSTATE);
+        time_t pinged = (time_t) 0;
+        long long value_ll = 0;
+        crm_time_t *crm_when = crm_time_new(NULL);
+        char *pinged_buf = NULL;
+
+        crm_element_value_ll(data, XML_ATTR_TSTAMP, &value_ll);
+        pinged = (time_t) value_ll;
+        crm_time_set_timet(crm_when, &pinged);
+        pinged_buf = crm_time_as_string(crm_when,
+            crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        printf("Status of %s: %s (%s%s%s)\n",
+               crm_element_value(data, XML_PING_ATTR_SYSFROM),
+               state, crm_element_value(data, XML_PING_ATTR_STATUS),
+               (pinged != (time_t) 0)?" @ ":"",
+               (pinged != (time_t) 0)?pinged_buf:"");
+
+        free(pinged_buf);
+        crm_time_free(crm_when);
 
         if (BE_SILENT && state != NULL) {
             fprintf(stderr, "%s\n", state);
