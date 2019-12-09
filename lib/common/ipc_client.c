@@ -41,7 +41,7 @@
  *
  * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
  * \note This is intended to supersede crm_ipc_new() but currently only
- *       supports the controller IPC API.
+ *       supports the controller & pacemakerd IPC API.
  */
 int
 pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
@@ -84,6 +84,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         case pcmk_ipc_pacemakerd:
+            (*api)->cmds = pcmk__pacemakerd_api_methods();
             break;
 
         case pcmk_ipc_schedulerd:
@@ -259,7 +260,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
             return for_log? "fencer" : NULL /* "stonith-ng" */;
 
         case pcmk_ipc_pacemakerd:
-            return for_log? "launcher" : NULL /* CRM_SYSTEM_MCP */;
+            return for_log? "launcher" : CRM_SYSTEM_MCP;
 
         case pcmk_ipc_schedulerd:
             return for_log? "scheduler" : NULL /* CRM_SYSTEM_PENGINE */;

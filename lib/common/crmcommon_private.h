@@ -210,4 +210,7 @@ bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
 G_GNUC_INTERNAL
 pcmk__ipc_methods_t *pcmk__controld_api_methods(void);
 
+G_GNUC_INTERNAL
+pcmk__ipc_methods_t *pcmk__pacemakerd_api_methods(void);
+
 #endif  // CRMCOMMON_PRIVATE__H

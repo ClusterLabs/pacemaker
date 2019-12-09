@@ -40,7 +40,24 @@ static bool global_keep_tracking = false;
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 
 static crm_trigger_t *shutdown_trigger = NULL;
+static crm_trigger_t *startup_trigger = NULL;
 static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
+
+/* state we report when asked via pacemakerd-api status-ping */
+static const char *pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_INIT;
+static gboolean running_with_sbd = FALSE; /* local copy */
+/* When contacted via pacemakerd-api by a client having sbd in
+ * the name we assume it is sbd-daemon which wants to know
+ * if pacemakerd shutdown gracefully.
+ * Thus when everything is shutdown properly pacemakerd
+ * waits till it has reported the graceful completion of
+ * shutdown to sbd and just when sbd-client closes the
+ * connection we can assume that the report has arrived
+ * properly so that pacemakerd can finally exit.
+ * Following two variables are used to track that handshake.
+ */
+static unsigned int shutdown_complete_state_reported_to = 0;
+static gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
 typedef struct pcmk_child_s {
     pid_t pid;
@@ -374,21 +391,20 @@ escalate_shutdown(gpointer data)
 static gboolean
 pcmk_shutdown_worker(gpointer user_data)
 {
-    static int phase = 0;
+    static int phase = SIZEOF(pcmk_children);
     static time_t next_log = 0;
-    static int max = SIZEOF(pcmk_children);
 
     int lpc = 0;
 
-    if (phase == 0) {
+    if (phase == SIZEOF(pcmk_children)) {
         crm_notice("Shutting down Pacemaker");
-        phase = max;
+        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN;
     }
 
     for (; phase > 0; phase--) {
         /* Don't stop anything with start_seq < 1 */
 
-        for (lpc = max - 1; lpc >= 0; lpc--) {
+        for (lpc = SIZEOF(pcmk_children) - 1; lpc >= 0; lpc--) {
             pcmk_child_t *child = &(pcmk_children[lpc]);
 
             if (phase != child->start_seq) {
@@ -436,6 +452,11 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     crm_notice("Shutdown complete");
+    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE;
+    if (!fatal_error && running_with_sbd &&
+        !shutdown_complete_state_reported_client_closed) {
+        return TRUE;
+    }
 
     {
         const char *delay = pcmk__env_option("shutdown_delay");
@@ -489,6 +510,51 @@ pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
+static void
+pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
+{
+    const char *value = NULL;
+    xmlNode *ping = NULL;
+    xmlNode *reply = NULL;
+    time_t pinged = time(NULL);
+    const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
+
+    /* Pinged for status */
+    crm_trace("Pinged from %s.%s",
+              crm_str(crm_element_value(msg, F_CRM_ORIGIN)),
+              from?from:"unknown");
+    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+    crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
+    crm_xml_add_ll(ping, XML_ATTR_TSTAMP, (long long) pinged);
+    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    reply = create_reply(msg, ping);
+    free_xml(ping);
+    if (reply) {
+        if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) !=
+                pcmk_rc_ok) {
+            crm_err("Failed sending ping-reply");
+        }
+        free_xml(reply);
+    } else {
+        crm_err("Failed building ping-reply");
+    }
+    /* just proceed state on sbd pinging us */
+    if (from && strstr(from, "sbd")) {
+        if (crm_str_eq(pacemakerd_state,
+                       XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
+                       TRUE)) {
+            shutdown_complete_state_reported_to = c->pid;
+        } else if (crm_str_eq(pacemakerd_state,
+                              XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
+                              TRUE)) {
+            pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+            mainloop_set_trigger(startup_trigger);
+        }
+    }
+}
+
 /* Exit code means? */
 static int32_t
 pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
@@ -514,6 +580,9 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_trace("Ignoring IPC request to purge node "
                   "because peer cache is not used");
 
+    } else if (crm_str_eq(task, CRM_OP_PING, TRUE)) {
+        pcmk_handle_ping_request(c, msg, id);
+
     } else {
         crm_debug("Unrecognized IPC command '%s' sent to pacemakerd",
                   crm_str(task));
@@ -533,6 +602,12 @@ pcmk_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
     crm_trace("Connection %p", c);
+    if (shutdown_complete_state_reported_to == client->pid) {
+        shutdown_complete_state_reported_client_closed = TRUE;
+        if (shutdown_trigger) {
+            mainloop_set_trigger(shutdown_trigger);
+        }
+    }
     pcmk__free_client(client);
     return 0;
 }
@@ -924,8 +999,8 @@ find_and_track_existing_processes(void)
     return pcmk_rc_ok;
 }
 
-static void
-init_children_processes(void)
+static gboolean
+init_children_processes(void *user_data)
 {
     int start_seq = 1, lpc = 0;
     static int max = SIZEOF(pcmk_children);
@@ -951,6 +1026,8 @@ init_children_processes(void)
      * This may be useful for the daemons to know
      */
     setenv("PCMK_respawned", "true", 1);
+    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_RUNNING;
+    return TRUE;
 }
 
 static void
@@ -1154,6 +1231,7 @@ main(int argc, char **argv)
 
     if(pcmk_locate_sbd() > 0) {
         setenv("PCMK_watchdog", "true", 1);
+        running_with_sbd = TRUE;
     } else {
         setenv("PCMK_watchdog", "false", 1);
     }
@@ -1170,7 +1248,13 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
-    init_children_processes();
+    if (running_with_sbd) {
+        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_WAITPING;
+        startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
+    } else {
+        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+        init_children_processes(NULL);
+    }
 
     crm_notice("Pacemaker daemon successfully started and accepting connections");
     g_main_loop_run(mainloop);
