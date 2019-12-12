@@ -389,6 +389,33 @@ rules with +date_spec+ are only guaranteed to be checked this often, and it
 also serves as a fail-safe for certain classes of scheduler bugs. A value of 0
 disables this polling; positive values are a time interval.
 
+| shutdown-lock | false |
+The default of false allows active resources to be recovered elsewhere when
+their node is cleanly shut down, which is what the vast majority of users will
+want. However, some users prefer to make resources highly available only for
+failures, with no recovery for clean shutdowns. If this option is true,
+resources active on a node when it is cleanly shut down are kept "locked" to
+that node (not allowed to run elsewhere) until they start again on that node
+after it rejoins (or for at most shutdown-lock-limit, if set). Stonith
+resources and Pacemaker Remote connections are never locked. Clone and bundle
+instances and the master role of promotable clones are currently never locked,
+though support could be added in a future release. Locks may be manually
+cleared using the `--refresh` option of `crm_resource` (both the resource and
+node must be specified; this works with remote nodes if their connection
+resource's target-role is set to Stopped, but not if Pacemaker Remote is
+stopped on the remote node without disabling the connection resource).
+indexterm:[shutdown-lock,Cluster Option]
+indexterm:[Cluster,Option,shutdown-lock]
+
+| shutdown-lock-limit | 0 |
+If shutdown-lock is true, and this is set to a nonzero time duration, locked
+resources will be allowed to start after this much time has passed since the
+node shutdown was initiated, even if the node has not rejoined. (This works
+with remote nodes only if their connection resource's target-role is set to
+Stopped.)
+indexterm:[shutdown-lock-limit,Cluster Option]
+indexterm:[Cluster,Option,shutdown-lock-limit]
+
 | remove-after-stop | FALSE |
 indexterm:[remove-after-stop,Cluster Option]
 indexterm:[Cluster,Option,remove-after-stop]
