@@ -168,3 +168,41 @@ controld_action_is_recordable(const char *action)
     }
     return TRUE;
 }
+
+static void
+erase_xpath_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                     void *user_data)
+{
+    char *xpath = user_data;
+
+    if (rc == 0) {
+        crm_debug("Deletion of '%s' from CIB (via CIB call %d) succeeded",
+                  xpath, call_id);
+    } else {
+        crm_warn("Deletion of '%s' from CIB (via CIB call %d) failed: %s "
+                 CRM_XS " rc=%d", xpath, call_id, pcmk_strerror(rc), rc);
+    }
+}
+
+#define XPATH_STATUS_TAG "//node_state[@uname='%s']/%s"
+
+void
+erase_status_tag(const char *uname, const char *tag, int options)
+{
+    CRM_CHECK(uname != NULL, return);
+
+    if (fsa_cib_conn == NULL) {
+        crm_warn("Unable to delete CIB '%s' section for node %s: "
+                 "no CIB connection", tag, uname);
+    } else {
+        int call_id;
+        char *xpath = crm_strdup_printf(XPATH_STATUS_TAG, uname, tag);
+
+        options |= cib_quorum_override|cib_xpath;
+        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
+        crm_info("Deleting CIB '%s' section for node %s (via CIB call %d) "
+                 CRM_XS " xpath=%s", tag, uname, call_id, xpath);
+        fsa_register_cib_callback(call_id, FALSE, xpath, erase_xpath_callback);
+        // CIB library handles freeing xpath
+    }
+}
