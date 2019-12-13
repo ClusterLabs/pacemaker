@@ -191,11 +191,20 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
 
+// Node's lrm_rsc_op entries and lrm_resource entries without lock (name 2x)
+#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
+                                "|" XPATH_NODE_STATE                        \
+                                "//" XML_LRM_TAG_RESOURCE                   \
+                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ")]"
+
 // Node's transient_attributes section (name 1x)
 #define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
 
 // Everything under node_state (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
+
+// Unlocked history + transient attributes (name 3x)
+#define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
 
 /*!
  * \internal
@@ -218,6 +227,11 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
             desc = crm_strdup_printf("resource history for node %s", uname);
             break;
+        case controld_section_lrm_unlocked:
+            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED, uname, uname);
+            desc = crm_strdup_printf("resource history (other than shutdown "
+                                     "locks) for node %s", uname);
+            break;
         case controld_section_attrs:
             xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
             desc = crm_strdup_printf("transient attributes for node %s", uname);
@@ -225,6 +239,12 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         case controld_section_all:
             xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
             desc = crm_strdup_printf("all state for node %s", uname);
+            break;
+        case controld_section_all_unlocked:
+            xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
+                                      uname, uname, uname);
+            desc = crm_strdup_printf("all state (other than shutdown locks) "
+                                     "for node %s", uname);
             break;
     }
 
@@ -234,7 +254,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     } else {
         int call_id;
 
-        options |= cib_quorum_override|cib_xpath;
+        options |= cib_quorum_override|cib_xpath|cib_multiple;
         call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
