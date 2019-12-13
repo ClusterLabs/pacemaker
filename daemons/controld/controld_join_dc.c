@@ -587,7 +587,8 @@ do_dc_join_ack(long long action,
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB notifies us of the change.
      */
-    erase_status_tag(join_from, XML_CIB_TAG_LRM, cib_scope_local);
+    controld_delete_node_state(join_from, controld_section_lrm,
+                               cib_scope_local);
     if (safe_str_eq(join_from, fsa_our_uname)) {
         xmlNode *now_dc_lrmd_state = do_lrm_query(TRUE, fsa_our_uname);
 
