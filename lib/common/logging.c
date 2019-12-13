@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -984,148 +986,13 @@ crm_log_args(int argc, char **argv)
     free(arg_string);
 }
 
+// @COMPAT Legacy function return codes
+
 const char *
-pcmk_errorname(int rc) 
+pcmk_errorname(int rc)
 {
-    int error = ABS(rc);
-
-    switch (error) {
-        case E2BIG: return "E2BIG";
-        case EACCES: return "EACCES";
-        case EADDRINUSE: return "EADDRINUSE";
-        case EADDRNOTAVAIL: return "EADDRNOTAVAIL";
-        case EAFNOSUPPORT: return "EAFNOSUPPORT";
-        case EAGAIN: return "EAGAIN";
-        case EALREADY: return "EALREADY";
-        case EBADF: return "EBADF";
-        case EBADMSG: return "EBADMSG";
-        case EBUSY: return "EBUSY";
-        case ECANCELED: return "ECANCELED";
-        case ECHILD: return "ECHILD";
-        case ECOMM: return "ECOMM";
-        case ECONNABORTED: return "ECONNABORTED";
-        case ECONNREFUSED: return "ECONNREFUSED";
-        case ECONNRESET: return "ECONNRESET";
-        /* case EDEADLK: return "EDEADLK"; */
-        case EDESTADDRREQ: return "EDESTADDRREQ";
-        case EDOM: return "EDOM";
-        case EDQUOT: return "EDQUOT";
-        case EEXIST: return "EEXIST";
-        case EFAULT: return "EFAULT";
-        case EFBIG: return "EFBIG";
-        case EHOSTDOWN: return "EHOSTDOWN";
-        case EHOSTUNREACH: return "EHOSTUNREACH";
-        case EIDRM: return "EIDRM";
-        case EILSEQ: return "EILSEQ";
-        case EINPROGRESS: return "EINPROGRESS";
-        case EINTR: return "EINTR";
-        case EINVAL: return "EINVAL";
-        case EIO: return "EIO";
-        case EISCONN: return "EISCONN";
-        case EISDIR: return "EISDIR";
-        case ELIBACC: return "ELIBACC";
-        case ELOOP: return "ELOOP";
-        case EMFILE: return "EMFILE";
-        case EMLINK: return "EMLINK";
-        case EMSGSIZE: return "EMSGSIZE";
-#ifdef EMULTIHOP // Not available on OpenBSD
-        case EMULTIHOP: return "EMULTIHOP";
-#endif
-        case ENAMETOOLONG: return "ENAMETOOLONG";
-        case ENETDOWN: return "ENETDOWN";
-        case ENETRESET: return "ENETRESET";
-        case ENETUNREACH: return "ENETUNREACH";
-        case ENFILE: return "ENFILE";
-        case ENOBUFS: return "ENOBUFS";
-        case ENODATA: return "ENODATA";
-        case ENODEV: return "ENODEV";
-        case ENOENT: return "ENOENT";
-        case ENOEXEC: return "ENOEXEC";
-        case ENOKEY: return "ENOKEY";
-        case ENOLCK: return "ENOLCK";
-#ifdef ENOLINK // Not available on OpenBSD
-        case ENOLINK: return "ENOLINK";
-#endif
-        case ENOMEM: return "ENOMEM";
-        case ENOMSG: return "ENOMSG";
-        case ENOPROTOOPT: return "ENOPROTOOPT";
-        case ENOSPC: return "ENOSPC";
-        case ENOSR: return "ENOSR";
-        case ENOSTR: return "ENOSTR";
-        case ENOSYS: return "ENOSYS";
-        case ENOTBLK: return "ENOTBLK";
-        case ENOTCONN: return "ENOTCONN";
-        case ENOTDIR: return "ENOTDIR";
-        case ENOTEMPTY: return "ENOTEMPTY";
-        case ENOTSOCK: return "ENOTSOCK";
-        /* case ENOTSUP: return "ENOTSUP"; */
-        case ENOTTY: return "ENOTTY";
-        case ENOTUNIQ: return "ENOTUNIQ";
-        case ENXIO: return "ENXIO";
-        case EOPNOTSUPP: return "EOPNOTSUPP";
-        case EOVERFLOW: return "EOVERFLOW";
-        case EPERM: return "EPERM";
-        case EPFNOSUPPORT: return "EPFNOSUPPORT";
-        case EPIPE: return "EPIPE";
-        case EPROTO: return "EPROTO";
-        case EPROTONOSUPPORT: return "EPROTONOSUPPORT";
-        case EPROTOTYPE: return "EPROTOTYPE";
-        case ERANGE: return "ERANGE";
-        case EREMOTE: return "EREMOTE";
-        case EREMOTEIO: return "EREMOTEIO";
-
-        case EROFS: return "EROFS";
-        case ESHUTDOWN: return "ESHUTDOWN";
-        case ESPIPE: return "ESPIPE";
-        case ESOCKTNOSUPPORT: return "ESOCKTNOSUPPORT";
-        case ESRCH: return "ESRCH";
-        case ESTALE: return "ESTALE";
-        case ETIME: return "ETIME";
-        case ETIMEDOUT: return "ETIMEDOUT";
-        case ETXTBSY: return "ETXTBSY";
-        case EUNATCH: return "EUNATCH";
-        case EUSERS: return "EUSERS";
-        /* case EWOULDBLOCK: return "EWOULDBLOCK"; */
-        case EXDEV: return "EXDEV";
-            
-#ifdef EBADE
-            /* Not available on OSX */
-        case EBADE: return "EBADE";
-        case EBADFD: return "EBADFD";
-        case EBADSLT: return "EBADSLT";
-        case EDEADLOCK: return "EDEADLOCK";
-        case EBADR: return "EBADR";
-        case EBADRQC: return "EBADRQC";
-        case ECHRNG: return "ECHRNG";
-#ifdef EISNAM /* Not available on Illumos/Solaris */
-        case EISNAM: return "EISNAM";
-        case EKEYEXPIRED: return "EKEYEXPIRED";
-        case EKEYREJECTED: return "EKEYREJECTED";
-        case EKEYREVOKED: return "EKEYREVOKED";
-#endif
-        case EL2HLT: return "EL2HLT";
-        case EL2NSYNC: return "EL2NSYNC";
-        case EL3HLT: return "EL3HLT";
-        case EL3RST: return "EL3RST";
-        case ELIBBAD: return "ELIBBAD";
-        case ELIBMAX: return "ELIBMAX";
-        case ELIBSCN: return "ELIBSCN";
-        case ELIBEXEC: return "ELIBEXEC";
-#ifdef ENOMEDIUM  /* Not available on Illumos/Solaris */
-        case ENOMEDIUM: return "ENOMEDIUM";
-        case EMEDIUMTYPE: return "EMEDIUMTYPE";
-#endif
-        case ENONET: return "ENONET";
-        case ENOPKG: return "ENOPKG";
-        case EREMCHG: return "EREMCHG";
-        case ERESTART: return "ERESTART";
-        case ESTRPIPE: return "ESTRPIPE";
-#ifdef EUCLEAN  /* Not available on Illumos/Solaris */
-        case EUCLEAN: return "EUCLEAN";
-#endif
-        case EXFULL: return "EXFULL";
-#endif
-
+    rc = abs(rc);
+    switch (rc) {
         case pcmk_err_generic: return "pcmk_err_generic";
         case pcmk_err_no_quorum: return "pcmk_err_no_quorum";
         case pcmk_err_schema_validation: return "pcmk_err_schema_validation";
@@ -1142,25 +1009,25 @@ pcmk_errorname(int rc)
         case pcmk_err_already: return "pcmk_err_already";
         case pcmk_err_bad_nvpair: return "pcmk_err_bad_nvpair";
         case pcmk_err_unknown_format: return "pcmk_err_unknown_format";
+        default: return pcmk_rc_name(rc); // system errno
     }
-    return "Unknown";
 }
-
 
 const char *
 pcmk_strerror(int rc)
 {
-    int error = abs(rc);
-
-    if (error == 0) {
+    if (rc == 0) {
         return "OK";
-
-    // Of course error > 0 ... unless someone passed INT_MIN as rc
-    } else if ((error > 0) && (error < PCMK_ERROR_OFFSET)) {
-        return strerror(error);
     }
 
-    switch (error) {
+    rc = abs(rc);
+
+    // Of course rc > 0 ... unless someone passed INT_MIN as rc
+    if ((rc > 0) && (rc < PCMK_ERROR_OFFSET)) {
+        return strerror(rc);
+    }
+
+    switch (rc) {
         case pcmk_err_generic:
             return "Generic Pacemaker error";
         case pcmk_err_no_quorum:
@@ -1216,9 +1083,307 @@ pcmk_strerror(int rc)
         case ENOKEY:
             return "Required key not available";
     }
-
     crm_err("Unknown error code: %d", rc);
     return "Unknown error";
+}
+
+// Standard Pacemaker API return codes
+
+/* This array is used only for nonzero values of pcmk_rc_e. Its values must be
+ * kept in the exact reverse order of the enum value numbering (i.e. add new
+ * values to the end of the array).
+ */
+static struct pcmk__rc_info {
+    const char *name;
+    const char *desc;
+    int legacy_rc;
+} pcmk__rcs[] = {
+    { "pcmk_rc_error",
+      "Error",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_unknown_format",
+      "Unknown output format",
+      -pcmk_err_unknown_format,
+    },
+    { "pcmk_rc_bad_nvpair",
+      "Bad name/value pair given",
+      -pcmk_err_bad_nvpair,
+    },
+    { "pcmk_rc_already",
+      "Already in requested state",
+      -pcmk_err_already,
+    },
+    { "pcmk_rc_node_unknown",
+      "Node not found",
+      -pcmk_err_node_unknown,
+    },
+    { "pcmk_rc_multiple",
+      "Resource active on multiple nodes",
+      -pcmk_err_multiple,
+    },
+    { "pcmk_rc_cib_corrupt",
+      "Could not parse on-disk configuration",
+      -pcmk_err_cib_corrupt,
+    },
+    { "pcmk_rc_cib_save",
+      "Could not save new configuration to disk",
+      -pcmk_err_cib_save,
+    },
+    { "pcmk_rc_cib_backup",
+      "Could not archive previous configuration",
+      -pcmk_err_cib_backup,
+    },
+    { "pcmk_rc_cib_modified",
+      "On-disk configuration was manually modified",
+      -pcmk_err_cib_modified,
+    },
+    { "pcmk_rc_diff_resync",
+      "Application of update diff failed, requesting full refresh",
+      -pcmk_err_diff_resync,
+    },
+    { "pcmk_rc_diff_failed",
+      "Application of update diff failed",
+      -pcmk_err_diff_failed,
+    },
+    { "pcmk_rc_old_data",
+      "Update was older than existing configuration",
+      -pcmk_err_old_data,
+    },
+    { "pcmk_rc_transform_failed",
+      "Schema transform failed",
+      -pcmk_err_transform_failed,
+    },
+    { "pcmk_rc_schema_unchanged",
+      "Schema is already the latest available",
+      -pcmk_err_schema_unchanged,
+    },
+    { "pcmk_rc_schema_validation",
+      "Update does not conform to the configured schema",
+      -pcmk_err_schema_validation,
+    },
+    { "pcmk_rc_no_quorum",
+      "Operation requires quorum",
+      -pcmk_err_no_quorum,
+    },
+};
+
+#define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
+
+/*!
+ * \brief Get a return code constant name as a string
+ *
+ * \param[in] rc  Integer return code to convert
+ *
+ * \return String of constant name corresponding to rc
+ */
+const char *
+pcmk_rc_name(int rc)
+{
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+        return pcmk__rcs[pcmk_rc_error - rc].name;
+    }
+    switch (rc) {
+        case pcmk_rc_ok:        return "pcmk_rc_ok";
+        case E2BIG:             return "E2BIG";
+        case EACCES:            return "EACCES";
+        case EADDRINUSE:        return "EADDRINUSE";
+        case EADDRNOTAVAIL:     return "EADDRNOTAVAIL";
+        case EAFNOSUPPORT:      return "EAFNOSUPPORT";
+        case EAGAIN:            return "EAGAIN";
+        case EALREADY:          return "EALREADY";
+        case EBADF:             return "EBADF";
+        case EBADMSG:           return "EBADMSG";
+        case EBUSY:             return "EBUSY";
+        case ECANCELED:         return "ECANCELED";
+        case ECHILD:            return "ECHILD";
+        case ECOMM:             return "ECOMM";
+        case ECONNABORTED:      return "ECONNABORTED";
+        case ECONNREFUSED:      return "ECONNREFUSED";
+        case ECONNRESET:        return "ECONNRESET";
+        /* case EDEADLK:        return "EDEADLK"; */
+        case EDESTADDRREQ:      return "EDESTADDRREQ";
+        case EDOM:              return "EDOM";
+        case EDQUOT:            return "EDQUOT";
+        case EEXIST:            return "EEXIST";
+        case EFAULT:            return "EFAULT";
+        case EFBIG:             return "EFBIG";
+        case EHOSTDOWN:         return "EHOSTDOWN";
+        case EHOSTUNREACH:      return "EHOSTUNREACH";
+        case EIDRM:             return "EIDRM";
+        case EILSEQ:            return "EILSEQ";
+        case EINPROGRESS:       return "EINPROGRESS";
+        case EINTR:             return "EINTR";
+        case EINVAL:            return "EINVAL";
+        case EIO:               return "EIO";
+        case EISCONN:           return "EISCONN";
+        case EISDIR:            return "EISDIR";
+        case ELIBACC:           return "ELIBACC";
+        case ELOOP:             return "ELOOP";
+        case EMFILE:            return "EMFILE";
+        case EMLINK:            return "EMLINK";
+        case EMSGSIZE:          return "EMSGSIZE";
+#ifdef EMULTIHOP // Not available on OpenBSD
+        case EMULTIHOP:         return "EMULTIHOP";
+#endif
+        case ENAMETOOLONG:      return "ENAMETOOLONG";
+        case ENETDOWN:          return "ENETDOWN";
+        case ENETRESET:         return "ENETRESET";
+        case ENETUNREACH:       return "ENETUNREACH";
+        case ENFILE:            return "ENFILE";
+        case ENOBUFS:           return "ENOBUFS";
+        case ENODATA:           return "ENODATA";
+        case ENODEV:            return "ENODEV";
+        case ENOENT:            return "ENOENT";
+        case ENOEXEC:           return "ENOEXEC";
+        case ENOKEY:            return "ENOKEY";
+        case ENOLCK:            return "ENOLCK";
+#ifdef ENOLINK // Not available on OpenBSD
+        case ENOLINK:           return "ENOLINK";
+#endif
+        case ENOMEM:            return "ENOMEM";
+        case ENOMSG:            return "ENOMSG";
+        case ENOPROTOOPT:       return "ENOPROTOOPT";
+        case ENOSPC:            return "ENOSPC";
+        case ENOSR:             return "ENOSR";
+        case ENOSTR:            return "ENOSTR";
+        case ENOSYS:            return "ENOSYS";
+        case ENOTBLK:           return "ENOTBLK";
+        case ENOTCONN:          return "ENOTCONN";
+        case ENOTDIR:           return "ENOTDIR";
+        case ENOTEMPTY:         return "ENOTEMPTY";
+        case ENOTSOCK:          return "ENOTSOCK";
+#if ENOTSUP != EOPNOTSUPP
+        case ENOTSUP:           return "ENOTSUP";
+#endif
+        case ENOTTY:            return "ENOTTY";
+        case ENOTUNIQ:          return "ENOTUNIQ";
+        case ENXIO:             return "ENXIO";
+        case EOPNOTSUPP:        return "EOPNOTSUPP";
+        case EOVERFLOW:         return "EOVERFLOW";
+        case EPERM:             return "EPERM";
+        case EPFNOSUPPORT:      return "EPFNOSUPPORT";
+        case EPIPE:             return "EPIPE";
+        case EPROTO:            return "EPROTO";
+        case EPROTONOSUPPORT:   return "EPROTONOSUPPORT";
+        case EPROTOTYPE:        return "EPROTOTYPE";
+        case ERANGE:            return "ERANGE";
+        case EREMOTE:           return "EREMOTE";
+        case EREMOTEIO:         return "EREMOTEIO";
+        case EROFS:             return "EROFS";
+        case ESHUTDOWN:         return "ESHUTDOWN";
+        case ESPIPE:            return "ESPIPE";
+        case ESOCKTNOSUPPORT:   return "ESOCKTNOSUPPORT";
+        case ESRCH:             return "ESRCH";
+        case ESTALE:            return "ESTALE";
+        case ETIME:             return "ETIME";
+        case ETIMEDOUT:         return "ETIMEDOUT";
+        case ETXTBSY:           return "ETXTBSY";
+        case EUNATCH:           return "EUNATCH";
+        case EUSERS:            return "EUSERS";
+        /* case EWOULDBLOCK:    return "EWOULDBLOCK"; */
+        case EXDEV:             return "EXDEV";
+
+#ifdef EBADE // Not available on OS X
+        case EBADE:             return "EBADE";
+        case EBADFD:            return "EBADFD";
+        case EBADSLT:           return "EBADSLT";
+        case EDEADLOCK:         return "EDEADLOCK";
+        case EBADR:             return "EBADR";
+        case EBADRQC:           return "EBADRQC";
+        case ECHRNG:            return "ECHRNG";
+#ifdef EISNAM // Not available on OS X, Illumos, Solaris
+        case EISNAM:            return "EISNAM";
+        case EKEYEXPIRED:       return "EKEYEXPIRED";
+        case EKEYREJECTED:      return "EKEYREJECTED";
+        case EKEYREVOKED:       return "EKEYREVOKED";
+#endif
+        case EL2HLT:            return "EL2HLT";
+        case EL2NSYNC:          return "EL2NSYNC";
+        case EL3HLT:            return "EL3HLT";
+        case EL3RST:            return "EL3RST";
+        case ELIBBAD:           return "ELIBBAD";
+        case ELIBMAX:           return "ELIBMAX";
+        case ELIBSCN:           return "ELIBSCN";
+        case ELIBEXEC:          return "ELIBEXEC";
+#ifdef ENOMEDIUM // Not available on OS X, Illumos, Solaris
+        case ENOMEDIUM:         return "ENOMEDIUM";
+        case EMEDIUMTYPE:       return "EMEDIUMTYPE";
+#endif
+        case ENONET:            return "ENONET";
+        case ENOPKG:            return "ENOPKG";
+        case EREMCHG:           return "EREMCHG";
+        case ERESTART:          return "ERESTART";
+        case ESTRPIPE:          return "ESTRPIPE";
+#ifdef EUCLEAN // Not available on OS X, Illumos, Solaris
+        case EUCLEAN:           return "EUCLEAN";
+#endif
+        case EXFULL:            return "EXFULL";
+#endif // EBADE
+        default:                return "Unknown";
+    }
+}
+
+/*!
+ * \brief Get a user-friendly description of a return code
+ *
+ * \param[in] rc  Integer return code to convert
+ *
+ * \return String description of rc
+ */
+const char *
+pcmk_rc_str(int rc)
+{
+    if (rc == pcmk_rc_ok) {
+        return "OK";
+    }
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+        return pcmk__rcs[pcmk_rc_error - rc].desc;
+    }
+    if (rc < 0) {
+        return "Unknown error";
+    }
+    return strerror(rc);
+}
+
+// This returns negative values for errors
+int
+pcmk_rc2legacy(int rc)
+{
+    if (rc >= 0) {
+        return -rc; // OK or system errno
+    }
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+        return pcmk__rcs[pcmk_rc_error - rc].legacy_rc;
+    }
+    return -pcmk_err_generic;
+}
+
+int
+pcmk_legacy2rc(int legacy_rc)
+{
+    legacy_rc = abs(legacy_rc);
+    switch (legacy_rc) {
+        case pcmk_err_no_quorum:            return pcmk_rc_no_quorum;
+        case pcmk_err_schema_validation:    return pcmk_rc_schema_validation;
+        case pcmk_err_schema_unchanged:     return pcmk_rc_schema_unchanged;
+        case pcmk_err_transform_failed:     return pcmk_rc_transform_failed;
+        case pcmk_err_old_data:             return pcmk_rc_old_data;
+        case pcmk_err_diff_failed:          return pcmk_rc_diff_failed;
+        case pcmk_err_diff_resync:          return pcmk_rc_diff_resync;
+        case pcmk_err_cib_modified:         return pcmk_rc_cib_modified;
+        case pcmk_err_cib_backup:           return pcmk_rc_cib_backup;
+        case pcmk_err_cib_save:             return pcmk_rc_cib_save;
+        case pcmk_err_cib_corrupt:          return pcmk_rc_cib_corrupt;
+        case pcmk_err_multiple:             return pcmk_rc_multiple;
+        case pcmk_err_node_unknown:         return pcmk_rc_node_unknown;
+        case pcmk_err_already:              return pcmk_rc_already;
+        case pcmk_err_bad_nvpair:           return pcmk_rc_bad_nvpair;
+        case pcmk_err_unknown_format:       return pcmk_rc_unknown_format;
+        case pcmk_err_generic:              return pcmk_rc_error;
+        case pcmk_ok:                       return pcmk_rc_ok;
+        default:                            return legacy_rc; // system errno
+    }
 }
 
 const char *
