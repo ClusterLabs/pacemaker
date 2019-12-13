@@ -1421,7 +1421,8 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     }
 
     /* Now delete the copy in the CIB */
-    erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+    controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
+                               cib_scope_local);
 
     /* And finally, _delete_ the value in attrd
      * Setting it to FALSE results in the PE sending us back here again
