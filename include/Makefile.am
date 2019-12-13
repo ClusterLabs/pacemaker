@@ -12,6 +12,7 @@ MAINTAINERCLEANFILES    = Makefile.in config.h.in
 noinst_HEADERS	        = config.h 			\
 			  crm_internal.h		\
 			  doxygen.h			\
+			  pacemaker.h \
 			  pacemaker-internal.h		\
 			  portability.h
 pkginclude_HEADERS	= crm_config.h
