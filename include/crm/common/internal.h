@@ -72,6 +72,29 @@ bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
 gint crm_alpha_sort(gconstpointer a, gconstpointer b);
 
+/* Correctly displaying singular or plural is complicated; consider "1 node has"
+ * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
+ *
+ * if (a == 1) {
+ *     crm_info("singular message"):
+ * } else {
+ *     crm_info("plural message");
+ * }
+ *
+ * though even that's not sufficient for all languages besides English (if we
+ * ever desire to do translations of output and log messages). But the following
+ * convenience macros are "good enough" and more concise for many cases.
+ */
+
+/* Example:
+ * crm_info("Found %d %s", nentries,
+ *          pcmk__plural_alt(nentries, "entry", "entries"));
+ */
+#define pcmk__plural_alt(i, s1, s2) (((i) == 1)? (s1) : (s2))
+
+// Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
+#define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
+
 static inline int
 crm_strlen_zero(const char *s)
 {
