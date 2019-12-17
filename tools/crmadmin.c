@@ -28,12 +28,14 @@
 #include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
+#include <crm/common/pacemakerd_types.h>
 
 static int message_timer_id = -1;
 static int message_timeout_ms = 30 * 1000;
 
 static GMainLoop *mainloop = NULL;
 static crm_ipc_t *ipc_channel = NULL;
+static pacemakerd_t *pacemakerd_api = NULL;
 static char *admin_uuid = NULL;
 static char *ipc_name = NULL;
 
@@ -243,12 +245,15 @@ do_work(void)
     } else if (DO_PACEMAKERD_HEALTH) {
         crm_trace("Querying pacemakerd state");
 
-        sys_to = CRM_SYSTEM_MCP;
-        crmd_operation = CRM_OP_PING;
+        ret = pacemakerd_api->cmds->ping(pacemakerd_api,
+                    ipc_name?ipc_name:crm_system_name,
+                    admin_uuid, 0);
 
         if (BE_VERBOSE) {
             expected_responses = 1;
         }
+
+        return ret;
 
     } else if (DO_ELECT_DC) {
         /* tell the local node to initiate an election */
@@ -344,10 +349,62 @@ struct ipc_client_callbacks crm_callbacks = {
     .destroy = crmadmin_ipc_connection_destroy
 };
 
+static void
+ping_callback (pacemakerd_t *pacemakerd,
+               time_t last_good,
+               enum pacemakerd_state state,
+               int rc, gpointer userdata)
+{
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *pinged_buf = NULL;
+    static int received_responses = 0;
+
+    crm_time_set_timet(crm_when, &last_good);
+    pinged_buf = crm_time_as_string(crm_when,
+        crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    printf("Status of pacemakerd: %s (%s%s%s)\n",
+        pacemakerd_state_enum2text(state),
+        (rc == pcmk_ok)?"ok":"unclean",
+        (last_good != (time_t) 0)?" @ ":"",
+        (last_good != (time_t) 0)?pinged_buf:"");
+
+    free(pinged_buf);
+    crm_time_free(crm_when);
+
+    if (BE_SILENT && pacemakerd_state_enum2text(state) != NULL) {
+        fprintf(stderr, "%s\n", pacemakerd_state_enum2text(state));
+    }
+
+    received_responses++;
+
+    if (received_responses >= expected_responses) {
+        crm_trace("Received expected number (%d) of replies, exiting normally",
+                   expected_responses);
+        crm_exit(CRM_EX_OK);
+    }
+}
+
 gboolean
 do_init(void)
 {
-    mainloop_io_t *ipc_source =
+    mainloop_io_t *ipc_source;
+
+    if (DO_PACEMAKERD_HEALTH) {
+        gboolean rv = FALSE;
+
+        pacemakerd_api = pacemakerd_api_new();
+        if (pacemakerd_api) {
+            pacemakerd_api->cmds->set_disconnect_callback(pacemakerd_api,
+                    crmadmin_ipc_connection_destroy, NULL);
+            pacemakerd_api->cmds->set_ping_callback(pacemakerd_api,
+                    ping_callback, NULL);
+            rv = (pacemakerd_api->cmds->connect(pacemakerd_api,
+                    ipc_name?ipc_name:crm_system_name) == pcmk_ok);
+        }
+        return rv;
+    }
+
+    ipc_source =
         mainloop_add_ipc_client(
             DO_PACEMAKERD_HEALTH?CRM_SYSTEM_MCP:CRM_SYSTEM_CRMD,
             G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
@@ -356,7 +413,7 @@ do_init(void)
 
     ipc_channel = mainloop_get_ipc_client(ipc_source);
 
-    if (DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_PACEMAKERD_HEALTH) {
+    if (DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
         return TRUE;
 
     } else if (ipc_channel != NULL) {
@@ -426,33 +483,6 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
                crm_element_value(data, XML_PING_ATTR_SYSFROM),
                crm_element_value(xml, F_CRM_HOST_FROM),
                state, crm_element_value(data, XML_PING_ATTR_STATUS));
-
-        if (BE_SILENT && state != NULL) {
-            fprintf(stderr, "%s\n", state);
-        }
-
-    } else if (DO_PACEMAKERD_HEALTH) {
-        xmlNode *data = get_message_xml(xml, F_CRM_DATA);
-        const char *state =
-            crm_element_value(data, XML_PING_ATTR_PACEMAKERDSTATE);
-        time_t pinged = (time_t) 0;
-        long long value_ll = 0;
-        crm_time_t *crm_when = crm_time_new(NULL);
-        char *pinged_buf = NULL;
-
-        crm_element_value_ll(data, XML_ATTR_TSTAMP, &value_ll);
-        pinged = (time_t) value_ll;
-        crm_time_set_timet(crm_when, &pinged);
-        pinged_buf = crm_time_as_string(crm_when,
-            crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-        printf("Status of %s: %s (%s%s%s)\n",
-               crm_element_value(data, XML_PING_ATTR_SYSFROM),
-               state, crm_element_value(data, XML_PING_ATTR_STATUS),
-               (pinged != (time_t) 0)?" @ ":"",
-               (pinged != (time_t) 0)?pinged_buf:"");
-
-        free(pinged_buf);
-        crm_time_free(crm_when);
 
         if (BE_SILENT && state != NULL) {
             fprintf(stderr, "%s\n", state);
