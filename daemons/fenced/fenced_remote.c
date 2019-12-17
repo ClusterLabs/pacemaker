@@ -373,7 +373,7 @@ create_op_done_notify(remote_fencing_op_t * op, int rc)
 }
 
 void
-stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
+stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
@@ -385,6 +385,11 @@ stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
     crm_xml_add(bcast, F_SUBTYPE, "broadcast");
     crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
     crm_xml_add_int(bcast, "count", count);
+
+    if (op_merged) {
+        crm_xml_add(bcast, F_STONITH_MERGED, "true");
+    }
+
     add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
     free_xml(notify_data);
@@ -480,6 +485,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     int level = LOG_ERR;
     const char *subt = NULL;
     xmlNode *local_data = NULL;
+    gboolean op_merged = FALSE;
 
     op->completed = time(NULL);
     clear_remote_op_timers(op);
@@ -510,13 +516,19 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         local_data = data;
     }
 
+    if(dup) {
+        op_merged = TRUE;
+    } else if (crm_element_value(data, F_STONITH_MERGED)) {
+        op_merged = TRUE;
+    } 
+
     /* Tell everyone the operation is done, we will continue
      * with doing the local notifications once we receive
      * the broadcast back. */
     subt = crm_element_value(data, F_SUBTYPE);
     if (dup == FALSE && safe_str_neq(subt, "broadcast")) {
         /* Defer notification until the bcast message arrives */
-        stonith_bcast_result_to_peers(op, rc);
+        stonith_bcast_result_to_peers(op, rc, (op_merged? TRUE: FALSE));
         goto remote_op_done_cleanup;
     }
 
@@ -526,11 +538,12 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         level = LOG_NOTICE;
     }
 
-    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s: %s",
+    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s: %s%s",
                op->action, (op->target? " targeting " : ""),
                (op->target? op->target : ""),
                (op->delegate? op->delegate : "<no-one>"),
-               op->client_name, op->originator, op->id, pcmk_strerror(rc));
+               op->client_name, op->originator, op->id, pcmk_strerror(rc),
+               (op_merged? "(merged)" : ""));
 
     handle_local_reply_and_notify(op, data, rc);
 

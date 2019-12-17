@@ -361,7 +361,7 @@ stonith_merge_in_history_list(GHashTable *history)
                trigger unexpected results at other places and to prevent
                remote_op_done from setting the delegate if not present
              */
-            stonith_bcast_result_to_peers(op, -EHOSTUNREACH);
+            stonith_bcast_result_to_peers(op, -EHOSTUNREACH, FALSE);
         }
 
         g_hash_table_insert(stonith_remote_op_list, op->id, op);

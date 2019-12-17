@@ -103,6 +103,7 @@ stonith_history_t *stonith__sort_history(stonith_history_t *history);
 #  define F_STONITH_DEVICE        "st_device_id"
 #  define F_STONITH_ACTION        "st_device_action"
 #  define F_STONITH_MODE          "st_mode"
+#  define F_STONITH_MERGED        "st_op_merged"
 
 #  define T_STONITH_NG        "stonith-ng"
 #  define T_STONITH_REPLY     "st-reply"
