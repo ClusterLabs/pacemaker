@@ -603,7 +603,9 @@ crm_time_parse_offset(const char *offset_str)
     } else if (offset_str[0] == '+' || offset_str[0] == '-' || isdigit((int)offset_str[0])) {
         gboolean negate = FALSE;
 
-        if (offset_str[0] == '-') {
+        if (offset_str[0] == '+') {
+            offset_str++;
+        } else if (offset_str[0] == '-') {
             negate = TRUE;
             offset_str++;
         }
