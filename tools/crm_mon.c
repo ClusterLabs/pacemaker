@@ -143,7 +143,7 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_plain:
         case mon_output_console:
             return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
-                   mon_show_nodes | mon_show_resources;
+                   mon_show_nodes | mon_show_resources | mon_show_failures;
             break;
 
         case mon_output_xml:
@@ -153,7 +153,8 @@ default_includes(mon_output_format_t fmt) {
 
         case mon_output_html:
         case mon_output_cgi:
-            return mon_show_summary | mon_show_nodes | mon_show_resources;
+            return mon_show_summary | mon_show_nodes | mon_show_resources |
+                   mon_show_failures;
             break;
 
         default:
@@ -171,6 +172,7 @@ struct {
     { "counts", mon_show_counts },
     { "dc", mon_show_dc },
     { "failcounts", mon_show_failcounts },
+    { "failures", mon_show_failures },
     { "fencing", mon_show_fencing_all },
     { "fencing-failed", mon_show_fence_failed },
     { "fencing-pending", mon_show_fence_pending },
@@ -214,9 +216,10 @@ apply_exclude(const gchar *excludes, GError **error) {
         } else {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
-                        "failcounts, fencing, fencing-failed, fencing-pending, "
-                        "fencing-succeeded, nodes, none, operations, options, "
-                        "resources, stack, summary, tickets, times");
+                        "failcounts, failures, fencing, fencing-failed, "
+                        "fencing-pending, fencing-succeeded, nodes, none, "
+                        "operations, options, resources, stack, summary, "
+                        "tickets, times");
             return FALSE;
         }
     }
@@ -254,9 +257,9 @@ apply_include(const gchar *includes, GError **error) {
         } else {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
-                        "default, failcounts, fencing, fencing-failed, fencing-pending, "
-                        "fencing-succeeded, nodes, none, operations, options, resources, "
-                        "stack, summary, tickets, times");
+                        "default, failcounts, failures, fencing, fencing-failed, "
+                        "fencing-pending, fencing-succeeded, nodes, none, operations, "
+                        "options, resources, stack, summary, tickets, times");
             return FALSE;
         }
     }

@@ -1098,7 +1098,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* If there were any failed actions, print them */
-    if (xml_has_children(data_set->failed)) {
+    if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1198,7 +1198,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* If there were any failed actions, print them */
-    if (xml_has_children(data_set->failed)) {
+    if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
         print_failed_actions(out, data_set);
     }
 
@@ -1271,7 +1271,7 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* If there were any failed actions, print them */
-    if (xml_has_children(data_set->failed)) {
+    if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
         print_failed_actions(out, data_set);
     }
 

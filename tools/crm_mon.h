@@ -70,13 +70,15 @@ typedef enum mon_output_format_e {
 #define mon_show_fence_worked   (1 << 12)
 #define mon_show_tickets        (1 << 13)
 #define mon_show_bans           (1 << 14)
+#define mon_show_failures       (1 << 15)
 
 #define mon_show_fencing_all    (mon_show_fence_failed | mon_show_fence_pending | mon_show_fence_worked)
 #define mon_show_summary        (mon_show_stack | mon_show_dc | mon_show_times | \
                                  mon_show_counts | mon_show_options)
 #define mon_show_all            (mon_show_summary | mon_show_nodes | mon_show_resources | \
                                  mon_show_attributes | mon_show_failcounts | mon_show_operations | \
-                                 mon_show_fencing_all | mon_show_tickets | mon_show_bans)
+                                 mon_show_fencing_all | mon_show_tickets | mon_show_bans | \
+                                 mon_show_failures)
 
 #define mon_op_group_by_node        (0x0001U)
 #define mon_op_inactive_resources   (0x0002U)
