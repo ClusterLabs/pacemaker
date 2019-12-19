@@ -1103,7 +1103,7 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print failed stonith actions */
-    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
         if (printed) {
             out->info(out, "%s", "");
         }
@@ -1135,9 +1135,9 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             out->info(out, "%s", "");
         }
 
-        if (is_set(show, mon_show_fencing)) {
+        if (is_set(show, mon_show_fence_worked)) {
             print_stonith_history(out, stonith_history, mon_ops);
-        } else {
+        } else if (is_set(show, mon_show_fence_pending)) {
             print_stonith_pending(out, stonith_history, mon_ops);
         }
     }
@@ -1199,7 +1199,7 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print stonith history */
-    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fencing_all) && is_set(mon_ops, mon_op_fence_history)) {
         print_stonith_history_full(out, stonith_history, mon_ops);
     }
 
@@ -1272,15 +1272,15 @@ print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
     }
 
     /* Print failed stonith actions */
-    if (is_set(show, mon_show_fencing) && is_set(mon_ops, mon_op_fence_history)) {
+    if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
         print_failed_stonith_actions(out, stonith_history, mon_ops);
     }
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        if (is_set(show, mon_show_fencing)) {
+        if (is_set(show, mon_show_fence_worked)) {
             print_stonith_history(out, stonith_history, mon_ops);
-        } else {
+        } else if (is_set(show, mon_show_fence_pending)) {
             print_stonith_pending(out, stonith_history, mon_ops);
         }
     }

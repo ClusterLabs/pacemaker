@@ -104,7 +104,6 @@ static pcmk__supported_format_t formats[] = {
 
 struct {
     int reconnect_msec;
-    int fence_history_level;
     gboolean daemonize;
     gboolean show_bans;
     char *pid_file;
@@ -116,7 +115,6 @@ struct {
     GSList *includes_excludes;
 } options = {
     .reconnect_msec = RECONNECT_MSECS,
-    .fence_history_level = 1,
     .mon_ops = mon_op_default
 };
 
@@ -173,7 +171,10 @@ struct {
     { "counts", mon_show_counts },
     { "dc", mon_show_dc },
     { "failcounts", mon_show_failcounts },
-    { "fencing", mon_show_fencing },
+    { "fencing", mon_show_fencing_all },
+    { "fencing-failed", mon_show_fence_failed },
+    { "fencing-pending", mon_show_fence_pending },
+    { "fencing-succeeded", mon_show_fence_worked },
     { "nodes", mon_show_nodes },
     { "operations", mon_show_operations },
     { "options", mon_show_options },
@@ -213,7 +214,8 @@ apply_exclude(const gchar *excludes, GError **error) {
         } else {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
-                        "failcounts, fencing, nodes, none, operations, options, "
+                        "failcounts, fencing, fencing-failed, fencing-pending, "
+                        "fencing-succeeded, nodes, none, operations, options, "
                         "resources, stack, summary, tickets, times");
             return FALSE;
         }
@@ -252,8 +254,9 @@ apply_include(const gchar *includes, GError **error) {
         } else {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
-                        "default, failcounts, fencing, nodes, none, operations, options, "
-                        "resources, stack, summary, tickets, times");
+                        "default, failcounts, fencing, fencing-failed, fencing-pending, "
+                        "fencing-succeeded, nodes, none, operations, options, resources, "
+                        "stack, summary, tickets, times");
             return FALSE;
         }
     }
@@ -372,14 +375,27 @@ static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     int rc = crm_atoi(optarg, "2");
 
-    if (rc == -1 || rc > 3) {
-        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
-        return FALSE;
-    } else {
-        options.fence_history_level = rc;
-    }
+    switch (rc) {
+        case 3:
+            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing", data, err);
 
-    return TRUE;
+        case 2:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing", data, err);
+
+        case 1:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
+
+        case 0:
+            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            return include_exclude_cb("--exclude", "fencing", data, err);
+
+        default:
+            g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+            return FALSE;
+    }
 }
 
 static gboolean
@@ -833,14 +849,21 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         switch (c) {
             case 'm':
-                if (!options.fence_history_level) {
+                if (is_not_set(show, mon_show_fencing_all)) {
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
                         mon_cib_connection_destroy(NULL);
                     }
                 }
-                show ^= mon_show_fencing;
+
+                if (is_set(show, mon_show_fence_failed) || is_set(show, mon_show_fence_pending) ||
+                    is_set(show, mon_show_fence_worked)) {
+                    show &= ~mon_show_fencing_all;
+                } else {
+                    show |= mon_show_fencing_all;
+                }
+
                 break;
             case 'c':
                 show ^= mon_show_tickets;
@@ -917,7 +940,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', is_set(show, mon_show_fencing));
+        print_option_help(out, 'm', is_set(show, mon_show_fencing_all));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -1124,6 +1147,8 @@ main(int argc, char **argv)
 
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
 
+    fence_history_cb("--fence-history", "1", NULL, NULL);
+
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         return clean_up(CRM_EX_USAGE);
@@ -1139,9 +1164,8 @@ main(int argc, char **argv)
         }
 
         if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            fence_history_cb("--fence-history", "0", NULL, NULL);
             options.mon_ops |= mon_op_fence_connect;
-            /* don't moan as fence_history_level == 1 is default */
-            options.fence_history_level = 0;
         }
 
         /* create the cib-object early to be able to do further
@@ -1165,13 +1189,13 @@ main(int argc, char **argv)
                      * not match the cib data from a file.
                      * As we don't expect cib-updates coming
                      * in enforce one-shot. */
-                    options.fence_history_level = 0;
+                    fence_history_cb("--fence-history", "0", NULL, NULL);
                     options.mon_ops |= mon_op_one_shot;
                     break;
 
                 case cib_remote:
                     /* updates coming in but no fencing */
-                    options.fence_history_level = 0;
+                    fence_history_cb("--fence-history", "0", NULL, NULL);
                     break;
 
                 case cib_undefined:
@@ -1181,21 +1205,6 @@ main(int argc, char **argv)
                     rc = -EINVAL;
                     break;
             }
-        }
-
-        switch (options.fence_history_level) {
-            case 3:
-                options.mon_ops |= mon_op_fence_full_history;
-                /* fall through to next lower level */
-            case 2:
-                show |= mon_show_fencing;
-                /* fall through to next lower level */
-            case 1:
-                options.mon_ops |= mon_op_fence_history;
-                options.mon_ops |= mon_op_fence_connect;
-                break;
-            default:
-                break;
         }
 
         if (is_set(options.mon_ops, mon_op_one_shot)) {

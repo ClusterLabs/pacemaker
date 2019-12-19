@@ -65,15 +65,18 @@ typedef enum mon_output_format_e {
 #define mon_show_attributes     (1 << 7)
 #define mon_show_failcounts     (1 << 8)
 #define mon_show_operations     (1 << 9)
-#define mon_show_fencing        (1 << 10)
-#define mon_show_tickets        (1 << 11)
-#define mon_show_bans           (1 << 12)
+#define mon_show_fence_failed   (1 << 10)
+#define mon_show_fence_pending  (1 << 11)
+#define mon_show_fence_worked   (1 << 12)
+#define mon_show_tickets        (1 << 13)
+#define mon_show_bans           (1 << 14)
 
+#define mon_show_fencing_all    (mon_show_fence_failed | mon_show_fence_pending | mon_show_fence_worked)
 #define mon_show_summary        (mon_show_stack | mon_show_dc | mon_show_times | \
                                  mon_show_counts | mon_show_options)
 #define mon_show_all            (mon_show_summary | mon_show_nodes | mon_show_resources | \
                                  mon_show_attributes | mon_show_failcounts | mon_show_operations | \
-                                 mon_show_fencing | mon_show_tickets | mon_show_bans)
+                                 mon_show_fencing_all | mon_show_tickets | mon_show_bans)
 
 #define mon_op_group_by_node        (0x0001U)
 #define mon_op_inactive_resources   (0x0002U)
@@ -88,7 +91,7 @@ typedef enum mon_output_format_e {
 #define mon_op_print_pending        (0x0400U)
 #define mon_op_print_clone_detail   (0x0800U)
 
-#define mon_op_default              (mon_op_print_pending)
+#define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 
 void print_status(pcmk__output_t *out, mon_output_format_t output_format,
                   pe_working_set_t *data_set, stonith_history_t *stonith_history,
