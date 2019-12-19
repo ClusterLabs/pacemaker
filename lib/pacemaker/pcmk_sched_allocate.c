@@ -623,21 +623,15 @@ check_actions(pe_working_set_t * data_set)
     }
 }
 
-static gboolean
+static void
 apply_placement_constraints(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
-
-    crm_trace("Applying constraints...");
-
-    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->placement_constraints;
+         gIter != NULL; gIter = gIter->next) {
         pe__location_t *cons = gIter->data;
 
         cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
-
-    return TRUE;
-
 }
 
 static gboolean
@@ -994,10 +988,7 @@ stage2(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    crm_trace("Applying placement constraints");
-
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
         if (node == NULL) {
