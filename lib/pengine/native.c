@@ -541,6 +541,9 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
         provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     }
 
+    if ((node == NULL) && (rsc->lock_node != NULL)) {
+        node = rsc->lock_node;
+    }
     if (is_set(options, pe_print_rsconly)
         || pcmk__list_of_multiple(rsc->running_on)) {
         node = NULL;
@@ -582,6 +585,9 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
     // Flags, as: (<flag> [...])
     if (node && !(node->details->online) && node->details->unclean) {
         have_flags = add_output_flag(outstr, "UNCLEAN", have_flags);
+    }
+    if (node && (node == rsc->lock_node)) {
+        have_flags = add_output_flag(outstr, "LOCKED", have_flags);
     }
     if (is_set(options, pe_print_pending)) {
         const char *pending_task = native_pending_task(rsc);
