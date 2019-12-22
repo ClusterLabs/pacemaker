@@ -42,7 +42,7 @@ then performs the actions in the transition in the proper order.
 Each transition can be identified in the logs by a line like:
 
 ----
-Nov 30 20:28:16 rhel7-1 pacemaker-schedulerd[36417] (process_pe_message)        notice: Calculated transition 19, saving inputs in /var/lib/pacemaker/pengine/pe-input-1463.bz2
+notice: Calculated transition 19, saving inputs in /var/lib/pacemaker/pengine/pe-input-1463.bz2
 ----
 
 The file listed as the "inputs" is a snapshot of the cluster configuration and
