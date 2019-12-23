@@ -70,6 +70,14 @@ enum st_remap_phase {
     st_phase_max = 3
 };
 
+/* These values provide additional information for STONITH's asynchronous reply response.
+ * The st_reply_opt_merged value indicates an operation that has been merged and completed without being executed.
+ */
+enum st_replay_option {
+    st_reply_opt_none            = 0x00000000,
+    st_reply_opt_merged          = 0x00000001,
+};
+
 typedef struct remote_fencing_op_s {
     /* The unique id associated with this operation */
     char *id;
@@ -155,7 +163,7 @@ typedef struct remote_fencing_op_s {
  * \param op, Operation whose result should be broadcast
  * \param rc, Result of the operation
  */
-void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc);
+void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged);
 
 enum st_callback_flags {
     st_callback_unknown               = 0x0000,
