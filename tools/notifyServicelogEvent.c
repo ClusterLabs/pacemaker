@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2019 the Pacemaker project contributors
+ * Later changes copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -161,14 +161,15 @@ main(int argc, char *argv[])
         health_status = status2char(status);
 
         if (health_status) {
-            gboolean rc;
+            int attrd_rc;
 
-            /* @TODO pass attrd_opt_remote when appropriate */
-            rc = (attrd_update_delegate(NULL, 'v', NULL, health_component,
-                                        health_status, NULL, NULL, NULL, NULL,
-                                        attrd_opt_none) > 0);
+            // @TODO pass pcmk__node_attr_remote when appropriate
+            attrd_rc = pcmk__node_attr_request(NULL, 'v', NULL,
+                                               health_component, health_status,
+                                               NULL, NULL, NULL, NULL,
+                                               pcmk__node_attr_none);
             crm_debug("Updating attribute ('%s', '%s') = %d",
-                      health_component, health_status, rc);
+                      health_component, health_status, attrd_rc);
         } else {
             crm_err("Error: status2char failed, status = %d", status);
             rc = 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -692,14 +692,15 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
                      const char *interval_spec, node_t *node)
 {
     int rc = pcmk_ok;
-    int attr_options = attrd_opt_none;
+    int attr_options = pcmk__node_attr_none;
     char *rsc_name = rsc_fail_name(rsc);
 
     if (pe__is_guest_or_remote_node(node)) {
-        attr_options |= attrd_opt_remote;
+        attr_options |= pcmk__node_attr_remote;
     }
-    rc = attrd_clear_delegate(NULL, node->details->uname, rsc_name, operation,
-                              interval_spec, NULL, attr_options);
+    rc = pcmk__node_attr_request_clear(NULL, node->details->uname, rsc_name,
+                                       operation, interval_spec, NULL,
+                                       attr_options);
     free(rsc_name);
     return rc;
 }
@@ -791,10 +792,10 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
     }
 
     rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         printf("Unable to clean up %s failures on %s: %s\n",
-                rsc->id, host_uname, pcmk_strerror(rc));
-        return rc;
+                rsc->id, host_uname, pcmk_rc_str(rc));
+        return pcmk_rc2legacy(rc);
     }
 
     if (just_failures) {
@@ -818,7 +819,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
                 pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
-    int attr_options = attrd_opt_none;
+    int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
 
     if (crmd_channel == NULL) {
@@ -836,16 +837,16 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
             return -ENXIO;
         }
         if (pe__is_guest_or_remote_node(node)) {
-            attr_options |= attrd_opt_remote;
+            attr_options |= pcmk__node_attr_remote;
         }
     }
 
-    rc = attrd_clear_delegate(NULL, node_name, NULL, operation, interval_spec,
-                              NULL, attr_options);
-    if (rc != pcmk_ok) {
+    rc = pcmk__node_attr_request_clear(NULL, node_name, NULL, operation,
+                                       interval_spec, NULL, attr_options);
+    if (rc != pcmk_rc_ok) {
         printf("Unable to clean up all failures on %s: %s\n",
-                display_name, pcmk_strerror(rc));
-        return rc;
+                display_name, pcmk_rc_str(rc));
+        return pcmk_rc2legacy(rc);
     }
 
     if (node_name) {

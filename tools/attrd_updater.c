@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,7 +81,7 @@ main(int argc, char **argv)
 {
     int index = 0;
     int argerr = 0;
-    int attr_options = attrd_opt_none;
+    int attr_options = pcmk__node_attr_none;
     int flag;
     crm_exit_t exit_code = CRM_EX_OK;
     char *attr_node = NULL;
@@ -136,7 +136,7 @@ main(int argc, char **argv)
                 query_all = TRUE;
                 break;
             case 'p':
-                set_bit(attr_options, attrd_opt_private);
+                set_bit(attr_options, pcmk__node_attr_private);
                 break;
             case 'q':
                 break;
@@ -177,14 +177,15 @@ main(int argc, char **argv)
         exit_code = crm_errno2exit(do_query(attr_name, attr_node, query_all));
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
-         * node or not, so we can't set attrd_opt_remote when appropriate.
+         * node or not, so we can't set pcmk__node_attr_remote when appropriate.
          * However, it's not a big problem, because pacemaker-attrd will learn
          * and remember a node's "remoteness".
          */
-        exit_code = crm_errno2exit(do_update(command,
-                                   attrd_get_target(attr_node), attr_name,
-                                   attr_value, attr_section, attr_set,
-                                   attr_dampen, attr_options));
+        exit_code = pcmk_rc2exitc(do_update(command,
+                                            pcmk__node_attr_target(attr_node),
+                                            attr_name, attr_value,
+                                            attr_section, attr_set,
+                                            attr_dampen, attr_options));
     }
 
     cleanup_memory();
@@ -332,7 +333,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     if (query_all == TRUE) {
         attr_node = NULL;
     } else {
-        attr_node = attrd_get_target(attr_node);
+        attr_node = pcmk__node_attr_target(attr_node);
     }
 
     /* Build and send pacemaker-attrd request, and get XML reply */
@@ -368,11 +369,12 @@ do_update(char command, const char *attr_node, const char *attr_name,
           const char *attr_value, const char *attr_section,
           const char *attr_set, const char *attr_dampen, int attr_options)
 {
-    int rc = attrd_update_delegate(NULL, command, attr_node, attr_name,
-                                   attr_value, attr_section, attr_set,
-                                   attr_dampen, NULL, attr_options);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
+    int rc = pcmk__node_attr_request(NULL, command, attr_node, attr_name,
+                                     attr_value, attr_section, attr_set,
+                                     attr_dampen, NULL, attr_options);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Could not update %s=%s: %s (%d)\n",
+                attr_name, attr_value, pcmk_rc_str(rc), rc);
     }
     return rc;
 }

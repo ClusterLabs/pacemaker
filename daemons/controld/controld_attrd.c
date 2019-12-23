@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2019 the Pacemaker project contributors
+ * Copyright 2006-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,13 +40,13 @@ log_attrd_error(const char *host, const char *name, const char *value,
         case 0:
             crm_err("Could not clear failure attributes for %s on %s node %s%s: %s "
                     CRM_XS " rc=%d", (name? name : "all resources"), node_type,
-                    host, when, pcmk_strerror(rc), rc);
+                    host, when, pcmk_rc_str(rc), rc);
             break;
 
         case 'C':
             crm_err("Could not purge %s node %s in attribute manager%s: %s "
                     CRM_XS " rc=%d",
-                    node_type, host, when, pcmk_strerror(rc), rc);
+                    node_type, host, when, pcmk_rc_str(rc), rc);
             break;
 
         case 'U':
@@ -57,7 +57,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
             do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
                        "Could not update attribute %s=%s for %s node %s%s: %s "
                        CRM_XS " rc=%d", name, value, node_type, host, when,
-                       pcmk_strerror(rc), rc);
+                       pcmk_rc_str(rc), rc);
 
 
             if (AM_I_DC) {
@@ -81,10 +81,10 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                     gboolean is_remote_node, char command)
 {
     int rc;
-    int attrd_opts = attrd_opt_none;
+    int attrd_opts = pcmk__node_attr_none;
 
     if (is_remote_node) {
-        attrd_opts |= attrd_opt_remote;
+        attrd_opts |= pcmk__node_attr_remote;
     }
 
     if (attrd_ipc == NULL) {
@@ -92,7 +92,7 @@ update_attrd_helper(const char *host, const char *name, const char *value,
     }
 
     for (int attempt = 1; attempt <= 4; ++attempt) {
-        rc = pcmk_ok;
+        rc = pcmk_rc_ok;
 
         // If we're not already connected, try to connect
         if (crm_ipc_connected(attrd_ipc) == FALSE) {
@@ -104,25 +104,27 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                 rc = errno;
             }
             crm_debug("Attribute manager connection attempt %d of 4: %s (%d)",
-                      attempt, pcmk_strerror(rc), rc);
+                      attempt, pcmk_rc_str(rc), rc);
         }
 
-        if (rc == pcmk_ok) {
-            rc = command?
-                 attrd_update_delegate(attrd_ipc, command, host, name, value,
-                                       XML_CIB_TAG_STATUS, NULL, NULL,
-                                       user_name, attrd_opts)
-
+        if (rc == pcmk_rc_ok) {
+            if (command) {
+                rc = pcmk__node_attr_request(attrd_ipc, command, host, name,
+                                             value, XML_CIB_TAG_STATUS, NULL,
+                                             NULL, user_name, attrd_opts);
+            } else {
                  /* No command means clear fail count (name/value is really
                   * resource/operation)
                   */
-                 : attrd_clear_delegate(attrd_ipc, host, name, value,
-                                        interval_spec, user_name, attrd_opts);
+                 rc = pcmk__node_attr_request_clear(attrd_ipc, host, name,
+                                                    value, interval_spec,
+                                                    user_name, attrd_opts);
+            }
             crm_debug("Attribute manager request attempt %d of 4: %s (%d)",
-                      attempt, pcmk_strerror(rc), rc);
+                      attempt, pcmk_rc_str(rc), rc);
         }
 
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             // Success, we're done
             break;
 
@@ -142,7 +144,7 @@ update_attrd_helper(const char *host, const char *name, const char *value,
         }
     }
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         log_attrd_error(host, name, value, is_remote_node, command, rc);
     }
 }

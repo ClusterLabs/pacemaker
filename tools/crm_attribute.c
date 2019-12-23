@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,6 +116,7 @@ main(int argc, char **argv)
     int is_remote_node = 0;
 
     bool try_attrd = true;
+    int attrd_opts = pcmk__node_attr_none;
 
     crm_log_cli_init("crm_attribute");
     crm_set_options(NULL, "<command> -n <attribute> [options]", long_options,
@@ -239,7 +240,7 @@ main(int argc, char **argv)
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
          */
-        dest_uname = attrd_get_target(dest_uname);
+        dest_uname = pcmk__node_attr_target(dest_uname);
         if (dest_uname == NULL) {
             dest_uname = get_local_node_name();
         }
@@ -278,10 +279,13 @@ main(int argc, char **argv)
         try_attrd = FALSE;
     }
 
+    if (is_remote_node) {
+        attrd_opts = pcmk__node_attr_remote;
+    }
     if (((command == 'v') || (command == 'D') || (command == 'u')) && try_attrd
-        && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name,
-                                            attr_value, type, set_name, NULL, NULL,
-                                            is_remote_node?attrd_opt_remote:attrd_opt_none)) {
+        && (pcmk__node_attr_request(NULL, command, dest_uname, attr_name,
+                                    attr_value, type, set_name, NULL, NULL,
+                                    attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  attr_name, ((command == 'D')? "<none>" : attr_value));
 

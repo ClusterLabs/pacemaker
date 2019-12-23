@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,19 +16,25 @@ extern "C" {
 
 #  include <crm/common/ipc.h>
 
-/* attribute options for clients to use with these functions */
-#define attrd_opt_none    0x000
-#define attrd_opt_remote  0x001
-#define attrd_opt_private 0x002
+// Options for clients to use with functions below
+enum pcmk__node_attr_opts {
+    pcmk__node_attr_none    = 0,
+    pcmk__node_attr_remote  = (1 << 0),
+    pcmk__node_attr_private = (1 << 1),
+};
 
-const char *attrd_get_target(const char *name);
+int pcmk__node_attr_request(crm_ipc_t * ipc, char command, const char *host,
+                            const char *name, const char *value,
+                            const char *section, const char *set,
+                            const char *dampen, const char *user_name,
+                            int options);
 
-int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
-                          const char *name, const char *value, const char *section,
-                          const char *set, const char *dampen, const char *user_name, int options);
-int attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
-                         const char *operation, const char *interval_spec,
-                         const char *user_name, int options);
+int pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
+                                  const char *resource, const char *operation,
+                                  const char *interval_spec,
+                                  const char *user_name, int options);
+
+const char *pcmk__node_attr_target(const char *name);
 
 #ifdef __cplusplus
 }
