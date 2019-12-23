@@ -1,10 +1,11 @@
 /*
- * Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2011-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -16,7 +17,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 /*!
  * \internal
@@ -106,6 +107,7 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
 }
 
 /*!
+ * \internal
  * \brief Send a request to pacemaker-attrd
  *
  * \param[in] ipc      Connection to pacemaker-attrd (or NULL to use a local connection)
@@ -222,6 +224,7 @@ done:
 }
 
 /*!
+ * \internal
  * \brief Send a request to pacemaker-attrd to clear resource failure
  *
  * \param[in] ipc           Connection to pacemaker-attrd (NULL to use local connection)
@@ -269,6 +272,9 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
 
 #define LRM_TARGET_ENV "OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET
 
+/*!
+ * \internal
+ */
 const char *
 attrd_get_target(const char *name)
 {

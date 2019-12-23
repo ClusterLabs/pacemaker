@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>

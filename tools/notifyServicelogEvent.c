@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2018 the Pacemaker project contributors
+ * Later changes copyright 2009-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 

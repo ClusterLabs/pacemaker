@@ -21,7 +21,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {

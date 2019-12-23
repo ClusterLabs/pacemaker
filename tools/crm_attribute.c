@@ -28,7 +28,7 @@
 #include <crm/cluster.h>
 
 #include <crm/cib.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include <sys/utsname.h>
 
 gboolean BE_QUIET = FALSE;

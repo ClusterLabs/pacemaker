@@ -16,7 +16,7 @@
 #include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>

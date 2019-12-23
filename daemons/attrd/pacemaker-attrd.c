@@ -29,7 +29,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include "pacemaker-attrd.h"
 
 lrmd_t *the_lrmd = NULL;
