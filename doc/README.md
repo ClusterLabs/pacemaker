@@ -54,9 +54,7 @@ Pacemaker has multiple forms of documentation:
 ## Editing the Books
 
 Each book's sources are kept in a subdirectory by title. Each book subdirectory
-has an en-US subdirectory with the master sources, and potentially other
-subdirectories for translations. However, the translations are not currently
-actively maintained and so are disabled.
+has an en-US subdirectory with the master sources.
 
 Each book's en-US subdirectory has text files with the chapter sources in
 asciidoc format. The file asciidoc.reference in this directory has a quick
