@@ -1993,7 +1993,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
 
 #define ST_LOG_OUTPUT_MAX 512
 static void
-log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output)
+log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output, gboolean op_merged)
 {
     if (rc == 0) {
         next = NULL;
@@ -2001,14 +2001,14 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 
     if (cmd->victim != NULL) {
         do_crm_log(rc == 0 ? LOG_NOTICE : LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d (%s)%s%s",
+                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned %s: %d (%s)%s%s",
                    cmd->action, pid, cmd->id, cmd->client_name, cmd->victim,
-                   cmd->device, rc, pcmk_strerror(rc),
+                   cmd->device, (op_merged? "(merged)" : ""), rc, pcmk_strerror(rc),
                    (next? ", retrying with " : ""), (next ? next : ""));
     } else {
         do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                            "Operation '%s' [%d] for device '%s' returned: %d (%s)%s%s",
-                            cmd->action, pid, cmd->device, rc, pcmk_strerror(rc),
+                            "Operation '%s' [%d] for device '%s' returned %s: %d (%s)%s%s",
+                            cmd->action, pid, cmd->device, (op_merged? "(merged)" : ""), rc, pcmk_strerror(rc),
                             (next? ", retrying with " : ""), (next ? next : ""));
     }
 
@@ -2022,7 +2022,7 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 }
 
 static void
-stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid pid)
+stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid pid, int options)
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
@@ -2044,8 +2044,12 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         bcast = TRUE;
     }
 
-    log_operation(cmd, rc, pid, NULL, output);
+    log_operation(cmd, rc, pid, NULL, output, (options & st_reply_opt_merged ? TRUE : FALSE));
     crm_log_xml_trace(reply, "Reply");
+
+    if (options & st_reply_opt_merged) {
+        crm_xml_add(reply, F_STONITH_MERGED, "true");
+    }
 
     if (bcast) {
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
@@ -2151,7 +2155,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, next_device->id, output);
+        log_operation(cmd, rc, pid, next_device->id, output, FALSE);
 
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */
@@ -2159,7 +2163,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         goto done;
     }
 
-    stonith_send_async_reply(cmd, output, rc, pid);
+    stonith_send_async_reply(cmd, output, rc, pid, st_reply_opt_none);
 
     if (rc != 0) {
         goto done;
@@ -2206,7 +2210,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 
-        stonith_send_async_reply(cmd_other, output, rc, pid);
+        stonith_send_async_reply(cmd_other, output, rc, pid, st_reply_opt_merged);
         cancel_stonith_command(cmd_other);
 
         free_async_command(cmd_other);
@@ -2259,7 +2263,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 
     /* no device found! */
-    stonith_send_async_reply(cmd, NULL, -ENODEV, 0);
+    stonith_send_async_reply(cmd, NULL, -ENODEV, 0, st_reply_opt_none);
 
     free_async_command(cmd);
     g_list_free_full(devices, free);
