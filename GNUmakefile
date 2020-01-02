@@ -34,7 +34,7 @@ PACKAGE		?= pacemaker
 # Definitions that specify what various targets will apply to
 
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
 	     test -n "$${T}" && echo "$${T}" \
 	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
