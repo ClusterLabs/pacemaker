@@ -368,7 +368,7 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
 G_GNUC_PRINTF(2, 3)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, va_list args) {
+curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     return;
 }
 
