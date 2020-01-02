@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2013-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,8 +61,8 @@ typedef struct attribute_value_s {
         gboolean seen;
 } attribute_value_t;
 
-crm_cluster_t *attrd_cluster;
-GHashTable *attributes;
+extern crm_cluster_t *attrd_cluster;
+extern GHashTable *attributes;
 
 #define attrd_send_ack(client, id, flags) \
     crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
