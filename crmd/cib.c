@@ -224,3 +224,78 @@ controld_action_is_recordable(const char *action)
     }
     return TRUE;
 }
+
+static void
+cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                    void *user_data)
+{
+    char *desc = user_data;
+
+    if (rc == 0) {
+        crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
+    } else {
+        crm_warn("Deletion of %s (via CIB call %d) failed: %s " CRM_XS " rc=%d",
+                 desc, call_id, pcmk_strerror(rc), rc);
+    }
+}
+
+// Searches for various portions of node_state to delete
+
+// Match a particular node's node_state (takes node name 1x)
+#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+
+// Node's lrm section (name 1x)
+#define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
+
+// Node's transient_attributes section (name 1x)
+#define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
+
+// Everything under node_state (name 1x)
+#define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
+
+/*!
+ * \internal
+ * \brief Delete subsection of a node's CIB node_state
+ *
+ * \param[in] uname    Desired node
+ * \param[in] section  Subsection of node_state to delete
+ * \param[in] options  CIB call options to use
+ */
+void
+controld_delete_node_state(const char *uname, enum controld_section_e section,
+                           int options)
+{
+    char *xpath = NULL;
+    char *desc = NULL;
+
+    CRM_CHECK(uname != NULL, return);
+    switch (section) {
+        case controld_section_lrm:
+            xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            desc = crm_strdup_printf("resource history for node %s", uname);
+            break;
+        case controld_section_attrs:
+            xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            desc = crm_strdup_printf("transient attributes for node %s", uname);
+            break;
+        case controld_section_all:
+            xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            desc = crm_strdup_printf("all state for node %s", uname);
+            break;
+    }
+
+    if (fsa_cib_conn == NULL) {
+        crm_warn("Unable to delete %s: no CIB connection", desc);
+        free(desc);
+    } else {
+        int call_id;
+
+        options |= cib_quorum_override|cib_xpath;
+        call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, options);
+        crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+                 desc, call_id, xpath);
+        fsa_register_cib_callback(call_id, FALSE, desc, cib_delete_callback);
+        // CIB library handles freeing desc
+    }
+    free(xpath);
+}

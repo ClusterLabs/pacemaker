@@ -1095,71 +1095,71 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         return action_xml;
     }
 
-    /* List affected resource */
-    if (action->rsc) {
-        if (is_set(action->flags, pe_action_pseudo) == FALSE) {
-            int lpc = 0;
+    if (action->rsc && is_not_set(action->flags, pe_action_pseudo)) {
+        int lpc = 0;
+        xmlNode *rsc_xml = NULL;
+        const char *attr_list[] = {
+            XML_AGENT_ATTR_CLASS,
+            XML_AGENT_ATTR_PROVIDER,
+            XML_ATTR_TYPE
+        };
 
-            xmlNode *rsc_xml = create_xml_node(action_xml, crm_element_name(action->rsc->xml));
+        // List affected resource
 
-            const char *attr_list[] = {
-                XML_AGENT_ATTR_CLASS,
-                XML_AGENT_ATTR_PROVIDER,
-                XML_ATTR_TYPE
-            };
+        rsc_xml = create_xml_node(action_xml,
+                                  crm_element_name(action->rsc->xml));
+        if (is_set(action->rsc->flags, pe_rsc_orphan)
+            && action->rsc->clone_name) {
+            /* Do not use the 'instance free' name here as that
+             * might interfere with the instance we plan to keep.
+             * Ie. if there are more than two named /anonymous/
+             * instances on a given node, we need to make sure the
+             * command goes to the right one.
+             *
+             * Keep this block, even when everyone is using
+             * 'instance free' anonymous clone names - it means
+             * we'll do the right thing if anyone toggles the
+             * unique flag to 'off'
+             */
+            crm_debug("Using orphan clone name %s instead of %s", action->rsc->id,
+                      action->rsc->clone_name);
+            crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
+            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
-            if (is_set(action->rsc->flags, pe_rsc_orphan) && action->rsc->clone_name) {
-                /* Do not use the 'instance free' name here as that
-                 * might interfere with the instance we plan to keep.
-                 * Ie. if there are more than two named /anonymous/
-                 * instances on a given node, we need to make sure the
-                 * command goes to the right one.
-                 *
-                 * Keep this block, even when everyone is using
-                 * 'instance free' anonymous clone names - it means
-                 * we'll do the right thing if anyone toggles the
-                 * unique flag to 'off'
-                 */
-                crm_debug("Using orphan clone name %s instead of %s", action->rsc->id,
-                          action->rsc->clone_name);
-                crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
-                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+        } else if (is_not_set(action->rsc->flags, pe_rsc_unique)) {
+            const char *xml_id = ID(action->rsc->xml);
 
-            } else if (is_not_set(action->rsc->flags, pe_rsc_unique)) {
-                const char *xml_id = ID(action->rsc->xml);
+            crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id,
+                      action->rsc->clone_name);
 
-                crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id,
-                          action->rsc->clone_name);
-
-                /* ID is what we'd like client to use
-                 * ID_LONG is what they might know it as instead
-                 *
-                 * ID_LONG is only strictly needed /here/ during the
-                 * transition period until all nodes in the cluster
-                 * are running the new software /and/ have rebooted
-                 * once (meaning that they've only ever spoken to a DC
-                 * supporting this feature).
-                 *
-                 * If anyone toggles the unique flag to 'on', the
-                 * 'instance free' name will correspond to an orphan
-                 * and fall into the clause above instead
-                 */
-                crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-                if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
-                    crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
-                } else {
-                    crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
-                }
-
+            /* ID is what we'd like client to use
+             * ID_LONG is what they might know it as instead
+             *
+             * ID_LONG is only strictly needed /here/ during the
+             * transition period until all nodes in the cluster
+             * are running the new software /and/ have rebooted
+             * once (meaning that they've only ever spoken to a DC
+             * supporting this feature).
+             *
+             * If anyone toggles the unique flag to 'on', the
+             * 'instance free' name will correspond to an orphan
+             * and fall into the clause above instead
+             */
+            crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
+            if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
+                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
             } else {
-                CRM_ASSERT(action->rsc->clone_name == NULL);
-                crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
             }
 
-            for (lpc = 0; lpc < DIMOF(attr_list); lpc++) {
-                crm_xml_add(rsc_xml, attr_list[lpc],
-                            g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
-            }
+        } else {
+            CRM_ASSERT(action->rsc->clone_name == NULL);
+            crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+        }
+
+        for (lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+            crm_xml_add(rsc_xml, attr_list[lpc],
+                        g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
         }
     }
 

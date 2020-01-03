@@ -298,7 +298,8 @@ do_cl_join_finalize_respond(long long action,
              * present for legacy attrd, but given legacy attrd's imminent
              * demise, this is preferable to making intrusive changes to it.
              */
-            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
+            controld_delete_node_state(fsa_our_uname, controld_section_attrs,
+                                       cib_scope_local);
             update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
             update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
 #endif

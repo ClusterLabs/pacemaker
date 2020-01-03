@@ -44,8 +44,8 @@ static int delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int ca
 
 static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
                                        const char *rsc_id, const char *operation);
-static void do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation,
-                          xmlNode * msg, xmlNode * request);
+static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+                          const char *operation, xmlNode *msg);
 
 void send_direct_ack(const char *to_host, const char *to_sys,
                      lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, const char *rsc_id);
@@ -400,7 +400,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     GHashTableIter gIter;
     const char *key = NULL;
     rsc_history_t *entry = NULL;
-    struct recurring_op_s *pending = NULL;
+    active_op_t *pending = NULL;
 
     crm_debug("Checking for active resources before exit");
 
@@ -917,7 +917,7 @@ static gboolean
 lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
 {
     const char *rsc = user_data;
-    struct recurring_op_s *pending = value;
+    active_op_t *pending = value;
 
     if (crm_str_eq(rsc, pending->rsc_id, TRUE)) {
         crm_info("Removing op %s:%d for deleted resource %s",
@@ -1148,7 +1148,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 {
     int rc = pcmk_ok;
     char *local_key = NULL;
-    struct recurring_op_s *pending = NULL;
+    active_op_t *pending = NULL;
 
     CRM_CHECK(op != 0, return FALSE);
     CRM_CHECK(rsc_id != NULL, return FALSE);
@@ -1159,18 +1159,17 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
     if (pending) {
-        if (remove && pending->remove == FALSE) {
-            pending->remove = TRUE;
+        if (remove && is_not_set(pending->flags, active_op_remove)) {
+            set_bit(pending->flags, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
-        if (pending->cancelled) {
+        if (is_set(pending->flags, active_op_cancelled)) {
             crm_debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
         }
-
-        pending->cancelled = TRUE;
+        set_bit(pending->flags, active_op_cancelled);
 
     } else {
         crm_info("No pending op found for %s", key);
@@ -1213,7 +1212,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     struct cancel_data *data = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (crm_str_eq(op->op_key, data->key, TRUE)) {
         data->done = TRUE;
@@ -1422,7 +1421,8 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     }
 
     /* Now delete the copy in the CIB */
-    erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+    controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
+                               cib_scope_local);
 
     /* And finally, _delete_ the value in attrd
      * Setting it to FALSE results in the PE sending us back here again
@@ -1852,7 +1852,7 @@ do_lrm_invoke(long long action,
                           crm_rsc_delete, user_name);
 
         } else {
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, input->msg);
+            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
         }
 
         lrmd_free_rsc_info(rsc);
@@ -2104,7 +2104,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     struct stop_recurring_action_s *event = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (op->interval != 0 && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
@@ -2119,7 +2119,7 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 {
     gboolean remove = FALSE;
     lrm_state_t *lrm_state = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     if (op->interval != 0) {
         crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
@@ -2168,8 +2168,8 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 }
 
 static void
-do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg,
-              xmlNode * request)
+do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+              const char *operation, xmlNode *msg)
 {
     int call_id = 0;
     char *op_id = NULL;
@@ -2294,9 +2294,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
          * for them to complete during shutdown
          */
         char *call_id_s = make_stop_id(rsc->id, call_id);
-        struct recurring_op_s *pending = NULL;
+        active_op_t *pending = NULL;
 
-        pending = calloc(1, sizeof(struct recurring_op_s));
+        pending = calloc(1, sizeof(active_op_t));
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
@@ -2517,7 +2517,7 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
 
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                  struct recurring_op_s *pending, xmlNode *action_xml)
+                  active_op_t *pending, xmlNode *action_xml)
 {
     char *op_id = NULL;
     char *op_key = NULL;
@@ -2636,7 +2636,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         crm_err("Recurring operation %s was cancelled without transition information",
                 op_key);
 
-    } else if (pending->remove) {
+    } else if (is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we
          * have been waiting for it to finish.
          */

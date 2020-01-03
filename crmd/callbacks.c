@@ -202,17 +202,18 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  * transient attributes intact until it rejoins.
                  */
                 if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                    controld_delete_node_state(node->uname,
+                                               controld_section_attrs,
+                                               cib_scope_local);
                 }
 
             } else if(AM_I_DC) {
-                if (appeared == FALSE) {
-                    crm_info("Peer %s left us", node->uname);
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-                } else {
-                    crm_info("New peer %s we want to sync fence history with",
-                             node->uname);
+                if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
+                } else {
+                    controld_delete_node_state(node->uname,
+                                               controld_section_attrs,
+                                               cib_scope_local);
                 }
             }
             break;
