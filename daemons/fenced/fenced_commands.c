@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2001,14 +2001,17 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 
     if (cmd->victim != NULL) {
         do_crm_log(rc == 0 ? LOG_NOTICE : LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned %s: %d (%s)%s%s",
+                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned%s: %d (%s)%s%s",
                    cmd->action, pid, cmd->id, cmd->client_name, cmd->victim,
-                   cmd->device, (op_merged? "(merged)" : ""), rc, pcmk_strerror(rc),
+                   cmd->device, (op_merged? " (merged)" : ""),
+                   rc, pcmk_strerror(rc),
                    (next? ", retrying with " : ""), (next ? next : ""));
     } else {
         do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                            "Operation '%s' [%d] for device '%s' returned %s: %d (%s)%s%s",
-                            cmd->action, pid, cmd->device, (op_merged? "(merged)" : ""), rc, pcmk_strerror(rc),
+                            "Operation '%s' [%d] for device '%s' returned%s: %d (%s)%s%s",
+                            cmd->action, pid, cmd->device,
+                            (op_merged? " (merged)" : ""),
+                            rc, pcmk_strerror(rc),
                             (next? ", retrying with " : ""), (next ? next : ""));
     }
 
