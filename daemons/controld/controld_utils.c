@@ -751,34 +751,6 @@ update_dc(xmlNode * msg)
     return TRUE;
 }
 
-#define STATUS_PATH_MAX 512
-static void
-erase_xpath_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    char *xpath = user_data;
-
-    do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                        "Deletion of \"%s\": %s (rc=%d)", xpath, pcmk_strerror(rc), rc);
-}
-
-#define XPATH_STATUS_TAG "//node_state[@uname='%s']/%s"
-
-void
-erase_status_tag(const char *uname, const char *tag, int options)
-{
-    if (fsa_cib_conn && uname) {
-        int call_id;
-        char *xpath = crm_strdup_printf(XPATH_STATUS_TAG, uname, tag);
-
-        crm_info("Deleting %s status entries for %s " CRM_XS " xpath=%s",
-                 tag, uname, xpath);
-        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL,
-                                             cib_quorum_override | cib_xpath | options);
-        fsa_register_cib_callback(call_id, FALSE, xpath, erase_xpath_callback);
-        // CIB library handles freeing xpath
-    }
-}
-
 void crmd_peer_down(crm_node_t *peer, bool full) 
 {
     if(full && peer->state == NULL) {

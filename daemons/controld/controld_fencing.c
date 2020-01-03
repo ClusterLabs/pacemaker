@@ -229,9 +229,8 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
     /* Make sure it sticks */
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
 
-    erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-
+    controld_delete_node_state(peer->uname, controld_section_all,
+                               cib_scope_local);
     free_xml(node_state);
     return;
 }
