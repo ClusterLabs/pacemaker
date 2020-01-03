@@ -30,15 +30,15 @@ extern "C" {
  * \param[in] target    The node receiving the action.
  * \param[in] action    The action to perform.
  * \param[in] name      Who requested the fence action?
- * \param[in] timeout   How long to wait for the operation to complete (in seconds).
+ * \param[in] timeout   How long to wait for the operation to complete (in ms).
  * \param[in] tolerance If a successful action for \p target happened within
- *                      this many seconds, return 0 without performing the
- *                      action again.
+ *                      this many ms, return 0 without performing the action
+ *                      again.
  *
  * \return 0 on success, or various error codes on error.
  */
 int pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                      const char *name, int timeout, int tolerance);
+                      const char *name, unsigned int timeout, unsigned int tolerance);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.
@@ -49,7 +49,7 @@ int pcmk_fence_action(stonith_t *st, const char *target, const char *action,
  * \param[in,out] xml       The destination for the result, as an XML tree.
  * \param[in]     st        A connection to the STONITH API.
  * \param[in]     target    The node to get history for.
- * \param[in]     timeout   How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout   How long to wait for the operation to complete (in ms).
  * \param[in]     quiet     Suppress most output.
  * \param[in]     verbose   Include additional output.
  * \param[in]     broadcast Gather fencing history from all nodes.
@@ -57,8 +57,9 @@ int pcmk_fence_action(stonith_t *st, const char *target, const char *action,
  *
  * \return 0 on success, or various error codes on error.
  */
-int pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, int timeout,
-                       bool quiet, int verbose, bool broadcast, bool cleanup);
+int pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target,
+                       unsigned int timeout, bool quiet, int verbose,
+                       bool broadcast, bool cleanup);
 
 /*!
  * \brief List all installed STONITH agents.
@@ -68,11 +69,11 @@ int pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, int timeout
  *
  * \param[in,out] xml     The destination for the result, as an XML tree.
  * \param[in]     st      A connection to the STONITH API.
- * \param[in]     timeout How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
  * \return 0 on success, or various error codes on error.
  */
-int pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, int timeout);
+int pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout);
 
 /*!
  * \brief When was a device last fenced?
@@ -97,11 +98,12 @@ int pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid);
  * \param[in,out] xml     The destination for the result, as an XML tree.
  * \param[in]     st      A connection to the STONITH API.
  * \param[in]     agent   The agent that can do the fencing.
- * \param[in]     timeout How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
  * \return 0 on success, or various error codes on error.
  */
-int pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout);
+int pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
+                            unsigned int timeout);
 
 /*!
  * \brief Get metadata for a resource.
@@ -112,11 +114,12 @@ int pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent, int tim
  * \param[in,out] xml     The destination for the result, as an XML tree.
  * \param[in]     st      A connection to the STONITH API.
  * \param[in]     agent   The fence agent to get metadata for.
- * \param[in]     timeout How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
  * \return 0 on success, or various error codes on error.
  */
-int pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout);
+int pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
+                        unsigned int timeout);
 
 /*!
  * \brief List registered fence devices.
@@ -128,11 +131,12 @@ int pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout
  * \param[in]     st      A connection to the STONITH API.
  * \param[in]     target  If not NULL, only return devices that can fence
  *                        this node.
- * \param[in]     timeout How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
  * \return 0 on success, or various error codes on error.
  */
-int pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target, int timeout);
+int pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
+                          unsigned int timeout);
 
 /*!
  * \brief Register a fencing level for a specific node, node regex, or attribute.
@@ -179,12 +183,13 @@ int pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level);
  * \param[in]     agent   The agent to validate (for example, "fence_xvm").
  * \param[in]     id      STONITH device ID (may be NULL).
  * \param[in]     params  STONITH device configuration parameters.
- * \param[in]     timeout How long to wait for the operation to complete (in seconds).
+ * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
  * \return 0 on success, or various error codes on error.
  */
 int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                        const char *id, stonith_key_value_t *params, int timeout);
+                        const char *id, stonith_key_value_t *params,
+                        unsigned int timeout);
 
 #ifdef __cplusplus
 }

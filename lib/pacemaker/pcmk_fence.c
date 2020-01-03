@@ -27,8 +27,8 @@ static struct {
     const char *target;
     const char *action;
     char *name;
-    int timeout;
-    int tolerance;
+    unsigned int timeout;
+    unsigned int tolerance;
     int rc;
 } async_fence_data;
 
@@ -109,7 +109,8 @@ async_fence_helper(gpointer user_data)
                               st_opt_allow_suicide,
                               async_fence_data.target,
                               async_fence_data.action,
-                              async_fence_data.timeout, async_fence_data.tolerance);
+                              async_fence_data.timeout/1000,
+                              async_fence_data.tolerance/1000);
 
     if (call_id < 0) {
         g_main_loop_quit(mainloop);
@@ -118,7 +119,7 @@ async_fence_helper(gpointer user_data)
 
     st->cmds->register_callback(st,
                                 call_id,
-                                async_fence_data.timeout,
+                                async_fence_data.timeout/1000,
                                 st_opt_timeout_updates, NULL, "callback", fence_callback);
 
     return TRUE;
@@ -126,7 +127,7 @@ async_fence_helper(gpointer user_data)
 
 int
 pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                   const char *name, int timeout, int tolerance)
+                   const char *name, unsigned int timeout, unsigned int tolerance)
 {
     crm_trigger_t *trig;
 
@@ -151,14 +152,14 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 
 int
 pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                  const char *name, int timeout, int tolerance) {
+                  const char *name, unsigned int timeout, unsigned int tolerance) {
     return pcmk__fence_action(st, target, action, name, timeout, tolerance);
 }
 
 int
 pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
-                    int timeout, bool quiet, int verbose, bool broadcast,
-                    bool cleanup) {
+                    unsigned int timeout, bool quiet, int verbose,
+                    bool broadcast, bool cleanup) {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = 0;
 
@@ -175,7 +176,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
                            broadcast ? st_opt_broadcast : 0,
                            safe_str_eq(target, "*") ? NULL : target,
-                           &history, timeout);
+                           &history, timeout/1000);
 
     out->begin_list(out, "event", "events", "Fencing history");
 
@@ -209,7 +210,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 }
 
 int
-pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, int timeout,
+pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int timeout,
                    bool quiet, int verbose, bool broadcast, bool cleanup) {
     pcmk__output_t *out = NULL;
     int rc = 0;
@@ -226,11 +227,11 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, int timeout,
 }
 
 int
-pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, int timeout) {
+pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) {
     stonith_key_value_t *devices = NULL;
     int rc;
 
-    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout);
+    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout/1000);
     if (rc < 0) {
         return rc;
     }
@@ -246,7 +247,7 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, int timeout) {
 }
 
 int
-pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, int timeout) {
+pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = 0;
 
@@ -294,12 +295,13 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
 }
 
 int
-pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent, int timeout) {
+pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
+                         unsigned int timeout) {
     GList *targets = NULL;
     char *lists = NULL;
     int rc = 0;
 
-    rc = st->cmds->list(st, st_opts, agent, &lists, timeout);
+    rc = st->cmds->list(st, st_opts, agent, &lists, timeout/1000);
     if (rc != 0) {
         return rc;
     }
@@ -318,7 +320,8 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent, int ti
 }
 
 int
-pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout) {
+pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
+                        unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = 0;
 
@@ -333,10 +336,11 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout
 }
 
 int
-pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent, int timeout) {
+pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
+                     unsigned int timeout) {
     char *buffer = NULL;
     int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
-                                timeout);
+                                timeout/1000);
 
     if (rc != pcmk_ok) {
         return rc;
@@ -348,7 +352,8 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent, int timeou
 }
 
 int
-pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout) {
+pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
+                    unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = 0;
 
@@ -363,11 +368,12 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent, int timeout) {
 }
 
 int
-pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target, int timeout) {
+pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
+                       unsigned int timeout) {
     stonith_key_value_t *devices = NULL;
     int rc;
 
-    rc = st->cmds->query(st, st_opts, target, &devices, timeout);
+    rc = st->cmds->query(st, st_opts, target, &devices, timeout/1000);
     if (rc < 0) {
         return rc;
     }
@@ -383,7 +389,8 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target, int tim
 }
 
 int
-pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target, int timeout) {
+pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
+                      unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = 0;
 
@@ -421,20 +428,22 @@ pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level) {
 
 int
 pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                     const char *id, stonith_key_value_t *params, int timeout) {
+                     const char *id, stonith_key_value_t *params,
+                     unsigned int timeout) {
     char *output = NULL;
     char *error_output = NULL;
     int rc;
 
     rc  = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
-                             timeout, &output, &error_output);
+                             timeout/1000, &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
     return rc;
 }
 
 int
 pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                    const char *id, stonith_key_value_t *params, int timeout) {
+                    const char *id, stonith_key_value_t *params,
+                    unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = 0;
 
