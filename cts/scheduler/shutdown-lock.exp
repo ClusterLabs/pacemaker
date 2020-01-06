@@ -1,0 +1,64 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="Fencing_monitor_120000" on_node="node3" on_node_uuid="3">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="120000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="node1 node2 node3 node4 node5"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="start" operation_key="Fencing_start_0" on_node="node3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="4" operation="start" operation_key="Fencing_start_0" on_node="node3" on_node_uuid="3">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="node1 node2 node3 node4 node5"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="stop" operation_key="Fencing_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="3" operation="stop" operation_key="Fencing_stop_0" on_node="node1" on_node_uuid="1">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="node1 node2 node3 node4 node5"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="1" shutdown-lock="1578347951">
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <crm_event id="7" operation="do_shutdown" operation_key="do_shutdown-node1" on_node="node1" on_node_uuid="1">
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_op_no_wait="true" />
+        <downed>
+          <node id="1"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="stop" operation_key="Fencing_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
