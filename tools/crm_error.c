@@ -1,21 +1,10 @@
-/* 
- * Copyright 2012-2018 the Pacemaker project contributors
+/*
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -33,11 +22,30 @@ static struct crm_option long_options[] = {
      "\n\t\t\tUseful for looking for sources of the error in source code"},
 
     {"list",    0, 0, 'l', "\tShow all known errors."},
-    {"exit",    0, 0, 'X', "\tInterpret as exit code rather than function return value"},
+    {"exit",    0, 0, 'X', "\tInterpret as exit code rather than legacy function return value"},
+    {"rc",      0, 0, 'r', "\tInterpret as return code rather than legacy function return value"},
 
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
+static bool as_exit_code = false;
+static bool as_rc = false;
+
+static void
+get_strings(int rc, const char **name, const char **str)
+{
+    if (as_exit_code) {
+        *str = crm_exit_str((crm_exit_t) rc);
+        *name = crm_exit_name(rc);
+    } else if (as_rc) {
+        *str = pcmk_rc_str(rc);
+        *name = pcmk_rc_name(rc);
+    } else {
+        *str = pcmk_strerror(rc);
+        *name = pcmk_errorname(rc);
+    }
+}
 
 int
 main(int argc, char **argv)
@@ -49,10 +57,12 @@ main(int argc, char **argv)
 
     bool do_list = FALSE;
     bool with_name = FALSE;
-    bool as_exit_code = FALSE;
+
+    const char *name = NULL;
+    const char *desc = NULL;
 
     crm_log_cli_init("crm_error");
-    crm_set_options(NULL, "[options] -- rc", long_options,
+    crm_set_options(NULL, "[options] -- <rc> [...]", long_options,
                     "Tool for displaying the textual name or description of a reported error code");
 
     while (flag >= 0) {
@@ -73,6 +83,9 @@ main(int argc, char **argv)
             case 'l':
                 do_list = TRUE;
                 break;
+            case 'r':
+                as_rc = true;
+                break;
             case 'X':
                 as_exit_code = TRUE;
                 break;
@@ -83,30 +96,43 @@ main(int argc, char **argv)
     }
 
     if(do_list) {
-        for (rc = 0; rc < 256; rc++) {
-            const char *name = as_exit_code? crm_exit_name(rc) : pcmk_errorname(rc);
-            const char *desc = as_exit_code? crm_exit_str(rc) : pcmk_strerror(rc);
+        int start, end, width;
+
+        // 256 is a hacky magic number that "should" be enough
+        if (as_rc) {
+            start = pcmk_rc_error - 256;
+            end = PCMK_CUSTOM_OFFSET;
+            width = 4;
+        } else {
+            start = 0;
+            end = 256;
+            width = 3;
+        }
+
+        for (rc = start; rc < end; rc++) {
+            if (rc == (pcmk_rc_error + 1)) {
+                // Values in between are reserved for callers, no use iterating
+                rc = pcmk_rc_ok;
+            }
+            get_strings(rc, &name, &desc);
             if (!name || !strcmp(name, "Unknown") || !strcmp(name, "CRM_EX_UNKNOWN")) {
-                /* Unknown */
+                // Undefined
             } else if(with_name) {
-                printf("%.3d: %-26s  %s\n", rc, name, desc);
+                printf("% .*d: %-26s  %s\n", width, rc, name, desc);
             } else {
-                printf("%.3d: %s\n", rc, desc);
+                printf("% .*d: %s\n", width, rc, desc);
             }
         }
-        return CRM_EX_OK;
-    }
 
-    for (lpc = optind; lpc < argc; lpc++) {
-        const char *str, *name;
-
-        rc = crm_atoi(argv[lpc], NULL);
-        str = as_exit_code? crm_exit_str(rc) : pcmk_strerror(rc);
-        if(with_name) {
-            name = as_exit_code? crm_exit_name(rc) : pcmk_errorname(rc);
-            printf("%s - %s\n", name, str);
-        } else {
-            printf("%s\n", str);
+    } else {
+        for (lpc = optind; lpc < argc; lpc++) {
+            rc = crm_atoi(argv[lpc], NULL);
+            get_strings(rc, &name, &desc);
+            if (with_name) {
+                printf("%s - %s\n", name, desc);
+            } else {
+                printf("%s\n", desc);
+            }
         }
     }
     return CRM_EX_OK;

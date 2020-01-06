@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1327,7 +1327,7 @@ main(int argc, char **argv)
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
-        int attr_options = attrd_opt_none;
+        int attr_options = pcmk__node_attr_none;
 
         if (host_uname) {
             node_t *node = pe_find_node(data_set->nodes, host_uname);
@@ -1341,7 +1341,7 @@ main(int argc, char **argv)
                     goto bail;
                 }
                 router_node = node->details->uname;
-                attr_options |= attrd_opt_remote;
+                attr_options |= pcmk__node_attr_remote;
             }
         }
 
@@ -1364,8 +1364,9 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
-        rc = attrd_clear_delegate(NULL, host_uname, NULL, NULL, NULL, NULL,
-                                  attr_options);
+        rc = pcmk_rc2legacy(pcmk__node_attr_request_clear(NULL, host_uname,
+                                                          NULL, NULL, NULL,
+                                                          NULL, attr_options));
 
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();

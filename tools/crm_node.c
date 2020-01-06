@@ -19,7 +19,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 #define SUMMARY "crm_node - Tool for displaying low-level node information"
 

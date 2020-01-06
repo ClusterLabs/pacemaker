@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -719,7 +719,7 @@ pcmk_acl_required(const char *user)
 
 #if ENABLE_ACL
 char *
-uid2username(uid_t uid)
+pcmk__uid2username(uid_t uid)
 {
     struct passwd *pwent = getpwuid(uid);
 
@@ -738,7 +738,7 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
     const char *user = NULL;
 
     if (effective_user == NULL) {
-        effective_user = uid2username(geteuid());
+        effective_user = pcmk__uid2username(geteuid());
         if (effective_user == NULL) {
             effective_user = strdup("#unprivileged");
             CRM_CHECK(effective_user != NULL, return NULL);

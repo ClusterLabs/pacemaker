@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2019 the Pacemaker project contributors
+ * Copyright 2006-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
 
 /* For ACLs */
-char *uid2username(uid_t uid);
+char *pcmk__uid2username(uid_t uid);
 const char *crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user);
 
 #  if ENABLE_ACL

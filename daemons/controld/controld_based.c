@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ int cib_retries = 0;
 static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
-    if (crm_patchset_contains_alert(msg, TRUE)) {
+    if (pcmk__alert_in_patchset(msg, TRUE)) {
         mainloop_set_trigger(config_read);
     }
 }

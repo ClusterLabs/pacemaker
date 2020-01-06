@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -315,7 +315,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 
     if (c) {
 #if ENABLE_ACL
-        client->user = uid2username(uid_client);
+        client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = strdup("#unprivileged");
             CRM_CHECK(client->user != NULL, free(client); return NULL);

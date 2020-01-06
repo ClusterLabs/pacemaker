@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2018 the Pacemaker project contributors
+ * Later changes copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -161,14 +161,15 @@ main(int argc, char *argv[])
         health_status = status2char(status);
 
         if (health_status) {
-            gboolean rc;
+            int attrd_rc;
 
-            /* @TODO pass attrd_opt_remote when appropriate */
-            rc = (attrd_update_delegate(NULL, 'v', NULL, health_component,
-                                        health_status, NULL, NULL, NULL, NULL,
-                                        attrd_opt_none) > 0);
+            // @TODO pass pcmk__node_attr_remote when appropriate
+            attrd_rc = pcmk__node_attr_request(NULL, 'v', NULL,
+                                               health_component, health_status,
+                                               NULL, NULL, NULL, NULL,
+                                               pcmk__node_attr_none);
             crm_debug("Updating attribute ('%s', '%s') = %d",
-                      health_component, health_status, rc);
+                      health_component, health_status, attrd_rc);
         } else {
             crm_err("Error: status2char failed, status = %d", status);
             rc = 1;
