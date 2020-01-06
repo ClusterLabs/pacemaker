@@ -2445,6 +2445,49 @@ stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
     }
 }
 
+static void 
+remove_relay_op(xmlNode * request)
+{
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, request, LOG_TRACE);
+    const char *relay_op_id = NULL; 
+    const char *target = NULL; 
+    remote_fencing_op_t *relay_op = NULL; 
+
+    if (dev) { 
+        target = crm_element_value(dev, F_STONITH_TARGET); 
+    }
+
+    relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID_RELAY);
+
+    /* Delete RELAY operation. */
+    if (relay_op_id && target && safe_str_eq(target, stonith_our_uname)) {
+        relay_op = g_hash_table_lookup(stonith_remote_op_list, relay_op_id);
+
+        if (relay_op) {
+            GHashTableIter iter;
+            remote_fencing_op_t *list_op = NULL; 
+            g_hash_table_iter_init(&iter, stonith_remote_op_list);
+
+            /* If the operation to be deleted is registered as a duplicate, delete the registration. */
+            while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
+                GListPtr dup_iter = NULL;
+                if (list_op != relay_op) {
+                    for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
+                        remote_fencing_op_t *other = dup_iter->data;
+                        if (other == relay_op) {
+                            other->duplicates = g_list_remove(other->duplicates, relay_op);
+                            break;
+                        }
+                    }
+                }
+            }
+            crm_info("Delete the relay op: %s - %s of %s for %s",
+                  relay_op->id, relay_op->action, relay_op->target, relay_op->client_name);
+            g_hash_table_remove(stonith_remote_op_list, relay_op_id);
+        }
+    }
+}
+
 static int
 handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * request,
                const char *remote_peer)
@@ -2492,6 +2535,10 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         if (remote_peer) {
             create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
         }
+
+        /* Delete the DC node RELAY operation. */
+        remove_relay_op(request);
+
         stonith_query(request, remote_peer, client_id, call_options);
         return 0;
 
@@ -2572,6 +2619,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
             if (alternate_host && client) {
                 const char *client_id = NULL;
+                remote_fencing_op_t *op = NULL;
 
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
 
@@ -2582,10 +2630,11 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
                 }
 
                 /* Create a record of it, otherwise call_id will be 0 if we need to notify of failures */
-                create_remote_stonith_op(client_id, request, FALSE);
+                op = create_remote_stonith_op(client_id, request, FALSE);
 
                 crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
                 crm_xml_add(request, F_STONITH_CLIENTID, client->id);
+                crm_xml_add(request, F_STONITH_REMOTE_OP_ID, op->id);
                 send_cluster_message(crm_get_peer(0, alternate_host), crm_msg_stonith_ng, request,
                                      FALSE);
                 rc = -EINPROGRESS;
