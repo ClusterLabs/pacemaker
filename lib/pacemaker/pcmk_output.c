@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/output.h>
+#include <crm/common/results.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <libxml/tree.h>
@@ -21,7 +22,7 @@ pcmk__supported_format_t pcmk__out_formats[] = {
 
 int
 pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     if (*xml != NULL) {
         xmlFreeNode(*xml);
@@ -29,7 +30,7 @@ pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
 
     pcmk__register_formats(NULL, pcmk__out_formats);
     rc = pcmk__output_new(out, "xml", NULL, NULL);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -39,7 +40,7 @@ pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
 
 void
 pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
-    if (retval == 0) {
+    if (retval == pcmk_rc_ok) {
         out->finish(out, 0, FALSE, (void **) xml);
     }
 

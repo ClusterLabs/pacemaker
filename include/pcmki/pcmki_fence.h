@@ -27,7 +27,7 @@
  *                      this many ms, return 0 without performing the action
  *                      again.
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
                       const char *name, unsigned int timeout, unsigned int tolerance);
@@ -51,7 +51,7 @@ int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
  * \param[in]     broadcast Gather fencing history from all nodes.
  * \param[in]     cleanup   Clean up fencing history after listing.
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
                         unsigned int timeout, bool quiet, int verbose,
@@ -71,7 +71,7 @@ int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
  * \param[in]     st      A connection to the STONITH API.
  * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout);
 
@@ -89,7 +89,7 @@ int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeo
  * \param[in]     target    The node that was fenced.
  * \param[in]     as_nodeid 
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid);
 
@@ -108,7 +108,7 @@ int pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid);
  * \param[in]     agent   The agent that can do the fencing.
  * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
                              unsigned int timeout);
@@ -128,7 +128,7 @@ int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
  * \param[in]     agent   The fence agent to get metadata for.
  * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
                          unsigned int timeout);
@@ -149,7 +149,7 @@ int pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
  *                        this node.
  * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
                            unsigned int timeout);
@@ -170,7 +170,7 @@ int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
  * \param[in] fence_level Index number of level to add.
  * \param[in] devices     Devices to use in level.
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
                               stonith_key_value_t *devices);
@@ -190,7 +190,7 @@ int pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
  * \param[in] target      The object to unregister a fencing level for.
  * \param[in] fence_level Index number of level to remove.
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level);
 
@@ -211,7 +211,7 @@ int pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level);
  * \param[in]     params  STONITH device configuration parameters.
  * \param[in]     timeout How long to wait for the operation to complete (in ms).
  *
- * \return 0 on success, or various error codes on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
                          const char *id, stonith_key_value_t *params,

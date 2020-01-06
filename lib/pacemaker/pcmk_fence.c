@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
+#include <crm/common/results.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <glib.h>
@@ -39,10 +40,11 @@ handle_level(stonith_t *st, char *target, int fence_level,
     char *pattern = NULL;
     char *name = NULL;
     char *value = NULL;
+    int rc = pcmk_rc_ok;
 
     if (target == NULL) {
         // Not really possible, but makes static analysis happy
-        return -EINVAL;
+        return EINVAL;
     }
 
     /* Determine if targeting by attribute, node name pattern or node name */
@@ -58,13 +60,15 @@ handle_level(stonith_t *st, char *target, int fence_level,
 
     /* Register or unregister level as appropriate */
     if (added) {
-        return st->cmds->register_level_full(st, st_opts, node, pattern,
-                                             name, value, fence_level,
-                                             devices);
+        rc = st->cmds->register_level_full(st, st_opts, node, pattern,
+                                           name, value, fence_level,
+                                           devices);
+    } else {
+        rc = st->cmds->remove_level_full(st, st_opts, node, pattern,
+                                         name, value, fence_level);
     }
 
-    return st->cmds->remove_level_full(st, st_opts, node, pattern,
-                                       name, value, fence_level);
+    return pcmk_legacy2rc(rc);
 }
 
 static void
@@ -137,7 +141,7 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
     async_fence_data.action = action;
     async_fence_data.timeout = timeout;
     async_fence_data.tolerance = tolerance;
-    async_fence_data.rc = -1;
+    async_fence_data.rc = pcmk_err_generic;
 
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
     mainloop_set_trigger(trig);
@@ -147,7 +151,7 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 
     free(async_fence_data.name);
 
-    return async_fence_data.rc;
+    return pcmk_legacy2rc(async_fence_data.rc);
 }
 
 int
@@ -161,7 +165,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
                     unsigned int timeout, bool quiet, int verbose,
                     bool broadcast, bool cleanup) {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     if (!quiet) {
         if (cleanup) {
@@ -206,17 +210,17 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     out->end_list(out);
 
     stonith_history_free(history);
-    return rc;
+    return pcmk_legacy2rc(rc);
 }
 
 int
 pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int timeout,
                    bool quiet, int verbose, bool broadcast, bool cleanup) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -229,11 +233,11 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
 int
 pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) {
     stonith_key_value_t *devices = NULL;
-    int rc;
+    int rc = pcmk_rc_ok;
 
     rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout/1000);
-    if (rc < 0) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        return pcmk_legacy2rc(rc);
     }
 
     out->begin_list(out, "fence device", "fence devices", "Installed fence devices");
@@ -243,16 +247,16 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) 
     out->end_list(out);
 
     stonith_key_value_freeall(devices, 1, 1);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
 pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -266,7 +270,7 @@ pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
     time_t when = 0;
 
     if (target == NULL) {
-        return 0;
+        return pcmk_rc_ok;
     }
 
     if (as_nodeid) {
@@ -276,16 +280,16 @@ pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
     }
 
     out->message(out, "last-fenced", target, when);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
 pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -299,11 +303,11 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
                          unsigned int timeout) {
     GList *targets = NULL;
     char *lists = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = st->cmds->list(st, st_opts, agent, &lists, timeout/1000);
-    if (rc != 0) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        return pcmk_legacy2rc(rc);
     }
 
     targets = stonith__parse_targets(lists);
@@ -316,17 +320,17 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
     out->end_list(out);
 
     free(lists);
-    return 0;
+    return rc;
 }
 
 int
 pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
                         unsigned int timeout) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -342,8 +346,8 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
     int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
                                 timeout/1000);
 
-    if (rc != pcmk_ok) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        return pcmk_legacy2rc(rc);
     }
 
     out->output_xml(out, "metadata", buffer);
@@ -355,10 +359,10 @@ int
 pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
                     unsigned int timeout) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -371,11 +375,11 @@ int
 pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
                        unsigned int timeout) {
     stonith_key_value_t *devices = NULL;
-    int rc;
+    int rc = pcmk_rc_ok;
 
     rc = st->cmds->query(st, st_opts, target, &devices, timeout/1000);
-    if (rc < 0) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        return pcmk_legacy2rc(rc);
     }
 
     out->begin_list(out, "fence device", "fence devices", "Registered fence devices");
@@ -385,17 +389,17 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
     out->end_list(out);
 
     stonith_key_value_freeall(devices, 1, 1);
-    return 0;
+    return rc;
 }
 
 int
 pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
                       unsigned int timeout) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
@@ -437,7 +441,7 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
     rc  = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
                              timeout/1000, &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
-    return rc;
+    return pcmk_legacy2rc(rc);
 }
 
 int
@@ -445,10 +449,10 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
                     const char *id, stonith_key_value_t *params,
                     unsigned int timeout) {
     pcmk__output_t *out = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     rc = pcmk__out_prologue(&out, xml);
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
 
