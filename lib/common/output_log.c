@@ -114,7 +114,7 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
     node = create_xml_node(NULL, name);
     xmlNodeSetContent(node, (pcmkXmlStr) buf);
-    do_crm_log_xml(LOG_INFO, name, node);
+    crm_log_xml_info(node, name);
     free(node);
 }
 
