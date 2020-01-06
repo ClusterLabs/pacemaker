@@ -836,7 +836,7 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
 }
 
 xmlNode *
-do_lrm_query(gboolean is_replace, const char *node_name)
+controld_query_executor_state(const char *node_name)
 {
     lrm_state_t *lrm_state = lrm_state_find(node_name);
     xmlNode *xml_state;

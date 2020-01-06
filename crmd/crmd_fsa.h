@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -112,9 +114,10 @@ extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
 
-/* these two should be moved elsewhere... */
-extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
+// These should be moved elsewhere
+void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);
+xmlNode *controld_query_executor_state(const char *node_name);
 
 #  define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #  define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
