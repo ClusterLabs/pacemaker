@@ -690,7 +690,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
     } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
         cl = "rsc-failed";
 
-    } else if (g_list_length(rsc->running_on) > 1) {
+    } else if (pcmk__list_of_multiple(rsc->running_on)) {
         cl = "rsc-multiple";
 
     } else if (is_set(rsc->flags, pe_rsc_failure_ignored)) {

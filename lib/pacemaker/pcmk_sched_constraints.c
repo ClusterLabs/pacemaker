@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1718,7 +1718,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
         }
     }
 
-    if (g_list_length(resources) == 1) {
+    if (pcmk__list_of_1(resources)) {
         crm_trace("Single set: %s", id);
         *rsc = resource;
         *end = NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -250,14 +250,14 @@ destroy_action(crm_action_t * action)
 static void
 destroy_synapse(synapse_t * synapse)
 {
-    while (g_list_length(synapse->actions) > 0) {
+    while (synapse->actions != NULL) {
         crm_action_t *action = g_list_nth_data(synapse->actions, 0);
 
         synapse->actions = g_list_remove(synapse->actions, action);
         destroy_action(action);
     }
 
-    while (g_list_length(synapse->inputs) > 0) {
+    while (synapse->inputs != NULL) {
         crm_action_t *action = g_list_nth_data(synapse->inputs, 0);
 
         synapse->inputs = g_list_remove(synapse->inputs, action);
@@ -272,7 +272,7 @@ destroy_graph(crm_graph_t * graph)
     if (graph == NULL) {
         return;
     }
-    while (g_list_length(graph->synapses) > 0) {
+    while (graph->synapses != NULL) {
         synapse_t *synapse = g_list_nth_data(graph->synapses, 0);
 
         graph->synapses = g_list_remove(graph->synapses, synapse);

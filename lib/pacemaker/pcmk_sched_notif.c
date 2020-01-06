@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -710,21 +712,21 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
 
     switch (task) {
         case start_rsc:
-            if(g_list_length(n_data->start) == 0) {
+            if (n_data->start == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;
             }
             break;
         case action_promote:
-            if(g_list_length(n_data->promote) == 0) {
+            if (n_data->promote == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;
             }
             break;
         case action_demote:
-            if(g_list_length(n_data->demote) == 0) {
+            if (n_data->demote == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;

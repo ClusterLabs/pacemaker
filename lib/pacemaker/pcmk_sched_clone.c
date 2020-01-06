@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -734,7 +734,7 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
             }
         }
 
-        if (active && g_list_length(active) == 1) {
+        if (active && pcmk__list_of_1(active)) {
             match = g_list_nth_data(active, 0);
         }
 
@@ -743,7 +743,7 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
             active = NULL;
         }
 
-    } else if (possible && g_list_length(possible) == 1) {
+    } else if (possible && pcmk__list_of_1(possible)) {
         match = g_list_nth_data(possible, 0);
 
     }

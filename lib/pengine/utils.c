@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -483,7 +483,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
     }
 
     if (possible_matches != NULL) {
-        if (g_list_length(possible_matches) > 1) {
+        if (pcmk__list_of_multiple(possible_matches)) {
             pe_warn("Action %s for %s on %s exists %d times",
                     task, rsc ? rsc->id : "<NULL>",
                     on_node ? on_node->details->uname : "<NULL>", g_list_length(possible_matches));

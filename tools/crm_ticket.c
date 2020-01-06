@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -424,7 +424,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
         }
     }
 
-    if (found && g_list_length(attr_delete)) {
+    if (found && (attr_delete != NULL)) {
         crm_log_xml_debug(xml_top, "Replace");
         rc = cib->cmds->replace(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
 

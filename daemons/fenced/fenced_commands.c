@@ -2246,7 +2246,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
     crm_info("Found %d matching devices for '%s'", g_list_length(devices), cmd->victim);
 
-    if (g_list_length(devices) > 0) {
+    if (devices != NULL) {
         /* Order based on priority */
         devices = g_list_sort(devices, sort_device_priority);
         device = g_hash_table_lookup(device_list, devices->data);

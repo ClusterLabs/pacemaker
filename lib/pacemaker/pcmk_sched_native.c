@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2019,7 +2019,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                    && safe_str_eq(then->task, RSC_START)
                    && is_set(then->flags, pe_action_optional)
                    && then->node
-                   && g_list_length(then_rsc->running_on) == 1
+                   && pcmk__list_of_1(then_rsc->running_on)
                    && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
             /* Ignore. If 'then' is supposed to be started after 'first', but
              * 'then' is already started, there is nothing to be done when

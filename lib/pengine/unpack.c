@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1366,7 +1366,7 @@ determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
 
     container = rsc->container;
 
-    if (container && (g_list_length(rsc->running_on) == 1)) {
+    if (container && pcmk__list_of_1(rsc->running_on)) {
         host = rsc->running_on->data;
     }
 
