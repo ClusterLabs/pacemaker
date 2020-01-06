@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,8 +11,6 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
-
-#define s_if_plural(i) (((i) == 1)? "" : "s")
 
 static char *
 failed_action_string(xmlNodePtr xml_op) {
@@ -330,14 +328,15 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
     int ndisabled = va_arg(args, int);
     int nblocked = va_arg(args, int);
 
-    char *nnodes_str = crm_strdup_printf("%d node%s configured", nnodes, s_if_plural(nnodes));
+    char *nnodes_str = crm_strdup_printf("%d node%s configured",
+                                         nnodes, pcmk__plural_s(nnodes));
 
     pcmk_create_html_node(nodes_node, "span", NULL, NULL, nnodes_str);
     free(nnodes_str);
 
     if (ndisabled && nblocked) {
         char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
-                                    nresources, s_if_plural(nresources),
+                                    nresources, pcmk__plural_s(nresources),
                                     ndisabled);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
@@ -353,7 +352,7 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
                               " from further action due to failure)");
     } else if (ndisabled && !nblocked) {
         char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
-                                    nresources, s_if_plural(nresources),
+                                    nresources, pcmk__plural_s(nresources),
                                     ndisabled);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
@@ -362,7 +361,7 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(resources_node, "span", NULL, NULL, ")");
     } else if (!ndisabled && nblocked) {
         char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
-                                    nresources, s_if_plural(nresources),
+                                    nresources, pcmk__plural_s(nresources),
                                     nblocked);
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
@@ -372,7 +371,7 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
                               " from further action due to failure)");
     } else {
         char *s = crm_strdup_printf("%d resource instance%s configured",
-                                    nresources, s_if_plural(nresources));
+                                    nresources, pcmk__plural_s(nresources));
         pcmk_create_html_node(resources_node, "span", NULL, NULL, s);
         free(s);
     }
@@ -387,26 +386,27 @@ pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
     int ndisabled = va_arg(args, int);
     int nblocked = va_arg(args, int);
 
-    out->list_item(out, NULL, "%d node%s configured", nnodes, s_if_plural(nnodes));
+    out->list_item(out, NULL, "%d node%s configured",
+                   nnodes, pcmk__plural_s(nnodes));
 
     if (ndisabled && nblocked) {
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d DISABLED, %d BLOCKED from "
                                   "further action due to failure)",
-                       nresources, s_if_plural(nresources), ndisabled,
+                       nresources, pcmk__plural_s(nresources), ndisabled,
                        nblocked);
     } else if (ndisabled && !nblocked) {
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d DISABLED)",
-                       nresources, s_if_plural(nresources), ndisabled);
+                       nresources, pcmk__plural_s(nresources), ndisabled);
     } else if (!ndisabled && nblocked) {
         out->list_item(out, NULL, "%d resource instance%s configured "
                                   "(%d BLOCKED from further action "
                                   "due to failure)",
-                       nresources, s_if_plural(nresources), nblocked);
+                       nresources, pcmk__plural_s(nresources), nblocked);
     } else {
         out->list_item(out, NULL, "%d resource instance%s configured",
-                       nresources, s_if_plural(nresources));
+                       nresources, pcmk__plural_s(nresources));
     }
 
     return 0;

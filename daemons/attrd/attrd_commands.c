@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -1155,8 +1157,6 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     }
 }
 
-#define s_if_plural(i) (((i) == 1)? "" : "s")
-
 void
 write_attribute(attribute_t *a, bool ignore_delay)
 {
@@ -1272,7 +1272,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
     if (private_updates) {
         crm_info("Processed %d private change%s for %s, id=%s, set=%s",
-                 private_updates, s_if_plural(private_updates),
+                 private_updates, pcmk__plural_s(private_updates),
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
     }
     if (cib_updates) {
@@ -1282,7 +1282,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                                     flags, a->user);
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
-                 a->update, cib_updates, s_if_plural(cib_updates),
+                 a->update, cib_updates, pcmk__plural_s(cib_updates),
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
 
         the_cib->cmds->register_callback_full(the_cib, a->update,

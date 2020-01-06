@@ -57,10 +57,12 @@ start_mainloop(void)
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
-    fprintf(stderr, "Waiting for %d repl%s from the controller",
-            crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
-    crm_debug("Waiting for %d repl%s from the controller",
-              crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
+    fprintf(stderr, "Waiting for %d %s from the controller",
+            crmd_replies_needed,
+            pcmk__plural_alt(crmd_replies_needed, "reply", "replies"));
+    crm_debug("Waiting for %d %s from the controller",
+              crmd_replies_needed,
+              pcmk__plural_alt(crmd_replies_needed, "reply", "replies"));
 
     g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
     g_main_loop_run(mainloop);
