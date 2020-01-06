@@ -21,7 +21,7 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-CRM_TRACE_INIT_DATA(pe_allocate);
+CRM_TRACE_INIT_DATA(pacemaker);
 
 void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
