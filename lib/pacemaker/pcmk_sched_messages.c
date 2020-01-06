@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,6 +27,39 @@ int scores_log_level = LOG_TRACE;
 gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_TRACE;
 
+static void
+log_resource_details(pe_working_set_t *data_set)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__output_t *out = NULL;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        return;
+    }
+    pe__register_messages(out);
+
+    for (GList *item = data_set->resources; item != NULL; item = item->next) {
+        pe_resource_t *rsc = (pe_resource_t *) item->data;
+
+        // Log all resources except inactive orphans
+        if (is_not_set(rsc->flags, pe_rsc_orphan)
+            || (rsc->role != RSC_ROLE_STOPPED)) {
+            out->message(out, crm_map_element_name(rsc->xml), pe_print_log,
+                         rsc);
+        }
+    }
+    pcmk__output_free(out);
+}
+
 /*!
  * \internal
  * \brief Run the scheduler for a given CIB
@@ -40,14 +73,6 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                        crm_time_t *now)
 {
     GListPtr gIter = NULL;
-    int rc = pcmk_ok;
-    pcmk__output_t *out = NULL;
-    const char* argv[] = { "", NULL };
-    GOptionGroup *output_group = NULL;
-    pcmk__supported_format_t formats[] = {
-        PCMK__SUPPORTED_FORMAT_LOG,
-        { NULL, NULL, NULL }
-    };
 
 /*	pe_debug_on(); */
 
@@ -68,28 +93,9 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
-
-    pcmk__register_formats(output_group, formats);
-    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
-    if ((rc != 0) || (out == NULL)) {
-        fprintf(stderr, "Error creating log output format: %s\n", pcmk_strerror(rc));
-        exit(CRM_EX_ERROR);
+    if (is_not_set(data_set->flags, pe_flag_quick_location)) {
+        log_resource_details(data_set);
     }
-    pe__register_messages(out);
-
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
-        gIter = data_set->resources;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
-                continue;
-            }
-            out->message(out, crm_map_element_name(rsc->xml), pe_print_log, rsc);
-        }
-    }
-
-    pcmk__output_free(out);
 
     crm_trace("Applying placement constraints");
     stage2(data_set);

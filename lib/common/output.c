@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,7 +46,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     }
 
     if (create == NULL) {
-        return pcmk_err_unknown_format;
+        return pcmk_rc_unknown_format;
     }
 
     *out = create(argv);
@@ -70,7 +70,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         return ENOMEM;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
