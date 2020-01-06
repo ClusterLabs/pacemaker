@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -473,7 +473,7 @@ void pcmk__output_free(pcmk__output_t *out);
  *                         output, pass a filename of "/dev/null".
  * \param[in]     argv     The list of command line arguments.
  *
- * \return 0 on success or an error code on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
                      const char *filename, char **argv);

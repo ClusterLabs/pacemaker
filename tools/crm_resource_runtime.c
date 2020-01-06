@@ -1256,7 +1256,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
     return 5 + (max_delay / 1000);
 }
 
-#define waiting_for_starts(d, r, h) ((g_list_length(d) > 0) || \
+#define waiting_for_starts(d, r, h) ((d != NULL) || \
                                     (resource_is_running_on((r), (h)) == FALSE))
 
 /*!
@@ -1393,14 +1393,14 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     display_list(list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
-    while(g_list_length(list_delta) > 0) {
+    while (list_delta != NULL) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
             step_timeout_s = max_delay_in(data_set, list_delta) / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
-        for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
+        for(lpc = 0; (lpc < step_timeout_s) && (list_delta != NULL); lpc++) {
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;

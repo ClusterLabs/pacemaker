@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1603,7 +1603,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         pcmk__output_xml_create_parent(out, "li");
         if (is_set(options, pe_print_implicit)) {
-            if(g_list_length(bundle_data->replicas) > 1) {
+            if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
@@ -1691,7 +1691,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         CRM_ASSERT(replica);
 
         if (is_set(options, pe_print_implicit)) {
-            if(g_list_length(bundle_data->replicas) > 1) {
+            if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->list_item(out, NULL, "Replica[%d]", replica->offset);
             }
 
@@ -1791,7 +1791,7 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
 
         if (is_set(options, pe_print_implicit)) {
             child_text = crm_strdup_printf("     %s", pre_text);
-            if(g_list_length(bundle_data->replicas) > 1) {
+            if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 status_print("  %sReplica[%d]\n", pre_text, replica->offset);
             }
             if (options & pe_print_html) {

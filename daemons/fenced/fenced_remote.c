@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -538,11 +538,12 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         level = LOG_NOTICE;
     }
 
-    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s %s: %s",
+    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s%s: %s",
                op->action, (op->target? " targeting " : ""),
                (op->target? op->target : ""),
                (op->delegate? op->delegate : "<no-one>"),
-               op->client_name, op->originator, op->id, (op_merged? "(merged)" : ""), pcmk_strerror(rc));
+               op->client_name, op->originator, op->id,
+               (op_merged? " (merged)" : ""), pcmk_strerror(rc));
 
     handle_local_reply_and_notify(op, data, rc);
 

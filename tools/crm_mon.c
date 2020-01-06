@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1059,8 +1059,9 @@ main(int argc, char **argv)
         rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     }
 
-    if (rc != 0) {
-        fprintf(stderr, "Error creating output format %s: %s\n", args->output_ty, pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Error creating output format %s: %s\n",
+                args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
 
@@ -1225,21 +1226,21 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
 
         if (nodes_standby > 0) {
             nodes_standby_s = crm_strdup_printf(", %d standby node%s", nodes_standby,
-                                                s_if_plural(nodes_standby));
+                                                pcmk__plural_s(nodes_standby));
         }
 
         if (nodes_maintenance > 0) {
             nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
                                               nodes_maintenance,
-                                              s_if_plural(nodes_maintenance));
+                                              pcmk__plural_s(nodes_maintenance));
         }
 
         out->info(out, "CLUSTER OK: %d node%s online%s%s, "
                        "%d resource instance%s configured",
-                  nodes_online, s_if_plural(nodes_online),
+                  nodes_online, pcmk__plural_s(nodes_online),
                   nodes_standby_s != NULL ? nodes_standby_s : "",
                   nodes_maint_s != NULL ? nodes_maint_s : "",
-                  data_set->ninstances, s_if_plural(data_set->ninstances));
+                  data_set->ninstances, pcmk__plural_s(data_set->ninstances));
 
         free(nodes_standby_s);
         free(nodes_maint_s);

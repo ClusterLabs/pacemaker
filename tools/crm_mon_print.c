@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -339,7 +339,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                                      is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                     }
 
-                    if (g_list_length(op_list) > 0) {
+                    if (op_list != NULL) {
                         print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
                     }
                 }
@@ -593,8 +593,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
                 attr_list = append_attr_list(attr_list, key);
             }
 
-            if (g_list_length(attr_list) == 0) {
-                g_list_free(attr_list);
+            if (attr_list == NULL) {
                 continue;
             }
 

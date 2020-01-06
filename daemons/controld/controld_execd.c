@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,8 +26,6 @@
 
 #define START_DELAY_THRESHOLD 5 * 60 * 1000
 #define MAX_LRM_REG_FAILS 30
-
-#define s_if_plural(i) (((i) == 1)? "" : "s")
 
 struct delete_event_s {
     int rc;
@@ -367,7 +365,7 @@ do_lrm_control(long long action,
             if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
                 crm_warn("Failed to connect to the executor %d time%s (%d max)",
                          lrm_state->num_lrm_register_fails,
-                         s_if_plural(lrm_state->num_lrm_register_fails),
+                         pcmk__plural_s(lrm_state->num_lrm_register_fails),
                          MAX_LRM_REG_FAILS);
 
                 controld_start_timer(wait_timer);
@@ -379,7 +377,7 @@ do_lrm_control(long long action,
         if (ret != pcmk_ok) {
             crm_err("Failed to connect to the executor the max allowed %d time%s",
                     lrm_state->num_lrm_register_fails,
-                    s_if_plural(lrm_state->num_lrm_register_fails));
+                    pcmk__plural_s(lrm_state->num_lrm_register_fails));
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
         }
@@ -422,7 +420,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
         if (removed || nremaining) {
             crm_notice("Stopped %u recurring operation%s at %s (%u remaining)",
-                       removed, s_if_plural(removed), when, nremaining);
+                       removed, pcmk__plural_s(removed), when, nremaining);
         }
     }
 
@@ -438,7 +436,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
     if (counter > 0) {
         do_crm_log(log_level, "%d pending executor operation%s at %s",
-                   counter, s_if_plural(counter), when);
+                   counter, pcmk__plural_s(counter), when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
@@ -841,7 +839,7 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
 }
 
 xmlNode *
-do_lrm_query(gboolean is_replace, const char *node_name)
+controld_query_executor_state(const char *node_name)
 {
     lrm_state_t *lrm_state = lrm_state_find(node_name);
 
@@ -2225,7 +2223,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
         if (removed) {
             crm_debug("Stopped %u recurring operation%s in preparation for " CRM_OP_FMT,
-                      removed, s_if_plural(removed),
+                      removed, pcmk__plural_s(removed),
                       rsc->id, operation, op->interval_ms);
         }
     }

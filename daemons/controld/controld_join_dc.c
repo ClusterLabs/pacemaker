@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,6 @@ char *max_epoch = NULL;
 char *max_generation_from = NULL;
 xmlNode *max_generation_xml = NULL;
 
-void initialize_join(gboolean before);
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
@@ -68,8 +67,8 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     }
 }
 
-void
-initialize_join(gboolean before)
+static void
+start_join_round()
 {
     GHashTableIter iter;
     crm_node_t *peer = NULL;
@@ -80,19 +79,16 @@ initialize_join(gboolean before)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
     }
-
-    if (before) {
-        if (max_generation_from != NULL) {
-            free(max_generation_from);
-            max_generation_from = NULL;
-        }
-        if (max_generation_xml != NULL) {
-            free_xml(max_generation_xml);
-            max_generation_xml = NULL;
-        }
-        clear_bit(fsa_input_register, R_HAVE_CIB);
-        clear_bit(fsa_input_register, R_CIB_ASKED);
+    if (max_generation_from != NULL) {
+        free(max_generation_from);
+        max_generation_from = NULL;
     }
+    if (max_generation_xml != NULL) {
+        free_xml(max_generation_xml);
+        max_generation_xml = NULL;
+    }
+    clear_bit(fsa_input_register, R_HAVE_CIB);
+    clear_bit(fsa_input_register, R_CIB_ASKED);
 }
 
 /*!
@@ -192,7 +188,7 @@ do_dc_join_offer_all(long long action,
      * will be seen as offline by the scheduler anyway.
      */
     current_join_id++;
-    initialize_join(TRUE);
+    start_join_round();
 /* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
     update_dc(NULL);
@@ -590,7 +586,7 @@ do_dc_join_ack(long long action,
     controld_delete_node_state(join_from, controld_section_lrm,
                                cib_scope_local);
     if (safe_str_eq(join_from, fsa_our_uname)) {
-        xmlNode *now_dc_lrmd_state = do_lrm_query(TRUE, fsa_our_uname);
+        xmlNode *now_dc_lrmd_state = controld_query_executor_state(fsa_our_uname);
 
         if (now_dc_lrmd_state != NULL) {
             fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,

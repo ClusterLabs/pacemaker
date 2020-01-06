@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,7 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-CRM_TRACE_INIT_DATA(pe_allocate);
+CRM_TRACE_INIT_DATA(pacemaker);
 
 void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
@@ -715,7 +715,7 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     }
 
     if (is_set(rsc->flags, pe_rsc_managed)
-        && rsc->stickiness != 0 && g_list_length(rsc->running_on) == 1) {
+        && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
         node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
         node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
@@ -1990,7 +1990,7 @@ get_remote_node_state(pe_node_t *node)
         /* Connection is running on a dead node, see if we can recover it first */
         return remote_state_resting;
 
-    } else if (g_list_length(remote_rsc->running_on) > 1
+    } else if (pcmk__list_of_multiple(remote_rsc->running_on)
                && remote_rsc->partial_migration_source
                && remote_rsc->partial_migration_target) {
         /* We're in the middle of migrating a connection resource,

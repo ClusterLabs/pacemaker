@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,9 +18,6 @@
 #define FILTER_STR { CRM_FAIL_COUNT_PREFIX, CRM_LAST_FAILURE_PREFIX,       \
                      "shutdown", "terminate", "standby", "probe_complete", \
                      "#", NULL }
-
-/* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
-#define s_if_plural(i) (((i) == 1)? "" : "s")
 
 #if CURSES_ENABLED
 #  define print_dot(output_format) if (output_format == mon_output_console) { \

@@ -41,7 +41,6 @@ enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
 extern uint num_join_invites;
-extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
@@ -247,7 +246,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = NULL;
     }
 
-    if (g_list_length(fsa_message_queue) > 0 || fsa_actions != A_NOTHING || do_fsa_stall) {
+    if ((fsa_message_queue != NULL) || (fsa_actions != A_NOTHING)
+        || do_fsa_stall) {
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
                   g_list_length(fsa_message_queue), fsa_actions, do_fsa_stall ? "true" : "false");
     } else {

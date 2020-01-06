@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2019 the Pacemaker project contributors
+ * Copyright 2005-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -451,7 +451,6 @@ crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
 }
 
 #define DATE_MAX 128
-#define s_if_plural(i) (((i) == 1)? "" : "s")
 
 static void
 crm_duration_as_string(crm_time_t *dt, char *result)
@@ -460,21 +459,21 @@ crm_duration_as_string(crm_time_t *dt, char *result)
 
     if (dt->years) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
-                           dt->years, s_if_plural(dt->years));
+                           dt->years, pcmk__plural_s(dt->years));
     }
     if (dt->months) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%2d month%s ",
-                           dt->months, s_if_plural(dt->months));
+                           dt->months, pcmk__plural_s(dt->months));
     }
     if (dt->days) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%2d day%s ",
-                           dt->days, s_if_plural(dt->days));
+                           dt->days, pcmk__plural_s(dt->days));
     }
 
     if (((offset == 0) || (dt->seconds != 0))
         && (dt->seconds > -60) && (dt->seconds < 60)) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
-                           dt->seconds, s_if_plural(dt->seconds));
+                           dt->seconds, pcmk__plural_s(dt->seconds));
     } else if (dt->seconds) {
         uint h = 0, m = 0, s = 0;
 
@@ -483,15 +482,15 @@ crm_duration_as_string(crm_time_t *dt, char *result)
         crm_time_get_sec(dt->seconds, &h, &m, &s);
         if (h) {
             offset += snprintf(result + offset, DATE_MAX - offset, "%u hour%s%s",
-                               h, s_if_plural(h), ((m || s)? " " : ""));
+                               h, pcmk__plural_s(h), ((m || s)? " " : ""));
         }
         if (m) {
             offset += snprintf(result + offset, DATE_MAX - offset, "%u minute%s%s",
-                               m, s_if_plural(m), (s? " " : ""));
+                               m, pcmk__plural_s(m), (s? " " : ""));
         }
         if (s) {
             offset += snprintf(result + offset, DATE_MAX - offset, "%u second%s",
-                               s, s_if_plural(s));
+                               s, pcmk__plural_s(s));
         }
         offset += snprintf(result + offset, DATE_MAX - offset, ")");
     }

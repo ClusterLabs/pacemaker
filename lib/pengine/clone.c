@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -156,7 +156,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if (max_clones) {
         clone_data->clone_max = crm_parse_int(max_clones, "1");
 
-    } else if (g_list_length(data_set->nodes) > 0) {
+    } else if (pcmk__list_of_multiple(data_set->nodes)) {
         clone_data->clone_max = g_list_length(data_set->nodes);
 
     } else {
@@ -538,7 +538,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             /* Custom stopped list for non-unique clones */
             free(stopped_list); stopped_list = NULL;
 
-            if (g_list_length(list) == 0) {
+            if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
                  * If we've not probed for them yet, the Stopped list will be empty
                  */
@@ -753,7 +753,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             free(stopped_list);
             stopped_list = NULL;
 
-            if (g_list_length(list) == 0) {
+            if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
                  * If we've not probed for them yet, the Stopped list will be empty
                  */
@@ -939,7 +939,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             free(stopped_list);
             stopped_list = NULL;
 
-            if (g_list_length(list) == 0) {
+            if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
                  * If we've not probed for them yet, the Stopped list will be empty
                  */

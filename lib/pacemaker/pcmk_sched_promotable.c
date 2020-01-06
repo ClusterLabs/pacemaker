@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -665,7 +667,7 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
         }
 
         chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
-        if (g_list_length(list) > 1) {
+        if (pcmk__list_of_multiple(list)) {
             crm_config_err("Cannot promote non-colocated child %s", child_rsc->id);
         }
 
