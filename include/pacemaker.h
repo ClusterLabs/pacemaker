@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
+
 /**
  * \file
  * \brief High Level API
@@ -190,6 +192,8 @@ int pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level);
 int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
                         const char *id, stonith_key_value_t *params,
                         unsigned int timeout);
+
+#endif
 
 #ifdef __cplusplus
 }

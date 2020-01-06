@@ -154,11 +154,13 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
     return pcmk_legacy2rc(async_fence_data.rc);
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_action(stonith_t *st, const char *target, const char *action,
                   const char *name, unsigned int timeout, unsigned int tolerance) {
     return pcmk__fence_action(st, target, action, name, timeout, tolerance);
 }
+#endif
 
 int
 pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
@@ -213,6 +215,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     return pcmk_legacy2rc(rc);
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int timeout,
                    bool quiet, int verbose, bool broadcast, bool cleanup) {
@@ -229,6 +232,7 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) {
@@ -250,6 +254,7 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) 
     return pcmk_rc_ok;
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
     pcmk__output_t *out = NULL;
@@ -264,6 +269,7 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
@@ -283,6 +289,7 @@ pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
     return pcmk_rc_ok;
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
     pcmk__output_t *out = NULL;
@@ -297,6 +304,7 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
@@ -323,6 +331,7 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
     return rc;
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
                         unsigned int timeout) {
@@ -338,6 +347,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
@@ -355,6 +365,7 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
     return rc;
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
                     unsigned int timeout) {
@@ -370,6 +381,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
@@ -392,6 +404,7 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
     return rc;
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
                       unsigned int timeout) {
@@ -407,6 +420,7 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
 
 int
 pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
@@ -414,21 +428,25 @@ pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
     return handle_level(st, target, fence_level, devices, true);
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_register_level(stonith_t *st, char *target, int fence_level,
                             stonith_key_value_t *devices) {
     return pcmk__fence_register_level(st, target, fence_level, devices);
 }
+#endif
 
 int
 pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level) {
     return handle_level(st, target, fence_level, NULL, false);
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level) {
     return pcmk__fence_unregister_level(st, target, fence_level);
 }
+#endif
 
 int
 pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
@@ -444,6 +462,7 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
     return pcmk_legacy2rc(rc);
 }
 
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
                     const char *id, stonith_key_value_t *params,
@@ -460,3 +479,4 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+#endif
