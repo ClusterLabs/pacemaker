@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -264,7 +264,7 @@ do_cl_join_finalize_respond(long long action,
     update_dc_expected(input->msg);
 
     /* send our status section to the DC */
-    tmp1 = do_lrm_query(TRUE, fsa_our_uname);
+    tmp1 = controld_query_executor_state(fsa_our_uname);
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
                                         CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);

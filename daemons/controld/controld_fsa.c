@@ -41,7 +41,6 @@ enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
 extern uint num_join_invites;
-extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
