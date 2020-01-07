@@ -60,8 +60,14 @@
 #  define pcmk_err_multiple             213
 #  define pcmk_err_node_unknown         214
 #  define pcmk_err_already              215
+/* On HPPA 215 is ENOSYM (Unknown error 215), which hopefully never happens. */
+#ifdef __hppa__
+#  define pcmk_err_bad_nvpair           250	/* 216 is ENOTSOCK */
+#  define pcmk_err_unknown_format       252	/* 217 is EDESTADDRREQ */
+#else
 #  define pcmk_err_bad_nvpair           216
 #  define pcmk_err_unknown_format       217
+#endif
 #  define pcmk_err_panic                255
 
 /*!
