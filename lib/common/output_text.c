@@ -243,7 +243,7 @@ pcmk__mk_text_output(char **argv) {
     }
 
     retval->fmt_name = "text";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
     retval->init = text_init;

@@ -139,13 +139,17 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
     g_option_context_add_group(context, group);
 }
 
-char **
-pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
-    char **retval = NULL;
+gchar **
+pcmk__cmdline_preproc(char **argv, const char *special) {
+    gchar **retval = NULL;
     GPtrArray *arr = g_ptr_array_new();
     bool saw_dash_dash = false;
 
-    for (int i = 0; i < argc; i++) {
+    if (argv == NULL) {
+        return retval;
+    }
+
+    for (int i = 0; argv[i] != NULL; i++) {
         /* If this is the first time we saw "--" in the command line, set
          * a flag so we know to just copy everything after it over.  We also
          * want to copy the "--" over so whatever actually parses the command
@@ -215,13 +219,13 @@ pcmk__cmdline_preproc(int argc, char **argv, const char *special) {
         }
     }
 
-    /* Convert the GPtrArray into a char **, which the command line parsing
+    /* Convert the GPtrArray into a gchar **, which the command line parsing
      * code knows how to deal with.  Then we can free the array (but not its
      * contents).
      */
     retval = calloc(arr->len+1, sizeof(char *));
     for (int i = 0; i < arr->len; i++) {
-        retval [i] = (char *) g_ptr_array_index(arr, i);
+        retval[i] = (gchar *) g_ptr_array_index(arr, i);
     }
 
     g_ptr_array_free(arr, FALSE);

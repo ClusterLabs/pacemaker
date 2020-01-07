@@ -131,13 +131,12 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  * of all the command line arguments.  It is up to the caller to free this memory
  * after use.
  *
- * \param[in] argc    The length of argv.
  * \param[in] argv    The command line arguments.
  * \param[in] special Single-letter command line arguments that take a value.
  *                    These letters will all have pre-processing applied.
  */
-char **
-pcmk__cmdline_preproc(int argc, char **argv, const char *special);
+gchar **
+pcmk__cmdline_preproc(char **argv, const char *special);
 
 /*!
  * \internal

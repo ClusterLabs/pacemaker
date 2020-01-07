@@ -140,10 +140,11 @@ crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 stonith_admin_SOURCES	= stonith_admin.c
-stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+stonith_admin_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
-			  $(top_builddir)/lib/fencing/libstonithd.la
+			  $(top_builddir)/lib/fencing/libstonithd.la \
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c

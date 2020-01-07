@@ -72,9 +72,11 @@ static cib_t *cib = NULL;
 static stonith_t *st = NULL;
 static xmlNode *current_cib = NULL;
 
+static GError *error = NULL;
 static pcmk__common_args_t *args = NULL;
 static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
+static gchar **processed_args = NULL;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
@@ -128,7 +130,7 @@ static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void kick_refresh(gboolean data_updated);
 
 static gboolean
-as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
@@ -140,7 +142,7 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
-as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
@@ -160,7 +162,7 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 }
 
 static gboolean
-as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
@@ -172,7 +174,7 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (args->output_ty != NULL) {
         free(args->output_ty);
     }
@@ -184,11 +186,11 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
-fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     int rc = crm_atoi(optarg, "2");
 
     if (rc == -1 || rc > 3) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
         return FALSE;
     } else {
         options.fence_history_level = rc;
@@ -198,66 +200,66 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 static gboolean
-group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_group_by_node;
     return TRUE;
 }
 
 static gboolean
-hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show &= ~mon_show_headers;
     return TRUE;
 }
 
 static gboolean
-inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_inactive_resources;
     return TRUE;
 }
 
 static gboolean
-no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     output_format = mon_output_plain;
     return TRUE;
 }
 
 static gboolean
-one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_brief;
     return TRUE;
 }
 
 static gboolean
-print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_clone_detail;
     return TRUE;
 }
 
 static gboolean
-print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_pending;
     return TRUE;
 }
 
 static gboolean
-print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_timing;
     show |= mon_show_operations;
     return TRUE;
 }
 
 static gboolean
-reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     int rc = crm_get_msec(optarg);
 
     if (rc == -1) {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
         options.reconnect_msec = crm_parse_interval_spec(optarg);
@@ -267,13 +269,13 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show |= mon_show_attributes;
     return TRUE;
 }
 
 static gboolean
-show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show |= mon_show_bans;
 
     if (optarg != NULL) {
@@ -284,32 +286,32 @@ show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show |= mon_show_failcounts;
     return TRUE;
 }
 
 static gboolean
-show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show |= mon_show_operations;
     return TRUE;
 }
 
 static gboolean
-show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show |= mon_show_tickets;
     return TRUE;
 }
 
 static gboolean
-use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     setenv("CIB_file", optarg, 1);
     options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
 static gboolean
-watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_watch_fencing;
     return TRUE;
 }
@@ -803,33 +805,38 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
  */
 static void
 add_output_args() {
-    GError *error = NULL;
+    GError *err = NULL;
 
     if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        if (!pcmk__force_args(context, &err, "%s --text-fancy", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+            g_clear_error(&err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
+        if (!pcmk__force_args(context, &err, "%s --html-title \"Cluster Status\"",
                               g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+            g_clear_error(&err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &error, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        if (!pcmk__force_args(context, &err, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+            g_clear_error(&err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        if (!pcmk__force_args(context, &err, "%s --xml-simple-list", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+            g_clear_error(&err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &error, "%s --xml-legacy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        if (!pcmk__force_args(context, &err, "%s --xml-legacy", g_get_prgname())) {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+            g_clear_error(&err);
             clean_up(CRM_EX_USAGE);
         }
     }
@@ -846,7 +853,7 @@ add_output_args() {
 static void
 reconcile_output_format(pcmk__common_args_t *args) {
     gboolean retval = TRUE;
-    GError *error = NULL;
+    GError *err = NULL;
 
     if (output_format != mon_output_unset) {
         return;
@@ -859,10 +866,10 @@ reconcile_output_format(pcmk__common_args_t *args) {
             dest = strdup(args->output_dest);
         }
 
-        retval = as_html_cb("h", dest, NULL, &error);
+        retval = as_html_cb("h", dest, NULL, &err);
         free(dest);
     } else if (safe_str_eq(args->output_ty, "text")) {
-        retval = no_curses_cb("N", NULL, NULL, &error);
+        retval = no_curses_cb("N", NULL, NULL, &err);
     } else if (safe_str_eq(args->output_ty, "xml")) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
@@ -889,7 +896,8 @@ reconcile_output_format(pcmk__common_args_t *args) {
     }
 
     if (!retval) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
+        g_clear_error(&err);
         clean_up(CRM_EX_USAGE);
     }
 }
@@ -898,10 +906,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_ok;
-    char **processed_args = NULL;
     GOptionGroup *output_group = NULL;
-
-    GError *error = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
     context = build_arg_context(args, &output_group);
@@ -918,7 +923,7 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_one_shot;
     }
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "ehimpxEL");
+    processed_args = pcmk__cmdline_preproc(argv, "ehimpxEL");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
@@ -1892,6 +1897,8 @@ clean_up(crm_exit_t exit_code)
 
     pcmk__free_arg_context(context);
 
+    g_clear_error(&error);
+
     if (out != NULL) {
         if (output_format == mon_output_cgi || output_format == mon_output_html) {
             handle_html_output(exit_code);
@@ -1902,5 +1909,6 @@ clean_up(crm_exit_t exit_code)
         pcmk__output_free(out);
     }
 
+    g_strfreev(processed_args);
     crm_exit(exit_code);
 }

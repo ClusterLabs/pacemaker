@@ -23,7 +23,7 @@ pcmk__output_free(pcmk__output_t *out) {
         g_hash_table_destroy(out->messages);
     }
 
-    free(out->request);
+    g_free(out->request);
     free(out);
 }
 

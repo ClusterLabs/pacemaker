@@ -162,7 +162,7 @@ struct pcmk__output_s {
      * In the case of command line usage, this would be the command line
      * arguments.  For other use cases, it could be different.
      */
-    char *request;
+    gchar *request;
 
     /*!
      * \brief Does this formatter support a special quiet mode?

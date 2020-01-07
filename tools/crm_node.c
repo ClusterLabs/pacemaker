@@ -605,7 +605,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_node");
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "NR");
+    processed_args = pcmk__cmdline_preproc(argv, "NR");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
@@ -658,6 +658,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
+    g_clear_error(&error);
     pcmk__free_arg_context(context);
     crm_node_exit(exit_code);
     return exit_code;
