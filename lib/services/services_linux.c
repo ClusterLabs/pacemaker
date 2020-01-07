@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,10 +29,6 @@
 #include "crm/services.h"
 
 #include "services_private.h"
-
-#if SUPPORT_CIBSECRETS
-#  include "crm/common/cib_secrets.h"
-#endif
 
 static void close_pipe(int fildes[]);
 
@@ -716,7 +712,7 @@ action_launch_child(svc_action_t *op)
     pcmk__close_fds_in_child(false);
 
 #if SUPPORT_CIBSECRETS
-    if (replace_secret_params(op->rsc, op->params) < 0) {
+    if (pcmk__substitute_secrets(op->rsc, op->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
         if (safe_str_eq(op->action,"stop")) {
             /* don't fail on stop! */

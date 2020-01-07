@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,14 @@
 #include <sys/types.h>  /* for uid_t and gid_t */
 
 #include <crm/common/logging.h>
+
+
+#if SUPPORT_CIBSECRETS
+// Internal CIB utilities (from cib_secrets.c) */
+
+int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
+#endif
+
 
 /* internal I/O utilities (from io.c) */
 

@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2011 SUSE, Attachmate
- * Author: Dejan Muhamedagic <dejan@suse.de>
+ * Copyright 2011-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -21,10 +22,9 @@
 #include <glib.h>
 
 #include <crm/common/util.h>
-#include <crm/common/cib_secrets.h>
 
 static int is_magic_value(char *p);
-static int check_md5_hash(char *hash, char *value);
+static bool check_md5_hash(char *hash, char *value);
 static void add_secret_params(gpointer key, gpointer value, gpointer user_data);
 static char *read_local_file(char *local_file);
 
@@ -37,18 +37,17 @@ is_magic_value(char *p)
     return !strcmp(p, MAGIC);
 }
 
-static int
+static bool
 check_md5_hash(char *hash, char *value)
 {
-    int rc = FALSE;
+    bool rc = false;
     char *hash2 = NULL;
 
     hash2 = crm_md5sum(value);
     crm_debug("hash: %s, calculated hash: %s", hash, hash2);
     if (safe_str_eq(hash, hash2)) {
-        rc = TRUE;
+        rc = true;
     }
-
     free(hash2);
     return rc;
 }
@@ -74,29 +73,36 @@ read_local_file(char *local_file)
     }
     fclose(fp);
 
-    /* strip white space */
-    for (p = buf+strlen(buf)-1; p >= buf && isspace(*p); p--)
-		;
+    // Strip trailing white space
+    for (p = buf + strlen(buf) - 1; (p >= buf) && isspace(*p); p--);
     *(p+1) = '\0';
     return strdup(buf);
 }
 
-/*
- * returns 0 on success or no replacements necessary
- * returns -1 if replacement failed for whatever reasone
+/*!
+ * \internal
+ * \brief Read secret parameter values from file
+ *
+ * Given a table of resource parameters, if any of their values are the
+ * magic string indicating a CIB secret, replace that string with the
+ * secret read from the file appropriate to the given resource.
+ *
+ * \param[in]     rsc_id  Resource whose parameters are being checked
+ * \param[in,out] params  Resource parameters to check
+ *
+ * \return Standard Pacemaker return code
  */
-
 int
-replace_secret_params(const char *rsc_id, GHashTable *params)
+pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 {
     char local_file[FILENAME_MAX+1], *start_pname;
     char hash_file[FILENAME_MAX+1], *hash;
     GList *secret_params = NULL, *l;
     char *key, *pvalue, *secret_value;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     if (params == NULL) {
-        return 0;
+        return pcmk_rc_ok;
     }
 
     /* secret_params could be cached with the resource;
@@ -104,16 +110,17 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
      * which cannot be cached
      */
     g_hash_table_foreach(params, add_secret_params, &secret_params);
-    if (!secret_params) { /* none found? */
-        return 0;
+    if (secret_params == NULL) { // No secret parameters found
+        return pcmk_rc_ok;
     }
 
-    crm_debug("replace secret parameters for resource %s", rsc_id);
+    crm_debug("Replace secret parameters for resource %s", rsc_id);
 
     if (snprintf(local_file, FILENAME_MAX, LRM_CIBSECRETS_DIR "/%s/", rsc_id)
             > FILENAME_MAX) {
-        crm_err("filename size exceeded for resource %s", rsc_id);
-        return -1;
+        crm_err("Can't replace secret parameters for %s: file name size exceeded",
+                rsc_id);
+        return ENAMETOOLONG;
     }
     start_pname = local_file + strlen(local_file);
 
@@ -126,8 +133,8 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
         }
 
         if ((strlen(key) + strlen(local_file)) >= FILENAME_MAX-2) {
-            crm_err("%d: parameter name %s too big", key);
-            rc = -1;
+            crm_err("%s: parameter name %s too big", rsc_id, key);
+            rc = ENAMETOOLONG;
             continue;
         }
 
@@ -136,7 +143,7 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
         if (!secret_value) {
             crm_err("secret for rsc %s parameter %s not found in %s",
                     rsc_id, key, LRM_CIBSECRETS_DIR);
-            rc = -1;
+            rc = ENOENT;
             continue;
         }
 
@@ -145,7 +152,7 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
             crm_err("cannot build such a long name "
                     "for the sign file: %s.sign", hash_file);
             free(secret_value);
-            rc = -1;
+            rc = ENAMETOOLONG;
             continue;
 
         } else {
@@ -155,7 +162,7 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
                 crm_err("md5 sum for rsc %s parameter %s "
                         "cannot be read from %s", rsc_id, key, hash_file);
                 free(secret_value);
-                rc = -1;
+                rc = ENOENT;
                 continue;
 
             } else if (!check_md5_hash(hash, secret_value)) {
@@ -163,7 +170,7 @@ replace_secret_params(const char *rsc_id, GHashTable *params)
                         "does not match", rsc_id, key);
                 free(secret_value);
                 free(hash);
-                rc = -1;
+                rc = pcmk_rc_cib_corrupt;
                 continue;
             }
             free(hash);
@@ -180,6 +187,6 @@ add_secret_params(gpointer key, gpointer value, gpointer user_data)
     GList **lp = (GList **)user_data;
 
     if (is_magic_value((char *)value)) {
-	*lp = g_list_append(*lp, (char *)key);
+        *lp = g_list_append(*lp, (char *)key);
     }
 }

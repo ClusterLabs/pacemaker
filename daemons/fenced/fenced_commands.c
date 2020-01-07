@@ -33,10 +33,6 @@
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
 
-#if SUPPORT_CIBSECRETS
-#  include <crm/common/cib_secrets.h>
-#endif
-
 #include <pacemaker-fenced.h>
 
 GHashTable *device_list = NULL;
@@ -387,7 +383,7 @@ stonith_device_execute(stonith_device_t * device)
     }
 
 #if SUPPORT_CIBSECRETS
-    if (replace_secret_params(device->id, device->params) < 0) {
+    if (pcmk__substitute_secrets(device->id, device->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
         if (safe_str_eq(cmd->action,"stop")) {
             /* don't fail on stop! */
