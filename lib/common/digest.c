@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2015 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -215,24 +206,24 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
 
 /*!
  * \internal
- * \brief Return whether calculated digest of XML tree matches expected digest
+ * \brief Check whether calculated digest of given XML matches expected digest
  *
- * \param[in] input Root of XML to digest
- * \param[in] expected Expected digest in on-disk format
+ * \param[in] input     Root of XML tree to digest
+ * \param[in] expected  Expected digest in on-disk format
  *
- * \return TRUE if digests match, FALSE otherwise or on error
+ * \return true if digests match, false on mismatch or error
  */
-gboolean
-crm_digest_verify(xmlNode *input, const char *expected)
+bool
+pcmk__verify_digest(xmlNode *input, const char *expected)
 {
     char *calculated = NULL;
-    gboolean passed;
+    bool passed;
 
     if (input != NULL) {
         calculated = calculate_on_disk_digest(input);
         if (calculated == NULL) {
             crm_perror(LOG_ERR, "Could not calculate digest for comparison");
-            return FALSE;
+            return false;
         }
     }
     passed = safe_str_eq(expected, calculated);

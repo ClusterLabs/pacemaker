@@ -1,5 +1,6 @@
 /*
- * Copyright 2004-2018 International Business Machines
+ * Original copyright 2004 International Business Machines
+ * Later changes copyright 2008-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -90,7 +91,7 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
                 return FALSE;
         }
     }
-    passed = crm_digest_verify(root, expected);
+    passed = pcmk__verify_digest(root, expected);
     free(expected);
     return passed;
 }

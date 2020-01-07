@@ -274,7 +274,7 @@ const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
-gboolean crm_digest_verify(xmlNode *input, const char *expected);
+bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 /* cross-platform compatibility functions */
 char *crm_compat_realpath(const char *path);
