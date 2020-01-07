@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <errno.h>
+#include <limits.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -60,6 +62,42 @@ crm_build_path(const char *path_c, mode_t mode)
     }
 
     free(path);
+}
+
+/*!
+ * \internal
+ * \brief Return canonicalized form of a path name
+ *
+ * \param[in]  path           Pathname to canonicalize
+ * \param[out] resolved_path  Where to store canonicalized pathname
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller is responsible for freeing \p resolved_path on success.
+ * \note This function exists because not all C library versions of
+ *       realpath(path, resolved_path) support a NULL resolved_path.
+ */
+int
+pcmk__real_path(const char *path, char **resolved_path)
+{
+    CRM_CHECK((path != NULL) && (resolved_path != NULL), return EINVAL);
+
+#if _POSIX_VERSION >= 200809L
+    /* Recent C libraries can dynamically allocate memory as needed */
+    *resolved_path = realpath(path, NULL);
+    return (*resolved_path == NULL)? errno : pcmk_rc_ok;
+
+#elif defined(PATH_MAX)
+    /* Older implementations require pre-allocated memory */
+    /* (this is less desirable because PATH_MAX may be huge or not defined) */
+    *resolved_path = malloc(PATH_MAX);
+    if ((*resolved_path == NULL) || (realpath(path, *resolved_path) == NULL)) {
+        return errno;
+    }
+    return pcmk_rc_ok;
+#else
+    *resolved_path = NULL;
+    return ENOTSUP;
+#endif
 }
 
 /*!

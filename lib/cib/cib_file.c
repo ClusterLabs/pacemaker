@@ -185,16 +185,16 @@ cib_file_is_live(const char *filename)
 
     if (filename != NULL) {
         // Canonicalize file names for true comparison
-        char *real_filename = crm_compat_realpath(filename);
+        char *real_filename = NULL;
 
-        if (real_filename != NULL) {
-            char *real_livename;
+        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
+            char *real_livename = NULL;
 
-            real_livename = crm_compat_realpath(CRM_CONFIG_DIR "/" CIB_LIVE_NAME);
-            if (real_livename && !strcmp(real_filename, real_livename)) {
-                same = TRUE;
+            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
+                                &real_livename) == pcmk_rc_ok) {
+                same = !strcmp(real_filename, real_livename);
+                free(real_livename);
             }
-            free(real_livename);
             free(real_filename);
         }
     }

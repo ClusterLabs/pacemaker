@@ -28,6 +28,8 @@ int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 
 /* internal I/O utilities (from io.c) */
 
+int pcmk__real_path(const char *path, char **resolved_path);
+
 char *generate_series_filename(const char *directory, const char *series, int sequence,
                                gboolean bzip);
 int get_last_sequence(const char *directory, const char *series);

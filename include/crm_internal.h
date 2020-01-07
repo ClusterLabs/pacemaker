@@ -276,9 +276,6 @@ void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
-/* cross-platform compatibility functions */
-char *crm_compat_realpath(const char *path);
-
 /* IPC Proxy Backend Shared Functions */
 typedef struct remote_proxy_s {
     char *node_name;
