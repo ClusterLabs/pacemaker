@@ -525,19 +525,19 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
-            out->list_item(out, NULL, "No Quorum policy: Freeze resources");
+            out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
         case no_quorum_stop:
-            out->list_item(out, NULL, "No Quorum policy: Stop ALL resources");
+            out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
         case no_quorum_ignore:
-            out->list_item(out, NULL, "No Quorum policy: Ignore");
+            out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
         case no_quorum_suicide:
-            out->list_item(out, NULL, "No Quorum policy: Suicide");
+            out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
 
