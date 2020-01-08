@@ -678,7 +678,7 @@ validate_xml_verbose(xmlNode *xml_blob)
     gboolean rc = FALSE;
     char *filename = NULL;
 
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", crm_get_tmpdir());
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);

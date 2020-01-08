@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -3373,7 +3373,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = crm_strdup_printf("%s/%s", crm_get_tmpdir(), uuid);
+        f = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), uuid);
         filename = f;
         free(uuid);
     }

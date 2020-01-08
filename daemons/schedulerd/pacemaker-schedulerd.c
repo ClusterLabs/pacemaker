@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,7 +76,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         return FALSE;
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
-        int seq = -1;
+        unsigned int seq;
         int series_id = 0;
         int series_wrap = 0;
         char *digest = NULL;
@@ -137,8 +137,12 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
                             " preference: %s", series[series_id].param);
         }
 
-        seq = get_last_sequence(PE_STATE_DIR, series[series_id].name);
-        crm_trace("Series %s: wrap=%d, seq=%d, pref=%s",
+        if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                       &seq) != pcmk_rc_ok) {
+            // @TODO maybe handle errors better ...
+            seq = 0;
+        }
+        crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
                   series[series_id].name, series_wrap, seq, value);
 
         sched_data_set->input = NULL;
@@ -147,9 +151,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE) {
             free(filename);
-            filename = generate_series_filename(PE_STATE_DIR,
-                                                series[series_id].name, seq,
-                                                TRUE);
+            filename = pcmk__series_filename(PE_STATE_DIR,
+                                             series[series_id].name, seq, true);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -186,7 +189,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
             unlink(filename);
             crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
             write_xml_file(xml_data, filename, TRUE);
-            write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
+            pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                        ++seq, series_wrap);
         } else {
             crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
         }

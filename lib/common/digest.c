@@ -122,7 +122,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
     }
     if (digest_cs && digest_cs->targets) {
         char *trace_file = crm_strdup_printf("%s/digest-%s",
-                                             crm_get_tmpdir(), digest);
+                                             pcmk__get_tmpdir(), digest);
 
         crm_trace("Saving %s.%s.%s to %s",
                   crm_element_value(source, XML_ATTR_GENERATION_ADMIN),

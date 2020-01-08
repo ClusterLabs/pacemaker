@@ -76,20 +76,23 @@ static gboolean
 cib_file_verify_digest(xmlNode *root, const char *sigfile)
 {
     gboolean passed = FALSE;
-    char *expected = crm_read_contents(sigfile);
+    char *expected;
+    int rc = pcmk__file_contents(sigfile, &expected);
 
-    if (expected == NULL) {
-        switch (errno) {
-            case 0:
+    switch (rc) {
+        case pcmk_rc_ok:
+            if (expected == NULL) {
                 crm_err("On-disk digest at %s is empty", sigfile);
                 return FALSE;
-            case ENOENT:
-                crm_warn("No on-disk digest present at %s", sigfile);
-                return TRUE;
-            default:
-                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
-                return FALSE;
-        }
+            }
+            break;
+        case ENOENT:
+            crm_warn("No on-disk digest present at %s", sigfile);
+            return TRUE;
+        default:
+            crm_err("Could not read on-disk digest from %s: %s",
+                    sigfile, pcmk_rc_str(rc));
+            return FALSE;
     }
     passed = pcmk__verify_digest(root, expected);
     free(expected);
@@ -222,17 +225,21 @@ static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
+    unsigned int seq;
     char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
     char *cib_digest = crm_concat(cib_path, "sig", '.');
+    char *backup_path;
+    char *backup_digest;
 
-    /* Figure out what backup file sequence number to use */
-    int seq = get_last_sequence(cib_dirname, CIB_SERIES);
-    char *backup_path = generate_series_filename(cib_dirname, CIB_SERIES, seq,
-                                                 CIB_SERIES_BZIP);
-    char *backup_digest = crm_concat(backup_path, "sig", '.');
-
-    CRM_ASSERT((cib_path != NULL) && (cib_digest != NULL)
-               && (backup_path != NULL) && (backup_digest != NULL));
+    // Determine backup and digest file names
+    if (pcmk__read_series_sequence(cib_dirname, CIB_SERIES,
+                                   &seq) != pcmk_rc_ok) {
+        // @TODO maybe handle errors better ...
+        seq = 0;
+    }
+    backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
+                                        CIB_SERIES_BZIP);
+    backup_digest = crm_concat(backup_path, "sig", '.');
 
     /* Remove the old backups if they exist */
     unlink(backup_path);
@@ -252,8 +259,11 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 
     /* Update the last counter and ensure everything is sync'd to media */
     } else {
-        write_last_sequence(cib_dirname, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
+        pcmk__write_series_sequence(cib_dirname, CIB_SERIES, ++seq,
+                                    CIB_SERIES_MAX);
         if (cib_do_chown) {
+            int rc2;
+
             if ((chown(backup_path, cib_file_owner, cib_file_group) < 0)
                     && (errno != ENOENT)) {
                 crm_perror(LOG_ERR, "Could not set owner of %s", backup_path);
@@ -264,15 +274,15 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
                 crm_perror(LOG_ERR, "Could not set owner of %s", backup_digest);
                 rc = -1;
             }
-            if (crm_chown_last_sequence(cib_dirname, CIB_SERIES, cib_file_owner,
-                                        cib_file_group) < 0) {
-                crm_perror(LOG_ERR,
-                           "Could not set owner of %s last sequence file",
-                           cib_dirname);
+            rc2 = pcmk__chown_series_sequence(cib_dirname, CIB_SERIES,
+                                              cib_file_owner, cib_file_group);
+            if (rc2 != pcmk_rc_ok) {
+                crm_err("Could not set owner of sequence file in %s: %s",
+                        cib_dirname, pcmk_rc_str(rc2));
                 rc = -1;
             }
         }
-        crm_sync_directory(cib_dirname);
+        pcmk__sync_directory(cib_dirname);
         crm_info("Archived previous version as %s", backup_path);
     }
 
@@ -419,8 +429,10 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
         close(fd);
         goto cleanup;
     }
-    if (crm_write_sync(fd, digest) < 0) {
-        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
+    rc = pcmk__write_sync(fd, digest);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not write digest to %s: %s",
+                tmp_digest, pcmk_rc_str(rc));
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
@@ -445,7 +457,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                    digest_path);
         exit_rc = pcmk_err_cib_save;
     }
-    crm_sync_directory(cib_dirname);
+    pcmk__sync_directory(cib_dirname);
 
   cleanup:
     free(cib_path);

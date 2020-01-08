@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -304,10 +304,10 @@ cib_remote_listen(gpointer data)
     crm_debug("New %s connection from %s",
               ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
-    rc = crm_set_nonblocking(csock);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(csock);
+    if (rc != pcmk_rc_ok) {
         crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
-                pcmk_strerror(rc), rc);
+                pcmk_rc_str(rc), rc);
         close(csock);
         return TRUE;
     }

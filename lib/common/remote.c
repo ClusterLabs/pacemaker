@@ -1,5 +1,7 @@
 /*
- * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -929,10 +931,10 @@ internal_tcp_connect_async(int sock,
     int timer;
     struct tcp_async_cb_data *cb_data = NULL;
 
-    rc = crm_set_nonblocking(sock);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(sock);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
+                 pcmk_rc_str(rc), rc);
         close(sock);
         return -1;
     }
@@ -989,11 +991,11 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
         return rc;
     }
 
-    rc = crm_set_nonblocking(sock);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(sock);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
-        return rc;
+                 pcmk_rc_str(rc), rc);
+        return pcmk_rc2legacy(rc);
     }
 
     return pcmk_ok;
@@ -1156,12 +1158,12 @@ crm_remote_accept(int ssock)
         return -1;
     }
 
-    rc = crm_set_nonblocking(csock);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(csock);
+    if (rc != pcmk_rc_ok) {
         crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
-                pcmk_strerror(rc), rc);
+                pcmk_rc_str(rc), rc);
         close(csock);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
 #ifdef TCP_USER_TIMEOUT
