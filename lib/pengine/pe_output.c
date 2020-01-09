@@ -544,11 +544,12 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
+        pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
     } else {
-        out->list_item(out, NULL, "Resource management enabled");
+        out->list_item(out, NULL, "Resource management: enabled");
     }
 
     return 0;
