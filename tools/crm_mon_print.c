@@ -732,6 +732,10 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
         out->end_list(out);
     }
 
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        out->message(out, "maint-mode");
+    }
+
     return header_printed;
 }
 

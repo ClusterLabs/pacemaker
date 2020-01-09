@@ -520,6 +520,14 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
 }
 
 int
+pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
+    fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
+    fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
+    fprintf(out->dest, "\n");
+    return 0;
+}
+
+int
 pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
@@ -598,12 +606,6 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
         case no_quorum_suicide:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
-    }
-
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->list_item(out, NULL, "Resource management DISABLED (the cluster will not attempt to start, stop, or recover services)");
-    } else {
-        out->list_item(out, NULL, "Resource management enabled");
     }
 
     return 0;
@@ -1292,6 +1294,11 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "group", "log",  pe__group_text },
+    /* maint-mode only exists for text and log.  Other formatters output it as
+     * part of the cluster-options handler.
+     */
+    { "maint-mode", "log", pe__cluster_maint_mode_text },
+    { "maint-mode", "text", pe__cluster_maint_mode_text },
     { "node", "html", pe__node_html },
     { "node", "log", pe__node_text },
     { "node", "text", pe__node_text },
