@@ -555,13 +555,24 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
 }
 
 int
+pe__cluster_options_log(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
+    }
+
+    return 0;
+}
+
+int
 pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
-        fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
-        fprintf(out->dest, "\n");
+        out->info(out, "\n");
+        out->info(out, "              *** Resource management is DISABLED ***");
+        out->info(out, "  The cluster will not attempt to start, stop or recover services");
     }
 
     return 0;
@@ -1219,7 +1230,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-dc", "text", pe__cluster_dc_text },
     { "cluster-dc", "xml", pe__cluster_dc_xml },
     { "cluster-options", "html", pe__cluster_options_html },
-    { "cluster-options", "log", pe__cluster_options_text },
+    { "cluster-options", "log", pe__cluster_options_log },
     { "cluster-options", "text", pe__cluster_options_text },
     { "cluster-options", "xml", pe__cluster_options_xml },
     { "cluster-stack", "html", pe__cluster_stack_html },

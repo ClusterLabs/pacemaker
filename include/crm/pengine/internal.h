@@ -121,6 +121,7 @@ int pe__cluster_dc_html(pcmk__output_t *out, va_list args);
 int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
 int pe__cluster_dc_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_options_html(pcmk__output_t *out, va_list args);
+int pe__cluster_options_log(pcmk__output_t *out, va_list args);
 int pe__cluster_options_text(pcmk__output_t *out, va_list args);
 int pe__cluster_options_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_stack_html(pcmk__output_t *out, va_list args);
