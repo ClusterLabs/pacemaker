@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -94,7 +94,9 @@ struct crm_client_s {
     unsigned int queue_max;     /* Evict client whose queue grows this big */
 };
 
-extern GHashTable *client_connections;
+guint pcmk__ipc_client_count(void);
+void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
+void pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data);
 
 void crm_client_init(void);
 void crm_client_cleanup(void);

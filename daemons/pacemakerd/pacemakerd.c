@@ -627,6 +627,13 @@ struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
     .connection_destroyed = pcmk_ipc_destroy
 };
 
+static void
+send_xml_to_client(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_ipcs_send((crm_client_t *) value, 0, (xmlNode *) user_data,
+                  crm_ipc_server_event);
+}
+
 /*!
  * \internal
  * \brief Send an XML message with process list of all known peers to client(s)
@@ -656,16 +663,13 @@ update_process_clients(crm_client_t *client)
 
     if(client) {
         crm_trace("Sending process list to client %s", client->id);
-        crm_ipcs_send(client, 0, update, crm_ipc_server_event);
+        send_xml_to_client(NULL, client, update);
 
     } else {
-        crm_trace("Sending process list to %d clients", crm_hash_table_size(client_connections));
-        g_hash_table_iter_init(&iter, client_connections);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
-            crm_ipcs_send(client, 0, update, crm_ipc_server_event);
-        }
+        crm_trace("Sending process list to %d clients",
+                  pcmk__ipc_client_count());
+        pcmk__foreach_ipc_client(send_xml_to_client, update);
     }
-
     free_xml(update);
 }
 

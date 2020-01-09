@@ -184,7 +184,53 @@ create_reply_adv(xmlNode * original_request, xmlNode * xml_response_data, const 
 
 /* Server... */
 
-GHashTable *client_connections = NULL;
+static GHashTable *client_connections = NULL;
+
+/*!
+ * \internal
+ * \brief Count IPC clients
+ *
+ * \return Number of active IPC client connections
+ */
+guint
+pcmk__ipc_client_count()
+{
+    return client_connections? g_hash_table_size(client_connections) : 0;
+}
+
+/*!
+ * \internal
+ * \brief Execute a function for each active IPC client connection
+ *
+ * \param[in] func       Function to call
+ * \param[in] user_data  Pointer to pass to function
+ *
+ * \note The parameters are the same as for g_hash_table_foreach().
+ */
+void
+pcmk__foreach_ipc_client(GHFunc func, gpointer user_data)
+{
+    if (func) {
+        g_hash_table_foreach(client_connections, func, user_data);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remote IPC clients based on iterative function result
+ *
+ * \param[in] func       Function to call for each active IPC client
+ * \param[in] user_data  Pointer to pass to function
+ *
+ * \note The parameters are the same as for g_hash_table_foreach_remove().
+ */
+void
+pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data)
+{
+    if (func) {
+        g_hash_table_foreach_remove(client_connections, func, user_data);
+    }
+}
 
 crm_client_t *
 crm_client_get(qb_ipcs_connection_t * c)
@@ -454,12 +500,12 @@ crm_client_destroy(crm_client_t * c)
     if (client_connections) {
         if (c->ipcs) {
             crm_trace("Destroying %p/%p (%d remaining)",
-                      c, c->ipcs, crm_hash_table_size(client_connections) - 1);
+                      c, c->ipcs, g_hash_table_size(client_connections) - 1);
             g_hash_table_remove(client_connections, c->ipcs);
 
         } else {
             crm_trace("Destroying remote connection %p (%d remaining)",
-                      c, crm_hash_table_size(client_connections) - 1);
+                      c, g_hash_table_size(client_connections) - 1);
             g_hash_table_remove(client_connections, c->id);
         }
     }

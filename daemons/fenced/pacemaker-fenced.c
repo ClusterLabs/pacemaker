@@ -365,7 +365,7 @@ do_stonith_notify(int options, const char *type, int result, xmlNode * data)
     }
 
     crm_trace("Notifying clients");
-    g_hash_table_foreach(client_connections, stonith_notify_client, update_msg);
+    pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
     free_xml(update_msg);
     crm_trace("Notify complete");
 }
@@ -1116,9 +1116,8 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 stonith_shutdown(int nsig)
 {
+    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
     stonith_shutdown_flag = TRUE;
-    crm_info("Terminating with %d clients",
-             crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
     } else {

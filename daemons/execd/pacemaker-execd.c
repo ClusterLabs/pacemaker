@@ -260,9 +260,7 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 static gboolean
 lrmd_exit(gpointer data)
 {
-    crm_info("Terminating with %d clients",
-             crm_hash_table_size(client_connections));
-
+    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
     if (stonith_api) {
         stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
         stonith_api->cmds->disconnect(stonith_api);

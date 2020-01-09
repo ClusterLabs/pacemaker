@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -111,7 +113,7 @@ cib_notify_send(xmlNode * xml)
         update.msg = xml;
         update.iov = iov;
         update.iov_size = rc;
-        g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
+        pcmk__foreach_ipc_client_remove(cib_notify_send_one, &update);
 
     } else {
         crm_notice("Could not notify clients: %s " CRM_XS " rc=%lld",

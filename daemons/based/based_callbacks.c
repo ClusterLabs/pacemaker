@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1453,22 +1453,22 @@ cib_shutdown(int nsig)
             disconnects++;
         }
 
-        disconnects += crm_hash_table_size(client_connections);
+        disconnects += pcmk__ipc_client_count();
 
-        crm_debug("Disconnecting %d remote clients", crm_hash_table_size(client_connections));
-        g_hash_table_foreach(client_connections, disconnect_remote_client, NULL);
+        crm_debug("Disconnecting %d remote clients", pcmk__ipc_client_count());
+        pcmk__foreach_ipc_client(disconnect_remote_client, NULL);
         crm_info("Disconnected %d clients", disconnects);
     }
 
     qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
 
-    if (crm_hash_table_size(client_connections) == 0) {
+    if (pcmk__ipc_client_count() == 0) {
         crm_info("All clients disconnected (%d)", srv_stats.active_connections);
         initiate_exit();
 
     } else {
         crm_info("Waiting on %d clients to disconnect (%d)",
-                 crm_hash_table_size(client_connections), srv_stats.active_connections);
+                 pcmk__ipc_client_count(), srv_stats.active_connections);
     }
 }
 

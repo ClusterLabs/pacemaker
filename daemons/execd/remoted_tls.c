@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -156,7 +156,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 
     /* if this is the last remote connection, stop recurring
      * operations */
-    if (crm_hash_table_size(client_connections) == 1) {
+    if (pcmk__ipc_client_count() == 1) {
         client_disconnect_cleanup(NULL);
     }
 

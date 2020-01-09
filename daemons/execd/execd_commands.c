@@ -608,8 +608,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         if (client) {
             send_client_notify(client->id, client, notify);
         }
-    } else if (client_connections != NULL) {
-        g_hash_table_foreach(client_connections, send_client_notify, notify);
+    } else {
+        pcmk__foreach_ipc_client(send_client_notify, notify);
     }
 
     free_xml(notify);
@@ -618,7 +618,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 static void
 send_generic_notify(int rc, xmlNode * request)
 {
-    if (client_connections != NULL) {
+    if (pcmk__ipc_client_count() != 0) {
         int call_id = 0;
         xmlNode *notify = NULL;
         xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
@@ -634,7 +634,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_xml_add(notify, F_LRMD_OPERATION, op);
         crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
-        g_hash_table_foreach(client_connections, send_client_notify, notify);
+        pcmk__foreach_ipc_client(send_client_notify, notify);
 
         free_xml(notify);
     }
@@ -794,28 +794,33 @@ action_get_uniform_rc(svc_action_t * action)
     return get_uniform_rc(action->standard, cmd->action, action->rc);
 }
 
+struct notify_new_client_data {
+    xmlNode *notify;
+    crm_client_t *new_client;
+};
+
+static void
+notify_one_client(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_client_t *client = value;
+    struct notify_new_client_data *data = user_data;
+
+    if (safe_str_neq(client->id, data->new_client->id)) {
+        send_client_notify(key, (gpointer) client, (gpointer) data->notify);
+    }
+}
+
 void
 notify_of_new_client(crm_client_t *new_client)
 {
-    crm_client_t *client = NULL;
-    GHashTableIter iter;
-    xmlNode *notify = NULL;
-    char *key = NULL;
+    struct notify_new_client_data data;
 
-    notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-    crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
-    crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
-
-    g_hash_table_iter_init(&iter, client_connections);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & client)) {
-
-        if (safe_str_eq(client->id, new_client->id)) {
-            continue;
-        }
-
-        send_client_notify((gpointer) key, (gpointer) client, (gpointer) notify);
-    }
-    free_xml(notify);
+    data.new_client = new_client;
+    data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+    crm_xml_add(data.notify, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(data.notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
+    pcmk__foreach_ipc_client(notify_one_client, &data);
+    free_xml(data.notify);
 }
 
 static char *
