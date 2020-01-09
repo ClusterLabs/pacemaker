@@ -112,7 +112,7 @@ extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 
 #define attrd_send_ack(client, id, flags) \
-    crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
+    pcmk__ipc_send_ack((client), (id), (flags), "ack")
 
 #define CIB_OP_TIMEOUT_S 120
 
@@ -123,7 +123,8 @@ void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);
-void attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query);
+void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                        xmlNode *query);
 
 void free_attribute(gpointer data);
 

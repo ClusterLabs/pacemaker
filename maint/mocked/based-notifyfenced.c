@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,20 +42,20 @@ struct cib_notification_s {
 
 /* see based/based_notify.c:cib_notify_send_one */
 static bool
-mock_based_cib_notify_send_one(crm_client_t *client, xmlNode *xml)
+mock_based_cib_notify_send_one(pcmk__client_t *client, xmlNode *xml)
 {
     const char *type = NULL;
     bool do_send = false;
-
     struct iovec *iov;
-    ssize_t rc = crm_ipc_prepare(0, xml, &iov, 0);
+    ssize_t bytes;
     struct cib_notification_s update = {
         .msg = xml,
-        .iov = iov,
-        .iov_size = rc,
     };
 
     CRM_CHECK(client != NULL, return true);
+    pcmk__ipc_prepare_iov(0, xml, 0, &iov, &bytes);
+    update.iov = iov;
+    update.iov_size = bytes;
     if (client->ipcs == NULL && client->remote == NULL) {
         crm_warn("Skipping client with NULL channel");
         return FALSE;
@@ -66,8 +66,10 @@ mock_based_cib_notify_send_one(crm_client_t *client, xmlNode *xml)
     if (is_set(client->options, cib_notify_diff)
             && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
 
-        if (crm_ipcs_sendv(client, update.iov, crm_ipc_server_event) < 0)
+        if (pcmk__ipc_send_iov(client, update.iov,
+                               crm_ipc_server_event) != pcmk_rc_ok) {
             crm_warn("Notification of client %s/%s failed", client->name, client->id);
+        }
 
     }
     pcmk_free_ipc_event(iov);
@@ -77,7 +79,7 @@ mock_based_cib_notify_send_one(crm_client_t *client, xmlNode *xml)
 
 /* see based/based_notify.c:do_cib_notify + cib_notify_send */
 void
-do_cib_notify(crm_client_t *cib_client, int options, const char *op,
+do_cib_notify(pcmk__client_t *cib_client, int options, const char *op,
               xmlNode *update, int result, xmlNode *result_data,
               const char *msg_type)
 {
@@ -128,7 +130,7 @@ do_cib_notify(crm_client_t *cib_client, int options, const char *op,
 static gboolean
 mock_based_notifyfencedmer_callback_worker(gpointer data)
 {
-    crm_client_t *cib_client = (crm_client_t *) data;
+    pcmk__client_t *cib_client = (pcmk__client_t *) data;
 
     xmlNode *result_data;
     xmlNode *input, *update;
@@ -173,7 +175,7 @@ mock_based_notifyfencedmer_callback_worker(gpointer data)
 }
 
 static void
-mock_based_notifyfenced_cib_notify_hook(crm_client_t *cib_client)
+mock_based_notifyfenced_cib_notify_hook(pcmk__client_t *cib_client)
 {
 
     /* MOCK: client asked for upcoming diff's, let's

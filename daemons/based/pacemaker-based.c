@@ -215,7 +215,7 @@ cib_cleanup(void)
     if (local_notify_queue) {
         g_hash_table_destroy(local_notify_queue);
     }
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     g_hash_table_destroy(config_hash);
     free(cib_our_uname);
 }

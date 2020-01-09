@@ -99,7 +99,7 @@ struct crm_remote_header_v0
 } __attribute__ ((packed));
 
 static struct crm_remote_header_v0 *
-crm_remote_header(crm_remote_t * remote)
+crm_remote_header(pcmk__remote_t *remote)
 {
     struct crm_remote_header_v0 *header = (struct crm_remote_header_v0 *)remote->buffer;
     if(remote->buffer_offset < sizeof(struct crm_remote_header_v0)) {
@@ -133,7 +133,7 @@ crm_remote_header(crm_remote_t * remote)
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
-crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
+crm_initiate_client_tls_handshake(pcmk__remote_t *remote, int timeout_ms)
 {
     int rc = 0;
     int pollrc = 0;
@@ -359,7 +359,7 @@ error:
  * \retval 1 if handshake is successfully completed
  */
 int
-pcmk__read_handshake_data(crm_client_t *client)
+pcmk__read_handshake_data(pcmk__client_t *client)
 {
     int rc = 0;
 
@@ -469,7 +469,7 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
 }
 
 static int
-crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
+crm_remote_sendv(pcmk__remote_t *remote, struct iovec * iov, int iovs)
 {
     int rc = 0;
 
@@ -490,7 +490,7 @@ crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
 }
 
 int
-crm_remote_send(crm_remote_t * remote, xmlNode * msg)
+crm_remote_send(pcmk__remote_t *remote, xmlNode *msg)
 {
     int rc = pcmk_ok;
     static uint64_t id = 0;
@@ -539,7 +539,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
  * \note new_data is owned by this function once it is passed in.
  */
 xmlNode *
-crm_remote_parse_buffer(crm_remote_t * remote)
+crm_remote_parse_buffer(pcmk__remote_t *remote)
 {
     xmlNode *xml = NULL;
     struct crm_remote_header_v0 *header = crm_remote_header(remote);
@@ -611,7 +611,7 @@ crm_remote_parse_buffer(crm_remote_t * remote)
  * \return Positive value if ready to be read, 0 on timeout, -errno on error
  */
 int
-crm_remote_ready(crm_remote_t *remote, int total_timeout)
+crm_remote_ready(pcmk__remote_t *remote, int total_timeout)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
@@ -672,7 +672,7 @@ crm_remote_ready(crm_remote_t *remote, int total_timeout)
  * \retval number of bytes received
  */
 static size_t
-crm_remote_recv_once(crm_remote_t * remote)
+crm_remote_recv_once(pcmk__remote_t *remote)
 {
     int rc = 0;
     size_t read_len = sizeof(struct crm_remote_header_v0);
@@ -773,7 +773,7 @@ crm_remote_recv_once(crm_remote_t * remote)
  * \return TRUE if at least one full message read, FALSE otherwise
  */
 gboolean
-crm_remote_recv(crm_remote_t *remote, int total_timeout, int *disconnected)
+crm_remote_recv(pcmk__remote_t *remote, int total_timeout, int *disconnected)
 {
     int rc;
     time_t start = time(NULL);

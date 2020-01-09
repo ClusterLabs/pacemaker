@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -212,8 +212,8 @@ void free_metadata_cache(void);
 
 long long get_stonith_flag(const char *name);
 
-void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
-                            xmlNode * op_request, const char *remote_peer);
+void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                            xmlNode *op_request, const char *remote_peer);
 
 int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
@@ -240,8 +240,9 @@ void do_stonith_notify(int options, const char *type, int result, xmlNode * data
 void do_stonith_notify_device(int options, const char *op, int rc, const char *desc);
 void do_stonith_notify_level(int options, const char *op, int rc, const char *desc);
 
-remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t * client, xmlNode * request,
-                                                       gboolean manual_ack);
+remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
+                                                xmlNode *request,
+                                                gboolean manual_ack);
 
 int process_remote_stonith_exec(xmlNode * msg);
 

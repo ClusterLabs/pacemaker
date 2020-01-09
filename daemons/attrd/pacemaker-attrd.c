@@ -240,20 +240,27 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
-    xmlNode *xml = crm_ipcs_recv(client, data, size, &id, &flags);
+    pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *xml = NULL;
     const char *op;
 
-    if (xml == NULL) {
-        crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK((c != NULL) && (client != NULL), return 0);
+    if (data == NULL) {
+        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
+    xml = pcmk__client_data2xml(client, data, size, &id, &flags);
+    if (xml == NULL) {
+        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
+
 #if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
     crm_acl_get_set_user(xml, F_ATTRD_USER, client->user);
 #endif
 
-    crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
     crm_log_xml_trace(xml, __FUNCTION__);
 
     op = crm_element_value(xml, F_ATTRD_TASK);
@@ -282,7 +289,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     } else if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
-  
+
     } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
@@ -304,7 +311,7 @@ void
 attrd_ipc_fini()
 {
     if (ipcs != NULL) {
-        crm_client_disconnect_all(ipcs);
+        pcmk__drop_all_clients(ipcs);
         qb_ipcs_destroy(ipcs);
         ipcs = NULL;
     }

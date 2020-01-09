@@ -11,7 +11,7 @@
 #include <stdlib.h>  /* size_t */
 #include <stdbool.h>  /* bool */
 
-#include <crm/common/ipcs_internal.h>  /* crm_client_t */
+#include <crm/common/ipcs_internal.h>  /* pcmk__client_t */
 
 
 struct module_s;
@@ -29,7 +29,7 @@ typedef int (*mock_based_argparse_hook)(mock_based_context_t *,
 typedef void (*mock_based_destroy_hook)(struct module_s *);
 
 /* specialized callbacks... */
-typedef void (*mock_based_cib_notify_hook)(crm_client_t *);
+typedef void (*mock_based_cib_notify_hook)(pcmk__client_t *);
 
 typedef struct mock_based_hooks_s {
     /* generic ones */

@@ -24,17 +24,17 @@ extern "C" {
 #  include <crm/common/ipc.h>
 #  include <crm/common/mainloop.h>
 
-typedef struct crm_client_s crm_client_t;
+typedef struct pcmk__client_s pcmk__client_t;
 
-enum client_type {
-    CRM_CLIENT_IPC = 1,
-    CRM_CLIENT_TCP = 2,
+enum pcmk__client_type {
+    PCMK__CLIENT_IPC = 1,
+    PCMK__CLIENT_TCP = 2,
 #  ifdef HAVE_GNUTLS_GNUTLS_H
-    CRM_CLIENT_TLS = 3,
+    PCMK__CLIENT_TLS = 3,
 #  endif
 };
 
-struct crm_remote_s {
+struct pcmk__remote_s {
     /* Shared */
     char *buffer;
     size_t buffer_size;
@@ -54,13 +54,12 @@ struct crm_remote_s {
 #  endif
 };
 
-enum crm_client_flags
-{
-    crm_client_flag_ipc_proxied    = 0x00001, /* ipc_proxy code only */
-    crm_client_flag_ipc_privileged = 0x00002, /* root or cluster user */
+enum pcmk__client_flags {
+    pcmk__client_proxied    = 0x00001, /* ipc_proxy code only */
+    pcmk__client_privileged = 0x00002, /* root or cluster user */
 };
 
-struct crm_client_s {
+struct pcmk__client_s {
     uint pid;
 
     uid_t uid;
@@ -84,11 +83,11 @@ struct crm_client_s {
     /* Depending on the value of kind, only some of the following
      * will be populated/valid
      */
-    enum client_type kind;
+    enum pcmk__client_type kind;
 
     qb_ipcs_connection_t *ipcs; /* IPC */
 
-    struct crm_remote_s *remote;        /* TCP/TLS */
+    struct pcmk__remote_s *remote;        /* TCP/TLS */
 
     unsigned int queue_backlog; /* IPC queue length after last flush */
     unsigned int queue_max;     /* Evict client whose queue grows this big */
@@ -98,30 +97,34 @@ guint pcmk__ipc_client_count(void);
 void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
 void pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data);
 
-void crm_client_init(void);
-void crm_client_cleanup(void);
+void pcmk__client_cleanup(void);
 
-crm_client_t *crm_client_get(qb_ipcs_connection_t * c);
-crm_client_t *crm_client_get_by_id(const char *id);
-const char *crm_client_name(crm_client_t * c);
-const char *crm_client_type_text(enum client_type client_type);
+pcmk__client_t *pcmk__find_client(qb_ipcs_connection_t *c);
+pcmk__client_t *pcmk__find_client_by_id(const char *id);
+const char *pcmk__client_name(pcmk__client_t *c);
+const char *pcmk__client_type_str(enum pcmk__client_type client_type);
 
-crm_client_t *crm_client_alloc(void *key);
-crm_client_t *crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid);
-void crm_client_destroy(crm_client_t * c);
-void crm_client_disconnect_all(qb_ipcs_service_t *s);
-bool crm_set_client_queue_max(crm_client_t *client, const char *qmax);
+pcmk__client_t *pcmk__new_unauth_client(void *key);
+pcmk__client_t *pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid);
+void pcmk__free_client(pcmk__client_t *c);
+void pcmk__drop_all_clients(qb_ipcs_service_t *s);
+bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
-void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags,
-                       const char *tag, const char *function, int line);
+void pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
+                           uint32_t request, uint32_t flags, const char *tag);
+#define pcmk__ipc_send_ack(c, req, flags, tag) \
+    pcmk__ipc_send_ack_as(__FUNCTION__, __LINE__, (c), (req), (flags), (tag))
 
-/* when max_send_size is 0, default ipc buffer size is used */
-ssize_t crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uint32_t max_send_size);
-ssize_t crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message, enum crm_ipc_flags flags);
-ssize_t crm_ipcs_sendv(crm_client_t * c, struct iovec *iov, enum crm_ipc_flags flags);
-xmlNode *crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t * flags);
+int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
+                          uint32_t max_send_size,
+                          struct iovec **result, ssize_t *bytes);
+int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
+                       uint32_t flags);
+int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
+xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data, size_t size,
+                               uint32_t *id, uint32_t *flags);
 
-int crm_ipcs_client_pid(qb_ipcs_connection_t * c);
+int pcmk__client_pid(qb_ipcs_connection_t *c);
 
 #ifdef __cplusplus
 }

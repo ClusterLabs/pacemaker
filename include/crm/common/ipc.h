@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ enum crm_ipc_flags
     crm_ipc_proxied         = 0x00000100, /* _ALL_ replies to proxied connections need to be sent as events */
     crm_ipc_client_response = 0x00000200, /* A Response is expected in reply */
 
-    /* These options are just options for crm_ipcs_sendv() */
+    // These are options only for pcmk__ipc_send_iov()
     crm_ipc_server_event    = 0x00010000, /* Send an Event instead of a Response */
     crm_ipc_server_free     = 0x00020000, /* Free the iovec after sending */
     crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/

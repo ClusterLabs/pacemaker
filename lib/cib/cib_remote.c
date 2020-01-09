@@ -59,8 +59,8 @@ typedef struct cib_remote_opaque_s {
     char *user;
     char *passwd;
     gboolean encrypted;
-    crm_remote_t command;
-    crm_remote_t callback;
+    pcmk__remote_t command;
+    pcmk__remote_t callback;
 
 } cib_remote_opaque_t;
 
@@ -191,7 +191,7 @@ cib_tls_close(cib_t * cib)
 }
 
 static int
-cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
+cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 {
     int sock;
     cib_remote_opaque_t *private = cib->variant_opaque;

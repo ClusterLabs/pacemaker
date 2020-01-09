@@ -107,6 +107,9 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_ipc_pid_only        = -1020,
+    pcmk_rc_ipc_unresponsive    = -1019,
+    pcmk_rc_ipc_unauthorized    = -1018,
     pcmk_rc_no_quorum           = -1017,
     pcmk_rc_schema_validation   = -1016,
     pcmk_rc_schema_unchanged    = -1015,

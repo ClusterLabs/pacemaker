@@ -204,6 +204,18 @@ static struct pcmk__rc_info {
       "Operation requires quorum",
       -pcmk_err_no_quorum,
     },
+    { "pcmk_rc_ipc_pid_only",
+      "IPC server process is active but not accepting connections",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_ipc_unresponsive",
+      "IPC server is unresponsive",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_ipc_unauthorized",
+      "IPC server is blocked by unauthorized process",
+      -pcmk_err_generic,
+    },
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))

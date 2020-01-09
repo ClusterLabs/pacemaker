@@ -260,7 +260,7 @@ cib_remote_auth(xmlNode * login)
 static gboolean
 remote_auth_timeout_cb(gpointer data)
 {
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
 
     client->remote->auth_timeout = 0;
 
@@ -284,7 +284,7 @@ cib_remote_listen(gpointer data)
     int ssock = *(int *)data;
     int rc;
 
-    crm_client_t *new_client = NULL;
+    pcmk__client_t *new_client = NULL;
 
     static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
         .dispatch = cib_remote_msg,
@@ -314,13 +314,12 @@ cib_remote_listen(gpointer data)
 
     num_clients++;
 
-    crm_client_init();
-    new_client = crm_client_alloc(NULL);
-    new_client->remote = calloc(1, sizeof(crm_remote_t));
+    new_client = pcmk__new_unauth_client(NULL);
+    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        new_client->kind = CRM_CLIENT_TLS;
+        new_client->kind = PCMK__CLIENT_TLS;
 
         /* create gnutls session for the server socket */
         new_client->remote->tls_session = pcmk__new_tls_session(csock,
@@ -333,7 +332,7 @@ cib_remote_listen(gpointer data)
         }
 #endif
     } else {
-        new_client->kind = CRM_CLIENT_TCP;
+        new_client->kind = PCMK__CLIENT_TCP;
         new_client->remote->tcp_socket = csock;
     }
 
@@ -354,7 +353,7 @@ cib_remote_listen(gpointer data)
 void
 cib_remote_connection_destroy(gpointer user_data)
 {
-    crm_client_t *client = user_data;
+    pcmk__client_t *client = user_data;
     int csock = 0;
 
     if (client == NULL) {
@@ -367,11 +366,11 @@ cib_remote_connection_destroy(gpointer user_data)
     crm_trace("Num unfree'd clients: %d", num_clients);
 
     switch (client->kind) {
-        case CRM_CLIENT_TCP:
+        case PCMK__CLIENT_TCP:
             csock = client->remote->tcp_socket;
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case CRM_CLIENT_TLS:
+        case PCMK__CLIENT_TLS:
             if (client->remote->tls_session) {
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
 
@@ -393,7 +392,7 @@ cib_remote_connection_destroy(gpointer user_data)
         close(csock);
     }
 
-    crm_client_destroy(client);
+    pcmk__free_client(client);
 
     crm_trace("Freed the cib client");
 
@@ -404,7 +403,7 @@ cib_remote_connection_destroy(gpointer user_data)
 }
 
 static void
-cib_handle_remote_msg(crm_client_t * client, xmlNode * command)
+cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
     const char *value = NULL;
 
@@ -466,14 +465,17 @@ static int
 cib_remote_msg(gpointer data)
 {
     xmlNode *command = NULL;
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
     int disconnected = 0;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
-    crm_trace("%s callback", client->kind != CRM_CLIENT_TCP ? "secure" : "clear-text");
+    crm_trace("%s callback",
+              (client->kind == PCMK__CLIENT_TCP)? "clear-text" : "secure");
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    if (client->kind == CRM_CLIENT_TLS && (client->remote->tls_handshake_complete == FALSE)) {
+    if ((client->kind == PCMK__CLIENT_TLS)
+        && !(client->remote->tls_handshake_complete)) {
+
         int rc = pcmk__read_handshake_data(client);
 
         if (rc == 0) {

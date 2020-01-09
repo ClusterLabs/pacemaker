@@ -106,11 +106,11 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     crm_trace("New client connection %p", c);
     if (shutting_down) {
         crm_info("Ignoring new connection from pid %d during shutdown",
-                 crm_ipcs_client_pid(c));
+                 pcmk__client_pid(c));
         return -EPERM;
     }
 
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return pcmk_ok;
@@ -139,13 +139,13 @@ attrd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t *c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         crm_trace("Ignoring request to clean up unknown connection %p", c);
     } else {
         crm_trace("Cleaning up closed client connection %p", c);
-        crm_client_destroy(client);
+        pcmk__free_client(client);
     }
     return FALSE;
 }

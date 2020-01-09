@@ -50,7 +50,8 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 
 void send_cib_replace(const xmlNode * sync_request, const char *host);
 static void cib_process_request(xmlNode* request, gboolean force_synchronous,
-                                gboolean privileged, crm_client_t *cib_client);
+                                gboolean privileged,
+                                pcmk__client_t *cib_client);
 
 
 static int cib_process_command(xmlNode *request, xmlNode **reply,
@@ -68,13 +69,13 @@ gboolean cib_legacy_mode(void)
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
     if (cib_shutdown_flag) {
-        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
+        crm_info("Ignoring new IPC client [%d] during shutdown",
+                 pcmk__client_pid(c));
         return -EPERM;
     }
 
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -89,7 +90,7 @@ cib_ipc_created(qb_ipcs_connection_t * c)
 static int32_t
 cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     crm_trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, TRUE);
@@ -98,7 +99,7 @@ cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 static int32_t
 cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     crm_trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, FALSE);
@@ -108,13 +109,13 @@ cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
 static int32_t
 cib_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
     }
     crm_trace("Connection %p", c);
-    crm_client_destroy(client);
+    pcmk__free_client(client);
     return 0;
 }
 
@@ -146,7 +147,7 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
 
 void
 cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
-                           crm_client_t * cib_client, gboolean privileged)
+                           pcmk__client_t *cib_client, gboolean privileged)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
 
@@ -156,7 +157,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
-            crm_ipcs_send(cib_client, id, ack, flags);
+            pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             free_xml(ack);
         }
@@ -197,7 +198,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         if (flags & crm_ipc_client_response) {
             /* TODO - include rc */
-            crm_ipcs_send_ack(cib_client, id, flags, "ack", __FUNCTION__, __LINE__);
+            pcmk__ipc_send_ack(cib_client, id, flags, "ack");
         }
         return;
     }
@@ -211,8 +212,9 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     uint32_t id = 0;
     uint32_t flags = 0;
     int call_options = 0;
-    crm_client_t *cib_client = crm_client_get(c);
-    xmlNode *op_request = crm_ipcs_recv(cib_client, data, size, &id, &flags);
+    pcmk__client_t *cib_client = pcmk__find_client(c);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, size, &id,
+                                                &flags);
 
     if (op_request) {
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
@@ -220,7 +222,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
     if (op_request == NULL) {
         crm_trace("Invalid message from %p", c);
-        crm_ipcs_send_ack(cib_client, id, flags, "nack", __FUNCTION__, __LINE__);
+        pcmk__ipc_send_ack(cib_client, id, flags, "nack");
         return 0;
 
     } else if(cib_client == NULL) {
@@ -251,7 +253,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     if (is_set(cib_client->options, cib_is_daemon)) {
         const char *qmax = cib_config_lookup("cluster-ipc-limit");
 
-        if (crm_set_client_queue_max(cib_client, qmax)) {
+        if (pcmk__set_client_queue_max(cib_client, qmax)) {
             crm_trace("IPC threshold for %s[%u] is now %u",
                       cib_client->name, cib_client->pid, cib_client->queue_max);
         }
@@ -368,14 +370,13 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
 {
     int rid = 0;
     int call_id = 0;
-    ssize_t rc = 0;
-    crm_client_t *client_obj = NULL;
+    pcmk__client_t *client_obj = NULL;
 
     CRM_ASSERT(notify_src && client_id);
 
     crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
 
-    client_obj = crm_client_get_by_id(client_id);
+    client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
         crm_debug("Could not send response %d: client %s not found",
                   call_id, client_id);
@@ -403,19 +404,23 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
     }
 
     switch (client_obj->kind) {
-        case CRM_CLIENT_IPC:
-            rc = crm_ipcs_send(client_obj, rid, notify_src, (sync_reply?
-                               crm_ipc_flags_none : crm_ipc_server_event));
-            if (rc < 0) {
-                crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%lld",
-                         (sync_reply? "Synchronous" : "Asynchronous"),
-                         client_obj->name, pcmk_strerror(rc), (long long) rc);
+        case PCMK__CLIENT_IPC:
+            {
+                int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
+                                            (sync_reply? crm_ipc_flags_none
+                                             : crm_ipc_server_event));
+
+                if (rc != pcmk_rc_ok) {
+                    crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
+                             (sync_reply? "Synchronous" : "Asynchronous"),
+                             client_obj->name, pcmk_rc_str(rc), rc);
+                }
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case CRM_CLIENT_TLS:
+        case PCMK__CLIENT_TLS:
 #endif
-        case CRM_CLIENT_TCP:
+        case PCMK__CLIENT_TCP:
             crm_remote_send(client_obj->remote, notify_src);
             break;
         default:
@@ -472,9 +477,10 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 }
 
 static void
-parse_local_options_v1(crm_client_t * cib_client, int call_type, int call_options, const char *host,
-                    const char *op, gboolean * local_notify, gboolean * needs_reply,
-                    gboolean * process, gboolean * needs_forward)
+parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
+                       int call_options, const char *host, const char *op,
+                       gboolean *local_notify, gboolean *needs_reply,
+                       gboolean *process, gboolean *needs_forward)
 {
     if (cib_op_modifies(call_type)
         && !(call_options & cib_inhibit_bcast)) {
@@ -510,9 +516,10 @@ parse_local_options_v1(crm_client_t * cib_client, int call_type, int call_option
 }
 
 static void
-parse_local_options_v2(crm_client_t * cib_client, int call_type, int call_options, const char *host,
-                    const char *op, gboolean * local_notify, gboolean * needs_reply,
-                    gboolean * process, gboolean * needs_forward)
+parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
+                       int call_options, const char *host, const char *op,
+                       gboolean *local_notify, gboolean *needs_reply,
+                       gboolean *process, gboolean *needs_forward)
 {
     if (cib_op_modifies(call_type)) {
         if(safe_str_eq(op, CIB_OP_MASTER) || safe_str_eq(op, CIB_OP_SLAVE)) {
@@ -557,9 +564,10 @@ parse_local_options_v2(crm_client_t * cib_client, int call_type, int call_option
 }
 
 static void
-parse_local_options(crm_client_t * cib_client, int call_type, int call_options, const char *host,
-                    const char *op, gboolean * local_notify, gboolean * needs_reply,
-                    gboolean * process, gboolean * needs_forward)
+parse_local_options(pcmk__client_t *cib_client, int call_type,
+                    int call_options, const char *host, const char *op,
+                    gboolean *local_notify, gboolean *needs_reply,
+                    gboolean *process, gboolean *needs_forward)
 {
     if(cib_legacy_mode()) {
         parse_local_options_v1(cib_client, call_type, call_options, host,
@@ -810,7 +818,7 @@ parse_peer_options(int call_type, xmlNode * request,
 }
 
 static void
-forward_request(xmlNode * request, crm_client_t * cib_client, int call_options)
+forward_request(xmlNode * request, pcmk__client_t *cib_client, int call_options)
 {
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
@@ -892,7 +900,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
 static void
 cib_process_request(xmlNode *request, gboolean force_synchronous,
-                    gboolean privileged, crm_client_t *cib_client)
+                    gboolean privileged, pcmk__client_t *cib_client)
 {
     int call_type = 0;
     int call_options = 0;
@@ -1401,7 +1409,7 @@ cib_force_exit(gpointer data)
 static void
 disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
 {
-    crm_client_t *a_client = value;
+    pcmk__client_t *a_client = value;
 
     crm_err("Disconnecting %s... Not implemented", crm_str(a_client->name));
 }
