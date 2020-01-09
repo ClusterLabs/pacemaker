@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
 #include <crm/cib/internal.h>  /* cib_channel_ro */
 #include <crm/msg_xml.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>

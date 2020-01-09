@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 
 #include <crm_internal.h>
 #if 0
-#include "crm/common/ipcs.h"  /* crm_client_t */
+#include "crm/common/ipcs_internal.h"  /* crm_client_t */
 #include "crm/common/xml.h"  /* crm_xml_add */
 #endif
 #include "crm/msg_xml.h"  /* F_SUBTYPE */

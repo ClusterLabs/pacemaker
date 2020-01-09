@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/msg_xml.h>
 
 #include "pacemaker-execd.h"

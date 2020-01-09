@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define PACEMAKER_EXECD__H
 
 #  include <glib.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 

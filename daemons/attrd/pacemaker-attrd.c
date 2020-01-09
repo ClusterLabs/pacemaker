@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 

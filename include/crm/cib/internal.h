@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"

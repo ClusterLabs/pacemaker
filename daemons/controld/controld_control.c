@@ -18,7 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 #include <pacemaker-controld.h>
 

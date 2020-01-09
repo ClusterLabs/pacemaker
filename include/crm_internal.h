@@ -19,7 +19,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 #  include <crm/common/internal.h>
 
 /* This symbol allows us to deprecate public API and prevent internal code from

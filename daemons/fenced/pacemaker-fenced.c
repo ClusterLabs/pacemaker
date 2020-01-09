@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
