@@ -576,10 +576,34 @@ int
 pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
+    out->list_item(out, NULL, "STONITH of failed nodes %s",
+                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+
+    out->list_item(out, NULL, "Cluster is %s",
+                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+
+    switch (data_set->no_quorum_policy) {
+        case no_quorum_freeze:
+            out->list_item(out, NULL, "No quorum policy: Freeze resources");
+            break;
+
+        case no_quorum_stop:
+            out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
+            break;
+
+        case no_quorum_ignore:
+            out->list_item(out, NULL, "No quorum policy: Ignore");
+            break;
+
+        case no_quorum_suicide:
+            out->list_item(out, NULL, "No quorum policy: Suicide");
+            break;
+    }
+
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->info(out, "\n");
-        out->info(out, "              *** Resource management is DISABLED ***");
-        out->info(out, "  The cluster will not attempt to start, stop or recover services");
+        out->list_item(out, NULL, "Resource management DISABLED (the cluster will not attempt to start, stop, or recover services)");
+    } else {
+        out->list_item(out, NULL, "Resource management enabled");
     }
 
     return 0;
