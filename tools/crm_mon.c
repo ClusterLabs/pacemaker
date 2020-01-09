@@ -345,6 +345,10 @@ static GOptionEntry addl_entries[] = {
       "A recipient for your program (assuming you want the program to send something to someone).",
       "RCPT" },
 
+    { "watch-fencing", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, watch_fencing_cb,
+      "Listen for fencing events. For use with --external-agent.",
+      NULL },
+
     { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, use_cib_file_cb,
       NULL,
       NULL },
@@ -375,10 +379,6 @@ static GOptionEntry display_entries[] = {
 
     { "tickets", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_tickets_cb,
       "Display cluster tickets",
-      NULL },
-
-    { "watch-fencing", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, watch_fencing_cb,
-      "Listen for fencing events. For use with --external-agent",
       NULL },
 
     { "fence-history", 'm', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, fence_history_cb,
