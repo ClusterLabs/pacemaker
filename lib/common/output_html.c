@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,6 +36,7 @@ static const char *stylesheet_default =
 static gboolean cgi_output = FALSE;
 static char *stylesheet_link = NULL;
 static char *title = NULL;
+static GSList *extra_headers = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
     { "html-cgi", 0, 0, G_OPTION_ARG_NONE, &cgi_output,
@@ -142,6 +143,11 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     charset_node = create_xml_node(head_node, "meta");
     xmlSetProp(charset_node, (pcmkXmlStr) "charset", (pcmkXmlStr) "utf-8");
 
+    /* Add any extra header nodes the caller might have created. */
+    for (int i = 0; i < g_slist_length(extra_headers); i++) {
+        xmlAddChild(head_node, g_slist_nth_data(extra_headers, i));
+    }
+
     /* Stylesheets are included two different ways.  The first is via a built-in
      * default (see the stylesheet_default const above).  The second is via the
      * html-stylesheet option, and this should obviously be a link to a
@@ -181,6 +187,7 @@ html_reset(pcmk__output_t *out) {
 
     htmlDocDump(out->dest, priv->root->doc);
 
+    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_free_priv(out);
     html_init(out);
 }
@@ -395,15 +402,12 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 
 void
 pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
-    htmlNodePtr head_node;
     htmlNodePtr header_node;
     va_list ap;
 
-    head_node = find_xml_node(parent, "head", TRUE);
-
     va_start(ap, name);
 
-    header_node = create_xml_node(head_node, name);
+    header_node = xmlNewNode(NULL, (pcmkXmlStr) name);
     while (1) {
         char *key = va_arg(ap, char *);
         char *value;
@@ -415,6 +419,8 @@ pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
         value = va_arg(ap, char *);
         xmlSetProp(header_node, (pcmkXmlStr) key, (pcmkXmlStr) value);
     }
+
+    extra_headers = g_slist_append(extra_headers, header_node);
 
     va_end(ap);
 }
