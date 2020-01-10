@@ -499,7 +499,7 @@ main(int argc, char **argv)
 
     switch (action) {
         case 'I':
-            rc = pcmk__fence_installed(out, st, options.timeout);
+            rc = pcmk__fence_installed(out, st, options.timeout*1000);
             if (rc < 0) {
                 out->err(out, "Failed to list installed devices: %s", pcmk_strerror(rc));
             }
@@ -507,7 +507,7 @@ main(int argc, char **argv)
             break;
 
         case 'L':
-            rc = pcmk__fence_registered(out, st, target, options.timeout);
+            rc = pcmk__fence_registered(out, st, target, options.timeout*1000);
             if (rc < 0) {
                 out->err(out, "Failed to list registered devices: %s", pcmk_strerror(rc));
             }
@@ -522,7 +522,7 @@ main(int argc, char **argv)
             break;
 
         case 's':
-            rc = pcmk__fence_list_targets(out, st, target, options.timeout);
+            rc = pcmk__fence_list_targets(out, st, target, options.timeout*1000);
             if (rc < 0) {
                 out->err(out, "Couldn't list targets: %s", pcmk_strerror(rc));
             }
@@ -547,7 +547,7 @@ main(int argc, char **argv)
             break;
 
         case 'M':
-            rc = pcmk__fence_metadata(out, st, options.agent, options.timeout);
+            rc = pcmk__fence_metadata(out, st, options.agent, options.timeout*1000);
             if (rc != 0) {
                 out->err(out, "Can't get fence agent meta-data: %s", pcmk_strerror(rc));
             }
@@ -559,18 +559,18 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = pcmk__fence_action(st, target, "reboot", name, options.timeout,
-                                      options.tolerance);
+            rc = pcmk__fence_action(st, target, "reboot", name, options.timeout*1000,
+                                      options.tolerance*1000);
             break;
 
         case 'F':
-            rc = pcmk__fence_action(st, target, "off", name, options.timeout,
-                                      options.tolerance);
+            rc = pcmk__fence_action(st, target, "off", name, options.timeout*1000,
+                                      options.tolerance*1000);
             break;
 
         case 'U':
-            rc = pcmk__fence_action(st, target, "on", name, options.timeout,
-                                      options.tolerance);
+            rc = pcmk__fence_action(st, target, "on", name, options.timeout*1000,
+                                      options.tolerance*1000);
             break;
 
         case 'h':
@@ -578,14 +578,14 @@ main(int argc, char **argv)
             break;
 
         case 'H':
-            rc = pcmk__fence_history(out, st, target, options.timeout, args->quiet,
+            rc = pcmk__fence_history(out, st, target, options.timeout*1000, args->quiet,
                                        args->verbosity, options.broadcast, options.cleanup);
             break;
 
         case 'K':
             device = options.devices ? options.devices->key : NULL;
             rc = pcmk__fence_validate(out, st, options.agent, device, options.params,
-                                        options.timeout);
+                                        options.timeout*1000);
             break;
     }
 
