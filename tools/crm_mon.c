@@ -1854,10 +1854,9 @@ static void
 handle_html_output(crm_exit_t exit_code) {
     xmlNodePtr html = NULL;
 
-    out->finish(out, exit_code, false, (void **) &html);
     pcmk__html_add_header(html, "meta", "http-equiv", "refresh", "content",
                           crm_itoa(options.reconnect_msec/1000), NULL);
-    htmlDocDump(out->dest, html->doc);
+    out->finish(out, exit_code, true, (void **) &html);
 }
 
 /*
