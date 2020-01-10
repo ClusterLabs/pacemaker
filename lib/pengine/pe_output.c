@@ -167,7 +167,7 @@ resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
         buf = crm_strdup_printf("%s: orphan", rsc_id);
     } else if (all || failcount || last_failure > 0) {
         char *failcount_s = failcount > 0 ? crm_strdup_printf(" %s=%d", CRM_FAIL_COUNT_PREFIX, failcount) : strdup("");
-        char *lastfail_s = last_failure > 0 ? crm_strdup_printf(" %s=%s", CRM_LAST_FAILURE_PREFIX,
+        char *lastfail_s = last_failure > 0 ? crm_strdup_printf(" %s='%s'", CRM_LAST_FAILURE_PREFIX,
                                                                 crm_now_string(&last_failure)) : strdup("");
 
         buf = crm_strdup_printf("%s: migration-threshold=%d%s%s",
@@ -525,30 +525,42 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
-            out->list_item(out, NULL, "No Quorum policy: Freeze resources");
+            out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
         case no_quorum_stop:
-            out->list_item(out, NULL, "No Quorum policy: Stop ALL resources");
+            out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
         case no_quorum_ignore:
-            out->list_item(out, NULL, "No Quorum policy: Ignore");
+            out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
         case no_quorum_suicide:
-            out->list_item(out, NULL, "No Quorum policy: Suicide");
+            out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
+        pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
     } else {
-        out->list_item(out, NULL, "Resource management enabled");
+        out->list_item(out, NULL, "Resource management: enabled");
+    }
+
+    return 0;
+}
+
+int
+pe__cluster_options_log(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
     }
 
     return 0;
@@ -559,9 +571,9 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
-        fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
-        fprintf(out->dest, "\n");
+        out->info(out, "\n");
+        out->info(out, "              *** Resource management is DISABLED ***");
+        out->info(out, "  The cluster will not attempt to start, stop or recover services");
     }
 
     return 0;
@@ -1088,7 +1100,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
 }
 
 int
-pe__resource_history_text(pcmk__output_t *out, va_list args) {
+pe__resource_header_text(pcmk__output_t *out, va_list args) {
     resource_t *rsc = va_arg(args, resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
@@ -1098,6 +1110,21 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
     char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
 
     out->begin_list(out, NULL, NULL, "%s", buf);
+    free(buf);
+    return 0;
+}
+
+int
+pe__resource_history_text(pcmk__output_t *out, va_list args) {
+    resource_t *rsc = va_arg(args, resource_t *);
+    const char *rsc_id = va_arg(args, const char *);
+    gboolean all = va_arg(args, gboolean);
+    int failcount = va_arg(args, int);
+    time_t last_failure = va_arg(args, int);
+
+    char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
+
+    out->list_item(out, NULL, "%s", buf);
     free(buf);
     return 0;
 }
@@ -1219,7 +1246,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-dc", "text", pe__cluster_dc_text },
     { "cluster-dc", "xml", pe__cluster_dc_xml },
     { "cluster-options", "html", pe__cluster_options_html },
-    { "cluster-options", "log", pe__cluster_options_text },
+    { "cluster-options", "log", pe__cluster_options_log },
     { "cluster-options", "text", pe__cluster_options_text },
     { "cluster-options", "xml", pe__cluster_options_xml },
     { "cluster-stack", "html", pe__cluster_stack_html },
@@ -1254,6 +1281,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
+    { "resource-header", "text", pe__resource_header_text },
     { "resource-history", "html", pe__resource_history_text },
     { "resource-history", "log", pe__resource_history_text },
     { "resource-history", "text", pe__resource_history_text },

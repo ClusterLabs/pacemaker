@@ -264,7 +264,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
-            out->message(out, "resource-history", rsc, rsc_id, TRUE, failcount, last_failure);
+            out->message(out, "resource-header", rsc, rsc_id, TRUE, failcount, last_failure);
             printed = TRUE;
         }
 

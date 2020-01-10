@@ -340,6 +340,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-attribute", "console", pe__node_attribute_text },
     { "op-history", "console", pe__op_history_text },
     { "primitive", "console", pe__resource_text },
+    { "resource-header", "console", pe__resource_history_text },
     { "resource-history", "console", pe__resource_history_text },
     { "stonith-event", "console", stonith_event_console },
     { "ticket", "console", pe__ticket_text },
