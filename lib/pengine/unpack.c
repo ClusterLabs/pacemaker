@@ -2218,6 +2218,7 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
                 > (lock_time + data_set->shutdown_lock))) {
             pe_rsc_info(rsc, "Shutdown lock for %s on %s expired",
                         rsc->id, node->details->uname);
+            pe__clear_resource_history(rsc, node, data_set);
         } else {
             rsc->lock_node = node;
             rsc->lock_time = lock_time;

@@ -1026,6 +1026,7 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
             pe_rsc_info(rsc,
                         "Cancelling shutdown lock because %s is already active",
                         rsc->id);
+            pe__clear_resource_history(rsc, rsc->lock_node, data_set);
             rsc->lock_node = NULL;
             rsc->lock_time = 0;
         }

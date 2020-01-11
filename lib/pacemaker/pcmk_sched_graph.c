@@ -586,10 +586,11 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any reload).
-             * Only used with reload actions as 'first'.
              */
             set_bit(other->action->flags, pe_action_optional);
-            clear_bit(first->rsc->flags, pe_rsc_reload);
+            if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
+                clear_bit(first->rsc->flags, pe_rsc_reload);
+            }
         }
 
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
@@ -1039,6 +1040,11 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     } else if (safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
+    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+        // CIB-only clean-up for shutdown locks
+        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
+
 /* 	} else if(safe_str_eq(action->task, RSC_PROBED)) { */
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
@@ -1051,6 +1057,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
 #endif
@@ -1391,6 +1398,11 @@ should_dump_action(pe_action_t *action)
                action->uuid, action->id);
         log_action(LOG_DEBUG, "Unallocated action", action, false);
         return false;
+
+    } else if (is_set(action->flags, pe_action_dc)) {
+        crm_trace("Action %s (%d) should be dumped: "
+                  "can run on DC instead of %s",
+                  action->uuid, action->id, action->node->details->uname);
 
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {

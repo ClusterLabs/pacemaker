@@ -1403,6 +1403,12 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                             pe_order_runnable_left, data_set);
     }
 
+    // Don't clear resource history if probing on same node
+    custom_action_order(rsc, generate_op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
+                        NULL, rsc, generate_op_key(rsc->id, RSC_STATUS, 0),
+                        NULL, pe_order_same_node|pe_order_then_cancels_first,
+                        data_set);
+
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
         allowed_nodes = allowed_nodes_as_list(rsc, data_set);

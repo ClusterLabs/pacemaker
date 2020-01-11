@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -287,6 +287,8 @@ enum pe_action_flags {
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
+
+    pe_action_dc = 0x10000,         //! Action may run on DC instead of target
 };
 /* *INDENT-ON* */
 

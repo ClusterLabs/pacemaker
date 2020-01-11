@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -435,5 +435,7 @@ void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
                                 pe_working_set_t *data_set);
 
 bool pe__resource_is_disabled(pe_resource_t *rsc);
+pe_action_t *pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+                                        pe_working_set_t *data_set);
 
 #endif
