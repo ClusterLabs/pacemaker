@@ -180,7 +180,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     }
 
     rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
-                           broadcast ? st_opt_broadcast : 0,
+                           (broadcast ? st_opt_broadcast : 0),
                            safe_str_eq(target, "*") ? NULL : target,
                            &history, timeout/1000);
 
