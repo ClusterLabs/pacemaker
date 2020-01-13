@@ -180,7 +180,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     }
 
     rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
-                           broadcast ? st_opt_broadcast : 0,
+                           (broadcast ? st_opt_broadcast : 0),
                            safe_str_eq(target, "*") ? NULL : target,
                            &history, timeout/1000);
 
@@ -240,7 +240,8 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) 
     int rc = pcmk_rc_ok;
 
     rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout/1000);
-    if (rc != pcmk_rc_ok) {
+    /* list_agents returns a negative error code or a positive number of agents. */
+    if (rc < 0) {
         return pcmk_legacy2rc(rc);
     }
 
@@ -390,7 +391,8 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
     int rc = pcmk_rc_ok;
 
     rc = st->cmds->query(st, st_opts, target, &devices, timeout/1000);
-    if (rc != pcmk_rc_ok) {
+    /* query returns a negative error code or a positive number of results. */
+    if (rc < 0) {
         return pcmk_legacy2rc(rc);
     }
 
@@ -401,7 +403,11 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
     out->end_list(out);
 
     stonith_key_value_freeall(devices, 1, 1);
-    return rc;
+
+    /* Return pcmk_rc_ok here, not the number of results.  Callers probably
+     * don't care.
+     */
+    return pcmk_rc_ok;
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
