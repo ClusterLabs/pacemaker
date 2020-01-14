@@ -473,6 +473,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     const char *rsc_type = NULL;
     xmlNode *params = NULL;
     xmlNode *msg_data = NULL;
+    bool cib_only = false;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
@@ -504,10 +505,14 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         }
 
         if (!(node->details->online)) {
-            CMD_ERR("Node %s is not online", host_uname);
-            return -ENOTCONN;
+            if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
+                cib_only = true;
+            } else {
+                CMD_ERR("Node %s is not online", host_uname);
+                return -ENOTCONN;
+            }
         }
-        if (pe__is_guest_or_remote_node(node)) {
+        if (!cib_only && pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
@@ -531,6 +536,11 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
     if (safe_str_neq(router_node, host_uname)) {
         crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+    }
+
+    if (cib_only) {
+        // Indicate that only the CIB needs to be cleaned
+        crm_xml_add(msg_data, PCMK__XA_MODE, XML_TAG_CIB);
     }
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
