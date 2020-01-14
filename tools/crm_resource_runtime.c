@@ -468,8 +468,9 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     int rc = -ECOMM;
     xmlNode *cmd = NULL;
     xmlNode *xml_rsc = NULL;
-    const char *value = NULL;
     const char *router_node = host_uname;
+    const char *rsc_class = NULL;
+    const char *rsc_type = NULL;
     xmlNode *params = NULL;
     xmlNode *msg_data = NULL;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
@@ -481,27 +482,49 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     } else if (rsc->variant != pe_native) {
         CMD_ERR("We can only process primitive resources, not %s", rsc_id);
         return -EINVAL;
+    }
 
-    } else if (host_uname == NULL) {
+    rsc_class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    if ((rsc_class == NULL) || (rsc_type == NULL)) {
+        CMD_ERR("Resource %s does not have a class and type", rsc_id);
+        return -EINVAL;
+    }
+
+    if (host_uname == NULL) {
         CMD_ERR("Please specify a node name");
         return -EINVAL;
-    } else {
-        node_t *node = pe_find_node(data_set->nodes, host_uname);
 
+    } else {
+        pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
+
+        if (node == NULL) {
+            CMD_ERR("Node %s not found", host_uname);
+            return -pcmk_err_node_unknown;
+        }
+
+        if (!(node->details->online)) {
+            CMD_ERR("Node %s is not online", host_uname);
+            return -ENOTCONN;
+        }
         if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
                         host_uname);
-                return -ENXIO;
+                return -ENOTCONN;
             }
             router_node = node->details->uname;
         }
     }
 
-    key = generate_transition_key(0, getpid(), 0, "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-
     msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+
+    /* The controller logs the transition key from requests, so we need to have
+     * *something* for it.
+     */
+    key = generate_transition_key(0, getpid(), 0,
+                                  "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
     crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
     free(key);
 
@@ -519,31 +542,20 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
     }
 
-    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_ATTR_TYPE);
-    if (value == NULL) {
-        CMD_ERR("%s has no type!  Aborting...", rsc_id);
-        return -ENXIO;
-    }
-
-    value = crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_CLASS);
-    if (value == NULL) {
-        CMD_ERR("%s has no class!  Aborting...", rsc_id);
-        return -ENXIO;
-    }
-
+    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, rsc_class);
     crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_PROVIDER);
+    crm_xml_add(xml_rsc, XML_ATTR_TYPE, rsc_type);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
     crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    // The controller parses the timeout from the request
+    key = crm_meta_name(XML_ATTR_TIMEOUT);
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
     our_pid = crm_getpid_s();
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-
-/* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
     free_xml(msg_data);
 
     if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
