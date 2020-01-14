@@ -39,8 +39,6 @@ struct delete_event_s {
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
-static int delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
-                             const char *user_name);
 
 static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
                                        const char *rsc_id, const char *operation);
@@ -178,7 +176,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
     if (op->rsc_deleted) {
         crm_debug("Purged history for '%s' after %s", op->rsc_id, op->op_type);
-        delete_rsc_status(lrm_state, op->rsc_id, cib_quorum_override, NULL);
+        controld_delete_resource_history(op->rsc_id, lrm_state->node_name,
+                                         NULL, crmd_cib_smart_opt());
         return;
     }
 
@@ -927,34 +926,6 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-/*
- * Remove the rsc from the CIB
- *
- * Avoids refreshing the entire LRM section of this host
- */
-#define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
-
-static int
-delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
-                  const char *user_name)
-{
-    char *rsc_xpath = NULL;
-    int max = 0;
-    int rc = pcmk_ok;
-
-    CRM_CHECK(rsc_id != NULL, return -ENXIO);
-
-    max = strlen(rsc_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + 1;
-    rsc_xpath = calloc(1, max);
-    snprintf(rsc_xpath, max, rsc_template, lrm_state->node_name, rsc_id);
-
-    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
-                         NULL, NULL, call_options | cib_xpath, user_name);
-
-    free(rsc_xpath);
-    return rc;
-}
-
 static void
 delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id,
                  GHashTableIter * rsc_gIter, int rc, const char *user_name)
@@ -971,7 +942,8 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
         else
             g_hash_table_remove(lrm_state->resource_history, rsc_id_copy);
         crm_debug("sync: Sending delete op for %s", rsc_id_copy);
-        delete_rsc_status(lrm_state, rsc_id_copy, cib_quorum_override, user_name);
+        controld_delete_resource_history(rsc_id_copy, lrm_state->node_name,
+                                         user_name, crmd_cib_smart_opt());
 
         g_hash_table_foreach_remove(lrm_state->pending_ops, lrm_remove_deleted_op, rsc_id_copy);
         free(rsc_id_copy);
@@ -1692,21 +1664,17 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
     gboolean unregister = TRUE;
 
 #if ENABLE_ACL
-    int cib_rc = delete_rsc_status(lrm_state, rsc->id,
-                                   cib_dryrun|cib_sync_call, user_name);
+    int cib_rc = controld_delete_resource_history(rsc->id, lrm_state->node_name,
+                                                  user_name,
+                                                  cib_dryrun|cib_sync_call);
 
-    if (cib_rc != pcmk_ok) {
+    if (cib_rc != pcmk_rc_ok) {
         lrmd_event_data_t *op = NULL;
-
-        crm_err("Could not delete resource status of %s for %s (user %s) on %s: %s"
-                CRM_XS " rc=%d",
-                rsc->id, from_sys, (user_name? user_name : "unknown"),
-                from_host, pcmk_strerror(cib_rc), cib_rc);
 
         op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
         op->op_status = PCMK_LRM_OP_ERROR;
 
-        if (cib_rc == -EACCES) {
+        if (cib_rc == EACCES) {
             op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
         } else {
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
