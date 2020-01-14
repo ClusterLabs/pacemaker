@@ -928,6 +928,11 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
     }
     free(managed);
 
+    if (rsc->lock_node) {
+        printf("%s  * '%s' is locked to node %s due to shutdown\n",
+               (printed? "" : "\n"), parent->id, rsc->lock_node->details->uname);
+    }
+
     if (printed) {
         printf("\n");
     }
