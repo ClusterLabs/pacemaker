@@ -860,7 +860,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
 void
 cli_resource_check(cib_t * cib_conn, resource_t *rsc)
 {
-    int need_nl = 0;
+    bool printed = false;
     char *role_s = NULL;
     char *managed = NULL;
     resource_t *parent = uber_parent(rsc);
@@ -877,21 +877,25 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             // Treated as if unset
 
         } else if(role == RSC_ROLE_STOPPED) {
-            printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
-            need_nl++;
+            printf("\n  * Configuration specifies '%s' should remain stopped\n",
+                   parent->id);
+            printed = true;
 
         } else if(parent->variant == pe_master && role == RSC_ROLE_SLAVE) {
-            printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
-            need_nl++;
+            printf("\n  * Configuration specifies '%s' should not be promoted\n",
+                   parent->id);
+            printed = true;
         }
     }
 
-    if(managed && crm_is_true(managed) == FALSE) {
-        printf("%s  * The configuration prevents the cluster from stopping or starting '%s' (unmanaged)\n", need_nl == 0?"\n":"", parent->id);
-        need_nl++;
+    if (managed && !crm_is_true(managed)) {
+        printf("%s  * Configuration prevents cluster from stopping or starting unmanaged '%s'\n",
+               (printed? "" : "\n"), parent->id);
+        printed = true;
     }
+    free(managed);
 
-    if(need_nl) {
+    if (printed) {
         printf("\n");
     }
 }
