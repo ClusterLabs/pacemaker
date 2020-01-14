@@ -216,6 +216,8 @@ pid_t pcmk_locate_sbd(void);
 #  define ATTRD_OP_SYNC_RESPONSE "sync-response"
 #  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
 
+#  define PCMK__XA_MODE             "mode"
+
 #  define PCMK_ENV_PHYSICAL_HOST "physical_host"
 
 

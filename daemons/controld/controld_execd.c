@@ -1769,7 +1769,9 @@ do_lrm_invoke(long long action,
     crm_trace("Executor %s command from %s", crm_op, from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
-        crm_rsc_delete = TRUE; // Only crm_resource uses this op
+        if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+            crm_rsc_delete = TRUE; // from crm_resource
+        }
         operation = CRMD_ACTION_DELETE;
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {

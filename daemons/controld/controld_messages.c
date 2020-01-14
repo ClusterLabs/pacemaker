@@ -410,6 +410,14 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     } else if (safe_str_eq(fsa_our_uname, host_to)) {
         is_local = 1;
+    } else if (is_for_crm && safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+        xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
+        const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
+
+        if (safe_str_eq(mode, XML_TAG_CIB)) {
+            // Local delete of an offline node's resource history
+            is_local = 1;
+        }
     }
 
     if (is_for_dc || is_for_dcib || is_for_te) {
@@ -652,6 +660,86 @@ handle_failcount_op(xmlNode * stored_msg)
     lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
     return I_NULL;
+}
+
+static enum crmd_fsa_input
+handle_lrm_delete(xmlNode *stored_msg)
+{
+    const char *mode = NULL;
+    xmlNode *msg_data = get_message_xml(stored_msg, F_CRM_DATA);
+
+    CRM_CHECK(msg_data != NULL, return I_NULL);
+
+    /* CRM_OP_LRM_DELETE has two distinct modes. The default behavior is to
+     * relay the operation to the affected node, which will unregister the
+     * resource from the local executor, clear the resource's history from the
+     * CIB, and do some bookkeeping in the controller.
+     *
+     * However, if the affected node is offline, the client will specify
+     * mode="cib" which means the controller receiving the operation should
+     * clear the resource's history from the CIB and nothing else. This is used
+     * to clear shutdown locks.
+     */
+    mode = crm_element_value(msg_data, PCMK__XA_MODE);
+    if ((mode == NULL) || strcmp(mode, XML_TAG_CIB)) {
+        // Relay to affected node
+        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        return I_ROUTER;
+
+    } else {
+        // Delete CIB history locally (compare with do_lrm_delete())
+        const char *from_sys = NULL;
+        const char *user_name = NULL;
+        const char *rsc_id = NULL;
+        const char *node = NULL;
+        xmlNode *rsc_xml = NULL;
+        int rc = pcmk_rc_ok;
+
+        rsc_xml = first_named_child(msg_data, XML_CIB_TAG_RESOURCE);
+        CRM_CHECK(rsc_xml != NULL, return I_NULL);
+
+        rsc_id = ID(rsc_xml);
+        from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
+        node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
+#if ENABLE_ACL
+        user_name = crm_acl_get_set_user(stored_msg, F_CRM_USER, NULL);
+#endif
+        crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
+                  "(clearing CIB resource history only)", rsc_id, node,
+                  (user_name? " for user " : ""), (user_name? user_name : ""));
+#if ENABLE_ACL
+        rc = controld_delete_resource_history(rsc_id, node, user_name,
+                                              cib_dryrun|cib_sync_call);
+#endif
+        if (rc == pcmk_rc_ok) {
+            rc = controld_delete_resource_history(rsc_id, node, user_name,
+                                                  crmd_cib_smart_opt());
+        }
+
+        // Notify client if not from graph (compare with notify_deleted())
+        if (from_sys && strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
+            lrmd_event_data_t *op = NULL;
+            const char *from_host = crm_element_value(stored_msg,
+                                                      F_CRM_HOST_FROM);
+            const char *transition = crm_element_value(msg_data,
+                                                       XML_ATTR_TRANSITION_KEY);
+
+            crm_info("Notifying %s on %s that %s was%s deleted",
+                     from_sys, (from_host? from_host : "local node"), rsc_id,
+                     ((rc == pcmk_rc_ok)? "" : " not"));
+            op = lrmd_new_event(rsc_id, CRMD_ACTION_DELETE, 0);
+            op->type = lrmd_event_exec_complete;
+            op->user_data = strdup(transition? transition : FAKE_TE_ID);
+            op->params = crm_str_table_new();
+            g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION),
+                                strdup(CRM_FEATURE_SET));
+            controld_rc2event(op, rc);
+            controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
+            lrmd_free_event(op);
+            controld_trigger_delete_refresh(from_sys, rsc_id);
+        }
+        return I_NULL;
+    }
 }
 
 /*!
@@ -913,9 +1001,12 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         crm_debug("Raising I_JOIN_RESULT: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
         return I_JOIN_RESULT;
 
-    } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0
-               || strcmp(op, CRM_OP_LRM_FAIL) == 0
-               || strcmp(op, CRM_OP_LRM_REFRESH) == 0 || strcmp(op, CRM_OP_REPROBE) == 0) {
+    } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
+        return handle_lrm_delete(stored_msg);
+
+    } else if ((strcmp(op, CRM_OP_LRM_FAIL) == 0)
+               || (strcmp(op, CRM_OP_LRM_REFRESH) == 0)
+               || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
         crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
