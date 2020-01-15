@@ -147,12 +147,7 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-
-    op->rsc_id = strdup(ID(cib_resource));
-    op->interval = interval;
-    op->op_type = strdup(task);
-
+    op = lrmd_new_event(ID(cib_resource), task, interval);
     op->rc = outcome;
     op->op_status = 0;
     op->params = NULL;          /* TODO: Fill me in */
