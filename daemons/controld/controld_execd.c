@@ -1878,15 +1878,10 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     CRM_ASSERT(rsc_id && operation);
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-    CRM_ASSERT(op != NULL);
-
+    op = lrmd_new_event(rsc_id, operation, 0);
     op->type = lrmd_event_exec_complete;
-    op->op_type = strdup(operation);
     op->op_status = PCMK_LRM_OP_PENDING;
     op->rc = -1;
-    op->rsc_id = strdup(rsc_id);
-    op->interval_ms = 0;
     op->timeout = 0;
     op->start_delay = 0;
 
