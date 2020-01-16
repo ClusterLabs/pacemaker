@@ -520,6 +520,11 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
         action->uuid = strdup(key);
 
+        if (safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+            // Resource history deletion for a node can be done on the DC
+            pe_set_action_bit(action, pe_action_dc);
+        }
+
         pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
             pe_set_action_bit(action, pe_action_optional);
@@ -588,7 +593,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             pe_set_action_bit(action, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
-        } else if (action->node->details->online == FALSE
+        } else if (is_not_set(action->flags, pe_action_dc)
+                   && !(action->node->details->online)
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
@@ -600,7 +606,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
                 pe_fence_node(data_set, action->node, "resource actions are unrunnable");
             }
 
-        } else if (action->node->details->pending) {
+        } else if (is_not_set(action->flags, pe_action_dc)
+                   && action->node->details->pending) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
                        action->uuid, action->node->details->uname);
@@ -714,6 +721,8 @@ unpack_operation_on_fail(action_t * action)
 
             value = on_fail;
         }
+    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+        value = "ignore";
     }
 
     return value;
@@ -2594,4 +2603,25 @@ pe__resource_is_disabled(pe_resource_t *rsc)
         }
     }
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Create an action to clear a resource's history from CIB
+ *
+ * \param[in] rsc   Resource to clear
+ * \param[in] node  Node to clear history on
+ *
+ * \return New action to clear resource history
+ */
+pe_action_t *
+pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+                           pe_working_set_t *data_set)
+{
+    char *key = NULL;
+
+    CRM_ASSERT(rsc && node);
+    key = generate_op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
+    return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
+                         data_set);
 }

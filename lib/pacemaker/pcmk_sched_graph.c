@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -586,10 +586,11 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any reload).
-             * Only used with reload actions as 'first'.
              */
             set_bit(other->action->flags, pe_action_optional);
-            clear_bit(first->rsc->flags, pe_rsc_reload);
+            if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
+                clear_bit(first->rsc->flags, pe_rsc_reload);
+            }
         }
 
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
@@ -988,6 +989,26 @@ add_downed_nodes(xmlNode *xml, const action_t *action,
     }
 }
 
+static bool
+should_lock_action(pe_action_t *action)
+{
+    // Only actions taking place on resource's lock node are locked
+    if ((action->rsc->lock_node == NULL) || (action->node == NULL)
+        || (action->node->details != action->rsc->lock_node->details)) {
+        return false;
+    }
+
+    /* During shutdown, only stops are locked (otherwise, another action such as
+     * a demote would cause the controller to clear the lock)
+     */
+    if (action->node->details->shutdown && action->task
+        && strcmp(action->task, RSC_STOP)) {
+        return false;
+    }
+
+    return true;
+}
+
 static xmlNode *
 action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
@@ -1019,6 +1040,11 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     } else if (safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
+    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+        // CIB-only clean-up for shutdown locks
+        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
+
 /* 	} else if(safe_str_eq(action->task, RSC_PROBED)) { */
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
@@ -1031,6 +1057,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
 #endif
@@ -1096,6 +1123,14 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             XML_AGENT_ATTR_PROVIDER,
             XML_ATTR_TYPE
         };
+
+        /* If a resource is locked to a node via shutdown-lock, mark its actions
+         * so the controller can preserve the lock when the action completes.
+         */
+        if (should_lock_action(action)) {
+            crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                           (long long) action->rsc->lock_time);
+        }
 
         // List affected resource
 
@@ -1363,6 +1398,11 @@ should_dump_action(pe_action_t *action)
                action->uuid, action->id);
         log_action(LOG_DEBUG, "Unallocated action", action, false);
         return false;
+
+    } else if (is_set(action->flags, pe_action_dc)) {
+        crm_trace("Action %s (%d) should be dumped: "
+                  "can run on DC instead of %s",
+                  action->uuid, action->id, action->node->details->uname);
 
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {

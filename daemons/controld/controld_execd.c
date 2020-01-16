@@ -36,20 +36,16 @@ struct delete_event_s {
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
-static int delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
-                             const char *user_name);
 
 static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
                                        const char *rsc_id, const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                           const char *operation, xmlNode *msg);
 
-void send_direct_ack(const char *to_host, const char *to_sys,
-                     lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, const char *rsc_id);
-
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
-static int do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op);
+static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
+                              lrmd_event_data_t *op, time_t lock_time);
 
 static void
 lrm_connection_destroy(void)
@@ -169,7 +165,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
     if (op->rsc_deleted) {
         crm_debug("Purged history for '%s' after %s", op->rsc_id, op->op_type);
-        delete_rsc_status(lrm_state, op->rsc_id, cib_quorum_override, NULL);
+        controld_delete_resource_history(op->rsc_id, lrm_state->node_name,
+                                         NULL, crmd_cib_smart_opt());
         return;
     }
 
@@ -279,7 +276,7 @@ send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
 
     op->rc = PCMK_OCF_OK;
     op->op_status = PCMK_LRM_OP_DONE;
-    send_direct_ack(ack_host, ack_sys, rsc, op, rsc_id);
+    controld_ack_event_directly(ack_host, ack_sys, rsc, op, rsc_id);
     lrmd_free_event(op);
 }
 
@@ -851,6 +848,57 @@ controld_query_executor_state(const char *node_name)
                                  node_update_cluster|node_update_peer);
 }
 
+/*!
+ * \internal
+ * \brief Map standard Pacemaker return code to operation status and OCF code
+ *
+ * \param[out] event  Executor event whose status and return code should be set
+ * \param[in]  rc     Standard Pacemaker return code
+ */
+void
+controld_rc2event(lrmd_event_data_t *event, int rc)
+{
+    switch (rc) {
+        case pcmk_rc_ok:
+            event->rc = PCMK_OCF_OK;
+            event->op_status = PCMK_LRM_OP_DONE;
+            break;
+        case EACCES:
+            event->rc = PCMK_OCF_INSUFFICIENT_PRIV;
+            event->op_status = PCMK_LRM_OP_ERROR;
+            break;
+        default:
+            event->rc = PCMK_OCF_UNKNOWN_ERROR;
+            event->op_status = PCMK_LRM_OP_ERROR;
+            break;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Trigger a new transition after CIB status was deleted
+ *
+ * If a CIB status delete was not expected (as part of the transition graph),
+ * trigger a new transition by updating the (arbitrary) "last-lrm-refresh"
+ * cluster property.
+ *
+ * \param[in] from_sys  IPC name that requested the delete
+ * \param[in] rsc_id    Resource whose status was deleted (for logging only)
+ */
+void
+controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
+{
+    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+        char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
+
+        crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
+        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                             NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s,
+                             FALSE, NULL, NULL);
+        free(now_s);
+    }
+}
+
 static void
 notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id, int rc)
 {
@@ -861,33 +909,11 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
     crm_info("Notifying %s on %s that %s was%s deleted",
              from_sys, (from_host? from_host : "localhost"), rsc_id,
              ((rc == pcmk_ok)? "" : " not"));
-
     op = construct_op(lrm_state, input->xml, rsc_id, CRMD_ACTION_DELETE);
-
-    if (rc == pcmk_ok) {
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_OCF_OK;
-    } else {
-        op->op_status = PCMK_LRM_OP_ERROR;
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    send_direct_ack(from_host, from_sys, NULL, op, rsc_id);
+    controld_rc2event(op, pcmk_legacy2rc(rc));
+    controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
     lrmd_free_event(op);
-
-    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
-        /* this isn't expected - trigger a new transition */
-        time_t now = time(NULL);
-        char *now_s = crm_itoa(now);
-
-        crm_debug("Triggering a refresh after %s deleted %s from the executor",
-                  from_sys, rsc_id);
-
-        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             "last-lrm-refresh", now_s, FALSE, NULL, NULL);
-
-        free(now_s);
-    }
+    controld_trigger_delete_refresh(from_sys, rsc_id);
 }
 
 static gboolean
@@ -917,31 +943,6 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-/*
- * Remove the rsc from the CIB
- *
- * Avoids refreshing the entire LRM section of this host
- */
-#define RSC_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
-
-static int
-delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
-                  const char *user_name)
-{
-    char *rsc_xpath = NULL;
-    int rc = pcmk_ok;
-
-    CRM_CHECK(rsc_id != NULL, return -ENXIO);
-
-    rsc_xpath = crm_strdup_printf(RSC_TEMPLATE, lrm_state->node_name, rsc_id);
-
-    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
-                         NULL, NULL, call_options | cib_xpath, user_name);
-
-    free(rsc_xpath);
-    return rc;
-}
-
 static void
 delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id,
                  GHashTableIter * rsc_gIter, int rc, const char *user_name)
@@ -958,7 +959,8 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
         else
             g_hash_table_remove(lrm_state->resource_history, rsc_id_copy);
         crm_debug("sync: Sending delete op for %s", rsc_id_copy);
-        delete_rsc_status(lrm_state, rsc_id_copy, cib_quorum_override, user_name);
+        controld_delete_resource_history(rsc_id_copy, lrm_state->node_name,
+                                         user_name, crmd_cib_smart_opt());
 
         g_hash_table_foreach_remove(lrm_state->pending_ops, lrm_remove_deleted_op, rsc_id_copy);
         free(rsc_id_copy);
@@ -1520,7 +1522,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 #if ENABLE_ACL
     if (user_name && is_privileged(user_name) == FALSE) {
         crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
-        send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+        controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
         lrmd_free_event(op);
         return;
     }
@@ -1539,7 +1541,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
         crm_log_xml_warn(xml, "bad input");
     }
 
-    send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+    controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
     lrmd_free_event(op);
 }
 
@@ -1694,26 +1696,22 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
     gboolean unregister = TRUE;
 
 #if ENABLE_ACL
-    int cib_rc = delete_rsc_status(lrm_state, rsc->id,
-                                   cib_dryrun|cib_sync_call, user_name);
+    int cib_rc = controld_delete_resource_history(rsc->id, lrm_state->node_name,
+                                                  user_name,
+                                                  cib_dryrun|cib_sync_call);
 
-    if (cib_rc != pcmk_ok) {
+    if (cib_rc != pcmk_rc_ok) {
         lrmd_event_data_t *op = NULL;
-
-        crm_err("Could not delete resource status of %s for %s (user %s) on %s: %s"
-                CRM_XS " rc=%d",
-                rsc->id, from_sys, (user_name? user_name : "unknown"),
-                from_host, pcmk_strerror(cib_rc), cib_rc);
 
         op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
         op->op_status = PCMK_LRM_OP_ERROR;
 
-        if (cib_rc == -EACCES) {
+        if (cib_rc == EACCES) {
             op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
         } else {
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
         }
-        send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
+        controld_ack_event_directly(from_host, from_sys, NULL, op, rsc->id);
         lrmd_free_event(op);
         return;
     }
@@ -1771,7 +1769,9 @@ do_lrm_invoke(long long action,
     crm_trace("Executor %s command from %s", crm_op, from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
-        crm_rsc_delete = TRUE; // Only crm_resource uses this op
+        if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+            crm_rsc_delete = TRUE; // from crm_resource
+        }
         operation = CRMD_ACTION_DELETE;
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
@@ -1881,15 +1881,10 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     CRM_ASSERT(rsc_id && operation);
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-    CRM_ASSERT(op != NULL);
-
+    op = lrmd_new_event(rsc_id, operation, 0);
     op->type = lrmd_event_exec_complete;
-    op->op_type = strdup(operation);
     op->op_status = PCMK_LRM_OP_PENDING;
     op->rc = -1;
-    op->rsc_id = strdup(rsc_id);
-    op->interval_ms = 0;
     op->timeout = 0;
     op->start_delay = 0;
 
@@ -2029,9 +2024,23 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     return op;
 }
 
+/*!
+ * \internal
+ * \brief Send a (synthesized) event result
+ *
+ * Reply with a synthesized event result directly, as opposed to going through
+ * the executor.
+ *
+ * \param[in] to_host  Host to send result to
+ * \param[in] to_sys   IPC name to send result to (NULL for transition engine)
+ * \param[in] rsc      Type information about resource the result is for
+ * \param[in] op       Event with result to send
+ * \param[in] rsc_id   ID of resource the result is for
+ */
 void
-send_direct_ack(const char *to_host, const char *to_sys,
-                lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, const char *rsc_id)
+controld_ack_event_directly(const char *to_host, const char *to_sys,
+                            lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
+                            const char *rsc_id)
 {
     xmlNode *reply = NULL;
     xmlNode *update, *iter;
@@ -2165,7 +2174,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     crm_debug("Recording pending op " CRM_OP_FMT " on %s in the CIB",
               op->rsc_id, op->op_type, op->interval_ms, node_name);
 
-    do_update_resource(node_name, rsc, op);
+    do_update_resource(node_name, rsc, op, 0);
 }
 
 static void
@@ -2250,7 +2259,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->op_status = PCMK_LRM_OP_INVALID;
-        send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+        controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
         lrmd_free_event(op);
         free(op_id);
         return;
@@ -2307,6 +2316,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
         pending->user_data = op->user_data? strdup(op->user_data) : NULL;
+        if (crm_element_value_epoch(msg, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                                    &(pending->lock_time)) != pcmk_ok) {
+            pending->lock_time = 0;
+        }
         g_hash_table_replace(lrm_state->pending_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)
@@ -2317,7 +2330,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
             decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
             op->rc = target_rc;
             op->op_status = PCMK_LRM_OP_DONE;
-            send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+            controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
         }
 
         pending->params = op->params;
@@ -2350,8 +2363,28 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
     }
 }
 
+/* Only successful stops, and probes that found the resource inactive, get locks
+ * recorded in the history. This ensures the resource stays locked to the node
+ * until it is active there again after the node comes back up.
+ */
+static bool
+should_preserve_lock(lrmd_event_data_t *op)
+{
+    if (!controld_shutdown_lock_enabled) {
+        return false;
+    }
+    if (!strcmp(op->op_type, RSC_STOP) && (op->rc == PCMK_OCF_OK)) {
+        return true;
+    }
+    if (!strcmp(op->op_type, RSC_STATUS) && (op->rc == PCMK_OCF_NOT_RUNNING)) {
+        return true;
+    }
+    return false;
+}
+
 static int
-do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
+do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
+                   lrmd_event_data_t *op, time_t lock_time)
 {
 /*
   <status>
@@ -2406,6 +2439,16 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
         crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->standard);
         crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER, rsc->provider);
+        if (lock_time != 0) {
+            /* Actions on a locked resource should either preserve the lock by
+             * recording it with the action result, or clear it.
+             */
+            if (!should_preserve_lock(op)) {
+                lock_time = 0;
+            }
+            crm_xml_add_ll(iter, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                           (long long) lock_time);
+        }
 
         if (op->params) {
             container = g_hash_table_lookup(op->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
@@ -2417,7 +2460,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
 
     } else {
         crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
-        send_direct_ack(NULL, NULL, rsc, op, op->rsc_id);
+        controld_ack_event_directly(NULL, NULL, rsc, op, op->rsc_id);
         goto cleanup;
     }
 
@@ -2610,7 +2653,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
                 // We should record the result, and happily, we can
-                update_id = do_update_resource(node_name, rsc, op);
+                update_id = do_update_resource(node_name, rsc, op,
+                                               pending? pending->lock_time : 0);
                 need_direct_ack = FALSE;
 
             } else if (op->rsc_deleted) {
@@ -2689,7 +2733,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     if (need_direct_ack) {
-        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
+        controld_ack_event_directly(NULL, NULL, NULL, op, op->rsc_id);
     }
 
     if(remove == FALSE) {

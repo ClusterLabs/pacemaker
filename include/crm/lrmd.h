@@ -248,6 +248,8 @@ typedef struct lrmd_event_data_s {
     const char *exit_reason;
 } lrmd_event_data_t;
 
+lrmd_event_data_t *lrmd_new_event(const char *rsc_id, const char *task,
+                                  guint interval_ms);
 lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t * event);
 void lrmd_free_event(lrmd_event_data_t * event);
 

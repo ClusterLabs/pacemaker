@@ -534,6 +534,7 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     int call_id = 0;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+    enum controld_section_e section = controld_section_lrm;
 
     const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
@@ -583,8 +584,10 @@ do_dc_join_ack(long long action,
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB notifies us of the change.
      */
-    controld_delete_node_state(join_from, controld_section_lrm,
-                               cib_scope_local);
+    if (controld_shutdown_lock_enabled) {
+        section = controld_section_lrm_unlocked;
+    }
+    controld_delete_node_state(join_from, section, cib_scope_local);
     if (safe_str_eq(join_from, fsa_our_uname)) {
         xmlNode *now_dc_lrmd_state = controld_query_executor_state(fsa_our_uname);
 

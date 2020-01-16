@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,6 +35,7 @@ gboolean fsa_has_quorum = FALSE;
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
 bool no_quorum_suicide_escalation = FALSE;
+bool controld_shutdown_lock_enabled = false;
 
 /*	 A_HA_CONNECT	*/
 void
@@ -587,7 +588,10 @@ static pe_cluster_option crmd_opts[] = {
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
           "How many times stonith can fail before it will no longer be attempted on a target"
         },   
+
+    // Already documented in libpe_status (other values must be kept identical)
 	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
+    { XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL, "false", &check_boolean, NULL, NULL },
 };
 /* *INDENT-ON* */
 
@@ -697,6 +701,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, "join-finalization-timeout");
     finalization_timer->period_ms = crm_parse_interval_spec(value);
+
+    value = crmd_pref(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    controld_shutdown_lock_enabled = crm_is_true(value);
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;

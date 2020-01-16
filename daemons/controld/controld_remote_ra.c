@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,17 +177,21 @@ remote_node_up(const char *node_name)
     int call_opt, call_id = 0;
     xmlNode *update, *state;
     crm_node_t *node;
+    enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing pacemaker_remote node %s", node_name);
 
-    /* Clear node's entire state (resource history and transient attributes).
-     * The transient attributes should and normally will be cleared when the
-     * node leaves, but since remote node state has a number of corner cases,
-     * clear them here as well, to be sure.
+    /* Clear node's entire state (resource history and transient attributes)
+     * other than shutdown locks. The transient attributes should and normally
+     * will be cleared when the node leaves, but since remote node state has a
+     * number of corner cases, clear them here as well, to be sure.
      */
     call_opt = crmd_cib_smart_opt();
-    controld_delete_node_state(node_name, controld_section_all, call_opt);
+    if (controld_shutdown_lock_enabled) {
+        section = controld_section_all_unlocked;
+    }
+    controld_delete_node_state(node_name, section, call_opt);
 
     /* Clear node's probed attribute */
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,6 +102,7 @@ enum pe_find {
 #  define pe_flag_start_failure_fatal   0x00001000ULL
 #  define pe_flag_remove_after_stop     0x00002000ULL
 #  define pe_flag_startup_fencing       0x00004000ULL
+#  define pe_flag_shutdown_lock         0x00008000ULL
 
 #  define pe_flag_startup_probes        0x00010000ULL
 #  define pe_flag_have_status           0x00020000ULL
@@ -167,6 +168,7 @@ struct pe_working_set_s {
     GList *stop_needed; // Containers that need stop actions
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
     int ninstances;     // Total number of resource instances
+    guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
 };
 
 enum pe_check_parameters {
@@ -285,6 +287,8 @@ enum pe_action_flags {
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
+
+    pe_action_dc = 0x10000,         //! Action may run on DC instead of target
 };
 /* *INDENT-ON* */
 
@@ -352,6 +356,8 @@ struct pe_resource_s {
     GListPtr fillers;
 
     pe_node_t *pending_node;    // Node on which pending_task is happening
+    pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+    time_t lock_time;           // When shutdown lock started
 
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;

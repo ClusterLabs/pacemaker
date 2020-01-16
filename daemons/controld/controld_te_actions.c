@@ -107,6 +107,13 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     if (!router_node) {
         router_node = on_node;
+        if (safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+            const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
+
+            if (safe_str_eq(mode, XML_TAG_CIB)) {
+                router_node = fsa_our_uname;
+            }
+        }
     }
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,

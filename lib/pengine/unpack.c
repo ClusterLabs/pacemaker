@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <time.h>
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -318,6 +319,16 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
     crm_trace("Placement strategy: %s", data_set->placement_strategy);
+
+    set_config_flag(data_set, "shutdown-lock", pe_flag_shutdown_lock);
+    crm_trace("Resources will%s be locked to cleanly shut down nodes",
+              (is_set(data_set->flags, pe_flag_shutdown_lock)? "" : " not"));
+    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        value = pe_pref(data_set->config_hash,
+                        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
+        data_set->shutdown_lock = crm_parse_interval_spec(value) / 1000;
+        crm_trace("Shutdown locks expire after %us", data_set->shutdown_lock);
+    }
 
     return TRUE;
 }
@@ -1049,7 +1060,8 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
                 crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
 
             } else if (!pe__is_guest_node(this_node)
-                       && rsc->role == RSC_ROLE_STARTED) {
+                       && ((rsc->role == RSC_ROLE_STARTED)
+                           || is_set(data_set->flags, pe_flag_shutdown_lock))) {
                 check = TRUE;
                 crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
             }
@@ -1064,6 +1076,9 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             process = TRUE;
 
         } else if (fence) {
+            process = TRUE;
+
+        } else if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
             process = TRUE;
         }
 
@@ -2188,6 +2203,29 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
     }
 }
 
+// If resource history entry has shutdown lock, remember lock node and time
+static void
+unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
+                     pe_working_set_t *data_set)
+{
+    time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
+
+    if ((crm_element_value_epoch(rsc_entry, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                                 &lock_time) == pcmk_ok) && (lock_time != 0)) {
+
+        if ((data_set->shutdown_lock > 0)
+            && (get_effective_time(data_set)
+                > (lock_time + data_set->shutdown_lock))) {
+            pe_rsc_info(rsc, "Shutdown lock for %s on %s expired",
+                        rsc->id, node->details->uname);
+            pe__clear_resource_history(rsc, node, data_set);
+        } else {
+            rsc->lock_node = node;
+            rsc->lock_time = lock_time;
+        }
+    }
+}
+
 static resource_t *
 unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
 {
@@ -2224,17 +2262,29 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
         }
     }
 
-    if (op_list == NULL) {
-        /* if there are no operations, there is nothing to do */
-        return NULL;
+    if (is_not_set(data_set->flags, pe_flag_shutdown_lock)) {
+        if (op_list == NULL) {
+            // If there are no operations, there is nothing to do
+            return NULL;
+        }
     }
 
     /* find the resource */
     rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
     if (rsc == NULL) {
-        rsc = process_orphan_resource(rsc_entry, node, data_set);
+        if (op_list == NULL) {
+            // If there are no operations, there is nothing to do
+            return NULL;
+        } else {
+            rsc = process_orphan_resource(rsc_entry, node, data_set);
+        }
     }
     CRM_ASSERT(rsc != NULL);
+
+    // Check whether the resource is "shutdown-locked" to this node
+    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        unpack_shutdown_lock(rsc_entry, rsc, node, data_set);
+    }
 
     /* process operations */
     saved_role = rsc->role;

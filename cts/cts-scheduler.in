@@ -5,7 +5,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2004-2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2004-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -956,6 +956,8 @@ TESTS = [
     [
         [ "resource-discovery", "Exercises resource-discovery location constraint option" ],
         [ "rsc-discovery-per-node", "Disable resource discovery per node" ],
+        [ "shutdown-lock", "Ensure shutdown lock works properly" ],
+        [ "shutdown-lock-expiration", "Ensure shutdown lock expiration works properly" ],
     ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
