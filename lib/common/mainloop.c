@@ -1075,7 +1075,7 @@ child_timeout_callback(gpointer p)
     }
 
     rc = child_kill_helper(child);
-    if (rc == ESRCH) {
+    if (rc == -ESRCH) {
         /* Nothing left to do. pid doesn't exist */
         return FALSE;
     }
