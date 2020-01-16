@@ -1137,6 +1137,11 @@ pcmk_errorname(int rc)
         case pcmk_err_cib_backup: return "pcmk_err_cib_backup";
         case pcmk_err_cib_save: return "pcmk_err_cib_save";
         case pcmk_err_cib_corrupt: return "pcmk_err_cib_corrupt";
+        case pcmk_err_multiple: return "pcmk_err_multiple";
+        case pcmk_err_node_unknown: return "pcmk_err_node_unknown";
+        case pcmk_err_already: return "pcmk_err_already";
+        case pcmk_err_bad_nvpair: return "pcmk_err_bad_nvpair";
+        case pcmk_err_unknown_format: return "pcmk_err_unknown_format";
     }
     return "Unknown";
 }
@@ -1178,9 +1183,18 @@ pcmk_strerror(int rc)
             return "Could not save the new configuration to disk";
         case pcmk_err_cib_corrupt:
             return "Could not parse on-disk configuration";
-
+        case pcmk_err_multiple:
+            return "Resource active on multiple nodes";
+        case pcmk_err_node_unknown:
+            return "Node not found";
+        case pcmk_err_already:
+            return "Situation already as requested";
+        case pcmk_err_bad_nvpair:
+            return "Bad name/value pair given";
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";
+        case pcmk_err_unknown_format:
+            return "Unknown output format";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */

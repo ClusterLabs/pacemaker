@@ -1,36 +1,21 @@
 /*
- * Copyright (C) 2012 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2019 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef CRM_ERROR__H
 #  define CRM_ERROR__H
 #  include <crm_config.h>
 #  include <assert.h>
 
-/**
+/*!
  * \file
- * \brief Error codes and asserts
+ * \brief Function and executable result codes
  * \ingroup core
  */
-
-/*
-  System error codes
-  - /usr/include/asm-generic/errno.h
-  - /usr/include/asm-generic/errno-base.h
-*/
 
 #  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
@@ -38,6 +23,14 @@
             abort(); /* Redundant but it makes analyzers like coverity and clang happy */ \
 	}								\
     } while(0)
+
+/*
+ * Function return codes
+ *
+ * For system error codes, see:
+ * - /usr/include/asm-generic/errno.h
+ * - /usr/include/asm-generic/errno-base.h
+ */
 
 #  define pcmk_ok                       0
 #  define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
@@ -54,6 +47,11 @@
 #  define pcmk_err_cib_save             210
 #  define pcmk_err_schema_unchanged     211
 #  define pcmk_err_cib_corrupt          212
+#  define pcmk_err_multiple             213
+#  define pcmk_err_node_unknown         214
+#  define pcmk_err_already              215
+#  define pcmk_err_bad_nvpair           216
+#  define pcmk_err_unknown_format       217
 #  define pcmk_err_panic                255
 
 const char *pcmk_strerror(int rc);
