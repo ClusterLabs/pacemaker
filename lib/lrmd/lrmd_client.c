@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -185,6 +187,36 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
         free(head);
         head = p;
     }
+}
+
+/*!
+ * Create a new lrmd_event_data_t object
+ *
+ * \param[in] rsc_id       ID of resource involved in event
+ * \param[in] task         Action name
+ * \param[in] interval_ms  Action interval
+ *
+ * \return Newly allocated and initialized lrmd_event_data_t
+ * \note This functions asserts on memory errors, so the return value is
+ *       guaranteed to be non-NULL. The caller is responsible for freeing the
+ *       result with lrmd_free_event().
+ */
+lrmd_event_data_t *
+lrmd_new_event(const char *rsc_id, const char *task, int interval_ms)
+{
+    lrmd_event_data_t *event = calloc(1, sizeof(lrmd_event_data_t));
+
+    CRM_ASSERT(event != NULL);
+    if (rsc_id != NULL) {
+        event->rsc_id = strdup(rsc_id);
+        CRM_ASSERT(event->rsc_id != NULL);
+    }
+    if (task != NULL) {
+        event->op_type = strdup(task);
+        CRM_ASSERT(event->op_type != NULL);
+    }
+    event->interval = interval_ms;
+    return event;
 }
 
 lrmd_event_data_t *

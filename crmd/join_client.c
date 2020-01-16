@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -268,7 +270,7 @@ do_cl_join_finalize_respond(long long action,
     update_dc_expected(input->msg);
 
     /* send our status section to the DC */
-    tmp1 = do_lrm_query(TRUE, fsa_our_uname);
+    tmp1 = controld_query_executor_state(fsa_our_uname);
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
                                         CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);

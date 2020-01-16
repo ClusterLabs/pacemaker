@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -123,6 +125,8 @@ enum controld_section_e {
 
 void controld_delete_node_state(const char *uname,
                                 enum controld_section_e section, int options);
+int controld_delete_resource_history(const char *rsc_id, const char *node,
+                                     const char *user_name, int call_options);
 
 const char *get_node_id(xmlNode *lrm_rsc_op);
 

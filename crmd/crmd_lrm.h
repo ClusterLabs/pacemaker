@@ -1,20 +1,13 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The version control history for this file may have further details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+#ifndef CONTROLD_LRM__H
+#  define CONTROLD_LRM__H
 
 #include <crmd_messages.h>
 #include <crmd_metadata.h>
@@ -176,3 +169,10 @@ gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
 
 void process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                        active_op_t *pending, xmlNode *action_xml);
+void controld_ack_event_directly(const char *to_host, const char *to_sys,
+                                 lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
+                                 const char *rsc_id);
+void controld_rc2event(lrmd_event_data_t *event, int rc);
+void controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id);
+
+#endif

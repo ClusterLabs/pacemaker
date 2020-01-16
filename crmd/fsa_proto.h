@@ -19,8 +19,6 @@
 #ifndef XML_FSA_PROTO__H
 #  define XML_FSA_PROTO__H
 
-extern xmlNode *do_lrm_query(gboolean, const char *node_name);
-
 /*	 A_READCONFIG	*/
 void
 

@@ -310,12 +310,9 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad");
               return NULL);
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-
-    op->rsc_id = strdup(ID(action_resource));
-    op->interval = action->interval;
-    op->op_type = strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
-
+    op = lrmd_new_event(ID(action_resource),
+                        crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+                        action->interval);
     op->rc = rc;
     op->op_status = status;
     op->t_run = time(NULL);
