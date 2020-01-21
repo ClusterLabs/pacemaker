@@ -207,7 +207,11 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                                                cib_scope_local);
                 }
 
-            } else if(AM_I_DC) {
+            } else if (AM_I_DC || (fsa_our_dc == NULL)) {
+                /* This only needs to be done once, so normally the DC should do
+                 * it. However if there is no DC, every node must do it, since
+                 * there is no other way to ensure some one node does it.
+                 */
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
                 } else {
