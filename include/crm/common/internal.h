@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,21 +18,34 @@
 
 #include <crm/common/logging.h>
 
+
+#if SUPPORT_CIBSECRETS
+// Internal CIB utilities (from cib_secrets.c) */
+
+int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
+#endif
+
+
 /* internal I/O utilities (from io.c) */
 
-char *generate_series_filename(const char *directory, const char *series, int sequence,
-                               gboolean bzip);
-int get_last_sequence(const char *directory, const char *series);
-void write_last_sequence(const char *directory, const char *series, int sequence, int max);
-int crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gid_t gid);
+int pcmk__real_path(const char *path, char **resolved_path);
+
+char *pcmk__series_filename(const char *directory, const char *series,
+                            int sequence, bool bzip);
+int pcmk__read_series_sequence(const char *directory, const char *series,
+                               unsigned int *seq);
+void pcmk__write_series_sequence(const char *directory, const char *series,
+                                 unsigned int sequence, int max);
+int pcmk__chown_series_sequence(const char *directory, const char *series,
+                                uid_t uid, gid_t gid);
 
 bool pcmk__daemon_can_write(const char *dir, const char *file);
-void crm_sync_directory(const char *name);
+void pcmk__sync_directory(const char *name);
 
-char *crm_read_contents(const char *filename);
-int crm_write_sync(int fd, const char *contents);
-int crm_set_nonblocking(int fd);
-const char *crm_get_tmpdir(void);
+int pcmk__file_contents(const char *filename, char **contents);
+int pcmk__write_sync(int fd, const char *contents);
+int pcmk__set_nonblocking(int fd);
+const char *pcmk__get_tmpdir(void);
 
 void pcmk__close_fds_in_child(bool);
 

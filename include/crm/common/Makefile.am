@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,7 +13,7 @@ headerdir=$(pkgincludedir)/crm/common
 
 header_HEADERS = xml.h ipc.h util.h iso8601.h mainloop.h logging.h results.h \
 		 nvpair.h
-noinst_HEADERS = cib_secrets.h ipcs.h internal.h alerts_internal.h \
+noinst_HEADERS = ipcs_internal.h internal.h alerts_internal.h \
 		 iso8601_internal.h remote_internal.h xml_internal.h \
 		 ipc_internal.h output.h cmdline_internal.h curses_internal.h \
 		 attrd_internal.h

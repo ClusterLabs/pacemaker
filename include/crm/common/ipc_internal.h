@@ -53,11 +53,14 @@
  *                     see PCMK__SPECIAL_PID, used instead, and the caller
  *                     is required to special case this value respectively)
  *
- * \return 0 if no trace of IPC peer's liveness detected, 1 if it was,
- *         -1 on error, and -2 when the IPC blocked with unauthorized
- *         process (log message emitted in both latter cases)
+ * \return Standard Pacemaker return code
  *
- * \note This function emits a log message also in case there isn't a perfect
+ * \note Return codes of particular interest include pcmk_rc_ipc_unresponsive
+ *       indicating that no trace of IPC liveness was detected, and
+ *       pcmk_rc_ipc_unauthorized indicating that the IPC endpoint is blocked by
+ *       an unauthorized process.
+ * \note This function emits a log message for return codes other than
+ *       pcmk_rc_ok and pcmk_rc_ipc_unresponsive, and when there isn't a perfect
  *       match in respect to \p reguid and/or \p refgid, for a possible
  *       least privilege principle violation.
  *

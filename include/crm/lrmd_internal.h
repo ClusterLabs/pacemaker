@@ -13,7 +13,7 @@
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // GList
 #include <libxml/tree.h>                // xmlNode
-#include <crm/common/remote_internal.h> // crm_remote_t
+#include <crm/common/remote_internal.h> // pcmk__remote_t
 #include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t
 
 int lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
@@ -27,7 +27,7 @@ int lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
 int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                              const char *node, lrmd_event_data_t *op);
 
-int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id,
+int lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                       const char *msg_type);
 
 #endif

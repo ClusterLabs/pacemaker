@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 #include <qb/qbarray.h>
 
@@ -717,7 +717,6 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
-    crm_client_init();
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
 
     if (server == NULL) {

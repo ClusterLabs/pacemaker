@@ -25,17 +25,13 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
-
-#if SUPPORT_CIBSECRETS
-#  include <crm/common/cib_secrets.h>
-#endif
 
 #include <pacemaker-fenced.h>
 
@@ -387,7 +383,7 @@ stonith_device_execute(stonith_device_t * device)
     }
 
 #if SUPPORT_CIBSECRETS
-    if (replace_secret_params(device->id, device->params) < 0) {
+    if (pcmk__substitute_secrets(device->id, device->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
         if (safe_str_eq(cmd->action,"stop")) {
             /* don't fail on stop! */
@@ -2449,8 +2445,8 @@ stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
 }
 
 static int
-handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * request,
-               const char *remote_peer)
+handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
+               xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
@@ -2474,7 +2470,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID, client->id);
-        crm_ipcs_send(client, id, reply, flags);
+        pcmk__ipc_send_xml(client, id, reply, flags);
         client->request_id = 0;
         free_xml(reply);
         return 0;
@@ -2515,7 +2511,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         }
 
         if (flags & crm_ipc_client_response) {
-            crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
+            pcmk__ipc_send_ack(client, id, flags, "ack");
         }
         return 0;
 
@@ -2674,7 +2670,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 }
 
 static void
-handle_reply(crm_client_t * client, xmlNode * request, const char *remote_peer)
+handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
 
@@ -2692,8 +2688,8 @@ handle_reply(crm_client_t * client, xmlNode * request, const char *remote_peer)
 }
 
 void
-stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * request,
-                const char *remote_peer)
+stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = 0;

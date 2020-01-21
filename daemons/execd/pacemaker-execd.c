@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/lrmd_internal.h>
 
@@ -86,7 +86,7 @@ static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -95,7 +95,7 @@ lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static void
 lrmd_ipc_created(qb_ipcs_connection_t * c)
 {
-    crm_client_t *new_client = crm_client_get(c);
+    pcmk__client_t *new_client = pcmk__find_client(c);
 
     crm_trace("Connection %p", c);
     CRM_ASSERT(new_client != NULL);
@@ -110,8 +110,8 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
-    xmlNode *request = crm_ipcs_recv(client, data, size, &id, &flags);
+    pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *request = pcmk__client_data2xml(client, data, size, &id, &flags);
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);
@@ -129,7 +129,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = crm_itoa(crm_ipcs_client_pid(c));
+            client->name = crm_itoa(pcmk__client_pid(c));
         } else {
             client->name = strdup(value);
         }
@@ -157,9 +157,9 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
  * \param[in] client  Client connection to free
  */
 void
-lrmd_client_destroy(crm_client_t *client)
+lrmd_client_destroy(pcmk__client_t *client)
 {
-    crm_client_destroy(client);
+    pcmk__free_client(client);
 
 #ifdef ENABLE_PCMK_REMOTE
     /* If we were waiting to shut down, we can now safely do so
@@ -174,7 +174,7 @@ lrmd_client_destroy(crm_client_t *client)
 static int32_t
 lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
@@ -204,48 +204,57 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
     .connection_destroyed = lrmd_ipc_destroy
 };
 
+// \return Standard Pacemaker return code
 int
-lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
+lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
-
     crm_trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (client->kind) {
-        case CRM_CLIENT_IPC:
-            return crm_ipcs_send(client, id, reply, FALSE);
+        case PCMK__CLIENT_IPC:
+            return pcmk__ipc_send_xml(client, id, reply, FALSE);
 #ifdef ENABLE_PCMK_REMOTE
-        case CRM_CLIENT_TLS:
-            return lrmd_tls_send_msg(client->remote, reply, id, "reply");
+        case PCMK__CLIENT_TLS:
+            {
+                int legacy_rc = lrmd_tls_send_msg(client->remote, reply, id,
+                                                  "reply");
+                return (legacy_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(legacy_rc);
+            }
 #endif
         default:
             crm_err("Could not send reply: unknown client type %d",
                     client->kind);
     }
-    return -ENOTCONN;
+    return ENOTCONN;
 }
 
+// \return Standard Pacemaker return code
 int
-lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
+lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
     crm_trace("Sending notification to client (%s)", client->id);
     switch (client->kind) {
-        case CRM_CLIENT_IPC:
+        case PCMK__CLIENT_IPC:
             if (client->ipcs == NULL) {
                 crm_trace("Could not notify local client: disconnected");
-                return -ENOTCONN;
+                return ENOTCONN;
             }
-            return crm_ipcs_send(client, 0, msg, crm_ipc_server_event);
+            return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef ENABLE_PCMK_REMOTE
-        case CRM_CLIENT_TLS:
+        case PCMK__CLIENT_TLS:
             if (client->remote == NULL) {
                 crm_trace("Could not notify remote client: disconnected");
-                return -ENOTCONN;
+                return ENOTCONN;
+            } else {
+                int legacy_rc = lrmd_tls_send_msg(client->remote, msg, 0,
+                                                  "notify");
+
+                return (legacy_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(legacy_rc);
             }
-            return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
 #endif
         default:
             crm_err("Could not notify client: unknown type %d", client->kind);
     }
-    return -ENOTCONN;
+    return ENOTCONN;
 }
 
 /*!
@@ -260,9 +269,7 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 static gboolean
 lrmd_exit(gpointer data)
 {
-    crm_info("Terminating with %d clients",
-             crm_hash_table_size(client_connections));
-
+    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
     if (stonith_api) {
         stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
         stonith_api->cmds->disconnect(stonith_api);
@@ -277,7 +284,7 @@ lrmd_exit(gpointer data)
     ipc_proxy_cleanup();
 #endif
 
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     g_hash_table_destroy(rsc_list);
 
     if (mainloop) {
@@ -298,7 +305,7 @@ static void
 lrmd_shutdown(int nsig)
 {
 #ifdef ENABLE_PCMK_REMOTE
-    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
+    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
     /* If there are active proxied IPC providers, then we may be running
      * resources, so notify the cluster that we wish to shut down.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,7 +215,7 @@ cib_cleanup(void)
     if (local_notify_queue) {
         g_hash_table_destroy(local_notify_queue);
     }
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     g_hash_table_destroy(config_hash);
     free(cib_our_uname);
 }
@@ -283,7 +283,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         case crm_status_uname:
         case crm_status_nstate:
             if (cib_shutdown_flag && (crm_active_peers() < 2)
-                && crm_hash_table_size(client_connections) == 0) {
+                && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
                 terminate_cib(__FUNCTION__, -1);

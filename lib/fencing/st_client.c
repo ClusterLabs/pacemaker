@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,10 +29,6 @@
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>
-
-#if SUPPORT_CIBSECRETS
-#  include <crm/common/cib_secrets.h>
-#endif
 
 CRM_TRACE_INIT_DATA(stonith);
 
@@ -2036,10 +2032,11 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     }
 
 #if SUPPORT_CIBSECRETS
-    rc = replace_secret_params(rsc_id, params_table);
-    if (rc < 0) {
+    rc = pcmk__substitute_secrets(rsc_id, params_table);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
-                 agent, pcmk_strerror(rc));
+                 agent, pcmk_rc_str(rc));
+        rc = pcmk_rc2legacy(rc);
     }
 #endif
 

@@ -18,7 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -237,7 +237,7 @@ crmd_exit(crm_exit_t exit_code)
     mainloop_destroy_trigger(config_read); config_read = NULL;
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     crm_peer_destroy();
 
     controld_free_fsa_timers();
@@ -358,7 +358,7 @@ static int32_t
 crmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -375,12 +375,12 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
-    xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
+    xmlNode *msg = pcmk__client_data2xml(client, data, size, &id, &flags);
 
-    crm_trace("Invoked: %s", crm_client_name(client));
-    crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
+    crm_trace("Invoked: %s", pcmk__client_name(client));
+    pcmk__ipc_send_ack(client, id, flags, "ack");
 
     if (msg == NULL) {
         return 0;
@@ -391,7 +391,7 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
-    crm_trace("Processing msg from %s", crm_client_name(client));
+    crm_trace("Processing msg from %s", pcmk__client_name(client));
     crm_log_xml_trace(msg, "controller[inbound]");
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
@@ -407,14 +407,14 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 static int32_t
 crmd_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client) {
         crm_trace("Disconnecting %sregistered client %s (%p/%p)",
-                  (client->userdata? "" : "un"), crm_client_name(client),
+                  (client->userdata? "" : "un"), pcmk__client_name(client),
                   c, client);
         free(client->userdata);
-        crm_client_destroy(client);
+        pcmk__free_client(client);
         trigger_fsa(fsa_source);
     }
     return 0;

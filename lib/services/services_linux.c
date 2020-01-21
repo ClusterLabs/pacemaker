@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,10 +29,6 @@
 #include "crm/services.h"
 
 #include "services_private.h"
-
-#if SUPPORT_CIBSECRETS
-#  include "crm/common/cib_secrets.h"
-#endif
 
 static void close_pipe(int fildes[]);
 
@@ -170,15 +166,15 @@ sigchld_setup(struct sigchld_data_s *data)
         return false;
     }
 
-    rc = crm_set_nonblocking(data->pipe_fd[0]);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(data->pipe_fd[0]);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
+                 pcmk_rc_str(rc), rc);
     }
-    rc = crm_set_nonblocking(data->pipe_fd[1]);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(data->pipe_fd[1]);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
+                 pcmk_rc_str(rc), rc);
     }
 
     // Set SIGCHLD handler
@@ -716,7 +712,7 @@ action_launch_child(svc_action_t *op)
     pcmk__close_fds_in_child(false);
 
 #if SUPPORT_CIBSECRETS
-    if (replace_secret_params(op->rsc, op->params) < 0) {
+    if (pcmk__substitute_secrets(op->rsc, op->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
         if (safe_str_eq(op->action,"stop")) {
             /* don't fail on stop! */
@@ -1018,30 +1014,30 @@ services_os_action_execute(svc_action_t * op)
     }
 
     op->opaque->stdout_fd = stdout_fd[0];
-    rc = crm_set_nonblocking(op->opaque->stdout_fd);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(op->opaque->stdout_fd);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set '%s' output non-blocking: %s "
                  CRM_XS " rc=%d",
-                 op->opaque->exec, pcmk_strerror(rc), rc);
+                 op->opaque->exec, pcmk_rc_str(rc), rc);
     }
 
     op->opaque->stderr_fd = stderr_fd[0];
-    rc = crm_set_nonblocking(op->opaque->stderr_fd);
-    if (rc < 0) {
+    rc = pcmk__set_nonblocking(op->opaque->stderr_fd);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not set '%s' error output non-blocking: %s "
                  CRM_XS " rc=%d",
-                 op->opaque->exec, pcmk_strerror(rc), rc);
+                 op->opaque->exec, pcmk_rc_str(rc), rc);
     }
 
     op->opaque->stdin_fd = stdin_fd[1];
     if (op->opaque->stdin_fd >= 0) {
         // using buffer behind non-blocking-fd here - that could be improved
         // as long as no other standard uses stdin_fd assume stonith
-        rc = crm_set_nonblocking(op->opaque->stdin_fd);
-        if (rc < 0) {
+        rc = pcmk__set_nonblocking(op->opaque->stdin_fd);
+        if (rc != pcmk_rc_ok) {
             crm_warn("Could not set '%s' input non-blocking: %s "
                     CRM_XS " fd=%d,rc=%d", op->opaque->exec,
-                    pcmk_strerror(rc), op->opaque->stdin_fd, rc);
+                    pcmk_rc_str(rc), op->opaque->stdin_fd, rc);
         }
         pipe_in_action_stdin_parameters(op);
         // as long as we are handling parameters directly in here just close

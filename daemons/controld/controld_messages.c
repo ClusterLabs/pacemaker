@@ -18,7 +18,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -527,7 +527,8 @@ process_hello_message(xmlNode * hello,
 }
 
 gboolean
-crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client, const char *proxy_session)
+crmd_authorize_message(xmlNode *client_msg, pcmk__client_t *curr_client,
+                       const char *proxy_session)
 {
     char *client_name = NULL;
     char *major_version = NULL;
@@ -1158,7 +1159,7 @@ gboolean
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
     gboolean send_ok = TRUE;
-    crm_client_t *client_channel = crm_client_get_by_id(sys);
+    pcmk__client_t *client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
         crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
@@ -1166,7 +1167,10 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     if (client_channel != NULL) {
         /* Transient clients such as crmadmin */
-        send_ok = crm_ipcs_send(client_channel, 0, msg, crm_ipc_server_event);
+        if (pcmk__ipc_send_xml(client_channel, 0, msg,
+                               crm_ipc_server_event) != pcmk_rc_ok) {
+            send_ok = FALSE;
+        }
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);

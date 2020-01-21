@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2018 the Pacemaker project contributors
+ * Copyright 2008-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,13 +12,13 @@
 
 // internal functions from remote.c
 
-typedef struct crm_remote_s crm_remote_t;
+typedef struct pcmk__remote_s pcmk__remote_t;
 
-int crm_remote_send(crm_remote_t *remote, xmlNode *msg);
-int crm_remote_ready(crm_remote_t *remote, int total_timeout /*ms */ );
-gboolean crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */,
+int crm_remote_send(pcmk__remote_t *remote, xmlNode *msg);
+int crm_remote_ready(pcmk__remote_t *remote, int total_timeout /*ms */ );
+gboolean crm_remote_recv(pcmk__remote_t *remote, int total_timeout /*ms */,
                          int *disconnected);
-xmlNode *crm_remote_parse_buffer(crm_remote_t *remote);
+xmlNode *crm_remote_parse_buffer(pcmk__remote_t *remote);
 int crm_remote_tcp_connect(const char *host, int port);
 int crm_remote_tcp_connect_async(const char *host, int port,
                                  int timeout /*ms */,
@@ -34,7 +34,7 @@ gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
                                         gnutls_credentials_type_t cred_type,
                                         void *credentials);
 int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
-int pcmk__read_handshake_data(crm_client_t *client);
+int pcmk__read_handshake_data(pcmk__client_t *client);
 
 /*!
  * \internal
@@ -44,7 +44,7 @@ int pcmk__read_handshake_data(crm_client_t *client);
  * \note This function will block until the entire handshake is complete or
  *        until the timeout period is reached.
  */
-int crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms);
+int crm_initiate_client_tls_handshake(pcmk__remote_t *remote, int timeout_ms);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__REMOTE__H

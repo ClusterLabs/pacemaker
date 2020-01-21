@@ -457,11 +457,11 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
  * \return void
  */
 void
-attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query)
+attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                   xmlNode *query)
 {
     const char *attr;
     const char *origin = crm_element_value(query, F_ORIG);
-    ssize_t rc;
     xmlNode *reply;
 
     if (origin == NULL) {
@@ -488,9 +488,13 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
 
     /* Send the reply to the client */
     client->request_id = 0;
-    if ((rc = crm_ipcs_send(client, id, reply, flags)) < 0) {
-        crm_err("Could not respond to query from %s: %s (%lld)",
-                origin, pcmk_strerror(-rc), (long long) -rc);
+    {
+        int rc = pcmk__ipc_send_xml(client, id, reply, flags);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Could not respond to query from %s: %s " CRM_XS " rc=%d",
+                    origin, pcmk_rc_str(rc), rc);
+        }
     }
     free_xml(reply);
 }

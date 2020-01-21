@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,7 +51,7 @@ debug_log(int level, const char *str)
  * \brief Read (more) TLS handshake data from client
  */
 static int
-remoted__read_handshake_data(crm_client_t *client)
+remoted__read_handshake_data(pcmk__client_t *client)
 {
     int rc = pcmk__read_handshake_data(client);
 
@@ -86,7 +86,7 @@ lrmd_remote_client_msg(gpointer data)
     int rc = 0;
     int disconnected = 0;
     xmlNode *request = NULL;
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
 
     if (client->remote->tls_handshake_complete == FALSE) {
         return remoted__read_handshake_data(client);
@@ -142,7 +142,7 @@ lrmd_remote_client_msg(gpointer data)
 static void
 lrmd_remote_client_destroy(gpointer user_data)
 {
-    crm_client_t *client = user_data;
+    pcmk__client_t *client = user_data;
 
     if (client == NULL) {
         return;
@@ -156,7 +156,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 
     /* if this is the last remote connection, stop recurring
      * operations */
-    if (crm_hash_table_size(client_connections) == 1) {
+    if (pcmk__ipc_client_count() == 1) {
         client_disconnect_cleanup(NULL);
     }
 
@@ -180,7 +180,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 static gboolean
 lrmd_auth_timeout_cb(gpointer data)
 {
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
 
     client->remote->auth_timeout = 0;
 
@@ -201,7 +201,7 @@ lrmd_remote_listen(gpointer data)
 {
     int csock = 0;
     gnutls_session_t *session = NULL;
-    crm_client_t *new_client = NULL;
+    pcmk__client_t *new_client = NULL;
 
     // For client socket
     static struct mainloop_fd_callbacks lrmd_remote_fd_cb = {
@@ -223,9 +223,9 @@ lrmd_remote_listen(gpointer data)
         return TRUE;
     }
 
-    new_client = crm_client_alloc(NULL);
-    new_client->remote = calloc(1, sizeof(crm_remote_t));
-    new_client->kind = CRM_CLIENT_TLS;
+    new_client = pcmk__new_unauth_client(NULL);
+    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->kind = PCMK__CLIENT_TLS;
     new_client->remote->tls_session = session;
 
     // Require the client to authenticate within this time

@@ -14,7 +14,7 @@
 #include <crm/crm.h>
 #include <crm/services.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 
@@ -80,7 +80,7 @@ alert_complete(svc_action_t *action)
 }
 
 int
-process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
+process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 

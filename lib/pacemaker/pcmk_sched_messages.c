@@ -20,7 +20,7 @@
 
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 gboolean show_scores = FALSE;
 int scores_log_level = LOG_TRACE;

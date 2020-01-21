@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
 #include <crm/cib/internal.h>  /* cib_channel_ro */
 #include <crm/msg_xml.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
@@ -105,11 +105,11 @@ static pcmk_child_t pcmk_children[] = {
 };
 
 static gboolean check_active_before_startup_processes(gpointer user_data);
-static int pcmk_child_active(pcmk_child_t *child);
+static int child_liveness(pcmk_child_t *child);
 static gboolean start_child(pcmk_child_t * child);
 static gboolean update_node_processes(uint32_t id, const char *uname,
                                       uint32_t procs);
-void update_process_clients(crm_client_t *client);
+void update_process_clients(pcmk__client_t *client);
 
 static uint32_t
 get_process_list(void)
@@ -160,7 +160,7 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_err("Rebooting system because of %s", child->name);
         pcmk_panic(__FUNCTION__);
 
-    } else if (pcmk_child_active(child) == 1) {
+    } else if (child_liveness(child) == pcmk_rc_ok) {
         crm_warn("One-off suppressing strict respawning of a child process %s,"
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
@@ -287,7 +287,7 @@ static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 /* TODO once libqb is taught to juggle with IPC end-points carried over as
         bare file descriptor (https://github.com/ClusterLabs/libqb/issues/325)
         it shall hand over these descriptors here if/once they are successfully
-        pre-opened in (presumably) pcmk_child_active, to avoid any remaining
+        pre-opened in (presumably) child_liveness(), to avoid any remaining
         room for races */
 static gboolean
 start_child(pcmk_child_t * child)
@@ -541,7 +541,7 @@ static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -560,10 +560,10 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     const char *task = NULL;
-    crm_client_t *c = crm_client_get(qbc);
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
+    pcmk__client_t *c = pcmk__find_client(qbc);
+    xmlNode *msg = pcmk__client_data2xml(c, data, size, &id, &flags);
 
-    crm_ipcs_send_ack(c, id, flags, "ack", __FUNCTION__, __LINE__);
+    pcmk__ipc_send_ack(c, id, flags, "ack");
     if (msg == NULL) {
         return 0;
     }
@@ -602,13 +602,13 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 static int32_t
 pcmk_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
     }
     crm_trace("Connection %p", c);
-    crm_client_destroy(client);
+    pcmk__free_client(client);
     return 0;
 }
 
@@ -627,6 +627,13 @@ struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
     .connection_destroyed = pcmk_ipc_destroy
 };
 
+static void
+send_xml_to_client(gpointer key, gpointer value, gpointer user_data)
+{
+    pcmk__ipc_send_xml((pcmk__client_t *) value, 0, (xmlNode *) user_data,
+                       crm_ipc_server_event);
+}
+
 /*!
  * \internal
  * \brief Send an XML message with process list of all known peers to client(s)
@@ -634,7 +641,7 @@ struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
  * \param[in] client  Send message to this client, or all clients if NULL
  */
 void
-update_process_clients(crm_client_t *client)
+update_process_clients(pcmk__client_t *client)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -656,16 +663,13 @@ update_process_clients(crm_client_t *client)
 
     if(client) {
         crm_trace("Sending process list to client %s", client->id);
-        crm_ipcs_send(client, 0, update, crm_ipc_server_event);
+        send_xml_to_client(NULL, client, update);
 
     } else {
-        crm_trace("Sending process list to %d clients", crm_hash_table_size(client_connections));
-        g_hash_table_iter_init(&iter, client_connections);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
-            crm_ipcs_send(client, 0, update, crm_ipc_server_event);
-        }
+        crm_trace("Sending process list to %d clients",
+                  pcmk__ipc_client_count());
+        pcmk__foreach_ipc_client(send_xml_to_client, update);
     }
-
     free_xml(update);
 }
 
@@ -765,93 +769,125 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
  *
  * \param[inout] child  Child tracked data
  *
- * \return 0 if no trace of child's liveness detected (while it is detectable
- *         to begin with, at least according to one of the two properties),
- *         1 if everything is fine, 2 if it's up per PID, but not per IPC
- *         end-point (still starting?), -1 on error, and -2 when the child
- *         (its IPC) blocked with an unauthorized process (log message
- *         emitted in both latter cases)
+ * \return Standard Pacemaker return code
  *
+ * \note Return codes of particular interest include pcmk_rc_ipc_unresponsive
+ *       indicating that no trace of IPC liveness was detected,
+ *       pcmk_rc_ipc_unauthorized indicating that the IPC endpoint is blocked by
+ *       an unauthorized process, and pcmk_rc_ipc_pid_only indicating that
+ *       the child is up by PID but not IPC end-point (possibly starting).
  * \note This function doesn't modify any of \p child members but \c pid,
  *       and is not actively toying with processes as such but invoking
  *       \c stop_child in one particular case (there's for some reason
  *       a different authentic holder of the IPC end-point).
  */
 static int
-pcmk_child_active(pcmk_child_t *child) {
+child_liveness(pcmk_child_t *child) {
     uid_t cl_uid = 0;
     gid_t cl_gid = 0;
     const uid_t root_uid = 0;
     const gid_t root_gid = 0;
     const uid_t *ref_uid;
     const gid_t *ref_gid;
-    int ret = 0;
+    int rc = pcmk_rc_ipc_unresponsive;
     pid_t ipc_pid = 0;
 
     if (child->endpoint == NULL
             && (child->pid <= 0 || child->pid == PCMK__SPECIAL_PID)) {
         crm_err("Cannot track child %s for missing both API end-point and PID",
                 child->name);
-        ret = -1;  /* misuse of the function when child is not trackable */
+        rc = EINVAL; // Misuse of function when child is not trackable
 
     } else if (child->endpoint != NULL) {
+        int legacy_rc = pcmk_ok;
 
-        ref_uid = (child->uid != NULL) ? &cl_uid : &root_uid;
-        ref_gid = (child->uid != NULL) ? &cl_gid : &root_gid;
+        if (child->uid == NULL) {
+            ref_uid = &root_uid;
+            ref_gid = &root_gid;
+        } else {
+            ref_uid = &cl_uid;
+            ref_gid = &cl_gid;
+            legacy_rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+        }
 
-        if ((child->uid != NULL) && (pcmk_daemon_user(&cl_uid, &cl_gid) < 0)) {
-            crm_err("Could not find user and group IDs for user %s",
-                    CRM_DAEMON_USER);
-            ret = -1;
-        } else if ((ret = pcmk__ipc_is_authentic_process_active(child->endpoint,
-                                                                *ref_uid, *ref_gid,
-                                                                &ipc_pid)) < 0) {
-            /* game over */
-        } else if (child->pid <= 0) {
-            /* hit new child to be initialized, or reset to zero
-               and investigate further for ret == 0 */
-            child->pid = ipc_pid;
-        } else if (ipc_pid && child->pid != ipc_pid) {
-            /* ultimately strange for ret == 1; either way, investigate */
-            ret = 0;
+        if (legacy_rc < 0) {
+            rc = pcmk_legacy2rc(legacy_rc);
+            crm_err("Could not find user and group IDs for user %s: %s "
+                    CRM_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
+        } else {
+            rc = pcmk__ipc_is_authentic_process_active(child->endpoint,
+                                                       *ref_uid, *ref_gid,
+                                                       &ipc_pid);
+            if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
+                if (child->pid <= 0) {
+                    /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this
+                     * initializes a new child. If rc is
+                     * pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we will
+                     * investigate further.
+                     */
+                    child->pid = ipc_pid;
+                } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
+                    /* An unexpected (but authorized) process is responding to
+                     * IPC. Investigate further.
+                     */
+                    rc = pcmk_rc_ipc_unresponsive;
+                }
+            }
         }
     }
 
-    if (!ret) {
-        /* when no IPC based liveness detected (incl. if ever a child without
-           IPC is tracked), or detected for a different _authentic_ process;
-           safe on FreeBSD since the only change possible from a proper child's
-           PID into "special" PID of 1 behind more loosely related process */
-        ret = crm_pid_active(child->pid, child->name);
+    if (rc == pcmk_rc_ipc_unresponsive) {
+        /* If we get here, a child without IPC is being tracked, no IPC liveness
+         * has been detected, or IPC liveness has been detected with an
+         * unexpected (but authorized) process. This is safe on FreeBSD since
+         * the only change possible from a proper child's PID into "special" PID
+         * of 1 behind more loosely related process.
+         */
+        int ret = crm_pid_active(child->pid, child->name);
+
         if (ipc_pid && (ret != 1
                         || ipc_pid == PCMK__SPECIAL_PID
                         || crm_pid_active(ipc_pid, child->name) == 1)) {
+            /* An unexpected (but authorized) process was detected at the IPC
+             * endpoint, and either it is active, or the child we're tracking is
+             * not.
+             */
+
             if (ret == 1) {
-                /* assume there's no forking-while-retaining-IPC-socket
-                   involved in the "children's" lifecycle, hence that the
-                   tracking got out of sync purely because of some external
-                   (esotheric?) forces (user initiated process "refresh" by
-                   force? or intentionally racing on start-up, even?), and
-                   that switching over to this other detected, authentic
-                   instance with an IPC already in possession is a better
-                   trade-off than "neutralizing" it first so as to give
-                   either the original or possibly a new to-be-spawned
-                   daemon process a leeway for operation, which would
-                   otherwise have to be carried out */
+                /* The child we're tracking is active. Kill it, and adopt the
+                 * detected process. This assumes that our children don't fork
+                 * (thus getting a different PID owning the IPC), but rather the
+                 * tracking got out of sync because of some means external to
+                 * Pacemaker, and adopting the detected process is better than
+                 * killing it and possibly having to spawn a new child.
+                 */
                 /* not possessing IPC, afterall (what about corosync CPG?) */
                 stop_child(child, SIGKILL);
-            } else {
-                ret = 1;
             }
+            rc = pcmk_rc_ok;
             child->pid = ipc_pid;
         } else if (ret == 1) {
-            ret = 2;  /* up per PID, but not per IPC (still starting?) */
+            // Our tracked child's PID was found active, but not its IPC
+            rc = pcmk_rc_ipc_pid_only;
         } else if (!child->pid && ret == -1) {
-            ret = 0;  /* correct -1 on FreeBSD from above back to 0 */
+            // FreeBSD can return -1
+            rc = pcmk_rc_ipc_unresponsive;
+        } else {
+            // Map crm_pid_active() result to standard rc
+            switch (ret) {
+                case -1:
+                    rc = EINVAL;
+                    break;
+                case -2:
+                    rc = pcmk_rc_ipc_unauthorized;
+                    break;
+                case 0:
+                    rc = pcmk_rc_ipc_unresponsive;
+                    break;
+            }
         }
     }
-
-    return ret;
+    return rc;
 }
 
 static gboolean
@@ -869,35 +905,26 @@ check_active_before_startup_processes(gpointer user_data)
             } else if (start_seq != pcmk_children[lpc].start_seq) {
                 continue;
             } else {
-                const char *name = pcmk_children[lpc].name;
-                int ret;
+                int rc = child_liveness(&pcmk_children[lpc]);
 
-                switch ((ret = pcmk_child_active(&pcmk_children[lpc]))) {
-                    case 1:
+                switch (rc) {
+                    case pcmk_rc_ok:
                         break;
-                    case 0:
-                    case 2:  /* this very case: it was OK once already */
+                    case pcmk_rc_ipc_unresponsive:
+                    case pcmk_rc_ipc_pid_only: // This case: it was previously OK
                         if (pcmk_children[lpc].respawn == TRUE) {
-                            crm_err("%s[%d] terminated%s", name,
+                            crm_err("%s[%d] terminated%s", pcmk_children[lpc].name,
                                     PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                    ret ? " as IPC server" : "");
+                                    (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
                         } else {
                             /* orderly shutdown */
-                            crm_notice("%s[%d] terminated%s", name,
+                            crm_notice("%s[%d] terminated%s", pcmk_children[lpc].name,
                                        PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
-                                       ret ? " as IPC server" : "");
+                                       (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
                         }
                         pcmk_process_exit(&(pcmk_children[lpc]));
                         continue;
                     default:
-                        crm_crit("Unexpected value from pcmk_child_active:"
-                                 " %d (pid=%lld)", ret,
-                                 (long long) PCMK__SPECIAL_PID_AS_0(
-                                                 pcmk_children[lpc].pid));
-                        /* fall through */
-                    case -1:
-                    case -2:
-                        /* message(s) already emitted */
                         crm_exit(CRM_EX_FATAL);
                         break;  /* static analysis/noreturn */
                 }
@@ -930,9 +957,7 @@ check_active_before_startup_processes(gpointer user_data)
  * will appear or the unattainable process will disappear per the observable
  * IPC, respectively.
  *
- * \return 0 if no such "child" process found, positive number X when X
- *         "children" detected, -1 on an internal error, -2 when any
- *         would-be-used IPC is blocked with an unauthorized process
+ * \return Standard Pacemaker return code
  *
  * \note Since this gets run at the very start, \c respawn_count fields
  *       for particular children get temporarily overloaded with "rounds
@@ -945,33 +970,39 @@ check_active_before_startup_processes(gpointer user_data)
 static int
 find_and_track_existing_processes(void)
 {
-    unsigned tracking = 0U;
+    bool tracking = false;
     bool wait_in_progress;
-    int cur;
+    int rc;
     size_t i, rounds;
 
     for (rounds = 1; rounds <= WAIT_TRIES; rounds++) {
         wait_in_progress = false;
         for (i = 0; i < SIZEOF(pcmk_children); i++) {
-            if (!pcmk_children[i].endpoint
-                    || pcmk_children[i].respawn_count < 0
-                    || !(cur = pcmk_child_active(&pcmk_children[i]))) {
-                /* as a speculation, don't give up in the context of
-                   pcmk_child_active check if there are more rounds to
-                   come for other reasons, but don't artificially wait just
-                   because of this, since we would preferably start ASAP */
+
+            if ((pcmk_children[i].endpoint == NULL)
+                || (pcmk_children[i].respawn_count < 0)) {
                 continue;
             }
+
+            rc = child_liveness(&pcmk_children[i]);
+            if (rc == pcmk_rc_ipc_unresponsive) {
+                /* As a speculation, don't give up if there are more rounds to
+                 * come for other reasons, but don't artificially wait just
+                 * because of this, since we would preferably start ASAP.
+                 */
+                continue;
+            }
+
             pcmk_children[i].respawn_count = rounds;
-            switch (cur) {
-                case 1:
+            switch (rc) {
+                case pcmk_rc_ok:
                     if (pcmk_children[i].pid == PCMK__SPECIAL_PID) {
                         if (crm_is_true(getenv("PCMK_fail_fast"))) {
                             crm_crit("Cannot reliably track pre-existing"
                                      " authentic process behind %s IPC on this"
                                      " platform and PCMK_fail_fast requested",
                                      pcmk_children[i].endpoint);
-                            return -1;
+                            return EOPNOTSUPP;
                         } else if (pcmk_children[i].respawn_count == WAIT_TRIES) {
                             crm_notice("Assuming pre-existing authentic, though"
                                        " on this platform untrackable, process"
@@ -1007,16 +1038,16 @@ find_and_track_existing_processes(void)
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
                     pcmk_children[i].active_before_startup = TRUE;
-                    tracking++;
+                    tracking = true;
                     break;
-                case 2:
+                case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
                         crm_crit("%s IPC end-point for existing authentic"
                                  " process %lld did not (re)appear",
                                  pcmk_children[i].endpoint,
                                  (long long) PCMK__SPECIAL_PID_AS_0(
                                                  pcmk_children[i].pid));
-                        return -1;
+                        return rc;
                     }
                     wait_in_progress = true;
                     crm_warn("Cannot find %s IPC end-point for existing"
@@ -1027,12 +1058,10 @@ find_and_track_existing_processes(void)
                                              pcmk_children[i].pid),
                              WAIT_TRIES - pcmk_children[i].respawn_count);
                     continue;
-                case -1:
-                case -2:
-                    return cur;  /* messages already emitted */
                 default:
-                    crm_crit("Unexpected condition"CRM_XS"cur=%d", cur);
-                    return -1;  /* unexpected condition */
+                    crm_crit("Checked liveness of %s: %s " CRM_XS " rc=%d",
+                             pcmk_children[i].name, pcmk_rc_str(rc), rc);
+                    return rc;
             }
         }
         if (!wait_in_progress) {
@@ -1048,7 +1077,7 @@ find_and_track_existing_processes(void)
         g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
                               check_active_before_startup_processes, NULL);
     }
-    return (tracking > INT_MAX) ? INT_MAX : tracking;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -1361,14 +1390,12 @@ main(int argc, char **argv)
     }
 
     switch (find_and_track_existing_processes()) {
-        case -1:
-            crm_crit("Internal fatality, see the log");
-            crm_exit(CRM_EX_FATAL);
-        case -2:
-            crm_crit("Blocked by foreign process, kill the offender");
+        case pcmk_rc_ok:
+            break;
+        case pcmk_rc_ipc_unauthorized:
             crm_exit(CRM_EX_CANTCREAT);
         default:
-            break;
+            crm_exit(CRM_EX_FATAL);
     };
 
     cluster.destroy = mcp_cpg_destroy;
