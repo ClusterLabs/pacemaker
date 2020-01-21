@@ -20,7 +20,7 @@
 #    include <gnutls/gnutls.h>
 #  endif
 
-GHashTable *rsc_list;
+extern GHashTable *rsc_list;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
