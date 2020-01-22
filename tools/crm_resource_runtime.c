@@ -11,7 +11,6 @@
 
 int resource_verbose = 0;
 bool do_force = FALSE;
-int crmd_replies_needed = 1; /* The welcome message */
 
 const char *attr_set_type = XML_TAG_ATTR_SETS;
 
@@ -458,58 +457,56 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
     return rc;
 }
 
+// \return Standard Pacemaker return code
 static int
-send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
+send_lrm_rsc_op(pcmk_controld_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
-                bool only_failed, pe_working_set_t * data_set)
+                pe_working_set_t *data_set)
 {
-    char *our_pid = NULL;
-    char *key = NULL;
-    int rc = -ECOMM;
-    xmlNode *cmd = NULL;
-    xmlNode *xml_rsc = NULL;
     const char *router_node = host_uname;
+    const char *rsc_api_id = NULL;
+    const char *rsc_long_id = NULL;
     const char *rsc_class = NULL;
+    const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
-    xmlNode *params = NULL;
-    xmlNode *msg_data = NULL;
     bool cib_only = false;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
         CMD_ERR("Resource %s not found", rsc_id);
-        return -ENXIO;
+        return ENXIO;
 
     } else if (rsc->variant != pe_native) {
         CMD_ERR("We can only process primitive resources, not %s", rsc_id);
-        return -EINVAL;
+        return EINVAL;
     }
 
     rsc_class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rsc_provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
     rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         CMD_ERR("Resource %s does not have a class and type", rsc_id);
-        return -EINVAL;
+        return EINVAL;
     }
 
     if (host_uname == NULL) {
         CMD_ERR("Please specify a node name");
-        return -EINVAL;
+        return EINVAL;
 
     } else {
         pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {
             CMD_ERR("Node %s not found", host_uname);
-            return -pcmk_err_node_unknown;
+            return pcmk_rc_node_unknown;
         }
 
         if (!(node->details->online)) {
-            if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
-                cib_only = true;
-            } else {
+            if (do_fail_resource) {
                 CMD_ERR("Node %s is not online", host_uname);
-                return -ENOTCONN;
+                return ENOTCONN;
+            } else {
+                cib_only = true;
             }
         }
         if (!cib_only && pe__is_guest_or_remote_node(node)) {
@@ -517,67 +514,28 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
             if (node == NULL) {
                 CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
                         host_uname);
-                return -ENOTCONN;
+                return ENOTCONN;
             }
             router_node = node->details->uname;
         }
     }
 
-    msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
-
-    /* The controller logs the transition key from requests, so we need to have
-     * *something* for it.
-     */
-    key = generate_transition_key(0, getpid(), 0,
-                                  "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-    crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
-    free(key);
-
-    crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
-    if (safe_str_neq(router_node, host_uname)) {
-        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
-    }
-
-    if (cib_only) {
-        // Indicate that only the CIB needs to be cleaned
-        crm_xml_add(msg_data, PCMK__XA_MODE, XML_TAG_CIB);
-    }
-
-    xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
     if (rsc->clone_name) {
-        crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->clone_name);
-        crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->id);
-
+        rsc_api_id = rsc->clone_name;
+        rsc_long_id = rsc->id;
     } else {
-        crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
+        rsc_api_id = rsc->id;
     }
-
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, rsc_class);
-    crm_copy_xml_element(rsc->xml, xml_rsc, XML_AGENT_ATTR_PROVIDER);
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, rsc_type);
-
-    params = create_xml_node(msg_data, XML_TAG_ATTRS);
-    crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-
-    // The controller parses the timeout from the request
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
-    crm_xml_add(params, key, "60000");  /* 1 minute */
-    free(key);
-
-    our_pid = crm_getpid_s();
-    cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-    free_xml(msg_data);
-
-    if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
-        rc = 0;
-
+    if (do_fail_resource) {
+        return controld_api->fail_resource(controld_api, host_uname,
+                                           router_node, rsc_api_id, rsc_long_id,
+                                           rsc_class, rsc_provider, rsc_type);
     } else {
-        crm_debug("Could not send %s op to the controller", op);
-        rc = -ENOTCONN;
+        return controld_api->refresh_resource(controld_api, host_uname,
+                                              router_node, rsc_api_id,
+                                              rsc_long_id, rsc_class,
+                                              rsc_provider, rsc_type, cib_only);
     }
-
-    free_xml(cmd);
-    return rc;
 }
 
 /*!
@@ -597,8 +555,9 @@ rsc_fail_name(resource_t *rsc)
     return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
+// \return Standard Pacemaker return code
 static int
-clear_rsc_history(crm_ipc_t *crmd_channel, const char *host_uname,
+clear_rsc_history(pcmk_controld_api_t *controld_api, const char *host_uname,
                   const char *rsc_id, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
@@ -608,27 +567,22 @@ clear_rsc_history(crm_ipc_t *crmd_channel, const char *host_uname,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc_id,
-                         TRUE, data_set);
-    if (rc != pcmk_ok) {
+    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, data_set);
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
-    crmd_replies_needed++;
 
-    crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
+    crm_trace("Processing %d mainloop inputs",
+              controld_api->replies_expected(controld_api));
     while (g_main_context_iteration(NULL, FALSE)) {
         crm_trace("Processed mainloop input, %d still remaining",
-                  crmd_replies_needed);
-    }
-
-    if (crmd_replies_needed < 0) {
-        crmd_replies_needed = 0;
+                  controld_api->replies_expected(controld_api));
     }
     return rc;
 }
 
 static int
-clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
+clear_rsc_failures(pcmk_controld_api_t *controld_api, const char *node_name,
                    const char *rsc_id, const char *operation,
                    const char *interval_spec, pe_working_set_t *data_set)
 {
@@ -700,9 +654,9 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         crm_debug("Erasing failures of %s on %s", failed_id, node_name);
-        rc = clear_rsc_history(crmd_channel, node_name, failed_id, data_set);
-        if (rc != pcmk_ok) {
-            return rc;
+        rc = clear_rsc_history(controld_api, node_name, failed_id, data_set);
+        if (rc != pcmk_rc_ok) {
+            return pcmk_rc2legacy(rc);
         }
     }
     g_hash_table_destroy(rscs);
@@ -728,7 +682,7 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
 }
 
 int
-cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
+cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
                     resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set)
@@ -745,7 +699,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             resource_t *child = (resource_t *) lpc->data;
 
-            rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
+            rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set);
             if (rc != pcmk_ok) {
                 return rc;
@@ -779,7 +733,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
-                rc = cli_resource_delete(crmd_channel, node->details->uname,
+                rc = cli_resource_delete(controld_api, node->details->uname,
                                          rsc, operation, interval_spec,
                                          just_failures, data_set);
             }
@@ -807,7 +761,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return -EOPNOTSUPP;
     }
 
-    if (crmd_channel == NULL) {
+    if (controld_api == NULL) {
         printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
                rsc->id, host_uname);
         return pcmk_ok;
@@ -821,10 +775,11 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
     }
 
     if (just_failures) {
-        rc = clear_rsc_failures(crmd_channel, host_uname, rsc->id, operation,
+        rc = clear_rsc_failures(controld_api, host_uname, rsc->id, operation,
                                 interval_spec, data_set);
     } else {
-        rc = clear_rsc_history(crmd_channel, host_uname, rsc->id, data_set);
+        rc = clear_rsc_history(controld_api, host_uname, rsc->id, data_set);
+        rc = pcmk_rc2legacy(rc);
     }
     if (rc != pcmk_ok) {
         printf("Cleaned %s failures on %s, but unable to clean history: %s\n",
@@ -836,7 +791,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 }
 
 int
-cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
+cli_cleanup_all(pcmk_controld_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
                 pe_working_set_t *data_set)
 {
@@ -844,12 +799,11 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
 
-    if (crmd_channel == NULL) {
+    if (controld_api == NULL) {
         printf("Dry run: skipping clean-up of %s due to CIB_file\n",
                display_name);
         return pcmk_ok;
     }
-    crmd_replies_needed = 0;
 
     if (node_name) {
         node_t *node = pe_find_node(data_set->nodes, node_name);
@@ -872,7 +826,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
     }
 
     if (node_name) {
-        rc = clear_rsc_failures(crmd_channel, node_name, NULL,
+        rc = clear_rsc_failures(controld_api, node_name, NULL,
                                 operation, interval_spec, data_set);
         if (rc != pcmk_ok) {
             printf("Cleaned all resource failures on %s, but unable to clean history: %s\n",
@@ -883,7 +837,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
         for (GList *iter = data_set->nodes; iter; iter = iter->next) {
             pe_node_t *node = (pe_node_t *) iter->data;
 
-            rc = clear_rsc_failures(crmd_channel, node->details->uname, NULL,
+            rc = clear_rsc_failures(controld_api, node->details->uname, NULL,
                                     operation, interval_spec, data_set);
             if (rc != pcmk_ok) {
                 printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
@@ -948,12 +902,13 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
     }
 }
 
+// \return Standard Pacemaker return code
 int
-cli_resource_fail(crm_ipc_t * crmd_channel, const char *host_uname,
-             const char *rsc_id, pe_working_set_t * data_set)
+cli_resource_fail(pcmk_controld_api_t *controld_api, const char *host_uname,
+                  const char *rsc_id, pe_working_set_t *data_set)
 {
-    crm_warn("Failing: %s", rsc_id);
-    return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_FAIL, host_uname, rsc_id, FALSE, data_set);
+    crm_notice("Failing %s on %s", rsc_id, host_uname);
+    return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, data_set);
 }
 
 static GHashTable *
