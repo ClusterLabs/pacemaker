@@ -1106,10 +1106,16 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
+    gboolean as_header = va_arg(args, gboolean);
 
     char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
 
-    out->begin_list(out, NULL, NULL, "%s", buf);
+    if (as_header) {
+        out->begin_list(out, NULL, NULL, "%s", buf);
+    } else {
+        out->list_item(out, NULL, "%s", buf);
+    }
+
     free(buf);
     return 0;
 }
@@ -1121,6 +1127,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
+    gboolean as_header G_GNUC_UNUSED = va_arg(args, gboolean);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
