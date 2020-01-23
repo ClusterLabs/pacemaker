@@ -1381,10 +1381,12 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
  * \param[in]  client      Connection to IPC server
  * \param[in]  message     XML message to send
  * \param[in]  flags       Bitmask of crm_ipc_flags
- * \param[in]  ms_timeout  Give up if not sent within this time (5s if 0)
+ * \param[in]  ms_timeout  Give up if not sent within this much time
+ *                         (5 seconds if 0, or no timeout if negative)
  * \param[out] reply       Reply from server (or NULL if none)
  *
- * \return Negative errno on error, otherwise number of bytes sent
+ * \return Negative errno on error, otherwise size of reply received in bytes
+ *         if reply was needed, otherwise number of bytes sent
  */
 int
 crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, int32_t ms_timeout,
@@ -1401,12 +1403,14 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     crm_ipc_init();
 
     if (client == NULL) {
-        crm_notice("Invalid connection");
+        crm_notice("Can't send IPC request without connection (bug?): %.100s",
+                   message);
         return -ENOTCONN;
 
     } else if (crm_ipc_connected(client) == FALSE) {
         /* Don't even bother */
-        crm_notice("Connection to %s closed", client->name);
+        crm_notice("Can't send IPC request to %s: Connection closed",
+                   client->name);
         return -ENOTCONN;
     }
 
@@ -1415,7 +1419,6 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     if (client->need_reply) {
-        crm_trace("Trying again to obtain pending reply from %s", client->name);
         qb_rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, ms_timeout);
         if (qb_rc < 0) {
             crm_warn("Sending IPC to %s disabled until pending reply received",
@@ -1423,7 +1426,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
             return -EALREADY;
 
         } else {
-            crm_notice("Lost reply from %s finally arrived, sending re-enabled",
+            crm_notice("Sending IPC to %s re-enabled after pending reply received",
                        client->name);
             client->need_reply = FALSE;
         }
@@ -1433,6 +1436,8 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
     rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't prepare IPC request to %s: %s " CRM_XS " rc=%d",
+                 client->name, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
 
@@ -1446,14 +1451,15 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     if(header->size_compressed) {
         if(factor < 10 && (client->max_buf_size / 10) < (bytes / factor)) {
-            crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%u bytes), "
-                       "consider setting PCMK_ipc_buffer to %u or higher",
+            crm_notice("Compressed message exceeds %d0%% of configured IPC "
+                       "limit (%u bytes); consider setting PCMK_ipc_buffer to "
+                       "%u or higher",
                        factor, client->max_buf_size, 2 * client->max_buf_size);
             factor++;
         }
     }
 
-    crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg...",
+    crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
               client->name, header->qb.id, header->qb.size, ms_timeout);
 
     if (ms_timeout > 0 || is_not_set(flags, crm_ipc_client_response)) {
@@ -1461,72 +1467,77 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
 
         do {
-            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-        } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout)
-                 && crm_ipc_connected(client));
+            /* @TODO Is this check really needed? Won't qb_ipcc_sendv() return
+             * an error if it's not connected?
+             */
+            if (!crm_ipc_connected(client)) {
+                goto send_cleanup;
+            }
 
+            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout));
+
+        rc = (int) qb_rc; // Negative of system errno, or bytes sent
         if (qb_rc <= 0) {
-            crm_trace("Failed to send %s IPC request %d of %u bytes",
-                      client->name, header->qb.id, header->qb.size);
-            rc = (int) qb_rc;
             goto send_cleanup;
 
         } else if (is_not_set(flags, crm_ipc_client_response)) {
-            crm_trace("Sent %s IPC request %d of %u bytes (not waiting for reply)",
-                      client->name, header->qb.id, header->qb.size);
-            rc = (int) qb_rc;
+            crm_trace("Not waiting for reply to %s IPC request %d",
+                      client->name, header->qb.id);
             goto send_cleanup;
         }
 
         rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes);
         if (rc != pcmk_rc_ok) {
-            /* No reply, for now, disable sending
+            /* We didn't get the reply in time, so disable future sends for now.
+             * The only alternative would be to close the connection since we
+             * don't know how to detect and discard out-of-sequence replies.
              *
-             * The alternative is to close the connection since we don't know
-             * how to detect and discard out-of-sequence replies
-             *
-             * TODO - implement the above
+             * @TODO Implement out-of-sequence detection
              */
             client->need_reply = TRUE;
         }
-        rc = (int) bytes;
+        rc = (int) bytes; // Negative system errno, or size of reply received
 
     } else {
+        // No timeout, and client response needed
         do {
             qb_rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer,
-                                    client->buf_size, -1);
+                                       client->buf_size, -1);
         } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
-        rc = (int) qb_rc;
+        rc = (int) qb_rc; // Negative system errno, or size of reply received
     }
 
     if (rc > 0) {
         struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)(void*)client->buffer;
 
-        crm_trace("Received response %d, size=%u, rc=%d, text: %.200s",
-                  hdr->qb.id, hdr->qb.size, rc, crm_ipc_buffer(client));
+        crm_trace("Received %d-byte reply %d to %s IPC %d: %.100s",
+                  rc, hdr->qb.id, client->name, header->qb.id,
+                  crm_ipc_buffer(client));
 
         if (reply) {
             *reply = string2xml(crm_ipc_buffer(client));
         }
 
     } else {
-        crm_trace("Response not received: rc=%d, errno=%d", rc, errno);
+        crm_trace("No reply to %s IPC %d: rc=%d",
+                  client->name, header->qb.id, rc);
     }
 
   send_cleanup:
     if (crm_ipc_connected(client) == FALSE) {
-        crm_notice("Connection to %s closed: %s (%d)",
-                   client->name, pcmk_strerror(rc), rc);
+        crm_notice("Couldn't send %s IPC request %d: Connection closed "
+                   CRM_XS " rc=%d", client->name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
-        crm_warn("Request %d to %s failed: %s after %dms " CRM_XS " rc=%d",
-                 header->qb.id, client->name, pcmk_strerror(rc), ms_timeout,
+        crm_warn("%s IPC request %d failed: %s after %dms " CRM_XS " rc=%d",
+                 client->name, header->qb.id, pcmk_strerror(rc), ms_timeout,
                  rc);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
-        crm_warn("Request %d to %s failed: %s " CRM_XS " rc=%d",
-                 header->qb.id, client->name,
+        crm_warn("%s IPC request %d failed: %s " CRM_XS " rc=%d",
+                 client->name, header->qb.id,
                  ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
     }
 
