@@ -1100,31 +1100,22 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
 }
 
 int
-pe__resource_header_text(pcmk__output_t *out, va_list args) {
-    resource_t *rsc = va_arg(args, resource_t *);
-    const char *rsc_id = va_arg(args, const char *);
-    gboolean all = va_arg(args, gboolean);
-    int failcount = va_arg(args, int);
-    time_t last_failure = va_arg(args, int);
-
-    char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
-
-    out->begin_list(out, NULL, NULL, "%s", buf);
-    free(buf);
-    return 0;
-}
-
-int
 pe__resource_history_text(pcmk__output_t *out, va_list args) {
     resource_t *rsc = va_arg(args, resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
+    gboolean as_header = va_arg(args, gboolean);
 
     char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
 
-    out->list_item(out, NULL, "%s", buf);
+    if (as_header) {
+        out->begin_list(out, NULL, NULL, "%s", buf);
+    } else {
+        out->list_item(out, NULL, "%s", buf);
+    }
+
     free(buf);
     return 0;
 }
@@ -1136,6 +1127,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
+    gboolean as_header G_GNUC_UNUSED = va_arg(args, gboolean);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
@@ -1281,7 +1273,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
-    { "resource-header", "text", pe__resource_header_text },
     { "resource-history", "html", pe__resource_history_text },
     { "resource-history", "log", pe__resource_history_text },
     { "resource-history", "text", pe__resource_history_text },
