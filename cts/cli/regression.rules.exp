@@ -9,7 +9,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 No rule found with ID=blahblah
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule that doesn't exist =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -26,6 +26,27 @@ Error checking rule: No such device or address
       <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
         <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
           <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
         </rule>
       </rsc_location>
     </constraints>
@@ -41,7 +62,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 No rule found with ID=no-date-expression
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule that has no date_expression =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -58,6 +79,27 @@ Error checking rule: No such device or address
       <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
         <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
           <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
         </rule>
       </rsc_location>
     </constraints>
@@ -72,7 +114,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-expired is expired
 =#=#=#= Current cib after: Verify basic rule is expired =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -89,6 +131,27 @@ Rule cli-prefer-rule-dummy-expired is expired
       <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
         <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
           <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
         </rule>
       </rsc_location>
     </constraints>
@@ -103,7 +166,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-expired is still in effect
 =#=#=#= Current cib after: Verify basic rule worked in the past =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -120,6 +183,27 @@ Rule cli-prefer-rule-dummy-expired is still in effect
       <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
         <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
           <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
         </rule>
       </rsc_location>
     </constraints>
@@ -134,7 +218,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-not-yet has not yet taken effect
 =#=#=#= Current cib after: Verify basic rule is not yet in effect =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -153,9 +237,240 @@ Rule cli-prefer-rule-dummy-not-yet has not yet taken effect
           <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
         </rule>
       </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
     </constraints>
   </configuration>
   <status/>
 </cib>
 =#=#=#= End test: Verify basic rule is not yet in effect - Requested item is not yet in effect (111) =#=#=#=
 * Passed: crm_rule       - Verify basic rule is not yet in effect
+=#=#=#= Begin test: Verify date_spec rule with years doesn't match =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule cli-prefer-rule-dummy-date_spec-only-years does not satisfy conditions
+=#=#=#= Current cib after: Verify date_spec rule with years doesn't match =#=#=#=
+<cib epoch="7" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Verify date_spec rule with years doesn't match - Requested item does not satisfy constraints (113) =#=#=#=
+* Passed: crm_rule       - Verify date_spec rule with years doesn't match
+=#=#=#= Begin test: Verify date_spec rule with years does match =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule cli-prefer-rule-dummy-date_spec-only-years satisfies conditions
+=#=#=#= Current cib after: Verify date_spec rule with years does match =#=#=#=
+<cib epoch="7" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Verify date_spec rule with years does match - OK (0) =#=#=#=
+* Passed: crm_rule       - Verify date_spec rule with years does match
+=#=#=#= Begin test: Try to check a rule whose date_spec does not contain years= =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule either must not use date_spec, or use date_spec with years= but not moon=
+Error checking rule: No such device or address
+=#=#=#= Current cib after: Try to check a rule whose date_spec does not contain years= =#=#=#=
+<cib epoch="7" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Try to check a rule whose date_spec does not contain years= - No such object (105) =#=#=#=
+* Passed: crm_rule       - Try to check a rule whose date_spec does not contain years=
+=#=#=#= Begin test: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Rule either must not use date_spec, or use date_spec with years= but not moon=
+Error checking rule: No such device or address
+=#=#=#= Current cib after: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
+<cib epoch="7" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01"/>
+      <rsc_location id="cli-prefer-dummy-expired" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-expired" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-expired" operation="lt" end=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start=""/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-only-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-only-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-only-years-spec" years="2019"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-without-years" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-without-years" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-without-years-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-without-years-spec" hours="20" months="1,3,5,7"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
+          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
+            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - No such object (105) =#=#=#=
+* Passed: crm_rule       - Try to check a rule whose date_spec contains years= and moon=
