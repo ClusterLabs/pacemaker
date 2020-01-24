@@ -479,6 +479,7 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_EXPIRED: return "CRM_EX_EXPIRED";
         case CRM_EX_NOT_YET_IN_EFFECT: return "CRM_EX_NOT_YET_IN_EFFECT";
         case CRM_EX_INDETERMINATE: return "CRM_EX_INDETERMINATE";
+        case CRM_EX_UNSATISFIED: return "CRM_EX_UNSATISFIED";
         case CRM_EX_OLD: return "CRM_EX_OLD";
         case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
         case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
@@ -525,6 +526,7 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_EXPIRED: return "Requested item has expired";
         case CRM_EX_NOT_YET_IN_EFFECT: return "Requested item is not yet in effect";
         case CRM_EX_INDETERMINATE: return "Could not determine status";
+        case CRM_EX_UNSATISFIED: return "Not applicable under current conditions";
         case CRM_EX_OLD: return "Update was older than existing configuration";
         case CRM_EX_TIMEOUT: return "Timeout occurred";
         case CRM_EX_MAX: return "Error occurred";
@@ -653,6 +655,10 @@ pcmk_rc2exitc(int rc)
         case ETIME:
         case ETIMEDOUT:
             return CRM_EX_TIMEOUT;
+
+        case EAGAIN:
+        case EBUSY:
+            return CRM_EX_UNSATISFIED;
 
         default:
             return CRM_EX_ERROR;

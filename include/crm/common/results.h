@@ -205,6 +205,7 @@ typedef enum crm_exit_e {
     CRM_EX_EXPIRED              = 110, // requested item has expired
     CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
     CRM_EX_INDETERMINATE        = 112, // could not determine status
+    CRM_EX_UNSATISFIED          = 113, // requested item does not satisfy constraints
 
     // Other
     CRM_EX_TIMEOUT              = 124, // convention from timeout(1)
