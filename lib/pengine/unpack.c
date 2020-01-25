@@ -410,37 +410,6 @@ pe_create_node(const char *id, const char *uname, const char *type,
     return new_node;
 }
 
-bool
-remote_id_conflict(const char *remote_name, pe_working_set_t *data) 
-{
-    bool match = FALSE;
-#if 1
-    pe_find_resource(data->resources, remote_name);
-#else
-    if (data->name_check == NULL) {
-        data->name_check = g_hash_table_new(crm_str_hash, g_str_equal);
-        for (xml_rsc = __xml_first_child_element(parent); xml_rsc != NULL;
-             xml_rsc = __xml_next_element(xml_rsc)) {
-
-            const char *id = ID(xml_rsc);
-
-            /* avoiding heap allocation here because we know the duration of this hashtable allows us to */
-            g_hash_table_insert(data->name_check, (char *) id, (char *) id);
-        }
-    }
-    if (g_hash_table_lookup(data->name_check, remote_name)) {
-        match = TRUE;
-    }
-#endif
-    if (match) {
-        crm_err("Invalid remote-node name, a resource called '%s' already exists.", remote_name);
-        return NULL;
-    }
-
-    return match;
-}
-
-
 static const char *
 expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
 {
@@ -486,7 +455,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         return NULL;
     }
 
-    if (remote_id_conflict(remote_name, data)) {
+    if (pe_find_resource(data->resources, remote_name) != NULL) {
         return NULL;
     }
 
