@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -145,7 +145,7 @@ pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 static bool
 pe_subsystem_new()
 {
-    static struct ipc_client_callbacks pe_callbacks = {
+    struct ipc_client_callbacks pe_callbacks = {
         .dispatch = pe_ipc_dispatch,
         .destroy = pe_ipc_destroy
     };

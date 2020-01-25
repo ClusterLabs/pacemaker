@@ -1,5 +1,8 @@
 /*
  * Copyright 2004 International Business Machines
+ * Later changes copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -179,7 +182,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    static struct ipc_client_callbacks cib_callbacks = {
+    struct ipc_client_callbacks cib_callbacks = {
         .dispatch = cib_native_dispatch_internal,
         .destroy = cib_native_destroy
     };

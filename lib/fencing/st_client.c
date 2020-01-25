@@ -1449,7 +1449,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     stonith_private_t *native = NULL;
     const char *display_name = name? name : "client";
 
-    static struct ipc_client_callbacks st_callbacks = {
+    struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
         .destroy = stonith_connection_destroy
     };
