@@ -113,48 +113,6 @@ crm_trigger_finalize(GSource * source)
     crm_trace("Trigger %p destroyed", source);
 }
 
-#if 0
-struct _GSourceCopy
-{
-  gpointer callback_data;
-  GSourceCallbackFuncs *callback_funcs;
-
-  const GSourceFuncs *source_funcs;
-  guint ref_count;
-
-  GMainContext *context;
-
-  gint priority;
-  guint flags;
-  guint source_id;
-
-  GSList *poll_fds;
-  
-  GSource *prev;
-  GSource *next;
-
-  char    *name;
-
-  void *priv;
-};
-
-static int
-g_source_refcount(GSource * source)
-{
-    /* Duplicating the contents of private header files is a necessary evil */
-    if (source) {
-        struct _GSourceCopy *evil = (struct _GSourceCopy*)source;
-        return evil->ref_count;
-    }
-    return 0;
-}
-#else
-static int g_source_refcount(GSource * source)
-{
-    return 0;
-}
-#endif
-
 static GSourceFuncs crm_trigger_funcs = {
     crm_trigger_prepare,
     crm_trigger_check,
@@ -181,10 +139,7 @@ mainloop_setup_trigger(GSource * source, int priority, int (*dispatch) (gpointer
     g_source_set_priority(source, priority);
     g_source_set_can_recurse(source, FALSE);
 
-    crm_trace("Setup %p with ref-count=%u", source, g_source_refcount(source));
     trigger->id = g_source_attach(source, NULL);
-    crm_trace("Attached %p with ref-count=%u", source, g_source_refcount(source));
-
     return trigger;
 }
 
@@ -230,10 +185,6 @@ mainloop_destroy_trigger(crm_trigger_t * source)
     }
 
     gs = (GSource *)source;
-
-    if(g_source_refcount(gs) > 2) {
-        crm_info("Trigger %p is still referenced %u times", gs, g_source_refcount(gs));
-    }
 
     g_source_destroy(gs); /* Remove from mainloop, ref_count-- */
     g_source_unref(gs); /* The caller no longer carries a reference to source
@@ -1176,7 +1127,7 @@ child_signal_init(gpointer p)
     return FALSE;
 }
 
-int
+gboolean
 mainloop_child_kill(pid_t pid)
 {
     GListPtr iter;
@@ -1282,7 +1233,8 @@ struct mainloop_timer_s {
         void *userdata;
 };
 
-static gboolean mainloop_timer_cb(gpointer user_data)
+static gboolean
+mainloop_timer_cb(gpointer user_data)
 {
     int id = 0;
     bool repeat = FALSE;
@@ -1312,7 +1264,8 @@ static gboolean mainloop_timer_cb(gpointer user_data)
     return repeat;
 }
 
-bool mainloop_timer_running(mainloop_timer_t *t)
+bool
+mainloop_timer_running(mainloop_timer_t *t)
 {
     if(t && t->id != 0) {
         return TRUE;
@@ -1320,7 +1273,8 @@ bool mainloop_timer_running(mainloop_timer_t *t)
     return FALSE;
 }
 
-void mainloop_timer_start(mainloop_timer_t *t)
+void
+mainloop_timer_start(mainloop_timer_t *t)
 {
     mainloop_timer_stop(t);
     if(t && t->period_ms > 0) {
@@ -1329,7 +1283,8 @@ void mainloop_timer_start(mainloop_timer_t *t)
     }
 }
 
-void mainloop_timer_stop(mainloop_timer_t *t)
+void
+mainloop_timer_stop(mainloop_timer_t *t)
 {
     if(t && t->id != 0) {
         crm_trace("Stopping timer %s", t->name);
@@ -1338,7 +1293,8 @@ void mainloop_timer_stop(mainloop_timer_t *t)
     }
 }
 
-guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
+guint
+mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 {
     guint last = 0;
 
@@ -1352,7 +1308,6 @@ guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
     }
     return last;
 }
-
 
 mainloop_timer_t *
 mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)

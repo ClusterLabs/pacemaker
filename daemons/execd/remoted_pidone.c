@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the Pacemaker project contributors
+ * Copyright 2017-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -225,8 +225,8 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
      * /var/log/pacemaker, so use a different default if no value has been
      * explicitly configured in the container's environment.
      */
-    if (daemon_option("logfile") == NULL) {
-        set_daemon_option("logfile", "/var/log/pcmk-init.log");
+    if (pcmk__env_option("logfile") == NULL) {
+        pcmk__set_env_option("logfile", "/var/log/pcmk-init.log");
     }
 
     sigfillset(&set);

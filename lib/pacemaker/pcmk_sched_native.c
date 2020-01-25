@@ -674,7 +674,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         return;
     }
 
-    key = generate_op_key(rsc->id, name, interval_ms);
+    key = pcmk__op_key(rsc->id, name, interval_ms);
     if (find_rsc_op_entry(rsc, key) == NULL) {
         crm_trace("Not creating recurring action %s for disabled resource %s",
                   ID(operation), rsc->id);
@@ -867,7 +867,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         return;
     }
 
-    key = generate_op_key(rsc->id, name, interval_ms);
+    key = pcmk__op_key(rsc->id, name, interval_ms);
     if (find_rsc_op_entry(rsc, key) == NULL) {
         crm_trace("Not creating recurring action %s for disabled resource %s",
                   ID(operation), rsc->id);
@@ -1053,10 +1053,12 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
     stop = stop_action(rsc, current, TRUE);
 
     if (partial == FALSE) {
-        migrate_to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, current, TRUE, TRUE, data_set);
+        migrate_to = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                                   RSC_MIGRATE, current, TRUE, TRUE, data_set);
     }
 
-    migrate_from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, chosen, TRUE, TRUE, data_set);
+    migrate_from = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                                 RSC_MIGRATED, chosen, TRUE, TRUE, data_set);
 
     if ((migrate_to && migrate_from) || (migrate_from && partial)) {
 
@@ -1070,24 +1072,33 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
             set_bit(migrate_from->flags, pe_action_migrate_runnable);
             migrate_from->needs = start->needs;
 
-            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL, pe_order_optional, data_set);
+            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                                NULL, pe_order_optional, data_set);
 
         } else {
             set_bit(migrate_from->flags, pe_action_migrate_runnable);
             set_bit(migrate_to->flags, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
-            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL, pe_order_optional, data_set);
-            custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
-                                rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL, pe_order_optional | pe_order_implies_first_migratable, data_set);
+            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                                NULL, pe_order_optional, data_set);
+            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                                NULL, rsc,
+                                pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                                pe_order_optional|pe_order_implies_first_migratable,
+                                data_set);
         }
 
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL, pe_order_optional | pe_order_implies_first_migratable, data_set);
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional | pe_order_implies_first_migratable | pe_order_pseudo_left, data_set);
+        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                            pe_order_optional|pe_order_implies_first_migratable,
+                            data_set);
+        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                            pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
+                            data_set);
 
     }
 
@@ -1387,25 +1398,25 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                         && safe_str_neq(data_set->placement_strategy, "default");
 
     // Order stops before starts (i.e. restart)
-    custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                        rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                        pe_order_optional | pe_order_implies_then | pe_order_restart,
+    custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                        rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                        pe_order_optional|pe_order_implies_then|pe_order_restart,
                         data_set);
 
     // Promotable ordering: demote before stop, start before promote
     if (is_set(top->flags, pe_rsc_promotable) || (rsc->role > RSC_ROLE_SLAVE)) {
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
+                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
 
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_PROMOTE, 0), NULL,
+        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
                             pe_order_runnable_left, data_set);
     }
 
     // Don't clear resource history if probing on same node
-    custom_action_order(rsc, generate_op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
-                        NULL, rsc, generate_op_key(rsc->id, RSC_STATUS, 0),
+    custom_action_order(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
+                        NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
                         NULL, pe_order_same_node|pe_order_then_cancels_first,
                         data_set);
 
@@ -1485,8 +1496,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                 rsc, start_key(rsc), NULL, pe_order_load, data_set);
 
             custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
-                                rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
-                                pe_order_load, data_set);
+                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                                NULL, pe_order_load, data_set);
 
             free(load_stopped_task);
         }
@@ -1551,13 +1562,17 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             crm_trace("Order and colocate %s relative to its container %s",
                       rsc->id, rsc->container->id);
 
-            custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
-                                rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                                pe_order_implies_then | pe_order_runnable_left, data_set);
+            custom_action_order(rsc->container,
+                                pcmk__op_key(rsc->container->id, RSC_START, 0),
+                                NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
+                                NULL,
+                                pe_order_implies_then|pe_order_runnable_left,
+                                data_set);
 
-            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                                rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
-                                pe_order_implies_first, data_set);
+            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                                rsc->container,
+                                pcmk__op_key(rsc->container->id, RSC_STOP, 0),
+                                NULL, pe_order_implies_first, data_set);
 
             if (is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -2897,8 +2912,10 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                  * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
-                custom_action_order(remote, generate_op_key(remote->id, RSC_STATUS, 0), NULL,
-                                    top, generate_op_key(top->id, RSC_START, 0), NULL,
+                custom_action_order(remote,
+                                    pcmk__op_key(remote->id, RSC_STATUS, 0),
+                                    NULL, top,
+                                    pcmk__op_key(top->id, RSC_START, 0), NULL,
                                     pe_order_optional, data_set);
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
@@ -2919,9 +2936,9 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
              * 'rsc' until 'remote' stops as this also implies that
              * 'rsc' is stopped - avoiding the need to probe
              */
-            custom_action_order(remote, generate_op_key(remote->id, RSC_STOP, 0), NULL,
-                                top, generate_op_key(top->id, RSC_START, 0), NULL,
-                                pe_order_optional, data_set);
+            custom_action_order(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
+                                NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+                                NULL, pe_order_optional, data_set);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
             return FALSE;
@@ -2931,7 +2948,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
     }
 
-    key = generate_op_key(rsc->id, RSC_STATUS, 0);
+    key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
@@ -2966,7 +2983,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     }
 
     custom_action_order(rsc, NULL, probe,
-                        top, generate_op_key(top->id, RSC_START, 0), NULL,
+                        top, pcmk__op_key(top->id, RSC_START, 0), NULL,
                         flags, data_set);
 
     /* Before any reloads, if they exist */

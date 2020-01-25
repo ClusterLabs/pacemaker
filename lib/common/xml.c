@@ -2423,7 +2423,8 @@ filename2xml(const char *filename)
 const char *
 crm_xml_add_last_written(xmlNode *xml_node)
 {
-    const char *now_str = crm_now_string(NULL);
+    const char *now_str = pcmk__epoch2str(NULL);
+
     return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN,
                        now_str ? now_str : "Could not determine current time");
 }

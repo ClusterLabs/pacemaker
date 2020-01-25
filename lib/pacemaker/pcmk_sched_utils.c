@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -397,7 +399,8 @@ can_run_any(GHashTable * nodes)
 pe_action_t *
 create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
 {
-    pe_action_t *action = custom_action(rsc, generate_op_key(rsc->id, task, 0), task, NULL, optional, TRUE, data_set);
+    pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
+                                        task, NULL, optional, TRUE, data_set);
     update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
     update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
     if(runnable) {
@@ -426,7 +429,7 @@ pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
     char *interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
     // @TODO dangerous if possible to schedule another action with this key
-    char *key = generate_op_key(rsc->id, task, interval_ms);
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
     cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
                               data_set);
@@ -562,7 +565,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    key = generate_op_key(op->rsc_id, task, op->interval_ms);
+    key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
     if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
@@ -582,10 +585,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
-        op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+        op_id = pcmk__op_key(op->rsc_id, "last_failure", 0);
         if (op->interval_ms == 0) {
             // Ensure 'last' gets updated, in case record-pending is true
-            op_id_additional = generate_op_key(op->rsc_id, "last", 0);
+            op_id_additional = pcmk__op_key(op->rsc_id, "last", 0);
         }
         exit_reason = op->exit_reason;
 
@@ -593,7 +596,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         op_id = strdup(key);
 
     } else {
-        op_id = generate_op_key(op->rsc_id, "last", 0);
+        op_id = pcmk__op_key(op->rsc_id, "last", 0);
     }
 
   again:

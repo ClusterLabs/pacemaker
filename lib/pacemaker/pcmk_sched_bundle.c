@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -349,8 +349,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
 
     } else {
 //    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-//        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-//                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional, data_set);
+//        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+//                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional, data_set);
     }
 }
 
@@ -999,9 +999,9 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                         && (other->container != NULL)) {
 
                         custom_action_order(replica->container,
-                                            generate_op_key(replica->container->id, RSC_STATUS, 0),
+                                            pcmk__op_key(replica->container->id, RSC_STATUS, 0),
                                             NULL, other->container,
-                                            generate_op_key(other->container->id, RSC_START, 0),
+                                            pcmk__op_key(other->container->id, RSC_START, 0),
                                             NULL,
                                             pe_order_optional|pe_order_same_node,
                                             data_set);
@@ -1018,7 +1018,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
              * container is running. This is required for REMOTE_CONTAINER_HACK
              * to correctly probe remote resources.
              */
-            char *probe_uuid = generate_op_key(replica->remote->id, RSC_STATUS,
+            char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS,
                                                0);
             action_t *probe = find_first_action(replica->remote->actions,
                                                 probe_uuid, NULL, node);
@@ -1029,7 +1029,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
                 custom_action_order(replica->container,
-                                    generate_op_key(replica->container->id, RSC_START, 0),
+                                    pcmk__op_key(replica->container->id, RSC_START, 0),
                                     NULL, replica->remote, NULL, probe,
                                     pe_order_probe, data_set);
             }

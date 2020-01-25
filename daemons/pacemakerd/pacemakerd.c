@@ -499,7 +499,7 @@ pcmk_shutdown_worker(gpointer user_data)
     crm_notice("Shutdown complete");
 
     {
-        const char *delay = daemon_option("shutdown_delay");
+        const char *delay = pcmk__env_option("shutdown_delay");
         if(delay) {
             sync();
             sleep(crm_get_msec(delay) / 1000);
@@ -1232,7 +1232,7 @@ main(int argc, char **argv)
                 pid_file = optarg;
                 break;
             case 's':
-                set_daemon_option("node_start_state", "standby");
+                pcmk__set_env_option("node_start_state", "standby");
                 break;
             case '$':
             case '?':
@@ -1265,7 +1265,7 @@ main(int argc, char **argv)
 
     setenv("LC_ALL", "C", 1);
 
-    set_daemon_option("mcp", "true");
+    pcmk__set_env_option("mcp", "true");
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
@@ -1306,7 +1306,7 @@ main(int argc, char **argv)
 
     // OCF shell functions and cluster-glue need facility under different name
     {
-        const char *facility = daemon_option("logfacility");
+        const char *facility = pcmk__env_option("logfacility");
 
         if (facility && safe_str_neq(facility, "none")) {
             setenv("HA_LOGFACILITY", facility, 1);

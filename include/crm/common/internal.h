@@ -94,8 +94,7 @@ int crm_lock_pidfile(const char *filename, const char *name);
 
 /* interal functions related to resource operations (from operations.c) */
 
-char *generate_op_key(const char *rsc_id, const char *op_type,
-                      guint interval_ms);
+char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
 char *generate_notify_key(const char *rsc_id, const char *notify_type,
                           const char *op_type);
 char *generate_transition_key(int action, int transition_id, int target_rc,

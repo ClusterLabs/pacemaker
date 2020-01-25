@@ -2149,7 +2149,7 @@ process_recurring(node_t * node, resource_t * rsc,
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s/%s", key, node->details->uname);
         custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
     }
@@ -2763,7 +2763,7 @@ last_change_str(xmlNode *xml_op)
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &when) == pcmk_ok) {
-        when_s = crm_now_string(&when);
+        when_s = pcmk__epoch2str(&when);
         if (when_s) {
             // Skip day of week to make message shorter
             when_s = strchr(when_s, ' ');
