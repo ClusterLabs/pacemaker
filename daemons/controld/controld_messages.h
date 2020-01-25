@@ -72,7 +72,6 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 void delete_fsa_input(fsa_data_t * fsa_data);
 
 fsa_data_t *get_message(void);
-gboolean is_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 

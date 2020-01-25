@@ -256,13 +256,6 @@ get_message(void)
     return message;
 }
 
-/* returns the current head of the FIFO queue */
-gboolean
-is_message(void)
-{
-    return fsa_message_queue != NULL;
-}
-
 void *
 fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char *caller)
 {

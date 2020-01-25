@@ -168,7 +168,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(fsa_actions, "Initial");
 
     do_fsa_stall = FALSE;
-    if (is_message() == FALSE && fsa_actions != A_NOTHING) {
+    if ((fsa_message_queue == NULL) && (fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
         fsa_data = calloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
@@ -178,7 +178,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
         fsa_data = NULL;
     }
-    while (is_message() && do_fsa_stall == FALSE) {
+    while ((fsa_message_queue != NULL) && !do_fsa_stall) {
         crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
 
         fsa_data = get_message();
