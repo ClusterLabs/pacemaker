@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -400,7 +400,7 @@ lrm_state_ipc_connect(lrm_state_t * lrm_state)
 static remote_proxy_t *
 crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id, const char *channel)
 {
-    static struct ipc_client_callbacks proxy_callbacks = {
+    struct ipc_client_callbacks proxy_callbacks = {
         .dispatch = remote_proxy_dispatch,
         .destroy = remote_proxy_disconnected
     };

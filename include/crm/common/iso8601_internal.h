@@ -1,41 +1,32 @@
 /*
- * Copyright 2015-2017 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_ISO8601_INTERNAL
-#  define CRM_COMMON_ISO8601_INTERNAL
+#ifndef PCMK__ISO8601_INTERNAL__H
+#  define PCMK__ISO8601_INTERNAL__H
+
 #include <time.h>
 #include <sys/time.h>
 #include <ctype.h>
 #include <crm/common/iso8601.h>
 
-typedef struct crm_time_us crm_time_hr_t;
-crm_time_hr_t *crm_time_hr_convert(crm_time_hr_t *target, crm_time_t *dt);
-void crm_time_set_hr_dt(crm_time_t *target, crm_time_hr_t *hr_dt);
-crm_time_hr_t *crm_time_timeval_hr_convert(crm_time_hr_t *target,
-                                           struct timeval *tv);
-crm_time_hr_t *crm_time_hr_new(const char *date_time);
-void crm_time_hr_free(crm_time_hr_t * hr_dt);
-char *crm_time_format_hr(const char *format, crm_time_hr_t * hr_dt);
-const char *crm_now_string(time_t *when);
+typedef struct pcmk__time_us pcmk__time_hr_t;
 
-struct crm_time_us {
+pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt);
+void pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt);
+pcmk__time_hr_t *pcmk__time_timeval_hr_convert(pcmk__time_hr_t *target,
+                                               struct timeval *tv);
+pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
+void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
+char *pcmk__time_format_hr(const char *format, pcmk__time_hr_t *hr_dt);
+const char *pcmk__epoch2str(time_t *when);
+
+struct pcmk__time_us {
     int years;
     int months;                 /* Only for durations */
     int days;
@@ -44,4 +35,5 @@ struct crm_time_us {
     bool duration;
     int useconds;
 };
+
 #endif

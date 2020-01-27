@@ -130,7 +130,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
 {
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = pcmk__alert_flag2text(kind);
-    crm_time_hr_t *now = NULL;
+    pcmk__time_hr_t *now = NULL;
     struct timeval tv_now;
     char timestamp_epoch[20];
     char timestamp_usec[7];
@@ -160,7 +160,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
 
         if (now == NULL) {
             if (gettimeofday(&tv_now, NULL) == 0) {
-                now = crm_time_timeval_hr_convert(NULL, &tv_now);
+                now = pcmk__time_timeval_hr_convert(NULL, &tv_now);
             }
         }
         crm_info("Sending %s alert via %s to %s",
@@ -175,7 +175,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
                                       entry->recipient);
 
         if (now) {
-            char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
+            char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
 
             if (timestamp) {
                 copy_params = alert_key2param(copy_params,

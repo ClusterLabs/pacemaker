@@ -994,7 +994,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    static struct ipc_client_callbacks lrmd_callbacks = {
+    struct ipc_client_callbacks lrmd_callbacks = {
         .dispatch = lrmd_ipc_dispatch,
         .destroy = lrmd_ipc_connection_destroy
     };

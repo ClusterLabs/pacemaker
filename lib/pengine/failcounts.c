@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the Pacemaker project contributors
+ * Copyright 2008-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -51,13 +51,13 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
     }
 
     lrm_op_id = ID(lrm_op_xml);
-    last_failure_key = generate_op_key(rsc_id, "last_failure", 0);
+    last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
     if (safe_str_eq(last_failure_key, lrm_op_id)) {
         matched = TRUE;
 
     } else {
-        char *expected_op_key = generate_op_key(rsc_id, conf_op_name,
+        char *expected_op_key = pcmk__op_key(rsc_id, conf_op_name,
                                                 conf_op_interval_ms);
 
         if (safe_str_eq(expected_op_key, lrm_op_id)) {
@@ -365,7 +365,7 @@ pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
 
     CRM_CHECK(rsc && node && reason && data_set, return NULL);
 
-    key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+    key = pcmk__op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE,
                           data_set);
     add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);

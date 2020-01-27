@@ -463,17 +463,17 @@ main(int argc, char **argv, char **envp)
         bump_log_num--;
     }
 
-    option = daemon_option("logfacility");
+    option = pcmk__env_option("logfacility");
     if (option && safe_str_neq(option, "none")
         && safe_str_neq(option, "/dev/null")) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
-    option = daemon_option("logfile");
+    option = pcmk__env_option("logfile");
     if(option && safe_str_neq(option, "none")) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
-        if (daemon_option_enabled(crm_system_name, "debug")) {
+        if (pcmk__env_option_enabled(crm_system_name, "debug")) {
             setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
         }
     }

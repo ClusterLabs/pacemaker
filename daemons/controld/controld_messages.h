@@ -72,7 +72,6 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 void delete_fsa_input(fsa_data_t * fsa_data);
 
 fsa_data_t *get_message(void);
-gboolean is_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 
@@ -86,8 +85,6 @@ gboolean crmd_authorize_message(xmlNode *client_msg,
                                 const char *proxy_session);
 
 extern gboolean send_request(xmlNode * msg, char **msg_reference);
-
-extern enum crmd_fsa_input handle_message(xmlNode * stored_msg, enum crmd_fsa_cause cause);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 

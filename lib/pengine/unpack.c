@@ -410,37 +410,6 @@ pe_create_node(const char *id, const char *uname, const char *type,
     return new_node;
 }
 
-bool
-remote_id_conflict(const char *remote_name, pe_working_set_t *data) 
-{
-    bool match = FALSE;
-#if 1
-    pe_find_resource(data->resources, remote_name);
-#else
-    if (data->name_check == NULL) {
-        data->name_check = g_hash_table_new(crm_str_hash, g_str_equal);
-        for (xml_rsc = __xml_first_child_element(parent); xml_rsc != NULL;
-             xml_rsc = __xml_next_element(xml_rsc)) {
-
-            const char *id = ID(xml_rsc);
-
-            /* avoiding heap allocation here because we know the duration of this hashtable allows us to */
-            g_hash_table_insert(data->name_check, (char *) id, (char *) id);
-        }
-    }
-    if (g_hash_table_lookup(data->name_check, remote_name)) {
-        match = TRUE;
-    }
-#endif
-    if (match) {
-        crm_err("Invalid remote-node name, a resource called '%s' already exists.", remote_name);
-        return NULL;
-    }
-
-    return match;
-}
-
-
 static const char *
 expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
 {
@@ -486,7 +455,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         return NULL;
     }
 
-    if (remote_id_conflict(remote_name, data)) {
+    if (pe_find_resource(data->resources, remote_name) != NULL) {
         return NULL;
     }
 
@@ -2149,7 +2118,7 @@ process_recurring(node_t * node, resource_t * rsc,
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s/%s", key, node->details->uname);
         custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
     }
@@ -2763,7 +2732,7 @@ last_change_str(xmlNode *xml_op)
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &when) == pcmk_ok) {
-        when_s = crm_now_string(&when);
+        when_s = pcmk__epoch2str(&when);
         if (when_s) {
             // Skip day of week to make message shorter
             when_s = strchr(when_s, ' ');

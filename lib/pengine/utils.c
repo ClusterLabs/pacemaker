@@ -1230,14 +1230,14 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
             }
 
             interval_ms = crm_parse_interval_spec(interval_spec);
-            match_key = generate_op_key(rsc->id, name, interval_ms);
+            match_key = pcmk__op_key(rsc->id, name, interval_ms);
             if (safe_str_eq(key, match_key)) {
                 op = operation;
             }
             free(match_key);
 
             if (rsc->clone_name) {
-                match_key = generate_op_key(rsc->clone_name, name, interval_ms);
+                match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
                 if (safe_str_eq(key, match_key)) {
                     op = operation;
                 }
@@ -1258,12 +1258,12 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 
     do_retry = FALSE;
     if (strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
-        local_key = generate_op_key(rsc->id, "migrate", 0);
+        local_key = pcmk__op_key(rsc->id, "migrate", 0);
         key = local_key;
         goto retry;
 
     } else if (strstr(key, "_notify_")) {
-        local_key = generate_op_key(rsc->id, "notify", 0);
+        local_key = pcmk__op_key(rsc->id, "notify", 0);
         key = local_key;
         goto retry;
     }
@@ -1533,7 +1533,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
-    char *key = generate_op_key(rsc->id, task, 0);
+    char *key = pcmk__op_key(rsc->id, task, 0);
 
     if (require_node) {
         result = find_actions_exact(rsc->actions, key, node);
@@ -2083,7 +2083,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
     interval_ms = crm_parse_ms(interval_ms_s);
-    key = generate_op_key(rsc->id, task, interval_ms);
+    key = pcmk__op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op,
                              is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
@@ -2198,7 +2198,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
-    char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
+    char *key = pcmk__op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key,
                                                 node, NULL, TRUE, data_set);
 
@@ -2621,7 +2621,7 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
     char *key = NULL;
 
     CRM_ASSERT(rsc && node);
-    key = generate_op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
+    key = pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
     return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
                          data_set);
 }

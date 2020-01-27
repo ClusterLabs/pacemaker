@@ -25,9 +25,12 @@
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
-void handle_response(xmlNode * stored_msg);
-enum crmd_fsa_input handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause);
-enum crmd_fsa_input handle_shutdown_request(xmlNode * stored_msg);
+static enum crmd_fsa_input handle_message(xmlNode *msg,
+                                          enum crmd_fsa_cause cause);
+static void handle_response(xmlNode *stored_msg);
+static enum crmd_fsa_input handle_request(xmlNode *stored_msg,
+                                          enum crmd_fsa_cause cause);
+static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 
 #define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
 
@@ -254,13 +257,6 @@ get_message(void)
     fsa_message_queue = g_list_remove(fsa_message_queue, message);
     crm_trace("Processing input %d", message->id);
     return message;
-}
-
-/* returns the current head of the FIFO queue */
-gboolean
-is_message(void)
-{
-    return fsa_message_queue != NULL;
 }
 
 void *
@@ -594,8 +590,8 @@ crmd_authorize_message(xmlNode *client_msg, pcmk__client_t *curr_client,
     return FALSE;
 }
 
-enum crmd_fsa_input
-handle_message(xmlNode * msg, enum crmd_fsa_cause cause)
+static enum crmd_fsa_input
+handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
 {
     const char *type = NULL;
 
@@ -890,8 +886,8 @@ verify_feature_set(xmlNode *msg)
     }
 }
 
-enum crmd_fsa_input
-handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
+static enum crmd_fsa_input
+handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 {
     xmlNode *msg = NULL;
     const char *op = crm_element_value(stored_msg, F_CRM_TASK);
@@ -1085,8 +1081,8 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
     return I_NULL;
 }
 
-void
-handle_response(xmlNode * stored_msg)
+static void
+handle_response(xmlNode *stored_msg)
 {
     const char *op = crm_element_value(stored_msg, F_CRM_TASK);
 
@@ -1122,7 +1118,7 @@ handle_response(xmlNode * stored_msg)
     }
 }
 
-enum crmd_fsa_input
+static enum crmd_fsa_input
 handle_shutdown_request(xmlNode * stored_msg)
 {
     /* handle here to avoid potential version issues

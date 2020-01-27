@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -214,7 +214,7 @@ resources_action_create(const char *name, const char *standard,
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
-    op->id = generate_op_key(name, action, interval_ms);
+    op->id = pcmk__op_key(name, action, interval_ms);
 
     if (is_set(ra_caps, pcmk_ra_cap_status) && safe_str_eq(action, "monitor")) {
         op->action = strdup("status");
@@ -547,7 +547,7 @@ gboolean
 services_action_cancel(const char *name, const char *action, guint interval_ms)
 {
     gboolean cancelled = FALSE;
-    char *id = generate_op_key(name, action, interval_ms);
+    char *id = pcmk__op_key(name, action, interval_ms);
     svc_action_t *op = NULL;
 
     /* We can only cancel a recurring action */
@@ -614,7 +614,7 @@ gboolean
 services_action_kick(const char *name, const char *action, guint interval_ms)
 {
     svc_action_t * op = NULL;
-    char *id = generate_op_key(name, action, interval_ms);
+    char *id = pcmk__op_key(name, action, interval_ms);
 
     init_recurring_actions();
     op = g_hash_table_lookup(recurring_actions, id);

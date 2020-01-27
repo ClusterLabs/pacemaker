@@ -711,12 +711,13 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         const char *uname = NULL;
         const char *connect_name = NULL;
 
-        if (remote_id_conflict(id, data_set)) {
+        if (pe_find_resource(data_set->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
-            CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
+            //@TODO return false instead of asserting?
+            CRM_ASSERT(pe_find_resource(data_set->resources, id) == NULL);
         }
 
         /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the

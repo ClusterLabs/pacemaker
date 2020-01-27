@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -293,7 +295,8 @@ pcmk_format_nvpair(const char *name, const char *value, const char *units) {
  */
 char *
 pcmk_format_named_time(const char *name, time_t epoch_time) {
-    const char *now_str = crm_now_string(&epoch_time);
+    const char *now_str = pcmk__epoch2str(&epoch_time);
+
     return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
 }
 

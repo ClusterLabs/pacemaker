@@ -114,7 +114,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
             uuid = generate_notify_key(rid, "confirmed-post", task2text(task + 1));
 
         } else {
-            uuid = generate_op_key(rid, task2text(task + 1), 0);
+            uuid = pcmk__op_key(rid, task2text(task + 1), 0);
         }
         pe_rsc_trace(rsc, "Converted %s -> %s", old_uuid, uuid);
     }
@@ -1081,11 +1081,11 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
 
         } else if(action->cancel_task) {
-            clone_key = generate_op_key(action->rsc->clone_name,
-                                        action->cancel_task, interval_ms);
+            clone_key = pcmk__op_key(action->rsc->clone_name,
+                                     action->cancel_task, interval_ms);
         } else {
-            clone_key = generate_op_key(action->rsc->clone_name,
-                                        action->task, interval_ms);
+            clone_key = pcmk__op_key(action->rsc->clone_name,
+                                     action->task, interval_ms);
         }
 
         CRM_CHECK(clone_key != NULL, crm_err("Could not generate a key for %s", action->uuid));

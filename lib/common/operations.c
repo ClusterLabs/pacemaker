@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 #include <crm/common/util.h>
 
 /*!
- * \brief Generate an operation key
+ * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
  *
  * \param[in] rsc_id       ID of resource being operated on
  * \param[in] op_type      Operation name
@@ -33,10 +33,11 @@
  *
  * \return Newly allocated memory containing operation key as string
  *
- * \note It is the caller's responsibility to free() the result.
+ * \note This function asserts on errors, so it will never return NULL.
+ *       The caller is responsible for freeing the result with free().
  */
 char *
-generate_op_key(const char *rsc_id, const char *op_type, guint interval_ms)
+pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
     CRM_ASSERT(rsc_id != NULL);
     CRM_ASSERT(op_type != NULL);

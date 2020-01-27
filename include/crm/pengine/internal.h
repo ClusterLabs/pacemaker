@@ -251,48 +251,48 @@ extern xmlNode *find_rsc_op_entry(resource_t * rsc, const char *key);
 extern action_t *custom_action(resource_t * rsc, char *key, const char *task, node_t * on_node,
                                gboolean optional, gboolean foo, pe_working_set_t * data_set);
 
-#  define delete_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DELETE, 0)
+#  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
 		optional, TRUE, data_set);
 
-#  define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
+#  define stopped_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #  define stopped_action(rsc, node, optional) custom_action(		\
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
 		optional, TRUE, data_set);
 
-#  define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
+#  define stop_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
-#  define reload_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
-#  define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
+#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
+#  define start_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
 		optional, TRUE, data_set)
 
-#  define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
+#  define started_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #  define started_action(rsc, node, optional) custom_action(		\
 		rsc, started_key(rsc), CRMD_ACTION_STARTED, node,	\
 		optional, TRUE, data_set)
 
-#  define promote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
+#  define promote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, node,	\
 		optional, TRUE, data_set)
 
-#  define promoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
+#  define promoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
 #  define promoted_action(rsc, node, optional) custom_action(		\
 		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node,	\
 		optional, TRUE, data_set)
 
-#  define demote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
+#  define demote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node,		\
 		optional, TRUE, data_set)
 
-#  define demoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
+#  define demoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
 #  define demoted_action(rsc, node, optional) custom_action(		\
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)
@@ -395,7 +395,6 @@ void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reaso
 
 node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
-bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
 void pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
 void pe__common_output_html(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);

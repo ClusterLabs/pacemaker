@@ -995,7 +995,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
     crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
-        char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval_ms);
+        char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
         /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
         crm_xml_add(xml_top, XML_ATTR_ID, op_id);
@@ -1111,9 +1111,9 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name,
     }
 
     /* Erase from CIB */
-    op_key = generate_op_key(rsc_id, "last_failure", 0);
+    op_key = pcmk__op_key(rsc_id, "last_failure", 0);
     if (operation) {
-        orig_op_key = generate_op_key(rsc_id, operation, interval_ms);
+        orig_op_key = pcmk__op_key(rsc_id, operation, interval_ms);
     }
     erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
     free(op_key);
@@ -1637,7 +1637,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
 
-    op_key = generate_op_key(rsc->id, op_task, crm_parse_ms(interval_ms_s));
+    op_key = pcmk__op_key(rsc->id, op_task, crm_parse_ms(interval_ms_s));
 
     crm_debug("Scheduler requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));
@@ -2267,7 +2267,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
     record_pending_op(lrm_state->node_name, rsc, op);
 
-    op_id = generate_op_key(rsc->id, op->op_type, op->interval_ms);
+    op_id = pcmk__op_key(rsc->id, op->op_type, op->interval_ms);
 
     if (op->interval_ms > 0) {
         /* cancel it so we can then restart it without conflict */
@@ -2590,7 +2590,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     op_id = make_stop_id(op->rsc_id, op->call_id);
-    op_key = generate_op_key(op->rsc_id, op->op_type, op->interval_ms);
+    op_key = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
     // Get resource info if available (from executor state or action XML)
     if (lrm_state) {

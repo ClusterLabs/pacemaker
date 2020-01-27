@@ -241,7 +241,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         xmlNode *op_match = NULL;
 
         /* we need to reconstruct the key because of the way we used to construct resource IDs */
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
 
         pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
@@ -295,7 +295,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         pe_action_t *required = NULL;
 
         did_change = TRUE;
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
         required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
         pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
@@ -310,7 +310,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         did_change = TRUE;
         trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
 
         if (interval_ms > 0) {
             action_t *op = NULL;
@@ -1788,7 +1788,7 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
         guint interval_ms = 0;
 
         if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
-            key = generate_op_key(rsc->id, task, interval_ms);
+            key = pcmk__op_key(rsc->id, task, interval_ms);
             list = find_actions(actions, key, NULL);
 
         } else {
@@ -1883,7 +1883,7 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
         guint interval_ms = 0;
 
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
-        key = generate_op_key(lh_rsc->id, op_type, interval_ms);
+        key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
             free(key);
@@ -2266,7 +2266,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 NULL,
                 action,
                 action->rsc,
-                generate_op_key(action->rsc->id, RSC_START, 0),
+                pcmk__op_key(action->rsc->id, RSC_START, 0),
                 NULL,
                 pe_order_optional,
                 data_set);
