@@ -147,7 +147,8 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
             free(queue_str);
         }
     } else {
-        buf = crm_strdup_printf("(%s) %s:%s", call, task,
+        buf = crm_strdup_printf("(%s) %s%s%s", call, task,
+                                interval_str ? ":" : "",
                                 interval_str ? interval_str : "");
     }
 
