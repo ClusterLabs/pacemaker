@@ -1,10 +1,10 @@
 Allocation scores:
 Using the original execution date of: 2019-06-06 13:56:45Z
-native_color: fence_ilo_ha-idg-1 allocation score on ha-idg-1: -INFINITY
-native_color: fence_ilo_ha-idg-1 allocation score on ha-idg-2: 0
-native_color: fence_ilo_ha-idg-2 allocation score on ha-idg-1: 200
-native_color: fence_ilo_ha-idg-2 allocation score on ha-idg-2: -INFINITY
-native_color: vm_idcc_devel allocation score on ha-idg-1: 200
-native_color: vm_idcc_devel allocation score on ha-idg-2: 0
-native_color: vm_severin allocation score on ha-idg-1: 200
-native_color: vm_severin allocation score on ha-idg-2: 0
+pcmk__native_allocate: fence_ilo_ha-idg-1 allocation score on ha-idg-1: -INFINITY
+pcmk__native_allocate: fence_ilo_ha-idg-1 allocation score on ha-idg-2: 0
+pcmk__native_allocate: fence_ilo_ha-idg-2 allocation score on ha-idg-1: 200
+pcmk__native_allocate: fence_ilo_ha-idg-2 allocation score on ha-idg-2: -INFINITY
+pcmk__native_allocate: vm_idcc_devel allocation score on ha-idg-1: 200
+pcmk__native_allocate: vm_idcc_devel allocation score on ha-idg-2: 0
+pcmk__native_allocate: vm_severin allocation score on ha-idg-1: 200
+pcmk__native_allocate: vm_severin allocation score on ha-idg-2: 0
