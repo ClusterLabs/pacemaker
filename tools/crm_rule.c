@@ -125,7 +125,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     max = numXpathResults(xpathObj);
 
     if (max != 1) {
-        CMD_ERR("Can't check rule %s because it has more than one date_expression", rule_id);
+        CMD_ERR("Can't check rule %s because it does not have exactly one date_expression", rule_id);
         rc = EOPNOTSUPP;
         goto bail;
     }

@@ -932,7 +932,19 @@ test_rules() {
     export CIB_shadow=$shadow
 
     cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
-    cibadmin -C -o constraints --xml-text '<rsc_location id="no-date-expression" rsc="dummy" score="-INFINITY" node="node01" />'
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    cat <<EOF > "$TMPXML"
+<rsc_location id="cli-too-many-date-expressions" rsc="dummy">
+  <rule id="cli-rule-too-many-date-expressions" score="INFINITY" boolean-op="or">
+    <date_expression id="cli-date-expression-1" operation="gt" start="2020-01-01 01:00:00 -0500"/>
+    <date_expression id="cli-date-expression-2" operation="lt" end="2019-01-01 01:00:00 -0500"/>
+  </rule>
+</rsc_location>
+EOF
+
+    cibadmin -C -o constraints -x "$TMPXML"
+    rm -f "$TMPXML"
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     cat <<EOF > "$TMPXML"
@@ -1006,12 +1018,24 @@ EOF
     cibadmin -C -o constraints -x "$TMPXML"
     rm -f "$TMPXML"
 
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    cat <<EOF > "$TMPXML"
+<rsc_location id="cli-no-date_expression" rsc="dummy">
+  <rule id="cli-no-date_expression-rule" score="INFINITY">
+    <expression id="ban-apache-expr" attribute="#uname" operation="eq" value="node3"/>
+  </rule>
+</rsc_location>
+EOF
+
+    cibadmin -C -o constraints -x "$TMPXML"
+    rm -f "$TMPXML"
+
     desc="Try to check a rule that doesn't exist"
     cmd="crm_rule -c -r blahblah"
     test_assert $CRM_EX_NOSUCH
 
-    desc="Try to check a rule that has no date_expression"
-    cmd="crm_rule -c -r no-date-expression"
+    desc="Try to check a rule that has too many date_expressions"
+    cmd="crm_rule -c -r cli-too-many-date-expressions"
     test_assert $CRM_EX_NOSUCH
 
     desc="Verify basic rule is expired"
@@ -1026,11 +1050,11 @@ EOF
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
     test_assert $CRM_EX_NOT_YET_IN_EFFECT
 
-    desc="Verify date_spec rule with years doesn't match"
+    desc="Verify date_spec rule with years has expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years"
-    test_assert $CRM_EX_UNSATISFIED
+    test_assert $CRM_EX_EXPIRED
 
-    desc="Verify date_spec rule with years does match"
+    desc="Verify date_spec rule with years is in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"
     test_assert $CRM_EX_OK
 
@@ -1041,6 +1065,10 @@ EOF
     desc="Try to check a rule whose date_spec contains years= and moon="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
     test_assert $CRM_EX_NOSUCH
+
+    desc="Try to check a rule with no date_expression"
+    cmd="crm_rule -c -r cli-no-date_expression-rule"
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE
 
     unset CIB_shadow_dir
 }
