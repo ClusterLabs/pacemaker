@@ -104,7 +104,6 @@ xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern gboolean show_scores;
-extern int scores_log_level;
 extern gboolean show_utilization;
 extern int utilization_log_level;
 extern const char *transition_idle_timeout;

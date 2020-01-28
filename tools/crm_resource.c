@@ -969,6 +969,7 @@ main(int argc, char **argv)
             goto bail;
         }
         set_bit(data_set->flags, pe_flag_no_counts);
+        set_bit(data_set->flags, pe_flag_no_compat);
         rc = update_working_set_xml(data_set, &cib_xml_copy);
         if (rc != pcmk_ok) {
             goto bail;

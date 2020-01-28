@@ -86,6 +86,8 @@ enum pe_find {
     pe_find_any      = 0x020, //!< match base name of any clone instance
 };
 
+// @TODO Make these an enum
+
 #  define pe_flag_have_quorum           0x00000001ULL
 #  define pe_flag_symmetric_cluster     0x00000002ULL
 #  define pe_flag_maintenance_mode      0x00000008ULL
@@ -114,6 +116,11 @@ enum pe_find {
 
 //! Don't count total, disabled and blocked resource instances
 #  define pe_flag_no_counts             0x00800000ULL
+
+/*! Skip deprecated code that is kept solely for backward API compatibility.
+ * (Internal code should always set this.)
+ */
+#  define pe_flag_no_compat             0x01000000ULL
 
 struct pe_working_set_s {
     xmlNode *input;
@@ -150,7 +157,7 @@ struct pe_working_set_s {
 
     /* stats */
     int num_synapse;
-    int max_valid_nodes;
+    int max_valid_nodes;    //! Deprecated (will be removed in a future release)
     int order_id;
     int action_id;
 

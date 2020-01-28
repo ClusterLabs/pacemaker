@@ -16,8 +16,9 @@
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
-node_t *
-group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                     pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     node_t *group_node = NULL;
@@ -29,7 +30,6 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
     if (is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
@@ -52,13 +52,14 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 
-    dump_node_scores((show_scores? LOG_STDOUT : scores_log_level), rsc,
-                     __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
+        pe_rsc_trace(rsc, "Allocating group %s member %s",
+                     rsc->id, child_rsc->id);
         node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
         if (group_node == NULL) {
             group_node = node;
@@ -296,6 +297,9 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         pe_err("rsc_rh was NULL for %s", constraint->id);
         return;
     }
+    if (constraint->score == 0) {
+        return;
+    }
 
     gIter = rsc_lh->children;
     pe_rsc_trace(rsc_lh, "Processing constraints from %s", rsc_lh->id);
@@ -333,6 +337,9 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
+    if (constraint->score == 0) {
+        return;
+    }
     pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
                  rsc_rh->id, constraint->id, rsc_lh->id);
 
@@ -482,8 +489,9 @@ group_expand(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 GHashTable *
-group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    float factor, enum pe_weights flags)
+pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
+                          GHashTable *nodes, const char *attr, float factor,
+                          uint32_t flags)
 {
     GListPtr gIter = rsc->rsc_cons_lhs;
     group_variant_data_t *group_data = NULL;
@@ -504,9 +512,13 @@ group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-        nodes = native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
-                                     constraint->node_attribute,
-                                     (float)constraint->score / INFINITY, flags);
+        if (constraint->score == 0) {
+            continue;
+        }
+        nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           flags);
     }
 
     clear_bit(rsc->flags, pe_rsc_merging);

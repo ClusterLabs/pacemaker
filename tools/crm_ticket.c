@@ -683,6 +683,7 @@ main(int argc, char **argv)
         goto bail;
     }
     set_bit(data_set->flags, pe_flag_no_counts);
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {

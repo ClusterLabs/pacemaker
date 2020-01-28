@@ -98,8 +98,8 @@ migration_threshold_reached(resource_t *rsc, node_t *node,
 }
 
 pe_node_t *
-pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
-                   pe_working_set_t *data_set)
+pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                      pe_working_set_t *data_set)
 {
     GListPtr containers = NULL;
     GListPtr nodes = NULL;
@@ -112,8 +112,7 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
     set_bit(rsc->flags, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    dump_node_scores((show_scores? LOG_STDOUT : scores_log_level), rsc,
-                     __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -130,6 +129,8 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
 
         CRM_ASSERT(replica);
         if (replica->ip) {
+            pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
+                         rsc->id, replica->ip->id);
             replica->ip->cmds->allocate(replica->ip, prefer, data_set);
         }
 
@@ -146,6 +147,8 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
         }
 
         if (replica->remote) {
+            pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
+                         rsc->id, replica->remote->id);
             replica->remote->cmds->allocate(replica->remote, prefer,
                                             data_set);
         }
@@ -166,6 +169,8 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
             }
 
             set_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
+                         rsc->id, replica->child->id);
             replica->child->cmds->allocate(replica->child, replica->node,
                                            data_set);
             clear_bit(replica->child->parent->flags, pe_rsc_allocating);
@@ -183,6 +188,8 @@ pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *prefer,
                 node->weight = -INFINITY;
             }
         }
+        pe_rsc_trace(rsc, "Allocating bundle %s child %s",
+                     rsc->id, bundle_data->child->id);
         bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
     }
 
@@ -473,6 +480,9 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
     CRM_ASSERT(rsc_lh->variant == pe_native);
 
+    if (constraint->score == 0) {
+        return;
+    }
     if (is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;
@@ -1041,14 +1051,6 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
 void
 pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 {
-}
-
-GHashTable *
-pcmk__bundle_merge_weights(pe_resource_t *rsc, const char *rhs,
-                           GHashTable *nodes, const char *attr,
-                           float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
 void

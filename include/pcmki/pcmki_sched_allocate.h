@@ -43,23 +43,16 @@ struct resource_alloc_functions_s {
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
 };
 
-extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
-
-extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                       const char *attr, float factor, enum pe_weights flags);
-
-GHashTable *pcmk__bundle_merge_weights(pe_resource_t *rsc, const char *rhs,
+GHashTable *pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                                        GHashTable *nodes, const char *attr,
-                                       float factor, enum pe_weights flags);
+                                       float factor, uint32_t flags);
 
-extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                        const char *attr, float factor, enum pe_weights flags);
+GHashTable *pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
+                                      GHashTable *nodes, const char *attr,
+                                      float factor, uint32_t flags);
 
-extern GHashTable *group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                       const char *attr, float factor, enum pe_weights flags);
-
-extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                 pe_working_set_t *data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 void native_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
@@ -78,7 +71,8 @@ extern gboolean native_create_probe(resource_t * rsc, node_t * node, action_t * 
                                     gboolean force, pe_working_set_t * data_set);
 extern void native_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern node_t *group_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                pe_working_set_t *data_set);
 extern void group_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
@@ -92,8 +86,8 @@ void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(resource_t * rsc, xmlNode * xml);
 
-pe_node_t *pcmk__bundle_color(pe_resource_t *rsc, pe_node_t *preferred,
-                              pe_working_set_t *data_set);
+pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                 pe_working_set_t *data_set);
 void pcmk__bundle_create_actions(pe_resource_t *rsc,
                                  pe_working_set_t *data_set);
 gboolean pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
@@ -115,7 +109,8 @@ enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
 void pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t *data_set);
 void pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml);
 
-extern node_t *clone_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
+pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
+                                pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 void clone_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
@@ -132,7 +127,8 @@ extern gboolean clone_create_probe(resource_t * rsc, node_t * node, action_t * c
 extern void clone_append_meta(resource_t * rsc, xmlNode * xml);
 
 void apply_master_prefs(resource_t *rsc);
-node_t *color_promotable(resource_t *rsc, pe_working_set_t *data_set);
+pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,
+                                    pe_working_set_t *data_set);
 void create_promotable_actions(resource_t *rsc, pe_working_set_t *data_set);
 void promote_demote_constraints(resource_t *rsc, pe_working_set_t *data_set);
 void promotable_constraints(resource_t *rsc, pe_working_set_t *data_set);
