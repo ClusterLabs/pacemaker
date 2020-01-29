@@ -214,11 +214,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
             return pcmk__ipc_send_xml(client, id, reply, FALSE);
 #ifdef ENABLE_PCMK_REMOTE
         case PCMK__CLIENT_TLS:
-            {
-                int legacy_rc = lrmd_tls_send_msg(client->remote, reply, id,
-                                                  "reply");
-                return (legacy_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(legacy_rc);
-            }
+            return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
             crm_err("Could not send reply: unknown client type %d",
@@ -245,10 +241,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
                 crm_trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
             } else {
-                int legacy_rc = lrmd_tls_send_msg(client->remote, msg, 0,
-                                                  "notify");
-
-                return (legacy_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(legacy_rc);
+                return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
             }
 #endif
         default:

@@ -24,6 +24,7 @@
 
 #include <crm/crm.h>
 #include <crm/lrmd.h>
+#include <crm/lrmd_internal.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipcs_internal.h>
@@ -61,8 +62,6 @@ gnutls_psk_client_credentials_t psk_cred_s;
 int lrmd_tls_set_key(gnutls_datum_t * key);
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
-int lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
-                      const char *msg_type);
 static void lrmd_tls_connection_destroy(gpointer userdata);
 #endif
 
@@ -365,8 +364,7 @@ lrmd_tls_dispatch(gpointer userdata)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *xml = NULL;
-    int rc = 0;
-    int disconnected = 0;
+    int rc = pcmk_rc_ok;
 
     if (lrmd_tls_connected(lrmd) == FALSE) {
         crm_trace("TLS dispatch triggered after disconnect");
@@ -389,15 +387,18 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     /* Next read the current buffer and see if there are any messages to handle. */
-    rc = crm_remote_ready(native->remote, 0);
-    if (rc == 0) {
-        /* nothing to read, see if any full messages are already in buffer. */
-        xml = crm_remote_parse_buffer(native->remote);
-    } else if (rc < 0) {
-        disconnected = 1;
-    } else {
-        crm_remote_recv(native->remote, -1, &disconnected);
-        xml = crm_remote_parse_buffer(native->remote);
+    switch (pcmk__remote_ready(native->remote, 0)) {
+        case pcmk_rc_ok:
+            rc = pcmk__read_remote_message(native->remote, -1);
+            xml = pcmk__remote_message_xml(native->remote);
+            break;
+        case ETIME:
+            // Nothing to read, check if a full message is already in buffer
+            xml = pcmk__remote_message_xml(native->remote);
+            break;
+        default:
+            rc = ENOTCONN;
+            break;
     }
     while (xml) {
         const char *msg_type = crm_element_value(xml, F_LRMD_REMOTE_MSG_TYPE);
@@ -414,10 +415,10 @@ lrmd_tls_dispatch(gpointer userdata)
             }
         }
         free_xml(xml);
-        xml = crm_remote_parse_buffer(native->remote);
+        xml = pcmk__remote_message_xml(native->remote);
     }
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
@@ -441,9 +442,18 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
         case PCMK__CLIENT_TLS:
             if (native->pending_notify) {
                 return 1;
-            }
+            } else {
+                int rc = pcmk__remote_ready(native->remote, 0);
 
-            return crm_remote_ready(native->remote, 0);
+                switch (rc) {
+                    case pcmk_rc_ok:
+                        return 1;
+                    case ETIME:
+                        return 0;
+                    default:
+                        return pcmk_rc2legacy(rc);
+                }
+            }
 #endif
         default:
             crm_err("Unsupported connection type: %d", native->type);
@@ -579,13 +589,14 @@ lrmd_tls_connection_destroy(gpointer userdata)
     return;
 }
 
+// \return Standard Pacemaker return code
 int
 lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                   const char *msg_type)
 {
     crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, F_LRMD_REMOTE_MSG_TYPE, msg_type);
-    return crm_remote_send(session, msg);
+    return pcmk__remote_send_xml(session, msg);
 }
 
 static xmlNode *
@@ -606,7 +617,7 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
 
     while (!xml) {
 
-        xml = crm_remote_parse_buffer(native->remote);
+        xml = pcmk__remote_message_xml(native->remote);
         if (!xml) {
             /* read some more off the tls buffer if we still have time left. */
             if (remaining_timeout) {
@@ -620,8 +631,13 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
                 return NULL;
             }
 
-            crm_remote_recv(native->remote, remaining_timeout, disconnected);
-            xml = crm_remote_parse_buffer(native->remote);
+            if (pcmk__read_remote_message(native->remote,
+                                          remaining_timeout) == ENOTCONN) {
+                *disconnected = TRUE;
+            } else {
+                *disconnected = FALSE;
+            }
+            xml = pcmk__remote_message_xml(native->remote);
             if (!xml) {
                 crm_err("Unable to receive expected reply, disconnecting.");
                 *disconnected = TRUE;
@@ -684,8 +700,9 @@ lrmd_tls_send(lrmd_t * lrmd, xmlNode * msg)
     }
 
     rc = lrmd_tls_send_msg(native->remote, msg, global_remote_msg_id, "request");
-    if (rc <= 0) {
-        crm_err("Disconnecting because TLS message could not be sent to Pacemaker Remote");
+    if (rc != pcmk_rc_ok) {
+        crm_err("Disconnecting because TLS message could not be sent to "
+                "Pacemaker Remote: %s", pcmk_rc_str(rc));
         lrmd_tls_disconnect(lrmd);
         return -ENOTCONN;
     }
@@ -1155,8 +1172,14 @@ report_async_connection_result(lrmd_t * lrmd, int rc)
 }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+static inline int
+lrmd__tls_client_handshake(pcmk__remote_t *remote)
+{
+    return pcmk__tls_client_handshake(remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT);
+}
+
 static void
-lrmd_tcp_connect_cb(void *userdata, int sock)
+lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1165,16 +1188,16 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         .dispatch = lrmd_tls_dispatch,
         .destroy = lrmd_tls_connection_destroy,
     };
-    int rc = sock;
     gnutls_datum_t psk_key = { NULL, 0 };
 
     native->async_timer = 0;
 
-    if (rc < 0) {
+    if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
-        crm_info("Could not connect to Pacemaker Remote at %s:%d",
-                 native->server, native->port);
-        report_async_connection_result(lrmd, rc);
+        crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                 CRM_XS " rc=%d",
+                 native->server, native->port, pcmk_rc_str(rc), rc);
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
         return;
     }
 
@@ -1206,7 +1229,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         return;
     }
 
-    if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
+    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
         crm_warn("Disconnecting after TLS handshake with Pacemaker Remote server %s:%d failed",
                  native->server, native->port);
         gnutls_deinit(*native->remote->tls_session);
@@ -1237,17 +1260,20 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 static int
 lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
 {
-    int sock = 0;
+    int rc;
     int timer_id = 0;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     lrmd_gnutls_global_init();
-    sock = crm_remote_tcp_connect_async(native->server, native->port, timeout,
-                                        &timer_id, lrmd, lrmd_tcp_connect_cb);
-    if (sock < 0) {
-        return sock;
+    native->sock = -1;
+    rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
+                              &(native->sock), lrmd, lrmd_tcp_connect_cb);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+                 CRM_XS " rc=%d",
+                 native->server, native->port, pcmk_rc_str(rc), rc);
+        return -1;
     }
-    native->sock = sock;
     native->async_timer = timer_id;
     return pcmk_ok;
 }
@@ -1262,19 +1288,20 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     int rc;
 
     lrmd_private_t *native = lrmd->lrmd_private;
-    int sock;
     gnutls_datum_t psk_key = { NULL, 0 };
 
     lrmd_gnutls_global_init();
 
-    sock = crm_remote_tcp_connect(native->server, native->port);
-    if (sock < 0) {
-        crm_warn("Could not establish Pacemaker Remote connection to %s", native->server);
+    native->sock = -1;
+    rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
+                              &(native->sock), NULL, NULL);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+                 CRM_XS " rc=%d",
+                 native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         return -ENOTCONN;
     }
-
-    native->sock = sock;
 
     rc = lrmd_tls_set_key(&psk_key);
     if (rc < 0) {
@@ -1286,7 +1313,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     gnutls_psk_set_client_credentials(native->psk_cred_c, DEFAULT_REMOTE_USERNAME, &psk_key, GNUTLS_PSK_KEY_RAW);
     gnutls_free(psk_key.data);
 
-    native->remote->tls_session = pcmk__new_tls_session(sock, GNUTLS_CLIENT,
+    native->remote->tls_session = pcmk__new_tls_session(native->sock, GNUTLS_CLIENT,
                                                         GNUTLS_CRD_PSK,
                                                         native->psk_cred_c);
     if (native->remote->tls_session == NULL) {
@@ -1294,7 +1321,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return -EPROTO;
     }
 
-    if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
+    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
         crm_err("Session creation for %s:%d failed", native->server, native->port);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
@@ -1307,7 +1334,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
              native->port);
 
     if (fd) {
-        *fd = sock;
+        *fd = native->sock;
     } else {
         char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
                                        native->server, native->port);

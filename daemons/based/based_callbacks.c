@@ -421,7 +421,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         case PCMK__CLIENT_TLS:
 #endif
         case PCMK__CLIENT_TCP:
-            crm_remote_send(client_obj->remote, notify_src);
+            pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;
         default:
             crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);

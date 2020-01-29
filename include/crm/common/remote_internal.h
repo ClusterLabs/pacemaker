@@ -14,18 +14,15 @@
 
 typedef struct pcmk__remote_s pcmk__remote_t;
 
-int crm_remote_send(pcmk__remote_t *remote, xmlNode *msg);
-int crm_remote_ready(pcmk__remote_t *remote, int total_timeout /*ms */ );
-gboolean crm_remote_recv(pcmk__remote_t *remote, int total_timeout /*ms */,
-                         int *disconnected);
-xmlNode *crm_remote_parse_buffer(pcmk__remote_t *remote);
-int crm_remote_tcp_connect(const char *host, int port);
-int crm_remote_tcp_connect_async(const char *host, int port,
-                                 int timeout /*ms */,
-                                 int *timer_id, void *userdata,
-                                 void (*callback) (void *userdata, int sock));
-int crm_remote_accept(int ssock);
-void crm_sockaddr2str(void *sa, char *s);
+int pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg);
+int pcmk__remote_ready(pcmk__remote_t *remote, int timeout_ms);
+int pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms);
+xmlNode *pcmk__remote_message_xml(pcmk__remote_t *remote);
+int pcmk__connect_remote(const char *host, int port, int timeout_ms,
+                         int *timer_id, int *sock_fd, void *userdata,
+                         void (*callback) (void *userdata, int rc, int sock));
+int pcmk__accept_remote_connection(int ssock, int *csock);
+void pcmk__sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    include <gnutls/gnutls.h>
@@ -38,13 +35,14 @@ int pcmk__read_handshake_data(pcmk__client_t *client);
 
 /*!
  * \internal
- * \brief Initiate the client handshake after establishing the tcp socket
+ * \brief Perform client TLS handshake after establishing TCP socket
  *
- * \return 0 on success, negative number on failure
- * \note This function will block until the entire handshake is complete or
- *        until the timeout period is reached.
+ * \param[in] remote      Newly established remote connection
+ * \param[in] timeout_ms  Abort if entire handshake is not complete within this
+ *
+ * \return Standard Pacemaker return code
  */
-int crm_initiate_client_tls_handshake(pcmk__remote_t *remote, int timeout_ms);
+int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__REMOTE__H
