@@ -31,7 +31,27 @@ int cib_options = cib_sync_call;
 
 static GMainLoop *mainloop = NULL;
 
+// Things that should be cleaned up on exit
+static cib_t *cib_conn = NULL;
+static pcmk_controld_api_t *controld_api = NULL;
+static pe_working_set_t *data_set = NULL;
+
 #define MESSAGE_TIMEOUT_S 60
+
+// Clean up and exit
+_Noreturn static void
+bye(crm_exit_t exit_code)
+{
+    if (cib_conn != NULL) {
+        cib_conn->cmds->signoff(cib_conn);
+        cib_delete(cib_conn);
+    }
+    if (controld_api != NULL) {
+        pcmk_free_controld_api(controld_api);
+    }
+    pe_free_working_set(data_set);
+    crm_exit(exit_code);
+}
 
 static gboolean
 resource_ipc_timeout(gpointer data)
@@ -39,35 +59,35 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "Aborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
-    crm_exit(CRM_EX_TIMEOUT);
+    bye(CRM_EX_TIMEOUT);
 }
 
 static void
-handle_controller_reply(pcmk_controld_api_t *controld_api, void *api_data,
+handle_controller_reply(pcmk_controld_api_t *capi, void *api_data,
                         void *user_data)
 {
     fprintf(stderr, ".");
-    if ((controld_api->replies_expected(controld_api) == 0)
+    if ((capi->replies_expected(capi) == 0)
         && mainloop && g_main_loop_is_running(mainloop)) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        crm_exit(CRM_EX_OK);
+        bye(CRM_EX_OK);
     }
 }
 
 static void
-handle_controller_drop(pcmk_controld_api_t *controld_api, void *api_data,
+handle_controller_drop(pcmk_controld_api_t *capi, void *api_data,
                        void *user_data)
 {
     crm_info("Connection to controller was terminated");
-    crm_exit(CRM_EX_DISCONNECT);
+    bye(CRM_EX_DISCONNECT);
 }
 
 static void
-start_mainloop(pcmk_controld_api_t *controld_api)
+start_mainloop(pcmk_controld_api_t *capi)
 {
-    if (controld_api->replies_expected(controld_api) > 0) {
-        unsigned int count = controld_api->replies_expected(controld_api);
+    if (capi->replies_expected(capi) > 0) {
+        unsigned int count = capi->replies_expected(capi);
 
         fprintf(stderr, "Waiting for %d %s from the controller",
                 count, pcmk__plural_alt(count, "reply", "replies"));
@@ -466,10 +486,7 @@ main(int argc, char **argv)
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
-    pcmk_controld_api_t *controld_api = NULL;
-    pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    cib_t *cib_conn = NULL;
     resource_t *rsc = NULL;
     bool recursive = FALSE;
 
@@ -560,7 +577,7 @@ main(int argc, char **argv)
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
                     char *standard = NULL;
@@ -589,7 +606,7 @@ main(int argc, char **argv)
                         exit_code = crm_errno2exit(rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -613,7 +630,7 @@ main(int argc, char **argv)
                         exit_code = CRM_EX_NOSUCH;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("class", longname)) {
                     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
@@ -622,7 +639,7 @@ main(int argc, char **argv)
                                     optarg);
                         }
 
-                        crm_exit(exit_code);
+                        bye(exit_code);
                     } else {
                         v_class = optarg;
                     }
@@ -896,13 +913,13 @@ main(int argc, char **argv)
                                                   "validate-all", validate_options,
                                                   override_params, timeout_ms);
             exit_code = crm_errno2exit(rc);
-            crm_exit(exit_code);
+            bye(exit_code);
         }
     }
 
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
-        crm_exit(CRM_EX_USAGE);
+        bye(CRM_EX_USAGE);
     }
 
     if (do_force) {
@@ -1369,15 +1386,6 @@ main(int argc, char **argv)
 
   bail:
 
-    pe_free_working_set(data_set);
-    if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
-    if (controld_api != NULL) {
-        pcmk_free_controld_api(controld_api);
-    }
-
     if (is_ocf_rc) {
         exit_code = rc;
 
@@ -1391,5 +1399,5 @@ main(int argc, char **argv)
         }
     }
 
-    crm_exit(exit_code);
+    bye(exit_code);
 }
