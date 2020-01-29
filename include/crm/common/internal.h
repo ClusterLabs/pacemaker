@@ -52,9 +52,8 @@ void pcmk__close_fds_in_child(bool);
 
 /* internal procfs utilities (from procfs.c) */
 
-int crm_procfs_process_info(struct dirent *entry, char *name, int *pid);
-int crm_procfs_pid_of(const char *name);
-unsigned int crm_procfs_num_cores(void);
+pid_t pcmk__procfs_pid_of(const char *name);
+unsigned int pcmk__procfs_num_cores(void);
 
 
 /* internal XML schema functions (from xml.c) */

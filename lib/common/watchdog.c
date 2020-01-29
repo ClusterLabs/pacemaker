@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -68,7 +68,8 @@ pcmk_panic_local(void)
          *
          * Of these, only the controller is likely to be initiating resets.
          */
-        do_crm_log_always(LOG_EMERG, "Signaling parent %d to panic", ppid);
+        do_crm_log_always(LOG_EMERG, "Signaling parent %lld to panic",
+                          (long long) ppid);
         crm_exit(CRM_EX_PANIC);
         return;
 
@@ -81,11 +82,13 @@ pcmk_panic_local(void)
         union sigval signal_value;
 
         memset(&signal_value, 0, sizeof(signal_value));
-        ppid = crm_procfs_pid_of("pacemakerd");
-        do_crm_log_always(LOG_EMERG, "Signaling pacemakerd(%d) to panic", ppid);
+        ppid = pcmk__procfs_pid_of("pacemakerd");
+        do_crm_log_always(LOG_EMERG, "Signaling pacemakerd[%lld] to panic",
+                          (long long) ppid);
 
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-            crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
+            crm_perror(LOG_EMERG, "Cannot signal pacemakerd[%lld] to panic",
+                       (long long) ppid);
         }
 #endif // SUPPORT_PROCFS
 
@@ -105,7 +108,8 @@ pcmk_panic_local(void)
     reboot(RB_AUTOBOOT);
     rc = errno;
 
-    do_crm_log_always(LOG_EMERG, "Reboot failed, escalating to %d: %s (%d)", ppid, pcmk_strerror(rc), rc);
+    do_crm_log_always(LOG_EMERG, "Reboot failed, escalating to parent %lld: %s "
+                      CRM_XS " rc=%d", (long long) ppid, pcmk_rc_str(rc), rc);
 
     if(ppid > 1) {
         /* child daemon */
@@ -199,7 +203,7 @@ pcmk_locate_sbd(void)
 #if SUPPORT_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
-        sbd_pid = (pid_t) crm_procfs_pid_of("sbd");
+        sbd_pid = pcmk__procfs_pid_of("sbd");
         crm_trace("SBD detected at pid %lld (via procfs)",
                   (long long) sbd_pid);
 #endif // SUPPORT_PROCFS
