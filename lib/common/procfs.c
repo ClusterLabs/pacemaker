@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -123,7 +125,7 @@ crm_procfs_pid_of(const char *name)
     while ((entry = readdir(dp)) != NULL) {
         if ((crm_procfs_process_info(entry, entry_name, &pid) == 0)
             && safe_str_eq(entry_name, name)
-            && (crm_pid_active(pid, NULL) == 1)) {
+            && (pcmk__pid_active((pid_t) pid, NULL) == pcmk_rc_ok)) {
 
             crm_info("Found %s active as process %d", name, pid);
             break;

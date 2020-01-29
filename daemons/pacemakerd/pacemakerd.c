@@ -51,7 +51,7 @@ static crm_trigger_t *shutdown_trigger = NULL;
 static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
 
 typedef struct pcmk_child_s {
-    int pid;
+    pid_t pid;
     long flag;
     int start_seq;
     int respawn_count;
@@ -270,12 +270,12 @@ stop_child(pcmk_child_t * child, int signal)
 
     errno = 0;
     if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %d",
-                   child->name, signal, child->pid);
+        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %lld",
+                   child->name, signal, (long long) child->pid);
 
     } else {
-        crm_perror(LOG_ERR, "Could not stop %s (process %d) with signal %d",
-                   child->name, child->pid, signal);
+        crm_err("Could not stop %s (process %lld) with signal %d: %s",
+                child->name, (long long) child->pid, signal, strerror(errno));
     }
 
     return TRUE;
@@ -343,7 +343,8 @@ start_child(pcmk_child_t * child)
         /* parent */
         mainloop_child_add(child->pid, 0, child->name, child, pcmk_child_exit);
 
-        crm_info("Forked child %d for process %s%s", child->pid, child->name,
+        crm_info("Forked child %lld for process %s%s",
+                 (long long) child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
         update_node_processes(local_nodeid, NULL, get_process_list());
         return TRUE;
@@ -422,7 +423,7 @@ escalate_shutdown(gpointer data)
     if (child->pid == PCMK__SPECIAL_PID) {
         pcmk_process_exit(child);
 
-    } else if (child->pid) {
+    } else if (child->pid != 0) {
         /* Use SIGSEGV instead of SIGKILL to create a core so we can see what it was up to */
         crm_err("Child %s not terminating in a timely manner, forcing", child->name);
         stop_child(child, SIGSEGV);
@@ -456,7 +457,7 @@ pcmk_shutdown_worker(gpointer user_data)
                 continue;
             }
 
-            if (child->pid) {
+            if (child->pid != 0) {
                 time_t now = time(NULL);
 
                 if (child->respawn) {
@@ -483,8 +484,9 @@ pcmk_shutdown_worker(gpointer user_data)
                 } else if (now >= next_log) {
                     next_log = now + 30;
                     crm_notice("Still waiting for %s to terminate "
-                               CRM_XS " pid=%d seq=%d",
-                               child->name, child->pid, child->start_seq);
+                               CRM_XS " pid=%lld seq=%d",
+                               child->name, (long long) child->pid,
+                               child->start_seq);
                 }
                 return TRUE;
             }
@@ -782,7 +784,8 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
  *       a different authentic holder of the IPC end-point).
  */
 static int
-child_liveness(pcmk_child_t *child) {
+child_liveness(pcmk_child_t *child)
+{
     uid_t cl_uid = 0;
     gid_t cl_gid = 0;
     const uid_t root_uid = 0;
@@ -843,17 +846,18 @@ child_liveness(pcmk_child_t *child) {
          * the only change possible from a proper child's PID into "special" PID
          * of 1 behind more loosely related process.
          */
-        int ret = crm_pid_active(child->pid, child->name);
+        int ret = pcmk__pid_active(child->pid, child->name);
 
-        if (ipc_pid && (ret != 1
+        if (ipc_pid && ((ret != pcmk_rc_ok)
                         || ipc_pid == PCMK__SPECIAL_PID
-                        || crm_pid_active(ipc_pid, child->name) == 1)) {
+                        || (pcmk__pid_active(ipc_pid,
+                                             child->name) == pcmk_rc_ok))) {
             /* An unexpected (but authorized) process was detected at the IPC
              * endpoint, and either it is active, or the child we're tracking is
              * not.
              */
 
-            if (ret == 1) {
+            if (ret == pcmk_rc_ok) {
                 /* The child we're tracking is active. Kill it, and adopt the
                  * detected process. This assumes that our children don't fork
                  * (thus getting a different PID owning the IPC), but rather the
@@ -866,23 +870,22 @@ child_liveness(pcmk_child_t *child) {
             }
             rc = pcmk_rc_ok;
             child->pid = ipc_pid;
-        } else if (ret == 1) {
+        } else if (ret == pcmk_rc_ok) {
             // Our tracked child's PID was found active, but not its IPC
             rc = pcmk_rc_ipc_pid_only;
-        } else if (!child->pid && ret == -1) {
-            // FreeBSD can return -1
+        } else if ((child->pid == 0) && (ret == EINVAL)) {
+            // FreeBSD can return EINVAL
             rc = pcmk_rc_ipc_unresponsive;
         } else {
-            // Map crm_pid_active() result to standard rc
             switch (ret) {
-                case -1:
-                    rc = EINVAL;
-                    break;
-                case -2:
+                case EACCES:
                     rc = pcmk_rc_ipc_unauthorized;
                     break;
-                case 0:
+                case ESRCH:
                     rc = pcmk_rc_ipc_unresponsive;
+                    break;
+                default:
+                    rc = ret;
                     break;
             }
         }
@@ -913,13 +916,13 @@ check_active_before_startup_processes(gpointer user_data)
                     case pcmk_rc_ipc_unresponsive:
                     case pcmk_rc_ipc_pid_only: // This case: it was previously OK
                         if (pcmk_children[lpc].respawn == TRUE) {
-                            crm_err("%s[%d] terminated%s", pcmk_children[lpc].name,
-                                    PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
+                            crm_err("%s[%lld] terminated%s", pcmk_children[lpc].name,
+                                    (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
                                     (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
                         } else {
                             /* orderly shutdown */
-                            crm_notice("%s[%d] terminated%s", pcmk_children[lpc].name,
-                                       PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
+                            crm_notice("%s[%lld] terminated%s", pcmk_children[lpc].name,
+                                       (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
                                        (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
                         }
                         pcmk_process_exit(&(pcmk_children[lpc]));
@@ -1090,7 +1093,7 @@ init_children_processes(void)
     for (start_seq = 1; start_seq < max; start_seq++) {
         /* don't start anything with start_seq < 1 */
         for (lpc = 0; lpc < max; lpc++) {
-            if (pcmk_children[lpc].pid) {
+            if (pcmk_children[lpc].pid != 0) {
                 /* we are already tracking it */
                 continue;
             }

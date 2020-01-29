@@ -20,21 +20,22 @@
 #include <crm/crm.h>
 
 int
-crm_pid_active(long pid, const char *daemon)
+pcmk__pid_active(pid_t pid, const char *daemon)
 {
-    static int last_asked_pid = 0;  /* log spam prevention */
+    static pid_t last_asked_pid = 0;  /* log spam prevention */
 #if SUPPORT_PROCFS
     static int have_proc_pid = 0;
 #else
     static int have_proc_pid = -1;
 #endif
     int rc = 0;
+    bool no_name_check = ((daemon == NULL) || (have_proc_pid == -1));
 
     if (have_proc_pid == 0) {
         /* evaluation of /proc/PID/exe applicability via self-introspection */
         char proc_path[PATH_MAX], exe_path[PATH_MAX];
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe",
-                 (long unsigned int) getpid());
+        snprintf(proc_path, sizeof(proc_path), "/proc/%lld/exe",
+                 (long long) getpid());
         have_proc_pid = 1;
         if (readlink(proc_path, exe_path, sizeof(exe_path) - 1) < 0) {
             have_proc_pid = -1;
@@ -42,43 +43,48 @@ crm_pid_active(long pid, const char *daemon)
     }
 
     if (pid <= 0) {
-        return -1;
+        return EINVAL;
+    }
 
-    } else if ((rc = kill(pid, 0)) < 0 && errno == ESRCH) {
-        return 0;  /* no such PID detected */
+    rc = kill(pid, 0);
+    if ((rc < 0) && (errno == ESRCH)) {
+        return ESRCH;  /* no such PID detected */
 
-    } else if (rc < 0 && (daemon == NULL || have_proc_pid == -1)) {
+    } else if ((rc < 0) && no_name_check) {
+        rc = errno;
         if (last_asked_pid != pid) {
-            crm_info("Cannot examine PID %ld: %s", pid, strerror(errno));
+            crm_info("Cannot examine PID %lld: %s",
+                     (long long) pid, strerror(errno));
             last_asked_pid = pid;
         }
-        return -2;  /* errno != ESRCH */
+        return rc; /* errno != ESRCH */
 
-    } else if (rc == 0 && (daemon == NULL || have_proc_pid == -1)) {
-        return 1;  /* kill as the only indicator, cannot double check */
+    } else if ((rc == 0) && no_name_check) {
+        return pcmk_rc_ok; /* kill as the only indicator, cannot double check */
 
     } else if (daemon != NULL) {
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
         char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
-        snprintf(proc_path, sizeof(proc_path), "/proc/%ld/exe", pid);
+        snprintf(proc_path, sizeof(proc_path), "/proc/%lld/exe",
+                 (long long) pid);
 
         rc = readlink(proc_path, exe_path, sizeof(exe_path) - 1);
-        if ((rc < 0) && (errno == EACCES)) {
+        if (rc < 0) {
             if (last_asked_pid != pid) {
-                crm_info("Could not read from %s: %s", proc_path,
-                         strerror(errno));
+                crm_err("Could not read from %s: %s " CRM_XS " errno=%d",
+                        proc_path, strerror(errno), errno);
                 last_asked_pid = pid;
             }
-            return checked_through_kill ? 1 : -2;
-        } else if (rc < 0) {
-            if (last_asked_pid != pid) {
-                crm_err("Could not read from %s: %s (%d)", proc_path,
-                        strerror(errno), errno);
-                last_asked_pid = pid;
+            if ((errno == EACCES) && checked_through_kill) {
+                // Trust kill result, can't double-check via path
+                return pcmk_rc_ok;
+            } else if (errno == EACCES) {
+                return EACCES;
+            } else {
+                return ESRCH;  /* most likely errno == ENOENT */
             }
-            return 0;  /* most likely errno == ENOENT */
         }
         exe_path[rc] = '\0';
 
@@ -90,26 +96,38 @@ crm_pid_active(long pid, const char *daemon)
         }
 
         if (rc > 0 && rc < sizeof(myexe_path) && !strcmp(exe_path, myexe_path)) {
-            return 1;
+            return pcmk_rc_ok;
         }
     }
 
-    return 0;
+    return ESRCH;
 }
 
 #define	LOCKSTRLEN	11
 
-long
-crm_read_pidfile(const char *filename)
+/*!
+ * \internal
+ * \brief Read a process ID from a file
+ *
+ * \param[in]  filename  Process ID file to read
+ * \param[out] pid       Where to put PID that was read
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__read_pidfile(const char *filename, pid_t *pid)
 {
     int fd;
     struct stat sbuf;
-    long pid = -ENOENT;
+    int rc = pcmk_rc_unknown_format;
+    long long pid_read = 0;
     char buf[LOCKSTRLEN + 1];
+
+    CRM_CHECK((filename != NULL) && (pid != NULL), return EINVAL);
 
     fd = open(filename, O_RDONLY);
     if (fd < 0) {
-        goto bail;
+        return errno;
     }
 
     if ((fstat(fd, &sbuf) >= 0) && (sbuf.st_size < LOCKSTRLEN)) {
@@ -119,83 +137,111 @@ crm_read_pidfile(const char *filename)
     }
 
     if (read(fd, buf, sizeof(buf)) < 1) {
+        rc = errno;
         goto bail;
     }
 
-    if (sscanf(buf, "%ld", &pid) > 0) {
-        if (pid <= 0) {
-            pid = -ESRCH;
+    if (sscanf(buf, "%lld", &pid_read) > 0) {
+        if (pid_read <= 0) {
+            rc = ESRCH;
         } else {
-            crm_trace("Got pid %lu from %s\n", pid, filename);
+            rc = pcmk_rc_ok;
+            *pid = (pid_t) pid_read;
+            crm_trace("Read pid %lld from %s", pid_read, filename);
         }
     }
 
   bail:
-    if (fd >= 0) {
-        close(fd);
-    }
-    return pid;
+    close(fd);
+    return rc;
 }
 
-long
-crm_pidfile_inuse(const char *filename, long mypid, const char *daemon)
+/*!
+ * \internal
+ * \brief Check whether a process from a PID file matches expected values
+ *
+ * \param[in]  filename       Path of PID file
+ * \param[in]  expected_pid   If positive, compare to this PID
+ * \param[in]  expected_name  If not NULL, the PID from the PID file is valid
+ *                            only if it is active as a process with this name
+ * \param[out] pid            If not NULL, store PID found in PID file here
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
+                      const char *expected_name, pid_t *pid)
 {
-    long pid = crm_read_pidfile(filename);
+    pid_t pidfile_pid = 0;
+    int rc = pcmk__read_pidfile(filename, &pidfile_pid);
 
-    if (pid < 2) {
-        // Invalid pid
-        pid = -ENOENT;
+    if (pid) {
+        *pid = pidfile_pid;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        // Error reading PID file or invalid contents
         unlink(filename);
+        rc = ENOENT;
 
-    } else if (mypid && (pid == mypid)) {
-        // In use by us
-        pid = pcmk_ok;
+    } else if ((expected_pid > 0) && (pidfile_pid == expected_pid)) {
+        // PID in file matches what was expected
+        rc = pcmk_rc_ok;
 
-    } else if (crm_pid_active(pid, daemon) == FALSE) {
+    } else if (pcmk__pid_active(pidfile_pid, expected_name) == ESRCH) {
         // Contains a stale value
         unlink(filename);
-        pid = -ENOENT;
+        rc = ENOENT;
 
-    } else if (mypid && (pid != mypid)) {
+    } else if ((expected_pid > 0) && (pidfile_pid != expected_pid)) {
         // Locked by existing process
-        pid = -EEXIST;
+        rc = EEXIST;
     }
 
-    return pid;
+    return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create a PID file for the current process (if not already existent)
+ *
+ * \param[in] filename   Name of PID file to create
+ * \param[in] name       Name of current process
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-crm_lock_pidfile(const char *filename, const char *name)
+pcmk__lock_pidfile(const char *filename, const char *name)
 {
-    long mypid = 0;
+    pid_t mypid = getpid();
     int fd = 0;
     int rc = 0;
     char buf[LOCKSTRLEN + 2];
 
-    mypid = (unsigned long) getpid();
-
-    rc = crm_pidfile_inuse(filename, 0, name);
-    if (rc == -ENOENT) {
-        // Exists, but the process is not active
-
-    } else if (rc != pcmk_ok) {
+    rc = pcmk__pidfile_matches(filename, 0, name, NULL);
+    if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
         // Locked by existing process
         return rc;
     }
 
     fd = open(filename, O_CREAT | O_WRONLY | O_EXCL, 0644);
     if (fd < 0) {
-        return -errno;
+        return errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*ld\n", LOCKSTRLEN - 1, mypid);
+    snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1, (long long) mypid);
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
     if (rc != LOCKSTRLEN) {
         crm_perror(LOG_ERR, "Incomplete write to %s", filename);
-        return -errno;
+        return errno;
     }
 
-    return crm_pidfile_inuse(filename, mypid, name);
+    rc = pcmk__pidfile_matches(filename, mypid, name, NULL);
+    if (rc != pcmk_rc_ok) {
+        // Something is really wrong -- maybe I/O error on read back?
+        unlink(filename);
+    }
+    return rc;
 }

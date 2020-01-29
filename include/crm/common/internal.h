@@ -14,7 +14,7 @@
 #include <dirent.h>     /* for struct dirent */
 #include <unistd.h>     /* for getpid() */
 #include <stdbool.h>    /* for bool */
-#include <sys/types.h>  /* for uid_t and gid_t */
+#include <sys/types.h>  // uid_t, gid_t, pid_t
 
 #include <crm/common/logging.h>
 
@@ -67,29 +67,26 @@ void crm_schema_cleanup(void);
 
 /*!
  * \internal
- * \brief Detect if process per PID and optionally exe path (component) exists
+ * \brief Check whether process exists (by PID and optionally executable path)
  *
- * \param[in] pid     PID of process assumed alive, disproving of which to try
- * \param[in] daemon  exe path (component) to possibly match with procfs entry
+ * \param[in] pid     PID of process to check
+ * \param[in] daemon  If not NULL, path component to match with procfs entry
  *
- * \return -1 on invalid PID specification, -2 when the calling process has no
- *         (is refused an) ability to (dis)prove the predicate,
- *         0 if the negation of the predicate is confirmed (check-through-kill
- *         indicates so, or the subsequent check-through-procfs-match on
- *         \p daemon when provided and procfs available at the standard path),
- *         1 if it cannot be disproved (reliably [modulo race conditions]
- *         when \p daemon provided, procfs available at the standard path
- *         and the calling process has permissions to access the respective
- *         procfs location, less so otherwise, since mere check-through-kill
- *         is exercised without powers to exclude PID recycled in the interim).
- *
+ * \return Standard Pacemaker return code
+ * \note Particular return codes of interest include pcmk_rc_ok for alive,
+ *       ESRCH for process is not alive (verified by kill and/or executable path
+ *       match), EACCES for caller unable or not allowed to check. A result of
+ *       "alive" is less reliable when \p daemon is not provided or procfs is
+ *       not available, since there is no guarantee that the PID has not been
+ *       recycled for another process.
  * \note This function cannot be used to verify \e authenticity of the process.
  */
-int crm_pid_active(long pid, const char *daemon);
+int pcmk__pid_active(pid_t pid, const char *daemon);
 
-long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
-long crm_read_pidfile(const char *filename);
-int crm_lock_pidfile(const char *filename, const char *name);
+int pcmk__read_pidfile(const char *filename, pid_t *pid);
+int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
+                          const char *expected_name, pid_t *pid);
+int pcmk__lock_pidfile(const char *filename, const char *name);
 
 
 /* interal functions related to resource operations (from operations.c) */

@@ -24,7 +24,7 @@
 #  include <sys/mman.h>
 #endif
 
-static int sbd_pid = 0;
+static pid_t sbd_pid = 0;
 
 enum pcmk_panic_flags
 {
@@ -122,12 +122,14 @@ pcmk_panic_sbd(void)
     union sigval signal_value;
     pid_t ppid = getppid();
 
-    do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic", sbd_pid);
+    do_crm_log_always(LOG_EMERG, "Signaling sbd[%lld] to panic",
+                      (long long) sbd_pid);
 
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_perror(LOG_EMERG, "Cannot signal SBD(%d) to terminate", sbd_pid);
+        crm_perror(LOG_EMERG, "Cannot signal sbd[%lld] to terminate",
+                   (long long) sbd_pid);
         pcmk_panic_local();
     }
 
@@ -155,14 +157,16 @@ pcmk_panic(const char *origin)
     if (panic_cs && panic_cs->targets) {
         /* getppid() == 1 means our original parent no longer exists */
         do_crm_log_always(LOG_EMERG,
-                          "Shutting down instead of panicking the node: origin=%s, sbd=%d, parent=%d",
-                          origin, sbd_pid, getppid());
+                          "Shutting down instead of panicking the node "
+                          CRM_XS " origin=%s sbd=%lld parent=%d",
+                          origin, (long long) sbd_pid, getppid());
         crm_exit(CRM_EX_FATAL);
         return;
     }
 
     if(sbd_pid > 1) {
-        do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic the system: %s", sbd_pid, origin);
+        do_crm_log_always(LOG_EMERG, "Signaling sbd[%lld] to panic the system: %s",
+                          (long long) sbd_pid, origin);
         pcmk_panic_sbd();
 
     } else {
@@ -176,6 +180,7 @@ pcmk_locate_sbd(void)
 {
     char *pidfile = NULL;
     char *sbd_path = NULL;
+    int rc;
 
     if(sbd_pid > 1) {
         return sbd_pid;
@@ -186,17 +191,17 @@ pcmk_locate_sbd(void)
     sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */
-    CRM_ASSERT(pidfile);
-
-    sbd_pid = crm_pidfile_inuse(pidfile, 0, sbd_path);
-    if(sbd_pid > 0) {
-        crm_trace("SBD detected at pid=%d (file)", sbd_pid);
+    rc = pcmk__pidfile_matches(pidfile, 0, sbd_path, &sbd_pid);
+    if (rc == pcmk_rc_ok) {
+        crm_trace("SBD detected at pid %lld (via PID file %s)",
+                  (long long) sbd_pid, pidfile);
 
 #if SUPPORT_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
-        sbd_pid = crm_procfs_pid_of("sbd");
-        crm_trace("SBD detected at pid=%d (proc)", sbd_pid);
+        sbd_pid = (pid_t) crm_procfs_pid_of("sbd");
+        crm_trace("SBD detected at pid %lld (via procfs)",
+                  (long long) sbd_pid);
 #endif // SUPPORT_PROCFS
     }
 

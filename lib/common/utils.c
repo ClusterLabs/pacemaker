@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -729,7 +729,7 @@ void
 crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
     int rc;
-    long pid;
+    pid_t pid;
     const char *devnull = "/dev/null";
 
     if (daemonize == FALSE) {
@@ -737,11 +737,12 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     }
 
     /* Check before we even try... */
-    rc = crm_pidfile_inuse(pidfile, 1, name);
-    if(rc < pcmk_ok && rc != -ENOENT) {
-        pid = crm_read_pidfile(pidfile);
-        crm_err("%s: already running [pid %ld in %s]", name, pid, pidfile);
-        printf("%s: already running [pid %ld in %s]\n", name, pid, pidfile);
+    rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
+    if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
+        crm_err("%s: already running [pid %lld in %s]",
+                name, (long long) pid, pidfile);
+        printf("%s: already running [pid %lld in %s]\n",
+               name, (long long) pid, pidfile);
         crm_exit(CRM_EX_ERROR);
     }
 
@@ -755,10 +756,12 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         crm_exit(CRM_EX_OK);
     }
 
-    rc = crm_lock_pidfile(pidfile, name);
-    if(rc < pcmk_ok) {
-        crm_err("Could not lock '%s' for %s: %s (%d)", pidfile, name, pcmk_strerror(rc), rc);
-        printf("Could not lock '%s' for %s: %s (%d)\n", pidfile, name, pcmk_strerror(rc), rc);
+    rc = pcmk__lock_pidfile(pidfile, name);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not lock '%s' for %s: %s " CRM_XS " rc=%d",
+                pidfile, name, pcmk_rc_str(rc), rc);
+        printf("Could not lock '%s' for %s: %s (%d)\n",
+               pidfile, name, pcmk_rc_str(rc), rc);
         crm_exit(CRM_EX_ERROR);
     }
 
