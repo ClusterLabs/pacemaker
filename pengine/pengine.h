@@ -102,7 +102,6 @@ extern void graph_element_from_action(action_t * action, pe_working_set_t * data
 extern void add_maintenance_update(pe_working_set_t *data_set);
 
 extern gboolean show_scores;
-extern int scores_log_level;
 extern gboolean show_utilization;
 extern int utilization_log_level;
 extern const char *transition_idle_timeout;

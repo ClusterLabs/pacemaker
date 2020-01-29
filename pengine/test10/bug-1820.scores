@@ -1,11 +1,11 @@
 Allocation scores:
-group_color: gr1 allocation score on star: INFINITY
-group_color: gr1 allocation score on world: 1000
-group_color: test1 allocation score on star: INFINITY
-group_color: test1 allocation score on world: 1000
-group_color: test2 allocation score on star: 0
-group_color: test2 allocation score on world: 0
-native_color: test1 allocation score on star: -INFINITY
-native_color: test1 allocation score on world: 1000
-native_color: test2 allocation score on star: -INFINITY
-native_color: test2 allocation score on world: 0
+pcmk__group_allocate: gr1 allocation score on star: INFINITY
+pcmk__group_allocate: gr1 allocation score on world: 1000
+pcmk__group_allocate: test1 allocation score on star: INFINITY
+pcmk__group_allocate: test1 allocation score on world: 1000
+pcmk__group_allocate: test2 allocation score on star: 0
+pcmk__group_allocate: test2 allocation score on world: 0
+pcmk__native_allocate: test1 allocation score on star: -INFINITY
+pcmk__native_allocate: test1 allocation score on world: 1000
+pcmk__native_allocate: test2 allocation score on star: -INFINITY
+pcmk__native_allocate: test2 allocation score on world: 0

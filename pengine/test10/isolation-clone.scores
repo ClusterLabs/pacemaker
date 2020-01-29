@@ -1,13 +1,13 @@
 Allocation scores:
-clone_color: single-clone allocation score on rhel7-auto1: 0
-clone_color: single-clone allocation score on rhel7-auto2: 0
-clone_color: single:0 allocation score on rhel7-auto1: 0
-clone_color: single:0 allocation score on rhel7-auto2: 0
-clone_color: single:1 allocation score on rhel7-auto1: 0
-clone_color: single:1 allocation score on rhel7-auto2: 0
-native_color: shooter allocation score on rhel7-auto1: 0
-native_color: shooter allocation score on rhel7-auto2: 0
-native_color: single:0 allocation score on rhel7-auto1: 0
-native_color: single:0 allocation score on rhel7-auto2: 0
-native_color: single:1 allocation score on rhel7-auto1: 0
-native_color: single:1 allocation score on rhel7-auto2: -INFINITY
+pcmk__clone_allocate: single-clone allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: single-clone allocation score on rhel7-auto2: 0
+pcmk__clone_allocate: single:0 allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: single:0 allocation score on rhel7-auto2: 0
+pcmk__clone_allocate: single:1 allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: single:1 allocation score on rhel7-auto2: 0
+pcmk__native_allocate: shooter allocation score on rhel7-auto1: 0
+pcmk__native_allocate: shooter allocation score on rhel7-auto2: 0
+pcmk__native_allocate: single:0 allocation score on rhel7-auto1: 0
+pcmk__native_allocate: single:0 allocation score on rhel7-auto2: 0
+pcmk__native_allocate: single:1 allocation score on rhel7-auto1: 0
+pcmk__native_allocate: single:1 allocation score on rhel7-auto2: -INFINITY

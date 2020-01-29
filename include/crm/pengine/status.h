@@ -95,6 +95,11 @@ enum pe_find {
 //! Don't count total, disabled and blocked resource instances
 #  define pe_flag_no_counts             0x00800000ULL
 
+/*! Skip deprecated code that is kept solely for backward API compatibility.
+ * (Internal code should always set this.)
+ */
+#  define pe_flag_no_compat             0x01000000ULL
+
 typedef struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;

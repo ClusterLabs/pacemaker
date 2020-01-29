@@ -37,7 +37,6 @@
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 gboolean show_scores = FALSE;
-int scores_log_level = LOG_DEBUG_2;
 gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_DEBUG_2;
 extern int transition_id;
@@ -108,6 +107,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
             sched_data_set = pe_new_working_set();
             CRM_ASSERT(sched_data_set != NULL);
             set_bit(sched_data_set->flags, pe_flag_no_counts);
+            set_bit(sched_data_set->flags, pe_flag_no_compat);
         }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);

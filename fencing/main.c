@@ -1473,6 +1473,7 @@ main(int argc, char **argv)
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
     set_bit(fenced_data_set->flags, pe_flag_no_counts);
+    set_bit(fenced_data_set->flags, pe_flag_no_compat);
 
     if (stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT

@@ -58,8 +58,8 @@ state2text(enum remote_connection_state state)
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
-     native_merge_weights,
-     native_color,
+     pcmk__native_merge_weights,
+     pcmk__native_allocate,
      native_create_actions,
      native_create_probe,
      native_internal_constraints,
@@ -72,8 +72,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      native_append_meta,
      },
     {
-     group_merge_weights,
-     group_color,
+     pcmk__group_merge_weights,
+     pcmk__group_allocate,
      group_create_actions,
      native_create_probe,
      group_internal_constraints,
@@ -86,8 +86,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
-     clone_merge_weights,
-     clone_color,
+     pcmk__native_merge_weights,
+     pcmk__clone_allocate,
      clone_create_actions,
      clone_create_probe,
      clone_internal_constraints,
@@ -101,7 +101,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      },
     {
      master_merge_weights,
-     master_color,
+     pcmk__set_instance_roles,
      master_create_actions,
      clone_create_probe,
      master_internal_constraints,
@@ -114,8 +114,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      master_append_meta,
      },
     {
-     container_merge_weights,
-     container_color,
+     pcmk__native_merge_weights,
+     pcmk__bundle_allocate,
      container_create_actions,
      container_create_probe,
      container_internal_constraints,
@@ -1010,28 +1010,30 @@ rsc_discover_filter(resource_t *rsc, node_t *node)
 }
 
 /*
- * Count how many valid nodes we have (so we know the maximum number of
- *  colors we can resolve).
+ * \internal
+ * \brief Stage 2 of cluster status: apply node-specific criteria
  *
- * Apply node constraints (i.e. filter the "allowed_nodes" part of resources)
+ * Count known nodes, and apply location constraints, stickiness, and exclusive
+ * resource discovery.
  */
 gboolean
 stage2(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+    if (is_not_set(data_set->flags, pe_flag_no_compat)) {
+        // @COMPAT API backward compatibility
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node == NULL) {
-            /* error */
-
-        } else if (node->weight >= 0.0  /* global weight */
-                   && node->details->online && node->details->type != node_ping) {
-            data_set->max_valid_nodes++;
+            if (node && (node->weight >= 0) && node->details->online
+                && (node->details->type != node_ping)) {
+                data_set->max_valid_nodes++;
+            }
         }
     }
 
+    crm_trace("Applying placement constraints");
     apply_placement_constraints(data_set);
 
     gIter = data_set->nodes;
@@ -1079,6 +1081,13 @@ stage4(pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void *
+convert_const_pointer(const void *ptr)
+{
+    /* Worst function ever */
+    return (void *)ptr;
+}
+
 static gint
 sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 {
@@ -1089,8 +1098,8 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     const char *reason = "existence";
 
     const GListPtr nodes = (GListPtr) data;
-    resource_t *resource1 = (resource_t *) convert_const_pointer(a);
-    resource_t *resource2 = (resource_t *) convert_const_pointer(b);
+    const resource_t *resource1 = a;
+    const resource_t *resource2 = b;
 
     node_t *r1_node = NULL;
     node_t *r2_node = NULL;
@@ -1127,14 +1136,15 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    r1_nodes =
-        rsc_merge_weights(resource1, resource1->id, NULL, NULL, 1,
-                          pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
-    r2_nodes =
-        rsc_merge_weights(resource2, resource2->id, NULL, NULL, 1,
-                          pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
+    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
+                                          resource1->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes);
+
+    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
+                                          resource2->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes);
 
     /* Current location score */
     reason = "current location";
@@ -1222,18 +1232,17 @@ allocate_resources(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
-        /* Force remote connection resources to be allocated first. This
-         * also forces any colocation dependencies to be allocated as well */
+        /* Allocate remote connection resources first (which will also allocate
+         * any colocation dependencies). If the connection is migrating, always
+         * prefer the partial migration target.
+         */
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
             if (rsc->is_remote_node == FALSE) {
                 continue;
             }
-            pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            /* For remote node connection resources, always prefer the partial
-             * migration target during resource allocation, if the rsc is in the
-             * middle of a migration.
-             */
+            pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                         rsc->id);
             rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
@@ -1244,7 +1253,7 @@ allocate_resources(pe_working_set_t * data_set)
         if (rsc->is_remote_node == TRUE) {
             continue;
         }
-        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
+        pe_rsc_trace(rsc, "Allocating resource '%s'", rsc->id);
         rsc->cmds->allocate(rsc, NULL, data_set);
     }
 }

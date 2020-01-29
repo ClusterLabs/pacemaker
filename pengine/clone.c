@@ -228,21 +228,31 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
                 rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+                if (constraint->score == 0) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
-                hash1 = native_merge_weights(constraint->rsc_rh, resource1->id, hash1,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, 0);
+                hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
+                                                   resource1->id, hash1,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   0);
             }
 
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
                 rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+                if (constraint->score == 0) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
-                hash1 = native_merge_weights(constraint->rsc_lh, resource1->id, hash1,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, pe_weights_positive);
+                hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
+                                                   resource1->id, hash1,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   pe_weights_positive);
             }
         }
 
@@ -252,9 +262,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
-                hash2 = native_merge_weights(constraint->rsc_rh, resource2->id, hash2,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, 0);
+                hash2 = pcmk__native_merge_weights(constraint->rsc_rh,
+                                                   resource2->id, hash2,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   0);
             }
 
             for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -262,9 +274,11 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
-                hash2 = native_merge_weights(constraint->rsc_lh, resource2->id, hash2,
-                                             constraint->node_attribute,
-                                             (float)constraint->score / INFINITY, pe_weights_positive);
+                hash2 = pcmk__native_merge_weights(constraint->rsc_lh,
+                                                   resource2->id, hash2,
+                                                   constraint->node_attribute,
+                                                   constraint->score / (float) INFINITY,
+                                                   pe_weights_positive);
             }
         }
 
@@ -393,8 +407,9 @@ can_run_instance(resource_t * rsc, node_t * node, int limit)
     return NULL;
 }
 
-static node_t *
-color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit, pe_working_set_t * data_set)
+static pe_node_t *
+allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
+                  int limit, pe_working_set_t *data_set)
 {
     node_t *chosen = NULL;
     GHashTable *backup = NULL;
@@ -430,6 +445,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit,
     can_run_instance(rsc, NULL, limit);
 
     backup = node_hash_dup(rsc->allowed_nodes);
+    pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen) {
         node_t *local_node = parent_node_instance(rsc, chosen);
@@ -469,6 +485,9 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
 
+        if (cons->score == 0) {
+            continue;
+        }
         if (all || cons->score < 0 || cons->score == INFINITY) {
             child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
         }
@@ -478,6 +497,9 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
 
+        if (cons->score == 0) {
+            continue;
+        }
         if (all || cons->score < 0) {
             child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
         }
@@ -538,7 +560,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
                              "Not pre-allocating because %s already allocated optimal instances",
                              child_node->details->uname);
 
-            } else if (color_instance(child, child_node, max < available_nodes, per_host_max, data_set)) {
+            } else if (allocate_instance(child, child_node,
+                                         max < available_nodes, per_host_max,
+                                         data_set)) {
                 pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
                              child_node->details->uname);
                 allocated++;
@@ -564,9 +588,10 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
         if (is_not_set(child->flags, pe_rsc_provisional)) {
         } else if (allocated >= max) {
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
-            resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
+            resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
         } else {
-            if (color_instance(child, NULL, max < available_nodes, per_host_max, data_set)) {
+            if (allocate_instance(child, NULL, max < available_nodes,
+                                  per_host_max, data_set)) {
                 allocated++;
             }
         }
@@ -577,8 +602,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
 }
 
 
-node_t *
-clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
+                     pe_working_set_t *data_set)
 {
     GListPtr nodes = NULL;
 
@@ -595,7 +621,6 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     set_bit(rsc->flags, pe_rsc_allocating);
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
 
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
@@ -603,13 +628,20 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
-        pe_rsc_trace(rsc, "%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
+        if (constraint->score == 0) {
+            continue;
+        }
+        pe_rsc_trace(rsc, "%s: Allocating %s first",
+                     rsc->id, constraint->rsc_rh->id);
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
 
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
+        if (constraint->score == 0) {
+            continue;
+        }
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
@@ -617,7 +649,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     (pe_weights_rollback | pe_weights_positive));
     }
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
@@ -1017,6 +1049,9 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
+    if (constraint->score == 0) {
+        return;
+    }
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
@@ -1405,11 +1440,4 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->clone_node_max);
     free(name);
-}
-
-GHashTable *
-clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                    float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }

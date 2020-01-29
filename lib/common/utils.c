@@ -1271,13 +1271,6 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     return a_function;
 }
 
-void *
-convert_const_pointer(const void *ptr)
-{
-    /* Worst function ever */
-    return (void *)ptr;
-}
-
 #ifdef HAVE_UUID_UUID_H
 #  include <uuid/uuid.h>
 #endif

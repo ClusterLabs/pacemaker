@@ -266,7 +266,7 @@ GHashTable *
 master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
                      float factor, enum pe_weights flags)
 {
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+    return pcmk__native_merge_weights(rsc, rhs, nodes, attr, factor, flags);
 }
 
 static void
@@ -293,7 +293,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
-    dump_node_scores(LOG_DEBUG_3, rsc, "Before", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -314,11 +314,15 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         node->weight = merge_weights(child->sort_index, node->weight);
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "Middle", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes);
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+
+        if (constraint->score == 0) {
+            continue;
+        }
 
         /* (re-)adds location preferences of resources that the
          * master instance should/must be colocated with
@@ -339,6 +343,10 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     gIter = rsc->rsc_cons_lhs;
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+
+        if (constraint->score == 0) {
+            continue;
+        }
 
         /* (re-)adds location preferences of resource that wish to be
          * colocated with the master instance
@@ -366,7 +374,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "After", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes);
 
     /* write them back and sort */
 
@@ -647,8 +655,8 @@ set_role_master(resource_t * rsc)
     }
 }
 
-node_t *
-master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+pe_node_t *
+pcmk__set_instance_roles(pe_resource_t *rsc, pe_node_t *prefer, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;
@@ -676,7 +684,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
     apply_master_prefs(rsc);
 
-    clone_color(rsc, prefer, data_set);
+    pcmk__clone_allocate(rsc, prefer, data_set);
 
     set_bit(rsc->flags, pe_rsc_allocating);
 
@@ -744,6 +752,9 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
 
+            if (cons->score == 0) {
+                continue;
+            }
             child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
         }
 
@@ -755,7 +766,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "Pre merge", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes);
     master_promotion_order(rsc, data_set);
 
     /* mark the first N as masters */
@@ -773,8 +784,8 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             }
 
         } else {
-            do_crm_log(scores_log_level, "%s promotion score on %s: %s",
-                       child_rsc->id, chosen ? chosen->details->uname : "none", score);
+            pe_rsc_trace(rsc, "%s promotion score on %s: %s", child_rsc->id,
+                         (chosen? chosen->details->uname : "none"), score);
         }
 
         chosen = NULL;          /* nuke 'chosen' so that we don't promote more than the
@@ -992,6 +1003,9 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     GListPtr gIter = NULL;
 
     CRM_CHECK(rsc_rh != NULL, return);
+    if (constraint->score == 0) {
+        return;
+    }
     if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return;
 

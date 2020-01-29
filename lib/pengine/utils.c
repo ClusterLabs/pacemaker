@@ -244,75 +244,119 @@ sort_node_uname(gconstpointer a, gconstpointer b)
     return strcmp(node_a->details->uname, node_b->details->uname);
 }
 
-void
-dump_node_scores_worker(int level, const char *file, const char *function, int line,
-                        resource_t * rsc, const char *comment, GHashTable * nodes)
+/*!
+ * \internal
+ * \brief Output node weights to stdout
+ *
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+static void
+pe__output_node_weights(pe_resource_t *rsc, const char *comment,
+                        GHashTable *nodes)
 {
-    GHashTable *hash = nodes;
-    GHashTableIter iter;
-    node_t *node = NULL;
+    char score[128]; // Stack-allocated since this is called frequently
 
-    if (rsc) {
-        hash = rsc->allowed_nodes;
+    // Sort the nodes so the output is consistent for regression tests
+    GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
+
+    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+
+        score2char_stack(node->weight, score, sizeof(score));
+        if (rsc) {
+            printf("%s: %s allocation score on %s: %s\n",
+                   comment, rsc->id, node->details->uname, score);
+        } else {
+            printf("%s: %s = %s\n", comment, node->details->uname, score);
+        }
     }
+    g_list_free(list);
+}
 
-    if (rsc && is_set(rsc->flags, pe_rsc_orphan)) {
-        /* Don't show the allocation scores for orphans */
+/*!
+ * \internal
+ * \brief Log node weights at trace level
+ *
+ * \param[in] file      Caller's filename
+ * \param[in] function  Caller's function name
+ * \param[in] line      Caller's line number
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+static void
+pe__log_node_weights(const char *file, const char *function, int line,
+                     pe_resource_t *rsc, const char *comment, GHashTable *nodes)
+{
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+    char score[128]; // Stack-allocated since this is called frequently
+
+    // Don't waste time if we're not tracing at this point
+    pcmk__log_else(LOG_TRACE, return);
+
+    g_hash_table_iter_init(&iter, nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        score2char_stack(node->weight, score, sizeof(score));
+        if (rsc) {
+            qb_log_from_external_source(function, file,
+                                        "%s: %s allocation score on %s: %s",
+                                        LOG_TRACE, line, 0,
+                                        comment, rsc->id,
+                                        node->details->uname, score);
+        } else {
+            qb_log_from_external_source(function, file, "%s: %s = %s",
+                                        LOG_TRACE, line, 0,
+                                        comment, node->details->uname,
+                                        score);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Log or output node weights
+ *
+ * \param[in] file      Caller's filename
+ * \param[in] function  Caller's function name
+ * \param[in] line      Caller's line number
+ * \param[in] to_log    Log if true, otherwise output
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+void
+pe__show_node_weights_as(const char *file, const char *function, int line,
+                         bool to_log, pe_resource_t *rsc, const char *comment,
+                         GHashTable *nodes)
+{
+    if (rsc != NULL) {
+        if (is_set(rsc->flags, pe_rsc_orphan)) {
+            // Don't show allocation scores for orphans
+            return;
+        }
+        nodes = rsc->allowed_nodes;
+    }
+    if (nodes == NULL) {
+        // Nothing to show
         return;
     }
 
-    if (level == 0) {
-        char score[128];
-        int len = sizeof(score);
-        /* For now we want this in sorted order to keep the regression tests happy */
-        GListPtr gIter = NULL;
-        GListPtr list = g_hash_table_get_values(hash);
-
-        list = g_list_sort(list, sort_node_uname);
-
-        gIter = list;
-        for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-            /* This function is called a whole lot, use stack allocated score */
-            score2char_stack(node->weight, score, len);
-
-            if (rsc) {
-                printf("%s: %s allocation score on %s: %s\n",
-                       comment, rsc->id, node->details->uname, score);
-            } else {
-                printf("%s: %s = %s\n", comment, node->details->uname, score);
-            }
-        }
-
-        g_list_free(list);
-
-    } else if (hash) {
-        char score[128];
-        int len = sizeof(score);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            /* This function is called a whole lot, use stack allocated score */
-            score2char_stack(node->weight, score, len);
-
-            if (rsc) {
-                do_crm_log_alias(LOG_TRACE, file, function, line,
-                                 "%s: %s allocation score on %s: %s", comment, rsc->id,
-                                 node->details->uname, score);
-            } else {
-                do_crm_log_alias(LOG_TRACE, file, function, line + 1, "%s: %s = %s", comment,
-                                 node->details->uname, score);
-            }
-        }
+    if (to_log) {
+        pe__log_node_weights(file, function, line, rsc, comment, nodes);
+    } else {
+        pe__output_node_weights(rsc, comment, nodes);
     }
 
+    // If this resource has children, repeat recursively for each
     if (rsc && rsc->children) {
-        GListPtr gIter = NULL;
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            dump_node_scores_worker(level, file, function, line, child, comment, nodes);
+            pe__show_node_weights_as(file, function, line, to_log, child,
+                                     comment, nodes);
         }
     }
 }

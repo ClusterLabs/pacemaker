@@ -36,7 +36,6 @@
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
-void *convert_const_pointer(const void *ptr);
 
 /* For ACLs */
 char *uid2username(uid_t uid);
