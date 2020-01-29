@@ -34,21 +34,7 @@
 #include <crm/common/remote_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
-
-const int psk_tls_kx_order[] = {
-    GNUTLS_KX_DHE_PSK,
-    GNUTLS_KX_PSK,
-};
-
-const int anon_tls_kx_order[] = {
-    GNUTLS_KX_ANON_DH,
-    GNUTLS_KX_DHE_RSA,
-    GNUTLS_KX_DHE_DSS,
-    GNUTLS_KX_RSA,
-    0
-};
 #endif
 
 /* Swab macros from linux/swab.h */
