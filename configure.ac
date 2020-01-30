@@ -71,6 +71,8 @@ export CC_IN_CONFIGURE
 
 LDD=ldd
 
+GLIB_TESTS
+
 dnl ========================================================================
 dnl Compiler characteristics
 dnl ========================================================================
@@ -2002,6 +2004,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \
