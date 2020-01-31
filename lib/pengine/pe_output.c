@@ -312,6 +312,7 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "ban");
     pe_node_t *pe_node = va_arg(args, pe_node_t *);
     pe__location_t *location = va_arg(args, pe__location_t *);
+    gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
 
     char *weight_s = crm_itoa(pe_node->weight);
 
@@ -507,6 +508,7 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     node_t *dc = va_arg(args, node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
+    char *dc_name G_GNUC_UNUSED = va_arg(args, char *);
 
     if (dc) {
         xmlSetProp(node, (pcmkXmlStr) "present", (pcmkXmlStr) "true");
