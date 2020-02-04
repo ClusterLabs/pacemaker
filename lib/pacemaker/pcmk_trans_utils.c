@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
         char *fail_s = getenv("PE_fail");
 
         if (fail_s) {
-            fail = crm_int_helper(fail_s, NULL);
+            fail = (int) crm_parse_ll(fail_s, NULL);
         } else {
             fail = 0;
         }

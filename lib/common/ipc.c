@@ -528,10 +528,11 @@ pcmk__free_client(pcmk__client_t *c)
 }
 
 /*!
+ * \internal
  * \brief Raise IPC eviction threshold for a client, if allowed
  *
  * \param[in,out] client     Client to modify
- * \param[in]     queue_max  New threshold (as string)
+ * \param[in]     qmax       New threshold (as non-NULL string)
  *
  * \return TRUE if change was allowed, FALSE otherwise
  */
@@ -539,10 +540,12 @@ bool
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
     if (is_set(client->flags, pcmk__client_privileged)) {
-        int qmax_int = crm_int_helper(qmax, NULL);
+        long long qmax_int;
 
+        errno = 0;
+        qmax_int = crm_parse_ll(qmax, NULL);
         if ((errno == 0) && (qmax_int > 0)) {
-            client->queue_max = qmax_int;
+            client->queue_max = (unsigned int) qmax_int;
             return TRUE;
         }
     }

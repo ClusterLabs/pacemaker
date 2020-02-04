@@ -1256,7 +1256,7 @@ max_delay_for_resource(pe_working_set_t * data_set, resource_t *rsc)
         action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
 
-        max_delay = crm_int_helper(value, NULL);
+        max_delay = value? (int) crm_parse_ll(value, NULL) : -1;
         pe_free_action(stop);
     }
 

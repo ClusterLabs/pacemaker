@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -147,7 +147,7 @@ guint
 crm_parse_ms(const char *text)
 {
     if (text) {
-        long long ms = crm_int_helper(text, NULL);
+        long long ms = crm_parse_ll(text, NULL);
 
         if ((ms < 0) || (ms > G_MAXUINT)) {
             errno = ERANGE;

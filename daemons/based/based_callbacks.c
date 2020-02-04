@@ -317,7 +317,7 @@ process_ping_reply(xmlNode *reply)
     const char *digest = crm_element_value(pong, XML_ATTR_DIGEST);
 
     if (seq_s) {
-        seq = crm_int_helper(seq_s, NULL);
+        seq = (uint64_t) crm_parse_ll(seq_s, NULL);
     }
 
     if(digest == NULL) {

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -199,7 +201,7 @@ crm_peer_uname(const char *uuid)
 
 #if SUPPORT_COROSYNC
     if (is_corosync_cluster()) {
-        uint32_t id = crm_int_helper(uuid, NULL);
+        uint32_t id = (uint32_t) crm_parse_ll(uuid, NULL);
 
         if (id != 0) {
             node = crm_find_peer(id, NULL);

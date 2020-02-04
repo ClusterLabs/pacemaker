@@ -782,7 +782,7 @@ main(int argc, char **argv)
 
     if (test_dir != NULL) {
         if (repeat_s != NULL) {
-            repeat = crm_int_helper(repeat_s, NULL);
+            repeat = crm_parse_ll(repeat_s, NULL);
             if (errno || (repeat < 1)) {
                 fprintf(stderr, "--repeat must be positive integer, not '%s' -- using 1",
                         repeat_s);

@@ -591,7 +591,7 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
     value = crm_element_value(data, name);
     if (value) {
         errno = 0;
-        *dest = crm_int_helper(value, NULL);
+        *dest = crm_parse_ll(value, NULL);
         if (errno == 0) {
             return 0;
         }

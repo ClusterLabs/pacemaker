@@ -985,7 +985,7 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
 
     if (shutdown) {
         errno = 0;
-        result = (time_t) crm_int_helper(shutdown, NULL);
+        result = (time_t) crm_parse_ll(shutdown, NULL);
         if (errno != 0) {
             result = 0;
         }
@@ -2947,7 +2947,7 @@ stage8(pe_working_set_t * data_set)
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
     value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_int_helper(value, NULL) > 0) {
+    if (crm_parse_ll(value, NULL) > 0) {
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 

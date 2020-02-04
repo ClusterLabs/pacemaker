@@ -110,7 +110,7 @@ check_number(const char *value)
     } else if (safe_str_eq(value, CRM_INFINITY_S)) {
 
     } else {
-        crm_int_helper(value, NULL);
+        crm_parse_ll(value, NULL);
     }
 
     if (errno != 0) {
