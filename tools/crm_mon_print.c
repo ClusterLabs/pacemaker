@@ -302,52 +302,56 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
     xmlNode *rsc_entry = NULL;
     gboolean printed_header = FALSE;
 
-    if (node && node->details && node->details->online) {
-        lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+    if (!node || !node->details || !node->details->online) {
+        return;
+    }
 
-        /* Print history of each of the node's resources */
-        for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
-             rsc_entry = __xml_next_element(rsc_entry)) {
+    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
-            if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-                if (operations == FALSE) {
-                    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-                    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-                    time_t last_failure = 0;
-                    int failcount = failure_count(data_set, node, rsc, &last_failure);
+    /* Print history of each of the node's resources */
+    for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
+         rsc_entry = __xml_next_element(rsc_entry)) {
 
-                    if (failcount > 0) {
-                        if (printed_header == FALSE) {
-                            printed_header = TRUE;
-                            out->message(out, "node", node, get_resource_display_options(mon_ops),
-                                         FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
-                        }
+        if (!crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+            continue;
+        }
 
-                        out->message(out, "resource-history", rsc, rsc_id, FALSE,
-                                     failcount, last_failure, FALSE);
-                    }
-                } else {
-                    GListPtr op_list = get_operation_list(rsc_entry);
+        if (operations == FALSE) {
+            const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+            resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+            time_t last_failure = 0;
+            int failcount = failure_count(data_set, node, rsc, &last_failure);
 
-                    if (printed_header == FALSE) {
-                        printed_header = TRUE;
-                        out->message(out, "node", node, get_resource_display_options(mon_ops),
-                                     FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                                     is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
-                    }
-
-                    if (op_list != NULL) {
-                        print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
-                    }
+            if (failcount > 0) {
+                if (printed_header == FALSE) {
+                    printed_header = TRUE;
+                    out->message(out, "node", node, get_resource_display_options(mon_ops),
+                                 FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                                 is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
                 }
+
+                out->message(out, "resource-history", rsc, rsc_id, FALSE,
+                             failcount, last_failure, FALSE);
+            }
+        } else {
+            GListPtr op_list = get_operation_list(rsc_entry);
+
+            if (printed_header == FALSE) {
+                printed_header = TRUE;
+                out->message(out, "node", node, get_resource_display_options(mon_ops),
+                             FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                             is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+            }
+
+            if (op_list != NULL) {
+                print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
             }
         }
+    }
 
-        if (printed_header) {
-            out->end_list(out);
-        }
+    if (printed_header) {
+        out->end_list(out);
     }
 }
 
