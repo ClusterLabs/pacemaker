@@ -723,6 +723,9 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
             }
 
             out->begin_list(out, NULL, NULL, "Config Options");
+        } else if (header_printed == FALSE) {
+            out->begin_list(out, NULL, NULL, "Cluster Summary");
+            header_printed = TRUE;
         }
 
         out->message(out, "cluster-options", data_set);
