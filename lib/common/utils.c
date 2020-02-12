@@ -120,12 +120,10 @@ check_number(const char *value)
 }
 
 gboolean
-check_positive_number(const char* value)
+check_positive_number(const char *value)
 {
-    if (safe_str_eq(value, CRM_INFINITY_S) || (crm_int_helper(value, NULL))) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, CRM_INFINITY_S)
+           || (crm_parse_ll(value, NULL) > 0);
 }
 
 gboolean
