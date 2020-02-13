@@ -563,8 +563,6 @@ compare_version(const char *version1, const char *version2)
     return rc;
 }
 
-gboolean do_stderr = FALSE;
-
 #ifndef NUMCHARS
 #  define	NUMCHARS	"0123456789."
 #endif
