@@ -57,6 +57,7 @@ script:
 # Create directories needed by commands used by regression tests
 - sudo make install-exec-local || true
 - make
+- make check
 - ./cts/cts-regression -V cli scheduler exec
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
