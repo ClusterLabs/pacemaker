@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -129,7 +131,7 @@ static int cib_archive_filter(const struct dirent * a)
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
 
-    } else if (crm_ends_with_ext(a->d_name, ".sig")) {
+    } else if (pcmk__ends_with_ext(a->d_name, ".sig")) {
         crm_trace("%s - wrong suffix", a->d_name);
 
     } else {

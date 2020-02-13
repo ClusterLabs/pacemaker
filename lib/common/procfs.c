@@ -155,7 +155,7 @@ pcmk__procfs_num_cores(void)
         char buffer[2048];
 
         while (fgets(buffer, sizeof(buffer), stream)) {
-            if (crm_starts_with(buffer, "cpu") && isdigit(buffer[3])) {
+            if (pcmk__starts_with(buffer, "cpu") && isdigit(buffer[3])) {
                 ++cores;
             }
         }

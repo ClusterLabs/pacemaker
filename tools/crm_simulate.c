@@ -126,22 +126,25 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
         } else if (node->details->online) {
             if (pe__is_guest_node(node)) {
-                online_guest_nodes = add_list_element(online_guest_nodes, node_name);
+                online_guest_nodes = pcmk__add_word(online_guest_nodes,
+                                                    node_name);
             } else if (pe__is_remote_node(node)) {
-                online_remote_nodes = add_list_element(online_remote_nodes, node_name);
+                online_remote_nodes = pcmk__add_word(online_remote_nodes,
+                                                     node_name);
             } else {
-                online_nodes = add_list_element(online_nodes, node_name);
+                online_nodes = pcmk__add_word(online_nodes, node_name);
             }
             free(node_name);
             continue;
 
         } else {
             if (pe__is_remote_node(node)) {
-                offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
+                offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
+                                                      node_name);
             } else if (pe__is_guest_node(node)) {
                 /* ignore offline container nodes */
             } else {
-                offline_nodes = add_list_element(offline_nodes, node_name);
+                offline_nodes = pcmk__add_word(offline_nodes, node_name);
             }
             free(node_name);
             continue;
@@ -569,7 +572,8 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
                 free(namelist[file_num]);
                 continue;
 
-            } else if (!crm_ends_with_ext(namelist[file_num]->d_name, ".xml")) {
+            } else if (!pcmk__ends_with_ext(namelist[file_num]->d_name,
+                                            ".xml")) {
                 free(namelist[file_num]);
                 continue;
             }

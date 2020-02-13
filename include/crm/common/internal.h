@@ -107,13 +107,12 @@ const char *pcmk_message_name(const char *name);
 
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
-bool crm_starts_with(const char *str, const char *prefix);
-gboolean crm_ends_with(const char *s, const char *match);
-gboolean crm_ends_with_ext(const char *s, const char *match);
-char *add_list_element(char *list, const char *value);
-bool crm_compress_string(const char *data, int length, int max, char **result,
-                         unsigned int *result_len);
-gint crm_alpha_sort(gconstpointer a, gconstpointer b);
+bool pcmk__starts_with(const char *str, const char *prefix);
+bool pcmk__ends_with(const char *s, const char *match);
+bool pcmk__ends_with_ext(const char *s, const char *match);
+char *pcmk__add_word(char *list, const char *word);
+int pcmk__compress(const char *data, unsigned int length, unsigned int max,
+                   char **result, unsigned int *result_len);
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"
  * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.

@@ -2023,7 +2023,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     for (; params; params = params->next) {
 
         // Strip out Pacemaker-implemented parameters
-        if (!crm_starts_with(params->key, "pcmk_")
+        if (!pcmk__starts_with(params->key, "pcmk_")
                 && strcmp(params->key, "provides")
                 && strcmp(params->key, "stonith-timeout")) {
             g_hash_table_insert(params_table, strdup(params->key),

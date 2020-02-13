@@ -1533,7 +1533,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if ((input->type == pe_order_optional)
                && is_set(input->action->flags, pe_action_migrate_runnable)
-               && crm_ends_with(input->action->uuid, "_stop_0")) {
+               && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional but stop in migration",
                   action->uuid, action->id,
@@ -1608,7 +1608,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
                && input->action->rsc != action->rsc
                && is_set(input->action->rsc->flags, pe_rsc_failed)
                && is_not_set(input->action->rsc->flags, pe_rsc_managed)
-               && crm_ends_with(input->action->uuid, "_stop_0")
+               && pcmk__ends_with(input->action->uuid, "_stop_0")
                && action->rsc && pe_rsc_is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",

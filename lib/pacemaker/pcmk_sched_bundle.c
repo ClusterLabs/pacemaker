@@ -647,8 +647,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     enum pe_graph_flags changed = pe_graph_none;
 
     /* Fix this - lazy */
-    if (crm_ends_with(first->uuid, "_stopped_0")
-        || crm_ends_with(first->uuid, "_demoted_0")) {
+    if (pcmk__ends_with(first->uuid, "_stopped_0")
+        || pcmk__ends_with(first->uuid, "_demoted_0")) {
         current = TRUE;
     }
 
@@ -792,7 +792,8 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
         return FALSE;
     }
 
-    if (crm_ends_with(then->uuid, "_stop_0") || crm_ends_with(then->uuid, "_demote_0")) {
+    if (pcmk__ends_with(then->uuid, "_stop_0")
+        || pcmk__ends_with(then->uuid, "_demote_0")) {
         rsc = first->rsc;
     } else {
         rsc = then->rsc;

@@ -803,8 +803,9 @@ pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
     } else {
         unsigned int new_size = 0;
 
-        if (crm_compress_string
-            (buffer, header->size_uncompressed, max_send_size, &compressed, &new_size)) {
+        if (pcmk__compress(buffer, (unsigned int) header->size_uncompressed,
+                           (unsigned int) max_send_size, &compressed,
+                           &new_size) == pcmk_rc_ok) {
 
             header->flags |= crm_ipc_compressed;
             header->size_compressed = new_size;

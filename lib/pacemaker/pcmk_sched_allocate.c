@@ -786,7 +786,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
         return;
     }
 
-    if (crm_starts_with(key, "#health")) {
+    if (pcmk__starts_with(key, "#health")) {
         int score;
 
         /* Convert the value into an integer */
@@ -2405,7 +2405,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         } else if (lh_action == NULL
                    && lh_action_task
-                   && crm_ends_with(lh_action_task, "_" RSC_STOP "_0") == FALSE) {
+                   && !pcmk__ends_with(lh_action_task, "_" RSC_STOP "_0")) {
             continue;
         }
 
@@ -2418,7 +2418,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
                 continue;
 
             } else if (rh_action == NULL && rh_action_task
-                       && crm_ends_with(rh_action_task,"_" RSC_STOP "_0")) {
+                       && pcmk__ends_with(rh_action_task,"_" RSC_STOP "_0")) {
                 continue;
             }
         }

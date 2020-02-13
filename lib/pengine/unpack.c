@@ -3153,7 +3153,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
                        xmlNode *xml_op, pe_working_set_t *data_set)
 {
     bool expired = FALSE;
-    bool is_last_failure = crm_ends_with(ID(xml_op), "_last_failure_0");
+    bool is_last_failure = pcmk__ends_with(ID(xml_op), "_last_failure_0");
     time_t last_run = 0;
     guint interval_ms = 0;
     int unexpired_fail_count = 0;

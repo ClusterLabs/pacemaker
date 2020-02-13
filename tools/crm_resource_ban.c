@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -317,11 +317,11 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
     char *rsc_role_substr = NULL;
     char *date_substr = NULL;
 
-    if (crm_starts_with(ID(constraint_node), "cli-ban-")) {
+    if (pcmk__starts_with(ID(constraint_node), "cli-ban-")) {
         date_substr = crm_strdup_printf("//date_expression[@id='%s-lifetime']",
                                         ID(constraint_node));
 
-    } else if (crm_starts_with(ID(constraint_node), "cli-prefer-")) {
+    } else if (pcmk__starts_with(ID(constraint_node), "cli-prefer-")) {
         date_substr = crm_strdup_printf("//date_expression[@id='cli-prefer-lifetime-end-%s']",
                                         crm_element_value(constraint_node, "rsc"));
     } else {

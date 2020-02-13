@@ -1003,11 +1003,13 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             node_mode = "online";
             if (is_not_set(mon_ops, mon_op_group_by_node)) {
                 if (pe__is_guest_node(node)) {
-                    online_guest_nodes = add_list_element(online_guest_nodes, node_name);
+                    online_guest_nodes = pcmk__add_word(online_guest_nodes,
+                                                        node_name);
                 } else if (pe__is_remote_node(node)) {
-                    online_remote_nodes = add_list_element(online_remote_nodes, node_name);
+                    online_remote_nodes = pcmk__add_word(online_remote_nodes,
+                                                         node_name);
                 } else {
-                    online_nodes = add_list_element(online_nodes, node_name);
+                    online_nodes = pcmk__add_word(online_nodes, node_name);
                 }
                 free(node_name);
                 continue;
@@ -1017,11 +1019,12 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             node_mode = "OFFLINE";
             if (is_not_set(mon_ops, mon_op_group_by_node)) {
                 if (pe__is_remote_node(node)) {
-                    offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
+                    offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
+                                                          node_name);
                 } else if (pe__is_guest_node(node)) {
                     /* ignore offline guest nodes */
                 } else {
-                    offline_nodes = add_list_element(offline_nodes, node_name);
+                    offline_nodes = pcmk__add_word(offline_nodes, node_name);
                 }
                 free(node_name);
                 continue;

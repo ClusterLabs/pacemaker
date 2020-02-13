@@ -156,14 +156,14 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
         crm_action_t *input = (crm_action_t *) lpc->data;
 
         if (input->failed) {
-            pending = add_list_element(pending, ID(input->xml));
+            pending = pcmk__add_word(pending, ID(input->xml));
 
         } else if (input->confirmed) {
             // Confirmed successful inputs are not pending
 
         } else if (find_action(graph, input->id) != NULL) {
             // In-flight or pending
-            pending = add_list_element(pending, ID(input->xml));
+            pending = pcmk__add_word(pending, ID(input->xml));
         }
     }
     if (pending == NULL) {

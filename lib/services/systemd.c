@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -360,6 +360,31 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Compare two strings alphabetically (case-insensitive)
+ *
+ * \param[in] a  First string to compare
+ * \param[in] b  Second string to compare
+ *
+ * \return 0 if strings are equal, -1 if a < b, 1 if a > b
+ *
+ * \note Usable as a GCompareFunc with g_list_sort().
+ *       NULL is considered less than non-NULL.
+ */
+static gint
+sort_str(gconstpointer a, gconstpointer b)
+{
+    if (!a && !b) {
+        return 0;
+    } else if (!a) {
+        return -1;
+    } else if (!b) {
+        return 1;
+    }
+    return strcasecmp(a, b);
+}
+
 GList *
 systemd_unit_listall(void)
 {
@@ -453,7 +478,7 @@ systemd_unit_listall(void)
     dbus_message_unref(reply);
 
     crm_trace("Found %d manageable systemd unit files", nfiles);
-    units = g_list_sort(units, crm_alpha_sort);
+    units = g_list_sort(units, sort_str);
     return units;
 }
 
