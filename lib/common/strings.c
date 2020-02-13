@@ -30,7 +30,7 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     return buffer;
 }
 
-long long
+static long long
 crm_int_helper(const char *text, char **end_text)
 {
     long long result = -1;
@@ -155,6 +155,74 @@ crm_parse_ms(const char *text)
         return errno? 0 : (guint) ms;
     }
     return 0;
+}
+
+#ifndef NUMCHARS
+#  define	NUMCHARS	"0123456789."
+#endif
+
+#ifndef WHITESPACE
+#  define	WHITESPACE	" \t\n\r\f"
+#endif
+
+/*!
+ * \brief Parse a time+units string and return milliseconds equivalent
+ *
+ * \param[in] input  String with a number and units (optionally with whitespace
+ *                   before and/or after the number)
+ *
+ * \return Milliseconds corresponding to string expression, or -1 on error
+ */
+long long
+crm_get_msec(const char *input)
+{
+    const char *num_start = NULL;
+    const char *units;
+    long long multiplier = 1000;
+    long long divisor = 1;
+    long long msec = -1;
+    size_t num_len = 0;
+    char *end_text = NULL;
+
+    if (input == NULL) {
+        return -1;
+    }
+
+    num_start = input + strspn(input, WHITESPACE);
+    num_len = strspn(num_start, NUMCHARS);
+    if (num_len < 1) {
+        return -1;
+    }
+    units = num_start + num_len;
+    units += strspn(units, WHITESPACE);
+
+    if (!strncasecmp(units, "ms", 2) || !strncasecmp(units, "msec", 4)) {
+        multiplier = 1;
+        divisor = 1;
+    } else if (!strncasecmp(units, "us", 2) || !strncasecmp(units, "usec", 4)) {
+        multiplier = 1;
+        divisor = 1000;
+    } else if (!strncasecmp(units, "s", 1) || !strncasecmp(units, "sec", 3)) {
+        multiplier = 1000;
+        divisor = 1;
+    } else if (!strncasecmp(units, "m", 1) || !strncasecmp(units, "min", 3)) {
+        multiplier = 60 * 1000;
+        divisor = 1;
+    } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
+        multiplier = 60 * 60 * 1000;
+        divisor = 1;
+    } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
+        return -1;
+    }
+
+    msec = crm_int_helper(num_start, &end_text);
+    if (msec > (LLONG_MAX / multiplier)) {
+        // Arithmetics overflow while multiplier/divisor mutually exclusive
+        return LLONG_MAX;
+    }
+    msec *= multiplier;
+    msec /= divisor;
+    return msec;
 }
 
 gboolean

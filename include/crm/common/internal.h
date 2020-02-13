@@ -105,7 +105,6 @@ const char *pcmk_message_name(const char *name);
 
 /* internal generic string functions (from strings.c) */
 
-long long crm_int_helper(const char *text, char **end_text);
 guint crm_parse_ms(const char *text);
 bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);

@@ -563,14 +563,6 @@ compare_version(const char *version1, const char *version2)
     return rc;
 }
 
-#ifndef NUMCHARS
-#  define	NUMCHARS	"0123456789."
-#endif
-
-#ifndef WHITESPACE
-#  define	WHITESPACE	" \t\n\r\f"
-#endif
-
 guint
 crm_parse_interval_spec(const char *input)
 {
@@ -599,61 +591,6 @@ crm_parse_interval_spec(const char *input)
     }
 
     return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
-}
-
-long long
-crm_get_msec(const char *input)
-{
-    const char *cp = input;
-    const char *units;
-    long long multiplier = 1000;
-    long long divisor = 1;
-    long long msec = -1;
-    char *end_text = NULL;
-
-    /* double dret; */
-
-    if (input == NULL) {
-        return msec;
-    }
-
-    cp += strspn(cp, WHITESPACE);
-    units = cp + strspn(cp, NUMCHARS);
-    units += strspn(units, WHITESPACE);
-
-    if (strchr(NUMCHARS, *cp) == NULL) {
-        return msec;
-    }
-
-    if (strncasecmp(units, "ms", 2) == 0 || strncasecmp(units, "msec", 4) == 0) {
-        multiplier = 1;
-        divisor = 1;
-    } else if (strncasecmp(units, "us", 2) == 0 || strncasecmp(units, "usec", 4) == 0) {
-        multiplier = 1;
-        divisor = 1000;
-    } else if (strncasecmp(units, "s", 1) == 0 || strncasecmp(units, "sec", 3) == 0) {
-        multiplier = 1000;
-        divisor = 1;
-    } else if (strncasecmp(units, "m", 1) == 0 || strncasecmp(units, "min", 3) == 0) {
-        multiplier = 60 * 1000;
-        divisor = 1;
-    } else if (strncasecmp(units, "h", 1) == 0 || strncasecmp(units, "hr", 2) == 0) {
-        multiplier = 60 * 60 * 1000;
-        divisor = 1;
-    } else if (*units != EOS && *units != '\n' && *units != '\r') {
-        return msec;
-    }
-
-    msec = crm_int_helper(cp, &end_text);
-    if (msec > LLONG_MAX/multiplier) {
-        /* arithmetics overflow while multiplier/divisor mutually exclusive */
-        return LLONG_MAX;
-    }
-    msec *= multiplier;
-    msec /= divisor;
-    /* dret += 0.5; */
-    /* msec = (long long)dret; */
-    return msec;
 }
 
 extern bool crm_is_daemon;

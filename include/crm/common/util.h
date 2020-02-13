@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,6 +50,7 @@ gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
+long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
@@ -112,7 +113,6 @@ GHashTable *crm_str_table_dup(GHashTable *old_table);
 /* public I/O functions (from io.c) */
 void crm_build_path(const char *path_c, mode_t mode);
 
-long long crm_get_msec(const char *input);
 guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
 char *score2char(int score);
