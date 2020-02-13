@@ -512,7 +512,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
     free(xpath_string);
     free_xml(xml_search);
-    free(host_lowercase);
+    g_free(host_lowercase);
 
     if (rc != pcmk_ok) {
         crm_debug("Could not map node name '%s' to a UUID: %s",
