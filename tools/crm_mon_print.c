@@ -29,9 +29,9 @@
 
 static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
 static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
-static gboolean print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
-                                unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                                gboolean print_summary);
+static void print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
+                            unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
+                            gboolean print_summary);
 static void print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                               GListPtr op_list);
@@ -41,26 +41,26 @@ static void print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
 static gboolean add_extra_info(pcmk__output_t *out, node_t * node, GListPtr rsc_list,
                                const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
-static gboolean print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
-                                   gboolean operations, unsigned int mon_ops);
-static gboolean print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set);
-static gboolean print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
+static void print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
+                               gboolean operations, unsigned int mon_ops);
+static void print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set);
+static void print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                     unsigned int mon_ops, const char *prefix);
-static gboolean print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
-                                      unsigned int mon_ops);
+static void print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
+                                  unsigned int mon_ops);
 static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set);
 static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
                              unsigned int mon_ops);
 static gboolean print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
                                       unsigned int mon_ops, unsigned int show,
                                       mon_output_format_t fmt);
-static gboolean print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
-static gboolean print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
-                                             unsigned int mon_ops);
-static gboolean print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
-                                      unsigned int mon_ops);
-static gboolean print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
-                                      unsigned int mon_ops);
+static void print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
+static void print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
+                                         unsigned int mon_ops);
+static void print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
+                                  unsigned int mon_ops);
+static void print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
+                                  unsigned int mon_ops);
 static gboolean print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history,
                                            unsigned int mon_ops);
 
@@ -127,7 +127,7 @@ print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
  * \param[in] brief_output  Whether to display full or brief output.
  * \param[in] print_summary Whether to display a failure summary.
  */
-static gboolean
+static void
 print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                 unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
                 gboolean print_summary)
@@ -139,8 +139,11 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
      * we're not showing inactive resources, we have nothing to do
      */
     if (is_set(mon_ops, mon_op_group_by_node) && is_not_set(mon_ops, mon_op_inactive_resources)) {
-        return FALSE;
+        return;
     }
+
+    /* Add a blank line between this section and the one before it. */
+    out->info(out, "%s", "");
 
     print_resources_heading(out, mon_ops);
 
@@ -192,8 +195,6 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     out->end_list(out);
-
-    return TRUE;
 }
 
 static int
@@ -452,7 +453,7 @@ print_node_attribute(gpointer name, gpointer user_data)
  * \param[in] operations Whether to print operations or just failcounts.
  * \param[in] mon_ops    Bitmask of mon_op_*.
  */
-static gboolean
+static void
 print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                    gboolean operations, unsigned int mon_ops)
 {
@@ -461,7 +462,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
     gboolean printed_header = FALSE;
 
     if (xmlChildElementCount(cib_status) == 0) {
-        return FALSE;
+        return;
     }
 
     /* Print each node in the CIB status */
@@ -472,6 +473,9 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
         }
 
         if (printed_header == FALSE) {
+            /* Add a blank line between this section and the one before it. */
+            out->info(out, "%s", "");
+
             if (operations) {
                 out->begin_list(out, NULL, NULL, "Operations");
             } else {
@@ -487,8 +491,6 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
     if (printed_header == TRUE) {
         out->end_list(out);
     }
-
-    return TRUE;
 }
 
 /*!
@@ -498,15 +500,18 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
  * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  */
-static gboolean
+static void
 print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set)
 {
     GHashTableIter iter;
     gpointer key, value;
 
     if (g_hash_table_size(data_set->tickets) == 0) {
-        return FALSE;
+        return;
     }
+
+    /* Add a blank line between this section and the one before it. */
+    out->info(out, "%s", "");
 
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Tickets");
@@ -520,7 +525,6 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set)
 
     /* Close section */
     out->end_list(out);
-    return TRUE;
 }
 
 /*!
@@ -532,7 +536,7 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set)
  * \param[in] mon_ops  Bitmask of mon_op_*.
  * \param[in] prefix   ID prefix to filter results by.
  */
-static gboolean
+static void
 print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops,
                     const char *prefix)
 {
@@ -549,6 +553,9 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
 
             if (node->weight < 0) {
                 if (printed_header == FALSE) {
+                    /* Add a blank line between this section and the one before it. */
+                    out->info(out, "%s", "");
+
                     printed_header = TRUE;
                     out->begin_list(out, NULL, NULL, "Negative Location Constraints");
                 }
@@ -560,9 +567,6 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
 
     if (printed_header) {
         out->end_list(out);
-        return TRUE;
-    } else {
-        return FALSE;
     }
 }
 
@@ -574,7 +578,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set, unsigned in
  * \param[in] data_set Cluster state to display.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  */
-static gboolean
+static void
 print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
@@ -609,6 +613,9 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
             }
 
             if (printed_header == FALSE) {
+                /* Add a blank line between this section and the one before it. */
+                out->info(out, "%s", "");
+
                 printed_header = TRUE;
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
@@ -625,9 +632,6 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
     /* Print section footer */
     if (printed_header) {
         out->end_list(out);
-        return TRUE;
-    } else {
-        return FALSE;
     }
 }
 
@@ -761,14 +765,17 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
  * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  */
-static gboolean
+static void
 print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
 {
     xmlNode *xml_op = NULL;
 
     if (xmlChildElementCount(data_set->failed) == 0) {
-        return FALSE;
+        return;
     }
+
+    /* Add a blank line between this section and the one before it. */
+    out->info(out, "%s", "");
 
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Failed Resource Actions");
@@ -781,7 +788,6 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
 
     /* End section */
     out->end_list(out);
-    return TRUE;
 }
 
 /*!
@@ -794,7 +800,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set)
  * \param[in] history  List of stonith actions.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  */
-static gboolean
+static void
 print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
 {
     stonith_history_t *hp;
@@ -805,8 +811,11 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
         }
     }
     if (!hp) {
-        return FALSE;
+        return;
     }
+
+    /* Add a blank line between this section and the one before it. */
+    out->info(out, "%s", "");
 
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -822,8 +831,6 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
 
     /* End section */
     out->end_list(out);
-
-    return TRUE;
 }
 
 /*!
@@ -836,9 +843,11 @@ print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history, un
  * \param[in] history  List of stonith actions.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  */
-static gboolean
+static void
 print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
 {
+    gboolean printed_header = FALSE;
+
     /* xml-output always shows the full history
      * so we'll never have to show pending-actions
      * separately
@@ -848,7 +857,14 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
         stonith_history_t *hp;
 
         /* Print section heading */
-        out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
+        if (printed_header == FALSE) {
+            printed_header = TRUE;
+
+            /* Add a blank line between this section and the one before it. */
+            out->info(out, "%s", "");
+
+            out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
+        }
 
         for (hp = history; hp; hp = hp->next) {
             if ((hp->state == st_failed) || (hp->state == st_done)) {
@@ -860,12 +876,10 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
         }
 
         /* End section */
-        out->end_list(out);
-
-        return TRUE;
+        if (printed_header == TRUE) {
+            out->end_list(out);
+        }
     }
-
-    return FALSE;
 }
 
 /*!
@@ -878,29 +892,39 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history, unsigned 
  * \param[in] history  List of stonith actions.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  */
-static gboolean
+static void
 print_stonith_history(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
 {
     stonith_history_t *hp;
+    gboolean printed_header = FALSE;
 
     if (history == NULL) {
-        return FALSE;
+        return;
     }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "Fencing History");
 
     for (hp = history; hp; hp = hp->next) {
         if (hp->state != st_failed) {
+            /* Print the header the first time we have an event to print out to
+             * prevent printing headers with empty sections underneath.
+             */
+            if (printed_header == FALSE) {
+                printed_header = TRUE;
+
+                /* Add a blank line between this section and the one before it. */
+                out->info(out, "%s", "");
+
+                out->begin_list(out, NULL, NULL, "Fencing History");
+            }
+
             out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
                          stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
     }
 
-    /* End section */
-    out->end_list(out);
-    return TRUE;
+    if (printed_header == TRUE) {
+        out->end_list(out);
+    }
 }
 
 /*!
@@ -967,13 +991,13 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
 
     printed = print_cluster_summary(out, data_set, mon_ops, show, output_format);
 
-    if (printed) {
-        out->info(out, "%s", "");
-        printed = FALSE;
-    }
-
     /* Gather node information (and print if in bad state or grouping by node) */
     if (is_set(show, mon_show_nodes)) {
+        if (printed) {
+            out->info(out, "%s", "");
+            printed = FALSE;
+        }
+
         out->begin_list(out, NULL, NULL, "Node List");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
@@ -1077,83 +1101,49 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
             free(online_guest_nodes);
         }
 
-        printed = TRUE;
         out->end_list(out);
     }
 
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_resources(out, data_set, print_opts, mon_ops,
-                                  is_set(mon_ops, mon_op_print_brief), TRUE);
+        print_resources(out, data_set, print_opts, mon_ops,
+                        is_set(mon_ops, mon_op_print_brief), TRUE);
     }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_node_attributes(out, data_set, mon_ops);
+        print_node_attributes(out, data_set, mon_ops);
     }
 
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
     if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_node_summary(out, data_set,
-                                     is_set(show, mon_show_operations), mon_ops);
+        print_node_summary(out, data_set, is_set(show, mon_show_operations), mon_ops);
     }
 
     /* If there were any failed actions, print them */
     if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_failed_actions(out, data_set);
+        print_failed_actions(out, data_set);
     }
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_failed_stonith_actions(out, stonith_history, mon_ops);
+        print_failed_stonith_actions(out, stonith_history, mon_ops);
     }
 
     /* Print tickets if requested */
     if (is_set(show, mon_show_tickets)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_cluster_tickets(out, data_set);
+        print_cluster_tickets(out, data_set);
     }
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
-        printed = print_neg_locations(out, data_set, mon_ops, prefix);
+        print_neg_locations(out, data_set, mon_ops, prefix);
     }
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
-        if (printed) {
-            out->info(out, "%s", "");
-        }
-
         if (is_set(show, mon_show_fence_worked)) {
             print_stonith_history(out, stonith_history, mon_ops);
         } else if (is_set(show, mon_show_fence_pending)) {
