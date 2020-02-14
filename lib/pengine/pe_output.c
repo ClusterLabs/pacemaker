@@ -1164,7 +1164,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
-    gboolean as_header G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean as_header = va_arg(args, gboolean);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
@@ -1189,6 +1189,10 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
             xmlSetProp(node, (pcmkXmlStr) CRM_LAST_FAILURE_PREFIX,
                        (pcmkXmlStr) pcmk__epoch2str(&last_failure));
         }
+    }
+
+    if (as_header == FALSE) {
+        pcmk__output_xml_pop_parent(out);
     }
 
     return 0;
