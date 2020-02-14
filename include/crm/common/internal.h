@@ -105,7 +105,8 @@ const char *pcmk_message_name(const char *name);
 
 /* internal generic string functions (from strings.c) */
 
-guint crm_parse_ms(const char *text);
+int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
+                          guint *result);
 bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);
 gboolean crm_ends_with_ext(const char *s, const char *match);

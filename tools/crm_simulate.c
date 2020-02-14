@@ -220,12 +220,13 @@ create_action_name(pe_action_t *action)
 
     if (clone_name) {
         char *key = NULL;
-        const char *interval_ms_s = NULL;
         guint interval_ms = 0;
 
-        interval_ms_s = g_hash_table_lookup(action->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        if (pcmk__guint_from_hash(action->meta,
+                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+                                  &interval_ms) != pcmk_rc_ok) {
+            interval_ms = 0;
+        }
 
         if (safe_str_eq(action->task, RSC_NOTIFY)
             || safe_str_eq(action->task, RSC_NOTIFIED)) {

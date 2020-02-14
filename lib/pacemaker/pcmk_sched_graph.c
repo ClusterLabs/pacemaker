@@ -1067,9 +1067,13 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
         char *clone_key = NULL;
-        const char *interval_ms_s = g_hash_table_lookup(action->meta,
-                                                        XML_LRM_ATTR_INTERVAL_MS);
-        guint interval_ms = crm_parse_ms(interval_ms_s);
+        guint interval_ms;
+
+        if (pcmk__guint_from_hash(action->meta,
+                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+                                  &interval_ms) != pcmk_rc_ok) {
+            interval_ms = 0;
+        }
 
         if (safe_str_eq(action->task, RSC_NOTIFY)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");

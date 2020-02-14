@@ -137,24 +137,46 @@ crm_parse_int(const char *text, const char *default_text)
 
 /*!
  * \internal
- * \brief Parse a milliseconds value (without units) from a string
+ * \brief Parse a guint from a string stored in a hash table
  *
- * \param[in] text  String to parse
+ * \param[in]  table        Hash table to search
+ * \param[in]  key          Hash table key to use to retrieve string
+ * \param[in]  default_val  What to use if key has no entry in table
+ * \param[out] result       If not NULL, where to store parsed integer
  *
- * \return Milliseconds on success, 0 otherwise (and errno will be set)
+ * \return Standard Pacemaker return code
  */
-guint
-crm_parse_ms(const char *text)
+int
+pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
+                      guint *result)
 {
-    if (text) {
-        long long ms = crm_parse_ll(text, NULL);
+    const char *value;
+    long long value_ll;
 
-        if ((ms < 0) || (ms > G_MAXUINT)) {
-            errno = ERANGE;
+    CRM_CHECK((table != NULL) && (key != NULL), return EINVAL);
+
+    value = g_hash_table_lookup(table, key);
+    if (value == NULL) {
+        if (result != NULL) {
+            *result = default_val;
         }
-        return errno? 0 : (guint) ms;
+        return pcmk_rc_ok;
     }
-    return 0;
+
+    errno = 0;
+    value_ll = crm_parse_ll(value, NULL);
+    if (errno != 0) {
+        return errno; // Message already logged
+    }
+    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+        crm_warn("Could not parse non-negative integer from %s", value);
+        return ERANGE;
+    }
+
+    if (result != NULL) {
+        *result = (guint) value_ll;
+    }
+    return pcmk_rc_ok;
 }
 
 #ifndef NUMCHARS

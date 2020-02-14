@@ -1919,12 +1919,15 @@ extern void update_colo_start_chain(pe_action_t *action,
                                     pe_working_set_t *data_set);
 
 static int
-is_recurring_action(action_t *action) 
+is_recurring_action(action_t *action)
 {
-    const char *interval_ms_s = g_hash_table_lookup(action->meta,
-                                                    XML_LRM_ATTR_INTERVAL_MS);
-    guint interval_ms = crm_parse_ms(interval_ms_s);
+    guint interval_ms;
 
+    if (pcmk__guint_from_hash(action->meta,
+                              XML_LRM_ATTR_INTERVAL_MS, 0,
+                              &interval_ms) != pcmk_rc_ok) {
+        return 0;
+    }
     return (interval_ms > 0);
 }
 

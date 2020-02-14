@@ -1876,7 +1876,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     lrmd_event_data_t *op = NULL;
     const char *op_delay = NULL;
     const char *op_timeout = NULL;
-    const char *interval_ms_s = NULL;
     GHashTable *params = NULL;
 
     const char *transition = NULL;
@@ -1910,12 +1909,15 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     g_hash_table_remove(params, CRM_META "_op_target_rc");
 
     op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
-    op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
-    interval_ms_s = crm_meta_value(params, XML_LRM_ATTR_INTERVAL_MS);
-
-    op->interval_ms = crm_parse_ms(interval_ms_s);
-    op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
+
+    op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
+    op->timeout = crm_parse_int(op_timeout, "0");
+
+    if (pcmk__guint_from_hash(params, CRM_META "_" XML_LRM_ATTR_INTERVAL_MS, 0,
+                              &(op->interval_ms)) != pcmk_rc_ok) {
+        op->interval_ms = 0;
+    }
 
 #if ENABLE_VERSIONED_ATTRS
     // Resolve any versioned parameters
