@@ -458,28 +458,36 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
 {
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    gboolean printed_header = FALSE;
 
     if (xmlChildElementCount(cib_status) == 0) {
         return FALSE;
     }
 
-    /* Print heading */
-    if (operations) {
-        out->begin_list(out, NULL, NULL, "Operations");
-    } else {
-        out->begin_list(out, NULL, NULL, "Migration Summary");
-    }
-
     /* Print each node in the CIB status */
     for (node_state = __xml_first_child_element(cib_status); node_state != NULL;
          node_state = __xml_next_element(node_state)) {
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-            print_node_history(out, data_set, node_state, operations, mon_ops);
+        if (!crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+            continue;
         }
+
+        if (printed_header == FALSE) {
+            if (operations) {
+                out->begin_list(out, NULL, NULL, "Operations");
+            } else {
+                out->begin_list(out, NULL, NULL, "Migration Summary");
+            }
+
+            printed_header = TRUE;
+        }
+
+        print_node_history(out, data_set, node_state, operations, mon_ops);
     }
 
-    /* Close section */
-    out->end_list(out);
+    if (printed_header == TRUE) {
+        out->end_list(out);
+    }
+
     return TRUE;
 }
 
