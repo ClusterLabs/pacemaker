@@ -199,16 +199,13 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 
     const char *task = NULL;
     const char *call_id = NULL;
-    const char *interval_ms_s = NULL;
 
     CRM_CHECK(xml_op != NULL, return);
     CRM_CHECK(active_node != NULL, return);
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-
-    interval_ms = crm_parse_ms(interval_ms_s);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     crm_info("Action " CRM_OP_FMT " on %s will be stopped: %s",
              rsc->id, task, interval_ms,
@@ -225,7 +222,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 {
     char *key = NULL;
     guint interval_ms = 0;
-    const char *interval_ms_s = NULL;
     const op_digest_cache_t *digest_data = NULL;
     gboolean did_change = FALSE;
 
@@ -234,9 +230,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     CRM_CHECK(active_node != NULL, return FALSE);
 
-    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms = crm_parse_ms(interval_ms_s);
-
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if (interval_ms > 0) {
         xmlNode *op_match = NULL;
 
@@ -396,12 +390,10 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 {
     GListPtr gIter = NULL;
     int offset = -1;
-    guint interval_ms = 0;
     int stop_index = 0;
     int start_index = 0;
 
     const char *task = NULL;
-    const char *interval_ms_s = NULL;
 
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
@@ -449,6 +441,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
+        guint interval_ms = 0;
 
         offset++;
 
@@ -461,9 +454,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         }
 
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-
-        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
         if ((interval_ms > 0) &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {

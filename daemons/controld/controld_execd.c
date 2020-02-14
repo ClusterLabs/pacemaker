@@ -1617,27 +1617,29 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     int call = 0;
     const char *call_id = NULL;
     const char *op_task = NULL;
-    const char *interval_ms_s = NULL;
+    guint interval_ms = 0;
     gboolean in_progress = FALSE;
     xmlNode *params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
 
     CRM_CHECK(params != NULL, return FALSE);
-
-    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms_s = crm_element_value(params, meta_key);
-    free(meta_key);
-    CRM_CHECK(interval_ms_s != NULL, return FALSE);
 
     meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
     op_task = crm_element_value(params, meta_key);
     free(meta_key);
     CRM_CHECK(op_task != NULL, return FALSE);
 
+    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    if (crm_element_value_ms(params, meta_key, &interval_ms) != pcmk_ok) {
+        free(meta_key);
+        return FALSE;
+    }
+    free(meta_key);
+
+    op_key = pcmk__op_key(rsc->id, op_task, interval_ms);
+
     meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
-
-    op_key = pcmk__op_key(rsc->id, op_task, crm_parse_ms(interval_ms_s));
 
     crm_debug("Scheduler requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));

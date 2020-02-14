@@ -616,7 +616,6 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *rsc = NULL;
     const char *uname = NULL;
     const char *op = NULL;
-    const char *interval_ms_s = NULL;
     char *interval_spec = NULL;
     guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
@@ -632,9 +631,9 @@ handle_failcount_op(xmlNode * stored_msg)
         if (xml_attrs) {
             op = crm_element_value(xml_attrs,
                                    CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
-            interval_ms_s = crm_element_value(xml_attrs,
-                                              CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
-            interval_ms = crm_parse_ms(interval_ms_s);
+            crm_element_value_ms(xml_attrs,
+                                 CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL,
+                                 &interval_ms);
         }
     }
     uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);

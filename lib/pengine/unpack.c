@@ -2086,7 +2086,6 @@ process_recurring(node_t * node, resource_t * rsc,
         guint interval_ms = 0;
         char *key = NULL;
         const char *id = ID(rsc_op);
-        const char *interval_ms_s = NULL;
 
         counter++;
 
@@ -2104,8 +2103,7 @@ process_recurring(node_t * node, resource_t * rsc,
             continue;
         }
 
-        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         if (interval_ms == 0) {
             pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
             continue;
