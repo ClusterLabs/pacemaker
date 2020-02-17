@@ -258,16 +258,20 @@ void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
         qb_ipcs_service_t *ipcs_rw,
         qb_ipcs_service_t *ipcs_shm);
 
-static inline void *realloc_safe(void *ptr, size_t size)
+static inline void *
+realloc_safe(void *ptr, size_t size)
 {
-    void *ret = realloc(ptr, size);
+    void *new_ptr;
 
-    if (ret == NULL) {
-        free(ptr); /* make coverity happy */
+    // realloc(p, 0) can replace free(p) but this wrapper can't
+    CRM_ASSERT(size > 0);
+
+    new_ptr = realloc(ptr, size);
+    if (new_ptr == NULL) {
+        free(ptr);
         abort();
     }
-
-    return ret;
+    return new_ptr;
 }
 
 const char *crm_xml_add_last_written(xmlNode *xml_node);
