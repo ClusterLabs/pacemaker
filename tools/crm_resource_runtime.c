@@ -1489,9 +1489,6 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
         g_list_free_full(target_active, free);
     }
     target_active = restart_target_active;
-    if (list_delta) {
-        g_list_free(list_delta);
-    }
     list_delta = subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
