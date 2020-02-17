@@ -56,15 +56,25 @@ xmlNode *get_message_xml(xmlNode * msg, const char *field);
 xmlDoc *getDocPtr(xmlNode * node);
 
 /*
- * Replacement function for xmlCopyPropList which at the very least,
- * doesn't work the way *I* would expect it to.
+ * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
- * Copy all the attributes/properties from src into target.
+ * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
+ * The function exits prematurely when any attribute cannot be copied for
+ * ACLs violation.  Even without bailing out, the result can possibly be
+ * incosistent with expectations in that case, hence the caller shall,
+ * aposteriori, verify that no document-level-tracked denial was indicated
+ * with \c{xml_acl_denied(target)} and drop whole such intermediate object.
  *
- * Not recursive, does not return anything.
+ * \param[in,out] target  Element to receive attributes from #src element
+ * \param[in]     src     Element carrying attributes to copy over to #target
  *
+ * \note Original commit 1c632c506 sadly haven't stated which otherwise
+ *       assumed behaviours of xmlCopyPropList were missing beyond otherwise
+ *       custom extensions like said ACLs and "atomic increment" (that landed
+ *       later on, anyway).
  */
-void copy_in_properties(xmlNode * target, xmlNode * src);
+void copy_in_properties(xmlNode *target, xmlNode *src);
+
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
@@ -332,6 +342,50 @@ xmlNode *xml_create_patchset(
 int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
+
+/* exclusive (should any combination make sense -> explicitly enumerated),
+   with intentional symbolic constant duality (easier to adapt to growth) */
+enum pcmk_acl_cred_type {
+#define PCMK_ACL_CRED_UNSET PCMK_ACL_CRED_UNSET
+    PCMK_ACL_CRED_UNSET = 0,
+#define PCMK_ACL_CRED_USER PCMK_ACL_CRED_USER
+    PCMK_ACL_CRED_USER,
+    /* XXX no proper support for groups yet */
+};
+
+/* need to be ORable */
+enum pcmk_acl_verdict {
+    PCMK_ACL_VERDICT_WRITABLE = 1 << 0,
+    PCMK_ACL_VERDICT_READABLE = 1 << 1,
+    PCMK_ACL_VERDICT_DENIED   = 1 << 2,
+};
+
+/*!
+ * \brief Mark CIB with namespace-encoded result of ACLs eval'd per credential
+ *
+ * \param[in] cred_type        credential type that \p cred represents
+ * \param[in] cred             credential whose ACL perspective to switch to
+ * \param[in] cib_doc          XML document representing CIB
+ * \param[out] acl_evaled_doc  XML document representing CIB, with said
+ *                             namespace-based annotations throughout
+ *
+ * \return  0 if ACLs were not applicable, >0 if it was and all went fine
+ *          (this is the only case when it's safe to touch \p acl_evaled_doc
+ *          afterwards, the result is #PCMK_ACL_VERDICT_WRITABLE,
+ *          #PCMK_ACL_VERDICT_READABLE and #PCMK_ACL_VERDICT_DENIED bits
+ *          ORed respectively), -2 on run-time unrecognized \p cred_type,
+ *          -3 on unsupported validation schema version (see below),
+ *          or -1 on any other/generic issue
+ *
+ * \note Only supported schemas are those following acls-2.0.rng, that is,
+ *       those validated with pacemaker-2.0.rng and newer (artificially caped
+ *       at 4.0, not including it (the future cannot be predicted,
+ *       compatibility needs to be confirmed, then, hopefully leading to
+ *       this comment being updated).
+ */
+int pcmk_acl_evaled_as_namespaces(enum pcmk_acl_cred_type cred_type,
+                                  const char *cred, xmlDoc *cib_doc,
+                                  xmlDoc **acl_evaled_doc);
 
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);

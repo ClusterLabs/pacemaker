@@ -36,13 +36,18 @@ enum xml_private_flags {
      xpf_lazy        = 0x4000,
 };
 
-typedef struct xml_private_s {
+typedef struct xml_node_private_s {
+        long check;
+        uint32_t flags;
+} xml_node_private_t;
+
+typedef struct xml_doc_private_s {
         long check;
         uint32_t flags;
         char *user;
         GListPtr acls;
         GListPtr deleted_objs;
-} xml_private_t;
+} xml_doc_private_t;
 
 G_GNUC_INTERNAL
 void pcmk__set_xml_flag(xmlNode *xml, enum xml_private_flags flag);
@@ -85,5 +90,23 @@ pcmk__xml_attr_value(const xmlAttr *attr)
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
 }
+
+/*!
+ * \internal
+ * \brief Derive full path to where the pacemaker's user config is expected
+ *
+ * Priorities:
+ * - $XDG_CONFIG_HOME/pacemaker if $XDG_CONFIG_HOME defined
+ * - $HOME/.config/pacemaker if $HOME defined
+ * - /home/$(id -nu)/.config/pacemaker otherwise
+ *
+ * See also:
+ * https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ *
+ * \param[in] basename  final path segment for the configuration file
+ *                      in question
+ * \return full path (dynamically allocated!) or \c NULL in case of error
+ */
+char *pcmk__user_config(const char *basename);
 
 #endif  // CRMCOMMON_PRIVATE__H

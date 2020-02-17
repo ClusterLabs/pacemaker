@@ -6,6 +6,7 @@ GRTAGS
 GTAGS
 TAGS
 Makefile
+!/doc/design/Makefile
 Makefile.in
 .deps
 .dirstamp
@@ -164,7 +165,8 @@ scratch
 /tools/iso8601
 /tools/stonith_admin
 xml/crm.dtd
-xml/pacemaker*.rng
+pacemaker*.rng
+!/xml/pacemaker-access-*.rng
 xml/versions.rng
 xml/api/api-result*.rng
 lib/gnu/libgnu.a

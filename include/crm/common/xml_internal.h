@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 the Pacemaker project contributors
+ * Copyright 2017-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,20 @@
 #  include <string.h>
 
 #  include <crm/crm.h>  /* transitively imports qblog.h */
+
+/*!
+ * \internal
+ * \brief Dummy marker to indicate the "calls itself directly".
+ *
+ * \note Having such a marker consistently used for what's inherently
+ *       a tree algoritm (and commonly, in-depth XML processing is of
+ *       this kind) is indispensable for a general reasoning in the
+ *       context of the tree (is this function meant to only be applied
+ *       to root/leave/complement of those two? etc.).
+ *
+ * \note Currently only applied in \c{acl.c}.
+ */
+#define PCMK__XML_DIRECTLY_RECURSIVE
 
 
 /*!
@@ -133,6 +147,15 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
+/*!
+ * \internal
+ * \brief Serialize XML (using libxml) into provided descriptor
+ *
+ * \param[in] fd  File descriptor to (piece-wise) write to
+ * \param[in] cur XML subtree to proceed
+ */
+void pcmk__xml_serialize_fd_formatted(int fd, xmlNode *cur);
+
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
     pcmk__xml_artefact_ns_legacy_xslt,
@@ -162,5 +185,38 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
  */
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
+
+enum pcmk__acl_render_how {
+    pcmk__acl_render_ns_simple = 1,
+    pcmk__acl_render_text,
+    pcmk__acl_render_color,
+};
+
+/*!
+ * \internal
+ * \brief Serialize-render already pcmk_acl_evaled_as_namespaces annotated XML
+ *
+ * This function is vitally coupled with externalized material:
+ * - access-render-2.xsl
+ * - access-render.cfg.xsl (referred to from the former in an abstracted way)
+ *
+ * In fact, it's just a wrapper for a graceful conducting of such
+ * transformation, in particular, it cares about converting values of some
+ * configuration parameters directly in said stylesheet(s) since the desired
+ * ANSI colors at the output are not expressible directly (alternative approach
+ * to this preprocessing: eventual postprocessing, which is less handy here).
+ *
+ * \param[in] annotated_doc pcmk_acl_evaled_as_namespaces annotated XML
+ * \param[in] how           render kind, see #pcmk__acl_render_how enumeration
+ * \param[out] doc_txt_ptr  where to put the final outcome string
+ * \param[out] doc_txt_len  length of the output string \p doc_txt_ptr
+ * \return 0 or -1, see \c xsltSaveResultToString
+ *
+ * \note Currently, the function did not receive enough of testing regarding
+ *       leak of resources, hence it is not recommended for anything other
+ *       than short-lived processes at this time.
+ */
+int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
+                            xmlChar **doc_txt_ptr, int *doc_txt_len);
 
 #endif

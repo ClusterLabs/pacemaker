@@ -55,6 +55,8 @@ before_script:
 
 script: 
 # Create directories needed by commands used by regression tests
+# XXX stop filtering out pacemaker-access-* when libxml2 fixed in the wild:
+#     https://gitlab.gnome.org/GNOME/libxml2/merge_requests/31
 - sudo make install-exec-local || true
 - make
 - ./cts/cts-regression -V cli scheduler exec
@@ -67,7 +69,8 @@ script:
       cd xml;
       ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
         schemas=; for schema in *.rng; do
-          case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
+          case ${schema} in *cibtr*|pacemaker-access-*);;
+                            *)schemas="${schemas} ${schema}";; esac;
         done;
         test -s .relaxng.org/relaxng.rng 2>/dev/null
           || curl --create-dirs -SsLo .relaxng.org/relaxng.rng

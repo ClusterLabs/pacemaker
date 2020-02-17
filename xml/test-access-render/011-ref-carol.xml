@@ -1,0 +1,162 @@
+<pcmk-access-readable:cib
+  xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable"
+  xmlns:pcmk-access-writable="http://clusterlabs.org/ns/pacemaker/access/writable"
+  pcmk-access-readable:crm_feature_set="3.0.14" pcmk-access-readable:validate-with="pacemaker-3.0" pcmk-access-readable:epoch="6815" pcmk-access-readable:num_updates="15" pcmk-access-readable:admin_epoch="2" pcmk-access-readable:cib-last-written="Thu Jun  6 15:41:29 2019" pcmk-access-readable:update-origin="ha-idg-2" pcmk-access-readable:update-client="crm_attribute" pcmk-access-readable:update-user="root" pcmk-access-readable:have-quorum="1" pcmk-access-readable:dc-uuid="1084777482" pcmk-access-readable:execution-date="1559829405">
+  <pcmk-access-readable:configuration>
+    <pcmk-access-readable:crm_config>
+      <pcmk-access-readable:cluster_property_set pcmk-access-readable:id="cib-bootstrap-options">
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="have-watchdog" pcmk-access-readable:value="false" pcmk-access-readable:id="cib-bootstrap-options-have-watchdog"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="dc-version" pcmk-access-readable:value="1.1.19+20181105.ccd6b5b10-3.3.1-1.1.19+20181105.ccd6b5b10" pcmk-access-readable:id="cib-bootstrap-options-dc-version"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="cluster-infrastructure" pcmk-access-readable:value="corosync" pcmk-access-readable:id="cib-bootstrap-options-cluster-infrastructure"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="last-lrm-refresh" pcmk-access-readable:value="1559146053" pcmk-access-readable:id="cib-bootstrap-options-last-lrm-refresh"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="cluster-name" pcmk-access-readable:value="ha-idg" pcmk-access-readable:id="cib-bootstrap-options-cluster-name"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="no-quorum-policy" pcmk-access-readable:value="ignore" pcmk-access-readable:id="cib-bootstrap-options-no-quorum-policy"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="stonith-enabled" pcmk-access-readable:value="true" pcmk-access-readable:id="cib-bootstrap-options-stonith-enabled"/>
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="stonith-action" pcmk-access-readable:value="Off" pcmk-access-readable:id="cib-bootstrap-options-stonith-action"/>
+      </pcmk-access-readable:cluster_property_set>
+    </pcmk-access-readable:crm_config>
+    <pcmk-access-readable:nodes>
+      <pcmk-access-readable:node pcmk-access-readable:id="1084777492" pcmk-access-readable:uname="ha-idg-2">
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="nodes-1084777492">
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777492-maintenance" pcmk-access-readable:name="maintenance" pcmk-access-readable:value="off"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777492-standby" pcmk-access-readable:name="standby" pcmk-access-readable:value="on"/>
+        </pcmk-access-readable:instance_attributes>
+      </pcmk-access-readable:node>
+      <pcmk-access-readable:node pcmk-access-readable:id="1084777482" pcmk-access-readable:uname="ha-idg-1">
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="nodes-1084777482">
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777482-maintenance" pcmk-access-readable:name="maintenance" pcmk-access-readable:value="off"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:id="nodes-1084777482-standby" pcmk-access-readable:name="standby" pcmk-access-readable:value="off"/>
+        </pcmk-access-readable:instance_attributes>
+      </pcmk-access-readable:node>
+    </pcmk-access-readable:nodes>
+    <pcmk-access-readable:acls>
+      <pcmk-access-readable:acl_role pcmk-access-readable:id="read_all">
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="read_all-cib" pcmk-access-readable:kind="read" pcmk-access-readable:xpath="/cib"/>
+      </pcmk-access-readable:acl_role>
+      <pcmk-access-readable:acl_role pcmk-access-readable:id="operator">
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="operator-maintenance" pcmk-access-readable:kind="write" pcmk-access-readable:xpath="//crm_config//nvpair[@name='maintenance-mode']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="operator-target-role" pcmk-access-readable:kind="write" pcmk-access-readable:xpath="//crm_config//nvpair[@name='target-role']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="operator-is-managed" pcmk-access-readable:kind="write" pcmk-access-readable:xpath="//resources//nvpair[@name='is-managed']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="operator-rsc_location" pcmk-access-readable:kind="write" pcmk-access-readable:object-type="rsc_location"/>
+      </pcmk-access-readable:acl_role>
+      <pcmk-access-readable:acl_role pcmk-access-readable:id="administrator">
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="administrator-cib" pcmk-access-readable:kind="write" pcmk-access-readable:xpath="/cib"/>
+      </pcmk-access-readable:acl_role>
+      <pcmk-access-readable:acl_role pcmk-access-readable:id="minimal">
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-standby" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading standby node attribute (permanent or transient)" pcmk-access-readable:xpath="//instance_attributes/nvpair[@name='standby']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-maintenance" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading maintenance node attribute (permanent or transient)" pcmk-access-readable:xpath="//instance_attributes/nvpair[@name='maintenance']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-target-role" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading resource target roles" pcmk-access-readable:xpath="//meta_attributes/nvpair[@name='target-role']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-is-managed" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading resource managed status" pcmk-access-readable:xpath="//meta_attributes/nvpair[@name='is-managed']"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-instance-attributes" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="//instance_attributes"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-meta-attributes" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="//meta_attributes"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-operations" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="//operations"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-utilization" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="//utilization"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-nodes" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading node names/IDs (attributes are denied separately)" pcmk-access-readable:xpath="/cib/configuration/nodes"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-resources" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading resource names/agents (parameters are denied separately)" pcmk-access-readable:xpath="/cib/configuration/resources"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-constraints" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/constraints"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-topology" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/fencing-topology"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-op_defaults" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/op_defaults"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-rsc_defaults" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/rsc_defaults"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-alerts" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/alerts"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-deny-acls" pcmk-access-readable:kind="deny" pcmk-access-readable:xpath="/cib/configuration/acls"/>
+        <pcmk-access-readable:acl_permission pcmk-access-readable:id="minimal-cib" pcmk-access-readable:kind="read" pcmk-access-readable:description="allow reading cib element and crm_config/status sections" pcmk-access-readable:xpath="/cib"/>
+      </pcmk-access-readable:acl_role>
+      <pcmk-access-readable:acl_target pcmk-access-readable:id="alice">
+        <pcmk-access-readable:role pcmk-access-readable:id="minimal"/>
+      </pcmk-access-readable:acl_target>
+      <pcmk-access-readable:acl_target pcmk-access-readable:id="bob">
+        <pcmk-access-readable:role pcmk-access-readable:id="read_all"/>
+      </pcmk-access-readable:acl_target>
+      <pcmk-access-readable:acl_target pcmk-access-readable:id="carol">
+        <pcmk-access-readable:role pcmk-access-readable:id="read_all"/>
+        <pcmk-access-readable:role pcmk-access-readable:id="operator"/>
+      </pcmk-access-readable:acl_target>
+      <pcmk-access-readable:acl_target pcmk-access-readable:id="dave">
+        <pcmk-access-readable:role pcmk-access-readable:id="administrator"/>
+      </pcmk-access-readable:acl_target>
+    </pcmk-access-readable:acls>
+    <pcmk-access-readable:resources>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="fence_ilo_ha-idg-2" pcmk-access-readable:class="stonith" pcmk-access-readable:type="fence_ilo2" pcmk-access-readable:description="fenct ha-idg-2 mit ILO">
+        <pcmk-access-readable:operations>
+          <pcmk-access-readable:op pcmk-access-readable:name="monitor" pcmk-access-readable:interval="30m" pcmk-access-readable:timeout="120s" pcmk-access-readable:id="fence_ha-idg-2-monitor-30m"/>
+        </pcmk-access-readable:operations>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="fence_ilo_ha-idg-1" pcmk-access-readable:class="stonith" pcmk-access-readable:type="fence_ilo4" pcmk-access-readable:description="fenct ha-idg-1 mit ILO">
+        <pcmk-access-readable:operations>
+          <pcmk-access-readable:op pcmk-access-readable:name="monitor" pcmk-access-readable:interval="30m" pcmk-access-readable:timeout="120s" pcmk-access-readable:id="fence_ha-idg-1-monitor-30m"/>
+        </pcmk-access-readable:operations>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="vm_idcc_devel" pcmk-access-readable:class="ocf" pcmk-access-readable:provider="heartbeat" pcmk-access-readable:type="VirtualDomain">
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_idcc-devel-instance_attributes">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="config" pcmk-access-readable:value="/mnt/share/idcc_devel.xml" pcmk-access-readable:id="vm_idcc-devel-instance_attributes-config"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_idcc-devel-instance_attributes-0">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="hypervisor" pcmk-access-readable:value="qemu:///system" pcmk-access-readable:id="vm_idcc-devel-instance_attributes-0-hypervisor"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_idcc-devel-instance_attributes-1">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="migration_transport" pcmk-access-readable:value="ssh" pcmk-access-readable:id="vm_idcc-devel-instance_attributes-1-migration_transport"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_idcc-devel-instance_attributes-2">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="migration_network_suffix" pcmk-access-readable:value="-private" pcmk-access-readable:id="vm_idcc-devel-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:operations>
+          <pcmk-access-readable:op pcmk-access-readable:name="start" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="120" pcmk-access-readable:id="vm_idcc-devel-start-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="stop" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="130" pcmk-access-readable:id="vm_idcc-devel-stop-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="monitor" pcmk-access-readable:interval="30" pcmk-access-readable:timeout="25" pcmk-access-readable:id="vm_idcc-devel-monitor-30"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="migrate_from" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="300" pcmk-access-readable:id="vm_idcc-devel-migrate_from-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="migrate_to" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="300" pcmk-access-readable:id="vm_idcc-devel-migrate_to-0"/>
+        </pcmk-access-readable:operations>
+        <pcmk-access-readable:meta_attributes pcmk-access-readable:id="vm_idcc-devel-meta_attributes">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="allow-migrate" pcmk-access-readable:value="true" pcmk-access-readable:id="vm_idcc-devel-meta_attributes-allow-migrate"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="target-role" pcmk-access-readable:value="Started" pcmk-access-readable:id="vm_idcc-devel-meta_attributes-target-role"/>
+          <pcmk-access-writable:nvpair pcmk-access-writable:name="is-managed" pcmk-access-writable:value="true" pcmk-access-writable:id="vm_idcc-devel-meta_attributes-is-managed"/>
+        </pcmk-access-readable:meta_attributes>
+        <pcmk-access-readable:utilization pcmk-access-readable:id="vm_idcc-devel-utilization">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="cpu" pcmk-access-readable:value="1" pcmk-access-readable:id="vm_idcc-devel-utilization-cpu"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="hv_memory" pcmk-access-readable:value="1020" pcmk-access-readable:id="vm_idcc-devel-utilization-hv_memory"/>
+        </pcmk-access-readable:utilization>
+      </pcmk-access-readable:primitive>
+      <pcmk-access-readable:primitive pcmk-access-readable:id="vm_severin" pcmk-access-readable:class="ocf" pcmk-access-readable:provider="heartbeat" pcmk-access-readable:type="VirtualDomain">
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_severin-instance_attributes">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="config" pcmk-access-readable:value="/mnt/share/severin.xml" pcmk-access-readable:id="vm_severin-instance_attributes-config"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_severin-instance_attributes-0">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="hypervisor" pcmk-access-readable:value="qemu:///system" pcmk-access-readable:id="vm_severin-instance_attributes-0-hypervisor"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_severin-instance_attributes-1">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="migration_transport" pcmk-access-readable:value="ssh" pcmk-access-readable:id="vm_severin-instance_attributes-1-migration_transport"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:instance_attributes pcmk-access-readable:id="vm_severin-instance_attributes-2">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="migration_network_suffix" pcmk-access-readable:value="-private" pcmk-access-readable:id="vm_severin-instance_attributes-2-migration_network_suffix"/>
+        </pcmk-access-readable:instance_attributes>
+        <pcmk-access-readable:operations>
+          <pcmk-access-readable:op pcmk-access-readable:name="start" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="120" pcmk-access-readable:id="vm_severin-start-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="stop" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="130" pcmk-access-readable:id="vm_severin-stop-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="monitor" pcmk-access-readable:interval="30" pcmk-access-readable:timeout="25" pcmk-access-readable:id="vm_severin-monitor-30"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="migrate_from" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="300" pcmk-access-readable:id="vm_severin-migrate_from-0"/>
+          <pcmk-access-readable:op pcmk-access-readable:name="migrate_to" pcmk-access-readable:interval="0" pcmk-access-readable:timeout="300" pcmk-access-readable:id="vm_severin-migrate_to-0"/>
+        </pcmk-access-readable:operations>
+        <pcmk-access-readable:meta_attributes pcmk-access-readable:id="vm_severin-meta_attributes">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="allow-migrate" pcmk-access-readable:value="true" pcmk-access-readable:id="vm_severin-meta_attributes-allow-migrate"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="target-role" pcmk-access-readable:value="Started" pcmk-access-readable:id="vm_severin-meta_attributes-target-role"/>
+          <pcmk-access-writable:nvpair pcmk-access-writable:name="is-managed" pcmk-access-writable:value="true" pcmk-access-writable:id="vm_severin-meta_attributes-is-managed"/>
+        </pcmk-access-readable:meta_attributes>
+        <pcmk-access-readable:utilization pcmk-access-readable:id="vm_severin-utilization">
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="cpu" pcmk-access-readable:value="2" pcmk-access-readable:id="vm_severin-utilization-cpu"/>
+          <pcmk-access-readable:nvpair pcmk-access-readable:name="hv_memory" pcmk-access-readable:value="2176" pcmk-access-readable:id="vm_severin-utilization-hv_memory"/>
+        </pcmk-access-readable:utilization>
+      </pcmk-access-readable:primitive>
+    </pcmk-access-readable:resources>
+    <pcmk-access-readable:constraints>
+      <pcmk-access-writable:rsc_location pcmk-access-writable:id="loc_fence_ilo_ha-idg-2" pcmk-access-writable:rsc="fence_ilo_ha-idg-2" pcmk-access-writable:score="-INFINITY" pcmk-access-writable:node="ha-idg-2"/>
+      <pcmk-access-writable:rsc_location pcmk-access-writable:id="loc_fence_ilo_ha-idg-1" pcmk-access-writable:rsc="fence_ilo_ha-idg-1" pcmk-access-writable:score="-INFINITY" pcmk-access-writable:node="ha-idg-1"/>
+    </pcmk-access-readable:constraints>
+    <pcmk-access-readable:rsc_defaults>
+      <pcmk-access-readable:meta_attributes pcmk-access-readable:id="rsc-options">
+        <pcmk-access-readable:nvpair pcmk-access-readable:name="resource-stickiness" pcmk-access-readable:value="200" pcmk-access-readable:id="rsc-options-resource-stickiness"/>
+      </pcmk-access-readable:meta_attributes>
+    </pcmk-access-readable:rsc_defaults>
+    <pcmk-access-readable:alerts/>
+  </pcmk-access-readable:configuration>
+  <pcmk-access-readable:status/>
+</pcmk-access-readable:cib>

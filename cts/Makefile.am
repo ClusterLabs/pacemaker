@@ -67,7 +67,8 @@ dist_cli_DATA	= cli/crm_diff_new.xml		\
 		  cli/regression.rules.exp	\
 		  cli/regression.tools.exp	\
 		  cli/regression.upgrade.exp	\
-		  cli/regression.validity.exp
+		  cli/regression.validity.exp	\
+		  cli/regression.access_render.exp
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler
