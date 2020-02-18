@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 ocfdir			= @OCF_RA_DIR@/pacemaker
 dist_ocf_SCRIPTS	= attribute	\

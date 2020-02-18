@@ -6,7 +6,9 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
+
+SUBDIRS = tests
 
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
