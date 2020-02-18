@@ -195,6 +195,11 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /xml/assets/diffview.js
 /xml/assets/xmlcatalog
 
+# Test results
+*.log
+*.trs
+/lib/pengine/tests/rules/pe_cron_range_satisfied
+
 # Release maintenance detritus
 /maint/gnulib
 

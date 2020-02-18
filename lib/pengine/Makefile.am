@@ -8,6 +8,8 @@
 #
 include $(top_srcdir)/mk/common.mk
 
+SUBDIRS = tests
+
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 
