@@ -6,7 +6,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-No rule found with ID=blahblah containing a date_expression
+No rule found with ID=blahblah
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule that doesn't exist =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
@@ -38,7 +38,7 @@ Error checking rule: No such device or address
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-No rule found with ID=no-date-expression containing a date_expression
+No rule found with ID=no-date-expression
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule that has no date_expression =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">

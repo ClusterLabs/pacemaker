@@ -95,21 +95,52 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
-    /* Get all rules matching the given ID, which also have only a single date_expression
-     * child whose operation is not 'date_spec'.  This is fairly limited, but it's hard
-     * to check expressions more complicated than that.
+    /* Get all rules matching the given ID which are also simple enough for us to check.
+     * For the moment, these rules must only have a single date_expression child and:
+     * - Do not have a date_spec operation
+     *
+     * We do this in steps to provide better error messages.  First, check that there's
+     * any rule with the given ID.
      */
-    xpath = crm_strdup_printf("//rule[@id='%s']/date_expression[@operation!='date_spec']", rule_id);
+    xpath = crm_strdup_printf("//rule[@id='%s']", rule_id);
     xpathObj = xpath_search(cib_constraints, xpath);
-
     max = numXpathResults(xpathObj);
+
     if (max == 0) {
-        CMD_ERR("No rule found with ID=%s containing a date_expression", rule_id);
+        CMD_ERR("No rule found with ID=%s", rule_id);
         rc = -ENXIO;
         goto bail;
     } else if (max > 1) {
-        CMD_ERR("More than one date_expression in %s is not supported", rule_id);
+        CMD_ERR("More than one rule with ID=%s found", rule_id);
+        rc = -ENXIO;
+        goto bail;
+    }
+
+    free(xpath);
+    freeXpathObject(xpathObj);
+
+    /* Next, make sure it has exactly one date_expression. */
+    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression", rule_id);
+    xpathObj = xpath_search(cib_constraints, xpath);
+    max = numXpathResults(xpathObj);
+
+    if (max != 1) {
+        CMD_ERR("Can't check rule %s because it has more than one date_expression", rule_id);
         rc = -EOPNOTSUPP;
+        goto bail;
+    }
+
+    free(xpath);
+    freeXpathObject(xpathObj);
+
+    /* Then, check that it's something we actually support. */
+    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression[@operation!='date_spec']", rule_id);
+    xpathObj = xpath_search(cib_constraints, xpath);
+    max = numXpathResults(xpathObj);
+
+    if (max == 0) {
+        CMD_ERR("Rule must not use date_spec");
+        rc = -ENXIO;
         goto bail;
     }
 
