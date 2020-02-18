@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 

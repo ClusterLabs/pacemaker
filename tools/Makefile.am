@@ -6,7 +6,7 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
@@ -58,7 +58,7 @@ endif
 
 # A few tools are just thin wrappers around crm_attribute.
 # This makes their help get updated when crm_attribute changes
-# (see Makefile.common).
+# (see mk/common.mk).
 MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c

@@ -7,7 +7,7 @@
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 halibdir		= $(CRM_DAEMON_DIR)
 
