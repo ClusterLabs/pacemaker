@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2019 the Pacemaker project contributors
+# Copyright 2012-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,7 +26,7 @@ pacemaker_execd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_execd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 				  $(top_builddir)/lib/services/libcrmservice.la	\
-				  $(top_builddir)/lib/fencing/libstonithd.la ${COMPAT_LIBS}
+				  $(top_builddir)/lib/fencing/libstonithd.la
 pacemaker_execd_SOURCES		= pacemaker-execd.c execd_commands.c \
 				  execd_alerts.c
 
