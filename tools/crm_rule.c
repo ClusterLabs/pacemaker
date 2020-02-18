@@ -97,7 +97,8 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
 
     /* Get all rules matching the given ID which are also simple enough for us to check.
      * For the moment, these rules must only have a single date_expression child and:
-     * - Do not have a date_spec operation
+     * - Do not have a date_spec operation, or
+     * - Have a date_spec operation that contains years= but does not contain moon=.
      *
      * We do this in steps to provide better error messages.  First, check that there's
      * any rule with the given ID.
@@ -139,9 +140,19 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     max = numXpathResults(xpathObj);
 
     if (max == 0) {
-        CMD_ERR("Rule must not use date_spec");
-        rc = -ENXIO;
-        goto bail;
+        free(xpath);
+        freeXpathObject(xpathObj);
+
+        xpath = crm_strdup_printf("//rule[@id='%s']//date_expression[@operation='date_spec' and date_spec/@years and not(date_spec/@moon)]",
+                                  rule_id);
+        xpathObj = xpath_search(cib_constraints, xpath);
+        max = numXpathResults(xpathObj);
+
+        if (max == 0) {
+            CMD_ERR("Rule either must not use date_spec, or use date_spec with years= but not moon=");
+            rc = -ENXIO;
+            goto bail;
+        }
     }
 
     match = getXpathResult(xpathObj, 0);
@@ -157,12 +168,18 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     if (result == pe_date_within_range) {
         printf("Rule %s is still in effect\n", rule_id);
         rc = 0;
+    } else if (result == pe_date_op_satisfied) {
+        printf("Rule %s satisfies conditions\n", rule_id);
+        rc = 0;
     } else if (result == pe_date_after_range) {
         printf("Rule %s is expired\n", rule_id);
         rc = 1;
     } else if (result == pe_date_before_range) {
         printf("Rule %s has not yet taken effect\n", rule_id);
         rc = 2;
+    } else if (result == pe_date_op_unsatisfied) {
+        printf("Rule %s does not satisfy conditions\n", rule_id);
+        rc = 4;
     } else {
         printf("Could not determine whether rule %s is expired\n", rule_id);
         rc = 3;
@@ -324,6 +341,8 @@ main(int argc, char **argv)
                 exit_code = CRM_EX_NOT_YET_IN_EFFECT;
             } else if (rc == 3) {
                 exit_code = CRM_EX_INDETERMINATE;
+            } else if (rc == 4) {
+                exit_code = CRM_EX_UNSATISFIED;
             } else {
                 exit_code = rc;
             }
