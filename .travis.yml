@@ -62,6 +62,7 @@ script:
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files
+        | grep -v tap-driver.sh
         | xargs grep -Ensv "^([^[:cntrl:]]*|$(printf '\t'))*$"||:; } 2>/dev/null
         | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
     } && (
