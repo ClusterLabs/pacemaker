@@ -64,9 +64,10 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         action->timeout += crm_parse_int(value, NULL);
     }
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_interval");
-    if (value != NULL) {
-        action->interval_ms = crm_parse_ms(value);
+    if (pcmk__guint_from_hash(action->params,
+                              CRM_META "_" XML_LRM_ATTR_INTERVAL, 0,
+                              &(action->interval_ms)) != pcmk_rc_ok) {
+        action->interval_ms = 0;
     }
 
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");

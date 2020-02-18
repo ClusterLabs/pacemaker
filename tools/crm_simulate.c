@@ -126,22 +126,25 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
         } else if (node->details->online) {
             if (pe__is_guest_node(node)) {
-                online_guest_nodes = add_list_element(online_guest_nodes, node_name);
+                online_guest_nodes = pcmk__add_word(online_guest_nodes,
+                                                    node_name);
             } else if (pe__is_remote_node(node)) {
-                online_remote_nodes = add_list_element(online_remote_nodes, node_name);
+                online_remote_nodes = pcmk__add_word(online_remote_nodes,
+                                                     node_name);
             } else {
-                online_nodes = add_list_element(online_nodes, node_name);
+                online_nodes = pcmk__add_word(online_nodes, node_name);
             }
             free(node_name);
             continue;
 
         } else {
             if (pe__is_remote_node(node)) {
-                offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
+                offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
+                                                      node_name);
             } else if (pe__is_guest_node(node)) {
                 /* ignore offline container nodes */
             } else {
-                offline_nodes = add_list_element(offline_nodes, node_name);
+                offline_nodes = pcmk__add_word(offline_nodes, node_name);
             }
             free(node_name);
             continue;
@@ -220,12 +223,13 @@ create_action_name(pe_action_t *action)
 
     if (clone_name) {
         char *key = NULL;
-        const char *interval_ms_s = NULL;
         guint interval_ms = 0;
 
-        interval_ms_s = g_hash_table_lookup(action->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        if (pcmk__guint_from_hash(action->meta,
+                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+                                  &interval_ms) != pcmk_rc_ok) {
+            interval_ms = 0;
+        }
 
         if (safe_str_eq(action->task, RSC_NOTIFY)
             || safe_str_eq(action->task, RSC_NOTIFIED)) {
@@ -568,7 +572,8 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
                 free(namelist[file_num]);
                 continue;
 
-            } else if (!crm_ends_with_ext(namelist[file_num]->d_name, ".xml")) {
+            } else if (!pcmk__ends_with_ext(namelist[file_num]->d_name,
+                                            ".xml")) {
                 free(namelist[file_num]);
                 continue;
             }
@@ -782,7 +787,7 @@ main(int argc, char **argv)
 
     if (test_dir != NULL) {
         if (repeat_s != NULL) {
-            repeat = crm_int_helper(repeat_s, NULL);
+            repeat = crm_parse_ll(repeat_s, NULL);
             if (errno || (repeat < 1)) {
                 fprintf(stderr, "--repeat must be positive integer, not '%s' -- using 1",
                         repeat_s);

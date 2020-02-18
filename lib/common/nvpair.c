@@ -591,7 +591,7 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
     value = crm_element_value(data, name);
     if (value) {
         errno = 0;
-        *dest = crm_int_helper(value, NULL);
+        *dest = crm_parse_ll(value, NULL);
         if (errno == 0) {
             return 0;
         }
@@ -614,11 +614,24 @@ int
 crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 {
     const char *value = NULL;
+    long long value_ll;
 
     CRM_CHECK(dest != NULL, return -1);
+    *dest = 0;
+
     value = crm_element_value(data, name);
-    *dest = crm_parse_ms(value);
-    return errno? -1 : 0;
+    if (value == NULL) {
+        return pcmk_ok;
+    }
+
+    errno = 0;
+    value_ll = crm_parse_ll(value, NULL);
+    if ((errno != 0) || (value_ll < 0) || (value_ll > G_MAXUINT)) {
+        return -1;
+    }
+
+    *dest = (guint) value_ll;
+    return pcmk_ok;
 }
 
 /*!

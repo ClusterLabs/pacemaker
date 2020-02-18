@@ -110,7 +110,7 @@ init_remote_listener(int port, gboolean encrypted)
         crm_gnutls_global_init();
         /* gnutls_global_set_log_level (10); */
         gnutls_global_set_log_function(debug_log);
-        if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+        if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
             return -1;
         }
         gnutls_anon_allocate_server_credentials(&anon_cred_s);
@@ -300,7 +300,7 @@ cib_remote_listen(gpointer data)
         return TRUE;
     }
 
-    crm_sockaddr2str(&addr, ipstr);
+    pcmk__sockaddr2str(&addr, ipstr);
     crm_debug("New %s connection from %s",
               ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
@@ -466,7 +466,7 @@ cib_remote_msg(gpointer data)
 {
     xmlNode *command = NULL;
     pcmk__client_t *client = data;
-    int disconnected = 0;
+    int rc;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
     crm_trace("%s callback",
@@ -478,14 +478,12 @@ cib_remote_msg(gpointer data)
 
         int rc = pcmk__read_handshake_data(client);
 
-        if (rc == 0) {
+        if (rc == EAGAIN) {
             /* No more data is available at the moment. Just return for now;
              * we'll get invoked again once the client sends more.
              */
             return 0;
-        } else if (rc < 0) {
-            crm_err("TLS handshake with remote CIB client failed: %s "
-                    CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+        } else if (rc != pcmk_rc_ok) {
             return -1;
         }
 
@@ -503,7 +501,7 @@ cib_remote_msg(gpointer data)
     }
 #endif
 
-    crm_remote_recv(client->remote, timeout, &disconnected);
+    rc = pcmk__read_remote_message(client->remote, timeout);
 
     /* must pass auth before we will process anything else */
     if (client->remote->authenticated == FALSE) {
@@ -512,7 +510,7 @@ cib_remote_msg(gpointer data)
 #if ENABLE_ACL
         const char *user = NULL;
 #endif
-        command = crm_remote_parse_buffer(client->remote);
+        command = pcmk__remote_message_xml(client->remote);
         if (cib_remote_auth(command) == FALSE) {
             free_xml(command);
             return -1;
@@ -535,20 +533,20 @@ cib_remote_msg(gpointer data)
         reg = create_xml_node(NULL, "cib_result");
         crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reg, F_CIB_CLIENTID, client->id);
-        crm_remote_send(client->remote, reg);
+        pcmk__remote_send_xml(client->remote, reg);
         free_xml(reg);
         free_xml(command);
     }
 
-    command = crm_remote_parse_buffer(client->remote);
+    command = pcmk__remote_message_xml(client->remote);
     while (command) {
         crm_trace("Remote client message received");
         cib_handle_remote_msg(client, command);
         free_xml(command);
-        command = crm_remote_parse_buffer(client->remote);
+        command = pcmk__remote_message_xml(client->remote);
     }
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         crm_trace("Remote CIB client disconnected while reading from it");
         return -1;
     }

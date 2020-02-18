@@ -430,7 +430,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             // List stopped instances when requested (except orphans)
             if (is_not_set(child_rsc->flags, pe_rsc_orphan)
                 && is_not_set(options, pe_print_clone_active)) {
-                stopped_list = add_list_element(stopped_list, child_rsc->id);
+                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -486,7 +486,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     for (gIter = master_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
 	active_instances++;
     }
 
@@ -500,7 +500,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     for (gIter = started_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
 	active_instances++;
     }
 
@@ -550,7 +550,8 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
                 node_t *node = (node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
-                    stopped_list = add_list_element(stopped_list, node->details->uname);
+                    stopped_list = pcmk__add_word(stopped_list,
+                                                  node->details->uname);
                 }
             }
             g_list_free(list);
@@ -646,7 +647,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             // List stopped instances when requested (except orphans)
             if (is_not_set(child_rsc->flags, pe_rsc_orphan)
                 && is_not_set(options, pe_print_clone_active)) {
-                stopped_list = add_list_element(stopped_list, child_rsc->id);
+                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -696,7 +697,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
 
@@ -712,7 +713,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
 
@@ -765,7 +766,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                 node_t *node = (node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
-                    stopped_list = add_list_element(stopped_list, node->details->uname);
+                    stopped_list = pcmk__add_word(stopped_list,
+                                                  node->details->uname);
                 }
             }
             g_list_free(list);
@@ -833,7 +835,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             // List stopped instances when requested (except orphans)
             if (is_not_set(child_rsc->flags, pe_rsc_orphan)
                 && is_not_set(options, pe_print_clone_active)) {
-                stopped_list = add_list_element(stopped_list, child_rsc->id);
+                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -883,7 +885,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
 
@@ -899,7 +901,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
 
-        list_text = add_list_element(list_text, host->details->uname);
+        list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
 
@@ -951,7 +953,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                 node_t *node = (node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
-                    stopped_list = add_list_element(stopped_list, node->details->uname);
+                    stopped_list = pcmk__add_word(stopped_list,
+                                                  node->details->uname);
                 }
             }
             g_list_free(list);

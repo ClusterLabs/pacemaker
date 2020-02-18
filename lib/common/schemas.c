@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -134,7 +134,7 @@ schema_filter(const struct dirent *a)
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if (!crm_ends_with_ext(a->d_name, ".rng")) {
+    } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if (!version_from_filename(a->d_name, &version)) {
@@ -240,7 +240,8 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
 /*!
  * \internal
  * \brief Add version-specified schema + auxiliary data to internal bookkeeping.
- * \return \c -ENOENT when no upgrade schema associated, \c pcmk_ok otherwise.
+ * \return Standard Pacemaker return value (the only possible values are
+ * \c ENOENT when no upgrade schema is associated, or \c pcmk_rc_ok otherwise.
  *
  * \note There's no reliance on the particular order of schemas entering here.
  *
@@ -269,7 +270,7 @@ add_schema_by_version(const schema_version_t *version, int next,
                       bool transform_expected)
 {
     bool transform_onleave = FALSE;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     struct stat s;
     char *xslt = NULL,
          *transform_upgrade = NULL,
@@ -323,7 +324,7 @@ add_schema_by_version(const schema_version_t *version, int next,
         free(transform_upgrade);
         transform_upgrade = NULL;
         next = -1;
-        rc = -ENOENT;
+        rc = ENOENT;
     }
 
     add_schema(schema_validator_rng, version, NULL,
@@ -335,7 +336,7 @@ add_schema_by_version(const schema_version_t *version, int next,
     return rc;
 }
 
-static int
+static void
 wrap_libxslt(bool finalize)
 {
     static xsltSecurityPrefsPtr secprefs;
@@ -354,7 +355,7 @@ wrap_libxslt(bool finalize)
               | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_NETWORK,
                                      xsltSecurityForbid);
         if (ret != 0) {
-            return -1;
+            return;
         }
     } else {
         xsltFreeSecurityPrefs(secprefs);
@@ -365,8 +366,6 @@ wrap_libxslt(bool finalize)
     if (finalize) {
         xsltCleanupGlobals();
     }
-
-    return ret;
 }
 
 /*!
@@ -416,7 +415,7 @@ crm_schema_init(void)
                 next = -1;
             }
             if (add_schema_by_version(&version, next, transform_expected)
-                    == -ENOENT) {
+                    == ENOENT) {
                 break;
             }
         }

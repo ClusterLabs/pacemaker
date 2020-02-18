@@ -744,10 +744,14 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
                (pcmkXmlStr) services_lrm_status_str(status));
 
     if (last) {
-        char *s = crm_itoa(crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)));
+        guint interval_ms = 0;
+        char *s = NULL;
         time_t when = crm_parse_int(last, "0");
         crm_time_t *crm_when = crm_time_new(NULL);
         char *rc_change = NULL;
+
+        crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        s = crm_itoa(interval_ms);
 
         crm_time_set_timet(crm_when, &when);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);

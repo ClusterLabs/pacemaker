@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,7 +110,7 @@ check_number(const char *value)
     } else if (safe_str_eq(value, CRM_INFINITY_S)) {
 
     } else {
-        crm_int_helper(value, NULL);
+        crm_parse_ll(value, NULL);
     }
 
     if (errno != 0) {
@@ -120,12 +120,10 @@ check_number(const char *value)
 }
 
 gboolean
-check_positive_number(const char* value)
+check_positive_number(const char *value)
 {
-    if (safe_str_eq(value, CRM_INFINITY_S) || (crm_int_helper(value, NULL))) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, CRM_INFINITY_S)
+           || (crm_parse_ll(value, NULL) > 0);
 }
 
 gboolean
@@ -565,16 +563,6 @@ compare_version(const char *version1, const char *version2)
     return rc;
 }
 
-gboolean do_stderr = FALSE;
-
-#ifndef NUMCHARS
-#  define	NUMCHARS	"0123456789."
-#endif
-
-#ifndef WHITESPACE
-#  define	WHITESPACE	" \t\n\r\f"
-#endif
-
 guint
 crm_parse_interval_spec(const char *input)
 {
@@ -603,61 +591,6 @@ crm_parse_interval_spec(const char *input)
     }
 
     return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
-}
-
-long long
-crm_get_msec(const char *input)
-{
-    const char *cp = input;
-    const char *units;
-    long long multiplier = 1000;
-    long long divisor = 1;
-    long long msec = -1;
-    char *end_text = NULL;
-
-    /* double dret; */
-
-    if (input == NULL) {
-        return msec;
-    }
-
-    cp += strspn(cp, WHITESPACE);
-    units = cp + strspn(cp, NUMCHARS);
-    units += strspn(units, WHITESPACE);
-
-    if (strchr(NUMCHARS, *cp) == NULL) {
-        return msec;
-    }
-
-    if (strncasecmp(units, "ms", 2) == 0 || strncasecmp(units, "msec", 4) == 0) {
-        multiplier = 1;
-        divisor = 1;
-    } else if (strncasecmp(units, "us", 2) == 0 || strncasecmp(units, "usec", 4) == 0) {
-        multiplier = 1;
-        divisor = 1000;
-    } else if (strncasecmp(units, "s", 1) == 0 || strncasecmp(units, "sec", 3) == 0) {
-        multiplier = 1000;
-        divisor = 1;
-    } else if (strncasecmp(units, "m", 1) == 0 || strncasecmp(units, "min", 3) == 0) {
-        multiplier = 60 * 1000;
-        divisor = 1;
-    } else if (strncasecmp(units, "h", 1) == 0 || strncasecmp(units, "hr", 2) == 0) {
-        multiplier = 60 * 60 * 1000;
-        divisor = 1;
-    } else if (*units != EOS && *units != '\n' && *units != '\r') {
-        return msec;
-    }
-
-    msec = crm_int_helper(cp, &end_text);
-    if (msec > LLONG_MAX/multiplier) {
-        /* arithmetics overflow while multiplier/divisor mutually exclusive */
-        return LLONG_MAX;
-    }
-    msec *= multiplier;
-    msec /= divisor;
-    /* dret += 0.5; */
-    /* msec = (long long)dret; */
-    return msec;
 }
 
 extern bool crm_is_daemon;
@@ -729,7 +662,7 @@ void
 crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
     int rc;
-    long pid;
+    pid_t pid;
     const char *devnull = "/dev/null";
 
     if (daemonize == FALSE) {
@@ -737,11 +670,12 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     }
 
     /* Check before we even try... */
-    rc = crm_pidfile_inuse(pidfile, 1, name);
-    if(rc < pcmk_ok && rc != -ENOENT) {
-        pid = crm_read_pidfile(pidfile);
-        crm_err("%s: already running [pid %ld in %s]", name, pid, pidfile);
-        printf("%s: already running [pid %ld in %s]\n", name, pid, pidfile);
+    rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
+    if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
+        crm_err("%s: already running [pid %lld in %s]",
+                name, (long long) pid, pidfile);
+        printf("%s: already running [pid %lld in %s]\n",
+               name, (long long) pid, pidfile);
         crm_exit(CRM_EX_ERROR);
     }
 
@@ -755,10 +689,12 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         crm_exit(CRM_EX_OK);
     }
 
-    rc = crm_lock_pidfile(pidfile, name);
-    if(rc < pcmk_ok) {
-        crm_err("Could not lock '%s' for %s: %s (%d)", pidfile, name, pcmk_strerror(rc), rc);
-        printf("Could not lock '%s' for %s: %s (%d)\n", pidfile, name, pcmk_strerror(rc), rc);
+    rc = pcmk__lock_pidfile(pidfile, name);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not lock '%s' for %s: %s " CRM_XS " rc=%d",
+                pidfile, name, pcmk_rc_str(rc), rc);
+        printf("Could not lock '%s' for %s: %s (%d)\n",
+               pidfile, name, pcmk_rc_str(rc), rc);
         crm_exit(CRM_EX_ERROR);
     }
 

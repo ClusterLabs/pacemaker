@@ -1067,9 +1067,13 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
         char *clone_key = NULL;
-        const char *interval_ms_s = g_hash_table_lookup(action->meta,
-                                                        XML_LRM_ATTR_INTERVAL_MS);
-        guint interval_ms = crm_parse_ms(interval_ms_s);
+        guint interval_ms;
+
+        if (pcmk__guint_from_hash(action->meta,
+                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+                                  &interval_ms) != pcmk_rc_ok) {
+            interval_ms = 0;
+        }
 
         if (safe_str_eq(action->task, RSC_NOTIFY)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
@@ -1529,7 +1533,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if ((input->type == pe_order_optional)
                && is_set(input->action->flags, pe_action_migrate_runnable)
-               && crm_ends_with(input->action->uuid, "_stop_0")) {
+               && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional but stop in migration",
                   action->uuid, action->id,
@@ -1604,7 +1608,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
                && input->action->rsc != action->rsc
                && is_set(input->action->rsc->flags, pe_rsc_failed)
                && is_not_set(input->action->rsc->flags, pe_rsc_managed)
-               && crm_ends_with(input->action->uuid, "_stop_0")
+               && pcmk__ends_with(input->action->uuid, "_stop_0")
                && action->rsc && pe_rsc_is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",

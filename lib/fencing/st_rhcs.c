@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     for (i = 0; i < file_num; i++) {
         struct stat prop;
 
-        if (crm_starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
+        if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
 #if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
             snprintf(buffer, sizeof(buffer), "%s/%s", RH_STONITH_DIR,
                      namelist[i]->d_name);

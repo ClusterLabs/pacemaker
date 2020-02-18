@@ -92,7 +92,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 #endif
             case PCMK__CLIENT_TCP:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-                crm_remote_send(client->remote, update->msg);
+                pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
                 crm_err("Unknown transport %d for %s", client->kind, client->name);

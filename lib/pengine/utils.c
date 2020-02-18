@@ -2112,8 +2112,6 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *interval_ms_s = crm_element_value(xml_op,
-                                                  XML_LRM_ATTR_INTERVAL_MS);
     const char *digest_all;
     const char *digest_restart;
 
@@ -2123,7 +2121,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    interval_ms = crm_parse_ms(interval_ms_s);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     key = pcmk__op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op,
                              is_set(data_set->flags, pe_flag_sanitized),

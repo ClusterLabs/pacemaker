@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,13 +33,14 @@ static bool fence_reaction_panic = FALSE;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
+// crmd_opts defines default for stonith-max-attempts, so value is never NULL
 void
 update_stonith_max_attempts(const char *value)
 {
     if (safe_str_eq(value, CRM_INFINITY_S)) {
        stonith_max_attempts = CRM_SCORE_INFINITY;
     } else {
-       stonith_max_attempts = crm_int_helper(value, NULL);
+       stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
     }
 }
 

@@ -128,7 +128,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         value = pe_pref(sched_data_set->config_hash, series[series_id].param);
 
         if (value != NULL) {
-            series_wrap = crm_int_helper(value, NULL);
+            series_wrap = (int) crm_parse_ll(value, NULL);
             if (errno != 0) {
                 series_wrap = series[series_id].wrap;
             }

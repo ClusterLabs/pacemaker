@@ -1,5 +1,7 @@
 /*
- * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -87,7 +89,7 @@
 static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
-    if (!*value && crm_starts_with(line, prefix)) {
+    if (!*value && pcmk__starts_with(line, prefix)) {
         *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
         return TRUE;
     }
@@ -132,7 +134,7 @@ services__get_lsb_metadata(const char *type, char **output)
     while (fgets(buffer, sizeof(buffer), fp)) {
 
         // Ignore lines up to and including the block delimiter
-        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
+        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
             in_header = TRUE;
             continue;
         }
@@ -168,7 +170,7 @@ services__get_lsb_metadata(const char *type, char **output)
 
         /* Long description may cross multiple lines */
         if ((offset == 0) // haven't already found long description
-            && crm_starts_with(buffer, DESCRIPTION)) {
+            && pcmk__starts_with(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
 
             // Get remainder of description line itself
@@ -178,8 +180,8 @@ services__get_lsb_metadata(const char *type, char **output)
             // Read any continuation lines of the description
             buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
-                if (crm_starts_with(buffer, "#  ")
-                    || crm_starts_with(buffer, "#\t")) {
+                if (pcmk__starts_with(buffer, "#  ")
+                    || pcmk__starts_with(buffer, "#\t")) {
                     /* '#' followed by a tab or more than one space indicates a
                      * continuation of the long description.
                      */
@@ -204,7 +206,7 @@ services__get_lsb_metadata(const char *type, char **output)
         }
 
         // Stop if we leave the header block
-        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
+        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
             break;
         }
         if (buffer[0] != '#') {

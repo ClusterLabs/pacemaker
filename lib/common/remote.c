@@ -34,21 +34,7 @@
 #include <crm/common/remote_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
-
-const int psk_tls_kx_order[] = {
-    GNUTLS_KX_DHE_PSK,
-    GNUTLS_KX_PSK,
-};
-
-const int anon_tls_kx_order[] = {
-    GNUTLS_KX_ANON_DH,
-    GNUTLS_KX_DHE_RSA,
-    GNUTLS_KX_DHE_DSS,
-    GNUTLS_KX_RSA,
-    0
-};
 #endif
 
 /* Swab macros from linux/swab.h */
@@ -83,8 +69,7 @@ const int anon_tls_kx_order[] = {
 #define REMOTE_MSG_VERSION 1
 #define ENDIAN_LOCAL 0xBADADBBD
 
-struct crm_remote_header_v0 
-{
+struct remote_header_v0 {
     uint32_t endian;    /* Detect messages from hosts with different endian-ness */
     uint32_t version;
     uint64_t id;
@@ -98,11 +83,22 @@ struct crm_remote_header_v0
 
 } __attribute__ ((packed));
 
-static struct crm_remote_header_v0 *
-crm_remote_header(pcmk__remote_t *remote)
+/*!
+ * \internal
+ * \brief Retrieve remote message header, in local endianness
+ *
+ * Return a pointer to the header portion of a remote connection's message
+ * buffer, converting the header to local endianness if needed.
+ *
+ * \param[in,out] remote  Remote connection with new message
+ *
+ * \return Pointer to message header, localized if necessary
+ */
+static struct remote_header_v0 *
+localized_remote_header(pcmk__remote_t *remote)
 {
-    struct crm_remote_header_v0 *header = (struct crm_remote_header_v0 *)remote->buffer;
-    if(remote->buffer_offset < sizeof(struct crm_remote_header_v0)) {
+    struct remote_header_v0 *header = (struct remote_header_v0 *)remote->buffer;
+    if(remote->buffer_offset < sizeof(struct remote_header_v0)) {
         return NULL;
 
     } else if(header->endian != ENDIAN_LOCAL) {
@@ -133,29 +129,31 @@ crm_remote_header(pcmk__remote_t *remote)
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
-crm_initiate_client_tls_handshake(pcmk__remote_t *remote, int timeout_ms)
+pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
 {
     int rc = 0;
     int pollrc = 0;
-    time_t start = time(NULL);
+    time_t time_limit = time(NULL) + timeout_ms / 1000;
 
     do {
         rc = gnutls_handshake(*remote->tls_session);
-        if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            pollrc = crm_remote_ready(remote, 1000);
-            if (pollrc < 0) {
+        if ((rc == GNUTLS_E_INTERRUPTED) || (rc == GNUTLS_E_AGAIN)) {
+            pollrc = pcmk__remote_ready(remote, 1000);
+            if ((pollrc != pcmk_rc_ok) && (pollrc != ETIME)) {
                 /* poll returned error, there is no hope */
-                rc = -1;
+                crm_trace("TLS handshake poll failed: %s (%d)",
+                          pcmk_strerror(pollrc), pollrc);
+                return pcmk_legacy2rc(pollrc);
             }
+        } else if (rc < 0) {
+            crm_trace("TLS handshake failed: %s (%d)",
+                      gnutls_strerror(rc), rc);
+            return EPROTO;
+        } else {
+            return pcmk_rc_ok;
         }
-
-    } while (((time(NULL) - start) < (timeout_ms / 1000)) &&
-             (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN));
-
-    if (rc < 0) {
-        crm_trace("gnutls_handshake() failed with %d", rc);
-    }
-    return rc;
+    } while (time(NULL) < time_limit);
+    return ETIME;
 }
 
 /*!
@@ -165,7 +163,7 @@ crm_initiate_client_tls_handshake(pcmk__remote_t *remote, int timeout_ms)
  * \param[in] session  TLS session to affect
  */
 static void
-pcmk__set_minimum_dh_bits(gnutls_session_t *session)
+set_minimum_dh_bits(gnutls_session_t *session)
 {
     const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
 
@@ -185,7 +183,7 @@ pcmk__set_minimum_dh_bits(gnutls_session_t *session)
 }
 
 static unsigned int
-pcmk__bound_dh_bits(unsigned int dh_bits)
+get_bound_dh_bits(unsigned int dh_bits)
 {
     const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
     const char *dh_max_bits_s = getenv("PCMK_dh_max_bits");
@@ -266,7 +264,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
         goto error;
     }
     if (conn_type == GNUTLS_CLIENT) {
-        pcmk__set_minimum_dh_bits(session);
+        set_minimum_dh_bits(session);
     }
 
     gnutls_transport_set_ptr(*session,
@@ -298,7 +296,7 @@ error:
  *
  * \param[out] dh_params  Parameter object to initialize
  *
- * \return GNUTLS_E_SUCCESS on success, GnuTLS error code on error
+ * \return Standard Pacemaker return code
  * \todo The current best practice is to allow the client and server to
  *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
  *       However, we have to support both older versions of GnuTLS (<3.6) that
@@ -328,7 +326,7 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
 #else
     dh_bits = 1024;
 #endif
-    dh_bits = pcmk__bound_dh_bits(dh_bits);
+    dh_bits = get_bound_dh_bits(dh_bits);
 
     crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
              dh_bits);
@@ -337,13 +335,12 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
         goto error;
     }
 
-    return rc;
+    return pcmk_rc_ok;
 
 error:
     crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
             CRM_XS " rc=%d", gnutls_strerror(rc), rc);
-    CRM_ASSERT(rc == GNUTLS_E_SUCCESS);
-    return rc;
+    return EPROTO;
 }
 
 /*!
@@ -354,9 +351,8 @@ error:
  *
  * \param[in] client  Client connection
  *
- * \retval GnuTLS error code on error
- * \retval 0 if more data is needed
- * \retval 1 if handshake is successfully completed
+ * \return Standard Pacemaker return code (of particular interest, EAGAIN
+ *         if some data was successfully read but more data is needed)
  */
 int
 pcmk__read_handshake_data(pcmk__client_t *client)
@@ -373,140 +369,154 @@ pcmk__read_handshake_data(pcmk__client_t *client)
         /* No more data is available at the moment. This function should be
          * invoked again once the client sends more.
          */
-        return 0;
+        return EAGAIN;
     } else if (rc != GNUTLS_E_SUCCESS) {
-        return rc;
+        crm_err("TLS handshake with remote client failed: %s "
+                CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+        return EPROTO;
     }
-    return 1;
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 static int
-crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
+send_tls(gnutls_session_t *session, struct iovec *iov)
 {
-    const char *unsent = buf;
-    int rc = 0;
-    int total_send;
+    const char *unsent = iov->iov_base;
+    size_t unsent_len = iov->iov_len;
+    ssize_t gnutls_rc;
 
-    if (buf == NULL) {
-        return -EINVAL;
+    if (unsent == NULL) {
+        return EINVAL;
     }
 
-    total_send = len;
-    crm_trace("Message size: %llu", (unsigned long long) len);
+    crm_debug("Sending TLS message of %llu bytes",
+              (unsigned long long) unsent_len);
+    while (true) {
+        gnutls_rc = gnutls_record_send(*session, unsent, unsent_len);
 
-    while (TRUE) {
-        rc = gnutls_record_send(*session, unsent, len);
+        if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
+            crm_trace("Retrying to send %llu bytes remaining",
+                      (unsigned long long) unsent_len);
 
-        if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            crm_trace("Retrying to send %llu bytes",
-                      (unsigned long long) len);
-
-        } else if (rc < 0) {
+        } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
-            crm_info("TLS connection terminated: %s " CRM_XS " rc=%d",
-                     gnutls_strerror(rc), rc);
-            rc = -ECONNABORTED;
-            break;
+            crm_info("TLS connection terminated: %s " CRM_XS " rc=%lld",
+                     gnutls_strerror((int) gnutls_rc),
+                     (long long) gnutls_rc);
+            return ECONNABORTED;
 
-        } else if (rc < len) {
-            crm_debug("Sent %d of %llu bytes", rc, (unsigned long long) len);
-            len -= rc;
-            unsent += rc;
+        } else if (gnutls_rc < unsent_len) {
+            crm_trace("Sent %lld of %llu bytes remaining",
+                      (long long) gnutls_rc, (unsigned long long) unsent_len);
+            unsent_len -= gnutls_rc;
+            unsent += gnutls_rc;
         } else {
-            crm_trace("Sent all %d bytes", rc);
+            crm_trace("Sent all %lld bytes remaining", (long long) gnutls_rc);
             break;
         }
     }
-
-    return rc < 0 ? rc : total_send;
+    return pcmk_rc_ok;
 }
 #endif
 
+// \return Standard Pacemaker return code
 static int
-crm_send_plaintext(int sock, const char *buf, size_t len)
+send_plaintext(int sock, struct iovec *iov)
 {
+    const char *unsent = iov->iov_base;
+    size_t unsent_len = iov->iov_len;
+    ssize_t write_rc;
 
-    int rc = 0;
-    const char *unsent = buf;
-    int total_send;
-
-    if (buf == NULL) {
-        return -EINVAL;
+    if (unsent == NULL) {
+        return EINVAL;
     }
-    total_send = len;
 
-    crm_trace("Message on socket %d: size=%llu",
-              sock, (unsigned long long) len);
-  retry:
-    rc = write(sock, unsent, len);
-    if (rc < 0) {
-        rc = -errno;
-        switch (errno) {
-            case EINTR:
-            case EAGAIN:
-                crm_trace("Retry");
-                goto retry;
-            default:
-                crm_perror(LOG_INFO,
-                           "Could only write %d of the remaining %llu bytes",
-                           rc, (unsigned long long) len);
-                break;
+    crm_debug("Sending plaintext message of %llu bytes to socket %d",
+              (unsigned long long) unsent_len, sock);
+    while (true) {
+        write_rc = write(sock, unsent, unsent_len);
+        if (write_rc < 0) {
+            int rc = errno;
+
+            if ((errno == EINTR) || (errno == EAGAIN)) {
+                crm_trace("Retrying to send %llu bytes remaining to socket %d",
+                          (unsigned long long) unsent_len, sock);
+                continue;
+            }
+
+            // Caller can log as error if necessary
+            crm_info("Could not send message: %s " CRM_XS " rc=%d socket=%d",
+                     pcmk_rc_str(rc), rc, sock);
+            return rc;
+
+        } else if (write_rc < unsent_len) {
+            crm_trace("Sent %lld of %llu bytes remaining",
+                      (long long) write_rc, (unsigned long long) unsent_len);
+            unsent += write_rc;
+            unsent_len -= write_rc;
+            continue;
+
+        } else {
+            crm_trace("Sent all %lld bytes remaining: %.100s",
+                      (long long) write_rc, (char *) (iov->iov_base));
+            break;
         }
-
-    } else if (rc < len) {
-        crm_trace("Only sent %d of %llu remaining bytes",
-                  rc, (unsigned long long) len);
-        len -= rc;
-        unsent += rc;
-        goto retry;
-
-    } else {
-        crm_trace("Sent %d bytes: %.100s", rc, buf);
     }
-
-    return rc < 0 ? rc : total_send;
-
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 static int
-crm_remote_sendv(pcmk__remote_t *remote, struct iovec * iov, int iovs)
+remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
 {
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
-    for (int lpc = 0; (lpc < iovs) && (rc >= 0); lpc++) {
+    for (int lpc = 0; (lpc < iovs) && (rc == pcmk_rc_ok); lpc++) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote->tls_session) {
-            rc = crm_send_tls(remote->tls_session, iov[lpc].iov_base, iov[lpc].iov_len);
+            rc = send_tls(remote->tls_session, &(iov[lpc]));
             continue;
         }
 #endif
         if (remote->tcp_socket) {
-            rc = crm_send_plaintext(remote->tcp_socket, iov[lpc].iov_base, iov[lpc].iov_len);
+            rc = send_plaintext(remote->tcp_socket, &(iov[lpc]));
         } else {
-            rc = -ESOCKTNOSUPPORT;
+            rc = ESOCKTNOSUPPORT;
         }
     }
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Send an XML message over a Pacemaker Remote connection
+ *
+ * \param[in] remote  Pacemaker Remote connection to use
+ * \param[in] msg     XML to send
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-crm_remote_send(pcmk__remote_t *remote, xmlNode *msg)
+pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     static uint64_t id = 0;
-    char *xml_text = dump_xml_unformatted(msg);
+    char *xml_text = NULL;
 
     struct iovec iov[2];
-    struct crm_remote_header_v0 *header;
+    struct remote_header_v0 *header;
 
-    if (xml_text == NULL) {
-        crm_err("Could not send remote message: no message provided");
-        return -EINVAL;
-    }
+    CRM_CHECK((remote != NULL) && (msg != NULL), return EINVAL);
 
-    header = calloc(1, sizeof(struct crm_remote_header_v0));
+    xml_text = dump_xml_unformatted(msg);
+    CRM_CHECK(xml_text != NULL, return EINVAL);
+
+    header = calloc(1, sizeof(struct remote_header_v0));
+    CRM_ASSERT(header != NULL);
+
     iov[0].iov_base = header;
-    iov[0].iov_len = sizeof(struct crm_remote_header_v0);
+    iov[0].iov_len = sizeof(struct remote_header_v0);
 
     iov[1].iov_base = xml_text;
     iov[1].iov_len = 1 + strlen(xml_text);
@@ -519,12 +529,10 @@ crm_remote_send(pcmk__remote_t *remote, xmlNode *msg)
     header->payload_uncompressed = iov[1].iov_len;
     header->size_total = iov[0].iov_len + iov[1].iov_len;
 
-    crm_trace("Sending len[0]=%d, start=%x",
-              (int)iov[0].iov_len, *(int*)(void*)xml_text);
-    rc = crm_remote_sendv(remote, iov, 2);
-    if (rc < 0) {
+    rc = remote_send_iovs(remote, iov, 2);
+    if (rc != pcmk_rc_ok) {
         crm_err("Could not send remote message: %s " CRM_XS " rc=%d",
-                pcmk_strerror(rc), rc);
+                pcmk_rc_str(rc), rc);
     }
 
     free(iov[0].iov_base);
@@ -532,19 +540,22 @@ crm_remote_send(pcmk__remote_t *remote, xmlNode *msg)
     return rc;
 }
 
-
 /*!
  * \internal
- * \brief handles the recv buffer and parsing out msgs.
- * \note new_data is owned by this function once it is passed in.
+ * \brief Obtain the XML from the currently buffered remote connection message
+ *
+ * \param[in] remote  Remote connection possibly with message available
+ *
+ * \return Newly allocated XML object corresponding to message data, or NULL
+ * \note This effectively removes the message from the connection buffer.
  */
 xmlNode *
-crm_remote_parse_buffer(pcmk__remote_t *remote)
+pcmk__remote_message_xml(pcmk__remote_t *remote)
 {
     xmlNode *xml = NULL;
-    struct crm_remote_header_v0 *header = crm_remote_header(remote);
+    struct remote_header_v0 *header = localized_remote_header(remote);
 
-    if (remote->buffer == NULL || header == NULL) {
+    if (header == NULL) {
         return NULL;
     }
 
@@ -581,13 +592,13 @@ crm_remote_parse_buffer(pcmk__remote_t *remote)
 
         free(remote->buffer);
         remote->buffer = uncompressed;
-        header = crm_remote_header(remote);
+        header = localized_remote_header(remote);
     }
 
     /* take ownership of the buffer */
     remote->buffer_offset = 0;
 
-    CRM_LOG_ASSERT(remote->buffer[sizeof(struct crm_remote_header_v0) + header->payload_uncompressed - 1] == 0);
+    CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
     xml = string2xml(remote->buffer + header->payload_offset);
     if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
@@ -601,41 +612,49 @@ crm_remote_parse_buffer(pcmk__remote_t *remote)
     return xml;
 }
 
+static int
+get_remote_socket(pcmk__remote_t *remote)
+{
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    if (remote->tls_session) {
+        void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
+
+        return GPOINTER_TO_INT(sock_ptr);
+    }
+#endif
+
+    if (remote->tcp_socket) {
+        return remote->tcp_socket;
+    }
+
+    crm_err("Remote connection type undetermined (bug?)");
+    return -1;
+}
+
 /*!
  * \internal
  * \brief Wait for a remote session to have data to read
  *
- * \param[in] remote         Connection to check
- * \param[in] total_timeout  Maximum time (in ms) to wait
+ * \param[in] remote      Connection to check
+ * \param[in] timeout_ms  Maximum time (in ms) to wait
  *
- * \return Positive value if ready to be read, 0 on timeout, -errno on error
+ * \return Standard Pacemaker return code (of particular interest, pcmk_rc_ok if
+ *         there is data ready to be read, and ETIME if there is no data within
+ *         the specified timeout)
  */
 int
-crm_remote_ready(pcmk__remote_t *remote, int total_timeout)
+pcmk__remote_ready(pcmk__remote_t *remote, int timeout_ms)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
     int rc = 0;
     time_t start;
-    int timeout = total_timeout;
+    int timeout = timeout_ms;
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    if (remote->tls_session) {
-        void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
-
-        sock = GPOINTER_TO_INT(sock_ptr);
-    } else if (remote->tcp_socket) {
-#else
-    if (remote->tcp_socket) {
-#endif
-        sock = remote->tcp_socket;
-    } else {
-        crm_err("Unsupported connection type");
-    }
-
+    sock = get_remote_socket(remote);
     if (sock <= 0) {
         crm_trace("No longer connected");
-        return -ENOTCONN;
+        return ENOTCONN;
     }
 
     start = time(NULL);
@@ -648,7 +667,7 @@ crm_remote_ready(pcmk__remote_t *remote, int total_timeout)
          * specific timeout we are trying to honor, attempt
          * to adjust the timeout to the closest second. */
         if (errno == EINTR && (timeout > 0)) {
-            timeout = total_timeout - ((time(NULL) - start) * 1000);
+            timeout = timeout_ms - ((time(NULL) - start) * 1000);
             if (timeout < 1000) {
                 timeout = 1000;
             }
@@ -657,26 +676,32 @@ crm_remote_ready(pcmk__remote_t *remote, int total_timeout)
         rc = poll(&fds, 1, timeout);
     } while (rc < 0 && errno == EINTR);
 
-    return (rc < 0)? -errno : rc;
+    if (rc < 0) {
+        return errno;
+    }
+    return (rc == 0)? ETIME : pcmk_rc_ok;
 }
-
 
 /*!
  * \internal
- * \brief Read bytes off non blocking remote connection.
+ * \brief Read bytes from non-blocking remote connection
  *
- * \note only use with NON-Blocking sockets. Should only be used after polling socket.
- *       This function will return once max_size is met, the socket read buffer
- *       is empty, or an error is encountered.
+ * \param[in] remote  Remote connection to read
  *
- * \retval number of bytes received
+ * \return Standard Pacemaker return code (of particular interest, pcmk_rc_ok if
+ *         a full message has been received, or EAGAIN for a partial message)
+ * \note Use only with non-blocking sockets after polling the socket.
+ * \note This function will return when the socket read buffer is empty or an
+ *       error is encountered.
  */
-static size_t
-crm_remote_recv_once(pcmk__remote_t *remote)
+static int
+read_available_remote_data(pcmk__remote_t *remote)
 {
-    int rc = 0;
-    size_t read_len = sizeof(struct crm_remote_header_v0);
-    struct crm_remote_header_v0 *header = crm_remote_header(remote);
+    int rc = pcmk_rc_ok;
+    size_t read_len = sizeof(struct remote_header_v0);
+    struct remote_header_v0 *header = localized_remote_header(remote);
+    bool received = false;
+    ssize_t read_rc;
 
     if(header) {
         /* Stop at the end of the current message */
@@ -685,246 +710,261 @@ crm_remote_recv_once(pcmk__remote_t *remote)
 
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
-           remote->buffer_size = 2 * read_len;
+        remote->buffer_size = 2 * read_len;
         crm_trace("Expanding buffer to %llu bytes",
                   (unsigned long long) remote->buffer_size);
-
         remote->buffer = realloc_safe(remote->buffer, remote->buffer_size + 1);
-        CRM_ASSERT(remote->buffer != NULL);
     }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    if (remote->tls_session) {
-        rc = gnutls_record_recv(*(remote->tls_session),
-                                remote->buffer + remote->buffer_offset,
-                                remote->buffer_size - remote->buffer_offset);
-        if (rc == GNUTLS_E_INTERRUPTED) {
-            rc = -EINTR;
-        } else if (rc == GNUTLS_E_AGAIN) {
-            rc = -EAGAIN;
-        } else if (rc < 0) {
-            crm_debug("TLS receive failed: %s (%d)", gnutls_strerror(rc), rc);
-            rc = -pcmk_err_generic;
+    if (!received && remote->tls_session) {
+        read_rc = gnutls_record_recv(*(remote->tls_session),
+                                     remote->buffer + remote->buffer_offset,
+                                     remote->buffer_size - remote->buffer_offset);
+        if (read_rc == GNUTLS_E_INTERRUPTED) {
+            rc = EINTR;
+        } else if (read_rc == GNUTLS_E_AGAIN) {
+            rc = EAGAIN;
+        } else if (read_rc < 0) {
+            crm_debug("TLS receive failed: %s (%lld)",
+                      gnutls_strerror(read_rc), (long long) read_rc);
+            rc = EIO;
         }
-    } else if (remote->tcp_socket) {
-#else
-    if (remote->tcp_socket) {
+        received = true;
+    }
 #endif
-        errno = 0;
-        rc = read(remote->tcp_socket,
-                  remote->buffer + remote->buffer_offset,
-                  remote->buffer_size - remote->buffer_offset);
-        if(rc < 0) {
-            rc = -errno;
-        }
 
-    } else {
-        crm_err("Unsupported connection type");
-        return -ESOCKTNOSUPPORT;
+    if (!received && remote->tcp_socket) {
+        read_rc = read(remote->tcp_socket,
+                       remote->buffer + remote->buffer_offset,
+                       remote->buffer_size - remote->buffer_offset);
+        if (read_rc < 0) {
+            rc = errno;
+        }
+        received = true;
+    }
+
+    if (!received) {
+        crm_err("Remote connection type undetermined (bug?)");
+        return ESOCKTNOSUPPORT;
     }
 
     /* process any errors. */
-    if (rc > 0) {
-        remote->buffer_offset += rc;
+    if (read_rc > 0) {
+        remote->buffer_offset += read_rc;
         /* always null terminate buffer, the +1 to alloc always allows for this. */
         remote->buffer[remote->buffer_offset] = '\0';
-        crm_trace("Received %u more bytes, %llu total",
-                  rc, (unsigned long long) remote->buffer_offset);
-
-    } else if (rc == -EINTR || rc == -EAGAIN) {
-        crm_trace("non-blocking, exiting read: %s (%d)", pcmk_strerror(rc), rc);
-
-    } else if (rc == 0) {
-        crm_debug("EOF encoutered after %llu bytes",
+        crm_trace("Received %lld more bytes (%llu total)",
+                  (long long) read_rc,
                   (unsigned long long) remote->buffer_offset);
-        return -ENOTCONN;
+
+    } else if ((rc == EINTR) || (rc == EAGAIN)) {
+        crm_trace("No data available for non-blocking remote read: %s (%d)",
+                  pcmk_rc_str(rc), rc);
+
+    } else if (read_rc == 0) {
+        crm_debug("End of remote data encountered after %llu bytes",
+                  (unsigned long long) remote->buffer_offset);
+        return ENOTCONN;
 
     } else {
-        crm_debug("Error receiving message after %llu bytes: %s (%d)",
+        crm_debug("Error receiving remote data after %llu bytes: %s (%d)",
                   (unsigned long long) remote->buffer_offset,
-                  pcmk_strerror(rc), rc);
-        return -ENOTCONN;
+                  pcmk_rc_str(rc), rc);
+        return ENOTCONN;
     }
 
-    header = crm_remote_header(remote);
+    header = localized_remote_header(remote);
     if(header) {
         if(remote->buffer_offset < header->size_total) {
-            crm_trace("Read less than the advertised length: %llu < %u bytes",
+            crm_trace("Read partial remote message (%llu of %u bytes)",
                       (unsigned long long) remote->buffer_offset,
                       header->size_total);
         } else {
-            crm_trace("Read full message of %llu bytes",
+            crm_trace("Read full remote message of %llu bytes",
                       (unsigned long long) remote->buffer_offset);
-            return remote->buffer_offset;
+            return pcmk_rc_ok;
         }
     }
 
-    return -EAGAIN;
+    return EAGAIN;
 }
 
 /*!
  * \internal
- * \brief Read message(s) from a remote connection
+ * \brief Read one message from a remote connection
  *
- * \param[in]  remote         Remote connection to read
- * \param[in]  total_timeout  Fail if message not read in this time (ms)
- * \param[out] disconnected   Will be set to 1 if disconnect detected
+ * \param[in]  remote      Remote connection to read
+ * \param[in]  timeout_ms  Fail if message not read in this many milliseconds
+ *                         (10s will be used if 0, and 60s if negative)
  *
- * \return TRUE if at least one full message read, FALSE otherwise
+ * \return Standard Pacemaker return code
  */
-gboolean
-crm_remote_recv(pcmk__remote_t *remote, int total_timeout, int *disconnected)
+int
+pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     time_t start = time(NULL);
     int remaining_timeout = 0;
 
-    if (total_timeout == 0) {
-        total_timeout = 10000;
-    } else if (total_timeout < 0) {
-        total_timeout = 60000;
+    if (timeout_ms == 0) {
+        timeout_ms = 10000;
+    } else if (timeout_ms < 0) {
+        timeout_ms = 60000;
     }
-    *disconnected = 0;
 
-    remaining_timeout = total_timeout;
-    while ((remaining_timeout > 0) && !(*disconnected)) {
+    remaining_timeout = timeout_ms;
+    while (remaining_timeout > 0) {
 
-        crm_trace("Waiting for remote data (%d of %d ms timeout remaining)",
-                  remaining_timeout, total_timeout);
-        rc = crm_remote_ready(remote, remaining_timeout);
+        crm_trace("Waiting for remote data (%d ms of %d ms timeout remaining)",
+                  remaining_timeout, timeout_ms);
+        rc = pcmk__remote_ready(remote, remaining_timeout);
 
-        if (rc == 0) {
+        if (rc == ETIME) {
             crm_err("Timed out (%d ms) while waiting for remote data",
                     remaining_timeout);
-            return FALSE;
+            return rc;
 
-        } else if (rc < 0) {
-            crm_debug("Wait for remote data aborted, will try again: %s "
-                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+        } else if (rc != pcmk_rc_ok) {
+            crm_debug("Wait for remote data aborted (will retry): %s "
+                      CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
 
         } else {
-            rc = crm_remote_recv_once(remote);
-            if (rc > 0) {
-                return TRUE;
-            } else if (rc == -EAGAIN) {
-                crm_trace("Still waiting for remote data");
-            } else if (rc < 0) {
+            rc = read_available_remote_data(remote);
+            if (rc == pcmk_rc_ok) {
+                return rc;
+            } else if (rc == EAGAIN) {
+                crm_trace("Waiting for more remote data");
+            } else {
                 crm_debug("Could not receive remote data: %s " CRM_XS " rc=%d",
-                          pcmk_strerror(rc), rc);
+                          pcmk_rc_str(rc), rc);
             }
         }
 
-        if (rc == -ENOTCONN) {
-            *disconnected = 1;
-            return FALSE;
+        // Don't waste time retrying after fatal errors
+        if ((rc == ENOTCONN) || (rc == ESOCKTNOSUPPORT)) {
+            return rc;
         }
 
-        remaining_timeout = total_timeout - ((time(NULL) - start) * 1000);
+        remaining_timeout = timeout_ms - ((time(NULL) - start) * 1000);
     }
-
-    return FALSE;
+    return ETIME;
 }
 
 struct tcp_async_cb_data {
-    gboolean success;
     int sock;
-    void *userdata;
-    void (*callback) (void *userdata, int sock);
-    int timeout;                /*ms */
+    int timeout_ms;
     time_t start;
+    void *userdata;
+    void (*callback) (void *userdata, int rc, int sock);
 };
 
+// \return TRUE if timer should be rescheduled, FALSE otherwise
 static gboolean
 check_connect_finished(gpointer userdata)
 {
     struct tcp_async_cb_data *cb_data = userdata;
-    int cb_arg = 0; // socket fd on success, -errno on error
-    int sock = cb_data->sock;
-    int error = 0;
+    int rc;
 
     fd_set rset, wset;
-    socklen_t len = sizeof(error);
     struct timeval ts = { 0, };
 
-    if (cb_data->success == TRUE) {
+    if (cb_data->start == 0) {
+        // Last connect() returned success immediately
+        rc = pcmk_rc_ok;
         goto dispatch_done;
     }
 
+    // If the socket is ready for reading or writing, the connect succeeded
     FD_ZERO(&rset);
-    FD_SET(sock, &rset);
+    FD_SET(cb_data->sock, &rset);
     wset = rset;
+    rc = select(cb_data->sock + 1, &rset, &wset, NULL, &ts);
 
-    crm_trace("fd %d: checking to see if connect finished", sock);
-    cb_arg = select(sock + 1, &rset, &wset, NULL, &ts);
-
-    if (cb_arg < 0) {
-        cb_arg = -errno;
-        if ((errno == EINPROGRESS) || (errno == EAGAIN)) {
-            /* reschedule if there is still time left */
-            if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
-                goto reschedule;
+    if (rc < 0) { // select() error
+        rc = errno;
+        if ((rc == EINPROGRESS) || (rc == EAGAIN)) {
+            if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+                return TRUE; // There is time left, so reschedule timer
             } else {
-                cb_arg = -ETIMEDOUT;
+                rc = ETIMEDOUT;
             }
         }
-        crm_trace("fd %d: select failed %d connect dispatch ", sock, cb_arg);
-        goto dispatch_done;
-    } else if (cb_arg == 0) {
-        if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
-            goto reschedule;
-        }
-        crm_debug("fd %d: timeout during select", sock);
-        cb_arg = -ETIMEDOUT;
-        goto dispatch_done;
-    } else {
-        crm_trace("fd %d: select returned success", sock);
-        cb_arg = 0;
-    }
+        crm_trace("Could not check socket %d for connection success: %s (%d)",
+                  cb_data->sock, pcmk_rc_str(rc), rc);
 
-    /* can we read or write to the socket now? */
-    if (FD_ISSET(sock, &rset) || FD_ISSET(sock, &wset)) {
-        if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
-            cb_arg = -errno;
-            crm_trace("fd %d: call to getsockopt failed", sock);
-            goto dispatch_done;
+    } else if (rc == 0) { // select() timeout
+        if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+            return TRUE; // There is time left, so reschedule timer
         }
-        if (error) {
-            crm_trace("fd %d: error returned from getsockopt: %d", sock, error);
-            cb_arg = -error;
-            goto dispatch_done;
+        crm_debug("Timed out while waiting for socket %d connection success",
+                  cb_data->sock);
+        rc = ETIMEDOUT;
+
+    // select() returned number of file descriptors that are ready
+
+    } else if (FD_ISSET(cb_data->sock, &rset)
+               || FD_ISSET(cb_data->sock, &wset)) {
+
+        // The socket is ready; check it for connection errors
+        int error = 0;
+        socklen_t len = sizeof(error);
+
+        if (getsockopt(cb_data->sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+            rc = errno;
+            crm_trace("Couldn't check socket %d for connection errors: %s (%d)",
+                      cb_data->sock, pcmk_rc_str(rc), rc);
+        } else if (error != 0) {
+            rc = error;
+            crm_trace("Socket %d connected with error: %s (%d)",
+                      cb_data->sock, pcmk_rc_str(rc), rc);
+        } else {
+            rc = pcmk_rc_ok;
         }
-    } else {
-        crm_trace("neither read nor write set after select");
-        cb_arg = -EAGAIN;
-        goto dispatch_done;
+
+    } else { // Should not be possible
+        crm_trace("select() succeeded, but socket %d not in resulting "
+                  "read/write sets", cb_data->sock);
+        rc = EAGAIN;
     }
 
   dispatch_done:
-    if (!cb_arg) {
-        crm_trace("fd %d: connected", sock);
-        /* Success, set the return code to the sock to report to the callback */
-        cb_arg = cb_data->sock;
-        cb_data->sock = 0;
+    if (rc == pcmk_rc_ok) {
+        crm_trace("Socket %d is connected", cb_data->sock);
     } else {
-        close(sock);
+        close(cb_data->sock);
+        cb_data->sock = -1;
     }
 
     if (cb_data->callback) {
-        cb_data->callback(cb_data->userdata, cb_arg);
+        cb_data->callback(cb_data->userdata, rc, cb_data->sock);
     }
     free(cb_data);
-    return FALSE;
-
-  reschedule:
-
-    /* will check again next interval */
-    return TRUE;
+    return FALSE; // Do not reschedule timer
 }
 
+/*!
+ * \internal
+ * \brief Attempt to connect socket, calling callback when done
+ *
+ * Set a given socket non-blocking, then attempt to connect to it,
+ * retrying periodically until success or a timeout is reached.
+ * Call a caller-supplied callback function when completed.
+ *
+ * \param[in]  sock        Newly created socket
+ * \param[in]  addr        Socket address information for connect
+ * \param[in]  addrlen     Size of socket address information in bytes
+ * \param[in]  timeout_ms  Fail if not connected within this much time
+ * \param[out] timer_id    If not NULL, store retry timer ID here
+ * \param[in]  userdata    User data to pass to callback
+ * \param[in]  callback    Function to call when connection attempt completes
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-internal_tcp_connect_async(int sock,
-                           const struct sockaddr *addr, socklen_t addrlen, int timeout /* ms */ ,
-                           int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
+connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
+                     int timeout_ms, int *timer_id, void *userdata,
+                     void (*callback) (void *userdata, int rc, int sock))
 {
     int rc = 0;
     int interval = 500;
@@ -935,40 +975,43 @@ internal_tcp_connect_async(int sock,
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
-        close(sock);
-        return -1;
+        return rc;
     }
 
     rc = connect(sock, addr, addrlen);
     if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
-        crm_perror(LOG_WARNING, "connect");
-        return -1;
+        rc = errno;
+        crm_warn("Could not connect socket: %s " CRM_XS " rc=%d",
+                 pcmk_rc_str(rc), rc);
+        return rc;
     }
 
     cb_data = calloc(1, sizeof(struct tcp_async_cb_data));
     cb_data->userdata = userdata;
     cb_data->callback = callback;
     cb_data->sock = sock;
-    cb_data->timeout = timeout;
-    cb_data->start = time(NULL);
+    cb_data->timeout_ms = timeout_ms;
 
     if (rc == 0) {
         /* The connect was successful immediately, we still return to mainloop
          * and let this callback get called later. This avoids the user of this api
          * to have to account for the fact the callback could be invoked within this
          * function before returning. */
-        cb_data->success = TRUE;
+        cb_data->start = 0;
         interval = 1;
+    } else {
+        cb_data->start = time(NULL);
     }
 
-    /* Check connect finished is mostly doing a non-block poll on the socket
-     * to see if we can read/write to it. Once we can, the connect has completed.
-     * This method allows us to connect to the server without blocking mainloop.
+    /* This timer function does a non-blocking poll on the socket to see if we
+     * can use it. Once we can, the connect has completed. This method allows us
+     * to connect without blocking the mainloop.
      *
-     * This is a poor man's way of polling to see when the connection finished.
-     * At some point we should figure out a way to use a mainloop fd callback for this.
-     * Something about the way mainloop is currently polling prevents this from working at the
-     * moment though. */
+     * @TODO Use a mainloop fd callback for this instead of polling. Something
+     *       about the way mainloop is currently polling prevents this from
+     *       working at the moment though. (See connect(2) regarding EINPROGRESS
+     *       for possible new handling needed.)
+     */
     crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
               interval, sock);
     timer = g_timeout_add(interval, check_connect_finished, cb_data);
@@ -976,18 +1019,28 @@ internal_tcp_connect_async(int sock,
         *timer_id = timer;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Attempt once to connect socket and set it non-blocking
+ *
+ * \param[in]  sock        Newly created socket
+ * \param[in]  addr        Socket address information for connect
+ * \param[in]  addrlen     Size of socket address information in bytes
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
+connect_socket_once(int sock, const struct sockaddr *addr, socklen_t addrlen)
 {
     int rc = connect(sock, addr, addrlen);
 
     if (rc < 0) {
-        rc = -errno;
+        rc = errno;
         crm_warn("Could not connect socket: %s " CRM_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
+                 pcmk_rc_str(rc), rc);
         return rc;
     }
 
@@ -995,7 +1048,7 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
-        return pcmk_rc2legacy(rc);
+        return rc;
     }
 
     return pcmk_ok;
@@ -1005,41 +1058,48 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
  * \internal
  * \brief Connect to server at specified TCP port
  *
- * \param[in]  host      Name of server to connect to
- * \param[in]  port      Server port to connect to
- * \param[in]  timeout   Report error if not connected in this many milliseconds
- * \param[out] timer_id  If non-NULL, will be set to timer ID, if asynchronous
- * \param[in]  userdata  Data to pass to callback, if asynchronous
- * \param[in]  callback  If non-NULL, connect asynchronously then call this
+ * \param[in]  host        Name of server to connect to
+ * \param[in]  port        Server port to connect to
+ * \param[in]  timeout_ms  If asynchronous, fail if not connected in this time
+ * \param[out] timer_id    If asynchronous and this is non-NULL, retry timer ID
+ *                         will be put here (for ease of cancelling by caller)
+ * \param[out] sock_fd     Where to store socket file descriptor
+ * \param[in]  userdata    If asynchronous, data to pass to callback
+ * \param[in]  callback    If NULL, attempt a single synchronous connection,
+ *                         otherwise retry asynchronously then call this
  *
- * \return File descriptor of connected socket on success, -ENOTCONN otherwise
+ * \return Standard Pacemaker return code
  */
 int
-crm_remote_tcp_connect_async(const char *host, int port, int timeout,
-                             int *timer_id, void *userdata,
-                             void (*callback) (void *userdata, int sock))
+pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
+                     int *sock_fd, void *userdata,
+                     void (*callback) (void *userdata, int rc, int sock))
 {
     char buffer[INET6_ADDRSTRLEN];
     struct addrinfo *res = NULL;
     struct addrinfo *rp = NULL;
     struct addrinfo hints;
     const char *server = host;
-    int ret_ga;
-    int sock = -ENOTCONN;
+    int rc;
+    int sock = -1;
+
+    CRM_CHECK((host != NULL) && (sock_fd != NULL), return EINVAL);
 
     // Get host's IP address(es)
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;        /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
-    ret_ga = getaddrinfo(server, NULL, &hints, &res);
-    if (ret_ga) {
+    rc = getaddrinfo(server, NULL, &hints, &res);
+    if (rc != 0) {
         crm_err("Unable to get IP address info for %s: %s",
-                server, gai_strerror(ret_ga));
+                server, gai_strerror(rc));
+        rc = ENOTCONN;
         goto async_cleanup;
     }
     if (!res || !res->ai_addr) {
         crm_err("Unable to get IP address info for %s: no result", server);
+        rc = ENOTCONN;
         goto async_cleanup;
     }
 
@@ -1058,9 +1118,9 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,
 
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {
-            crm_perror(LOG_WARNING, "creating socket for connection to %s",
-                       server);
-            sock = -ENOTCONN;
+            rc = errno;
+            crm_warn("Could not create socket for remote connection to %s:%d: "
+                     "%s " CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
             continue;
         }
 
@@ -1073,21 +1133,24 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,
         }
 
         memset(buffer, 0, DIMOF(buffer));
-        crm_sockaddr2str(addr, buffer);
-        crm_info("Attempting TCP connection to %s:%d", buffer, port);
+        pcmk__sockaddr2str(addr, buffer);
+        crm_info("Attempting remote connection to %s:%d", buffer, port);
 
         if (callback) {
-            if (internal_tcp_connect_async
-                (sock, rp->ai_addr, rp->ai_addrlen, timeout, timer_id, userdata, callback) == 0) {
+            if (connect_socket_retry(sock, rp->ai_addr, rp->ai_addrlen, timeout,
+                                     timer_id, userdata, callback) == pcmk_rc_ok) {
                 goto async_cleanup; /* Success for now, we'll hear back later in the callback */
             }
 
-        } else if (internal_tcp_connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
+        } else if (connect_socket_once(sock, rp->ai_addr,
+                                       rp->ai_addrlen) == pcmk_rc_ok) {
             break;          /* Success */
         }
 
+        // Connect failed
         close(sock);
-        sock = -ENOTCONN;
+        sock = -1;
+        rc = ENOTCONN;
     }
 
 async_cleanup:
@@ -1095,16 +1158,12 @@ async_cleanup:
     if (res) {
         freeaddrinfo(res);
     }
-    return sock;
-}
-
-int
-crm_remote_tcp_connect(const char *host, int port)
-{
-    return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
+    *sock_fd = sock;
+    return rc;
 }
 
 /*!
+ * \internal
  * \brief Convert an IP address (IPv4 or IPv6) to a string for logging
  *
  * \param[in]  sa  Socket address for IP
@@ -1115,7 +1174,7 @@ crm_remote_tcp_connect(const char *host, int port)
  *          as long as its sa_family member is set correctly.
  */
 void
-crm_sockaddr2str(void *sa, char *s)
+pcmk__sockaddr2str(void *sa, char *s)
 {
     switch (((struct sockaddr*)sa)->sa_family) {
         case AF_INET:
@@ -1133,54 +1192,63 @@ crm_sockaddr2str(void *sa, char *s)
     }
 }
 
+/*!
+ * \internal
+ * \brief Accept a client connection on a remote server socket
+ *
+ * \param[in]  ssock  Server socket file descriptor being listened on
+ * \param[out] csock  Where to put new client socket's file descriptor
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-crm_remote_accept(int ssock)
+pcmk__accept_remote_connection(int ssock, int *csock)
 {
-    int csock = 0;
-    int rc = 0;
-    unsigned laddr = 0;
+    int rc;
     struct sockaddr_storage addr;
+    socklen_t laddr = sizeof(addr);
     char addr_str[INET6_ADDRSTRLEN];
-#ifdef TCP_USER_TIMEOUT
-    int optval;
-    long sbd_timeout = crm_get_sbd_timeout();
-#endif
 
     /* accept the connection */
-    laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
-    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    crm_sockaddr2str(&addr, addr_str);
-    crm_info("New remote connection from %s", addr_str);
-
-    if (csock == -1) {
-        crm_err("accept socket failed");
-        return -1;
+    *csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
+    if (*csock == -1) {
+        rc = errno;
+        crm_err("Could not accept remote client connection: %s "
+                CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+        return rc;
     }
+    pcmk__sockaddr2str(&addr, addr_str);
+    crm_info("Accepted new remote client connection from %s", addr_str);
 
-    rc = pcmk__set_nonblocking(csock);
+    rc = pcmk__set_nonblocking(*csock);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
-        close(csock);
-        return pcmk_rc2legacy(rc);
+        close(*csock);
+        *csock = -1;
+        return rc;
     }
 
 #ifdef TCP_USER_TIMEOUT
-    if (sbd_timeout > 0) {
-        optval = sbd_timeout / 2; /* time to fail and retry before watchdog */
-        rc = setsockopt(csock, SOL_TCP, TCP_USER_TIMEOUT,
+    if (crm_get_sbd_timeout() > 0) {
+        // Time to fail and retry before watchdog
+        unsigned int optval = (unsigned int) crm_get_sbd_timeout() / 2;
+
+        rc = setsockopt(*csock, SOL_TCP, TCP_USER_TIMEOUT,
                         &optval, sizeof(optval));
         if (rc < 0) {
-            crm_err("setting TCP_USER_TIMEOUT (%d) on client socket failed",
-                    optval);
-            close(csock);
+            rc = errno;
+            crm_err("Could not set TCP timeout to %d ms on remote connection: "
+                    "%s " CRM_XS " rc=%d", optval, pcmk_rc_str(rc), rc);
+            close(*csock);
+            *csock = -1;
             return rc;
         }
     }
 #endif
 
-    return csock;
+    return rc;
 }
 
 /*!

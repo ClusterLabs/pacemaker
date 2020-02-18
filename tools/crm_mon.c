@@ -30,7 +30,7 @@
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/curses_internal.h>
-#include <crm/common/internal.h>  /* crm_ends_with_ext */
+#include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
@@ -918,7 +918,7 @@ main(int argc, char **argv)
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();
 
-    if (crm_ends_with_ext(argv[0], ".cgi") == TRUE) {
+    if (pcmk__ends_with_ext(argv[0], ".cgi")) {
         output_format = mon_output_cgi;
         options.mon_ops |= mon_op_one_shot;
     }
@@ -1212,7 +1212,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
             nodes_online++;
         } else {
             char *s = crm_strdup_printf("offline node: %s", node->details->uname);
-            offline_nodes = add_list_element(offline_nodes, s);
+            offline_nodes = pcmk__add_word(offline_nodes, s);
             free(s);
             mon_ops |= mon_op_has_warnings;
             offline = TRUE;

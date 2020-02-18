@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -729,7 +729,8 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         unsigned int new_size = 0;
         char *uncompressed = strdup(data);
 
-        if (crm_compress_string(uncompressed, msg->size, 0, &compressed, &new_size)) {
+        if (pcmk__compress(uncompressed, (unsigned int) msg->size, 0,
+                           &compressed, &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
             msg = realloc_safe(msg, msg->header.size);

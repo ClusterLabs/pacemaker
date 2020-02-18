@@ -266,7 +266,7 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
             failcount = merge_weights(failcount, char2score(value));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
-            last = QB_MAX(last, crm_int_helper(value, NULL));
+            last = QB_MAX(last, (time_t) crm_parse_ll(value, NULL));
         }
     }
 

@@ -879,11 +879,10 @@ dnl ========================================================================
 dnl Headers
 dnl ========================================================================
 
-# Some distributions insert #warnings into deprecated headers such as
-# timeb.h used at some point in past. If we will enable fatal warnings
-# for the build, then enable them for the header checks as well, otherwise
-# the build could fail even though the header check succeeds.
-# (We should probably be doing this in more places.)
+# Some distributions insert #warnings into deprecated headers. If we will
+# enable fatal warnings for the build, then enable them for the header checks
+# as well, otherwise the build could fail even though the header check
+# succeeds. (We should probably be doing this in more places.)
 if test "x${enable_fatal_warnings}" = xyes ; then
     cc_temp_flags "$CFLAGS $WERROR"
 fi
@@ -1418,7 +1417,7 @@ case $SUPPORT_NAGIOS in
         else
             SUPPORT_NAGIOS=1
         fi
-        ``
+        ;;
     *)
         SUPPORT_NAGIOS=0
         ;;

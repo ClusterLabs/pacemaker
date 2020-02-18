@@ -2086,7 +2086,6 @@ process_recurring(node_t * node, resource_t * rsc,
         guint interval_ms = 0;
         char *key = NULL;
         const char *id = ID(rsc_op);
-        const char *interval_ms_s = NULL;
 
         counter++;
 
@@ -2104,8 +2103,7 @@ process_recurring(node_t * node, resource_t * rsc,
             continue;
         }
 
-        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         if (interval_ms == 0) {
             pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
             continue;
@@ -3155,7 +3153,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
                        xmlNode *xml_op, pe_working_set_t *data_set)
 {
     bool expired = FALSE;
-    bool is_last_failure = crm_ends_with(ID(xml_op), "_last_failure_0");
+    bool is_last_failure = pcmk__ends_with(ID(xml_op), "_last_failure_0");
     time_t last_run = 0;
     guint interval_ms = 0;
     int unexpired_fail_count = 0;

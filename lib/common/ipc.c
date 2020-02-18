@@ -528,10 +528,11 @@ pcmk__free_client(pcmk__client_t *c)
 }
 
 /*!
+ * \internal
  * \brief Raise IPC eviction threshold for a client, if allowed
  *
  * \param[in,out] client     Client to modify
- * \param[in]     queue_max  New threshold (as string)
+ * \param[in]     qmax       New threshold (as non-NULL string)
  *
  * \return TRUE if change was allowed, FALSE otherwise
  */
@@ -539,10 +540,12 @@ bool
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
     if (is_set(client->flags, pcmk__client_privileged)) {
-        int qmax_int = crm_int_helper(qmax, NULL);
+        long long qmax_int;
 
+        errno = 0;
+        qmax_int = crm_parse_ll(qmax, NULL);
         if ((errno == 0) && (qmax_int > 0)) {
-            client->queue_max = qmax_int;
+            client->queue_max = (unsigned int) qmax_int;
             return TRUE;
         }
     }
@@ -800,8 +803,9 @@ pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
     } else {
         unsigned int new_size = 0;
 
-        if (crm_compress_string
-            (buffer, header->size_uncompressed, max_send_size, &compressed, &new_size)) {
+        if (pcmk__compress(buffer, (unsigned int) header->size_uncompressed,
+                           (unsigned int) max_send_size, &compressed,
+                           &new_size) == pcmk_rc_ok) {
 
             header->flags |= crm_ipc_compressed;
             header->size_compressed = new_size;

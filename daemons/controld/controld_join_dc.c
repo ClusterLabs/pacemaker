@@ -271,8 +271,8 @@ compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
     const char *elem_l = crm_element_value(left, field);
     const char *elem_r = crm_element_value(right, field);
 
-    int int_elem_l = crm_int_helper(elem_l, NULL);
-    int int_elem_r = crm_int_helper(elem_r, NULL);
+    long long int_elem_l = elem_l? crm_parse_ll(elem_l, NULL) : -1;
+    long long int_elem_r = elem_r? crm_parse_ll(elem_r, NULL) : -1;
 
     if (int_elem_l < int_elem_r) {
         return -1;

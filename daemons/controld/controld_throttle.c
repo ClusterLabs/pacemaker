@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,9 +76,9 @@ load2str(enum throttle_state_e mode)
 static char *
 find_cib_loadfile(void)
 {
-    int pid = crm_procfs_pid_of("pacemaker-based");
+    pid_t pid = pcmk__procfs_pid_of("pacemaker-based");
 
-    return pid? crm_strdup_printf("/proc/%d/stat", pid) : NULL;
+    return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
 }
 
 static bool
@@ -306,7 +306,7 @@ throttle_mode(void)
     float load;
     float thresholds[4];
 
-    cores = crm_procfs_num_cores();
+    cores = pcmk__procfs_num_cores();
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
 
@@ -396,28 +396,29 @@ throttle_set_load_target(float target)
     throttle_load_target = target;
 }
 
+/*!
+ * \internal
+ * \brief Update the maximum number of simultaneous jobs
+ *
+ * \param[in] preference  Cluster-wide node-action-limit from the CIB
+ */
 void
 throttle_update_job_max(const char *preference)
 {
-    int max = 0;
+    long long max = -1;
+    const char *env_limit = getenv("PCMK_node_action_limit");
 
-    throttle_job_max = 2 * crm_procfs_num_cores();
-
-    if(preference) {
-        /* Global preference from the CIB */
-        max = crm_int_helper(preference, NULL);
-        if(max > 0) {
-            throttle_job_max = max;
-        }
+    if (env_limit != NULL) {
+        preference = env_limit; // Per-node override
     }
-
-    preference = getenv("PCMK_node_action_limit");
-    if(preference) {
-        /* Per-node override */
-        max = crm_int_helper(preference, NULL);
-        if(max > 0) {
-            throttle_job_max = max;
-        }
+    if (preference) {
+        max = crm_parse_ll(preference, NULL);
+    }
+    if (max > 0) {
+        throttle_job_max = (int) max;
+    } else {
+        // Default is based on the number of cores detected
+        throttle_job_max = 2 * pcmk__procfs_num_cores();
     }
 }
 

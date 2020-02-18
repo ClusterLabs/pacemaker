@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,53 +30,62 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     return buffer;
 }
 
-long long
-crm_int_helper(const char *text, char **end_text)
+/*!
+ * \internal
+ * \brief Scan a long long integer from a string
+ *
+ * \param[in]  text      String to scan
+ * \param[out] result    If not NULL, where to store scanned value
+ * \param[out] end_text  If not NULL, where to store pointer to just after value
+ *
+ * \return Standard Pacemaker return code (also set errno on error)
+ */
+static int
+scan_ll(const char *text, long long *result, char **end_text)
 {
-    long long result = -1;
+    long long local_result = -1;
     char *local_end_text = NULL;
-    int saved_errno = 0;
+    int rc = pcmk_rc_ok;
 
     errno = 0;
-
     if (text != NULL) {
 #ifdef ANSI_ONLY
-        if (end_text != NULL) {
-            result = strtol(text, end_text, 10);
-        } else {
-            result = strtol(text, &local_end_text, 10);
-        }
+        local_result = (long long) strtol(text, &local_end_text, 10);
 #else
-        if (end_text != NULL) {
-            result = strtoll(text, end_text, 10);
-        } else {
-            result = strtoll(text, &local_end_text, 10);
-        }
+        local_result = strtoll(text, &local_end_text, 10);
 #endif
-
-        saved_errno = errno;
-        if (errno == EINVAL) {
-            crm_err("Conversion of %s failed", text);
-            result = -1;
-
-        } else if (errno == ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
+        if (errno == ERANGE) {
+            rc = errno;
+            crm_warn("Integer parsed from %s was clipped to %lld",
+                     text, local_result);
 
         } else if (errno != 0) {
-            crm_perror(LOG_ERR, "Conversion of %s failed", text);
+            rc = errno;
+            local_result = -1;
+            crm_err("Could not parse integer from %s (using -1 instead): %s",
+                    text, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
-            crm_err("Text contained no digits: %s", text);
-            result = -1;
+            rc = EINVAL;
+            local_result = -1;
+            crm_err("Could not parse integer from %s (using -1 instead): "
+                    "No digits found", text);
         }
 
-        if (local_end_text != NULL && local_end_text[0] != '\0') {
-            crm_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
+        if ((end_text == NULL) && (local_end_text != NULL)
+            && (local_end_text[0] != '\0')) {
+            crm_warn("Characters left over after parsing '%s': '%s'",
+                     text, local_end_text);
         }
-
-        errno = saved_errno;
+        errno = rc;
     }
-    return result;
+    if (end_text != NULL) {
+        *end_text = local_end_text;
+    }
+    if (result != NULL) {
+        *result = local_result;
+    }
+    return rc;
 }
 
 /*!
@@ -90,6 +99,8 @@ crm_int_helper(const char *text, char **end_text)
 long long
 crm_parse_ll(const char *text, const char *default_text)
 {
+    long long result;
+
     if (text == NULL) {
         text = default_text;
         if (text == NULL) {
@@ -98,7 +109,8 @@ crm_parse_ll(const char *text, const char *default_text)
             return -1;
         }
     }
-    return crm_int_helper(text, NULL);
+    scan_ll(text, &result, NULL);
+    return result;
 }
 
 /*!
@@ -137,24 +149,114 @@ crm_parse_int(const char *text, const char *default_text)
 
 /*!
  * \internal
- * \brief Parse a milliseconds value (without units) from a string
+ * \brief Parse a guint from a string stored in a hash table
  *
- * \param[in] text  String to parse
+ * \param[in]  table        Hash table to search
+ * \param[in]  key          Hash table key to use to retrieve string
+ * \param[in]  default_val  What to use if key has no entry in table
+ * \param[out] result       If not NULL, where to store parsed integer
  *
- * \return Milliseconds on success, 0 otherwise (and errno will be set)
+ * \return Standard Pacemaker return code
  */
-guint
-crm_parse_ms(const char *text)
+int
+pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
+                      guint *result)
 {
-    if (text) {
-        long long ms = crm_int_helper(text, NULL);
+    const char *value;
+    long long value_ll;
 
-        if ((ms < 0) || (ms > G_MAXUINT)) {
-            errno = ERANGE;
+    CRM_CHECK((table != NULL) && (key != NULL), return EINVAL);
+
+    value = g_hash_table_lookup(table, key);
+    if (value == NULL) {
+        if (result != NULL) {
+            *result = default_val;
         }
-        return errno? 0 : (guint) ms;
+        return pcmk_rc_ok;
     }
-    return 0;
+
+    errno = 0;
+    value_ll = crm_parse_ll(value, NULL);
+    if (errno != 0) {
+        return errno; // Message already logged
+    }
+    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+        crm_warn("Could not parse non-negative integer from %s", value);
+        return ERANGE;
+    }
+
+    if (result != NULL) {
+        *result = (guint) value_ll;
+    }
+    return pcmk_rc_ok;
+}
+
+#ifndef NUMCHARS
+#  define	NUMCHARS	"0123456789."
+#endif
+
+#ifndef WHITESPACE
+#  define	WHITESPACE	" \t\n\r\f"
+#endif
+
+/*!
+ * \brief Parse a time+units string and return milliseconds equivalent
+ *
+ * \param[in] input  String with a number and units (optionally with whitespace
+ *                   before and/or after the number)
+ *
+ * \return Milliseconds corresponding to string expression, or -1 on error
+ */
+long long
+crm_get_msec(const char *input)
+{
+    const char *num_start = NULL;
+    const char *units;
+    long long multiplier = 1000;
+    long long divisor = 1;
+    long long msec = -1;
+    size_t num_len = 0;
+    char *end_text = NULL;
+
+    if (input == NULL) {
+        return -1;
+    }
+
+    num_start = input + strspn(input, WHITESPACE);
+    num_len = strspn(num_start, NUMCHARS);
+    if (num_len < 1) {
+        return -1;
+    }
+    units = num_start + num_len;
+    units += strspn(units, WHITESPACE);
+
+    if (!strncasecmp(units, "ms", 2) || !strncasecmp(units, "msec", 4)) {
+        multiplier = 1;
+        divisor = 1;
+    } else if (!strncasecmp(units, "us", 2) || !strncasecmp(units, "usec", 4)) {
+        multiplier = 1;
+        divisor = 1000;
+    } else if (!strncasecmp(units, "s", 1) || !strncasecmp(units, "sec", 3)) {
+        multiplier = 1000;
+        divisor = 1;
+    } else if (!strncasecmp(units, "m", 1) || !strncasecmp(units, "min", 3)) {
+        multiplier = 60 * 1000;
+        divisor = 1;
+    } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
+        multiplier = 60 * 60 * 1000;
+        divisor = 1;
+    } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
+        return -1;
+    }
+
+    scan_ll(num_start, &msec, &end_text);
+    if (msec > (LLONG_MAX / multiplier)) {
+        // Arithmetics overflow while multiplier/divisor mutually exclusive
+        return LLONG_MAX;
+    }
+    msec *= multiplier;
+    msec /= divisor;
+    return msec;
 }
 
 gboolean
@@ -240,58 +342,54 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     return FALSE;
 }
 
-static inline const char * null2emptystr(const char *);
-static inline const char *
-null2emptystr(const char *input)
-{
-    return (input == NULL) ? "" : input;
-}
-
 /*!
  * \brief Check whether a string starts with a certain sequence
  *
  * \param[in] str    String to check
  * \param[in] match  Sequence to match against beginning of \p str
  *
- * \return \c TRUE if \p str begins with match, \c FALSE otherwise
+ * \return \c true if \p str begins with match, \c false otherwise
  * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
  *       but is likely less efficient when prefix is a string literal
  *       if the compiler optimizes away the strlen() at compile time,
  *       and more efficient otherwise.
  */
 bool
-crm_starts_with(const char *str, const char *prefix)
+pcmk__starts_with(const char *str, const char *prefix)
 {
     const char *s = str;
     const char *p = prefix;
 
     if (!s || !p) {
-        return FALSE;
+        return false;
     }
     while (*s && *p) {
         if (*s++ != *p++) {
-            return FALSE;
+            return false;
         }
     }
     return (*p == 0);
 }
 
-static inline int crm_ends_with_internal(const char *, const char *, gboolean);
-static inline int
-crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
+static inline bool
+ends_with(const char *s, const char *match, bool as_extension)
 {
-    if ((s == NULL) || (match == NULL)) {
-        return 0;
+    if ((match == NULL) || (match[0] == '\0')) {
+        return true;
+    } else if (s == NULL) {
+        return false;
     } else {
         size_t slen, mlen;
 
-        if (match[0] != '\0'
-            && (as_extension /* following commented out for inefficiency:
-                || strchr(&match[1], match[0]) == NULL */))
-                return !strcmp(null2emptystr(strrchr(s, match[0])), match);
+        /* Besides as_extension, we could also check
+           !strchr(&match[1], match[0]) but that would be inefficient.
+         */
+        if (as_extension) {
+            s = strrchr(s, match[0]);
+            return (s == NULL)? false : !strcmp(s, match);
+        }
 
-        if ((mlen = strlen(match)) == 0)
-            return 1;
+        mlen = strlen(match);
         slen = strlen(s);
         return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
     }
@@ -304,15 +402,14 @@ crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
  * \param[in] s      String to check
  * \param[in] match  Sequence to match against end of \p s
  *
- * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
- *         with match (including empty string), \c FALSE otherwise
- *
- * \see crm_ends_with_ext()
+ * \return \c true if \p s ends case-sensitively with match, \c false otherwise
+ * \note pcmk__ends_with_ext() can be used if the first character of match
+ *       does not recur in match.
  */
-gboolean
-crm_ends_with(const char *s, const char *match)
+bool
+pcmk__ends_with(const char *s, const char *match)
 {
-    return crm_ends_with_internal(s, match, FALSE);
+    return ends_with(s, match, false);
 }
 
 /*!
@@ -327,21 +424,19 @@ crm_ends_with(const char *s, const char *match)
  *                   e.g., ".html"); incorrect results may be
  *                   returned otherwise.
  *
- * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
+ * \return \c true if \p s ends (verbatim, i.e., case sensitively)
  *         with "extension" designated as \p match (including empty
- *         string), \c FALSE otherwise
+ *         string), \c false otherwise
  *
- * \note Main incentive to prefer this function over \c crm_ends_with
+ * \note Main incentive to prefer this function over \c pcmk__ends_with()
  *       where possible is the efficiency (at the cost of added
  *       restriction on \p match as stated; the complexity class
  *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
- *
- * \see crm_ends_with()
  */
-gboolean
-crm_ends_with_ext(const char *s, const char *match)
+bool
+pcmk__ends_with_ext(const char *s, const char *match)
 {
-    return crm_ends_with_internal(s, match, TRUE);
+    return ends_with(s, match, true);
 }
 
 /*
@@ -408,27 +503,43 @@ crm_str_table_dup(GHashTable *old_table)
     return new_table;
 }
 
+/*!
+ * \internal
+ * \brief Add a word to a space-separated string list
+ *
+ * \param[in,out] list  Pointer to beginning of list
+ * \param[in]     word  Word to add to list
+ *
+ * \return (Potentially new) beginning of list
+ * \note This dynamically reallocates list as needed.
+ */
 char *
-add_list_element(char *list, const char *value)
+pcmk__add_word(char *list, const char *word)
 {
-    int len = 0;
-    int last = 0;
+    if (word != NULL) {
+        size_t len = list? strlen(list) : 0;
 
-    if (value == NULL) {
-        return list;
+        list = realloc_safe(list, len + strlen(word) + 2); // 2 = space + EOS
+        sprintf(list + len, " %s", word);
     }
-    if (list) {
-        last = strlen(list);
-    }
-    len = last + 2;             /* +1 space, +1 EOS */
-    len += strlen(value);
-    list = realloc_safe(list, len);
-    sprintf(list + last, " %s", value);
     return list;
 }
 
-bool
-crm_compress_string(const char *data, int length, int max, char **result, unsigned int *result_len)
+/*!
+ * \internal
+ * \brief Compress data
+ *
+ * \param[in]  data        Data to compress
+ * \param[in]  length      Number of characters of data to compress
+ * \param[in]  max         Maximum size of compressed data (or 0 to estimate)
+ * \param[out] result      Where to store newly allocated compressed result
+ * \param[out] result_len  Where to store actual compressed length of result
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__compress(const char *data, unsigned int length, unsigned int max,
+               char **result, unsigned int *result_len)
 {
     int rc;
     char *compressed = NULL;
@@ -438,28 +549,26 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     struct timespec before_t;
 #endif
 
-    if(max == 0) {
-        max = (length * 1.1) + 600; /* recommended size */
+    if (max == 0) {
+        max = (length * 1.01) + 601; // Size guaranteed to hold result
     }
 
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    compressed = calloc(max, sizeof(char));
+    compressed = calloc((size_t) max, sizeof(char));
     CRM_ASSERT(compressed);
 
     *result_len = max;
-    rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length, CRM_BZ2_BLOCKS, 0,
-                                  CRM_BZ2_WORK);
-
+    rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
+                                  CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
     free(uncompressed);
-
     if (rc != BZ_OK) {
         crm_err("Compression of %d bytes failed: %s " CRM_XS " bzerror=%d",
                 length, bz2_strerror(rc), rc);
         free(compressed);
-        return FALSE;
+        return pcmk_rc_error;
     }
 
 #ifdef CLOCK_MONOTONIC
@@ -475,31 +584,7 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
 #endif
 
     *result = compressed;
-    return TRUE;
-}
-
-/*!
- * \brief Compare two strings alphabetically (case-insensitive)
- *
- * \param[in] a  First string to compare
- * \param[in] b  Second string to compare
- *
- * \return 0 if strings are equal, -1 if a < b, 1 if a > b
- *
- * \note Usable as a GCompareFunc with g_list_sort().
- *       NULL is considered less than non-NULL.
- */
-gint
-crm_alpha_sort(gconstpointer a, gconstpointer b)
-{
-    if (!a && !b) {
-        return 0;
-    } else if (!a) {
-        return -1;
-    } else if (!b) {
-        return 1;
-    }
-    return strcasecmp(a, b);
+    return pcmk_rc_ok;
 }
 
 char *
