@@ -22,6 +22,16 @@ missing_separator(void) {
 }
 
 static void
+only_separator(void) {
+    char *start = NULL;
+    char *end = NULL;
+
+    g_assert(pcmk__split_range("-", '-', &start, &end) == false);
+    g_assert(start == NULL);
+    g_assert(end == NULL);
+}
+
+static void
 no_range_end(void) {
     char *start = NULL;
     char *end = NULL;
@@ -31,6 +41,18 @@ no_range_end(void) {
     g_assert(end == NULL);
 
     free(start);
+}
+
+static void
+no_range_start(void) {
+    char *start = NULL;
+    char *end = NULL;
+
+    g_assert(pcmk__split_range("-2020", '-', &start, &end) == true);
+    g_assert(start == NULL);
+    g_assert_cmpstr(end, ==, "2020");
+
+    free(end);
 }
 
 static void
@@ -51,7 +73,9 @@ int main(int argc, char **argv) {
 
     g_test_add_func("/common/strings/range/empty", empty_input_string);
     g_test_add_func("/common/strings/range/no_sep", missing_separator);
+    g_test_add_func("/common/strings/range/only_sep", only_separator);
     g_test_add_func("/common/strings/range/no_end", no_range_end);
+    g_test_add_func("/common/strings/range/no_start", no_range_start);
     g_test_add_func("/common/strings/range/start_and_end", range_start_and_end);
 
     return g_test_run();

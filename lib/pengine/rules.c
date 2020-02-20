@@ -448,8 +448,10 @@ phase_of_the_moon(crm_time_t * now)
     if(value != NULL) {							\
 	gboolean pass = TRUE;						\
 	pcmk__split_range(value, '-', &value_low, &value_high);		\
-	if(value_low == NULL) {						\
-	    value_low = strdup(value);				\
+        if (value_low == NULL && value_high != NULL) {                  \
+            value_low = strdup("0");                                    \
+        } else if (value_low == NULL) {                                 \
+	    value_low = strdup(value);				        \
 	}								\
 	value_low_i = crm_parse_int(value_low, "0");			\
 	value_high_i = crm_parse_int(value_high, "-1");			\

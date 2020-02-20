@@ -602,24 +602,39 @@ crm_strdup_printf(char const *format, ...)
 }
 
 bool
-pcmk__split_range(const char *srcstring, char separator, char **name, char **value)
+pcmk__split_range(const char *srcstring, char separator, char **start, char **end)
 {
     const char *seploc = NULL;
 
-    CRM_ASSERT(name != NULL && value != NULL);
-    *name = NULL;
-    *value = NULL;
+    CRM_ASSERT(start != NULL && end != NULL);
+    *start = NULL;
+    *end = NULL;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring != NULL) {
-        seploc = strchr(srcstring, separator);
-        if (seploc) {
-            *name = strndup(srcstring, seploc - srcstring);
-            if (*(seploc + 1)) {
-                *value = strdup(seploc + 1);
-            }
-            return true;
-        }
+    if (srcstring == NULL) {
+        return false;
     }
-    return false;
+
+    seploc = strchr(srcstring, separator);
+    if (!seploc) {
+        return false;
+    } else if (strlen(srcstring) == 1) {
+        /* The source string contained only the separator. */
+        return false;
+    } else if (seploc == srcstring && *(seploc + 1)) {
+        /* Separator is the first character of the range, so this
+         * range only has an end.
+         */
+        *end = strdup(seploc + 1);
+    } else if (! *(seploc + 1)) {
+        /* Separator is the last character of the range, so this
+         * range only has a start.
+         */
+        *start = strndup(srcstring, seploc - srcstring);
+    } else {
+        *start = strndup(srcstring, seploc - srcstring);
+        *end = strdup(seploc + 1);
+    }
+
+    return true;
 }
