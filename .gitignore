@@ -198,6 +198,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 # Test results
 *.log
 *.trs
+/lib/common/tests/strings/pcmk__split_range
 /lib/pengine/tests/rules/pe_cron_range_satisfied
 
 # Release maintenance detritus
