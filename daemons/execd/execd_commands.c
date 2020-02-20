@@ -127,7 +127,7 @@ time_diff_ms(struct timespec *now, struct timespec *old)
             now = &local_now;
         }
         diff_ms = (now->tv_sec - old->tv_sec) * 1000
-                  + (now->tv_nsec - old->tv_nsec) / 1000;
+                  + (now->tv_nsec - old->tv_nsec) / 1000000;
     }
     return diff_ms;
 }
