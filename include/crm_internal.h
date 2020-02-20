@@ -30,11 +30,6 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-/* char2score */
-extern int node_score_red;
-extern int node_score_green;
-extern int node_score_yellow;
-
 /* Assorted convenience functions */
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 

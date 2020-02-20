@@ -321,9 +321,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
-    node_score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
-    node_score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
-    node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
+    pcmk__score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
+    pcmk__score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
+    pcmk__score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
 
     crm_debug("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
              pe_pref(data_set->config_hash, "node-health-red"),

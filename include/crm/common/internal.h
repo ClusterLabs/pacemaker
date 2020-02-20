@@ -140,6 +140,10 @@ void pcmk__filter_op_for_digest(xmlNode *param_set);
 
 const char *pcmk_message_name(const char *name);
 
+extern int pcmk__score_red;
+extern int pcmk__score_green;
+extern int pcmk__score_yellow;
+
 
 /* internal generic string functions (from strings.c) */
 

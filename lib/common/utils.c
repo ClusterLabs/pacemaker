@@ -55,9 +55,9 @@ gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
 
-int node_score_red = 0;
-int node_score_green = 0;
-int node_score_yellow = 0;
+int pcmk__score_red = 0;
+int pcmk__score_green = 0;
+int pcmk__score_yellow = 0;
 
 int
 char2score(const char *score)
@@ -73,13 +73,13 @@ char2score(const char *score)
         score_f = CRM_SCORE_INFINITY;
 
     } else if (safe_str_eq(score, "red")) {
-        score_f = node_score_red;
+        score_f = pcmk__score_red;
 
     } else if (safe_str_eq(score, "yellow")) {
-        score_f = node_score_yellow;
+        score_f = pcmk__score_yellow;
 
     } else if (safe_str_eq(score, "green")) {
-        score_f = node_score_green;
+        score_f = pcmk__score_green;
 
     } else {
         score_f = crm_parse_int(score, NULL);
