@@ -600,3 +600,26 @@ crm_strdup_printf(char const *format, ...)
     va_end(ap);
     return string;
 }
+
+bool
+pcmk__split_range(const char *srcstring, char separator, char **name, char **value)
+{
+    const char *seploc = NULL;
+
+    CRM_ASSERT(name != NULL && value != NULL);
+    *name = NULL;
+    *value = NULL;
+
+    crm_trace("Attempting to decode: [%s]", srcstring);
+    if (srcstring != NULL) {
+        seploc = strchr(srcstring, separator);
+        if (seploc) {
+            *name = strndup(srcstring, seploc - srcstring);
+            if (*(seploc + 1)) {
+                *value = strdup(seploc + 1);
+            }
+            return true;
+        }
+    }
+    return false;
+}

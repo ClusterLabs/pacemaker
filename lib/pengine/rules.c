@@ -443,34 +443,11 @@ phase_of_the_moon(crm_time_t * now)
     return ((((((diy + epact) * 6) + 11) % 177) / 22) & 7);
 }
 
-static gboolean
-decodeNVpair(const char *srcstring, char separator, char **name, char **value)
-{
-    const char *seploc = NULL;
-
-    CRM_ASSERT(name != NULL && value != NULL);
-    *name = NULL;
-    *value = NULL;
-
-    crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring != NULL) {
-        seploc = strchr(srcstring, separator);
-        if (seploc) {
-            *name = strndup(srcstring, seploc - srcstring);
-            if (*(seploc + 1)) {
-                *value = strdup(seploc + 1);
-            }
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 #define cron_check(xml_field, time_field)				\
     value = crm_element_value(cron_spec, xml_field);			\
     if(value != NULL) {							\
 	gboolean pass = TRUE;						\
-	decodeNVpair(value, '-', &value_low, &value_high);		\
+	pcmk__split_range(value, '-', &value_low, &value_high);		\
 	if(value_low == NULL) {						\
 	    value_low = strdup(value);				\
 	}								\
