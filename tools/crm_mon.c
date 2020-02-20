@@ -473,7 +473,7 @@ mon_timer_popped(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    print_as(output_format, "Connection to the cluster-daemons terminated\n");
+    out->err(out, "Connection to the cluster-daemons terminated");
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
         mainloop_timer_stop(refresh_timer);
@@ -603,7 +603,7 @@ cib_connect(gboolean full)
             }
 
             if (rc != pcmk_ok) {
-                print_as(output_format, "Notification setup failed, could not monitor CIB actions");
+                out->err(out, "Notification setup failed, could not monitor CIB actions");
                 if (output_format == mon_output_console) {
                     sleep(2);
                 }
@@ -1082,13 +1082,13 @@ main(int argc, char **argv)
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
         if (cib && cib->variant == cib_file) {
-            fprintf(stderr, "CGI mode used with CIB file\n");
+            out->err(out, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
-            fprintf(stderr, "CGI mode cannot be used with --external-agent\n");
+            out->err(out, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
         } else if (options.daemonize == TRUE) {
-            fprintf(stderr, "CGI mode cannot be used with -d\n");
+            out->err(out, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
     }
@@ -1131,12 +1131,12 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
-            printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
-                    pcmk_strerror(rc));
+            out->err(out, "CLUSTER CRIT: Connection to cluster failed: %s",
+                     pcmk_strerror(rc));
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                out->err(out, "%s", "\nError: cluster is not available on this node");
+                out->err(out, "\nError: cluster is not available on this node");
             } else {
                 out->err(out, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
             }
@@ -1665,7 +1665,7 @@ mon_refresh_display(gpointer user_data)
         if (cib) {
             cib->cmds->signoff(cib);
         }
-        print_as(output_format, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
+        out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         if (output_format == mon_output_console) {
             sleep(2);
         }
@@ -1678,7 +1678,7 @@ mon_refresh_display(gpointer user_data)
     while (is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             if (st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120)) {
-                fprintf(stderr, "Critical: Unable to get stonith-history\n");
+                out->err(out, "Critical: Unable to get stonith-history");
                 mon_cib_connection_destroy(NULL);
             } else {
                 stonith_history = stonith__sort_history(stonith_history);
@@ -1688,10 +1688,10 @@ mon_refresh_display(gpointer user_data)
                 break; /* all other cases are errors */
             }
         } else {
-            fprintf(stderr, "Critical: No stonith-API\n");
+            out->err(out, "Critical: No stonith-API");
         }
         free_xml(cib_copy);
-        print_as(output_format, "Reading stonith-history failed");
+        out->err(out, "Reading stonith-history failed");
         if (output_format == mon_output_console) {
             sleep(2);
         }
@@ -1721,7 +1721,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(out, output_format, mon_data_set, stonith_history,
                                   options.mon_ops, show, print_neg_location_prefix) != 0) {
-                fprintf(stderr, "Critical: Unable to output html file\n");
+                out->err(out, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
             }
