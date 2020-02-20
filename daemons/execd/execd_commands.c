@@ -14,10 +14,7 @@
 #undef PCMK__TIME_USE_CGT
 #if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC) \
     && !defined(PCMK_TIME_EMERGENCY_CGT)
-#define PCMK__TIME_USE_CGT
-#endif
-
-#ifdef PCMK__TIME_USE_CGT
+#  define PCMK__TIME_USE_CGT
 #  include <time.h>  /* clock_gettime */
 #endif
 
@@ -101,16 +98,16 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
     }
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
 #ifdef PCMK__TIME_USE_CGT
-    do_crm_log(log_level,
-               "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d exec-time:%dms queue-time:%dms",
-               cmd->rsc_id, cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str,
-               cmd->exec_rc, exec_time, queue_time);
-#else
-    do_crm_log(log_level, "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d",
-               cmd->rsc_id,
-               cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str, cmd->exec_rc);
+               " (execution time %dms, queue time %dms)",
 #endif
+               cmd->rsc_id, cmd->action, cmd->call_id,
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc
+#ifdef PCMK__TIME_USE_CGT
+               , exec_time, queue_time
+#endif
+               );
 }
 
 static void
@@ -241,7 +238,7 @@ stonith_recurring_op_helper(gpointer data)
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
+    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
     if (cmd->t_first_queue.tv_sec == 0) {
         cmd->t_first_queue = cmd->t_queue;
     }
@@ -368,7 +365,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
+    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
     if (cmd->t_first_queue.tv_sec == 0) {
         cmd->t_first_queue = cmd->t_queue;
     }
@@ -487,16 +484,16 @@ cmd_original_times(lrmd_cmd_t * cmd)
 static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
-    int exec_time = 0;
-    int queue_time = 0;
     xmlNode *notify = NULL;
 
 #ifdef PCMK__TIME_USE_CGT
-    exec_time = time_diff_ms(NULL, &cmd->t_run);
-    queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
-#endif
+    int exec_time = time_diff_ms(NULL, &(cmd->t_run));
+    int queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
 
     log_finished(cmd, exec_time, queue_time);
+#else
+    log_finished(cmd, 0, 0);
+#endif
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
@@ -848,7 +845,7 @@ action_complete(svc_action_t * action)
 
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->exec_rc != action->rc) {
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_rcchange);
+        clock_gettime(CLOCK_MONOTONIC, &(cmd->t_rcchange));
     }
 #endif
 
@@ -900,7 +897,7 @@ action_complete(svc_action_t * action)
 
             } else {
 #ifdef PCMK__TIME_USE_CGT
-                int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+                int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
                 int timeout_left = cmd->timeout_orig - time_sum;
 
                 crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
@@ -942,7 +939,7 @@ action_complete(svc_action_t * action)
        are not fully supported on platforms without CLOCK_MONOTONIC,
        which is most likely contradiction, but for completeness... */
     if (goagain) {
-        int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+        int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
         int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
 
