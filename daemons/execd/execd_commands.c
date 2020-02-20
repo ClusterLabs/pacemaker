@@ -85,6 +85,81 @@ static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean lrmd_rsc_dispatch(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 
+#ifdef PCMK__TIME_USE_CGT
+
+/*!
+ * \internal
+ * \brief Check whether a struct timespec has been set
+ *
+ * \param[in] timespec  Time to check
+ *
+ * \return true if timespec has been set (i.e. is nonzero), false otherwise
+ */
+static inline bool
+time_is_set(struct timespec *timespec)
+{
+    return (timespec != NULL) &&
+           ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
+}
+
+/*!
+ * \internal
+ * \brief Return difference between two times in milliseconds
+ *
+ * \param[in] now  More recent time (or NULL to use current time)
+ * \param[in] old  Earlier time
+ *
+ * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
+ *
+ * \note Can overflow on 32bit machines when the differences is around
+ *       24 days or more.
+ */
+static int
+time_diff_ms(struct timespec *now, struct timespec *old)
+{
+    int diff_ms = 0;
+
+    if (time_is_set(old)) {
+        struct timespec local_now = { 0, };
+
+        if (now == NULL) {
+            clock_gettime(CLOCK_MONOTONIC, &local_now);
+            now = &local_now;
+        }
+        diff_ms = (now->tv_sec - old->tv_sec) * 1000
+                  + (now->tv_nsec - old->tv_nsec) / 1000;
+    }
+    return diff_ms;
+}
+
+/*!
+ * \internal
+ * \brief Reset a command's operation times to their original values.
+ *
+ * Reset a command's run and queued timestamps to the timestamps of the original
+ * command, so we report the entire time since then and not just the time since
+ * the most recent command (for recurring and systemd operations).
+ *
+ * /param[in] cmd  Executor command object to reset
+ *
+ * /note It's not obvious what the queued time should be for a systemd
+ * start/stop operation, which might go like this:
+ *   initial command queued 5ms, runs 3s
+ *   monitor command queued 10ms, runs 10s
+ *   monitor command queued 10ms, runs 10s
+ * Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ * implementation will report 5ms. If it's 25ms, then we need to
+ * subtract 20ms from the total exec time so as not to count it twice.
+ * We can implement that later if it matters to anyone ...
+ */
+static void
+cmd_original_times(lrmd_cmd_t * cmd)
+{
+    cmd->t_run = cmd->t_first_run;
+    cmd->t_queue = cmd->t_first_queue;
+}
+#endif
+
 static void
 log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
 {
@@ -239,7 +314,7 @@ stonith_recurring_op_helper(gpointer data)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
     clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (cmd->t_first_queue.tv_sec == 0) {
+    if (!time_is_set(&(cmd->t_first_queue))) {
         cmd->t_first_queue = cmd->t_queue;
     }
 #endif
@@ -366,7 +441,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
     clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (cmd->t_first_queue.tv_sec == 0) {
+    if (!time_is_set(&(cmd->t_first_queue))) {
         cmd->t_first_queue = cmd->t_queue;
     }
 #endif
@@ -423,63 +498,6 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
                "Could not notify client %s/%s: %s " CRM_XS " rc=%d",
                client->name, client->id, msg, rc);
 }
-
-#ifdef PCMK__TIME_USE_CGT
-/*!
- * \internal
- * \brief Return difference between two times in milliseconds
- *
- * \param[in] now  More recent time (or NULL to use current time)
- * \param[in] old  Earlier time
- *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
- *
- * \note Can overflow on 32bit machines when the differences is around
- *       24 days or more.
- */
-static int
-time_diff_ms(struct timespec *now, struct timespec *old)
-{
-    struct timespec local_now = { 0, };
-
-    if (now == NULL) {
-        clock_gettime(CLOCK_MONOTONIC, &local_now);
-        now = &local_now;
-    }
-    if ((old == NULL) || (old->tv_sec == 0)) {
-        return 0;
-    }
-    return (now->tv_sec - old->tv_sec) * 1000
-            + (now->tv_nsec - old->tv_nsec) / 1000;
-}
-
-/*!
- * \internal
- * \brief Reset a command's operation times to their original values.
- *
- * Reset a command's run and queued timestamps to the timestamps of the original
- * command, so we report the entire time since then and not just the time since
- * the most recent command (for recurring and systemd operations).
- *
- * /param[in] cmd  Executor command object to reset
- *
- * /note It's not obvious what the queued time should be for a systemd
- * start/stop operation, which might go like this:
- *   initial command queued 5ms, runs 3s
- *   monitor command queued 10ms, runs 10s
- *   monitor command queued 10ms, runs 10s
- * Is the queued time for that operation 5ms, 10ms or 25ms? The current
- * implementation will report 5ms. If it's 25ms, then we need to
- * subtract 20ms from the total exec time so as not to count it twice.
- * We can implement that later if it matters to anyone ...
- */
-static void
-cmd_original_times(lrmd_cmd_t * cmd)
-{
-    cmd->t_run = cmd->t_first_run;
-    cmd->t_queue = cmd->t_first_queue;
-}
-#endif
 
 static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
