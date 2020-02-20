@@ -860,50 +860,40 @@ action_complete(svc_action_t * action)
         rclass = rsc->class;
     }
 
+#ifdef PCMK__TIME_USE_CGT
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
-        if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
-            /* systemd I curse thee!
-             *
-             * systemd returns from start actions after the start _begins_
-             * not after it completes.
-             *
-             * So we have to jump through a few hoops so that we don't
-             * report 'complete' to the rest of pacemaker until, you know,
-             * it's actually done.
+        if ((cmd->exec_rc == PCMK_OCF_OK)
+            && (safe_str_eq(cmd->action, "start")
+                || safe_str_eq(cmd->action, "stop"))) {
+            /* systemd returns from start and stop actions after the action
+             * begins, not after it completes. We have to jump through a few
+             * hoops so that we don't report 'complete' to the rest of pacemaker
+             * until it's actually done.
              */
-#ifdef PCMK__TIME_USE_CGT
             goagain = true;
-#endif
             cmd->real_action = cmd->action;
             cmd->action = strdup("monitor");
 
-        } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "stop")) {
-#ifdef PCMK__TIME_USE_CGT
-            goagain = true;
-#endif
-            cmd->real_action = cmd->action;
-            cmd->action = strdup("monitor");
+        } else if (cmd->real_action != NULL) {
+            // This is follow-up monitor to check whether start/stop completed
+            if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
+                && (cmd->exec_rc == PCMK_OCF_PENDING)) {
+                goagain = true;
 
-        } else if(cmd->real_action) {
-            /* Ok, so this is the follow up monitor action to check if start actually completed */
-            if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
-#ifdef PCMK__TIME_USE_CGT
+            } else if ((cmd->exec_rc == PCMK_OCF_OK)
+                       && safe_str_eq(cmd->real_action, "stop")) {
                 goagain = true;
-#endif
-            } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->real_action, "stop")) {
-#ifdef PCMK__TIME_USE_CGT
-                goagain = true;
-#endif
 
             } else {
-#ifdef PCMK__TIME_USE_CGT
                 int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
                 int timeout_left = cmd->timeout_orig - time_sum;
 
-                crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+                crm_debug("%s systemd %s is now complete (elapsed=%dms, "
+                          "remaining=%dms): %s (%d)",
+                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                          services_ocf_exitcode_str(cmd->exec_rc),
+                          cmd->exec_rc);
                 cmd_original_times(cmd);
-#endif
 
                 // Monitors may return "not running", but start/stop shouldn't
                 if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
@@ -918,6 +908,7 @@ action_complete(svc_action_t * action)
             }
         }
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
@@ -935,9 +926,6 @@ action_complete(svc_action_t * action)
 #endif
 
 #ifdef PCMK__TIME_USE_CGT
-    /* Wrapping this section in ifdef implies that systemd resources
-       are not fully supported on platforms without CLOCK_MONOTONIC,
-       which is most likely contradiction, but for completeness... */
     if (goagain) {
         int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
         int timeout_left = cmd->timeout_orig - time_sum;
