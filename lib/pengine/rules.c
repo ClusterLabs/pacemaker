@@ -447,7 +447,7 @@ phase_of_the_moon(crm_time_t * now)
     value = crm_element_value(cron_spec, xml_field);			\
     if(value != NULL) {							\
 	gboolean pass = TRUE;						\
-	int rc = pcmk__split_range(value, &value_low, &value_high);     \
+	int rc = pcmk__parse_ll_range(value, &value_low, &value_high);  \
         if (rc == pcmk_rc_unknown_format) {                             \
             return FALSE;                                               \
         } else if (value_low == value_high) {                           \

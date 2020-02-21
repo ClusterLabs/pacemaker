@@ -8,7 +8,7 @@ include $(top_srcdir)/mk/glib-tap.mk
 # information.
 #
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
-test_programs = pcmk__split_range
+test_programs = pcmk__parse_ll_range
 
 # If any extra data needs to be added to the source distribution, add it to the
 # following list.

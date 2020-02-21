@@ -602,7 +602,7 @@ crm_strdup_printf(char const *format, ...)
 }
 
 int
-pcmk__split_range(const char *srcstring, long long *start, long long *end)
+pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 {
     char *remainder = NULL;
 
