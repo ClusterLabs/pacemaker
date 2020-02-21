@@ -549,12 +549,6 @@ pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-pcmk_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 /* Exit code means? */
 static int32_t
 pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
@@ -623,7 +617,7 @@ pcmk_ipc_destroy(qb_ipcs_connection_t * c)
 
 struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
     .connection_accept = pcmk_ipc_accept,
-    .connection_created = pcmk_ipc_created,
+    .connection_created = NULL,
     .msg_process = pcmk_ipc_dispatch,
     .connection_closed = pcmk_ipc_closed,
     .connection_destroyed = pcmk_ipc_destroy

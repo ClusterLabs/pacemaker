@@ -364,12 +364,6 @@ crmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-crmd_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 static int32_t
 crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
@@ -446,7 +440,7 @@ do_started(long long action,
 {
     static struct qb_ipcs_service_handlers crmd_callbacks = {
         .connection_accept = crmd_ipc_accept,
-        .connection_created = crmd_ipc_created,
+        .connection_created = NULL,
         .msg_process = crmd_ipc_dispatch,
         .connection_closed = crmd_ipc_closed,
         .connection_destroyed = crmd_ipc_destroy

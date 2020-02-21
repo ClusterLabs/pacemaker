@@ -81,12 +81,6 @@ cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-cib_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 static int32_t
 cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 {
@@ -131,7 +125,7 @@ cib_ipc_destroy(qb_ipcs_connection_t * c)
 
 struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_accept = cib_ipc_accept,
-    .connection_created = cib_ipc_created,
+    .connection_created = NULL,
     .msg_process = cib_ipc_dispatch_ro,
     .connection_closed = cib_ipc_closed,
     .connection_destroyed = cib_ipc_destroy
@@ -139,7 +133,7 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks = {
 
 struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_accept = cib_ipc_accept,
-    .connection_created = cib_ipc_created,
+    .connection_created = NULL,
     .msg_process = cib_ipc_dispatch_rw,
     .connection_closed = cib_ipc_closed,
     .connection_destroyed = cib_ipc_destroy

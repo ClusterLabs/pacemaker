@@ -132,12 +132,6 @@ cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RO);
 }
 
-static void
-ipc_proxy_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 void
 ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
@@ -335,7 +329,7 @@ ipc_proxy_destroy(qb_ipcs_connection_t * c)
 
 static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {
     .connection_accept = crmd_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -343,7 +337,7 @@ static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
     .connection_accept = attrd_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -351,7 +345,7 @@ static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
     .connection_accept = stonith_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -359,7 +353,7 @@ static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
     .connection_accept = cib_proxy_accept_ro,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -367,7 +361,7 @@ static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
 
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_rw = {
     .connection_accept = cib_proxy_accept_rw,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
