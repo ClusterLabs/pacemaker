@@ -80,9 +80,9 @@ extern gboolean send_msg_via_ipc(xmlNode * msg, const char *sys);
 gboolean crmd_is_proxy_session(const char *session);
 void crmd_proxy_send(const char *session, xmlNode *msg);
 
-gboolean crmd_authorize_message(xmlNode *client_msg,
-                                pcmk__client_t *curr_client,
-                                const char *proxy_session);
+bool controld_authorize_ipc_message(xmlNode *client_msg,
+                                    pcmk__client_t *curr_client,
+                                    const char *proxy_session);
 
 extern gboolean send_request(xmlNode * msg, char **msg_reference);
 

@@ -481,113 +481,96 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     return processing_complete;
 }
 
-static gboolean
-process_hello_message(xmlNode * hello,
-                      char **client_name, char **major_version, char **minor_version)
+// Return true if field contains a positive integer
+static bool
+authorize_version(xmlNode *message_data, const char *field,
+                  const char *client_name, const char *ref, const char *uuid)
 {
-    const char *local_client_name;
-    const char *local_major_version;
-    const char *local_minor_version;
+    const char *version = crm_element_value(message_data, field);
 
-    *client_name = NULL;
-    *major_version = NULL;
-    *minor_version = NULL;
+    if ((version == NULL) || (version[0] == '\0')) {
+        crm_warn("IPC hello from %s rejected: No protocol %s",
+                 CRM_XS " ref=%s uuid=%s",
+                 client_name, field, (ref? ref : "none"), uuid);
+        return false;
+    } else {
+        int version_num = crm_parse_int(version, NULL);
 
-    if (hello == NULL) {
-        return FALSE;
+        if (version_num < 0) {
+            crm_warn("IPC hello from %s rejected: Protocol %s '%s' "
+                     "not recognized", CRM_XS " ref=%s uuid=%s",
+                     client_name, field, version, (ref? ref : "none"), uuid);
+            return false;
+        }
     }
-
-    local_client_name = crm_element_value(hello, "client_name");
-    local_major_version = crm_element_value(hello, "major_version");
-    local_minor_version = crm_element_value(hello, "minor_version");
-
-    if (local_client_name == NULL || strlen(local_client_name) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "client name");
-        return FALSE;
-
-    } else if (local_major_version == NULL || strlen(local_major_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "major version");
-        return FALSE;
-
-    } else if (local_minor_version == NULL || strlen(local_minor_version) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "minor version");
-        return FALSE;
-    }
-
-    *client_name = strdup(local_client_name);
-    *major_version = strdup(local_major_version);
-    *minor_version = strdup(local_minor_version);
-
-    crm_trace("Hello message ok");
-    return TRUE;
+    return true;
 }
 
-gboolean
-crmd_authorize_message(xmlNode *client_msg, pcmk__client_t *curr_client,
-                       const char *proxy_session)
+/*!
+ * \internal
+ * \brief Check whether a client IPC message is acceptable
+ *
+ * If a given client IPC message is a hello, "authorize" it by ensuring it has
+ * valid information such as a protocol version, and return false indicating
+ * that nothing further needs to be done with the message. If the message is not
+ * a hello, just return true to indicate it needs further processing.
+ *
+ * \param[in] client_msg     XML of IPC message
+ * \param[in] curr_client    If IPC is not proxied, client that sent message
+ * \param[in] proxy_session  If IPC is proxied, the session ID
+ *
+ * \return true if message needs further processing, false if it doesn't
+ */
+bool
+controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
+                               const char *proxy_session)
 {
-    char *client_name = NULL;
-    char *major_version = NULL;
-    char *minor_version = NULL;
-    gboolean auth_result = FALSE;
-
-    xmlNode *xml = NULL;
+    xmlNode *message_data = NULL;
+    const char *client_name = NULL;
     const char *op = crm_element_value(client_msg, F_CRM_TASK);
-    const char *uuid = curr_client ? curr_client->id : proxy_session;
+    const char *ref = crm_element_value(client_msg, XML_ATTR_REFERENCE);
+    const char *uuid = (curr_client? curr_client->id : proxy_session);
 
     if (uuid == NULL) {
-        crm_warn("Message [%s] not authorized", crm_element_value(client_msg, XML_ATTR_REFERENCE));
-        return FALSE;
-
-    } else if (safe_str_neq(CRM_OP_HELLO, op)) {
-        return TRUE;
+        crm_warn("IPC message from client rejected: No client identifier "
+                 CRM_XS " ref=%s", (ref? ref : "none"));
+        goto rejected;
     }
 
-    xml = get_message_xml(client_msg, F_CRM_DATA);
-    auth_result = process_hello_message(xml, &client_name, &major_version, &minor_version);
-
-    if (auth_result == TRUE) {
-        if (client_name == NULL) {
-            crm_err("Bad client details (client_name=%s, uuid=%s)",
-                    crm_str(client_name), uuid);
-            auth_result = FALSE;
-        }
+    if (safe_str_neq(CRM_OP_HELLO, op)) {
+        // Only hello messages need to be authorized
+        return true;
     }
 
-    if (auth_result == TRUE) {
-        /* check version */
-        int mav = atoi(major_version);
-        int miv = atoi(minor_version);
+    message_data = get_message_xml(client_msg, F_CRM_DATA);
 
-        crm_trace("Checking client version number");
-        if (mav < 0 || miv < 0) {
-            crm_err("Client version (%d:%d) is not acceptable", mav, miv);
-            auth_result = FALSE;
-        }
+    client_name = crm_element_value(message_data, "client_name");
+    if ((client_name == NULL) || (client_name[0] == '\0')) {
+        crm_warn("IPC hello from client rejected: No client name",
+                 CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
+        goto rejected;
+    }
+    if (!authorize_version(message_data, "major_version", client_name, ref,
+                           uuid)) {
+        goto rejected;
+    }
+    if (!authorize_version(message_data, "minor_version", client_name, ref,
+                           uuid)) {
+        goto rejected;
     }
 
-    if (auth_result == TRUE) {
-        crm_trace("Accepted client %s", client_name);
-        if (curr_client) {
-            curr_client->userdata = strdup(client_name);
-        }
-
-        crm_trace("Triggering FSA: %s", __FUNCTION__);
-        mainloop_set_trigger(fsa_source);
-
-    } else {
-        crm_warn("Rejected client logon request");
-        if (curr_client) {
-            qb_ipcs_disconnect(curr_client->ipcs);
-        }
+    crm_trace("Validated IPC hello from client %s", client_name);
+    if (curr_client) {
+        curr_client->userdata = strdup(client_name);
     }
+    mainloop_set_trigger(fsa_source);
+    return false;
 
-    free(minor_version);
-    free(major_version);
-    free(client_name);
-
-    /* hello messages should never be processed further */
-    return FALSE;
+rejected:
+    if (curr_client) {
+        qb_ipcs_disconnect(curr_client->ipcs);
+    }
+    return false;
 }
 
 static enum crmd_fsa_input

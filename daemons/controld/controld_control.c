@@ -391,11 +391,11 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
-    crm_trace("Processing msg from %s", pcmk__client_name(client));
+    crm_trace("Processing IPC message from %s", pcmk__client_name(client));
     crm_log_xml_trace(msg, "controller[inbound]");
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
-    if (crmd_authorize_message(msg, client, NULL)) {
+    if (controld_authorize_ipc_message(msg, client, NULL)) {
         route_message(C_IPC_MESSAGE, msg);
     }
 
