@@ -207,8 +207,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     uint32_t flags = 0;
     int call_options = 0;
     pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, size, &id,
-                                                &flags);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     if (op_request) {
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
@@ -260,8 +259,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     CRM_LOG_ASSERT(cib_client->user != NULL);
     crm_acl_get_set_user(op_request, F_CIB_USER, cib_client->user);
 #endif
-
-    crm_log_xml_trace(op_request, "Client[inbound]");
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);

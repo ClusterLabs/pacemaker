@@ -90,7 +90,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    request = pcmk__client_data2xml(c, data, size, &id, &flags);
+    request = pcmk__client_data2xml(c, data, &id, &flags);
     if (request == NULL) {
         pcmk__ipc_send_ack(c, id, flags, "nack");
         return 0;
@@ -133,7 +133,6 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
-    crm_log_xml_trace(request, "Client[inbound]");
     stonith_command(c, id, flags, request, NULL);
 
     free_xml(request);

@@ -182,8 +182,7 @@ mock_based_dispatch_command(qb_ipcs_connection_t *c, void *data, size_t size)
     uint32_t id = 0, flags = 0;
     int call_options = 0;
     pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, size, &id,
-                                                &flags);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     crm_notice("Got connection %p", c);
     assert(op_request != NULL);

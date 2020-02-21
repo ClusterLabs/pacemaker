@@ -562,8 +562,19 @@ pcmk__client_pid(qb_ipcs_connection_t *c)
     return stats.client_pid;
 }
 
+/*!
+ * \internal
+ * \brief Retrieve message XML from data read from client IPC
+ *
+ * \param[in]  c       IPC client connection
+ * \param[in]  data    Data read from client connection
+ * \param[out] id      Where to store message ID from libqb header
+ * \param[out] flags   Where to store flags from libqb header
+ *
+ * \return Message XML on success, NULL otherwise
+ */
 xmlNode *
-pcmk__client_data2xml(pcmk__client_t *c, void *data, size_t size, uint32_t *id,
+pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
                       uint32_t *flags)
 {
     xmlNode *xml = NULL;
@@ -613,8 +624,8 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, size_t size, uint32_t *id,
 
     CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
 
-    crm_trace("Received %.200s", text);
     xml = string2xml(text);
+    crm_log_xml_trace(xml, "[IPC received]");
 
     free(uncompressed);
     return xml;

@@ -1841,8 +1841,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
-        crm_err("Unknown %s from %s", op, client->name);
-        crm_log_xml_warn(request, "UnknownOp");
+        crm_err("Unknown IPC request '%s' from %s", op, client->name);
     }
 
     crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",

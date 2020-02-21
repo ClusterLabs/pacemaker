@@ -250,7 +250,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
-    xml = pcmk__client_data2xml(client, data, size, &id, &flags);
+    xml = pcmk__client_data2xml(client, data, &id, &flags);
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         return 0;
@@ -260,8 +260,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     CRM_ASSERT(client->user != NULL);
     crm_acl_get_set_user(xml, F_ATTRD_USER, client->user);
 #endif
-
-    crm_log_xml_trace(xml, __FUNCTION__);
 
     op = crm_element_value(xml, F_ATTRD_TASK);
 

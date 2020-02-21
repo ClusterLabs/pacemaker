@@ -373,7 +373,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
 
-    xmlNode *msg = pcmk__client_data2xml(client, data, size, &id, &flags);
+    xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
 
     pcmk__ipc_send_ack(client, id, flags, "ack");
     if (msg == NULL) {
@@ -385,7 +385,6 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
-    crm_log_xml_trace(msg, "controller[inbound]");
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
         crm_trace("Processing IPC message from %s", pcmk__client_name(client));

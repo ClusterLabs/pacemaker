@@ -234,7 +234,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      * This function is receiving a request from connection
      * 1 and forwarding it to connection 2.
      */
-    request = pcmk__client_data2xml(client, data, size, &id, &flags);
+    request = pcmk__client_data2xml(client, data, &id, &flags);
 
     if (!request) {
         return 0;
