@@ -447,33 +447,26 @@ phase_of_the_moon(crm_time_t * now)
     value = crm_element_value(cron_spec, xml_field);			\
     if(value != NULL) {							\
 	gboolean pass = TRUE;						\
-	int rc = pcmk__split_range(value, '-', &value_low, &value_high);\
+	int rc = pcmk__split_range(value, &value_low, &value_high);     \
         if (rc == pcmk_rc_unknown_format) {                             \
             return FALSE;                                               \
-        } else if (value_low == NULL && value_high == NULL) {           \
-            value_low_i = crm_parse_int(value, NULL);                   \
-            if (value_low_i != time_field) {                            \
+        } else if (value_low == value_high) {                           \
+            if (value_low != time_field) {                              \
                 pass = FALSE;                                           \
             }                                                           \
-        } else if (value_low == NULL && value_high != NULL) {           \
-            value_high_i = crm_parse_int(value_high, "-1");             \
-            if (time_field > value_high_i) {                            \
+        } else if (value_low == -1 && value_high != -1) {               \
+            if (time_field > value_high) {                              \
                 pass = FALSE;                                           \
             }                                                           \
-        } else if (value_low != NULL && value_high == NULL) {           \
-            value_low_i = crm_parse_int(value_low, "0");                \
-            if (value_low_i > time_field) {                             \
+        } else if (value_low != -1 && value_high == -1) {               \
+            if (value_low > time_field) {                               \
                 pass = FALSE;                                           \
             }                                                           \
 	} else {                                                        \
-            value_low_i = crm_parse_int(value_low, "0");                \
-            value_high_i = crm_parse_int(value_high, "-1");             \
-            if (value_low_i > time_field || value_high_i < time_field) {\
+            if (value_low > time_field || value_high < time_field) {    \
                 pass = FALSE;                                           \
             }                                                           \
         }                                                               \
-	free(value_low);						\
-	free(value_high);						\
 	if(pass == FALSE) {						\
 	    crm_debug("Condition '%s' in %s: failed", value, xml_field); \
 	    return pass;						\
@@ -485,11 +478,9 @@ gboolean
 pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
     const char *value = NULL;
-    char *value_low = NULL;
-    char *value_high = NULL;
 
-    int value_low_i = 0;
-    int value_high_i = 0;
+    long long value_low = -1;
+    long long value_high = -1;
 
     uint32_t h, m, s, y, d, w;
 
