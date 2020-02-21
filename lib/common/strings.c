@@ -601,7 +601,7 @@ crm_strdup_printf(char const *format, ...)
     return string;
 }
 
-bool
+int
 pcmk__split_range(const char *srcstring, char separator, char **start, char **end)
 {
     const char *seploc = NULL;
@@ -611,16 +611,16 @@ pcmk__split_range(const char *srcstring, char separator, char **start, char **en
     *end = NULL;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring == NULL) {
-        return false;
+    if (srcstring == NULL || strcmp(srcstring, "") == 0) {
+        return pcmk_rc_unknown_format;
     }
 
     seploc = strchr(srcstring, separator);
     if (!seploc) {
-        return false;
+        return pcmk_rc_ok;
     } else if (strlen(srcstring) == 1) {
         /* The source string contained only the separator. */
-        return false;
+        return pcmk_rc_unknown_format;
     } else if (seploc == srcstring && *(seploc + 1)) {
         /* Separator is the first character of the range, so this
          * range only has an end.
@@ -636,5 +636,5 @@ pcmk__split_range(const char *srcstring, char separator, char **start, char **en
         *end = strdup(seploc + 1);
     }
 
-    return true;
+    return pcmk_rc_ok;
 }

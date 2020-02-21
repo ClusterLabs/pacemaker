@@ -7,8 +7,8 @@ empty_input_string(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range(NULL, '-', &start, &end) == false);
-    g_assert(pcmk__split_range("", '-', &start, &end) == false);
+    g_assert(pcmk__split_range(NULL, '-', &start, &end) == pcmk_rc_unknown_format);
+    g_assert(pcmk__split_range("", '-', &start, &end) == pcmk_rc_unknown_format);
 }
 
 static void
@@ -16,7 +16,7 @@ missing_separator(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range("1234", '-', &start, &end) == false);
+    g_assert(pcmk__split_range("1234", '-', &start, &end) == pcmk_rc_ok);
     g_assert(start == NULL);
     g_assert(end == NULL);
 }
@@ -26,7 +26,7 @@ only_separator(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range("-", '-', &start, &end) == false);
+    g_assert(pcmk__split_range("-", '-', &start, &end) == pcmk_rc_unknown_format);
     g_assert(start == NULL);
     g_assert(end == NULL);
 }
@@ -36,7 +36,7 @@ no_range_end(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range("2000-", '-', &start, &end) == true);
+    g_assert(pcmk__split_range("2000-", '-', &start, &end) == pcmk_rc_ok);
     g_assert_cmpstr(start, ==, "2000");
     g_assert(end == NULL);
 
@@ -48,7 +48,7 @@ no_range_start(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range("-2020", '-', &start, &end) == true);
+    g_assert(pcmk__split_range("-2020", '-', &start, &end) == pcmk_rc_ok);
     g_assert(start == NULL);
     g_assert_cmpstr(end, ==, "2020");
 
@@ -60,7 +60,7 @@ range_start_and_end(void) {
     char *start = NULL;
     char *end = NULL;
 
-    g_assert(pcmk__split_range("2000-2020", '-', &start, &end) == true);
+    g_assert(pcmk__split_range("2000-2020", '-', &start, &end) == pcmk_rc_ok);
     g_assert_cmpstr(start, ==, "2000");
     g_assert_cmpstr(end, ==, "2020");
 
