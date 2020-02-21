@@ -54,17 +54,13 @@ time_after_year_range(void) {
 }
 
 static void
-range_without_start_year_fails(void) {
-    run_one_test("2010-01-01", "<date_spec id='spec' years='-2020'/>", FALSE);
-}
-
-static void
-range_without_end_year_fails(void) {
-    run_one_test("2010-01-01", "<date_spec id='spec' years='2000-'/>", FALSE);
+range_without_start_year_passes(void) {
+    run_one_test("2010-01-01", "<date_spec id='spec' years='-2020'/>", TRUE);
 }
 
 static void
 range_without_end_year_passes(void) {
+    run_one_test("2010-01-01", "<date_spec id='spec' years='2000-'/>", TRUE);
     run_one_test("2000-10-01", "<date_spec id='spec' years='2000-'/>", TRUE);
 }
 
@@ -112,8 +108,7 @@ int main(int argc, char **argv) {
     g_test_add_func("/pengine/rules/cron_range/range/time_satisfies_year", time_satisfies_year_range);
     g_test_add_func("/pengine/rules/cron_range/range/time_before_year", time_before_year_range);
     g_test_add_func("/pengine/rules/cron_range/range/time_after_year", time_after_year_range);
-    g_test_add_func("/pengine/rules/cron_range/range/no_start_year_fails", range_without_start_year_fails);
-    g_test_add_func("/pengine/rules/cron_range/range/no_end_year_fails", range_without_end_year_fails);
+    g_test_add_func("/pengine/rules/cron_range/range/no_start_year_passes", range_without_start_year_passes);
     g_test_add_func("/pengine/rules/cron_range/range/no_end_year_passes", range_without_end_year_passes);
 
     g_test_add_func("/pengine/rules/cron_range/yeardays/satisfies", yeardays_satisfies);

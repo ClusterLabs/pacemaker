@@ -447,23 +447,29 @@ phase_of_the_moon(crm_time_t * now)
     value = crm_element_value(cron_spec, xml_field);			\
     if(value != NULL) {							\
 	gboolean pass = TRUE;						\
-	pcmk__split_range(value, '-', &value_low, &value_high);		\
-        if (value_low == NULL && value_high != NULL) {                  \
-            value_low = strdup("0");                                    \
-        } else if (value_low == NULL) {                                 \
-	    value_low = strdup(value);				        \
-	}								\
-	value_low_i = crm_parse_int(value_low, "0");			\
-	value_high_i = crm_parse_int(value_high, "-1");			\
-	if(value_high_i < 0) {						\
-	    if(value_low_i != time_field) {				\
-		pass = FALSE;						\
-	    }								\
-	} else if(value_low_i > time_field) {				\
-	    pass = FALSE;						\
-	} else if(value_high_i < time_field) {				\
-	    pass = FALSE;						\
-	}								\
+	gboolean rc = pcmk__split_range(value, '-', &value_low, &value_high); \
+        if (rc == false) {                                              \
+            value_low_i = crm_parse_int(value, NULL);                   \
+            if (value_low_i != time_field) {                            \
+                pass = FALSE;                                           \
+            }                                                           \
+        } else if (value_low == NULL && value_high != NULL) {           \
+            value_high_i = crm_parse_int(value_high, "-1");             \
+            if (time_field > value_high_i) {                            \
+                pass = FALSE;                                           \
+            }                                                           \
+        } else if (value_low != NULL && value_high == NULL) {           \
+            value_low_i = crm_parse_int(value_low, "0");                \
+            if (value_low_i > time_field) {                             \
+                pass = FALSE;                                           \
+            }                                                           \
+	} else {                                                        \
+            value_low_i = crm_parse_int(value_low, "0");                \
+            value_high_i = crm_parse_int(value_high, "-1");             \
+            if (value_low_i > time_field || value_high_i < time_field) {\
+                pass = FALSE;                                           \
+            }                                                           \
+        }                                                               \
 	free(value_low);						\
 	free(value_high);						\
 	if(pass == FALSE) {						\
