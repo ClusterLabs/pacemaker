@@ -425,7 +425,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
     }
 
     if (uid_client != 0) {
-        crm_trace("Giving access to group %u", gid_cluster);
+        crm_trace("Giving group %u access to new IPC connection", gid_cluster);
         /* Passing -1 to chown(2) means don't change */
         qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
@@ -441,8 +441,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
         set_bit(client->flags, pcmk__client_privileged);
     }
 
-    crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
-
+    crm_debug("New IPC client %s for PID %u with uid %d and gid %d",
+              client->id, client->pid, uid_client, gid_client);
     return client;
 }
 
