@@ -1322,7 +1322,11 @@ if test "x${enable_systemd}" != xno; then
     fi
     if test $(echo "$CPPFLAGS" | grep -q PCMK_TIME_EMERGENCY_CGT) \
             || test "x$ac_cv_have_decl_CLOCK_MONOTONIC" = xno; then
-        AC_MSG_FAILURE([cannot enable systemd without clock_gettime(CLOCK_MONOTONIC, ...)])
+        if test "x${enable_systemd}" = xyes; then
+            AC_MSG_FAILURE([cannot enable systemd without clock_gettime(CLOCK_MONOTONIC, ...)])
+        else
+            enable_systemd=no
+        fi
     fi
     if test "x${enable_systemd}" = xtry; then
         AC_MSG_CHECKING([for systemd version query result via dbus-send])

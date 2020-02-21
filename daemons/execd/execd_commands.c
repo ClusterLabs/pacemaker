@@ -14,10 +14,7 @@
 #undef PCMK__TIME_USE_CGT
 #if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC) \
     && !defined(PCMK_TIME_EMERGENCY_CGT)
-#define PCMK__TIME_USE_CGT
-#endif
-
-#ifdef PCMK__TIME_USE_CGT
+#  define PCMK__TIME_USE_CGT
 #  include <time.h>  /* clock_gettime */
 #endif
 
@@ -88,6 +85,81 @@ static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean lrmd_rsc_dispatch(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 
+#ifdef PCMK__TIME_USE_CGT
+
+/*!
+ * \internal
+ * \brief Check whether a struct timespec has been set
+ *
+ * \param[in] timespec  Time to check
+ *
+ * \return true if timespec has been set (i.e. is nonzero), false otherwise
+ */
+static inline bool
+time_is_set(struct timespec *timespec)
+{
+    return (timespec != NULL) &&
+           ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
+}
+
+/*!
+ * \internal
+ * \brief Return difference between two times in milliseconds
+ *
+ * \param[in] now  More recent time (or NULL to use current time)
+ * \param[in] old  Earlier time
+ *
+ * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
+ *
+ * \note Can overflow on 32bit machines when the differences is around
+ *       24 days or more.
+ */
+static int
+time_diff_ms(struct timespec *now, struct timespec *old)
+{
+    int diff_ms = 0;
+
+    if (time_is_set(old)) {
+        struct timespec local_now = { 0, };
+
+        if (now == NULL) {
+            clock_gettime(CLOCK_MONOTONIC, &local_now);
+            now = &local_now;
+        }
+        diff_ms = (now->tv_sec - old->tv_sec) * 1000
+                  + (now->tv_nsec - old->tv_nsec) / 1000000;
+    }
+    return diff_ms;
+}
+
+/*!
+ * \internal
+ * \brief Reset a command's operation times to their original values.
+ *
+ * Reset a command's run and queued timestamps to the timestamps of the original
+ * command, so we report the entire time since then and not just the time since
+ * the most recent command (for recurring and systemd operations).
+ *
+ * /param[in] cmd  Executor command object to reset
+ *
+ * /note It's not obvious what the queued time should be for a systemd
+ * start/stop operation, which might go like this:
+ *   initial command queued 5ms, runs 3s
+ *   monitor command queued 10ms, runs 10s
+ *   monitor command queued 10ms, runs 10s
+ * Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ * implementation will report 5ms. If it's 25ms, then we need to
+ * subtract 20ms from the total exec time so as not to count it twice.
+ * We can implement that later if it matters to anyone ...
+ */
+static void
+cmd_original_times(lrmd_cmd_t * cmd)
+{
+    cmd->t_run = cmd->t_first_run;
+    cmd->t_queue = cmd->t_first_queue;
+}
+#endif
+
 static void
 log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
 {
@@ -101,16 +173,16 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
     }
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
 #ifdef PCMK__TIME_USE_CGT
-    do_crm_log(log_level,
-               "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d exec-time:%dms queue-time:%dms",
-               cmd->rsc_id, cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str,
-               cmd->exec_rc, exec_time, queue_time);
-#else
-    do_crm_log(log_level, "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d",
-               cmd->rsc_id,
-               cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str, cmd->exec_rc);
+               " (execution time %dms, queue time %dms)",
 #endif
+               cmd->rsc_id, cmd->action, cmd->call_id,
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc
+#ifdef PCMK__TIME_USE_CGT
+               , exec_time, queue_time
+#endif
+               );
 }
 
 static void
@@ -241,8 +313,8 @@ stonith_recurring_op_helper(gpointer data)
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
-    if (cmd->t_first_queue.tv_sec == 0) {
+    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
+    if (!time_is_set(&(cmd->t_first_queue))) {
         cmd->t_first_queue = cmd->t_queue;
     }
 #endif
@@ -368,8 +440,8 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
-    if (cmd->t_first_queue.tv_sec == 0) {
+    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
+    if (!time_is_set(&(cmd->t_first_queue))) {
         cmd->t_first_queue = cmd->t_queue;
     }
 #endif
@@ -427,76 +499,19 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
                client->name, client->id, msg, rc);
 }
 
-#ifdef PCMK__TIME_USE_CGT
-/*!
- * \internal
- * \brief Return difference between two times in milliseconds
- *
- * \param[in] now  More recent time (or NULL to use current time)
- * \param[in] old  Earlier time
- *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
- *
- * \note Can overflow on 32bit machines when the differences is around
- *       24 days or more.
- */
-static int
-time_diff_ms(struct timespec *now, struct timespec *old)
-{
-    struct timespec local_now = { 0, };
-
-    if (now == NULL) {
-        clock_gettime(CLOCK_MONOTONIC, &local_now);
-        now = &local_now;
-    }
-    if ((old == NULL) || (old->tv_sec == 0)) {
-        return 0;
-    }
-    return (now->tv_sec - old->tv_sec) * 1000
-            + (now->tv_nsec - old->tv_nsec) / 1000;
-}
-
-/*!
- * \internal
- * \brief Reset a command's operation times to their original values.
- *
- * Reset a command's run and queued timestamps to the timestamps of the original
- * command, so we report the entire time since then and not just the time since
- * the most recent command (for recurring and systemd operations).
- *
- * /param[in] cmd  Executor command object to reset
- *
- * /note It's not obvious what the queued time should be for a systemd
- * start/stop operation, which might go like this:
- *   initial command queued 5ms, runs 3s
- *   monitor command queued 10ms, runs 10s
- *   monitor command queued 10ms, runs 10s
- * Is the queued time for that operation 5ms, 10ms or 25ms? The current
- * implementation will report 5ms. If it's 25ms, then we need to
- * subtract 20ms from the total exec time so as not to count it twice.
- * We can implement that later if it matters to anyone ...
- */
-static void
-cmd_original_times(lrmd_cmd_t * cmd)
-{
-    cmd->t_run = cmd->t_first_run;
-    cmd->t_queue = cmd->t_first_queue;
-}
-#endif
-
 static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
-    int exec_time = 0;
-    int queue_time = 0;
     xmlNode *notify = NULL;
 
 #ifdef PCMK__TIME_USE_CGT
-    exec_time = time_diff_ms(NULL, &cmd->t_run);
-    queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
-#endif
+    int exec_time = time_diff_ms(NULL, &(cmd->t_run));
+    int queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
 
     log_finished(cmd, exec_time, queue_time);
+#else
+    log_finished(cmd, 0, 0);
+#endif
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
@@ -848,7 +863,7 @@ action_complete(svc_action_t * action)
 
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->exec_rc != action->rc) {
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_rcchange);
+        clock_gettime(CLOCK_MONOTONIC, &(cmd->t_rcchange));
     }
 #endif
 
@@ -863,50 +878,40 @@ action_complete(svc_action_t * action)
         rclass = rsc->class;
     }
 
+#ifdef PCMK__TIME_USE_CGT
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
-        if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
-            /* systemd I curse thee!
-             *
-             * systemd returns from start actions after the start _begins_
-             * not after it completes.
-             *
-             * So we have to jump through a few hoops so that we don't
-             * report 'complete' to the rest of pacemaker until, you know,
-             * it's actually done.
+        if ((cmd->exec_rc == PCMK_OCF_OK)
+            && (safe_str_eq(cmd->action, "start")
+                || safe_str_eq(cmd->action, "stop"))) {
+            /* systemd returns from start and stop actions after the action
+             * begins, not after it completes. We have to jump through a few
+             * hoops so that we don't report 'complete' to the rest of pacemaker
+             * until it's actually done.
              */
-#ifdef PCMK__TIME_USE_CGT
             goagain = true;
-#endif
             cmd->real_action = cmd->action;
             cmd->action = strdup("monitor");
 
-        } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "stop")) {
-#ifdef PCMK__TIME_USE_CGT
-            goagain = true;
-#endif
-            cmd->real_action = cmd->action;
-            cmd->action = strdup("monitor");
+        } else if (cmd->real_action != NULL) {
+            // This is follow-up monitor to check whether start/stop completed
+            if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
+                && (cmd->exec_rc == PCMK_OCF_PENDING)) {
+                goagain = true;
 
-        } else if(cmd->real_action) {
-            /* Ok, so this is the follow up monitor action to check if start actually completed */
-            if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
-#ifdef PCMK__TIME_USE_CGT
+            } else if ((cmd->exec_rc == PCMK_OCF_OK)
+                       && safe_str_eq(cmd->real_action, "stop")) {
                 goagain = true;
-#endif
-            } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->real_action, "stop")) {
-#ifdef PCMK__TIME_USE_CGT
-                goagain = true;
-#endif
 
             } else {
-#ifdef PCMK__TIME_USE_CGT
-                int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+                int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
                 int timeout_left = cmd->timeout_orig - time_sum;
 
-                crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+                crm_debug("%s systemd %s is now complete (elapsed=%dms, "
+                          "remaining=%dms): %s (%d)",
+                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                          services_ocf_exitcode_str(cmd->exec_rc),
+                          cmd->exec_rc);
                 cmd_original_times(cmd);
-#endif
 
                 // Monitors may return "not running", but start/stop shouldn't
                 if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
@@ -921,6 +926,7 @@ action_complete(svc_action_t * action)
             }
         }
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
@@ -938,11 +944,8 @@ action_complete(svc_action_t * action)
 #endif
 
 #ifdef PCMK__TIME_USE_CGT
-    /* Wrapping this section in ifdef implies that systemd resources
-       are not fully supported on platforms without CLOCK_MONOTONIC,
-       which is most likely contradiction, but for completeness... */
     if (goagain) {
-        int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+        int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
         int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
 
