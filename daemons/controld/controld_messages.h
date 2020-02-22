@@ -75,8 +75,6 @@ fsa_data_t *get_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 
-extern gboolean send_msg_via_ipc(xmlNode * msg, const char *sys);
-
 gboolean crmd_is_proxy_session(const char *session);
 void crmd_proxy_send(const char *session, xmlNode *msg);
 

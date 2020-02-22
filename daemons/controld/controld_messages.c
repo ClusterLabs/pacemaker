@@ -31,8 +31,7 @@ static void handle_response(xmlNode *stored_msg);
 static enum crmd_fsa_input handle_request(xmlNode *stored_msg,
                                           enum crmd_fsa_cause cause);
 static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
-
-#define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
+static void send_msg_via_ipc(xmlNode * msg, const char *sys);
 
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
@@ -97,9 +96,10 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     last_data_id++;
-    crm_trace("%s %s FSA input %d (%s) (cause=%s) %s data",
-              raised_from, prepend ? "prepended" : "appended", last_data_id,
-              fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
+    crm_trace("%s %s FSA input %d (%s) due to %s, %s data",
+              raised_from, (prepend? "prepended" : "appended"), last_data_id,
+              fsa_input2string(input), fsa_cause2string(cause),
+              (data? "with" : "without"));
 
     fsa_data = calloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
@@ -120,10 +120,10 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_CRMD_STATUS_CALLBACK:
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
-                crm_trace("Copying %s data from %s as a HA msg",
-                          fsa_cause2string(cause), raised_from);
                 CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
                           crm_err("Bogus data from %s", raised_from));
+                crm_trace("Copying %s data from %s as cluster message data",
+                          fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_ha_msg_input(data);
                 fsa_data->data_type = fsa_dt_ha_msg;
                 break;
@@ -139,23 +139,22 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_SHUTDOWN:
             case C_UNKNOWN:
             case C_STARTUP:
-                crm_err("Copying %s data (from %s)"
-                        " not yet implemented", fsa_cause2string(cause), raised_from);
+                crm_crit("Copying %s data (from %s) is not yet implemented",
+                         fsa_cause2string(cause), raised_from);
                 crmd_exit(CRM_EX_SOFTWARE);
                 break;
         }
-        crm_trace("%s data copied", fsa_cause2string(fsa_data->fsa_cause));
     }
 
     /* make sure to free it properly later */
     if (prepend) {
-        crm_trace("Prepending input");
         fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
     } else {
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
     }
 
-    crm_trace("Queue len: %d", g_list_length(fsa_message_queue));
+    crm_trace("FSA message queue length is %d",
+              g_list_length(fsa_message_queue));
 
     /* fsa_dump_queue(LOG_TRACE); */
 
@@ -164,7 +163,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     if (fsa_source && input != I_WAIT_FOR_EVENT) {
-        crm_trace("Triggering FSA: %s", __FUNCTION__);
+        crm_trace("Triggering FSA");
         mainloop_set_trigger(fsa_source);
     }
     return last_data_id;
@@ -190,20 +189,11 @@ fsa_dump_queue(int log_level)
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
-    ha_msg_input_t *copy = NULL;
-    xmlNodePtr data = NULL;
+    ha_msg_input_t *copy = calloc(1, sizeof(ha_msg_input_t));
 
-    if (orig != NULL) {
-        crm_trace("Copy msg");
-        data = copy_xml(orig->msg);
-
-    } else {
-        crm_trace("No message to copy");
-    }
-    copy = new_ha_msg_input(data);
-    if (orig && orig->msg != NULL) {
-        CRM_CHECK(copy->msg != NULL, crm_err("copy failed"));
-    }
+    CRM_ASSERT(copy != NULL);
+    copy->msg = (orig && orig->msg)? copy_xml(orig->msg) : NULL;
+    copy->xml = get_message_xml(copy->msg, F_CRM_DATA);
     return copy;
 }
 
@@ -418,39 +408,39 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     if (is_for_dc || is_for_dcib || is_for_te) {
         if (AM_I_DC && is_for_te) {
-            ROUTER_RESULT("Message result: Local relay");
+            crm_trace("Message routing: Process locally as transition request");
             send_msg_via_ipc(msg, sys_to);
 
         } else if (AM_I_DC) {
-            ROUTER_RESULT("Message result: DC/controller process");
+            crm_trace("Message routing: Process locally as DC request");
             processing_complete = FALSE;        /* more to be done by caller */
         } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
                    && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
-
-            /* Neither the TE nor the scheduler should be sending messages
-             * to DCs on other nodes. By definition, if we are no longer the DC,
-             * then the scheduler's or TE's data should be discarded.
-             */
 
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 dest = text2msg_type(sys_to);
             }
 #endif
-            ROUTER_RESULT("Message result: External relay to DC");
+            crm_trace("Message routing: Relay to DC");
             send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
 
         } else {
-            /* discard */
-            ROUTER_RESULT("Message result: Discard, not DC");
+            /* Neither the TE nor the scheduler should be sending messages
+             * to DCs on other nodes. By definition, if we are no longer the DC,
+             * then the scheduler's or TE's data should be discarded.
+             */
+            crm_trace("Message routing: Discard because we are not DC");
         }
 
     } else if (is_local && (is_for_crm || is_for_cib)) {
-        ROUTER_RESULT("Message result: controller process");
+        crm_trace("Message routing: Process locally as controller request");
         processing_complete = FALSE;    /* more to be done by caller */
 
     } else if (is_local) {
-        ROUTER_RESULT("Message result: Local relay");
+        crm_trace("Message routing: Local relay to %s",
+                  (sys_to? sys_to : "unknown client"));
+        crm_log_xml_trace(msg, "[IPC relay]");
         send_msg_via_ipc(msg, sys_to);
 
     } else {
@@ -472,9 +462,11 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                crm_err("Cannot route message to unknown node %s", host_to);
                return TRUE;
             }
+            crm_trace("Message routing: Relay to %s",
+                      (node_to->uname? node_to->uname : "peer"));
+        } else {
+            crm_trace("Message routing: Relay to all peers");
         }
-
-        ROUTER_RESULT("Message result: External relay");
         send_cluster_message(host_to ? node_to : NULL, dest, msg, TRUE);
     }
 
@@ -877,7 +869,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
     /* Optimize this for the DC - it has the most to do */
 
     if (op == NULL) {
-        crm_log_xml_err(stored_msg, "Bad message");
+        crm_log_xml_warn(stored_msg, "[request without " F_CRM_TASK "]");
         return I_NULL;
     }
 
@@ -1133,10 +1125,9 @@ handle_shutdown_request(xmlNode * stored_msg)
 /* msg is deleted by the time this returns */
 extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);
 
-gboolean
+static void
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
-    gboolean send_ok = TRUE;
     pcmk__client_t *client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
@@ -1145,10 +1136,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     if (client_channel != NULL) {
         /* Transient clients such as crmadmin */
-        if (pcmk__ipc_send_xml(client_channel, 0, msg,
-                               crm_ipc_server_event) != pcmk_rc_ok) {
-            send_ok = FALSE;
-        }
+        pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);
@@ -1170,9 +1158,6 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.origin = __FUNCTION__;
         fsa_data.data_type = fsa_dt_ha_msg;
 
-#ifdef FSA_TRACE
-        crm_trace("Invoking action A_LRM_INVOKE (%.16llx)", A_LRM_INVOKE);
-#endif
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
 
     } else if (sys != NULL && crmd_is_proxy_session(sys)) {
@@ -1180,21 +1165,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     } else {
         crm_debug("Unknown Sub-system (%s)... discarding message.", crm_str(sys));
-        send_ok = FALSE;
     }
-
-    return send_ok;
-}
-
-ha_msg_input_t *
-new_ha_msg_input(xmlNode * orig)
-{
-    ha_msg_input_t *input_copy = NULL;
-
-    input_copy = calloc(1, sizeof(ha_msg_input_t));
-    input_copy->msg = orig;
-    input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
-    return input_copy;
 }
 
 void
