@@ -600,3 +600,58 @@ crm_strdup_printf(char const *format, ...)
     va_end(ap);
     return string;
 }
+
+int
+pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
+{
+    char *remainder = NULL;
+
+    CRM_ASSERT(start != NULL && end != NULL);
+
+    *start = -1;
+    *end = -1;
+
+    crm_trace("Attempting to decode: [%s]", srcstring);
+    if (srcstring == NULL || strcmp(srcstring, "") == 0 || strcmp(srcstring, "-") == 0) {
+        return pcmk_rc_unknown_format;
+    }
+
+    /* String starts with a dash, so this is either a range with
+     * no beginning or garbage.
+     * */
+    if (*srcstring == '-') {
+        int rc = scan_ll(srcstring+1, end, &remainder);
+
+        if (rc != pcmk_rc_ok || *remainder != '\0') {
+            return pcmk_rc_unknown_format;
+        } else {
+            return pcmk_rc_ok;
+        }
+    }
+
+    if (scan_ll(srcstring, start, &remainder) != pcmk_rc_ok) {
+        return pcmk_rc_unknown_format;
+    }
+
+    if (*remainder && *remainder == '-') {
+        if (*(remainder+1)) {
+            char *more_remainder = NULL;
+            int rc = scan_ll(remainder+1, end, &more_remainder);
+
+            if (rc != pcmk_rc_ok || *more_remainder != '\0') {
+                return pcmk_rc_unknown_format;
+            }
+        }
+    } else if (*remainder && *remainder != '-') {
+        *start = -1;
+        return pcmk_rc_unknown_format;
+    } else {
+        /* The input string contained only one number.  Set start and end
+         * to the same value and return pcmk_rc_ok.  This gives the caller
+         * a way to tell this condition apart from a range with no end.
+         */
+        *end = *start;
+    }
+
+    return pcmk_rc_ok;
+}

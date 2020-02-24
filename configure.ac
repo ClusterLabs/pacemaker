@@ -2003,6 +2003,8 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-cluster.pc                            \
                 lib/common/Makefile                                 \
+                lib/common/tests/Makefile                           \
+                lib/common/tests/strings/Makefile                   \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
                 lib/gnu/Makefile                                    \

@@ -24,6 +24,8 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
+SUBDIRS = tests
+
 noinst_HEADERS		= crmcommon_private.h
 
 libcrmcommon_la_LDFLAGS	= -version-info 37:0:3
