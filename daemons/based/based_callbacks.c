@@ -81,12 +81,6 @@ cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-cib_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 static int32_t
 cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 {
@@ -131,7 +125,7 @@ cib_ipc_destroy(qb_ipcs_connection_t * c)
 
 struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_accept = cib_ipc_accept,
-    .connection_created = cib_ipc_created,
+    .connection_created = NULL,
     .msg_process = cib_ipc_dispatch_ro,
     .connection_closed = cib_ipc_closed,
     .connection_destroyed = cib_ipc_destroy
@@ -139,7 +133,7 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks = {
 
 struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_accept = cib_ipc_accept,
-    .connection_created = cib_ipc_created,
+    .connection_created = NULL,
     .msg_process = cib_ipc_dispatch_rw,
     .connection_closed = cib_ipc_closed,
     .connection_destroyed = cib_ipc_destroy
@@ -213,8 +207,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     uint32_t flags = 0;
     int call_options = 0;
     pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, size, &id,
-                                                &flags);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     if (op_request) {
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
@@ -266,8 +259,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     CRM_LOG_ASSERT(cib_client->user != NULL);
     crm_acl_get_set_user(op_request, F_CIB_USER, cib_client->user);
 #endif
-
-    crm_log_xml_trace(op_request, "Client[inbound]");
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
+#include "crm_resource_controller.h"
 
 extern bool print_pending;
 
@@ -30,11 +31,12 @@ extern bool BE_QUIET;
 extern int resource_verbose;
 
 extern int cib_options;
-extern int crmd_replies_needed;
 
 extern char *move_lifetime;
 
 extern const char *attr_set_type;
+
+extern pcmk_controld_api_cb_t controld_api_cb;
 
 /* ban */
 int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn);
@@ -61,14 +63,16 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname, bo
 
 /* runtime */
 void cli_resource_check(cib_t * cib, resource_t *rsc);
-int cli_resource_fail(crm_ipc_t * crmd_channel, const char *host_uname, const char *rsc_id, pe_working_set_t * data_set);
+int cli_resource_fail(pcmk_controld_api_t *controld_api,
+                      const char *host_uname, const char *rsc_id,
+                      pe_working_set_t *data_set);
 int cli_resource_search(resource_t *rsc, const char *requested_name,
                         pe_working_set_t *data_set);
-int cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
-                        resource_t *rsc, const char *operation,
-                        const char *interval_spec, bool just_failures,
-                        pe_working_set_t *data_set);
-int cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
+int cli_resource_delete(pcmk_controld_api_t *controld_api,
+                        const char *host_uname, pe_resource_t *rsc,
+                        const char *operation, const char *interval_spec,
+                        bool just_failures, pe_working_set_t *data_set);
+int cli_cleanup_all(pcmk_controld_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
 int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,

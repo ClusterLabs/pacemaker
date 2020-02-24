@@ -118,18 +118,6 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 
 /*!
  * \internal
- * \brief Callback for successful client connection
- *
- * \param[in] c  New connection
- */
-static void
-attrd_ipc_created(qb_ipcs_connection_t *c)
-{
-    crm_trace("Client connection %p accepted", c);
-}
-
-/*!
- * \internal
  * \brief Destroy a client IPC connection
  *
  * \param[in] c  Connection to destroy
@@ -179,7 +167,7 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 
     static struct qb_ipcs_service_handlers ipc_callbacks = {
         .connection_accept = attrd_ipc_accept,
-        .connection_created = attrd_ipc_created,
+        .connection_created = NULL,
         .msg_process = NULL,
         .connection_closed = attrd_ipc_closed,
         .connection_destroyed = attrd_ipc_destroy

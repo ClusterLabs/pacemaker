@@ -354,34 +354,28 @@ do_startup(long long action,
     }
 }
 
+// \return libqb error code (0 on success, -errno on error)
 static int32_t
-crmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
+    crm_trace("Accepting new IPC client connection");
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
-static void
-crmd_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
+// \return libqb error code (0 on success, -errno on error)
 static int32_t
-crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
+dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
 
-    xmlNode *msg = pcmk__client_data2xml(client, data, size, &id, &flags);
+    xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
 
-    crm_trace("Invoked: %s", pcmk__client_name(client));
     pcmk__ipc_send_ack(client, id, flags, "ack");
-
     if (msg == NULL) {
         return 0;
     }
@@ -391,11 +385,9 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
-    crm_trace("Processing msg from %s", pcmk__client_name(client));
-    crm_log_xml_trace(msg, "controller[inbound]");
-
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
-    if (crmd_authorize_message(msg, client, NULL)) {
+    if (controld_authorize_ipc_message(msg, client, NULL)) {
+        crm_trace("Processing IPC message from %s", pcmk__client_name(client));
         route_message(C_IPC_MESSAGE, msg);
     }
 
@@ -445,9 +437,9 @@ do_started(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     static struct qb_ipcs_service_handlers crmd_callbacks = {
-        .connection_accept = crmd_ipc_accept,
-        .connection_created = crmd_ipc_created,
-        .msg_process = crmd_ipc_dispatch,
+        .connection_accept = accept_controller_client,
+        .connection_created = NULL,
+        .msg_process = dispatch_controller_ipc,
         .connection_closed = crmd_ipc_closed,
         .connection_destroyed = crmd_ipc_destroy
     };

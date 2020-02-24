@@ -954,14 +954,13 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
     if (rc == pcmk_ok) {
         char *rsc_id_copy = strdup(rsc_id);
 
-        if (rsc_gIter)
+        if (rsc_gIter) {
             g_hash_table_iter_remove(rsc_gIter);
-        else
+        } else {
             g_hash_table_remove(lrm_state->resource_history, rsc_id_copy);
-        crm_debug("sync: Sending delete op for %s", rsc_id_copy);
+        }
         controld_delete_resource_history(rsc_id_copy, lrm_state->node_name,
                                          user_name, crmd_cib_smart_opt());
-
         g_hash_table_foreach_remove(lrm_state->pending_ops, lrm_remove_deleted_op, rsc_id_copy);
         free(rsc_id_copy);
     }
@@ -1311,23 +1310,23 @@ delete_resource(lrm_state_t * lrm_state,
                 lrmd_rsc_info_t * rsc,
                 GHashTableIter * gIter,
                 const char *sys,
-                const char *host,
                 const char *user,
                 ha_msg_input_t * request,
                 gboolean unregister)
 {
     int rc = pcmk_ok;
 
-    crm_info("Removing resource %s for %s (%s) on %s", id, sys, user ? user : "internal", host);
+    crm_info("Removing resource %s from executor for %s%s%s",
+             id, sys, (user? " as " : ""), (user? user : ""));
 
     if (rsc && unregister) {
         rc = lrm_state_unregister_rsc(lrm_state, id, 0);
     }
 
     if (rc == pcmk_ok) {
-        crm_trace("Resource '%s' deleted", id);
+        crm_trace("Resource %s deleted from executor", id);
     } else if (rc == -EINPROGRESS) {
-        crm_info("Deletion of resource '%s' pending", id);
+        crm_info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
             char *ref = crm_element_value_copy(request->msg, XML_ATTR_REFERENCE);
@@ -1339,8 +1338,9 @@ delete_resource(lrm_state_t * lrm_state,
         }
         return;
     } else {
-        crm_warn("Deletion of resource '%s' for %s (%s) on %s failed: %d",
-                 id, sys, user ? user : "internal", host, rc);
+        crm_warn("Could not delete '%s' from executor for %s%s%s: %s "
+                 CRM_XS " rc=%d", id, sys, (user? " as " : ""),
+                 (user? user : ""), pcmk_strerror(rc), rc);
     }
 
     delete_rsc_entry(lrm_state, request, id, gIter, rc, user);
@@ -1406,7 +1406,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
             unregister = FALSE;
         }
 
-        delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
+        delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys,
                         user_name, NULL, unregister);
     }
 
@@ -1723,7 +1723,7 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         unregister = FALSE;
     }
 
-    delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host,
+    delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys,
                     user_name, input, unregister);
 }
 
@@ -1760,7 +1760,6 @@ do_lrm_invoke(long long action,
 
 #if ENABLE_ACL
     user_name = crm_acl_get_set_user(input->msg, F_CRM_USER, NULL);
-    crm_trace("Executor command from user '%s'", user_name);
 #endif
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
@@ -1768,7 +1767,13 @@ do_lrm_invoke(long long action,
     if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
-    crm_trace("Executor %s command from %s", crm_op, from_sys);
+#if ENABLE_ACL
+    crm_trace("Executor %s command from %s as user %s",
+              crm_op, from_sys, user_name);
+#else
+    crm_trace("Executor %s command from %s",
+              crm_op, from_sys);
+#endif
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
         if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
@@ -2073,7 +2078,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     build_operation_update(iter, rsc, op, fsa_our_uname, __FUNCTION__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
-    crm_log_xml_trace(update, "ACK Update");
+    crm_log_xml_trace(update, "[direct ACK]");
 
     crm_debug("ACK'ing resource op " CRM_OP_FMT " from %s: %s",
               op->rsc_id, op->op_type, op->interval_ms, op->user_data,

@@ -121,7 +121,7 @@ int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
                        uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
-xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data, size_t size,
+xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);
 
 int pcmk__client_pid(qb_ipcs_connection_t *c);

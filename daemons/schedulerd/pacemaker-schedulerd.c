@@ -214,12 +214,6 @@ pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-pe_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
 gboolean process_pe_message(xmlNode *msg, xmlNode *xml_data,
                             pcmk__client_t *sender);
 
@@ -229,7 +223,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *c = pcmk__find_client(qbc);
-    xmlNode *msg = pcmk__client_data2xml(c, data, size, &id, &flags);
+    xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
 
     pcmk__ipc_send_ack(c, id, flags, "ack");
     if (msg != NULL) {
@@ -264,7 +258,7 @@ pe_ipc_destroy(qb_ipcs_connection_t * c)
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = pe_ipc_accept,
-    .connection_created = pe_ipc_created,
+    .connection_created = NULL,
     .msg_process = pe_ipc_dispatch,
     .connection_closed = pe_ipc_closed,
     .connection_destroyed = pe_ipc_destroy

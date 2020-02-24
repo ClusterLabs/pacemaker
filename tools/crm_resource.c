@@ -31,7 +31,27 @@ int cib_options = cib_sync_call;
 
 static GMainLoop *mainloop = NULL;
 
+// Things that should be cleaned up on exit
+static cib_t *cib_conn = NULL;
+static pcmk_controld_api_t *controld_api = NULL;
+static pe_working_set_t *data_set = NULL;
+
 #define MESSAGE_TIMEOUT_S 60
+
+// Clean up and exit
+_Noreturn static void
+bye(crm_exit_t exit_code)
+{
+    if (cib_conn != NULL) {
+        cib_conn->cmds->signoff(cib_conn);
+        cib_delete(cib_conn);
+    }
+    if (controld_api != NULL) {
+        pcmk_free_controld_api(controld_api);
+    }
+    pe_free_working_set(data_set);
+    crm_exit(exit_code);
+}
 
 static gboolean
 resource_ipc_timeout(gpointer data)
@@ -39,54 +59,42 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "Aborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
-    crm_exit(CRM_EX_TIMEOUT);
+    bye(CRM_EX_TIMEOUT);
 }
 
 static void
-resource_ipc_connection_destroy(gpointer user_data)
+handle_controller_reply(pcmk_controld_api_t *capi, void *api_data,
+                        void *user_data)
 {
-    crm_info("Connection to controller was terminated");
-    crm_exit(CRM_EX_DISCONNECT);
-}
-
-static void
-start_mainloop(void)
-{
-    if (crmd_replies_needed == 0) {
-        return;
-    }
-
-    mainloop = g_main_loop_new(NULL, FALSE);
-    fprintf(stderr, "Waiting for %d %s from the controller",
-            crmd_replies_needed,
-            pcmk__plural_alt(crmd_replies_needed, "reply", "replies"));
-    crm_debug("Waiting for %d %s from the controller",
-              crmd_replies_needed,
-              pcmk__plural_alt(crmd_replies_needed, "reply", "replies"));
-
-    g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
-    g_main_loop_run(mainloop);
-}
-
-static int
-resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
-{
-    xmlNode *msg = string2xml(buffer);
-
     fprintf(stderr, ".");
-    crm_log_xml_trace(msg, "[inbound]");
-
-    crmd_replies_needed--;
-    if ((crmd_replies_needed == 0) && mainloop
-        && g_main_loop_is_running(mainloop)) {
-
+    if ((capi->replies_expected(capi) == 0)
+        && mainloop && g_main_loop_is_running(mainloop)) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        crm_exit(CRM_EX_OK);
+        bye(CRM_EX_OK);
     }
+}
 
-    free_xml(msg);
-    return 0;
+static void
+handle_controller_drop(pcmk_controld_api_t *capi, void *api_data,
+                       void *user_data)
+{
+    crm_info("Connection to controller was terminated");
+    bye(CRM_EX_DISCONNECT);
+}
+
+static void
+start_mainloop(pcmk_controld_api_t *capi)
+{
+    if (capi->replies_expected(capi) > 0) {
+        unsigned int count = capi->replies_expected(capi);
+
+        fprintf(stderr, "Waiting for %d %s from the controller",
+                count, pcmk__plural_alt(count, "reply", "replies"));
+        mainloop = g_main_loop_new(NULL, FALSE);
+        g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
+        g_main_loop_run(mainloop);
+    }
 }
 
 static int
@@ -114,12 +122,6 @@ build_constraint_list(xmlNode *root)
     freeXpathObject(xpathObj);
     return retval;
 }
-
-struct ipc_client_callbacks crm_callbacks = {
-    .dispatch = resource_ipc_callback,
-    .destroy = resource_ipc_connection_destroy,
-};
-
 
 /* short option letters still available: eEJkKXyYZ */
 
@@ -484,13 +486,9 @@ main(int argc, char **argv)
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
-    crm_ipc_t *crmd_channel = NULL;
-    pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    cib_t *cib_conn = NULL;
     resource_t *rsc = NULL;
     bool recursive = FALSE;
-    char *our_pid = NULL;
 
     bool validate_cmdline = FALSE; /* whether we are just validating based on command line options */
     bool require_resource = TRUE; /* whether command requires that resource be specified */
@@ -579,7 +577,7 @@ main(int argc, char **argv)
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
                     char *standard = NULL;
@@ -608,7 +606,7 @@ main(int argc, char **argv)
                         exit_code = crm_errno2exit(rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -632,7 +630,7 @@ main(int argc, char **argv)
                         exit_code = CRM_EX_NOSUCH;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    crm_exit(exit_code);
+                    bye(exit_code);
 
                 } else if (safe_str_eq("class", longname)) {
                     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
@@ -641,7 +639,7 @@ main(int argc, char **argv)
                                     optarg);
                         }
 
-                        crm_exit(exit_code);
+                        bye(exit_code);
                     } else {
                         v_class = optarg;
                     }
@@ -915,16 +913,14 @@ main(int argc, char **argv)
                                                   "validate-all", validate_options,
                                                   override_params, timeout_ms);
             exit_code = crm_errno2exit(rc);
-            crm_exit(exit_code);
+            bye(exit_code);
         }
     }
 
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
-        crm_exit(CRM_EX_USAGE);
+        bye(CRM_EX_USAGE);
     }
-
-    our_pid = crm_getpid_s();
 
     if (do_force) {
         crm_debug("Forcing...");
@@ -990,20 +986,26 @@ main(int argc, char **argv)
 
     // Establish a connection to the controller if needed
     if (require_crmd) {
-        xmlNode *xml = NULL;
-        mainloop_io_t *source =
-            mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
-        crmd_channel = mainloop_get_ipc_client(source);
+        char *client_uuid;
+        pcmk_controld_api_cb_t dispatch_cb = {
+            handle_controller_reply, NULL
+        };
+        pcmk_controld_api_cb_t destroy_cb = {
+            handle_controller_drop, NULL
+        };
 
-        if (crmd_channel == NULL) {
-            CMD_ERR("Error connecting to the controller");
-            rc = -ENOTCONN;
+
+        client_uuid = crm_getpid_s();
+        controld_api = pcmk_new_controld_api(crm_system_name, client_uuid);
+        free(client_uuid);
+
+        rc = controld_api->connect(controld_api, true, &dispatch_cb,
+                                   &destroy_cb);
+        if (rc != pcmk_rc_ok) {
+            CMD_ERR("Error connecting to the controller: %s", pcmk_rc_str(rc));
+            rc = pcmk_rc2legacy(rc);
             goto bail;
         }
-
-        xml = create_hello_message(our_pid, crm_system_name, "0", "1");
-        crm_ipc_send(crmd_channel, xml, 0, 0, NULL);
-        free_xml(xml);
     }
 
     /* Handle rsc_cmd appropriately */
@@ -1086,10 +1088,11 @@ main(int argc, char **argv)
         cli_resource_print_cts_constraints(data_set);
 
     } else if (rsc_cmd == 'F') {
-        rc = cli_resource_fail(crmd_channel, host_uname, rsc_id, data_set);
-        if (rc == pcmk_ok) {
-            start_mainloop();
+        rc = cli_resource_fail(controld_api, host_uname, rsc_id, data_set);
+        if (rc == pcmk_rc_ok) {
+            start_mainloop(controld_api);
         }
+        rc = pcmk_rc2legacy(rc);
 
     } else if (rsc_cmd == 'O') {
         rc = cli_resource_print_operations(rsc_id, host_uname, TRUE, data_set);
@@ -1283,12 +1286,11 @@ main(int argc, char **argv)
         if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
-        crmd_replies_needed = 0;
 
         crm_debug("Erasing failures of %s (%s requested) on %s",
                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
-                                 operation, interval_spec, TRUE, data_set);
+        rc = cli_resource_delete(controld_api, host_uname, rsc, operation,
+                                 interval_spec, TRUE, data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1296,26 +1298,25 @@ main(int argc, char **argv)
         }
 
         if (rc == pcmk_ok) {
-            start_mainloop();
+            start_mainloop(controld_api);
         }
 
     } else if (rsc_cmd == 'C') {
-        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval_spec,
+        rc = cli_cleanup_all(controld_api, host_uname, operation, interval_spec,
                              data_set);
         if (rc == pcmk_ok) {
-            start_mainloop();
+            start_mainloop(controld_api);
         }
 
     } else if ((rsc_cmd == 'R') && rsc) {
         if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
-        crmd_replies_needed = 0;
 
         crm_debug("Re-checking the state of %s (%s requested) on %s",
                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
-                                 NULL, 0, FALSE, data_set);
+        rc = cli_resource_delete(controld_api, host_uname, rsc, NULL, 0, FALSE,
+                                 data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1323,13 +1324,11 @@ main(int argc, char **argv)
         }
 
         if (rc == pcmk_ok) {
-            start_mainloop();
+            start_mainloop(controld_api);
         }
 
     } else if (rsc_cmd == 'R') {
         const char *router_node = host_uname;
-        xmlNode *msg_data = NULL;
-        xmlNode *cmd = NULL;
         int attr_options = pcmk__node_attr_none;
 
         if (host_uname) {
@@ -1348,22 +1347,12 @@ main(int argc, char **argv)
             }
         }
 
-        if (crmd_channel == NULL) {
+        if (controld_api == NULL) {
             printf("Dry run: skipping clean-up of %s due to CIB_file\n",
                    host_uname? host_uname : "all nodes");
             rc = pcmk_ok;
             goto bail;
         }
-
-        msg_data = create_xml_node(NULL, "crm-resource-reprobe-op");
-        crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
-        if (safe_str_neq(router_node, host_uname)) {
-            crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
-        }
-
-        cmd = create_request(CRM_OP_REPROBE, msg_data, router_node,
-                             CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-        free_xml(msg_data);
 
         crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
 
@@ -1371,11 +1360,10 @@ main(int argc, char **argv)
                                                           NULL, NULL, NULL,
                                                           NULL, attr_options));
 
-        if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
-            start_mainloop();
+        if (controld_api->reprobe(controld_api, host_uname,
+                                  router_node) == pcmk_rc_ok) {
+            start_mainloop(controld_api);
         }
-
-        free_xml(cmd);
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
@@ -1398,13 +1386,6 @@ main(int argc, char **argv)
 
   bail:
 
-    free(our_pid);
-    pe_free_working_set(data_set);
-    if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
-
     if (is_ocf_rc) {
         exit_code = rc;
 
@@ -1418,5 +1399,5 @@ main(int argc, char **argv)
         }
     }
 
-    crm_exit(exit_code);
+    bye(exit_code);
 }

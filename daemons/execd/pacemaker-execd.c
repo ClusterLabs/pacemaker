@@ -111,7 +111,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *request = pcmk__client_data2xml(client, data, size, &id, &flags);
+    xmlNode *request = pcmk__client_data2xml(client, data, &id, &flags);
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);

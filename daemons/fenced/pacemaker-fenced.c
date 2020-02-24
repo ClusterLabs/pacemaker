@@ -74,12 +74,6 @@ st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-static void
-st_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection created for %p", c);
-}
-
 /* Exit code means? */
 static int32_t
 st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
@@ -96,7 +90,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    request = pcmk__client_data2xml(c, data, size, &id, &flags);
+    request = pcmk__client_data2xml(c, data, &id, &flags);
     if (request == NULL) {
         pcmk__ipc_send_ack(c, id, flags, "nack");
         return 0;
@@ -139,7 +133,6 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
-    crm_log_xml_trace(request, "Client[inbound]");
     stonith_command(c, id, flags, request, NULL);
 
     free_xml(request);
@@ -1227,7 +1220,7 @@ setup_cib(void)
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = st_ipc_accept,
-    .connection_created = st_ipc_created,
+    .connection_created = NULL,
     .msg_process = st_ipc_dispatch,
     .connection_closed = st_ipc_closed,
     .connection_destroyed = st_ipc_destroy

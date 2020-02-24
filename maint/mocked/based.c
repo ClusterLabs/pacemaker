@@ -57,13 +57,6 @@ mock_based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     return ret;
 }
 
-/* see based/based_callbacks.c:cib_ipc_created */
-static void
-mock_based_ipc_created(qb_ipcs_connection_t *c)
-{
-    crm_trace("Connection %p", c);
-}
-
 /* see based/based_callbacks.c:cib_ipc_closed */
 static int32_t
 mock_based_ipc_closed(qb_ipcs_connection_t *c)
@@ -189,8 +182,7 @@ mock_based_dispatch_command(qb_ipcs_connection_t *c, void *data, size_t size)
     uint32_t id = 0, flags = 0;
     int call_options = 0;
     pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, size, &id,
-                                                &flags);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     crm_notice("Got connection %p", c);
     assert(op_request != NULL);
@@ -313,7 +305,7 @@ int main(int argc, char *argv[])
     if (mock_based_options(ctxt, false, argc, (const char **) argv) > 0) {
         struct qb_ipcs_service_handlers cib_ipc_callbacks = {
             .connection_accept = mock_based_ipc_accept,
-            .connection_created = mock_based_ipc_created,
+            .connection_created = NULL,
             .msg_process = mock_based_dispatch_command,
             .connection_closed = mock_based_ipc_closed,
             .connection_destroyed = mock_based_ipc_destroy,

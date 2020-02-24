@@ -2641,8 +2641,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         return pcmk_ok;
 
     } else {
-        crm_err("Unknown %s from %s", op, client ? client->name : remote_peer);
-        crm_log_xml_warn(request, "UnknownOp");
+        crm_err("Unknown IPC request %s from %s",
+                op, (client? client->name : remote_peer));
     }
 
   done:
