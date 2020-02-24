@@ -266,7 +266,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
 // Takes node name and resource ID
 #define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
-                               "[@" XML_ATTR_UNAME "='%s'] /"               \
+                               "[@" XML_ATTR_UNAME "='%s']/"                \
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
                                "[@" XML_ATTR_ID "='%s']"
