@@ -87,9 +87,8 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     xmlNode *cib_constraints = NULL;
     xmlNode *match = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    pe_eval_date_result_t result;
     char *xpath = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     int max = 0;
 
     /* Rules are under the constraints node in the XML, so first find that. */
@@ -109,11 +108,11 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
 
     if (max == 0) {
         CMD_ERR("No rule found with ID=%s", rule_id);
-        rc = -ENXIO;
+        rc = ENXIO;
         goto bail;
     } else if (max > 1) {
         CMD_ERR("More than one rule with ID=%s found", rule_id);
-        rc = -ENXIO;
+        rc = ENXIO;
         goto bail;
     }
 
@@ -127,7 +126,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
 
     if (max != 1) {
         CMD_ERR("Can't check rule %s because it has more than one date_expression", rule_id);
-        rc = -EOPNOTSUPP;
+        rc = EOPNOTSUPP;
         goto bail;
     }
 
@@ -150,7 +149,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
 
         if (max == 0) {
             CMD_ERR("Rule either must not use date_spec, or use date_spec with years= but not moon=");
-            rc = -ENXIO;
+            rc = ENXIO;
             goto bail;
         }
     }
@@ -163,26 +162,21 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    result = pe_eval_date_expression(match, effective_date, NULL);
+    rc = pe_eval_date_expression(match, effective_date, NULL);
 
-    if (result == pe_date_within_range) {
+    if (rc == pcmk_rc_within_range) {
         printf("Rule %s is still in effect\n", rule_id);
-        rc = 0;
-    } else if (result == pe_date_op_satisfied) {
+        rc = pcmk_rc_ok;
+    } else if (rc == pcmk_rc_ok) {
         printf("Rule %s satisfies conditions\n", rule_id);
-        rc = 0;
-    } else if (result == pe_date_after_range) {
+    } else if (rc == pcmk_rc_after_range) {
         printf("Rule %s is expired\n", rule_id);
-        rc = 1;
-    } else if (result == pe_date_before_range) {
+    } else if (rc == pcmk_rc_before_range) {
         printf("Rule %s has not yet taken effect\n", rule_id);
-        rc = 2;
-    } else if (result == pe_date_op_unsatisfied) {
+    } else if (rc == pcmk_rc_op_unsatisfied) {
         printf("Rule %s does not satisfy conditions\n", rule_id);
-        rc = 4;
     } else {
         printf("Could not determine whether rule %s is expired\n", rule_id);
-        rc = 3;
     }
 
 bail:
@@ -332,20 +326,11 @@ main(int argc, char **argv)
         case crm_rule_mode_check:
             rc = crm_rule_check(data_set, rule_id, rule_date);
 
-            if (rc < 0) {
-                CMD_ERR("Error checking rule: %s", pcmk_strerror(rc));
-                exit_code = crm_errno2exit(rc);
-            } else if (rc == 1) {
-                exit_code = CRM_EX_EXPIRED;
-            } else if (rc == 2) {
-                exit_code = CRM_EX_NOT_YET_IN_EFFECT;
-            } else if (rc == 3) {
-                exit_code = CRM_EX_INDETERMINATE;
-            } else if (rc == 4) {
-                exit_code = CRM_EX_UNSATISFIED;
-            } else {
-                exit_code = rc;
+            if (rc > 0) {
+                CMD_ERR("Error checking rule: %s", pcmk_rc_str(rc));
             }
+
+            exit_code = pcmk_rc2exitc(rc);
 
             break;
 

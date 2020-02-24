@@ -443,9 +443,9 @@ phase_of_the_moon(crm_time_t * now)
     return ((((((diy + epact) * 6) + 11) % 177) / 22) & 7);
 }
 
-static pe_eval_date_result_t
+static int
 check_one(xmlNode *cron_spec, const char *xml_field, uint32_t time_field) {
-    pe_eval_date_result_t rc = pe_date_result_undetermined;
+    int rc = pcmk_rc_undetermined;
     const char *value = crm_element_value(cron_spec, xml_field);
     long long low, high;
 
@@ -459,31 +459,31 @@ check_one(xmlNode *cron_spec, const char *xml_field, uint32_t time_field) {
     } else if (low == high) {
         /* A single number was given, not a range. */
         if (time_field < low) {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
         } else if (time_field > high) {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         } else {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
         }
     } else if (low != -1 && high != -1) {
         /* This is a range with both bounds. */
         if (time_field < low) {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
         } else if (time_field > high) {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         } else {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
         }
     } else if (low == -1) {
        /* This is a range with no starting value. */
-        rc = time_field <= high ? pe_date_within_range : pe_date_after_range;
+        rc = time_field <= high ? pcmk_rc_within_range : pcmk_rc_after_range;
     } else if (high == -1) {
         /* This is a range with no ending value. */
-        rc = time_field >= low ? pe_date_within_range : pe_date_before_range;
+        rc = time_field >= low ? pcmk_rc_within_range : pcmk_rc_before_range;
     }
 
 bail:
-    if (rc == pe_date_within_range) {
+    if (rc == pcmk_rc_within_range) {
         crm_debug("Condition '%s' in %s: passed", value, xml_field);
     } else {
         crm_debug("Condition '%s' in %s: failed", value, xml_field);
@@ -493,29 +493,28 @@ bail:
 }
 
 static gboolean
-check_passes(pe_eval_date_result_t rc) {
-    /* _within_range and _op_satisfied are obvious.  _result_undetermined is a pass
-     * because this is the return value if a field is not given.  In this case, we
-     * just want to ignore it and check other fields to see if they place some
-     * restriction on what can pass.
+check_passes(int rc) {
+    /* _within_range is obvious.  _undetermined is a pass because
+     * this is the return value if a field is not given.  In this
+     * case, we just want to ignore it and check other fields to
+     * see if they place some restriction on what can pass.
      */
-    return rc == pe_date_within_range || rc == pe_date_op_satisfied ||
-           rc == pe_date_result_undetermined;
+    return rc == pcmk_rc_within_range || rc == pcmk_rc_undetermined;
 }
 
 #define CHECK_ONE(spec, name, var) do { \
-    pe_eval_date_result_t subpart_rc = check_one(spec, name, var); \
+    int subpart_rc = check_one(spec, name, var); \
     if (check_passes(subpart_rc) == FALSE) { \
         return subpart_rc; \
     } \
 } while (0)
 
-pe_eval_date_result_t
+int
 pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
     uint32_t h, m, s, y, d, w;
 
-    CRM_CHECK(now != NULL, return pe_date_op_unsatisfied);
+    CRM_CHECK(now != NULL, return pcmk_rc_op_unsatisfied);
 
     crm_time_get_gregorian(now, &y, &m, &d);
     CHECK_ONE(cron_spec, "years", y);
@@ -541,7 +540,7 @@ pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
      * the fields that were specified had their conditions met (which is also a
      * success).  Thus, the result is success.
      */
-    return pe_date_op_satisfied;
+    return pcmk_rc_ok;
 }
 
 #define update_field(xml_field, time_fn)			\
@@ -586,8 +585,8 @@ pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
                         crm_time_t *next_change)
 {
     switch (pe_eval_date_expression(time_expr, now, next_change)) {
-        case pe_date_within_range:
-        case pe_date_op_satisfied:
+        case pcmk_rc_within_range:
+        case pcmk_rc_ok:
             return TRUE;
 
         default:
@@ -615,9 +614,9 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
  * \param[in]  now          Time for which to evaluate expression
  * \param[out] next_change  If not NULL, set to when evaluation will change
  *
- * \return Evaluation result
+ * \return Standard Pacemaker return code
  */
-pe_eval_date_result_t
+int
 pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
                         crm_time_t *next_change)
 {
@@ -630,7 +629,7 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
     xmlNode *date_spec = NULL;
 
     // "undetermined" will also be returned for parsing errors
-    pe_eval_date_result_t rc = pe_date_result_undetermined;
+    int rc = pcmk_rc_undetermined;
 
     crm_trace("Testing expression: %s", ID(time_expr));
 
@@ -654,12 +653,12 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         if ((start == NULL) && (end == NULL)) {
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
             crm_time_set_if_earlier(next_change, start);
         } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         } else {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
             if (end && next_change) {
                 // Evaluation doesn't change until second after end
                 crm_time_add_seconds(end, 1);
@@ -675,9 +674,9 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         if (start == NULL) {
             // gt requires start
         } else if (crm_time_compare(now, start) > 0) {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
         } else {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
 
             // Evaluation doesn't change until second after start
             crm_time_add_seconds(start, 1);
@@ -688,10 +687,10 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         if (end == NULL) {
             // lt requires end
         } else if (crm_time_compare(now, end) < 0) {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
             crm_time_set_if_earlier(next_change, end);
         } else {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         }
     }
 

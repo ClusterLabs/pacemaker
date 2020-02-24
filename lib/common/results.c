@@ -216,6 +216,26 @@ static struct pcmk__rc_info {
       "IPC server is blocked by unauthorized process",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_op_unsatisifed",
+      "Not applicable under current conditions",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_undetermined",
+      "Result undetermined",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_before_range",
+      "Result occurs before given range",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_within_range",
+      "Result occurs within given range",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_after_range",
+      "Result occurs after given range",
+      -pcmk_err_generic,
+    }
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
@@ -659,6 +679,21 @@ pcmk_rc2exitc(int rc)
         case EAGAIN:
         case EBUSY:
             return CRM_EX_UNSATISFIED;
+
+        case pcmk_rc_before_range:
+            return CRM_EX_NOT_YET_IN_EFFECT;
+
+        case pcmk_rc_after_range:
+            return CRM_EX_EXPIRED;
+
+        case pcmk_rc_undetermined:
+            return CRM_EX_INDETERMINATE;
+
+        case pcmk_rc_op_unsatisfied:
+            return CRM_EX_UNSATISFIED;
+
+        case pcmk_rc_within_range:
+            return CRM_EX_OK;
 
         default:
             return CRM_EX_ERROR;
