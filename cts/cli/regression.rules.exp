@@ -69,8 +69,8 @@ Error checking rule: No such device or address
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-No rule found with ID=cli-too-many-date-expressions
-Error checking rule: No such device or address
+Can't check rule cli-rule-too-many-date-expressions because it does not have exactly one date_expression
+Error checking rule: Operation not supported
 =#=#=#= Current cib after: Try to check a rule that has too many date_expressions =#=#=#=
 <cib epoch="8" num_updates="0" admin_epoch="0">
   <configuration>
@@ -126,7 +126,7 @@ Error checking rule: No such device or address
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to check a rule that has too many date_expressions - No such object (105) =#=#=#=
+=#=#=#= End test: Try to check a rule that has too many date_expressions - Unimplemented (3) =#=#=#=
 * Passed: crm_rule       - Try to check a rule that has too many date_expressions
 =#=#=#= Begin test: Verify basic rule is expired =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined

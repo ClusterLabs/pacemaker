@@ -54,6 +54,7 @@ VALGRIND_OPTS="
 CRM_EX_OK=0
 CRM_EX_ERROR=1
 CRM_EX_INVALID_PARAM=2
+CRM_EX_UNIMPLEMENT_FEATURE=3
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
 CRM_EX_CONFIG=78
@@ -1035,8 +1036,8 @@ EOF
     test_assert $CRM_EX_NOSUCH
 
     desc="Try to check a rule that has too many date_expressions"
-    cmd="crm_rule -c -r cli-too-many-date-expressions"
-    test_assert $CRM_EX_NOSUCH
+    cmd="crm_rule -c -r cli-rule-too-many-date-expressions"
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE
 
     desc="Verify basic rule is expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
