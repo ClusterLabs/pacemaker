@@ -331,41 +331,37 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     int is_for_crm = 0;
     int is_for_cib = 0;
     int is_local = 0;
-    gboolean processing_complete = FALSE;
     const char *host_to = crm_element_value(msg, F_CRM_HOST_TO);
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     const char *type = crm_element_value(msg, F_TYPE);
     const char *task = crm_element_value(msg, F_CRM_TASK);
-    const char *msg_error = NULL;
+    const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
 
-    crm_trace("Routing message %s", crm_element_value(msg, XML_ATTR_REFERENCE));
+    if (ref == NULL) {
+        ref = "without reference ID";
+    }
 
     if (msg == NULL) {
-        msg_error = "Cannot route empty message";
+        crm_warn("Cannot route empty message");
+        return TRUE;
 
     } else if (safe_str_eq(task, CRM_OP_HELLO)) {
         /* quietly ignore */
-        processing_complete = TRUE;
+        crm_trace("No routing needed for hello message %s", ref);
+        return TRUE;
 
     } else if (safe_str_neq(type, T_CRM)) {
-        msg_error = "Bad message type";
+        crm_warn("Cannot route message %s: Type is '%s' not '" T_CRM "'",
+                 ref, (type? type : "missing"));
+        crm_log_xml_warn(msg, "[bad message type]");
+        return TRUE;
 
     } else if (sys_to == NULL) {
-        msg_error = "Bad message destination: no subsystem";
-    }
-
-    if (msg_error != NULL) {
-        processing_complete = TRUE;
-        crm_err("%s", msg_error);
-        crm_log_xml_warn(msg, "bad msg");
-    }
-
-    if (processing_complete) {
+        crm_warn("Cannot route message %s: No subsystem specified", ref);
+        crm_log_xml_warn(msg, "[no subsystem]");
         return TRUE;
     }
-
-    processing_complete = TRUE;
 
     is_for_dc = (strcasecmp(CRM_SYSTEM_DC, sys_to) == 0);
     is_for_dcib = (strcasecmp(CRM_SYSTEM_DCIB, sys_to) == 0);
@@ -408,12 +404,13 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     if (is_for_dc || is_for_dcib || is_for_te) {
         if (AM_I_DC && is_for_te) {
-            crm_trace("Message routing: Process locally as transition request");
+            crm_trace("Route message %s locally as transition request", ref);
             send_msg_via_ipc(msg, sys_to);
 
         } else if (AM_I_DC) {
-            crm_trace("Message routing: Process locally as DC request");
-            processing_complete = FALSE;        /* more to be done by caller */
+            crm_trace("Route message %s locally as DC request", ref);
+            return FALSE; // More to be done by caller
+
         } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
                    && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
 
@@ -422,7 +419,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                 dest = text2msg_type(sys_to);
             }
 #endif
-            crm_trace("Message routing: Relay to DC");
+            crm_trace("Relay message %s to DC", ref);
             send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
 
         } else {
@@ -430,16 +427,16 @@ relay_message(xmlNode * msg, gboolean originated_locally)
              * to DCs on other nodes. By definition, if we are no longer the DC,
              * then the scheduler's or TE's data should be discarded.
              */
-            crm_trace("Message routing: Discard because we are not DC");
+            crm_trace("Discard message %s because we are not DC", ref);
         }
 
     } else if (is_local && (is_for_crm || is_for_cib)) {
-        crm_trace("Message routing: Process locally as controller request");
-        processing_complete = FALSE;    /* more to be done by caller */
+        crm_trace("Route message %s locally as controller request", ref);
+        return FALSE; // More to be done by caller
 
     } else if (is_local) {
-        crm_trace("Message routing: Local relay to %s",
-                  (sys_to? sys_to : "unknown client"));
+        crm_trace("Relay message %s locally to %s",
+                  ref, (sys_to? sys_to : "unknown client"));
         crm_log_xml_trace(msg, "[IPC relay]");
         send_msg_via_ipc(msg, sys_to);
 
@@ -459,18 +456,19 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         if (host_to) {
             node_to = crm_find_peer(0, host_to);
             if (node_to == NULL) {
-               crm_err("Cannot route message to unknown node %s", host_to);
-               return TRUE;
+                crm_warn("Cannot route message %s: Unknown node %s",
+                         ref, host_to);
+                return TRUE;
             }
-            crm_trace("Message routing: Relay to %s",
-                      (node_to->uname? node_to->uname : "peer"));
+            crm_trace("Relay message %s to %s",
+                      ref, (node_to->uname? node_to->uname : "peer"));
         } else {
-            crm_trace("Message routing: Relay to all peers");
+            crm_trace("Broadcast message %s to all peers", ref);
         }
         send_cluster_message(host_to ? node_to : NULL, dest, msg, TRUE);
     }
 
-    return processing_complete;
+    return TRUE; // No further processing of message is needed
 }
 
 // Return true if field contains a positive integer
