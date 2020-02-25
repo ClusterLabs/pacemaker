@@ -64,7 +64,7 @@ int node_score_red = 0;
 int node_score_green = 0;
 int node_score_yellow = 0;
 
-static struct crm_option *crm_long_options = NULL;
+static pcmk__cli_option_t *crm_long_options = NULL;
 static const char *crm_app_description = NULL;
 static char *crm_short_options = NULL;
 static const char *crm_app_usage = NULL;
@@ -187,7 +187,7 @@ check_utilization(const char *value)
 }
 
 void
-crm_args_fini()
+pcmk__cli_option_cleanup()
 {
     free(crm_short_options);
     crm_short_options = NULL;
@@ -746,7 +746,7 @@ crm_meta_value(GHashTable * hash, const char *field)
 }
 
 static struct option *
-crm_create_long_opts(struct crm_option *long_options)
+crm_create_long_opts(pcmk__cli_option_t *long_options)
 {
     struct option *long_opts = NULL;
 
@@ -757,8 +757,8 @@ crm_create_long_opts(struct crm_option *long_options)
      * A previous, possibly poor, choice of '?' as the short form of --help
      * means that getopt_long() returns '?' for both --help and for "unknown option"
      *
-     * This dummy entry allows us to differentiate between the two in crm_get_option()
-     * and exit with the correct error code
+     * This dummy entry allows us to differentiate between the two in
+     * pcmk__next_cli_option() and exit with the correct error code.
      */
     long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
     long_opts[index].name = "__dummmy__";
@@ -793,9 +793,18 @@ crm_create_long_opts(struct crm_option *long_options)
     return long_opts;
 }
 
+/*!
+ * \internal
+ * \brief Define the command-line options a daemon or tool accepts
+ *
+ * \param[in] short_options  getopt(3)-style short option list
+ * \param[in] app_usage      summary of how command is invoked (for help)
+ * \param[in] long_options   definition of options accepted
+ * \param[in] app_desc       brief command description (for help)
+ */
 void
-crm_set_options(const char *short_options, const char *app_usage, struct crm_option *long_options,
-                const char *app_desc)
+pcmk__set_cli_options(const char *short_options, const char *app_usage,
+                      pcmk__cli_option_t *long_options, const char *app_desc)
 {
     if (short_options) {
         crm_short_options = strdup(short_options);
@@ -835,13 +844,7 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
 }
 
 int
-crm_get_option(int argc, char **argv, int *index)
-{
-    return crm_get_option_long(argc, argv, index, NULL);
-}
-
-int
-crm_get_option_long(int argc, char **argv, int *index, const char **longname)
+pcmk__next_cli_option(int argc, char **argv, int *index, const char **longname)
 {
 #ifdef HAVE_GETOPT_H
     static struct option *long_opts = NULL;
@@ -868,10 +871,10 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
                 break;
             case ':':
                 crm_trace("Missing argument");
-                crm_help('?', CRM_EX_USAGE);
+                pcmk__cli_help('?', CRM_EX_USAGE);
                 break;
             case '?':
-                crm_help('?', (*index? CRM_EX_OK : CRM_EX_USAGE));
+                pcmk__cli_help('?', (*index? CRM_EX_OK : CRM_EX_USAGE));
                 break;
         }
         return flag;
@@ -886,7 +889,7 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
 }
 
 void
-crm_help(char cmd, crm_exit_t exit_code)
+pcmk__cli_help(char cmd, crm_exit_t exit_code)
 {
     int i = 0;
     FILE *stream = (exit_code ? stderr : stdout);
@@ -911,12 +914,12 @@ crm_help(char cmd, crm_exit_t exit_code)
     if (crm_long_options) {
         fprintf(stream, "Options:\n");
         for (i = 0; crm_long_options[i].name != NULL; i++) {
-            if (crm_long_options[i].flags & pcmk_option_hidden) {
+            if (crm_long_options[i].flags & pcmk__option_hidden) {
 
-            } else if (crm_long_options[i].flags & pcmk_option_paragraph) {
+            } else if (crm_long_options[i].flags & pcmk__option_paragraph) {
                 fprintf(stream, "%s\n\n", crm_long_options[i].desc);
 
-            } else if (crm_long_options[i].flags & pcmk_option_example) {
+            } else if (crm_long_options[i].flags & pcmk__option_example) {
                 fprintf(stream, "\t#%s\n\n", crm_long_options[i].desc);
 
             } else if (crm_long_options[i].val == '-' && crm_long_options[i].desc) {

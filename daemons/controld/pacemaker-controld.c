@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,15 +34,18 @@ extern void init_dotfile(void);
 
 GMainLoop *crmd_mainloop = NULL;
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -54,11 +57,12 @@ main(int argc, char **argv)
 
     crmd_mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Daemon for aggregating resource and node failures as well as co-ordinating the cluster's response");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for coordinating a Pacemaker cluster's "
+                          "response to events");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -67,7 +71,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -90,7 +94,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_notice("Starting Pacemaker controller");

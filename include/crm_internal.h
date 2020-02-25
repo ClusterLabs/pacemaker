@@ -58,12 +58,14 @@ is_privileged(const char *user)
 #    define required_argument 1
 #  endif
 
-#  define pcmk_option_default	0x00000
-#  define pcmk_option_hidden	0x00001
-#  define pcmk_option_paragraph	0x00002
-#  define pcmk_option_example	0x00004
+enum pcmk__cli_option_flags {
+    pcmk__option_default    = (1 << 0),
+    pcmk__option_hidden     = (1 << 1),
+    pcmk__option_paragraph  = (1 << 2),
+    pcmk__option_example    = (1 << 3),
+};
 
-struct crm_option {
+typedef struct pcmk__cli_option_s {
     /* Fields from 'struct option' in getopt.h */
     /* name of long option */
     const char *name;
@@ -80,13 +82,15 @@ struct crm_option {
     /* Custom fields */
     const char *desc;
     long flags;
-};
+} pcmk__cli_option_t;
 
-void crm_set_options(const char *short_options, const char *usage, struct crm_option *long_options,
-                     const char *app_desc);
-int crm_get_option(int argc, char **argv, int *index);
-int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-_Noreturn void crm_help(char cmd, crm_exit_t exit_code);
+void pcmk__set_cli_options(const char *short_options, const char *usage,
+                           pcmk__cli_option_t *long_options,
+                           const char *app_desc);
+int pcmk__next_cli_option(int argc, char **argv, int *index,
+                          const char **longname);
+_Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
+void pcmk__cli_option_cleanup(void);
 
 /* Cluster Option Processing */
 typedef struct pe_cluster_option_s {
@@ -124,7 +128,6 @@ gboolean check_utilization(const char *value);
 long crm_get_sbd_timeout(void);
 long crm_auto_watchdog_timeout(void);
 gboolean check_sbd_timeout(const char *value);
-void crm_args_fini(void);
 
 /* char2score */
 extern int node_score_red;

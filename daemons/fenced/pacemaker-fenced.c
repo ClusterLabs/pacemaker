@@ -1165,18 +1165,34 @@ stonith_cleanup(void)
     local_cib = NULL;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    {"stand-alone",         0, 0, 's'},
-    {"stand-alone-w-cpg",   0, 0, 'c'},
-    {"logfile",             1, 0, 'l'},
-    {"verbose",     0, 0, 'V'},
-    {"version",     0, 0, '$'},
-    {"help",        0, 0, '?'},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "stand-alone", no_argument, 0, 's',
+        NULL, pcmk__option_default
+    },
+    {
+        "stand-alone-w-cpg", no_argument, 0, 'c',
+        NULL, pcmk__option_default
+    },
+    {
+        "logfile", required_argument, 0, 'l',
+        NULL, pcmk__option_default
+    },
+    {
+        "verbose", no_argument, 0, 'V',
+        NULL, pcmk__option_default
+    },
+    {
+        "version", no_argument, 0, '$',
+        NULL, pcmk__option_default
+    },
+    {
+        "help", no_argument, 0, '?',
+        NULL, pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static void
 setup_cib(void)
@@ -1267,12 +1283,12 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Provides a summary of cluster's current state."
-                    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for executing fencing devices in a "
+                          "Pacemaker cluster");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1) {
             break;
         }
@@ -1293,7 +1309,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -1431,7 +1447,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);

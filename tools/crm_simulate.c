@@ -451,68 +451,234 @@ setup_input(const char *input, const char *output)
 }
 
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"  },
-    {"quiet",   0, 0, 'Q', "\tDisplay only essentialoutput"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {"-spacer-",      0, 0, '-', "\nOperations:"},
-    {"run",           0, 0, 'R', "\tDetermine the cluster's response to the given configuration and status"},
-    {"simulate",      0, 0, 'S', "Simulate the transition's execution and display the resulting cluster status"},
-    {"in-place",      0, 0, 'X', "Simulate the transition's execution and store the result back to the input file"},
-    {"show-scores",   0, 0, 's', "Show allocation scores"},
-    {"show-utilization",   0, 0, 'U', "Show utilization information"},
-    {"profile",       1, 0, 'P', "Run all tests in the named directory to create profiling data"},
-    {"repeat",        1, 0, 'N', "With --profile, repeat each test N times and print timings"},
-    {"pending",       0, 0, 'j', "\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
-
-    {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
-    {"node-up",      1, 0, 'u', "\tBring a node online"},
-    {"node-down",    1, 0, 'd', "\tTake a node offline"},
-    {"node-fail",    1, 0, 'f', "\tMark a node as failed"},
-    {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
-    {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
-    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html"},
-    {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
-    {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
-    {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
-    {   "set-datetime", required_argument, NULL, 't',
-        "Set date/time (ISO 8601 format, see https://en.wikipedia.org/wiki/ISO_8601)"
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
     },
-    {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
-    {"watchdog",     1, 0, 'w', "\tAssume a watchdog device is active"},
-    {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
-    {"ticket-revoke",    1, 0, 'r', "Revoke a ticket"},
-    {"ticket-standby",   1, 0, 'b', "Make a ticket standby"},
-    {"ticket-activate",  1, 0, 'e', "Activate a ticket"},
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "quiet", no_argument, NULL, 'Q',
+        "\tDisplay only essential output", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nOperations:", pcmk__option_default
+    },
+    {
+        "run", no_argument, NULL, 'R',
+        "\tDetermine cluster's response to the given configuration and status",
+        pcmk__option_default
+    },
+    {
+        "simulate", no_argument, NULL, 'S',
+        "Simulate transition's execution and display resulting cluster status",
+        pcmk__option_default
+    },
+    {
+        "in-place", no_argument, NULL, 'X',
+        "Simulate transition's execution and store result back to input file",
+        pcmk__option_default
+    },
+    {
+        "show-scores", no_argument, NULL, 's',
+        "Show allocation scores", pcmk__option_default
+    },
+    {
+        "show-utilization", no_argument, NULL, 'U',
+        "Show utilization information", pcmk__option_default
+    },
+    {
+        "profile", required_argument, NULL, 'P',
+        "Run all tests in the named directory to create profiling data",
+        pcmk__option_default
+    },
+    {
+        "repeat", required_argument, NULL, 'N',
+        "With --profile, repeat each test N times and print timings",
+        pcmk__option_default
+    },
+    {
+        "pending", no_argument, NULL, 'j',
+        "\tDisplay pending state if 'record-pending' is enabled",
+        pcmk__option_hidden
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nSynthetic Cluster Events:", pcmk__option_default
+    },
+    {
+        "node-up", required_argument, NULL, 'u',
+        "\tBring a node online", pcmk__option_default
+    },
+    {
+        "node-down", required_argument, NULL, 'd',
+        "\tTake a node offline", pcmk__option_default
+    },
+    {
+        "node-fail", required_argument, NULL, 'f',
+        "\tMark a node as failed", pcmk__option_default
+    },
+    {
+        "op-inject", required_argument, NULL, 'i',
+        "\tGenerate a failure for the cluster to react to in the simulation",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\tValue is of the form "
+            "${resource}_${task}_${interval_in_ms}@${node}=${rc}.",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\t(for example, memcached_monitor_20000@bart.example.com=7)",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\tFor more information on OCF return codes, refer to: "
+            "https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/"
+            "2.0/html/Pacemaker_Administration/s-ocf-return-codes.html",
+        pcmk__option_default
+    },
+    {
+        "op-fail", required_argument, NULL, 'F',
+        "\tIf the specified task occurs during the simulation, have it fail "
+            "with return code ${rc}",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\tValue is of the form "
+            "${resource}_${task}_${interval_in_ms}@${node}=${rc}.",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\t(for example, memcached_stop_0@bart.example.com=1)\n",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\tThe transition will normally stop at the failed action. Save "
+            "the result with --save-output and re-run with --xml-file",
+        pcmk__option_default
+    },
+    {   "set-datetime", required_argument, NULL, 't',
+        "Set date/time (ISO 8601 format, see "
+            "https://en.wikipedia.org/wiki/ISO_8601)",
+        pcmk__option_default
+    },
+    {
+        "quorum", required_argument, NULL, 'q',
+        "\tSpecify a value for quorum", pcmk__option_default
+    },
+    {
+        "watchdog", required_argument, NULL, 'w',
+        "\tAssume a watchdog device is active", pcmk__option_default
+    },
+    {
+        "ticket-grant", required_argument, NULL, 'g',
+        "Grant a ticket", pcmk__option_default
+    },
+    {
+        "ticket-revoke", required_argument, NULL, 'r',
+        "Revoke a ticket", pcmk__option_default
+    },
+    {
+        "ticket-standby", required_argument, NULL, 'b',
+        "Make a ticket standby", pcmk__option_default
+    },
+    {
+        "ticket-activate", required_argument, NULL, 'e',
+        "Activate a ticket", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nOutput Options:", pcmk__option_default
+    },
+    {
+        "save-input", required_argument, NULL, 'I',
+        "\tSave the input configuration to the named file", pcmk__option_default
+    },
+    {
+        "save-output", required_argument, NULL, 'O',
+        "Save the output configuration to the named file", pcmk__option_default
+    },
+    {
+        "save-graph", required_argument, NULL, 'G',
+        "\tSave the transition graph (XML format) to the named file",
+        pcmk__option_default
+    },
+    {
+        "save-dotfile", required_argument, NULL, 'D',
+        "Save the transition graph (DOT format) to the named file",
+        pcmk__option_default
+    },
+    {
+        "all-actions", no_argument, NULL, 'a',
+        "\tDisplay all possible actions in DOT graph (even if not part "
+            "of transition)",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nData Source:", pcmk__option_default
+    },
+    {
+        "live-check", no_argument, NULL, 'L',
+        "\tConnect to CIB mamager and use the current CIB contents as input",
+        pcmk__option_default
+    },
+    {
+        "xml-file", required_argument, NULL, 'x',
+        "\tRetrieve XML from the named file", pcmk__option_default
+    },
+    {
+        "xml-pipe", no_argument, NULL, 'p',
+        "\tRetrieve XML from stdin", pcmk__option_default
+    },
 
-    {"-spacer-",     0, 0, '-', "\nOutput Options:"},
-
-    {"save-input",   1, 0, 'I', "\tSave the input configuration to the named file"},
-    {"save-output",  1, 0, 'O', "Save the output configuration to the named file"},
-    {"save-graph",   1, 0, 'G', "\tSave the transition graph (XML format) to the named file"},
-    {"save-dotfile", 1, 0, 'D', "Save the transition graph (DOT format) to the named file"},
-    {"all-actions",  0, 0, 'a', "\tDisplay all possible actions in the DOT graph - even ones not part of the transition"},
-
-    {"-spacer-",    0, 0, '-', "\nData Source:"},
-    {"live-check",  0, 0, 'L', "\tConnect to the CIB mamager and use the current CIB contents as input"},
-    {"xml-file",    1, 0, 'x', "\tRetrieve XML from the named file"},
-    {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin"},
-
-    {"-spacer-",    0, 0, '-', "\nExamples:\n"},
-    {"-spacer-",    0, 0, '-', "Pretend a recurring monitor action found memcached stopped on node fred.example.com and, during recovery, that the memcached stop action failed", pcmk_option_paragraph},
-    {"-spacer-",    0, 0, '-', " crm_simulate -LS --op-inject memcached:0_monitor_20000@bart.example.com=7 --op-fail memcached:0_stop_0@fred.example.com=1 --save-output /tmp/memcached-test.xml", pcmk_option_example},
-    {"-spacer-",    0, 0, '-', "Now see what the reaction to the stop failure would be", pcmk_option_paragraph},
-    {"-spacer-",    0, 0, '-', " crm_simulate -S --xml-file /tmp/memcached-test.xml", pcmk_option_example},
-
-    {0, 0, 0, 0}
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nExamples:\n", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Pretend a recurring monitor action found memcached stopped on node "
+            "fred.example.com and, during recovery, that the memcached stop "
+            "action failed",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_simulate -LS --op-inject "
+            "memcached:0_monitor_20000@bart.example.com=7 "
+            "--op-fail memcached:0_stop_0@fred.example.com=1 "
+            "--save-output /tmp/memcached-test.xml",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Now see what the reaction to the stop failure would be",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_simulate -S --xml-file /tmp/memcached-test.xml",
+        pcmk__option_example
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static void
 profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
@@ -628,15 +794,16 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
 
     crm_log_cli_init("crm_simulate");
-    crm_set_options(NULL, "datasource operation [additional options]",
-                    long_options, "Tool for simulating the cluster's response to events");
+    pcmk__set_cli_options(NULL, "<data source> <operation> [options]",
+                          long_options,
+                          "simulate a Pacemaker cluster's response to events");
 
     if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -654,7 +821,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'p':
                 xml_file = "-";
@@ -774,7 +941,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     data_set = pe_new_working_set();

@@ -730,23 +730,48 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 }
 
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",           0, 0, '?', "\tThis text"},
-    {"version",        0, 0, '$', "\tVersion information"  },
-    {"verbose",        0, 0, 'V', "\tIncrease debug output"},
-    {"shutdown",       0, 0, 'S', "\tInstruct Pacemaker to shutdown on this machine"},
-    {"features",       0, 0, 'F', "\tDisplay the full version and list of features Pacemaker was built with"},
-
-    {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
-    {"foreground",     0, 0, 'f', "\t(Ignored) Pacemaker always runs in the foreground"},
-    {"pid-file",       1, 0, 'p', "\t(Ignored) Daemon pid file location"},
-    {"standby",        0, 0, 's', "\tStart node in standby state"},
-
-    {NULL, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "shutdown", no_argument, NULL, 'S',
+        "\tInstruct Pacemaker to shutdown on this machine", pcmk__option_default
+    },
+    {
+        "features", no_argument, NULL, 'F',
+        "\tDisplay full version and list of features Pacemaker was built with",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
+    {
+        "foreground", no_argument, NULL, 'f',
+        "\t(Ignored) Pacemaker always runs in the foreground",
+        pcmk__option_default
+    },
+    {
+        "pid-file", required_argument, NULL, 'p',
+        "\t(Ignored) Daemon pid file location", pcmk__option_default
+    },
+    {
+        "standby", no_argument, NULL, 's',
+        "\tStart node in standby state", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static void
 mcp_chown(const char *path, uid_t uid, gid_t gid)
@@ -1209,12 +1234,14 @@ main(int argc, char **argv)
     static crm_cluster_t cluster;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "primary Pacemaker daemon that launches and "
+                          "monitors all subsidiary Pacemaker daemons");
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1)
             break;
 
@@ -1233,7 +1260,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'S':
                 shutdown = TRUE;
@@ -1256,7 +1283,7 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
 

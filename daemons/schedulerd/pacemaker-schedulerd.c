@@ -264,15 +264,18 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_destroyed = pe_ipc_destroy
 };
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -282,13 +285,14 @@ main(int argc, char **argv)
     int argerr = 0;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]",
-                    long_options, "Daemon for calculating the cluster's response to events");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for calculating a Pacemaker cluster's "
+                          "response to events");
 
     mainloop_add_signal(SIGTERM, pengine_shutdown);
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -297,7 +301,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help('?', CRM_EX_OK);
+                pcmk__cli_help('?', CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -315,7 +319,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
