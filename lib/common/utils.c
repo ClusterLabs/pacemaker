@@ -301,34 +301,44 @@ compare_version(const char *version1, const char *version2)
     return rc;
 }
 
+/*!
+ * \brief Parse milliseconds from a Pacemaker interval specification
+ *
+ * \param[in] input  Pacemaker time interval specification (a bare number of
+ *                   seconds, a number with a unit optionally with whitespace
+ *                   before and/or after the number, or an ISO 8601 duration)
+ *
+ * \return Milliseconds equivalent of given specification on success (limited
+ *         to the range of an unsigned integer), 0 if input is NULL,
+ *         or 0 (and set errno to EINVAL) on error
+ */
 guint
 crm_parse_interval_spec(const char *input)
 {
-    long long msec = 0;
+    long long msec = -1;
 
+    errno = 0;
     if (input == NULL) {
         return 0;
 
-    } else if (input[0] != 'P') {
-        long long tmp = crm_get_msec(input);
-
-        if(tmp > 0) {
-            msec = tmp;
-        }
-
-    } else {
+    } else if (input[0] == 'P') {
         crm_time_t *period_s = crm_time_parse_duration(input);
 
         if (period_s) {
             msec = 1000 * crm_time_get_seconds(period_s);
             crm_time_free(period_s);
-        } else {
-            // Reason why not valid has already been logged
-            crm_warn("Using 0 instead of '%s'", input);
         }
+
+    } else {
+        msec = crm_get_msec(input);
     }
 
-    return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
+    if (msec < 0) {
+        crm_warn("Using 0 instead of '%s'", input);
+        errno = EINVAL;
+        return 0;
+    }
+    return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
 }
 
 extern bool crm_is_daemon;
