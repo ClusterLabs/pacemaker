@@ -297,12 +297,12 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s %s'\n",
+            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s'%s\n",
                                    stonith_action_str(event->action), event->target,
                                    event->delegate ? event->delegate : "",
                                    event->client, event->origin,
                                    full_history ? "completed" : "last-failed", buf,
-                                   later_succeeded ? "(a later attempt succeeded)" : "");
+                                   later_succeeded ? " (a later attempt succeeded)" : "");
             break;
 
         case st_done:
