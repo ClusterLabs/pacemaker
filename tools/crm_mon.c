@@ -54,7 +54,7 @@
  * Definitions indicating which items to print
  */
 
-static unsigned int show = mon_show_default;
+static unsigned int show;
 
 /*
  * Definitions indicating how to output
@@ -77,9 +77,6 @@ static pcmk__common_args_t *args = NULL;
 static pcmk__output_t *out = NULL;
 static GOptionContext *context = NULL;
 static gchar **processed_args = NULL;
-
-/* FIXME allow, detect, and correctly interpret glob pattern or regex? */
-const char *print_neg_location_prefix = "";
 
 static time_t last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
@@ -107,16 +104,17 @@ static pcmk__supported_format_t formats[] = {
 
 struct {
     int reconnect_msec;
-    int fence_history_level;
     gboolean daemonize;
     gboolean show_bans;
     char *pid_file;
     char *external_agent;
     char *external_recipient;
+    char *neg_location_prefix;
     unsigned int mon_ops;
+    GSList *user_includes_excludes;
+    GSList *includes_excludes;
 } options = {
     .reconnect_msec = RECONNECT_MSECS,
-    .fence_history_level = 1,
     .mon_ops = mon_op_default
 };
 
@@ -128,6 +126,197 @@ static int cib_connect(gboolean full);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void kick_refresh(gboolean data_updated);
+
+static unsigned int
+all_includes(mon_output_format_t fmt) {
+    if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
+        return ~mon_show_options;
+    } else {
+        return mon_show_all;
+    }
+}
+
+static unsigned int
+default_includes(mon_output_format_t fmt) {
+    switch (fmt) {
+        case mon_output_monitor:
+        case mon_output_plain:
+        case mon_output_console:
+            return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
+                   mon_show_nodes | mon_show_resources | mon_show_failures;
+            break;
+
+        case mon_output_xml:
+        case mon_output_legacy_xml:
+            return all_includes(fmt);
+            break;
+
+        case mon_output_html:
+        case mon_output_cgi:
+            return mon_show_summary | mon_show_nodes | mon_show_resources |
+                   mon_show_failures;
+            break;
+
+        default:
+            return 0;
+            break;
+    }
+}
+
+struct {
+    const char *name;
+    unsigned int bit;
+} sections[] = {
+    { "attributes", mon_show_attributes },
+    { "bans", mon_show_bans },
+    { "counts", mon_show_counts },
+    { "dc", mon_show_dc },
+    { "failcounts", mon_show_failcounts },
+    { "failures", mon_show_failures },
+    { "fencing", mon_show_fencing_all },
+    { "fencing-failed", mon_show_fence_failed },
+    { "fencing-pending", mon_show_fence_pending },
+    { "fencing-succeeded", mon_show_fence_worked },
+    { "nodes", mon_show_nodes },
+    { "operations", mon_show_operations },
+    { "options", mon_show_options },
+    { "resources", mon_show_resources },
+    { "stack", mon_show_stack },
+    { "summary", mon_show_summary },
+    { "tickets", mon_show_tickets },
+    { "times", mon_show_times },
+    { NULL }
+};
+
+static unsigned int
+find_section_bit(const char *name) {
+    for (int i = 0; sections[i].name != NULL; i++) {
+        if (crm_str_eq(sections[i].name, name, FALSE)) {
+            return sections[i].bit;
+        }
+    }
+
+    return 0;
+}
+
+static gboolean
+apply_exclude(const gchar *excludes, GError **error) {
+    char **parts = NULL;
+
+    parts = g_strsplit(excludes, ",", 0);
+    for (char **s = parts; *s != NULL; s++) {
+        unsigned int bit = find_section_bit(*s);
+
+        if (crm_str_eq(*s, "all", TRUE)) {
+            show = 0;
+        } else if (crm_str_eq(*s, "none", TRUE)) {
+            show = all_includes(output_format);
+        } else if (bit != 0) {
+            show &= ~bit;
+        } else {
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+                        "--exclude options: all, attributes, bans, counts, dc, "
+                        "failcounts, failures, fencing, fencing-failed, "
+                        "fencing-pending, fencing-succeeded, nodes, none, "
+                        "operations, options, resources, stack, summary, "
+                        "tickets, times");
+            return FALSE;
+        }
+    }
+    g_strfreev(parts);
+
+    return TRUE;
+}
+
+static gboolean
+apply_include(const gchar *includes, GError **error) {
+    char **parts = NULL;
+
+    parts = g_strsplit(includes, ",", 0);
+    for (char **s = parts; *s != NULL; s++) {
+        unsigned int bit = find_section_bit(*s);
+
+        if (crm_str_eq(*s, "all", TRUE)) {
+            show = all_includes(output_format);
+        } else if (pcmk__starts_with(*s, "bans")) {
+            show |= mon_show_bans;
+            if (options.neg_location_prefix != NULL) {
+                free(options.neg_location_prefix);
+                options.neg_location_prefix = NULL;
+            }
+
+            if (strlen(*s) > 4 && (*s)[4] == ':') {
+                options.neg_location_prefix = strdup(*s+5);
+            }
+        } else if (crm_str_eq(*s, "default", TRUE) || crm_str_eq(*s, "defaults", TRUE)) {
+            show |= default_includes(output_format);
+        } else if (crm_str_eq(*s, "none", TRUE)) {
+            show = 0;
+        } else if (bit != 0) {
+            show |= bit;
+        } else {
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+                        "--include options: all, attributes, bans[:PREFIX], counts, dc, "
+                        "default, failcounts, failures, fencing, fencing-failed, "
+                        "fencing-pending, fencing-succeeded, nodes, none, operations, "
+                        "options, resources, stack, summary, tickets, times");
+            return FALSE;
+        }
+    }
+    g_strfreev(parts);
+
+    return TRUE;
+}
+
+static gboolean
+apply_include_exclude(GSList *lst, mon_output_format_t fmt, GError **error) {
+    gboolean rc = TRUE;
+    GSList *node = lst;
+
+    /* Set the default of what to display here.  Note that we OR everything to
+     * show instead of set show directly because it could have already had some
+     * settings applied to it in main.
+     */
+    show |= default_includes(fmt);
+
+    while (node != NULL) {
+        char *s = node->data;
+
+        if (pcmk__starts_with(s, "--include=")) {
+            rc = apply_include(s+10, error);
+        } else if (pcmk__starts_with(s, "-I=")) {
+            rc = apply_include(s+3, error);
+        } else if (pcmk__starts_with(s, "--exclude=")) {
+            rc = apply_exclude(s+10, error);
+        } else if (pcmk__starts_with(s, "-U=")) {
+            rc = apply_exclude(s+3, error);
+        }
+
+        if (rc != TRUE) {
+            break;
+        }
+
+        node = node->next;
+    }
+
+    return rc;
+}
+
+static gboolean
+user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+
+    options.user_includes_excludes = g_slist_append(options.user_includes_excludes, s);
+    return TRUE;
+}
+
+static gboolean
+include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+
+    options.includes_excludes = g_slist_append(options.includes_excludes, s);
+    return TRUE;
+}
 
 static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
@@ -189,14 +378,27 @@ static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     int rc = crm_atoi(optarg, "2");
 
-    if (rc == -1 || rc > 3) {
-        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
-        return FALSE;
-    } else {
-        options.fence_history_level = rc;
-    }
+    switch (rc) {
+        case 3:
+            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing", data, err);
 
-    return TRUE;
+        case 2:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing", data, err);
+
+        case 1:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
+
+        case 0:
+            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            return include_exclude_cb("--exclude", "fencing", data, err);
+
+        default:
+            g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+            return FALSE;
+    }
 }
 
 static gboolean
@@ -207,8 +409,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show &= ~mon_show_headers;
-    return TRUE;
+    return include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
@@ -250,8 +451,7 @@ print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_timing;
-    show |= mon_show_operations;
-    return TRUE;
+    return include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
@@ -270,37 +470,34 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_attributes;
-    return TRUE;
+    return include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_bans;
-
     if (optarg != NULL) {
-        print_neg_location_prefix = optarg;
+        char *s = crm_strdup_printf("bans:%s", optarg);
+        gboolean rc = include_exclude_cb("--include", s, data, err);
+        free(s);
+        return rc;
+    } else {
+        return include_exclude_cb("--include", "bans", data, err);
     }
-
-    return TRUE;
 }
 
 static gboolean
 show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_failcounts;
-    return TRUE;
+    return include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
 show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_operations;
-    return TRUE;
+    return include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
 show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    show |= mon_show_tickets;
-    return TRUE;
+    return include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
@@ -357,6 +554,16 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry display_entries[] = {
+    { "include", 'I', 0, G_OPTION_ARG_CALLBACK, user_include_exclude_cb,
+      "A list of sections to include in the output.\n"
+      INDENT "See `Output Control` help for more information.",
+      "SECTION(s)" },
+
+    { "exclude", 'U', 0, G_OPTION_ARG_CALLBACK, user_include_exclude_cb,
+      "A list of sections to exclude from the output.\n"
+      INDENT "See `Output Control` help for more information.",
+      "SECTION(s)" },
+
     { "group-by-node", 'n', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, group_by_node_cb,
       "Group resources by node",
       NULL },
@@ -645,14 +852,21 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         switch (c) {
             case 'm':
-                if (!options.fence_history_level) {
+                if (is_not_set(show, mon_show_fencing_all)) {
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
                         mon_cib_connection_destroy(NULL);
                     }
                 }
-                show ^= mon_show_fence_history;
+
+                if (is_set(show, mon_show_fence_failed) || is_set(show, mon_show_fence_pending) ||
+                    is_set(show, mon_show_fence_worked)) {
+                    show &= ~mon_show_fencing_all;
+                } else {
+                    show |= mon_show_fencing_all;
+                }
+
                 break;
             case 'c':
                 show ^= mon_show_tickets;
@@ -665,7 +879,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'o':
                 show ^= mon_show_operations;
-                if ((show & mon_show_operations) == 0) {
+                if (is_not_set(show, mon_show_operations)) {
                     options.mon_ops &= ~mon_op_print_timing;
                 }
                 break;
@@ -689,11 +903,14 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (show & mon_show_headers) {
-                    show &= ~mon_show_headers;
+                if (is_set(show, mon_show_stack) || is_set(show, mon_show_dc) ||
+                    is_set(show, mon_show_times) || is_set(show, mon_show_counts)) {
+                    show &= ~mon_show_summary;
                 } else {
-                    show |= mon_show_headers;
+                    show |= mon_show_summary;
                 }
+                /* Regardless, we don't show options in console mode. */
+                show &= ~mon_show_options;
                 break;
             case 'b':
                 options.mon_ops ^= mon_op_print_brief;
@@ -714,19 +931,19 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         blank_screen();
 
         out->info(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', show & mon_show_tickets);
-        print_option_help(out, 'f', show & mon_show_failcounts);
+        print_option_help(out, 'c', is_set(show, mon_show_tickets));
+        print_option_help(out, 'f', is_set(show, mon_show_failcounts));
         print_option_help(out, 'n', is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(out, 'o', show & mon_show_operations);
+        print_option_help(out, 'o', is_set(show, mon_show_operations));
         print_option_help(out, 'r', is_set(options.mon_ops, mon_op_inactive_resources));
         print_option_help(out, 't', is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(out, 'A', show & mon_show_attributes);
-        print_option_help(out, 'L', show & mon_show_bans);
-        print_option_help(out, 'D', (show & mon_show_headers) == 0);
+        print_option_help(out, 'A', is_set(show, mon_show_attributes));
+        print_option_help(out, 'L', is_set(show,mon_show_bans));
+        print_option_help(out, 'D', is_not_set(show, mon_show_summary));
         print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', (show & mon_show_fence_history));
+        print_option_help(out, 'm', is_set(show, mon_show_fencing_all));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -773,6 +990,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "The TIMESPEC in any command line option can be specified in many different\n"
                               "formats.  It can be just an integer number of seconds, a number plus units\n"
                               "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
+                              "Output Control:\n\n"
+                              "By default, a certain list of sections are written to the output destination.\n"
+                              "The default varies based on the output format - XML includes everything, while\n"
+                              "other output formats will display less.  This list can be modified with the\n"
+                              "--include and --exclude command line options.  Each option may be given multiple\n"
+                              "times on the command line, and each can give a comma-separated list of sections.\n"
+                              "The options are applied to the default set, from left to right as seen on the\n"
+                              "command line.  For a list of valid sections, pass --include=list or --exclude=list.\n\n"
                               "Examples:\n\n"
                               "Display the cluster status on the console with updates as they occur:\n\n"
                               "\tcrm_mon\n\n"
@@ -923,7 +1148,9 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_one_shot;
     }
 
-    processed_args = pcmk__cmdline_preproc(argv, "ehimpxEL");
+    processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
+
+    fence_history_cb("--fence-history", "1", NULL, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
@@ -936,13 +1163,12 @@ main(int argc, char **argv)
 
     if (!args->version) {
         if (args->quiet) {
-            show &= ~mon_show_times;
+            include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
         if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            fence_history_cb("--fence-history", "0", NULL, NULL);
             options.mon_ops |= mon_op_fence_connect;
-            /* don't moan as fence_history_level == 1 is default */
-            options.fence_history_level = 0;
         }
 
         /* create the cib-object early to be able to do further
@@ -966,13 +1192,13 @@ main(int argc, char **argv)
                      * not match the cib data from a file.
                      * As we don't expect cib-updates coming
                      * in enforce one-shot. */
-                    options.fence_history_level = 0;
+                    fence_history_cb("--fence-history", "0", NULL, NULL);
                     options.mon_ops |= mon_op_one_shot;
                     break;
 
                 case cib_remote:
                     /* updates coming in but no fencing */
-                    options.fence_history_level = 0;
+                    fence_history_cb("--fence-history", "0", NULL, NULL);
                     break;
 
                 case cib_undefined:
@@ -982,21 +1208,6 @@ main(int argc, char **argv)
                     rc = -EINVAL;
                     break;
             }
-        }
-
-        switch (options.fence_history_level) {
-            case 3:
-                options.mon_ops |= mon_op_fence_full_history;
-                /* fall through to next lower level */
-            case 2:
-                show |= mon_show_fence_history;
-                /* fall through to next lower level */
-            case 1:
-                options.mon_ops |= mon_op_fence_history;
-                options.mon_ops |= mon_op_fence_connect;
-                break;
-            default:
-                break;
         }
 
         if (is_set(options.mon_ops, mon_op_one_shot)) {
@@ -1053,7 +1264,6 @@ main(int argc, char **argv)
     reconcile_output_format(args);
     add_output_args();
 
-    /* Create the output format - output_format must not be changed after this point. */
     if (args->version && output_format == mon_output_console) {
         /* Use the text output format here if we are in curses mode but were given
          * --version.  Displaying version information uses printf, and then we
@@ -1068,6 +1278,22 @@ main(int argc, char **argv)
         fprintf(stderr, "Error creating output format %s: %s\n",
                 args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
+    }
+
+    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
+
+    /* Apply --include/--exclude flags we used internally.  There's no error reporting
+     * here because this would be a programming error.
+     */
+    apply_include_exclude(options.includes_excludes, output_format, &error);
+
+    /* And now apply any --include/--exclude flags the user gave on the command line.
+     * These are done in a separate pass from the internal ones because we want to
+     * make sure whatever the user specifies overrides whatever we do.
+     */
+    if (!apply_include_exclude(options.user_includes_excludes, output_format, &error)) {
+        out->err(out, "%s: %s", g_get_prgname(), error->message);
+        return clean_up(0);
     }
 
     crm_mon_register_messages(out);
@@ -1093,9 +1319,7 @@ main(int argc, char **argv)
         }
     }
 
-    /* XML output always prints everything */
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
-        show = mon_show_all;
         options.mon_ops |= mon_op_print_timing;
     }
 
@@ -1710,7 +1934,7 @@ mon_refresh_display(gpointer user_data)
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (show & (mon_show_bans | mon_show_tickets)) {
+    if (is_set(show, mon_show_bans) || is_set(show, mon_show_tickets)) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                    mon_data_set->input);
         unpack_constraints(cib_constraints, mon_data_set);
@@ -1720,7 +1944,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(out, output_format, mon_data_set, stonith_history,
-                                  options.mon_ops, show, print_neg_location_prefix) != 0) {
+                                  options.mon_ops, show, options.neg_location_prefix) != 0) {
                 out->err(out, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1730,7 +1954,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(out, output_format, mon_data_set, stonith_history,
-                             options.mon_ops, show, print_neg_location_prefix);
+                             options.mon_ops, show, options.neg_location_prefix);
             break;
 
         case mon_output_monitor:
@@ -1748,14 +1972,14 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
-                         show, print_neg_location_prefix);
+                         show, options.neg_location_prefix);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(out, output_format, mon_data_set, stonith_history, options.mon_ops,
-                         show, print_neg_location_prefix);
+                         show, options.neg_location_prefix);
             break;
 
         case mon_output_unset:
@@ -1873,6 +2097,8 @@ clean_up(crm_exit_t exit_code)
 {
     clean_up_connections();
     free(options.pid_file);
+    free(options.neg_location_prefix);
+    g_slist_free_full(options.includes_excludes, free);
 
     pe_free_working_set(mon_data_set);
     mon_data_set = NULL;

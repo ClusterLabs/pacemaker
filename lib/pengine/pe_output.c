@@ -520,6 +520,14 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
 }
 
 int
+pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
+    fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
+    fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
+    fprintf(out->dest, "\n");
+    return 0;
+}
+
+int
 pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
@@ -576,10 +584,28 @@ int
 pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->info(out, "\n");
-        out->info(out, "              *** Resource management is DISABLED ***");
-        out->info(out, "  The cluster will not attempt to start, stop or recover services");
+    out->list_item(out, NULL, "STONITH of failed nodes %s",
+                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+
+    out->list_item(out, NULL, "Cluster is %s",
+                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+
+    switch (data_set->no_quorum_policy) {
+        case no_quorum_freeze:
+            out->list_item(out, NULL, "No quorum policy: Freeze resources");
+            break;
+
+        case no_quorum_stop:
+            out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
+            break;
+
+        case no_quorum_ignore:
+            out->list_item(out, NULL, "No quorum policy: Ignore");
+            break;
+
+        case no_quorum_suicide:
+            out->list_item(out, NULL, "No quorum policy: Suicide");
+            break;
     }
 
     return 0;
@@ -1138,7 +1164,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
-    gboolean as_header G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean as_header = va_arg(args, gboolean);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
@@ -1163,6 +1189,10 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
             xmlSetProp(node, (pcmkXmlStr) CRM_LAST_FAILURE_PREFIX,
                        (pcmkXmlStr) pcmk__epoch2str(&last_failure));
         }
+    }
+
+    if (as_header == FALSE) {
+        pcmk__output_xml_pop_parent(out);
     }
 
     return 0;
@@ -1268,6 +1298,11 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "group", "log",  pe__group_text },
+    /* maint-mode only exists for text and log.  Other formatters output it as
+     * part of the cluster-options handler.
+     */
+    { "maint-mode", "log", pe__cluster_maint_mode_text },
+    { "maint-mode", "text", pe__cluster_maint_mode_text },
     { "node", "html", pe__node_html },
     { "node", "log", pe__node_text },
     { "node", "text", pe__node_text },

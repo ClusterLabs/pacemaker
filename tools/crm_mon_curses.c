@@ -328,6 +328,16 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return 0;
 }
 
+static int
+cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
+    printw("\n              *** Resource management is DISABLED ***");
+    printw("\n  The cluster will not attempt to start, stop or recover services");
+    printw("\n");
+    clrtoeol();
+    refresh();
+    return 0;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "console", pe__ban_text },
     { "bundle", "console", pe__bundle_text },
@@ -339,6 +349,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "console", pe__cluster_times_text },
     { "failed-action", "console", pe__failed_action_text },
     { "group", "console", pe__group_text },
+    { "maint-mode", "console", cluster_maint_mode_console },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },
     { "op-history", "console", pe__op_history_text },
