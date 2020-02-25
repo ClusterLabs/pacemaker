@@ -72,6 +72,9 @@ curses_init(pcmk__output_t *out) {
 
 static void
 curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    echo();
+    nocbreak();
+    endwin();
 }
 
 static void

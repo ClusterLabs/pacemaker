@@ -1871,15 +1871,6 @@ handle_html_output(crm_exit_t exit_code) {
 static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
-#if CURSES_ENABLED
-    if (output_format == mon_output_console) {
-        output_format = mon_output_plain;
-        echo();
-        nocbreak();
-        endwin();
-    }
-#endif
-
     clean_up_connections();
     free(options.pid_file);
 
@@ -1900,10 +1891,20 @@ clean_up(crm_exit_t exit_code)
     g_clear_error(&error);
 
     if (out != NULL) {
-        if (output_format == mon_output_cgi || output_format == mon_output_html) {
-            handle_html_output(exit_code);
-        } else {
-            out->finish(out, exit_code, true, NULL);
+        switch (output_format) {
+            case mon_output_cgi:
+            case mon_output_html:
+                handle_html_output(exit_code);
+                break;
+
+            case mon_output_console:
+                output_format = mon_output_plain;
+                out->finish(out, exit_code, true, NULL);
+                break;
+
+            default:
+                out->finish(out, exit_code, true, NULL);
+                break;
         }
 
         pcmk__output_free(out);
