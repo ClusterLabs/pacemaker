@@ -69,121 +69,95 @@ static const char *crm_app_description = NULL;
 static char *crm_short_options = NULL;
 static const char *crm_app_usage = NULL;
 
-gboolean
-check_time(const char *value)
+bool
+pcmk__valid_time(const char *value)
 {
-    if (crm_get_msec(value) < 5000) {
-        return FALSE;
-    }
-    return TRUE;
+    return crm_get_msec(value) >= 5000;
 }
 
-gboolean
-check_timer(const char *value)
+bool
+pcmk__valid_timer(const char *value)
 {
-    if (crm_get_msec(value) < 0) {
-        return FALSE;
-    }
-    return TRUE;
+    return crm_get_msec(value) >= 0;
 }
 
-gboolean
-check_boolean(const char *value)
+bool
+pcmk__valid_boolean(const char *value)
 {
-    int tmp = FALSE;
+    int tmp;
 
-    if (crm_str_to_boolean(value, &tmp) != 1) {
-        return FALSE;
-    }
-    return TRUE;
+    return crm_str_to_boolean(value, &tmp) == 1;
 }
 
-gboolean
-check_number(const char *value)
+bool
+pcmk__valid_number(const char *value)
 {
-    errno = 0;
     if (value == NULL) {
-        return FALSE;
+        return false;
 
-    } else if (safe_str_eq(value, CRM_MINUS_INFINITY_S)) {
-
-    } else if (safe_str_eq(value, CRM_INFINITY_S)) {
-
-    } else {
-        crm_parse_ll(value, NULL);
+    } else if (safe_str_eq(value, CRM_MINUS_INFINITY_S)
+               || safe_str_eq(value, CRM_INFINITY_S)) {
+        return true;
     }
 
-    if (errno != 0) {
-        return FALSE;
-    }
-    return TRUE;
+    errno = 0;
+    crm_parse_ll(value, NULL);
+    return errno == 0;
 }
 
-gboolean
-check_positive_number(const char *value)
+bool
+pcmk__valid_positive_number(const char *value)
 {
     return safe_str_eq(value, CRM_INFINITY_S)
            || (crm_parse_ll(value, NULL) > 0);
 }
 
-gboolean
-check_quorum(const char *value)
+bool
+pcmk__valid_quorum(const char *value)
 {
-    if (safe_str_eq(value, "stop")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "freeze")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "ignore")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "suicide")) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, "stop")
+           || safe_str_eq(value, "freeze")
+           || safe_str_eq(value, "ignore")
+           || safe_str_eq(value, "suicide");
 }
 
-gboolean
-check_script(const char *value)
+bool
+pcmk__valid_script(const char *value)
 {
     struct stat st;
 
-    if(safe_str_eq(value, "/dev/null")) {
-        return TRUE;
+    if (safe_str_eq(value, "/dev/null")) {
+        return true;
     }
 
-    if(stat(value, &st) != 0) {
+    if (stat(value, &st) != 0) {
         crm_err("Script %s does not exist", value);
-        return FALSE;
+        return false;
     }
 
-    if(S_ISREG(st.st_mode) == 0) {
+    if (S_ISREG(st.st_mode) == 0) {
         crm_err("Script %s is not a regular file", value);
-        return FALSE;
+        return false;
     }
 
-    if( (st.st_mode & (S_IXUSR | S_IXGRP )) == 0) {
+    if ((st.st_mode & (S_IXUSR | S_IXGRP)) == 0) {
         crm_err("Script %s is not executable", value);
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
-gboolean
-check_utilization(const char *value)
+bool
+pcmk__valid_utilization(const char *value)
 {
     char *end = NULL;
     long number = strtol(value, &end, 10);
 
-    if(end && end[0] != '%') {
-        return FALSE;
-    } else if(number < 0) {
-        return FALSE;
+    if (end && (end[0] != '%')) {
+        return false;
     }
-
-    return TRUE;
+    return number >= 0;
 }
 
 void
@@ -257,9 +231,22 @@ score2char(int score)
     return crm_itoa(score);
 }
 
-const char *
-cluster_option(GHashTable * options, gboolean(*validate) (const char *),
-               const char *name, const char *old_name, const char *def_value)
+/*!
+ * \internal
+ * \brief Check a table of configured options for a particular option
+ *
+ * \param[in] options    Name/value pairs for configured options
+ * \param[in] validate   If not NULL, validator function for option value
+ * \param[in] name       Option name to look for
+ * \param[in] old_name   Alternative option name to look for
+ * \param[in] def_value  Default to use if option not configured
+ *
+ * \return Option value (from supplied options table or default value)
+ */
+static const char *
+cluster_option_value(GHashTable *options, bool (*validate)(const char *),
+                     const char *name, const char *old_name,
+                     const char *def_value)
 {
     const char *value = NULL;
     char *new_value = NULL;
@@ -319,18 +306,28 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
     return value;
 }
 
+/*!
+ * \internal
+ * \brief Get the value of a cluster option
+ *
+ * \param[in] options      Name/value pairs for configured options
+ * \param[in] option_list  Possible cluster options
+ * \param[in] name         (Primary) option name to look for
+ *
+ * \return Option value
+ */
 const char *
-get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len, const char *name)
+pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
+                     int len, const char *name)
 {
     const char *value = NULL;
 
     for (int lpc = 0; lpc < len; lpc++) {
         if (safe_str_eq(name, option_list[lpc].name)) {
-            value = cluster_option(options,
-                                   option_list[lpc].is_valid,
-                                   option_list[lpc].name,
-                                   option_list[lpc].alt_name,
-                                   option_list[lpc].default_value);
+            value = cluster_option_value(options, option_list[lpc].is_valid,
+                                         option_list[lpc].name,
+                                         option_list[lpc].alt_name,
+                                         option_list[lpc].default_value);
             return value;
         }
     }
@@ -339,8 +336,9 @@ get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len,
 }
 
 void
-config_metadata(const char *name, const char *version, const char *desc_short,
-                const char *desc_long, pe_cluster_option * option_list, int len)
+pcmk__print_option_metadata(const char *name, const char *version,
+                            const char *desc_short, const char *desc_long,
+                            pcmk__cluster_option_t *option_list, int len)
 {
     int lpc = 0;
 
@@ -353,7 +351,8 @@ config_metadata(const char *name, const char *version, const char *desc_short,
             "  <parameters>\n", name, version, desc_long, desc_short);
 
     for (lpc = 0; lpc < len; lpc++) {
-        if (option_list[lpc].description_long == NULL && option_list[lpc].description_short == NULL) {
+        if ((option_list[lpc].description_long == NULL)
+            && (option_list[lpc].description_short == NULL)) {
             continue;
         }
         fprintf(stdout, "    <parameter name=\"%s\" unique=\"0\">\n"
@@ -365,24 +364,24 @@ config_metadata(const char *name, const char *version, const char *desc_short,
                 option_list[lpc].description_short,
                 option_list[lpc].type,
                 option_list[lpc].default_value,
-                option_list[lpc].description_long ? option_list[lpc].
-                description_long : option_list[lpc].description_short,
-                option_list[lpc].values ? "  Allowed values: " : "",
-                option_list[lpc].values ? option_list[lpc].values : "");
+                option_list[lpc].description_long?
+                    option_list[lpc].description_long :
+                    option_list[lpc].description_short,
+                (option_list[lpc].values? "  Allowed values: " : ""),
+                (option_list[lpc].values? option_list[lpc].values : ""));
     }
     fprintf(stdout, "  </parameters>\n</resource-agent>\n");
 }
 
 void
-verify_all_options(GHashTable * options, pe_cluster_option * option_list, int len)
+pcmk__validate_cluster_options(GHashTable *options,
+                               pcmk__cluster_option_t *option_list, int len)
 {
-    int lpc = 0;
-
-    for (lpc = 0; lpc < len; lpc++) {
-        cluster_option(options,
-                       option_list[lpc].is_valid,
-                       option_list[lpc].name,
-                       option_list[lpc].alt_name, option_list[lpc].default_value);
+    for (int lpc = 0; lpc < len; lpc++) {
+        cluster_option_value(options, option_list[lpc].is_valid,
+                             option_list[lpc].name,
+                             option_list[lpc].alt_name,
+                             option_list[lpc].default_value);
     }
 }
 

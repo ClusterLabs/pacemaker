@@ -93,41 +93,43 @@ _Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
 void pcmk__cli_option_cleanup(void);
 
 /* Cluster Option Processing */
-typedef struct pe_cluster_option_s {
+typedef struct pcmk__cluster_option_s {
     const char *name;
     const char *alt_name;
     const char *type;
     const char *values;
     const char *default_value;
 
-     gboolean(*is_valid) (const char *);
+    bool (*is_valid)(const char *);
 
     const char *description_short;
     const char *description_long;
 
-} pe_cluster_option;
+} pcmk__cluster_option_t;
 
-const char *cluster_option(GHashTable * options, gboolean(*validate) (const char *),
-                           const char *name, const char *old_name, const char *def_value);
+const char *pcmk__cluster_option(GHashTable *options,
+                                 pcmk__cluster_option_t *option_list, int len,
+                                 const char *name);
 
-const char *get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len,
-                             const char *name);
+void pcmk__print_option_metadata(const char *name, const char *version,
+                                 const char *desc_short, const char *desc_long,
+                                 pcmk__cluster_option_t *option_list, int len);
 
-void config_metadata(const char *name, const char *version, const char *desc_short,
-                     const char *desc_long, pe_cluster_option * option_list, int len);
+void pcmk__validate_cluster_options(GHashTable *options,
+                                    pcmk__cluster_option_t *option_list,
+                                    int len);
 
-void verify_all_options(GHashTable * options, pe_cluster_option * option_list, int len);
-gboolean check_time(const char *value);
-gboolean check_timer(const char *value);
-gboolean check_boolean(const char *value);
-gboolean check_number(const char *value);
-gboolean check_positive_number(const char *value);
-gboolean check_quorum(const char *value);
-gboolean check_script(const char *value);
-gboolean check_utilization(const char *value);
-long crm_get_sbd_timeout(void);
-long crm_auto_watchdog_timeout(void);
-gboolean check_sbd_timeout(const char *value);
+bool pcmk__valid_time(const char *value);
+bool pcmk__valid_timer(const char *value);
+bool pcmk__valid_boolean(const char *value);
+bool pcmk__valid_number(const char *value);
+bool pcmk__valid_positive_number(const char *value);
+bool pcmk__valid_quorum(const char *value);
+bool pcmk__valid_script(const char *value);
+bool pcmk__valid_utilization(const char *value);
+long pcmk__get_sbd_timeout(void);
+long pcmk__auto_watchdog_timeout(void);
+bool pcmk__valid_sbd_timeout(const char *value);
 
 /* char2score */
 extern int node_score_red;

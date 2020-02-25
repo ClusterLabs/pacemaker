@@ -221,7 +221,7 @@ pcmk_locate_sbd(void)
 }
 
 long
-crm_get_sbd_timeout(void)
+pcmk__get_sbd_timeout(void)
 {
     static long sbd_timeout = -2;
 
@@ -232,20 +232,20 @@ crm_get_sbd_timeout(void)
 }
 
 long
-crm_auto_watchdog_timeout()
+pcmk__auto_watchdog_timeout()
 {
-    long sbd_timeout = crm_get_sbd_timeout();
+    long sbd_timeout = pcmk__get_sbd_timeout();
 
     return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
 }
 
-gboolean
-check_sbd_timeout(const char *value)
+bool
+pcmk__valid_sbd_timeout(const char *value)
 {
     long st_timeout = value? crm_get_msec(value) : 0;
 
     if (st_timeout < 0) {
-        st_timeout = crm_auto_watchdog_timeout();
+        st_timeout = pcmk__auto_watchdog_timeout();
         crm_debug("Using calculated value %ld for stonith-watchdog-timeout (%s)",
                   st_timeout, value);
     }
@@ -259,20 +259,20 @@ check_sbd_timeout(const char *value)
                           "Shutting down: stonith-watchdog-timeout configured (%s) but SBD not active",
                           (value? value : "auto"));
         crm_exit(CRM_EX_FATAL);
-        return FALSE;
+        return false;
 
     } else {
-        long sbd_timeout = crm_get_sbd_timeout();
+        long sbd_timeout = pcmk__get_sbd_timeout();
 
         if (st_timeout < sbd_timeout) {
             do_crm_log_always(LOG_EMERG,
                               "Shutting down: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
                               value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
-            return FALSE;
+            return false;
         }
         crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
                  value, sbd_timeout);
     }
-    return TRUE;
+    return true;
 }
