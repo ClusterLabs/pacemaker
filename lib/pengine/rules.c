@@ -443,74 +443,105 @@ phase_of_the_moon(crm_time_t * now)
     return ((((((diy + epact) * 6) + 11) % 177) / 22) & 7);
 }
 
-#define cron_check(xml_field, time_field)				\
-    value = crm_element_value(cron_spec, xml_field);			\
-    if(value != NULL) {							\
-	gboolean pass = TRUE;						\
-	int rc = pcmk__parse_ll_range(value, &value_low, &value_high);  \
-        if (rc == pcmk_rc_unknown_format) {                             \
-            return FALSE;                                               \
-        } else if (value_low == value_high) {                           \
-            if (value_low != time_field) {                              \
-                pass = FALSE;                                           \
-            }                                                           \
-        } else if (value_low == -1 && value_high != -1) {               \
-            if (time_field > value_high) {                              \
-                pass = FALSE;                                           \
-            }                                                           \
-        } else if (value_low != -1 && value_high == -1) {               \
-            if (value_low > time_field) {                               \
-                pass = FALSE;                                           \
-            }                                                           \
-	} else {                                                        \
-            if (value_low > time_field || value_high < time_field) {    \
-                pass = FALSE;                                           \
-            }                                                           \
-        }                                                               \
-	if(pass == FALSE) {						\
-	    crm_debug("Condition '%s' in %s: failed", value, xml_field); \
-	    return pass;						\
-	}								\
-	crm_debug("Condition '%s' in %s: passed", value, xml_field);	\
+static pe_eval_date_result_t
+check_one(xmlNode *cron_spec, const char *xml_field, uint32_t time_field) {
+    pe_eval_date_result_t rc = pe_date_result_undetermined;
+    const char *value = crm_element_value(cron_spec, xml_field);
+    long long low, high;
+
+    if (value == NULL) {
+        /* Return pe_date_result_undetermined if the field is missing. */
+        goto bail;
     }
 
-gboolean
+    if (pcmk__parse_ll_range(value, &low, &high) == pcmk_rc_unknown_format) {
+       goto bail;
+    } else if (low == high) {
+        /* A single number was given, not a range. */
+        if (time_field < low) {
+            rc = pe_date_before_range;
+        } else if (time_field > high) {
+            rc = pe_date_after_range;
+        } else {
+            rc = pe_date_within_range;
+        }
+    } else if (low != -1 && high != -1) {
+        /* This is a range with both bounds. */
+        if (time_field < low) {
+            rc = pe_date_before_range;
+        } else if (time_field > high) {
+            rc = pe_date_after_range;
+        } else {
+            rc = pe_date_within_range;
+        }
+    } else if (low == -1) {
+       /* This is a range with no starting value. */
+        rc = time_field <= high ? pe_date_within_range : pe_date_after_range;
+    } else if (high == -1) {
+        /* This is a range with no ending value. */
+        rc = time_field >= low ? pe_date_within_range : pe_date_before_range;
+    }
+
+bail:
+    if (rc == pe_date_within_range) {
+        crm_debug("Condition '%s' in %s: passed", value, xml_field);
+    } else {
+        crm_debug("Condition '%s' in %s: failed", value, xml_field);
+    }
+
+    return rc;
+}
+
+static gboolean
+check_passes(pe_eval_date_result_t rc) {
+    /* _within_range and _op_satisfied are obvious.  _result_undetermined is a pass
+     * because this is the return value if a field is not given.  In this case, we
+     * just want to ignore it and check other fields to see if they place some
+     * restriction on what can pass.
+     */
+    return rc == pe_date_within_range || rc == pe_date_op_satisfied ||
+           rc == pe_date_result_undetermined;
+}
+
+#define CHECK_ONE(spec, name, var) do { \
+    pe_eval_date_result_t subpart_rc = check_one(spec, name, var); \
+    if (check_passes(subpart_rc) == FALSE) { \
+        return subpart_rc; \
+    } \
+} while (0)
+
+pe_eval_date_result_t
 pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
-    const char *value = NULL;
-
-    long long value_low = -1;
-    long long value_high = -1;
-
     uint32_t h, m, s, y, d, w;
 
-    CRM_CHECK(now != NULL, return FALSE);
-
-    crm_time_get_timeofday(now, &h, &m, &s);
-
-    cron_check("seconds", s);
-    cron_check("minutes", m);
-    cron_check("hours", h);
+    CRM_CHECK(now != NULL, return pe_date_op_unsatisfied);
 
     crm_time_get_gregorian(now, &y, &m, &d);
+    CHECK_ONE(cron_spec, "years", y);
+    CHECK_ONE(cron_spec, "months", m);
+    CHECK_ONE(cron_spec, "monthdays", d);
 
-    cron_check("monthdays", d);
-    cron_check("months", m);
-    cron_check("years", y);
+    crm_time_get_timeofday(now, &h, &m, &s);
+    CHECK_ONE(cron_spec, "hours", h);
+    CHECK_ONE(cron_spec, "minutes", m);
+    CHECK_ONE(cron_spec, "seconds", s);
 
     crm_time_get_ordinal(now, &y, &d);
-
-    cron_check("yeardays", d);
+    CHECK_ONE(cron_spec, "yeardays", d);
 
     crm_time_get_isoweek(now, &y, &w, &d);
+    CHECK_ONE(cron_spec, "weekyears", y);
+    CHECK_ONE(cron_spec, "weeks", w);
+    CHECK_ONE(cron_spec, "weekdays", d);
 
-    cron_check("weekyears", y);
-    cron_check("weeks", w);
-    cron_check("weekdays", d);
+    CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
 
-    cron_check("moon", phase_of_the_moon(now));
-
-    return TRUE;
+    /* If we get here, either no fields were specified (which is success), or all
+     * the fields that were specified had their conditions met (which is also a
+     * success).  Thus, the result is success.
+     */
+    return pe_date_op_satisfied;
 }
 
 #define update_field(xml_field, time_fn)			\
@@ -637,8 +668,7 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         }
 
     } else if (safe_str_eq(op, "date_spec")) {
-        rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
-                                                     : pe_date_op_unsatisfied;
+        rc = pe_cron_range_satisfied(now, date_spec);
         // @TODO set next_change appropriately
 
     } else if (safe_str_eq(op, "gt")) {
