@@ -264,6 +264,100 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
 
 
 /*
+ * Environment variable option handling
+ */
+
+/*!
+ * \internal
+ * \brief Get the value of a Pacemaker environment variable option
+ *
+ * If an environment variable option is set, with either a PCMK_ or (for
+ * backward compatibility) HA_ prefix, log and return the value.
+ *
+ * \param[in] option  Environment variable name (without prefix)
+ *
+ * \return Value of environment variable option
+ */
+const char *
+pcmk__env_option(const char *option)
+{
+    char env_name[NAME_MAX];
+    const char *value = NULL;
+
+    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
+    value = getenv(env_name);
+    if (value != NULL) {
+        crm_trace("Found %s = %s", env_name, value);
+        return value;
+    }
+
+    snprintf(env_name, NAME_MAX, "HA_%s", option);
+    value = getenv(env_name);
+    if (value != NULL) {
+        crm_trace("Found %s = %s", env_name, value);
+        return value;
+    }
+
+    crm_trace("Nothing found for %s", option);
+    return NULL;
+}
+
+/*!
+ * \brief Set or unset a Pacemaker environment variable option
+ *
+ * Set an environment variable option with both a PCMK_ and (for
+ * backward compatibility) HA_ prefix.
+ *
+ * \param[in] option  Environment variable name (without prefix)
+ * \param[in] value   New value (or NULL to unset)
+ */
+void
+pcmk__set_env_option(const char *option, const char *value)
+{
+    char env_name[NAME_MAX];
+
+    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
+    if (value) {
+        crm_trace("Setting %s to %s", env_name, value);
+        setenv(env_name, value, 1);
+    } else {
+        crm_trace("Unsetting %s", env_name);
+        unsetenv(env_name);
+    }
+
+    snprintf(env_name, NAME_MAX, "HA_%s", option);
+    if (value) {
+        crm_trace("Setting %s to %s", env_name, value);
+        setenv(env_name, value, 1);
+    } else {
+        crm_trace("Unsetting %s", env_name);
+        unsetenv(env_name);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether Pacemaker environment variable option is enabled
+ *
+ * Given a Pacemaker environment variable option that can either be boolean
+ * or a list of daemon names, return true if the option is enabled for a given
+ * daemon.
+ *
+ * \param[in] daemon   Daemon name
+ * \param[in] option   Pacemaker environment variable name
+ *
+ * \return true if variable is enabled for daemon, otherwise false
+ */
+bool
+pcmk__env_option_enabled(const char *daemon, const char *option)
+{
+    const char *value = pcmk__env_option(option);
+
+    return (value != NULL) && (crm_is_true(value) || strstr(value, daemon));
+}
+
+
+/*
  * Cluster option handling
  */
 

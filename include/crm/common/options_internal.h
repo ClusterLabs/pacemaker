@@ -63,6 +63,15 @@ void pcmk__cli_option_cleanup(void);
 
 
 /*
+ * Environment variable option handling
+ */
+
+const char *pcmk__env_option(const char *option);
+void pcmk__set_env_option(const char *option, const char *value);
+bool pcmk__env_option_enabled(const char *daemon, const char *option);
+
+
+/*
  * Cluster option handling
  */
 

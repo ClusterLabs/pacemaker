@@ -99,9 +99,6 @@ crm_set_bit(const char *function, int line, const char *target, long long word, 
 
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
-const char *pcmk__env_option(const char *option);
-void pcmk__set_env_option(const char *option, const char *value);
-bool pcmk__env_option_enabled(const char *daemon, const char *option);
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);
