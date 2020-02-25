@@ -101,8 +101,7 @@ void pcmk__validate_cluster_options(GHashTable *options,
                                     pcmk__cluster_option_t *option_list,
                                     int len);
 
-bool pcmk__valid_time(const char *value);
-bool pcmk__valid_timer(const char *value);
+bool pcmk__valid_interval_spec(const char *value);
 bool pcmk__valid_boolean(const char *value);
 bool pcmk__valid_number(const char *value);
 bool pcmk__valid_positive_number(const char *value);

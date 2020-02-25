@@ -362,15 +362,10 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
  */
 
 bool
-pcmk__valid_time(const char *value)
+pcmk__valid_interval_spec(const char *value)
 {
-    return crm_get_msec(value) >= 5000;
-}
-
-bool
-pcmk__valid_timer(const char *value)
-{
-    return crm_get_msec(value) >= 0;
+    (void) crm_parse_interval_spec(value);
+    return errno == 0;
 }
 
 bool

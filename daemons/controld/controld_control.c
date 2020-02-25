@@ -532,7 +532,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
-        NULL, "20s", pcmk__valid_time,
+        NULL, "20s", pcmk__valid_interval_spec,
         "How long to wait for a response from other nodes during start-up",
         "The optimal value will depend on the speed and load of your network "
             "and the type of switches used."
@@ -541,7 +541,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
         XML_CONFIG_ATTR_RECHECK, NULL, "time",
         "Zero disables polling, while positive values are an interval in seconds"
             "(unless other units are specified, for example \"5min\")",
-        "15min", pcmk__valid_timer,
+        "15min", pcmk__valid_interval_spec,
         "Polling interval to recheck cluster state and evalute rules "
             "with date specifications",
         "Pacemaker is primarily event-driven, and looks ahead to know when to "
@@ -573,7 +573,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
-        "2min", pcmk__valid_timer,
+        "2min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         "Declare an election failed if it is not decided within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -581,7 +581,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
-        "20min", pcmk__valid_timer,
+        "20min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         "Exit immediately if shutdown does not complete within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -589,21 +589,21 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
-        "3min", pcmk__valid_timer,
+        "3min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         "If you need to adjust this value, it probably indicates "
             "the presence of a bug."
     },
     {
         "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
-        "30min", pcmk__valid_timer,
+        "30min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         "If you need to adjust this value, it probably indicates "
             "the presence of a bug."
     },
     {
         "transition-delay", "crmd-transition-delay", "time", NULL,
-        "0s", pcmk__valid_timer,
+        "0s", pcmk__valid_interval_spec,
         "*** Advanced Use Only *** Enabling this option will slow down "
             "cluster recovery under all conditions",
         "Delay cluster recovery for this much time to allow for additional "

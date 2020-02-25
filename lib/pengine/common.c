@@ -101,7 +101,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
-        "0", pcmk__valid_timer,
+        "0", pcmk__valid_interval_spec,
         "Do not lock resources to a cleanly shut down node longer than this",
         "If shutdown-lock is true and this is set to a nonzero time duration, "
             "shutdown locks will expire after this much time has passed since "
@@ -128,7 +128,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-timeout", NULL, "time", NULL,
-        "60s", pcmk__valid_timer,
+        "60s", pcmk__valid_interval_spec,
         "*** Advanced Use Only *** Unused by Pacemaker",
         "This value is not used by Pacemaker, but is kept for backward "
             "compatibility, and certain legacy fence agents might use it."
@@ -161,7 +161,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     {
         "cluster-delay", NULL, "time", NULL,
-        "60s", pcmk__valid_time,
+        "60s", pcmk__valid_interval_spec,
         "Maximum time for node-to-node communication",
         "The node elected Designated Controller (DC) will consider an action "
             "failed if it does not get a response from the node executing the "
