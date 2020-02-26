@@ -109,7 +109,7 @@ time_is_set(struct timespec *timespec)
  * \param[in] now  More recent time (or NULL to use current time)
  * \param[in] old  Earlier time
  *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
+ * \return milliseconds difference (or 0 if old is NULL or unset)
  *
  * \note Can overflow on 32bit machines when the differences is around
  *       24 days or more.
@@ -1371,7 +1371,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
         g_list_free_1(first);
 
 #ifdef PCMK__TIME_USE_CGT
-        if (cmd->t_first_run.tv_sec == 0) {
+        if (!time_is_set(&(cmd->t_first_run))) {
             clock_gettime(CLOCK_MONOTONIC, &cmd->t_first_run);
         }
         clock_gettime(CLOCK_MONOTONIC, &cmd->t_run);
