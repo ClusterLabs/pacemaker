@@ -120,6 +120,22 @@ time_is_set(struct timespec *timespec)
            ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
 }
 
+/*
+ * \internal
+ * \brief Set a timespec (and its original if unset) to the current time
+ *
+ * \param[out] t_current  Where to store current time
+ * \param[out] t_orig     Where to copy t_current if unset
+ */
+static void
+get_current_time(struct timespec *t_current, struct timespec *t_orig)
+{
+    clock_gettime(CLOCK_MONOTONIC, t_current);
+    if ((t_orig != NULL) && !time_is_set(t_orig)) {
+        *t_orig = *t_current;
+    }
+}
+
 /*!
  * \internal
  * \brief Return difference between two times in milliseconds
@@ -331,10 +347,7 @@ stonith_recurring_op_helper(gpointer data)
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (!time_is_set(&(cmd->t_first_queue))) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -458,10 +471,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (!time_is_set(&(cmd->t_first_queue))) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -1391,10 +1401,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
         g_list_free_1(first);
 
 #ifdef PCMK__TIME_USE_CGT
-        if (!time_is_set(&(cmd->t_first_run))) {
-            clock_gettime(CLOCK_MONOTONIC, &cmd->t_first_run);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_run);
+        get_current_time(&(cmd->t_run), &(cmd->t_first_run));
 #endif
         cmd->epoch_last_run = time(NULL);
     }
