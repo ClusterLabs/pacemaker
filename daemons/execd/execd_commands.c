@@ -1831,7 +1831,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
         const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
         CRM_LOG_ASSERT(data != NULL);
-        check_sbd_timeout(timeout);
+        pcmk__valid_sbd_timeout(timeout);
     } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
         rc = process_lrmd_alert_exec(client, id, request);
         do_reply = 1;

@@ -59,19 +59,30 @@ cib_enable_writes(int nsig)
     cib_writes_enabled = TRUE;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {"stand-alone",    0, 0, 's', "\tAdvanced use only"},
-    {"disk-writes",    0, 0, 'w', "\tAdvanced use only"},
-    {"cib-root",       1, 0, 'r', "\tAdvanced use only"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, 0, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "stand-alone", no_argument, NULL, 's',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    {
+        "disk-writes", no_argument, NULL, 'w',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    {
+        "cib-root", required_argument, NULL, 'r',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -84,8 +95,9 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]",
-                    long_options, "Daemon for storing and replicating the cluster configuration");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for managing the configuration "
+                          "of a Pacemaker cluster");
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
@@ -93,7 +105,7 @@ main(int argc, char **argv)
     cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -130,7 +142,7 @@ main(int argc, char **argv)
                 }
                 break;
             case '?':          /* Help message */
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'w':
                 cib_writes_enabled = TRUE;
@@ -156,7 +168,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);

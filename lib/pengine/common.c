@@ -20,76 +20,76 @@
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 
-static gboolean
+static bool
 check_health(const char *value)
 {
-    if (safe_str_eq(value, "none")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "custom")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "only-green")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "progressive")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "migrate-on-red")) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, "none")
+            || safe_str_eq(value, "custom")
+            || safe_str_eq(value, "only-green")
+            || safe_str_eq(value, "progressive")
+            || safe_str_eq(value, "migrate-on-red");
 }
 
-static gboolean
+static bool
 check_stonith_action(const char *value)
 {
-    if (safe_str_eq(value, "reboot")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "poweroff")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "off")) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, "reboot")
+           || safe_str_eq(value, "poweroff")
+           || safe_str_eq(value, "off");
 }
 
-static gboolean
+static bool
 check_placement_strategy(const char *value)
 {
-    if (safe_str_eq(value, "default")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "utilization")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "minimal")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "balanced")) {
-        return TRUE;
-    }
-    return FALSE;
+    return safe_str_eq(value, "default")
+           || safe_str_eq(value, "utilization")
+           || safe_str_eq(value, "minimal")
+           || safe_str_eq(value, "balanced");
 }
 
-/* *INDENT-OFF* */
-static pe_cluster_option pe_opts[] = {
-	/* name, old-name, validate, default, description */
-	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
-	  "What to do when the cluster does not have quorum", NULL },
-	{ "symmetric-cluster", NULL, "boolean", NULL, "true", &check_boolean,
-	  "All resources can run anywhere by default", NULL },
-	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster monitor resources and start/stop them as required", NULL },
-	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
-	  "When set to TRUE, the cluster will immediately ban a resource from a node if it fails to start there. When FALSE, the cluster will instead check the resource's fail count against its migration-threshold." },
-	{ "enable-startup-probes", NULL, "boolean", NULL, "true", &check_boolean,
-	  "Should the cluster check for active resources during startup", NULL },
+static pcmk__cluster_option_t pe_opts[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * short description,
+     * long description
+     */
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK,
-        NULL, "boolean", NULL, "false", &check_boolean,
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "stop", pcmk__valid_quorum,
+        "What to do when the cluster does not have quorum",
+        NULL
+    },
+    {
+        "symmetric-cluster", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "Whether resources can run on any node by default",
+        NULL
+    },
+    {
+        "maintenance-mode", NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
+        "Whether the cluster should refrain from monitoring, starting, "
+            "and stopping resources",
+        NULL
+    },
+    {
+        "start-failure-is-fatal", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "Whether a start failure should prevent a resource from being "
+            "recovered on the same node",
+        "When true, the cluster will immediately ban a resource from a node "
+            "if it fails to start there. When false, the cluster will instead "
+            "check the resource's fail count against its migration-threshold."
+    },
+    {
+        "enable-startup-probes", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "Whether the cluster should check for active resources during start-up",
+        NULL
+    },
+    {
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
         "Whether to lock resources to a cleanly shut down node",
         "When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
@@ -100,115 +100,204 @@ static pe_cluster_option pe_opts[] = {
             "never locked, though support could be added in a future release."
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT,
-        NULL, "time", NULL, "0", &check_timer,
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        "0", pcmk__valid_interval_spec,
         "Do not lock resources to a cleanly shut down node longer than this",
         "If shutdown-lock is true and this is set to a nonzero time duration, "
             "shutdown locks will expire after this much time has passed since "
             "the shutdown was initiated, even if the node has not rejoined."
     },
 
-	/* Stonith Options */
-	{ "stonith-enabled", NULL, "boolean", NULL, "true", &check_boolean,
-	  "Failed nodes are STONITH'd", NULL },
-	{ "stonith-action", NULL, "enum", "reboot, off, poweroff", "reboot", &check_stonith_action,
-	  "Action to send to STONITH device ('poweroff' is a deprecated alias for 'off')", NULL },
-	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
-	  "How long to wait for the STONITH action (reboot,on,off) to complete", NULL },
-	{ XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL, "false", &check_boolean,
-	  "Enable watchdog integration", "Set automatically by the cluster if SBD is detected.  User configured values are ignored." },
-	{ "concurrent-fencing", NULL, "boolean", NULL,
+    // Fencing-related options
+    {
+        "stonith-enabled", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "*** Advanced Use Only *** "
+            "Whether nodes may be fenced as part of recovery",
+        "If false, unresponsive nodes are immediately assumed to be harmless, "
+            "and resources that were active on them may be recovered "
+            "elsewhere. This can result in a \"split-brain\" situation, "
+            "potentially leading to data loss and/or service unavailability."
+    },
+    {
+        "stonith-action", NULL, "enum", "reboot, off, poweroff",
+        "reboot", check_stonith_action,
+        "Action to send to fence device when a node needs to be fenced "
+            "(\"poweroff\" is a deprecated alias for \"off\")",
+        NULL
+    },
+    {
+        "stonith-timeout", NULL, "time", NULL,
+        "60s", pcmk__valid_interval_spec,
+        "*** Advanced Use Only *** Unused by Pacemaker",
+        "This value is not used by Pacemaker, but is kept for backward "
+            "compatibility, and certain legacy fence agents might use it."
+    },
+    {
+        XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
+        "Whether watchdog integration is enabled",
+        "This is set automatically by the cluster according to whether SBD "
+            "is detected to be in use. User-configured values are ignored."
+    },
+    {
+        "concurrent-fencing", NULL, "boolean", NULL,
 #ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-      "true",
+        "true",
 #else
-      "false",
+        "false",
 #endif
-      &check_boolean,
-	  "Allow performing fencing operations in parallel", NULL },
-	{ "startup-fencing", NULL, "boolean", NULL, "true", &check_boolean,
-	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
-
-	/* Timeouts etc */
-	{ "cluster-delay", NULL, "time", NULL, "60s", &check_time,
-	  "Round trip delay over the network (excluding action execution)",
-	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
-	{ "batch-limit", NULL, "integer", NULL, "0", &check_number,
-	  "The number of jobs that the TE is allowed to execute in parallel",
-	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
-	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number,
-	  "The number of migration jobs that the TE is allowed to execute in parallel on a node"},
-
-	/* Orphans and stopping */
-	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster stop all active resources", NULL },
-	{ "stop-orphan-resources", NULL, "boolean", NULL, "true", &check_boolean,
-	  "Should deleted resources be stopped", NULL },
-	{ "stop-orphan-actions", NULL, "boolean", NULL, "true", &check_boolean,
-	  "Should deleted actions be cancelled", NULL },
- 	{ "remove-after-stop", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Remove resources from the executor after they are stopped",
-	  "Always set this to false.  Other values are, at best, poorly tested and potentially dangerous." },
-/* 	{ "", "", , "0", "", NULL }, */
-
-	/* Storing inputs */
-	{
-        "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
-	    "The number of scheduler inputs resulting in ERRORs to save",
-        "Zero to disable, -1 to store unlimited"
+        pcmk__valid_boolean,
+        "Allow performing fencing operations in parallel",
+        NULL
     },
-	{
-        "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
-	    "The number of scheduler inputs resulting in WARNINGs to save",
-        "Zero to disable, -1 to store unlimited"
-    },
-	{
-        "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
-	    "The number of other scheduler inputs to save",
-        "Zero to disable, -1 to store unlimited"
+    {
+        "startup-fencing", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "*** Advanced Use Only *** Whether to fence unseen nodes at start-up",
+        "Setting this to false may lead to a \"split-brain\" situation,"
+            "potentially leading to data loss and/or service unavailability."
     },
 
-	/* Node health */
-	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
-	  "The strategy combining node attributes to determine overall node health.",
-	  "Requires external entities to create node attributes (named with the prefix '#health') with values: 'red', 'yellow' or 'green'."},
-	{ "node-health-base", NULL, "integer", NULL, "0", &check_number,
-	  "The base score assigned to a node",
-	  "Only used when node-health-strategy is set to progressive." },
-	{ "node-health-green", NULL, "integer", NULL, "0", &check_number,
-	  "The score 'green' translates to in rsc_location constraints",
-	  "Only used when node-health-strategy is set to custom or progressive." },
-	{ "node-health-yellow", NULL, "integer", NULL, "0", &check_number,
-	  "The score 'yellow' translates to in rsc_location constraints",
-	  "Only used when node-health-strategy is set to custom or progressive." },
-	{ "node-health-red", NULL, "integer", NULL, "-INFINITY", &check_number,
-	  "The score 'red' translates to in rsc_location constraints",
-	  "Only used when node-health-strategy is set to custom or progressive." },
+    {
+        "cluster-delay", NULL, "time", NULL,
+        "60s", pcmk__valid_interval_spec,
+        "Maximum time for node-to-node communication",
+        "The node elected Designated Controller (DC) will consider an action "
+            "failed if it does not get a response from the node executing the "
+            "action within this time (after considering the action's own "
+            "timeout). The \"correct\" value will depend on the speed and "
+            "load of your network and cluster nodes."
+    },
+    {
+        "batch-limit", NULL, "integer", NULL,
+        "0", pcmk__valid_number,
+        "Maximum number of jobs that the cluster may execute in parallel "
+            "across all nodes",
+        "The \"correct\" value will depend on the speed and load of your "
+            "network and cluster nodes. If set to 0, the cluster will "
+            "impose a dynamically calculated limit when any node has a "
+            "high load."
+    },
+    {
+        "migration-limit", NULL, "integer", NULL,
+        "-1", pcmk__valid_number,
+        "The number of live migration actions that the cluster is allowed "
+            "to execute in parallel on a node (-1 means no limit)"
+    },
 
-	/*Placement Strategy*/
-	{ "placement-strategy", NULL, "enum", "default, utilization, minimal, balanced", "default", &check_placement_strategy,
-	  "The strategy to determine resource placement", NULL},
+    /* Orphans and stopping */
+    {
+        "stop-all-resources", NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
+        "Whether the cluster should stop all active resources",
+        NULL
+    },
+    {
+        "stop-orphan-resources", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "Whether to stop resources that were removed from the configuration",
+        NULL
+    },
+    {
+        "stop-orphan-actions", NULL, "boolean", NULL,
+        "true", pcmk__valid_boolean,
+        "Whether to cancel recurring actions removed from the configuration",
+        NULL
+    },
+    {
+        "remove-after-stop", NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
+        "*** Advanced Use Only *** Whether to remove stopped resources from "
+            "the executor",
+        "Values other than default are poorly tested and potentially dangerous."
+    },
+
+    /* Storing inputs */
+    {
+        "pe-error-series-max", NULL, "integer", NULL,
+        "-1", pcmk__valid_number,
+        "The number of scheduler inputs resulting in errors to save",
+        "Zero to disable, -1 to store unlimited."
+    },
+    {
+        "pe-warn-series-max",  NULL, "integer", NULL,
+        "5000", pcmk__valid_number,
+        "The number of scheduler inputs resulting in warnings to save",
+        "Zero to disable, -1 to store unlimited."
+    },
+    {
+        "pe-input-series-max", NULL, "integer", NULL,
+        "4000", pcmk__valid_number,
+        "The number of scheduler inputs without errors or warnings to save",
+        "Zero to disable, -1 to store unlimited."
+    },
+
+    /* Node health */
+    {
+        "node-health-strategy", NULL, "enum",
+        "none, migrate-on-red, only-green, progressive, custom",
+        "none", check_health,
+        "How cluster should react to node health attributes",
+        "Requires external entities to create node attributes (named with "
+            "the prefix \"#health\") with values \"red\", \"yellow\" or "
+            "\"green\"."
+    },
+    {
+        "node-health-base", NULL, "integer", NULL,
+        "0", pcmk__valid_number,
+        "Base health score assigned to a node",
+        "Only used when node-health-strategy is set to progressive."
+    },
+    {
+        "node-health-green", NULL, "integer", NULL,
+        "0", pcmk__valid_number,
+        "The score to use for a node health attribute whose value is \"green\"",
+        "Only used when node-health-strategy is set to custom or progressive."
+    },
+    {
+        "node-health-yellow", NULL, "integer", NULL,
+        "0", pcmk__valid_number,
+        "The score to use for a node health attribute whose value is \"yellow\"",
+        "Only used when node-health-strategy is set to custom or progressive."
+    },
+    {
+        "node-health-red", NULL, "integer", NULL,
+        "-INFINITY", pcmk__valid_number,
+        "The score to use for a node health attribute whose value is \"red\"",
+        "Only used when node-health-strategy is set to custom or progressive."
+    },
+
+    /*Placement Strategy*/
+    {
+        "placement-strategy", NULL, "enum",
+        "default, utilization, minimal, balanced",
+        "default", check_placement_strategy,
+        "How the cluster should allocate resources to nodes",
+        NULL
+    },
 };
-/* *INDENT-ON* */
 
 void
 pe_metadata(void)
 {
-    config_metadata("pacemaker-schedulerd", "1.0", "scheduler properties",
-                    "Cluster properties used by Pacemaker's scheduler,"
-                    " formerly known as pengine",
-                    pe_opts, DIMOF(pe_opts));
+    pcmk__print_option_metadata("pacemaker-schedulerd", "1.0",
+                                "Pacemaker scheduler options",
+                                "Cluster options used by Pacemaker's scheduler"
+                                    " (formerly called pengine)",
+                                pe_opts, DIMOF(pe_opts));
 }
 
 void
 verify_pe_options(GHashTable * options)
 {
-    verify_all_options(options, pe_opts, DIMOF(pe_opts));
+    pcmk__validate_cluster_options(options, pe_opts, DIMOF(pe_opts));
 }
 
 const char *
 pe_pref(GHashTable * options, const char *name)
 {
-    return get_cluster_pref(options, pe_opts, DIMOF(pe_opts), name);
+    return pcmk__cluster_option(options, pe_opts, DIMOF(pe_opts), name);
 }
 
 const char *

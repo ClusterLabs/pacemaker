@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -53,6 +53,7 @@ libcrmcommon_la_SOURCES	+= logging.c
 libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= nvpair.c
 libcrmcommon_la_SOURCES	+= operations.c
+libcrmcommon_la_SOURCES	+= options.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c
 libcrmcommon_la_SOURCES	+= output_log.c

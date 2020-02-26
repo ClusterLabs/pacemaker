@@ -1231,9 +1231,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     }
 
 #ifdef TCP_USER_TIMEOUT
-    if (crm_get_sbd_timeout() > 0) {
+    if (pcmk__get_sbd_timeout() > 0) {
         // Time to fail and retry before watchdog
-        unsigned int optval = (unsigned int) crm_get_sbd_timeout() / 2;
+        unsigned int optval = (unsigned int) pcmk__get_sbd_timeout() / 2;
 
         rc = setsockopt(*csock, SOL_TCP, TCP_USER_TIMEOUT,
                         &optval, sizeof(optval));

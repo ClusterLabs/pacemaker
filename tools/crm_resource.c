@@ -125,338 +125,481 @@ build_constraint_list(xmlNode *root)
 
 /* short option letters still available: eEJkKXyYZ */
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
     {
         "help", no_argument, NULL, '?',
-        "\t\tDisplay this text and exit"
+        "\t\tDisplay this text and exit", pcmk__option_default
     },
     {
         "version", no_argument, NULL, '$',
-        "\t\tDisplay version information and exit"
+        "\t\tDisplay version information and exit", pcmk__option_default
     },
     {
         "verbose", no_argument, NULL, 'V',
-        "\t\tIncrease debug output (may be specified multiple times)"
+        "\t\tIncrease debug output (may be specified multiple times)",
+        pcmk__option_default
     },
     {
         "quiet", no_argument, NULL, 'Q',
-        "\t\tBe less descriptive in results"
+        "\t\tBe less descriptive in results", pcmk__option_default
     },
     {
         "resource", required_argument, NULL, 'r',
-        "\tResource ID"
+        "\tResource ID", pcmk__option_default
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nQueries:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nQueries:", pcmk__option_default
+    },
     {
         "list", no_argument, NULL, 'L',
-        "\t\tList all cluster resources with status"},
+        "\t\tList all cluster resources with status", pcmk__option_default
+    },
     {
         "list-raw", no_argument, NULL, 'l',
-        "\t\tList IDs of all instantiated resources (individual members rather than groups etc.)"
+        "\t\tList IDs of all instantiated resources (individual members rather "
+            "than groups etc.)",
+        pcmk__option_default
     },
     {
         "list-cts", no_argument, NULL, 'c',
-        NULL, pcmk_option_hidden
+        NULL, pcmk__option_hidden
     },
     {
         "list-operations", no_argument, NULL, 'O',
-        "\tList active resource operations, optionally filtered by --resource and/or --node"
+        "\tList active resource operations, optionally filtered by --resource "
+            "and/or --node",
+        pcmk__option_default
     },
     {
         "list-all-operations", no_argument, NULL, 'o',
-        "List all resource operations, optionally filtered by --resource and/or --node"
+        "List all resource operations, optionally filtered by --resource "
+            "and/or --node",
+        pcmk__option_default
     },
     {
         "list-standards", no_argument, NULL, 0,
-        "\tList supported standards"
+        "\tList supported standards", pcmk__option_default
     },
     {
         "list-ocf-providers", no_argument, NULL, 0,
-        "List all available OCF providers"
+        "List all available OCF providers", pcmk__option_default
     },
     {
         "list-agents", required_argument, NULL, 0,
-        "List all agents available for the named standard and/or provider."
+        "List all agents available for the named standard and/or provider",
+        pcmk__option_default
     },
     {
         "list-ocf-alternatives", required_argument, NULL, 0,
-        "List all available providers for the named OCF agent"
+        "List all available providers for the named OCF agent",
+        pcmk__option_default
     },
     {
         "show-metadata", required_argument, NULL, 0,
-        "Show the metadata for the named class:provider:agent"
+        "Show the metadata for the named class:provider:agent",
+        pcmk__option_default
     },
     {
         "query-xml", no_argument, NULL, 'q',
-        "\tShow XML configuration of resource (after any template expansion)"
+        "\tShow XML configuration of resource (after any template expansion)",
+        pcmk__option_default
     },
     {
         "query-xml-raw", no_argument, NULL, 'w',
-        "\tShow XML configuration of resource (before any template expansion)"
+        "\tShow XML configuration of resource (before any template expansion)",
+        pcmk__option_default
     },
     {
         "get-parameter", required_argument, NULL, 'g',
-        "Display named parameter for resource.\n"
-        "\t\t\t\tUse instance attribute unless --meta or --utilization is specified"
+        "Display named parameter for resource (use instance attribute unless "
+            "--meta or --utilization is specified)",
+        pcmk__option_default
     },
     {
         "get-property", required_argument, NULL, 'G',
-        "Display named property of resource ('class', 'type', or 'provider') (requires --resource)",
-        pcmk_option_hidden
+        "Display named property of resource ('class', 'type', or 'provider') "
+            "(requires --resource)",
+        pcmk__option_hidden
     },
     {
         "locate", no_argument, NULL, 'W',
-        "\t\tShow node(s) currently running resource"
+        "\t\tShow node(s) currently running resource",
+        pcmk__option_default
     },
     {
         "stack", no_argument, NULL, 'A',
-        "\t\tDisplay the prerequisites and dependents of a resource"
+        "\t\tDisplay the prerequisites and dependents of a resource",
+        pcmk__option_default
     },
     {
         "constraints", no_argument, NULL, 'a',
-        "\tDisplay the (co)location constraints that apply to a resource"
+        "\tDisplay the (co)location constraints that apply to a resource",
+        pcmk__option_default
     },
     {
         "why", no_argument, NULL, 'Y',
-        "\t\tShow why resources are not running, optionally filtered by --resource and/or --node"
+        "\t\tShow why resources are not running, optionally filtered by "
+            "--resource and/or --node",
+        pcmk__option_default
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nCommands:", pcmk__option_default
+    },
     {
         "validate", no_argument, NULL, 0,
-        "\t\tValidate resource configuration by calling agent's validate-all action.\n"
-        "\t\t\t\tThe configuration may be specified either by giving an existing\n"
-        "\t\t\t\tresource name with -r, or by specifying --class, --agent, and\n"
-        "\t\t\t\t--provider arguments, along with any number of --option arguments."
+        "\t\tValidate resource configuration by calling agent's validate-all "
+            "action. The configuration may be specified either by giving an "
+            "existing resource name with -r, or by specifying --class, "
+            "--agent, and --provider arguments, along with any number of "
+            "--option arguments.",
+        pcmk__option_default
     },
     {
         "cleanup", no_argument, NULL, 'C',
-        "\t\tIf resource has any past failures, clear its history and fail count.\n"
-        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
-        "\t\t\t\t--operation and --interval apply to fail counts, but entire history is always cleared,\n"
-        "\t\t\t\tto allow current state to be rechecked. If the named resource is part of a group, or\n"
-        "\t\t\t\tone numbered instance of a clone or bundled resource, the clean-up applies to the\n"
-        "\t\t\t\twhole collective resource unless --force is given."
+        "\t\tIf resource has any past failures, clear its history and "
+            "fail count. Optionally filtered by --resource, --node, "
+            "--operation, and --interval (otherwise all). --operation and "
+            "--interval apply to fail counts, but entire history is always "
+            "cleared, to allow current state to be rechecked. If the named "
+            "resource is part of a group, or one numbered instance of a clone "
+            "or bundled resource, the clean-up applies to the whole collective "
+            "resource unless --force is given.",
+        pcmk__option_default
     },
     {
         "refresh", no_argument, NULL, 'R',
-        "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all). If the named resource is\n"
-        "\t\t\t\tpart of a group, or one numbered instance of a clone or bundled resource, the clean-up\n"
-        "applies to the whole collective resource unless --force is given."
+        "\t\tDelete resource's history (including failures) so its current "
+            "state is rechecked. Optionally filtered by --resource and --node "
+            "(otherwise all). If the named resource is part of a group, or one "
+            "numbered instance of a clone or bundled resource, the clean-up "
+            "applies to the whole collective resource unless --force is given.",
+        pcmk__option_default
     },
     {
         "set-parameter", required_argument, NULL, 'p',
-        "Set named parameter for resource (requires -v).\n"
-        "\t\t\t\tUse instance attribute unless --meta or --utilization is specified."
+        "Set named parameter for resource (requires -v). Use instance "
+            "attribute unless --meta or --utilization is specified.",
+        pcmk__option_default
     },
     {
         "delete-parameter", required_argument, NULL, 'd',
-        "Delete named parameter for resource.\n"
-        "\t\t\t\tUse instance attribute unless --meta or --utilization is specified."
+        "Delete named parameter for resource. Use instance attribute unless "
+            "--meta or --utilization is specified.",
+        pcmk__option_default
     },
     {
         "set-property", required_argument, NULL, 'S',
-        "Set named property of resource ('class', 'type', or 'provider') (requires -r, -t, -v)",
-        pcmk_option_hidden
+        "Set named property of resource ('class', 'type', or 'provider') "
+            "(requires -r, -t, -v)",
+        pcmk__option_hidden
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nResource location:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nResource location:", pcmk__option_default
+    },
     {
         "move", no_argument, NULL, 'M',
-        "\t\tCreate a constraint to move resource. If --node is specified, the constraint\n"
-        "\t\t\t\twill be to move to that node, otherwise it will be to ban the current node.\n"
-        "\t\t\t\tUnless --force is specified, this will return an error if the resource is\n"
-        "\t\t\t\talready running on the specified node. If --force is specified, this will\n"
-        "\t\t\t\talways ban the current node. Optional: --lifetime, --master.\n"
-        "\t\t\t\tNOTE: This may prevent the resource from running on its previous location\n"
-        "\t\t\t\tuntil the implicit constraint expires or is removed with --clear."
+        "\t\tCreate a constraint to move resource. If --node is specified, the "
+            "constraint will be to move to that node, otherwise it will be to "
+            "ban the current node. Unless --force is specified, this will "
+            "return an error if the resource is already running on the "
+            "specified node. If --force is specified, this will always ban the "
+            "current node. Optional: --lifetime, --master. NOTE: This may "
+            "prevent the resource from running on its previous location until "
+            "the implicit constraint expires or is removed with --clear.",
+        pcmk__option_default
     },
     {
         "ban", no_argument, NULL, 'B',
-        "\t\tCreate a constraint to keep resource off a node. Optional: --node, --lifetime, --master.\n"
-        "\t\t\t\tNOTE: This will prevent the resource from running on the affected node\n"
-        "\t\t\t\tuntil the implicit constraint expires or is removed with --clear.\n"
-        "\t\t\t\tIf --node is not specified, it defaults to the node currently running the resource\n"
-        "\t\t\t\tfor primitives and groups, or the master for promotable clones with promoted-max=1\n"
-        "\t\t\t\t(all other situations result in an error as there is no sane default).\n"
+        "\t\tCreate a constraint to keep resource off a node. Optional: "
+            "--node, --lifetime, --master. NOTE: This will prevent the "
+            "resource from running on the affected node until the implicit "
+            "constraint expires or is removed with --clear. If --node is not "
+            "specified, it defaults to the node currently running the resource "
+            "for primitives and groups, or the master for promotable clones "
+            "with promoted-max=1 (all other situations result in an error as "
+            "there is no sane default).",
+        pcmk__option_default
     },
     {
         "clear", no_argument, NULL, 'U',
-        "\t\tRemove all constraints created by the --ban and/or --move commands.\n"
-        "\t\t\t\tRequires: --resource. Optional: --node, --master, --expired.\n"
-        "\t\t\t\tIf --node is not specified, all constraints created by --ban and --move\n"
-        "\t\t\t\twill be removed for the named resource. If --node and --force are specified,\n"
-        "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node.\n"
-        "\t\t\t\tIf --expired is specified, only those constraints whose lifetimes have expired will\n"
-        "\t\t\t\tbe removed.\n"
+        "\t\tRemove all constraints created by the --ban and/or --move "
+            "commands. Requires: --resource. Optional: --node, --master, "
+            "--expired. If --node is not specified, all constraints created "
+            "by --ban and --move will be removed for the named resource. If "
+            "--node and --force are specified, any constraint created by "
+            "--move will be cleared, even if it is not for the specified node. "
+            "If --expired is specified, only those constraints whose lifetimes "
+            "have expired will be removed.",
+        pcmk__option_default
     },
     {
         "expired", no_argument, NULL, 'e',
-        "\t\tModifies the --clear argument to remove constraints with expired lifetimes.\n"
+        "\t\tModifies the --clear argument to remove constraints with "
+            "expired lifetimes.",
+        pcmk__option_default
     },
     {
         "lifetime", required_argument, NULL, 'u',
-        "\tLifespan (as ISO 8601 duration) of created constraints (with -B, -M)\n"
-        "\t\t\t\t(see https://en.wikipedia.org/wiki/ISO_8601#Durations)"
+        "\tLifespan (as ISO 8601 duration) of created constraints (with -B, "
+            "-M) (see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
+        pcmk__option_default
     },
     {
         "master", no_argument, NULL, 0,
-        "\t\tLimit scope of command to the Master role (with -B, -M, -U).\n"
-        "\t\t\t\tFor -B and -M, the previous master may remain active in the Slave role."
+        "\t\tLimit scope of command to Master role (with -B, -M, -U). For -B "
+            "and -M, the previous master may remain active in the Slave role.",
+        pcmk__option_default
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nAdvanced Commands:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdvanced Commands:", pcmk__option_default
+    },
     {
         "delete", no_argument, NULL, 'D',
-        "\t\t(Advanced) Delete a resource from the CIB. Required: -t"
+        "\t\t(Advanced) Delete a resource from the CIB. Required: -t",
+        pcmk__option_default
     },
     {
         "fail", no_argument, NULL, 'F',
-        "\t\t(Advanced) Tell the cluster this resource has failed"
+        "\t\t(Advanced) Tell the cluster this resource has failed",
+        pcmk__option_default
     },
     {
         "restart", no_argument, NULL, 0,
-        "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"
+        "\t\t(Advanced) Tell the cluster to restart this resource and "
+            "anything that depends on it",
+        pcmk__option_default
     },
     {
         "wait", no_argument, NULL, 0,
-        "\t\t(Advanced) Wait until the cluster settles into a stable state"
+        "\t\t(Advanced) Wait until the cluster settles into a stable state",
+        pcmk__option_default
     },
     {
         "force-demote", no_argument, NULL, 0,
-        "\t(Advanced) Bypass the cluster and demote a resource on the local node.\n"
-        "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
-        "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
+        "\t(Advanced) Bypass the cluster and demote a resource on the local "
+            "node. Unless --force is specified, this will refuse to do so if "
+            "the cluster believes the resource is a clone instance already "
+            "running on the local node.",
+        pcmk__option_default
     },
     {
         "force-stop", no_argument, NULL, 0,
-        "\t(Advanced) Bypass the cluster and stop a resource on the local node."
+        "\t(Advanced) Bypass the cluster and stop a resource on the local node",
+        pcmk__option_default
     },
     {
         "force-start", no_argument, NULL, 0,
-        "\t(Advanced) Bypass the cluster and start a resource on the local node.\n"
-        "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
-        "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
+        "\t(Advanced) Bypass the cluster and start a resource on the local "
+            "node. Unless --force is specified, this will refuse to do so if "
+            "the cluster believes the resource is a clone instance already "
+            "running on the local node.",
+        pcmk__option_default
     },
     {
         "force-promote", no_argument, NULL, 0,
-        "\t(Advanced) Bypass the cluster and promote a resource on the local node.\n"
-        "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
-        "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
+        "\t(Advanced) Bypass the cluster and promote a resource on the local "
+            "node. Unless --force is specified, this will refuse to do so if "
+            "the cluster believes the resource is a clone instance already "
+            "running on the local node.",
+        pcmk__option_default
     },
     {
         "force-check", no_argument, NULL, 0,
-        "\t(Advanced) Bypass the cluster and check the state of a resource on the local node."
+        "\t(Advanced) Bypass the cluster and check the state of a resource on "
+            "the local node",
+        pcmk__option_default
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nValidate Options:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nValidate Options:", pcmk__option_default
+    },
     {
         "class", required_argument, NULL, 0,
-        "\tThe standard the resource agent confirms to (for example, ocf).\n"
-        "\t\t\t\tUse with --agent, --provider, --option, and --validate."
+        "\tThe standard the resource agent confirms to (for example, ocf). "
+            "Use with --agent, --provider, --option, and --validate.",
+        pcmk__option_default
     },
     {
         "agent", required_argument, NULL, 0,
-        "\tThe agent to use (for example, IPaddr).\n"
-        "\t\t\t\tUse with --class, --provider, --option, and --validate."
+        "\tThe agent to use (for example, IPaddr). Use with --class, "
+            "--provider, --option, and --validate.",
+        pcmk__option_default
     },
     {
         "provider", required_argument, NULL, 0,
-        "\tThe vendor that supplies the resource agent (for example, heartbeat).\n"
-        "\t\t\t\tuse with --class, --agent, --option, and --validate."
+        "\tThe vendor that supplies the resource agent (for example, "
+            "heartbeat). Use with --class, --agent, --option, and --validate.",
+        pcmk__option_default
     },
     {
         "option", required_argument, NULL, 0,
-        "\tSpecify a device configuration parameter as NAME=VALUE\n"
-        "\t\t\t\t(may be specified multiple times).  Use with --validate\n"
-        "\t\t\t\tand without the -r option."
+        "\tSpecify a device configuration parameter as NAME=VALUE (may be "
+            "specified multiple times). Use with --validate and without the "
+            "-r option.",
+        pcmk__option_default
     },
-
-    { "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
     {
         "node", required_argument, NULL, 'N',
-        "\tNode name"
+        "\tNode name", pcmk__option_default
     },
     {
         "recursive", no_argument, NULL, 0,
-        "\tFollow colocation chains when using --set-parameter"
+        "\tFollow colocation chains when using --set-parameter",
+        pcmk__option_default
     },
     {
         "resource-type", required_argument, NULL, 't',
-        "Resource XML element (primitive, group, etc.) (with -D)"
+        "Resource XML element (primitive, group, etc.) (with -D)",
+        pcmk__option_default
     },
     {
         "parameter-value", required_argument, NULL, 'v',
-        "Value to use with -p"
+        "Value to use with -p", pcmk__option_default
     },
     {
         "meta", no_argument, NULL, 'm',
-        "\t\tUse resource meta-attribute instead of instance attribute (with -p, -g, -d)"
+        "\t\tUse resource meta-attribute instead of instance attribute "
+            "(with -p, -g, -d)",
+        pcmk__option_default
     },
     {
         "utilization", no_argument, NULL, 'z',
-        "\tUse resource utilization attribute instead of instance attribute (with -p, -g, -d)"
+        "\tUse resource utilization attribute instead of instance attribute "
+            "(with -p, -g, -d)",
+        pcmk__option_default
     },
     {
         "operation", required_argument, NULL, 'n',
-        "\tOperation to clear instead of all (with -C -r)"
+        "\tOperation to clear instead of all (with -C -r)",
+        pcmk__option_default
     },
     {
         "interval", required_argument, NULL, 'I',
-        "\tInterval of operation to clear (default 0) (with -C -r -n)"
+        "\tInterval of operation to clear (default 0) (with -C -r -n)",
+        pcmk__option_default
     },
     {
         "set-name", required_argument, NULL, 's',
-        "\t(Advanced) XML ID of attributes element to use (with -p, -d)"
+        "\t(Advanced) XML ID of attributes element to use (with -p, -d)",
+        pcmk__option_default
     },
     {
         "nvpair", required_argument, NULL, 'i',
-        "\t(Advanced) XML ID of nvpair element to use (with -p, -d)"
+        "\t(Advanced) XML ID of nvpair element to use (with -p, -d)",
+        pcmk__option_default
     },
     {
         "timeout", required_argument, NULL, 'T',
-        "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait, --force-*)"
+        "\t(Advanced) Abort if command does not finish in this time (with "
+            "--restart, --wait, --force-*)",
+        pcmk__option_default
     },
     {
         "force", no_argument, NULL, 'f',
-        "\t\tIf making CIB changes, do so regardless of quorum.\n"
-        "\t\t\t\tSee help for individual commands for additional behavior.\n"
+        "\t\tIf making CIB changes, do so regardless of quorum. See help for "
+            "individual commands for additional behavior.",
+        pcmk__option_default
     },
     {
         "xml-file", required_argument, NULL, 'x',
-        NULL, pcmk_option_hidden
+        NULL, pcmk__option_hidden
     },
 
     /* legacy options */
-    {"host-uname", required_argument, NULL, 'H', NULL, pcmk_option_hidden},
+    {
+        "host-uname", required_argument, NULL, 'H',
+        NULL, pcmk__option_hidden
+    },
 
-    {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', "List the available OCF agents:", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --list-agents ocf", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "List the available OCF agents from the linux-ha project:", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --list-agents ocf:heartbeat", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "Move 'myResource' to a specific node:", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --move --node altNode", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "Allow (but not force) 'myResource' to move back to its original location:", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --clear", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "Stop 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
-    {"-spacer-", 1, NULL, '-', "Useful when performing maintenance tasks on a resource.", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --set-parameter is-managed --meta --parameter-value false", pcmk_option_example},
-    {"-spacer-", 1, NULL, '-', "Erase the operation history of 'myResource' on 'aNode':", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
-    {"-spacer-", 1, NULL, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
-    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
-
-    {0, 0, 0, 0}
+    {
+        "-spacer-", 1, NULL, '-',
+        "\nExamples:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "List the available OCF agents:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --list-agents ocf", pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "List the available OCF agents from the linux-ha project:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --list-agents ocf:heartbeat", pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "Move 'myResource' to a specific node:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --resource myResource --move --node altNode",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "Allow (but not force) 'myResource' to move back to its original "
+            "location:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --resource myResource --clear", pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "Stop 'myResource' (and anything that depends on it):",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --resource myResource --set-parameter target-role "
+            "--meta --parameter-value Stopped",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "Tell the cluster not to manage 'myResource' (the cluster will not "
+            "attempt to start or stop the resource under any circumstances; "
+            "useful when performing maintenance tasks on a resource):",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --resource myResource --set-parameter is-managed "
+            "--meta --parameter-value false",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        "Erase the operation history of 'myResource' on 'aNode' (the cluster "
+            "will 'forget' the existing resource state, including any "
+            "errors, and attempt to recover the resource; useful when a "
+            "resource had failed permanently and has been repaired "
+            "by an administrator):",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", 1, NULL, '-',
+        " crm_resource --resource myResource --cleanup --node aNode",
+        pcmk__option_example
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 
 int
@@ -506,13 +649,14 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
 
     crm_log_cli_init("crm_resource");
-    crm_set_options(NULL, "(query|command) [options]", long_options,
-                    "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
+    pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
+                          "perform tasks related to Pacemaker "
+                          "cluster resources");
 
     validate_options = crm_str_table_new();
 
     while (1) {
-        flag = crm_get_option_long(argc, argv, &option_index, &longname);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, &longname);
         if (flag == -1)
             break;
 
@@ -679,7 +823,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'x':
                 xml_file = strdup(optarg);

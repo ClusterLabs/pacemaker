@@ -1106,10 +1106,10 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
         value = crm_element_value(xml_obj, "add-host");
-        if (check_boolean(value) == FALSE) {
-            bundle_data->add_host = TRUE;
-        } else {
+        if (pcmk__valid_boolean(value)) {
             crm_str_to_boolean(value, &bundle_data->add_host);
+        } else {
+            bundle_data->add_host = TRUE;
         }
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;

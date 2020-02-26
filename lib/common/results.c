@@ -708,7 +708,7 @@ crm_exit(crm_exit_t rc)
     crm_xml_cleanup();
 
     qb_log_fini();
-    crm_args_fini();
+    pcmk__cli_option_cleanup();
 
     if (crm_system_name) {
         crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);

@@ -20,6 +20,7 @@
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/ipcs_internal.h>
+#  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
 /* This symbol allows us to deprecate public API and prevent internal code from
@@ -49,82 +50,6 @@ is_privileged(const char *user)
     return FALSE;
 }
 #  endif
-
-/* CLI option processing*/
-#  ifdef HAVE_GETOPT_H
-#    include <getopt.h>
-#  else
-#    define no_argument 0
-#    define required_argument 1
-#  endif
-
-#  define pcmk_option_default	0x00000
-#  define pcmk_option_hidden	0x00001
-#  define pcmk_option_paragraph	0x00002
-#  define pcmk_option_example	0x00004
-
-struct crm_option {
-    /* Fields from 'struct option' in getopt.h */
-    /* name of long option */
-    const char *name;
-    /*
-     * one of no_argument, required_argument, and optional_argument:
-     * whether option takes an argument
-     */
-    int has_arg;
-    /* if not NULL, set *flag to val when option found */
-    int *flag;
-    /* if flag not NULL, value to set *flag to; else return value */
-    int val;
-
-    /* Custom fields */
-    const char *desc;
-    long flags;
-};
-
-void crm_set_options(const char *short_options, const char *usage, struct crm_option *long_options,
-                     const char *app_desc);
-int crm_get_option(int argc, char **argv, int *index);
-int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-_Noreturn void crm_help(char cmd, crm_exit_t exit_code);
-
-/* Cluster Option Processing */
-typedef struct pe_cluster_option_s {
-    const char *name;
-    const char *alt_name;
-    const char *type;
-    const char *values;
-    const char *default_value;
-
-     gboolean(*is_valid) (const char *);
-
-    const char *description_short;
-    const char *description_long;
-
-} pe_cluster_option;
-
-const char *cluster_option(GHashTable * options, gboolean(*validate) (const char *),
-                           const char *name, const char *old_name, const char *def_value);
-
-const char *get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len,
-                             const char *name);
-
-void config_metadata(const char *name, const char *version, const char *desc_short,
-                     const char *desc_long, pe_cluster_option * option_list, int len);
-
-void verify_all_options(GHashTable * options, pe_cluster_option * option_list, int len);
-gboolean check_time(const char *value);
-gboolean check_timer(const char *value);
-gboolean check_boolean(const char *value);
-gboolean check_number(const char *value);
-gboolean check_positive_number(const char *value);
-gboolean check_quorum(const char *value);
-gboolean check_script(const char *value);
-gboolean check_utilization(const char *value);
-long crm_get_sbd_timeout(void);
-long crm_auto_watchdog_timeout(void);
-gboolean check_sbd_timeout(const char *value);
-void crm_args_fini(void);
 
 /* char2score */
 extern int node_score_red;
@@ -174,9 +99,6 @@ crm_set_bit(const char *function, int line, const char *target, long long word, 
 
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
-const char *pcmk__env_option(const char *option);
-void pcmk__set_env_option(const char *option, const char *value);
-bool pcmk__env_option_enabled(const char *daemon, const char *option);
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);

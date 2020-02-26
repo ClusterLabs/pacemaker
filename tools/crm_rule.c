@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,28 +25,60 @@ enum crm_rule_mode {
 
 static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date);
 
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",       no_argument,       NULL, '?', "\tThis text"},
-    {"version",    no_argument,       NULL, '$', "\tVersion information"  },
-    {"verbose",    no_argument,       NULL, 'V', "\tIncrease debug output"},
-
-    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):" },
-    {"check",      no_argument,       NULL, 'c', "\tCheck whether a rule is in effect" },
-
-    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:" },
-    {"date",       required_argument, NULL, 'd', "Whether the rule is in effect on a given date" },
-    {"rule",       required_argument, NULL, 'r', "The ID of the rule to check" },
-
-    {"-spacer-",   no_argument,       NULL, '-', "\nData:"},
-    {"xml-text",   required_argument, NULL, 'X', "Use argument for XML (or stdin if '-')"},
-
-    {"-spacer-",   required_argument, NULL, '-', "\n\nThis tool is currently experimental.",
-     pcmk_option_paragraph},
-    {"-spacer-",   required_argument, NULL, '-', "The interface, behavior, and output may "
-                                                 "change with any version of pacemaker.", pcmk_option_paragraph},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nModes (mutually exclusive):", pcmk__option_default
+    },
+    {
+        "check", no_argument, NULL, 'c',
+        "\tCheck whether a rule is in effect", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional options:", pcmk__option_default
+    },
+    {
+        "date", required_argument, NULL, 'd',
+        "Whether the rule is in effect on a given date", pcmk__option_default
+    },
+    {
+        "rule", required_argument, NULL, 'r',
+        "The ID of the rule to check", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nData:", pcmk__option_default
+    },
+    {
+        "xml-text", required_argument, NULL, 'X',
+        "Use argument for XML (or stdin if '-')", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\n\nThis tool is currently experimental.",
+         pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "The interface, behavior, and output may change with any version of "
+            "pacemaker.",
+        pcmk__option_paragraph
+    },
+    { 0, 0, 0, 0 }
 };
 
 static int
@@ -130,11 +162,11 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
 
     crm_log_cli_init("crm_rule");
-    crm_set_options(NULL, "[options]", long_options,
-                    "Tool for querying the state of rules");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "evaluate rules from the Pacemaker configuration");
 
     while (flag >= 0) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         switch (flag) {
             case -1:
                 break;
@@ -145,7 +177,7 @@ main(int argc, char **argv)
 
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
 
             case 'c':
@@ -170,7 +202,7 @@ main(int argc, char **argv)
                 break;
 
             default:
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
         }
     }
@@ -181,7 +213,7 @@ main(int argc, char **argv)
     if (rule_mode == crm_rule_mode_check) {
         if (rule_id == NULL) {
             CMD_ERR("--check requires use of --rule=\n");
-            crm_help(flag, CRM_EX_USAGE);
+            pcmk__cli_help(flag, CRM_EX_USAGE);
         }
     }
 

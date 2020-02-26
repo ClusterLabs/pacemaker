@@ -619,7 +619,7 @@ main(int argc, char **argv)
 
     if (args->version) {
         /* FIXME:  When crm_node is converted to use formatted output, this can go. */
-        crm_help('v', CRM_EX_USAGE);
+        pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
     if (optind > argc || options.command == 0) {

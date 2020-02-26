@@ -549,7 +549,7 @@ main(int argc, char *argv[])
                 usage(argv[0]);
                 return CRM_EX_OK;
             } else if (!strcmp(*arg, "--version") || !strcmp(*arg, "-$")) {
-                crm_help('$', CRM_EX_OK);
+                pcmk__cli_help('$', CRM_EX_OK);
             }
         }
     }

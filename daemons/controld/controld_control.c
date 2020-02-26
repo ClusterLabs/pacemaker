@@ -505,42 +505,64 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-/* *INDENT-OFF* */
-static pe_cluster_option crmd_opts[] = {
-	/* name, old-name, validate, values, default, short description, long description */
-	{ "dc-version", NULL, "string", NULL, "none", NULL,
-          "Version of Pacemaker on the cluster's DC.",
-          "Includes the hash which identifies the exact changeset it was built from.  Used for diagnostic purposes."
-        },
-	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
-          "The messaging stack on which Pacemaker is currently running.",
-          "Used for informational and diagnostic purposes." },
-    { "cluster-name", NULL, "string", NULL, NULL, NULL,
+static pcmk__cluster_option_t crmd_opts[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * short description,
+     * long description
+     */
+    {
+        "dc-version", NULL, "string", NULL, "none", NULL,
+        "Pacemaker version on cluster node elected Designated Controller (DC)",
+        "Includes a hash which identifies the exact changeset the code was "
+            "built from. Used for diagnostic purposes."
+    },
+    {
+        "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
+        "The messaging stack on which Pacemaker is currently running",
+        "Used for informational and diagnostic purposes."
+    },
+    {
+        "cluster-name", NULL, "string", NULL, NULL, NULL,
         "An arbitrary name for the cluster",
         "This optional value is mostly for users' convenience as desired "
-        "in administration, but may also be used in Pacemaker configuration "
-        "rules via the #cluster-name node attribute, and by higher-level tools "
-        "and resource agents."
+            "in administration, but may also be used in Pacemaker "
+            "configuration rules via the #cluster-name node attribute, and "
+            "by higher-level tools and resource agents."
     },
-	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "20s", &check_time,
-          "How long to wait for a response from other nodes during startup.",
-          "The \"correct\" value will depend on the speed/load of your network and the type of switches used."
-        },
-	{ XML_CONFIG_ATTR_RECHECK, NULL, "time",
-	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)",
-          "15min", &check_timer,
-	  "Polling interval for time based changes to options, resource parameters and constraints.",
-	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
-	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
-        },
-
-	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
-	  "The maximum amount of system resources that should be used by nodes in the cluster",
-	  "The cluster will slow down its recovery process when the amount of system resources used"
-          " (currently CPU) approaches this limit",
-        },
-	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
-          "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
+    {
+        XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
+        NULL, "20s", pcmk__valid_interval_spec,
+        "How long to wait for a response from other nodes during start-up",
+        "The optimal value will depend on the speed and load of your network "
+            "and the type of switches used."
+    },
+    {
+        XML_CONFIG_ATTR_RECHECK, NULL, "time",
+        "Zero disables polling, while positive values are an interval in seconds"
+            "(unless other units are specified, for example \"5min\")",
+        "15min", pcmk__valid_interval_spec,
+        "Polling interval to recheck cluster state and evalute rules "
+            "with date specifications",
+        "Pacemaker is primarily event-driven, and looks ahead to know when to "
+            "recheck cluster state for failure timeouts and most time-based "
+            "rules. However, it will also recheck the cluster after this "
+            "amount of inactivity, to evaluate rules with date specifications "
+            "and serve as a fail-safe for certain types of scheduler bugs."
+    },
+    {
+        "load-threshold", NULL, "percentage", NULL,
+        "80%", pcmk__valid_utilization,
+        "Maximum amount of system load that should be used by cluster nodes",
+        "The cluster will slow down its recovery process when the amount of "
+            "system resources used (currently CPU) approaches this limit",
+    },
+    {
+        "node-action-limit", NULL, "integer", NULL,
+        "0", pcmk__valid_number,
+        "Maximum number of jobs that can be scheduled per node "
+            "(defaults to 2x cores)"
+    },
     { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
         "How a cluster node should react if notified of its own fencing",
         "A cluster node may receive notification of its own fencing if fencing "
@@ -549,64 +571,90 @@ static pe_cluster_option crmd_opts[] = {
         "immediately stop pacemaker and stay stopped, or \"panic\" to attempt "
         "to immediately reboot the local node, falling back to stop on failure."
     },
-	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer,
-          "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
-        },
-	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer,
-          "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
-        },
-	{
-        "join-integration-timeout", "crmd-integration-timeout",
-        "time", NULL, "3min", &check_timer,
+    {
+        XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
+        "2min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "If need to adjust this value, it probably indicates the presence of a bug"
+        "Declare an election failed if it is not decided within this much "
+            "time. If you need to adjust this value, it probably indicates "
+            "the presence of a bug."
     },
-	{
-        "join-finalization-timeout", "crmd-finalization-timeout",
-        "time", NULL, "30min", &check_timer,
+    {
+        XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
+        "20min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "If you need to adjust this value, it probably indicates the presence of a bug"
+        "Exit immediately if shutdown does not complete within this much "
+            "time. If you need to adjust this value, it probably indicates "
+            "the presence of a bug."
     },
-	{
-        "transition-delay", "crmd-transition-delay",
-        "time", NULL, "0s", &check_timer,
-        "*** Advanced Use Only *** Enabling this option will slow down cluster recovery under all conditions",
-        "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
-        "Useful if your configuration is sensitive to the order in which ping updates arrive."
+    {
+        "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
+        "3min", pcmk__valid_interval_spec,
+        "*** Advanced Use Only ***",
+        "If you need to adjust this value, it probably indicates "
+            "the presence of a bug."
     },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
-	  "How long to wait before we can assume nodes are safely down", NULL
-        },
-        { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
-          "How many times stonith can fail before it will no longer be attempted on a target"
-        },   
+    {
+        "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
+        "30min", pcmk__valid_interval_spec,
+        "*** Advanced Use Only ***",
+        "If you need to adjust this value, it probably indicates "
+            "the presence of a bug."
+    },
+    {
+        "transition-delay", "crmd-transition-delay", "time", NULL,
+        "0s", pcmk__valid_interval_spec,
+        "*** Advanced Use Only *** Enabling this option will slow down "
+            "cluster recovery under all conditions",
+        "Delay cluster recovery for this much time to allow for additional "
+            "events to occur. Useful if your configuration is sensitive to "
+            "the order in which ping updates arrive."
+    },
+    {
+        "stonith-watchdog-timeout", NULL, "time", NULL,
+        NULL, pcmk__valid_sbd_timeout,
+        "How long to wait before we can assume nodes are safely down "
+            "when sbd is in use",
+        NULL
+    },
+    {
+        "stonith-max-attempts", NULL, "integer", NULL,
+        "10", pcmk__valid_positive_number,
+        "How many times fencing can fail before it will no longer be "
+            "immediately re-attempted on a target"
+    },
 
     // Already documented in libpe_status (other values must be kept identical)
-	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
-    { XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL, "false", &check_boolean, NULL, NULL },
+    {
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "stop", pcmk__valid_quorum, NULL, NULL
+    },
+    {
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean, NULL, NULL
+    },
 };
-/* *INDENT-ON* */
 
 void
 crmd_metadata(void)
 {
-    config_metadata("pacemaker-controld", "1.0",
-                    "controller properties",
-                    "Cluster properties used by Pacemaker's controller,"
-                    " formerly known as crmd",
-                    crmd_opts, DIMOF(crmd_opts));
+    pcmk__print_option_metadata("pacemaker-controld", "1.0",
+                                "Pacemaker controller options",
+                                "Cluster options used by Pacemaker's "
+                                    "controller (formerly called crmd)",
+                                crmd_opts, DIMOF(crmd_opts));
 }
 
 static void
 verify_crmd_options(GHashTable * options)
 {
-    verify_all_options(options, crmd_opts, DIMOF(crmd_opts));
+    pcmk__validate_cluster_options(options, crmd_opts, DIMOF(crmd_opts));
 }
 
 static const char *
 crmd_pref(GHashTable * options, const char *name)
 {
-    return get_cluster_pref(options, crmd_opts, DIMOF(crmd_opts), name);
+    return pcmk__cluster_option(options, crmd_opts, DIMOF(crmd_opts), name);
 }
 
 static void

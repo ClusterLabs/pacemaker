@@ -11,23 +11,42 @@
 
 #include <crm/crm.h>
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",       0, 0, '?', "\tThis text"},
-    {"version",    0, 0, '$', "\tVersion information"  },
-    {"verbose",    0, 0, 'V', "\tIncrease debug output"},
-
-    {"name",    0, 0, 'n', "\tShow the error's name with its description."
-     "\n\t\t\tUseful for looking for sources of the error in source code"},
-
-    {"list",    0, 0, 'l', "\tShow all known errors."},
-    {"exit",    0, 0, 'X', "\tInterpret as exit code rather than legacy function return value"},
-    {"rc",      0, 0, 'r', "\tInterpret as return code rather than legacy function return value"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "name", no_argument, NULL, 'n',
+        "\tShow error's name with its description (useful for looking for "
+            "sources of the error in source code)",
+        pcmk__option_default
+    },
+    {
+        "list", no_argument, NULL, 'l',
+        "\tShow all known errors", pcmk__option_default
+    },
+    {
+        "exit", no_argument, NULL, 'X',
+        "\tInterpret as exit code rather than legacy function return value",
+        pcmk__option_default
+    },
+    {
+        "rc", no_argument, NULL, 'r',
+        "\tInterpret as return code rather than legacy function return value",
+        pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static bool as_exit_code = false;
 static bool as_rc = false;
@@ -62,11 +81,12 @@ main(int argc, char **argv)
     const char *desc = NULL;
 
     crm_log_cli_init("crm_error");
-    crm_set_options(NULL, "[options] -- <rc> [...]", long_options,
-                    "Tool for displaying the textual name or description of a reported error code");
+    pcmk__set_cli_options(NULL, "[options] -- <rc> [...]", long_options,
+                          "display name or description of a Pacemaker "
+                          "error code");
 
     while (flag >= 0) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         switch (flag) {
             case -1:
                 break;
@@ -75,7 +95,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 with_name = TRUE;
@@ -90,7 +110,7 @@ main(int argc, char **argv)
                 as_exit_code = TRUE;
                 break;
             default:
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
         }
     }

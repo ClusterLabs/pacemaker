@@ -380,26 +380,41 @@ void handle_shutdown_nack()
     crm_debug("Ignoring unexpected shutdown nack");
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0,    '?', "\tThis text"},
-    {"version", 0, 0,    '$', "\tVersion information"  },
-    {"verbose", 0, 0,    'V', "\tIncrease debug output"},
-
-    {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "logfile", required_argument, NULL, 'l',
+        "\tSend logs to the additional named logfile", pcmk__option_default
+    },
 #ifdef ENABLE_PCMK_REMOTE
-    {"port", 1, 0,       'p', "\tPort to listen on"},
+    {
+        "port", required_argument, NULL, 'p',
+        "\tPort to listen on", pcmk__option_default
+    },
 #endif
-
-    {0, 0, 0, 0}
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 #ifdef ENABLE_PCMK_REMOTE
 #  define EXECD_TYPE "remote"
+#  define EXECD_NAME "pacemaker-remoted"
+#  define EXECD_DESC "resource agent executor daemon for Pacemaker Remote nodes"
 #else
 #  define EXECD_TYPE "local"
+#  define EXECD_NAME "pacemaker-execd"
+#  define EXECD_DESC "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
 int
@@ -410,21 +425,16 @@ main(int argc, char **argv, char **envp)
     int bump_log_num = 0;
     const char *option = NULL;
 
-#ifndef ENABLE_PCMK_REMOTE
-    crm_log_preinit("pacemaker-execd", argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Resource agent executor daemon for cluster nodes");
-#else
+#ifdef ENABLE_PCMK_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
     remoted_spawn_pidone(argc, argv, envp);
-
-    crm_log_preinit("pacemaker-remoted", argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Resource agent executor daemon for Pacemaker Remote nodes");
 #endif
 
+    crm_log_preinit(EXECD_NAME, argc, argv);
+    pcmk__set_cli_options(NULL, "[options]", long_options, EXECD_DESC);
+
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1) {
             break;
         }
@@ -441,10 +451,10 @@ main(int argc, char **argv, char **envp)
                 break;
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
-                crm_help('?', CRM_EX_USAGE);
+                pcmk__cli_help('?', CRM_EX_USAGE);
                 break;
         }
     }
