@@ -107,6 +107,11 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_after_range         = -1025,
+    pcmk_rc_within_range        = -1024,
+    pcmk_rc_before_range        = -1023,
+    pcmk_rc_undetermined        = -1022,
+    pcmk_rc_op_unsatisfied      = -1021,
     pcmk_rc_ipc_pid_only        = -1020,
     pcmk_rc_ipc_unresponsive    = -1019,
     pcmk_rc_ipc_unauthorized    = -1018,
@@ -205,6 +210,7 @@ typedef enum crm_exit_e {
     CRM_EX_EXPIRED              = 110, // requested item has expired
     CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
     CRM_EX_INDETERMINATE        = 112, // could not determine status
+    CRM_EX_UNSATISFIED          = 113, // requested item does not satisfy constraints
 
     // Other
     CRM_EX_TIMEOUT              = 124, // convention from timeout(1)
