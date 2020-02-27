@@ -223,7 +223,7 @@ main(int argc, char **argv)
     processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto bail;
     }
@@ -278,7 +278,7 @@ main(int argc, char **argv)
         input = stdin2xml();
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input from STDIN\n");
+            CMD_ERR("Couldn't parse input from STDIN\n");
             exit_code = CRM_EX_DATAERR;
             goto bail;
         }
@@ -286,7 +286,7 @@ main(int argc, char **argv)
         input = string2xml(options.input_xml);
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input string: %s\n", options.input_xml);
+            CMD_ERR("Couldn't parse input string: %s\n", options.input_xml);
 
             exit_code = CRM_EX_DATAERR;
             goto bail;
