@@ -30,7 +30,9 @@ failed_action_string(xmlNodePtr xml_op) {
         crm_time_set_timet(crm_when, &last_change);
         time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
-        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', exitreason='%s', last-rc-change='%s', queued=%sms, exec=%sms",
+        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', "
+                                "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
+                                "='%s', queued=%sms, exec=%sms",
                                 op_key ? op_key : ID(xml_op),
                                 crm_element_value(xml_op, XML_ATTR_UNAME),
                                 services_ocf_exitcode_str(rc), rc,
@@ -782,7 +784,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
         crm_time_set_timet(crm_when, &when);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
-        xmlSetProp(node, (pcmkXmlStr) "last-rc-change", (pcmkXmlStr) rc_change);
+        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE, (pcmkXmlStr) rc_change);
         xmlSetProp(node, (pcmkXmlStr) "queued",
                    (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
         xmlSetProp(node, (pcmkXmlStr) "exec",

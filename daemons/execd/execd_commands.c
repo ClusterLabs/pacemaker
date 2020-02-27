@@ -11,6 +11,7 @@
 
 #include <glib.h>
 
+// Check whether we have a high-resolution monotonic clock
 #undef PCMK__TIME_USE_CGT
 #if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC) \
     && !defined(PCMK_TIME_EMERGENCY_CGT)
@@ -61,17 +62,34 @@ typedef struct lrmd_cmd_s {
     char *output;
     char *userdata_str;
 
+    /* We can track operation queue time and run time, to be saved with the CIB
+     * resource history (and displayed in cluster status). We need
+     * high-resolution monotonic time for this purpose, so we use
+     * clock_gettime(CLOCK_MONOTONIC, ...) (if available, otherwise this feature
+     * is disabled).
+     *
+     * However, we also need epoch timestamps for recording the time the command
+     * last ran and the time its return value last changed, for use in time
+     * displays (as opposed to interval calculations). We keep time_t values for
+     * this purpose.
+     *
+     * The last run time is used for both purposes, so we keep redundant
+     * monotonic and epoch values for this. Technically the two could represent
+     * different times, but since time_t has only second resolution and the
+     * values are used for distinct purposes, that is not significant.
+     */
 #ifdef PCMK__TIME_USE_CGT
     /* Recurring and systemd operations may involve more than one executor
      * command per operation, so they need info about the original and the most
      * recent.
      */
-    struct timespec t_first_run;   /* Timestamp of when op first ran */
-    struct timespec t_run;         /* Timestamp of when op most recently ran */
-    struct timespec t_first_queue; /* Timestamp of when op first was queued */
-    struct timespec t_queue;       /* Timestamp of when op most recently was queued */
-    struct timespec t_rcchange;    /* Timestamp of last rc change */
+    struct timespec t_first_run;    // When op first ran
+    struct timespec t_run;          // When op most recently ran
+    struct timespec t_first_queue;  // When op was first queued
+    struct timespec t_queue;        // When op was most recently queued
 #endif
+    time_t epoch_last_run;          // Epoch timestamp of when op last ran
+    time_t epoch_rcchange;          // Epoch timestamp of when rc last changed
 
     int first_notify_sent;
     int last_notify_rc;
@@ -102,6 +120,22 @@ time_is_set(struct timespec *timespec)
            ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
 }
 
+/*
+ * \internal
+ * \brief Set a timespec (and its original if unset) to the current time
+ *
+ * \param[out] t_current  Where to store current time
+ * \param[out] t_orig     Where to copy t_current if unset
+ */
+static void
+get_current_time(struct timespec *t_current, struct timespec *t_orig)
+{
+    clock_gettime(CLOCK_MONOTONIC, t_current);
+    if ((t_orig != NULL) && !time_is_set(t_orig)) {
+        *t_orig = *t_current;
+    }
+}
+
 /*!
  * \internal
  * \brief Return difference between two times in milliseconds
@@ -109,7 +143,7 @@ time_is_set(struct timespec *timespec)
  * \param[in] now  More recent time (or NULL to use current time)
  * \param[in] old  Earlier time
  *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec zero)
+ * \return milliseconds difference (or 0 if old is NULL or unset)
  *
  * \note Can overflow on 32bit machines when the differences is around
  *       24 days or more.
@@ -140,17 +174,17 @@ time_diff_ms(struct timespec *now, struct timespec *old)
  * command, so we report the entire time since then and not just the time since
  * the most recent command (for recurring and systemd operations).
  *
- * /param[in] cmd  Executor command object to reset
+ * \param[in] cmd  Executor command object to reset
  *
- * /note It's not obvious what the queued time should be for a systemd
- * start/stop operation, which might go like this:
- *   initial command queued 5ms, runs 3s
- *   monitor command queued 10ms, runs 10s
- *   monitor command queued 10ms, runs 10s
- * Is the queued time for that operation 5ms, 10ms or 25ms? The current
- * implementation will report 5ms. If it's 25ms, then we need to
- * subtract 20ms from the total exec time so as not to count it twice.
- * We can implement that later if it matters to anyone ...
+ * \note It's not obvious what the queued time should be for a systemd
+ *       start/stop operation, which might go like this:
+ *         initial command queued 5ms, runs 3s
+ *         monitor command queued 10ms, runs 10s
+ *         monitor command queued 10ms, runs 10s
+ *       Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ *       implementation will report 5ms. If it's 25ms, then we need to
+ *       subtract 20ms from the total exec time so as not to count it twice.
+ *       We can implement that later if it matters to anyone ...
  */
 static void
 cmd_original_times(lrmd_cmd_t * cmd)
@@ -313,10 +347,7 @@ stonith_recurring_op_helper(gpointer data)
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (!time_is_set(&(cmd->t_first_queue))) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -440,10 +471,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &(cmd->t_queue));
-    if (!time_is_set(&(cmd->t_first_queue))) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -541,9 +569,11 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
+    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME,
+                   (long long) cmd->epoch_last_run);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME,
+                   (long long) cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
-    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.tv_sec);
-    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.tv_sec);
     crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
@@ -618,11 +648,11 @@ cmd_reset(lrmd_cmd_t * cmd)
     memset(&cmd->t_run, 0, sizeof(cmd->t_run));
     memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
 #endif
+    cmd->epoch_last_run = 0;
     free(cmd->exit_reason);
     cmd->exit_reason = NULL;
     free(cmd->output);
     cmd->output = NULL;
-
 }
 
 static void
@@ -863,7 +893,7 @@ action_complete(svc_action_t * action)
 
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->exec_rc != action->rc) {
-        clock_gettime(CLOCK_MONOTONIC, &(cmd->t_rcchange));
+        cmd->epoch_rcchange = time(NULL);
     }
 #endif
 
@@ -1371,11 +1401,9 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
         g_list_free_1(first);
 
 #ifdef PCMK__TIME_USE_CGT
-        if (cmd->t_first_run.tv_sec == 0) {
-            clock_gettime(CLOCK_MONOTONIC, &cmd->t_first_run);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_run);
+        get_current_time(&(cmd->t_run), &(cmd->t_first_run));
 #endif
+        cmd->epoch_last_run = time(NULL);
     }
 
     if (!cmd) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -159,7 +159,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
 
         if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                     &last_change) == pcmk_ok) {
-            fprintf(stdout, ", last-rc-change=%s, exec=%sms",
+            fprintf(stdout, ", " XML_RSC_OP_LAST_CHANGE "=%s, exec=%sms",
                     crm_strip_trailing_newline(ctime(&last_change)),
                     crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
         }
