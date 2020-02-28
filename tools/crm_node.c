@@ -426,11 +426,11 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
         crm_xml_add(cmd, F_TYPE, T_ATTRD);
         crm_xml_add(cmd, F_ORIG, crm_system_name);
 
-        crm_xml_add(cmd, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
-        crm_xml_add(cmd, F_ATTRD_HOST, node_name);
+        crm_xml_add(cmd, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+        crm_xml_add(cmd, PCMK__XA_ATTR_NODE_NAME, node_name);
 
         if (nodeid > 0) {
-            crm_xml_add_int(cmd, F_ATTRD_HOST_ID, (int) nodeid);
+            crm_xml_add_int(cmd, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
         }
 
     } else {

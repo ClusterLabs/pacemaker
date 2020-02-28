@@ -101,7 +101,7 @@ attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml)
 {
     int peer_state = 0;
 
-    crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
+    crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(writer) == election_won)
            && safe_str_neq(peer->uname, attrd_cluster->uname)) {
@@ -155,5 +155,5 @@ attrd_remove_voter(const crm_node_t *peer)
 void
 attrd_xml_add_writer(xmlNode *xml)
 {
-    crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
+    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(writer));
 }

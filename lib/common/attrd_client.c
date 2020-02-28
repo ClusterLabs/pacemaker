@@ -35,7 +35,7 @@ create_attrd_op(const char *user_name)
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
 #if ENABLE_ACL
-    crm_xml_add(attrd_op, F_ATTRD_USER, user_name);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
 #endif
 
     return attrd_op;
@@ -158,33 +158,33 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
 
     switch (command) {
         case 'u':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_REGEX;
+            task = PCMK__ATTRD_CMD_UPDATE;
+            name_as = PCMK__XA_ATTR_PATTERN;
             break;
         case 'D':
         case 'U':
         case 'v':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'R':
-            task = ATTRD_OP_REFRESH;
+            task = PCMK__ATTRD_CMD_REFRESH;
             display_command = "refresh";
             break;
         case 'B':
-            task = ATTRD_OP_UPDATE_BOTH;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE_BOTH;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'Y':
-            task = ATTRD_OP_UPDATE_DELAY;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE_DELAY;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'Q':
-            task = ATTRD_OP_QUERY;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_QUERY;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'C':
-            task = ATTRD_OP_PEER_REMOVE;
+            task = PCMK__ATTRD_CMD_PEER_REMOVE;
             display_command = "purge";
             break;
     }
@@ -197,15 +197,15 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
         crm_xml_add(update, name_as, name);
     }
 
-    crm_xml_add(update, F_ATTRD_TASK, task);
-    crm_xml_add(update, F_ATTRD_VALUE, value);
-    crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
-    crm_xml_add(update, F_ATTRD_SECTION, section);
-    crm_xml_add(update, F_ATTRD_HOST, host);
-    crm_xml_add(update, F_ATTRD_SET, set);
-    crm_xml_add_int(update, F_ATTRD_IS_REMOTE,
+    crm_xml_add(update, PCMK__XA_TASK, task);
+    crm_xml_add(update, PCMK__XA_ATTR_VALUE, value);
+    crm_xml_add(update, PCMK__XA_ATTR_DAMPENING, dampen);
+    crm_xml_add(update, PCMK__XA_ATTR_SECTION, section);
+    crm_xml_add(update, PCMK__XA_ATTR_NODE_NAME, host);
+    crm_xml_add(update, PCMK__XA_ATTR_SET, set);
+    crm_xml_add_int(update, PCMK__XA_ATTR_IS_REMOTE,
                     is_set(options, pcmk__node_attr_remote));
-    crm_xml_add_int(update, F_ATTRD_IS_PRIVATE,
+    crm_xml_add_int(update, PCMK__XA_ATTR_IS_PRIVATE,
                     is_set(options, pcmk__node_attr_private));
 
     rc = send_attrd_op(ipc, update);
@@ -248,12 +248,12 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
     const char *interval_desc = NULL;
     const char *op_desc = NULL;
 
-    crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
-    crm_xml_add(clear_op, F_ATTRD_HOST, host);
-    crm_xml_add(clear_op, F_ATTRD_RESOURCE, resource);
-    crm_xml_add(clear_op, F_ATTRD_OPERATION, operation);
-    crm_xml_add(clear_op, F_ATTRD_INTERVAL, interval_spec);
-    crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE,
+    crm_xml_add(clear_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_NODE_NAME, host);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_RESOURCE, resource);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_OPERATION, operation);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_INTERVAL, interval_spec);
+    crm_xml_add_int(clear_op, PCMK__XA_ATTR_IS_REMOTE,
                     is_set(options, pcmk__node_attr_remote));
 
     rc = send_attrd_op(ipc, clear_op);

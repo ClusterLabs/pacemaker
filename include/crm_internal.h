@@ -88,39 +88,48 @@ pid_t pcmk_locate_sbd(void);
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
-#  define F_ATTRD_KEY		"attr_key"
-#  define F_ATTRD_ATTRIBUTE	"attr_name"
-#  define F_ATTRD_REGEX 	"attr_regex"
-#  define F_ATTRD_TASK		"task"
-#  define F_ATTRD_VALUE		"attr_value"
-#  define F_ATTRD_SET		"attr_set"
-#  define F_ATTRD_IS_REMOTE	"attr_is_remote"
-#  define F_ATTRD_IS_PRIVATE     "attr_is_private"
-#  define F_ATTRD_SECTION	"attr_section"
-#  define F_ATTRD_DAMPEN	"attr_dampening"
-#  define F_ATTRD_HOST		"attr_host"
-#  define F_ATTRD_HOST_ID	"attr_host_id"
-#  define F_ATTRD_USER		"attr_user"
-#  define F_ATTRD_WRITER	"attr_writer"
-#  define F_ATTRD_VERSION	"attr_version"
-#  define F_ATTRD_RESOURCE          "attr_resource"
-#  define F_ATTRD_OPERATION         "attr_clear_operation"
-#  define F_ATTRD_INTERVAL          "attr_clear_interval"
-#  define F_ATTRD_IS_FORCE_WRITE "attrd_is_force_write"
 
-/* attrd operations */
-#  define ATTRD_OP_PEER_REMOVE   "peer-remove"
-#  define ATTRD_OP_UPDATE        "update"
-#  define ATTRD_OP_UPDATE_BOTH   "update-both"
-#  define ATTRD_OP_UPDATE_DELAY  "update-delay"
-#  define ATTRD_OP_QUERY         "query"
-#  define ATTRD_OP_REFRESH       "refresh"
-#  define ATTRD_OP_FLUSH         "flush"
-#  define ATTRD_OP_SYNC          "sync"
-#  define ATTRD_OP_SYNC_RESPONSE "sync-response"
-#  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
+/*
+ * XML attribute names used only by internal code
+ */
 
-#  define PCMK__XA_MODE             "mode"
+#define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
+#define PCMK__XA_ATTR_FORCE             "attrd_is_force_write"
+#define PCMK__XA_ATTR_INTERVAL          "attr_clear_interval"
+#define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
+#define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
+#define PCMK__XA_ATTR_NAME              "attr_name"
+#define PCMK__XA_ATTR_NODE_ID           "attr_host_id"
+#define PCMK__XA_ATTR_NODE_NAME         "attr_host"
+#define PCMK__XA_ATTR_OPERATION         "attr_clear_operation"
+#define PCMK__XA_ATTR_PATTERN           "attr_regex"
+#define PCMK__XA_ATTR_RESOURCE          "attr_resource"
+#define PCMK__XA_ATTR_SECTION           "attr_section"
+#define PCMK__XA_ATTR_SET               "attr_set"
+#define PCMK__XA_ATTR_USER              "attr_user"
+#define PCMK__XA_ATTR_UUID              "attr_key"
+#define PCMK__XA_ATTR_VALUE             "attr_value"
+#define PCMK__XA_ATTR_VERSION           "attr_version"
+#define PCMK__XA_ATTR_WRITER            "attr_writer"
+#define PCMK__XA_MODE                   "mode"
+#define PCMK__XA_TASK                   "task"
+
+
+/*
+ * IPC commands that can be sent to Pacemaker daemons
+ */
+
+#define PCMK__ATTRD_CMD_PEER_REMOVE     "peer-remove"
+#define PCMK__ATTRD_CMD_UPDATE          "update"
+#define PCMK__ATTRD_CMD_UPDATE_BOTH     "update-both"
+#define PCMK__ATTRD_CMD_UPDATE_DELAY    "update-delay"
+#define PCMK__ATTRD_CMD_QUERY           "query"
+#define PCMK__ATTRD_CMD_REFRESH         "refresh"
+#define PCMK__ATTRD_CMD_FLUSH           "flush"
+#define PCMK__ATTRD_CMD_SYNC            "sync"
+#define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
+#define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
+
 
 #  define PCMK_ENV_PHYSICAL_HOST "physical_host"
 

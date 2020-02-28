@@ -257,8 +257,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             int rc = 0;
 
             if (safe_str_eq(type, T_ATTRD)
-                && crm_element_value(request, F_ATTRD_HOST) == NULL) {
-                crm_xml_add(request, F_ATTRD_HOST, proxy->node_name);
+                && crm_element_value(request,
+                                     PCMK__XA_ATTR_NODE_NAME) == NULL) {
+                crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, proxy->node_name);
             }
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);

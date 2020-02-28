@@ -33,7 +33,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failures of all resources */
 #define ATTRD_RE_CLEAR_ALL \
-    "^(" CRM_FAIL_COUNT_PREFIX "|" CRM_LAST_FAILURE_PREFIX ")-"
+    "^(" PCMK__FAIL_COUNT_PREFIX "|" PCMK__LAST_FAILURE_PREFIX ")-"
 
 /* regular expression to clear failure of all operations for one resource
  * (format takes resource name)

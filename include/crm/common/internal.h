@@ -188,8 +188,8 @@ pcmk__list_of_multiple(GList *list)
 
 /* convenience functions for failure-related node attributes */
 
-#define CRM_FAIL_COUNT_PREFIX   "fail-count"
-#define CRM_LAST_FAILURE_PREFIX "last-failure"
+#define PCMK__FAIL_COUNT_PREFIX   "fail-count"
+#define PCMK__LAST_FAILURE_PREFIX "last-failure"
 
 /*!
  * \internal
@@ -209,7 +209,7 @@ pcmk__list_of_multiple(GList *list)
  *       action labels like "myrsc_monitor_30000".
  */
 static inline char *
-crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
+pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
                    guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
@@ -217,15 +217,17 @@ crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__failcount_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
+    return pcmk__fail_attr_name(PCMK__FAIL_COUNT_PREFIX, rsc_id, op,
+                                interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
+    return pcmk__fail_attr_name(PCMK__LAST_FAILURE_PREFIX, rsc_id, op,
+                                interval_ms);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

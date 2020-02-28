@@ -258,41 +258,41 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
 #if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(xml, F_ATTRD_USER, client->user);
+    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 #endif
 
-    op = crm_element_value(xml, F_ATTRD_TASK);
+    op = crm_element_value(xml, PCMK__XA_TASK);
 
     if (client->name == NULL) {
         const char *value = crm_element_value(xml, F_ORIG);
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+    if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_clear_failure(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_REFRESH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
-    } else if (safe_str_eq(op, ATTRD_OP_QUERY)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_QUERY)) {
         /* queries will get reply, so no ack is necessary */
         attrd_client_query(client, id, flags, xml);
 
