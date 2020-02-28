@@ -53,18 +53,22 @@ Pacemaker has multiple forms of documentation:
 
 ## Editing the Books
 
-Each book's sources are kept in a subdirectory by title. Each book subdirectory
-has an en-US subdirectory with the master sources.
+We are currently transitioning from using Publican to Sphinx
+to generate the books.
 
-Each book's en-US subdirectory has text files with the chapter sources in
+### Publican
+
+Each book has a subdirectory by book title, containing a en-US subdirectory.
+
+Each book's en-US directory has .txt files, which are the chapter sources in
 asciidoc format. The file asciidoc.reference in this directory has a quick
 guide to asciidoc; search online for more detailed help.
 
 Once you have edited the asciidoc as desired, run "make" in this directory
-to generate all the books locally. You view the results by pointing your
+to generate all the books locally. You can view the results by pointing your
 web browser to (replacing BOOK\_TITLE appropriately):
 
-    file:///path/to/checkout/doc/BOOK\_TITLE/publish/desktop/en-US/index.html
+    file:///path/to/checkout/doc/BOOK_TITLE/publish/
 
 Each en-US subdirectory also contains some raw XML files of lesser interest:
 
@@ -76,3 +80,21 @@ Each en-US subdirectory also contains some raw XML files of lesser interest:
   official releases.
 * Revision\_History.xml: This can be updated for any change, listing the
   individual authors.
+
+### Sphinx
+
+There is a sphinx subdirectory here with a subdirectory for each book by title.
+Each book's directory contains .rst files, which are the chapter sources in
+reStructuredText format (with index.rst as the starting point).
+
+Once you have edited the sources as desired, run "make" in the sphinx
+subdirectory to generate all the books locally. You can view the results by
+pointing your web browser to (replacing PATH\_TO\_CHECKOUT and BOOK\_TITLE
+appropriately):
+
+    file:///PATH_TO_CHECKOUT/doc/sphinx/BOOK_TITLE/_build/html/index.html
+
+See the comments at the top of doc/sphinx/Makefile.am for various options you
+can use. For a guide to sphinx-flavored reStructuredText, see:
+
+    https://www.sphinx-doc.org/en/master/usage/restructuredtext/

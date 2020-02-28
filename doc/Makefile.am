@@ -26,6 +26,10 @@ BOOKS		= Clusters_from_Scratch		\
 doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
 
+# The sphinx docs are not yet built by default, but we still want to distribute
+# them so configure can build the Makefile in a distribution.
+DIST_SUBDIRS	= sphinx
+
 EXTRA_DIST	= $(DEPRECATED_ORIGINAL) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
 EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)

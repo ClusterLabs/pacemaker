@@ -681,6 +681,7 @@ esac
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
 AC_PATH_PROG([PUBLICAN], [publican])
+AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([INKSCAPE], [inkscape])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
@@ -776,6 +777,8 @@ AM_CONDITIONAL([BUILD_DOCBOOK],
                 && test x"${INKSCAPE}" != x""])
 AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
                [test x"${publican_intree_brand}" = x"yes"])
+AM_CONDITIONAL([BUILD_SPHINX_DOCS],
+               [test x"${SPHINX}" != x""])
 
 dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
 AC_MSG_CHECKING([for GNU-compatible getopt])
@@ -1978,6 +1981,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
+                doc/sphinx/Makefile                                 \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \
                 extra/resources/Makefile                            \
