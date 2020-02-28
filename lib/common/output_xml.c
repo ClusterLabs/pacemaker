@@ -116,7 +116,18 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         return;
     }
 
-    if (!legacy_xml) {
+    if (legacy_xml) {
+        GSList *node = priv->errors;
+
+        if (exit_status != CRM_EX_OK) {
+            fprintf(stderr, "%s\n", crm_exit_str(exit_status));
+        }
+
+        while (node != NULL) {
+            fprintf(stderr, "%s\n", (char *) node->data);
+            node = node->next;
+        }
+    } else {
         char *rc_as_str = crm_itoa(exit_status);
 
         node = create_xml_node(priv->root, "status");
