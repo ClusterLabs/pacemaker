@@ -81,20 +81,6 @@ crm_generate_ra_key(const char *standard, const char *provider,
 }
 
 /*!
- * \deprecated
- * \brief Check whether a resource standard requires a provider to be specified
- *
- * \param[in] standard  Standard name
- *
- * \return TRUE if standard requires a provider, FALSE otherwise
- */
-bool
-crm_provider_required(const char *standard)
-{
-    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
-}
-
-/*!
  * \brief Parse a "standard[:provider]:type" agent specification
  *
  * \param[in]  spec      Agent specification
@@ -145,4 +131,21 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
 
     *type = strdup(spec);
     return pcmk_ok;
+}
+
+// Deprecated functions kept only for backward API compatibility
+bool crm_provider_required(const char *standard);
+
+/*!
+ * \deprecated
+ * \brief Check whether a resource standard requires a provider to be specified
+ *
+ * \param[in] standard  Standard name
+ *
+ * \return TRUE if standard requires a provider, FALSE otherwise
+ */
+bool
+crm_provider_required(const char *standard)
+{
+    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }

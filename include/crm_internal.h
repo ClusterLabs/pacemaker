@@ -17,16 +17,18 @@
 #  include <stdbool.h>
 #  include <libxml/tree.h>
 
+/* Public API headers can guard deprecated code with this symbol, thus
+ * preventing internal code (which includes this header) from using it, while
+ * still allowing external code (which can't include this header) to use it,
+ * for backward compatibility.
+ */
+#define PCMK__NO_COMPAT
+
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/ipcs_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
-
-/* This symbol allows us to deprecate public API and prevent internal code from
- * using it while still keeping it for backward compatibility.
- */
-#define PCMK__NO_COMPAT
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);

@@ -213,10 +213,11 @@ char *pcmk_hostname(void);
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
-#endif
 
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
+
+#endif // PCMK__NO_COMPAT
 
 #ifdef __cplusplus
 }
