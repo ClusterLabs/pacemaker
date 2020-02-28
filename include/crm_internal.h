@@ -31,20 +31,6 @@
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
 
-/* For ACLs */
-char *pcmk__uid2username(uid_t uid);
-const char *pcmk__update_acl_user(xmlNode *request, const char *field,
-                                  const char *peer_user);
-
-#  if ENABLE_ACL
-#    include <string.h>
-static inline bool
-pcmk__is_privileged(const char *user)
-{
-    return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
-}
-#  endif
-
 /* char2score */
 extern int node_score_red;
 extern int node_score_green;

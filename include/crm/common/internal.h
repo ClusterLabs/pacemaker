@@ -19,6 +19,22 @@
 #include <crm/common/logging.h>
 
 
+// Internal ACL-related utilities (from acl.c)
+
+char *pcmk__uid2username(uid_t uid);
+const char *pcmk__update_acl_user(xmlNode *request, const char *field,
+                                  const char *peer_user);
+
+#if ENABLE_ACL
+#  include <string.h>
+static inline bool
+pcmk__is_privileged(const char *user)
+{
+    return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
+}
+#endif
+
+
 #if SUPPORT_CIBSECRETS
 // Internal CIB utilities (from cib_secrets.c) */
 
