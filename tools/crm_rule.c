@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/cib.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules_internal.h>
@@ -18,68 +19,61 @@
 
 #include <sys/stat.h>
 
+#define SUMMARY "evaluate rules from the Pacemaker configuration"
+
 enum crm_rule_mode {
     crm_rule_mode_none,
     crm_rule_mode_check
-} rule_mode = crm_rule_mode_none;
+};
+
+struct {
+    char *date;
+    char *input_xml;
+    enum crm_rule_mode mode;
+    char *rule;
+} options = {
+    .mode = crm_rule_mode_none
+};
 
 static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date);
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nModes (mutually exclusive):", pcmk__option_default
-    },
-    {
-        "check", no_argument, NULL, 'c',
-        "\tCheck whether a rule is in effect", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional options:", pcmk__option_default
-    },
-    {
-        "date", required_argument, NULL, 'd',
-        "Whether the rule is in effect on a given date", pcmk__option_default
-    },
-    {
-        "rule", required_argument, NULL, 'r',
-        "The ID of the rule to check", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nData:", pcmk__option_default
-    },
-    {
-        "xml-text", required_argument, NULL, 'X',
-        "Use argument for XML (or stdin if '-')", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\n\nThis tool is currently experimental.",
-         pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "The interface, behavior, and output may change with any version of "
-            "pacemaker.",
-        pcmk__option_paragraph
-    },
-    { 0, 0, 0, 0 }
+static gboolean mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+
+static GOptionEntry mode_entries[] = {
+    { "check", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
+      "Check whether a rule is in effect",
+      NULL },
+
+    { NULL }
 };
+
+static GOptionEntry data_entries[] = {
+    { "xml-text", 'X', 0, G_OPTION_ARG_STRING, &options.input_xml,
+      "Use argument for XML (or stdin if '-')",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "date", 'd', 0, G_OPTION_ARG_STRING, &options.date,
+      "Whether the rule is in effect on a given date",
+      NULL },
+    { "rule", 'r', 0, G_OPTION_ARG_STRING, &options.rule,
+      "The ID of the rule to check",
+      NULL },
+
+    { NULL }
+};
+
+static gboolean
+mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (strcmp(option_name, "c")) {
+        options.mode = crm_rule_mode_check;
+    }
+
+    return TRUE;
+}
 
 static int
 crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date)
@@ -185,101 +179,115 @@ bail:
     return rc;
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    const char *description = "This tool is currently experimental.\n"
+                              "The interface, behavior, and output may change with any version of pacemaker.";
+
+    context = pcmk__build_arg_context(args, NULL, NULL);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "modes", "Modes (mutually exclusive):",
+                        "Show modes of operation", mode_entries);
+    pcmk__add_arg_group(context, "data", "Data:",
+                        "Show data options", data_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
     cib_t *cib_conn = NULL;
     pe_working_set_t *data_set = NULL;
 
-    int flag = 0;
-    int option_index = 0;
-
-    char *rule_id = NULL;
     crm_time_t *rule_date = NULL;
-
     xmlNode *input = NULL;
-    char *input_xml = NULL;
 
     int rc = pcmk_ok;
     crm_exit_t exit_code = CRM_EX_OK;
 
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
+
     crm_log_cli_init("crm_rule");
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "evaluate rules from the Pacemaker configuration");
 
-    while (flag >= 0) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        switch (flag) {
-            case -1:
-                break;
+    processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
+        exit_code = CRM_EX_USAGE;
+        goto bail;
+    }
 
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
+    }
 
-            case 'c':
-                rule_mode = crm_rule_mode_check;
-                break;
+    if (args->version) {
+        /* FIXME:  When crm_rule is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+    }
 
-            case 'd':
-                rule_date = crm_time_new(optarg);
-                if (rule_date == NULL) {
-                    exit_code = CRM_EX_DATAERR;
-                    goto bail;
-                }
-
-                break;
-
-            case 'X':
-                input_xml = optarg;
-                break;
-
-            case 'r':
-                rule_id = strdup(optarg);
-                break;
-
-            default:
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-        }
+    if (optind > argc) {
+        CMD_ERR("%s", g_option_context_get_help(context, TRUE, NULL));
+        exit_code = CRM_EX_USAGE;
+        goto bail;
     }
 
     /* Check command line arguments before opening a connection to
      * the CIB manager or doing anything else important.
      */
-    if (rule_mode == crm_rule_mode_check) {
-        if (rule_id == NULL) {
-            CMD_ERR("--check requires use of --rule=\n");
-            pcmk__cli_help(flag, CRM_EX_USAGE);
-        }
+    switch(options.mode) {
+        case crm_rule_mode_check:
+            if (options.rule == NULL) {
+                CMD_ERR("--check requires use of --rule=");
+                exit_code = CRM_EX_USAGE;
+                goto bail;
+            }
+
+            break;
+
+        default:
+            CMD_ERR("No mode operation given");
+            exit_code = CRM_EX_USAGE;
+            goto bail;
+            break;
     }
 
     /* Set up some defaults. */
+    rule_date = crm_time_new(options.date);
     if (rule_date == NULL) {
-        rule_date = crm_time_new(NULL);
+        CMD_ERR("No --date given and can't determine current date");
+        exit_code = CRM_EX_DATAERR;
+        goto bail;
     }
 
     /* Where does the XML come from?  If one of various command line options were
      * given, use those.  Otherwise, connect to the CIB and use that.
      */
-    if (safe_str_eq(input_xml, "-")) {
+    if (safe_str_eq(options.input_xml, "-")) {
         input = stdin2xml();
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input from STDIN\n");
+            CMD_ERR("Couldn't parse input from STDIN\n");
             exit_code = CRM_EX_DATAERR;
             goto bail;
         }
-    } else if (input_xml != NULL) {
-        input = string2xml(input_xml);
+    } else if (options.input_xml != NULL) {
+        input = string2xml(options.input_xml);
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input string: %s\n", input_xml);
+            CMD_ERR("Couldn't parse input string: %s\n", options.input_xml);
+
             exit_code = CRM_EX_DATAERR;
             goto bail;
         }
@@ -322,16 +330,15 @@ main(int argc, char **argv)
      * moment so this looks a little silly, but I expect there will be more
      * modes in the future.
      */
-    switch(rule_mode) {
+    switch(options.mode) {
         case crm_rule_mode_check:
-            rc = crm_rule_check(data_set, rule_id, rule_date);
+            rc = crm_rule_check(data_set, options.rule, rule_date);
 
             if (rc > 0) {
                 CMD_ERR("Error checking rule: %s", pcmk_rc_str(rc));
             }
 
             exit_code = pcmk_rc2exitc(rc);
-
             break;
 
         default:
@@ -344,6 +351,9 @@ bail:
         cib_delete(cib_conn);
     }
 
+    g_strfreev(processed_args);
+    g_clear_error(&error);
+    pcmk__free_arg_context(context);
     pe_free_working_set(data_set);
     crm_exit(exit_code);
 }
