@@ -31,6 +31,7 @@ extern "C" {
 #  include <libxml/tree.h>
 
 #  include <crm/lrmd.h>
+#  include <crm/common/acl.h>
 #  include <crm/common/results.h>
 
 #  define ONLINESTATUS  "online"  // Status of an online client
@@ -201,8 +202,6 @@ int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 #ifdef HAVE_GNUTLS_GNUTLS_H
 void crm_gnutls_global_init(void);
 #endif
-
-bool pcmk_acl_required(const char *user);
 
 char *pcmk_hostname(void);
 
