@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm-mon"/>
+    </start>
+
+    <define name="element-crm-mon">
+        <optional>
+            <ref name="element-summary" />
+        </optional>
+        <optional>
+            <ref name="nodes-list" />
+        </optional>
+        <optional>
+            <ref name="resources-list" />
+        </optional>
+        <optional>
+            <ref name="node-attributes-list" />
+        </optional>
+        <optional>
+            <ref name="node-history-list" />
+        </optional>
+        <optional>
+            <ref name="failures-list" />
+        </optional>
+        <optional>
+            <ref name="fence-event-list" />
+        </optional>
+        <optional>
+            <ref name="tickets-list" />
+        </optional>
+        <optional>
+            <ref name="bans-list" />
+        </optional>
+    </define>
+
+    <define name="element-summary">
+        <element name="summary">
+            <optional>
+                <element name="stack">
+                    <attribute name="type"> <text /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="current_dc">
+                    <attribute name="present"> <data type="boolean" /> </attribute>
+                    <optional>
+                        <group>
+                            <attribute name="version"> <text /> </attribute>
+                            <attribute name="name"> <text /> </attribute>
+                            <attribute name="id"> <text /> </attribute>
+                            <attribute name="with_quorum"> <data type="boolean" /> </attribute>
+                        </group>
+                    </optional>
+                </element>
+            </optional>
+            <optional>
+                <element name="last_update">
+                    <attribute name="time"> <text /> </attribute>
+                </element>
+                <element name="last_change">
+                    <attribute name="time"> <text /> </attribute>
+                    <attribute name="user"> <text /> </attribute>
+                    <attribute name="client"> <text /> </attribute>
+                    <attribute name="origin"> <text /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="nodes_configured">
+                    <attribute name="number"> <data type="nonNegativeInteger" /> </attribute>
+                </element>
+                <element name="resources_configured">
+                    <attribute name="number"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="disabled"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="blocked"> <data type="nonNegativeInteger" /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="cluster_options">
+                    <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
+                    <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
+                    <attribute name="no-quorum-policy"> <text /> </attribute>
+                    <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+    <define name="resources-list">
+        <element name="resources">
+            <zeroOrMore>
+                <ref name="element-resource-list" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="nodes-list">
+        <element name="nodes">
+            <zeroOrMore>
+                <ref name="element-full-node" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="node-attributes-list">
+        <element name="node_attributes">
+            <zeroOrMore>
+                <ref name="element-node-with-attributes" />
+            </zeroOrMore>
+        </element>
+    </define>
+ 
+    <define name="node-history-list">
+        <element name="node_history">
+            <zeroOrMore>
+                <ref name="element-node-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="failures-list">
+        <element name="failures">
+            <zeroOrMore>
+                <ref name="element-failure" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="fence-event-list">
+        <element name="fence_history">
+            <optional>
+                <attribute name="status"> <data type="integer" /> </attribute>
+            </optional>
+            <zeroOrMore>
+                <externalRef href="fence-event-2.0.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="tickets-list">
+        <element name="tickets">
+            <zeroOrMore>
+                <ref name="element-ticket" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="bans-list">
+        <element name="bans">
+            <zeroOrMore>
+                <ref name="element-ban" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-full-node">
+        <element name="node">
+            <attribute name="name"> <text/> </attribute>
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="online"> <data type="boolean" /> </attribute>
+            <attribute name="standby"> <data type="boolean" /> </attribute>
+            <attribute name="standby_onfail"> <data type="boolean" /> </attribute>
+            <attribute name="maintenance"> <data type="boolean" /> </attribute>
+            <attribute name="pending"> <data type="boolean" /> </attribute>
+            <attribute name="unclean"> <data type="boolean" /> </attribute>
+            <attribute name="shutdown"> <data type="boolean" /> </attribute>
+            <attribute name="expected_up"> <data type="boolean" /> </attribute>
+            <attribute name="is_dc"> <data type="boolean" /> </attribute>
+            <attribute name="resources_running"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="type">
+                <choice>
+                    <value>unknown</value>
+                    <value>member</value>
+                    <value>remote</value>
+                    <value>ping</value>
+                </choice>
+            </attribute>
+            <optional>
+                <!-- for virtualized pacemaker_remote nodes, crm_mon 1.1.13 uses
+                     "container_id" while later versions use "id_as_resource" -->
+                <choice>
+                    <attribute name="container_id"> <text/> </attribute>
+                    <attribute name="id_as_resource"> <text/> </attribute>
+                </choice>
+            </optional>
+            <ref name="element-resource-list" />
+        </element>
+    </define>
+
+    <define name="element-node-with-attributes">
+        <element name="node">
+            <attribute name="name"> <text /> </attribute>
+            <zeroOrMore>
+                <element name="attribute">
+                    <attribute name="name"> <text /> </attribute>
+                    <attribute name="value"> <text /> </attribute>
+                    <optional>
+                        <attribute name="expected"> <data type="nonNegativeInteger" /> </attribute>
+                    </optional>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-node-history">
+        <element name="node">
+            <attribute name="name"> <text /> </attribute>
+            <zeroOrMore>
+                <ref name="element-resource-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-resource-history">
+        <element name="resource_history">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="orphan"> <data type="boolean" /> </attribute>
+            <optional>
+                <group>
+                    <attribute name="migration-threshold"> <data type="nonNegativeInteger" /> </attribute>
+                    <optional>
+                        <attribute name="fail-count"> <text /> </attribute>
+                    </optional>
+                    <optional>
+                        <attribute name="last-failure"> <text /> </attribute>
+                    </optional>
+                </group>
+            </optional>
+            <zeroOrMore>
+                <ref name="element-operation-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-operation-history">
+        <element name="operation_history">
+            <attribute name="call"> <text /> </attribute>
+            <attribute name="task"> <text /> </attribute>
+            <optional>
+                <attribute name="interval"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="last-rc-change"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="last-run"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="exec-time"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="queue-time"> <text /> </attribute>
+            </optional>
+            <attribute name="rc"> <data type="integer" /> </attribute>
+            <attribute name="rc_text"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-failure">
+        <element name="failure">
+            <choice>
+                <attribute name="op_key"> <text/> </attribute>
+                <attribute name="id"> <text/> </attribute>
+            </choice>
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="exitstatus"> <text /> </attribute>
+            <attribute name="exitreason"> <text /> </attribute>
+            <attribute name="exitcode"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="call"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="status"> <text /> </attribute>
+            <optional>
+                <group>
+                    <attribute name="last-rc-change"> <text /> </attribute>
+                    <attribute name="queued"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="exec"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="interval"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="task"> <text /> </attribute>
+                </group>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-ticket">
+        <element name="ticket">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="status">
+                <choice>
+                    <value>granted</value>
+                    <value>revoked</value>
+                </choice>
+            </attribute>
+            <attribute name="standby"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="last-granted"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-ban">
+        <element name="ban">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="resource"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="weight"> <data type="integer" /> </attribute>
+            <attribute name="master_only"> <data type="boolean" /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-resource-list">
+        <interleave>
+            <zeroOrMore>
+                <ref name="element-bundle" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-clone" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-group" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-resource" />
+            </zeroOrMore>
+        </interleave>
+    </define>
+
+    <define name="element-bundle">
+        <element name="bundle">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="type">
+                <choice>
+                    <value>docker</value>
+                    <value>rkt</value>
+                    <value>podman</value>
+                </choice>
+            </attribute>
+            <attribute name="image"> <text/> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <zeroOrMore>
+                <element name="replica">
+                    <attribute name="id"> <data type="nonNegativeInteger" /> </attribute>
+                    <zeroOrMore>
+                        <ref name="element-resource" />
+                    </zeroOrMore>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-clone">
+        <element name="clone">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="multi_state"> <data type="boolean" /> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
+            <ref name="element-resource-list" />
+        </element>
+    </define>
+
+    <define name="element-group">
+        <element name="group">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="number_resources"> <data type="nonNegativeInteger" /> </attribute>
+            <ref name="element-resource-list" />
+        </element>
+    </define>
+
+    <define name="element-resource">
+        <element name="resource">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="resource_agent"> <text/> </attribute>
+            <attribute name="role"> <text/> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
+            <attribute name="active"> <data type="boolean" /> </attribute>
+            <attribute name="orphaned"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="blocked"> <data type="boolean" /> </attribute>
+            </optional>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <attribute name="nodes_running_on"> <data type="nonNegativeInteger" />  </attribute>
+            <optional>
+                <attribute name="pending"> <text/> </attribute>
+            </optional>
+            <zeroOrMore>
+                <!-- crm_mon prints the node only if group-by-node is false -->
+                <element name="node">
+                    <attribute name="name"> <text/> </attribute>
+                    <attribute name="id"> <text/> </attribute>
+                    <attribute name="cached"> <data type="boolean" /> </attribute>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+</grammar>

@@ -27,7 +27,7 @@ extern "C" {
 #  include <glib.h>
 #  include <crm/common/results.h>
 
-#  define PCMK__API_VERSION "2.0"
+#  define PCMK__API_VERSION "2.2"
 
 typedef struct pcmk__output_s pcmk__output_t;
 
