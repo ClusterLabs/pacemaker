@@ -57,6 +57,14 @@ failed_action_string(xmlNodePtr xml_op) {
     }
 }
 
+static const char *
+get_cluster_stack(pe_working_set_t *data_set)
+{
+    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+                                      data_set->input, LOG_DEBUG);
+    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+}
+
 static char *
 last_changed_string(const char *last_written, const char *user,
                     const char *client, const char *origin) {
