@@ -48,7 +48,6 @@ static void print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                     unsigned int mon_ops, const char *prefix);
 static void print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                                   unsigned int mon_ops);
-static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set);
 static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
                              unsigned int mon_ops);
 static gboolean print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
@@ -637,24 +636,6 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
 
 /*!
  * \internal
- * \brief Print times the display was last updated and CIB last changed
- *
- * \param[in] out      The output functions structure.
- * \param[in] data_set Cluster state to display.
- */
-static void
-print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
-{
-    const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-    const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-    const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-    const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-    out->message(out, "cluster-times", last_written, user, client, origin);
-}
-
-/*!
- * \internal
  * \brief Print current DC and its version
  *
  * \param[in] out      The output functions structure.
@@ -711,11 +692,17 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     if (is_set(show, mon_show_times)) {
+        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
-        print_cluster_times(out, data_set);
+
+        out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (is_set(show, mon_show_counts)) {
