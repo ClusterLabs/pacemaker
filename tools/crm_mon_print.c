@@ -48,8 +48,6 @@ static void print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                     unsigned int mon_ops, const char *prefix);
 static void print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                                   unsigned int mon_ops);
-static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
-                             unsigned int mon_ops);
 static gboolean print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
                                       unsigned int mon_ops, unsigned int show,
                                       mon_output_format_t fmt);
@@ -636,30 +634,6 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
 
 /*!
  * \internal
- * \brief Print current DC and its version
- *
- * \param[in] out      The output functions structure.
- * \param[in] data_set Cluster state to display.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static void
-print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops)
-{
-    node_t *dc = data_set->dc_node;
-    xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-                                           data_set->input, LOG_DEBUG);
-    const char *dc_version_s = dc_version?
-                               crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
-                               : NULL;
-    const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-    char *dc_name = dc? pe__node_display_name(dc, is_set(mon_ops, mon_op_print_clone_detail)) : NULL;
-
-    out->message(out, "cluster-dc", dc, quorum, dc_version_s, dc_name);
-    free(dc_name);
-}
-
-/*!
- * \internal
  * \brief Print a summary of cluster-wide information
  *
  * \param[in] out      The output functions structure.
@@ -684,11 +658,21 @@ print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Always print DC if none, even if not requested */
     if ((data_set->dc_node == NULL) || is_set(show, mon_show_dc)) {
+        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                               data_set->input, LOG_DEBUG);
+        const char *dc_version_s = dc_version?
+                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   : NULL;
+        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, is_set(mon_ops, mon_op_print_clone_detail)) : NULL;
+
         if (header_printed == FALSE) {
             out->begin_list(out, NULL, NULL, "Cluster Summary");
             header_printed = TRUE;
         }
-        print_cluster_dc(out, data_set, mon_ops);
+
+        out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
+        free(dc_name);
     }
 
     if (is_set(show, mon_show_times)) {
