@@ -265,6 +265,11 @@ operating systems, and reduces the severity of uninitialized memory usage bugs.
   vary across platforms (+pid_t+, +time_t+, etc.), the safest approach is to
   use +%lld+ in the format string, and cast the value to +(long long)+.
 
+- Be sure 'not' to pass +NULL+ as an argument to satisfy +%s+ format specifier
+  in logging and more generally +printf+ style functions.  When mere +<null>+
+  string is a sufficient output representation in such case, there is
+  +crm_str+ convenient macro. Ternary operator is an apparent choice otherwise.
+
 === Regular Expressions ===
 
 - Use +REG_NOSUB+ with +regcomp()+ whenever possible, for efficiency.
