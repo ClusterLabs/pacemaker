@@ -2557,18 +2557,22 @@ void pe_action_set_flag_reason(const char *function, long line,
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {
-    if(action->reason && overwrite) {
-        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'", action->uuid, action->reason, reason);
+    if (action->reason != NULL && overwrite) {
+        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
+                     action->uuid, action->reason, crm_str(reason));
         free(action->reason);
-        action->reason = NULL;
+    } else if (action->reason == NULL) {
+        pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
+                     action->uuid, crm_str(reason));
+    } else {
+        // crm_assert(action->reason != NULL && !overwrite);
+        return;
     }
-    if(action->reason == NULL) {
-        if(reason) {
-            pe_rsc_trace(action->rsc, "Set %s reason to '%s'", action->uuid, reason);
-            action->reason = strdup(reason);
-        } else {
-            action->reason = NULL;
-        }
+
+    if (reason != NULL) {
+        action->reason = strdup(reason);
+    } else {
+        action->reason = NULL;
     }
 }
 
