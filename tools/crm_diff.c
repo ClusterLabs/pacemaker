@@ -274,16 +274,16 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
 
-    const char *description = "*Examples*\n\n"
+    const char *description = "Examples:\n\n"
                               "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:\n\n"
-                              "\tcibadmin --query > cib-old.xml\n"
-                              "\tcibadmin --query > cib-new.xml\n\n"
+                              "\t# cibadmin --query > cib-old.xml\n\n"
+                              "\t# cibadmin --query > cib-new.xml\n\n"
                               "Calculate and save the difference between the two files:\n\n"
-                              "\tcrm_diff --original cib-old.xml --new cib-new.xml > patch.xml\n\n"
+                              "\t# crm_diff --original cib-old.xml --new cib-new.xml > patch.xml\n\n"
                               "Apply the patch to the original file:\n\n"
-                              "\tcrm_diff --original cib-old.xml --patch patch.xml > updated.xml\n\n"
+                              "\t# crm_diff --original cib-old.xml --patch patch.xml > updated.xml\n\n"
                               "Apply the patch to the running cluster:\n\n"
-                              "\tcibadmin --patch patch.xml\n";
+                              "\t# cibadmin --patch -x patch.xml\n";
 
     context = pcmk__build_arg_context(args, NULL, NULL);
     g_option_context_set_description(context, description);
