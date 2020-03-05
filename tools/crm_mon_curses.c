@@ -346,6 +346,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-dc", "console", pe__cluster_dc_text },
     { "cluster-options", "console", pe__cluster_options_text },
     { "cluster-stack", "console", pe__cluster_stack_text },
+    { "cluster-summary", "console", pe__cluster_summary },
     { "cluster-times", "console", pe__cluster_times_text },
     { "failed-action", "console", pe__failed_action_text },
     { "group", "console", pe__group_text },

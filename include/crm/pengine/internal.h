@@ -129,6 +129,8 @@ int pe__cluster_options_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_stack_html(pcmk__output_t *out, va_list args);
 int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
 int pe__cluster_stack_xml(pcmk__output_t *out, va_list args);
+int pe__cluster_summary(pcmk__output_t *out, va_list args);
+int pe__cluster_summary_html(pcmk__output_t *out, va_list args);
 int pe__cluster_times_html(pcmk__output_t *out, va_list args);
 int pe__cluster_times_xml(pcmk__output_t *out, va_list args);
 int pe__cluster_times_text(pcmk__output_t *out, va_list args);

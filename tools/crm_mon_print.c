@@ -48,12 +48,6 @@ static void print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                     unsigned int mon_ops, const char *prefix);
 static void print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                                   unsigned int mon_ops);
-static void print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set);
-static void print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set,
-                             unsigned int mon_ops);
-static gboolean print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                                      unsigned int mon_ops, unsigned int show,
-                                      mon_output_format_t fmt);
 static void print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set);
 static void print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
                                          unsigned int mon_ops);
@@ -637,129 +631,6 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set, unsigned 
 
 /*!
  * \internal
- * \brief Print times the display was last updated and CIB last changed
- *
- * \param[in] out      The output functions structure.
- * \param[in] data_set Cluster state to display.
- */
-static void
-print_cluster_times(pcmk__output_t *out, pe_working_set_t *data_set)
-{
-    const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
-    const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
-    const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
-    const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
-
-    out->message(out, "cluster-times", last_written, user, client, origin);
-}
-
-/*!
- * \internal
- * \brief Print current DC and its version
- *
- * \param[in] out      The output functions structure.
- * \param[in] data_set Cluster state to display.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static void
-print_cluster_dc(pcmk__output_t *out, pe_working_set_t *data_set, unsigned int mon_ops)
-{
-    node_t *dc = data_set->dc_node;
-    xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-                                           data_set->input, LOG_DEBUG);
-    const char *dc_version_s = dc_version?
-                               crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
-                               : NULL;
-    const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
-    char *dc_name = dc? pe__node_display_name(dc, is_set(mon_ops, mon_op_print_clone_detail)) : NULL;
-
-    out->message(out, "cluster-dc", dc, quorum, dc_version_s, dc_name);
-    free(dc_name);
-}
-
-/*!
- * \internal
- * \brief Print a summary of cluster-wide information
- *
- * \param[in] out      The output functions structure.
- * \param[in] data_set Cluster state to display.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- * \param[in] show     Bitmask of mon_show_*.
- */
-static gboolean
-print_cluster_summary(pcmk__output_t *out, pe_working_set_t *data_set,
-                      unsigned int mon_ops, unsigned int show, mon_output_format_t fmt)
-{
-    const char *stack_s = get_cluster_stack(data_set);
-    gboolean header_printed = FALSE;
-
-    if (is_set(show, mon_show_stack)) {
-        if (header_printed == FALSE) {
-            out->begin_list(out, NULL, NULL, "Cluster Summary");
-            header_printed = TRUE;
-        }
-        out->message(out, "cluster-stack", stack_s);
-    }
-
-    /* Always print DC if none, even if not requested */
-    if ((data_set->dc_node == NULL) || is_set(show, mon_show_dc)) {
-        if (header_printed == FALSE) {
-            out->begin_list(out, NULL, NULL, "Cluster Summary");
-            header_printed = TRUE;
-        }
-        print_cluster_dc(out, data_set, mon_ops);
-    }
-
-    if (is_set(show, mon_show_times)) {
-        if (header_printed == FALSE) {
-            out->begin_list(out, NULL, NULL, "Cluster Summary");
-            header_printed = TRUE;
-        }
-        print_cluster_times(out, data_set);
-    }
-
-    if (is_set(show, mon_show_counts)) {
-        if (header_printed == FALSE) {
-            out->begin_list(out, NULL, NULL, "Cluster Summary");
-            header_printed = TRUE;
-        }
-        out->message(out, "cluster-counts", g_list_length(data_set->nodes),
-                     data_set->ninstances, data_set->disabled_resources,
-                     data_set->blocked_resources);
-    }
-
-    if (is_set(show, mon_show_options)) {
-        if (fmt == mon_output_html || fmt == mon_output_cgi) {
-            /* Kind of a hack - close the list we may have opened earlier in this
-             * function so we can put all the options into their own list.  We
-             * only want to do this on HTML output, though.
-             */
-            if (header_printed == TRUE) {
-                out->end_list(out);
-            }
-
-            out->begin_list(out, NULL, NULL, "Config Options");
-        } else if (header_printed == FALSE) {
-            out->begin_list(out, NULL, NULL, "Cluster Summary");
-            header_printed = TRUE;
-        }
-
-        out->message(out, "cluster-options", data_set);
-    }
-
-    if (header_printed) {
-        out->end_list(out);
-    }
-
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->message(out, "maint-mode");
-    }
-
-    return header_printed;
-}
-
-/*!
- * \internal
  * \brief Print a section for failed actions
  *
  * \param[in] out      The output functions structure.
@@ -966,7 +837,6 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
  * \brief Top-level printing function for text/curses output.
  *
  * \param[in] out             The output functions structure.
- * \param[in] output_format   Is this text or curses output?
  * \param[in] data_set        Cluster state to display.
  * \param[in] stonith_history List of stonith actions.
  * \param[in] mon_ops         Bitmask of mon_op_*.
@@ -974,13 +844,12 @@ print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsi
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_status(pcmk__output_t *out, mon_output_format_t output_format,
-             pe_working_set_t *data_set, stonith_history_t *stonith_history,
-             unsigned int mon_ops, unsigned int show, char *prefix)
+print_status(pcmk__output_t *out, pe_working_set_t *data_set,
+             stonith_history_t *stonith_history, unsigned int mon_ops,
+             unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
-    gboolean printed = FALSE;
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -989,13 +858,25 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
-    printed = print_cluster_summary(out, data_set, mon_ops, show, output_format);
+    gboolean show_stack = is_set(show, mon_show_stack);
+    gboolean show_dc = is_set(show, mon_show_dc);
+    gboolean show_times = is_set(show, mon_show_times);
+    gboolean show_counts = is_set(show, mon_show_counts);
+    gboolean show_options = is_set(show, mon_show_options);
+
+    out->message(out, "cluster-summary", data_set,
+                 is_set(mon_ops, mon_op_print_clone_detail),
+                 show_stack, show_dc, show_times, show_counts, show_options);
 
     /* Gather node information (and print if in bad state or grouping by node) */
     if (is_set(show, mon_show_nodes)) {
-        if (printed) {
+        /* If any of these conditions are met, the cluster-summary message will
+         * have printed out something.  In that case, we need to leave a blank
+         * line between the summary and the nodes.
+         */
+        if (show_stack || data_set->dc_node == NULL || show_dc || show_times ||
+            show_counts || show_options) {
             out->info(out, "%s", "");
-            printed = FALSE;
         }
 
         out->begin_list(out, NULL, NULL, "Node List");
@@ -1164,14 +1045,20 @@ print_status(pcmk__output_t *out, mon_output_format_t output_format,
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
-                 pe_working_set_t *data_set, stonith_history_t *stonith_history,
-                 unsigned int mon_ops, unsigned int show, char *prefix)
+print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
+                 stonith_history_t *stonith_history, unsigned int mon_ops,
+                 unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
-    print_cluster_summary(out, data_set, mon_ops, show, output_format);
+    out->message(out, "cluster-summary", data_set,
+                 is_set(mon_ops, mon_op_print_clone_detail),
+                 is_set(show, mon_show_stack),
+                 is_set(show, mon_show_dc),
+                 is_set(show, mon_show_times),
+                 is_set(show, mon_show_counts),
+                 is_set(show, mon_show_options));
 
     /*** NODES ***/
     if (is_set(show, mon_show_nodes)) {
@@ -1228,7 +1115,6 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
  * \brief Top-level printing function for HTML output.
  *
  * \param[in] out             The output functions structure.
- * \param[in] output_format   Is this HTML or CGI output?
  * \param[in] data_set        Cluster state to display.
  * \param[in] stonith_history List of stonith actions.
  * \param[in] mon_ops         Bitmask of mon_op_*.
@@ -1236,14 +1122,20 @@ print_xml_status(pcmk__output_t *out, mon_output_format_t output_format,
  * \param[in] prefix          ID prefix to filter results by.
  */
 int
-print_html_status(pcmk__output_t *out, mon_output_format_t output_format,
-                  pe_working_set_t *data_set, stonith_history_t *stonith_history,
-                  unsigned int mon_ops, unsigned int show, char *prefix)
+print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
+                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
-    print_cluster_summary(out, data_set, mon_ops, show, output_format);
+    out->message(out, "cluster-summary", data_set,
+                 is_set(mon_ops, mon_op_print_clone_detail),
+                 is_set(show, mon_show_stack),
+                 is_set(show, mon_show_dc),
+                 is_set(show, mon_show_times),
+                 is_set(show, mon_show_counts),
+                 is_set(show, mon_show_options));
 
     /*** NODE LIST ***/
     if (is_set(show, mon_show_nodes)) {

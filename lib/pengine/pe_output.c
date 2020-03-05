@@ -12,6 +12,13 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
+#define SUMMARY_HEADER(printed, out) do { \
+        if (printed == FALSE) { \
+            out->begin_list(out, NULL, NULL, "Cluster Summary"); \
+            printed = TRUE; \
+        } \
+    } while (0)
+
 static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
@@ -55,6 +62,14 @@ failed_action_string(xmlNodePtr xml_op) {
                                  services_lrm_status_str(status),
                                  exit_reason ? exit_reason : "none");
     }
+}
+
+static const char *
+get_cluster_stack(pe_working_set_t *data_set)
+{
+    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
+                                      data_set->input, LOG_DEBUG);
+    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
 }
 
 static char *
@@ -187,6 +202,146 @@ resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
     }
 
     return buf;
+}
+
+int
+pe__cluster_summary(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean show_stack = va_arg(args, gboolean);
+    gboolean show_dc = va_arg(args, gboolean);
+    gboolean show_times = va_arg(args, gboolean);
+    gboolean show_counts = va_arg(args, gboolean);
+    gboolean show_options = va_arg(args, gboolean);
+
+    const char *stack_s = get_cluster_stack(data_set);
+    gboolean header_printed = FALSE;
+
+    if (show_stack) {
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-stack", stack_s);
+    }
+
+    /* Always print DC if none, even if not requested */
+    if (data_set->dc_node == NULL || show_dc) {
+        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                               data_set->input, LOG_DEBUG);
+        const char *dc_version_s = dc_version?
+                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   : NULL;
+        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
+
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
+        free(dc_name);
+    }
+
+    if (show_times) {
+        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-times", last_written, user, client, origin);
+    }
+
+    if (show_counts) {
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-counts", g_list_length(data_set->nodes),
+                     data_set->ninstances, data_set->disabled_resources,
+                     data_set->blocked_resources);
+    }
+
+    if (show_options) {
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-options", data_set);
+    }
+
+    if (header_printed) {
+        out->end_list(out);
+    }
+
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        out->message(out, "maint-mode");
+    }
+
+    return 0;
+}
+
+int
+pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean show_stack = va_arg(args, gboolean);
+    gboolean show_dc = va_arg(args, gboolean);
+    gboolean show_times = va_arg(args, gboolean);
+    gboolean show_counts = va_arg(args, gboolean);
+    gboolean show_options = va_arg(args, gboolean);
+
+    const char *stack_s = get_cluster_stack(data_set);
+    gboolean header_printed = FALSE;
+
+    if (show_stack) {
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-stack", stack_s);
+    }
+
+    /* Always print DC if none, even if not requested */
+    if (data_set->dc_node == NULL || show_dc) {
+        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+                                               data_set->input, LOG_DEBUG);
+        const char *dc_version_s = dc_version?
+                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   : NULL;
+        const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+        char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
+
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
+        free(dc_name);
+    }
+
+    if (show_times) {
+        const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
+        const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
+        const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
+        const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
+
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-times", last_written, user, client, origin);
+    }
+
+    if (show_counts) {
+        SUMMARY_HEADER(header_printed, out);
+        out->message(out, "cluster-counts", g_list_length(data_set->nodes),
+                     data_set->ninstances, data_set->disabled_resources,
+                     data_set->blocked_resources);
+    }
+
+    if (show_options) {
+        /* Kind of a hack - close the list we may have opened earlier in this
+         * function so we can put all the options into their own list.  We
+         * only want to do this on HTML output, though.
+         */
+        if (header_printed == TRUE) {
+            out->end_list(out);
+        }
+
+        out->begin_list(out, NULL, NULL, "Config Options");
+        out->message(out, "cluster-options", data_set);
+    }
+
+    if (header_printed) {
+        out->end_list(out);
+    }
+
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        out->message(out, "maint-mode");
+    }
+
+    return 0;
 }
 
 char *
@@ -1286,6 +1441,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-options", "log", pe__cluster_options_log },
     { "cluster-options", "text", pe__cluster_options_text },
     { "cluster-options", "xml", pe__cluster_options_xml },
+    { "cluster-summary", "html", pe__cluster_summary_html },
+    { "cluster-summary", "log", pe__cluster_summary },
+    { "cluster-summary", "text", pe__cluster_summary },
+    { "cluster-summary", "xml", pe__cluster_summary },
     { "cluster-stack", "html", pe__cluster_stack_html },
     { "cluster-stack", "log", pe__cluster_stack_text },
     { "cluster-stack", "text", pe__cluster_stack_text },

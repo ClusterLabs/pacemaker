@@ -81,22 +81,6 @@ crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
 
 /*!
  * \internal
- * \brief Get the name of the stack in use (or "unknown" if not available)
- *
- * \param[in] data_set   Working set of CIB state
- *
- * \return String representing stack name
- */
-const char *
-get_cluster_stack(pe_working_set_t *data_set)
-{
-    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-                                      data_set->input, LOG_DEBUG);
-    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
-}
-
-/*!
- * \internal
  * \brief Return resource display options corresponding to command-line choices
  *
  * \return Bitmask of pe_print_options suitable for resource print functions
