@@ -696,7 +696,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
 static void
 destroy_tag(gpointer data)
 {
-    tag_t *tag = data;
+    pe_tag_t *tag = data;
 
     if (tag) {
         free(tag->id);

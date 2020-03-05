@@ -2463,7 +2463,7 @@ trigger_unfencing(
 gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
-    tag_t *tag = NULL;
+    pe_tag_t *tag = NULL;
     GListPtr gIter = NULL;
     gboolean is_existing = FALSE;
 
@@ -2471,7 +2471,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 
     tag = g_hash_table_lookup(tags, tag_name);
     if (tag == NULL) {
-        tag = calloc(1, sizeof(tag_t));
+        tag = calloc(1, sizeof(pe_tag_t));
         if (tag == NULL) {
             return FALSE;
         }

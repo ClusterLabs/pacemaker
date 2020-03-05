@@ -212,7 +212,7 @@ pe_find_constraint_resource(GListPtr rsc_list, const char *id)
 }
 
 static gboolean
-pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, tag_t ** tag)
+pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, pe_tag_t ** tag)
 {
     gboolean rc = FALSE;
 
@@ -243,7 +243,7 @@ pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, tag_t ** ta
 
 static gboolean
 valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
-                      resource_t ** rsc, tag_t ** tag)
+                      resource_t ** rsc, pe_tag_t ** tag)
 {
     gboolean rc = FALSE;
 
@@ -541,7 +541,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
              xml_rsc = __xml_next_element(xml_rsc)) {
 
             resource_t *rsc = NULL;
-            tag_t *tag = NULL;
+            pe_tag_t *tag = NULL;
             const char *id = ID(xml_rsc);
 
             if (safe_str_neq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF)) {
@@ -641,7 +641,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     const char *id = NULL;
 
     resource_t *rsc = NULL;
-    tag_t *tag = NULL;
+    pe_tag_t *tag = NULL;
 
     *rsc_set = NULL;
 
@@ -888,7 +888,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     resource_t *rsc_lh = NULL;
 
-    tag_t *tag_lh = NULL;
+    pe_tag_t *tag_lh = NULL;
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
@@ -2051,8 +2051,8 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
 
     resource_t *rsc_first = NULL;
     resource_t *rsc_then = NULL;
-    tag_t *tag_first = NULL;
-    tag_t *tag_then = NULL;
+    pe_tag_t *tag_first = NULL;
+    pe_tag_t *tag_then = NULL;
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_first = NULL;
@@ -2548,8 +2548,8 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     resource_t *rsc_lh = NULL;
     resource_t *rsc_rh = NULL;
 
-    tag_t *tag_lh = NULL;
-    tag_t *tag_rh = NULL;
+    pe_tag_t *tag_lh = NULL;
+    pe_tag_t *tag_rh = NULL;
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
@@ -2913,7 +2913,7 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     const char *state_lh = NULL;
 
     resource_t *rsc_lh = NULL;
-    tag_t *tag_lh = NULL;
+    pe_tag_t *tag_lh = NULL;
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
