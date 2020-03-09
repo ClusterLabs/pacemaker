@@ -1034,34 +1034,29 @@ add_output_args() {
 
     if (output_format == mon_output_plain) {
         if (!pcmk__force_args(context, &err, "%s --text-fancy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-            g_clear_error(&err);
+            g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_html) {
         if (!pcmk__force_args(context, &err, "%s --html-title \"Cluster Status\"",
                               g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-            g_clear_error(&err);
+            g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_cgi) {
         if (!pcmk__force_args(context, &err, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-            g_clear_error(&err);
+            g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
         if (!pcmk__force_args(context, &err, "%s --xml-simple-list", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-            g_clear_error(&err);
+            g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
         if (!pcmk__force_args(context, &err, "%s --xml-legacy", g_get_prgname())) {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-            g_clear_error(&err);
+            g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     }
@@ -1121,8 +1116,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
     }
 
     if (!retval) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), err->message);
-        g_clear_error(&err);
+        g_propagate_error(&error, err);
         clean_up(CRM_EX_USAGE);
     }
 }
@@ -1153,7 +1147,6 @@ main(int argc, char **argv)
     fence_history_cb("--fence-history", "1", NULL, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         return clean_up(CRM_EX_USAGE);
     }
 
@@ -1222,7 +1215,7 @@ main(int argc, char **argv)
             crm_enable_stderr(FALSE);
 
             if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
-                printf("--daemonize requires at least one of --output-to and --external-agent\n");
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
 
@@ -1257,7 +1250,7 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         // Shouldn't really be possible
-        fprintf(stderr, "Invalid CIB source\n");
+        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Invalid CIB source");
         return clean_up(CRM_EX_ERROR);
     }
 
@@ -1275,8 +1268,8 @@ main(int argc, char **argv)
     }
 
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
+        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
 
@@ -1292,8 +1285,7 @@ main(int argc, char **argv)
      * make sure whatever the user specifies overrides whatever we do.
      */
     if (!apply_include_exclude(options.user_includes_excludes, output_format, &error)) {
-        out->err(out, "%s: %s", g_get_prgname(), error->message);
-        return clean_up(0);
+        return clean_up(CRM_EX_USAGE);
     }
 
     crm_mon_register_messages(out);
@@ -1308,13 +1300,13 @@ main(int argc, char **argv)
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
         if (cib && cib->variant == cib_file) {
-            out->err(out, "CGI mode used with CIB file");
+            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
-            out->err(out, "CGI mode cannot be used with --external-agent");
+            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
         } else if (options.daemonize == TRUE) {
-            out->err(out, "CGI mode cannot be used with -d");
+            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
     }
@@ -1355,14 +1347,14 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
-            out->err(out, "CLUSTER CRIT: Connection to cluster failed: %s",
-                     pcmk_strerror(rc));
+            g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
+                        pcmk_strerror(rc));
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                out->err(out, "\nError: cluster is not available on this node");
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nError: cluster is not available on this node");
             } else {
-                out->err(out, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
         if (output_format == mon_output_console) {
@@ -1945,7 +1937,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix) != 0) {
-                out->err(out, "Critical: Unable to output html file");
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
             }
@@ -2095,6 +2087,9 @@ handle_html_output(crm_exit_t exit_code) {
 static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
+    /* Quitting crm_mon is much more complicated than it ought to be. */
+
+    /* (1) Close connections, free things, etc. */
     clean_up_connections();
     free(options.pid_file);
     free(options.neg_location_prefix);
@@ -2103,29 +2098,53 @@ clean_up(crm_exit_t exit_code)
     pe_free_working_set(mon_data_set);
     mon_data_set = NULL;
 
-    if (exit_code == CRM_EX_USAGE) {
-        if (output_format == mon_output_cgi) {
-            fprintf(stdout, "Content-Type: text/plain\n"
-                            "Status: 500\n\n");
-        } else {
-            fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
-        }
+    g_strfreev(processed_args);
+
+    /* (2) If this is abnormal termination and we're in curses mode, shut down
+     * curses first.  Any messages displayed to the screen before curses is shut
+     * down will be lost because doing the shut down will also restore the
+     * screen to whatever it looked like before crm_mon was started.
+     */
+    if ((error != NULL || exit_code == CRM_EX_USAGE) && output_format == mon_output_console) {
+        out->finish(out, exit_code, false, NULL);
+        pcmk__output_free(out);
+        out = NULL;
+    }
+
+    /* (3) If this is a command line usage related failure, print the usage
+     * message.
+     */
+    if (exit_code == CRM_EX_USAGE && (output_format == mon_output_console || output_format == mon_output_plain)) {
+        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
     }
 
     pcmk__free_arg_context(context);
 
-    g_clear_error(&error);
+    /* (4) If this is any kind of error, print the error out and exit.  Make
+     * sure to handle situations both before and after formatted output is
+     * set up.  We want errors to appear formatted if at all possible.
+     */
+    if (error != NULL) {
+        if (out != NULL) {
+            out->err(out, "%s: %s\n", g_get_prgname(), error->message);
+            out->finish(out, exit_code, true, NULL);
+            pcmk__output_free(out);
+        } else {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        }
 
+        g_clear_error(&error);
+        crm_exit(exit_code);
+    }
+
+    /* (5) Print formatted output to the screen if we made it far enough in
+     * crm_mon to be able to do so.
+     */
     if (out != NULL) {
         switch (output_format) {
             case mon_output_cgi:
             case mon_output_html:
                 handle_html_output(exit_code);
-                break;
-
-            case mon_output_console:
-                output_format = mon_output_plain;
-                out->finish(out, exit_code, true, NULL);
                 break;
 
             default:
@@ -2136,6 +2155,5 @@ clean_up(crm_exit_t exit_code)
         pcmk__output_free(out);
     }
 
-    g_strfreev(processed_args);
     crm_exit(exit_code);
 }
