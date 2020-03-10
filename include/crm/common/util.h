@@ -122,8 +122,8 @@ char *score2char_stack(int score, char *buf, size_t len);
 /* public operation functions (from operations.c) */
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
-gboolean decode_transition_key(const char *key, char **uuid, int *action,
-                               int *transition_id, int *target_rc);
+gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
+                               int *action_id, int *target_rc);
 gboolean decode_transition_magic(const char *magic, char **uuid,
                                  int *transition_id, int *action_id,
                                  int *op_status, int *op_rc, int *target_rc);
