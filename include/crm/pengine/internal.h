@@ -441,4 +441,7 @@ bool pe__resource_is_disabled(pe_resource_t *rsc);
 pe_action_t *pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
                                         pe_working_set_t *data_set);
 
+gchar **pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
+bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
+
 #endif
