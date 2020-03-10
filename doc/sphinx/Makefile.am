@@ -32,10 +32,23 @@ PAPER		?= letter
 # Additional options for sphinx-build
 SPHINXFLAGS	?=
 
+# toplevel rsync destination for www targets (without trailing slash)
+RSYNC_DEST	?= root@www.clusterlabs.org:/var/www/html
+
 # End of useful overrides
 
 
 EXTRA_DIST	= $(wildcard */*.rst)
+
+# recursive, preserve symlinks/permissions/times, verbose, compress,
+# don't cross filesystems, sparse, show progress
+RSYNC_OPTS      = -rlptvzxS --progress
+
+BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
+
+TAG	?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]		\
+	           && ( git tag --points-at HEAD | head -1 )			\
+		   || git log --pretty=format:Pacemaker-2.0.3-%h -n 1 HEAD)
 
 BOOK		= none
 
@@ -67,6 +80,21 @@ $(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(wildcard $(srcdir)/$(BOO
 			$(MAKE) $(AM_MAKEFLAGS)	-C "$@/$$format"	\
 				all-pdf;				\
 		fi;							\
+	done
+endif
+
+.PHONY: books-upload
+books-upload: all
+if BUILD_SPHINX_DOCS
+	@echo "Uploading $(PACKAGE_SERIES) documentation set"
+	@for book in $(BOOKS); do 					\
+		echo " * $$book";					\
+		buildfile="$$book/_build/build-$(PACKAGE_SERIES).txt";	\
+		echo "Generated on `date --utc` from version $(TAG)"	\
+			> "$$buildfile";				\
+		rsync $(RSYNC_OPTS) "$$buildfile"			\
+			$(BOOK_FORMATS:%=$$book/_build/%)		\
+			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
 endif
 
