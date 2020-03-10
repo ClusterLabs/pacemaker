@@ -45,6 +45,7 @@ bye(crm_exit_t exit_code)
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
+        cib_conn = NULL;
     }
     if (controld_api != NULL) {
         pcmk_free_controld_api(controld_api);
