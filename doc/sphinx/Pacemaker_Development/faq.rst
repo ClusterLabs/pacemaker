@@ -40,7 +40,7 @@ Frequently Asked Questions
     * The `1.0 repository <https://github.com/ClusterLabs/pacemaker-1.0>`_ is a
       frozen snapshot of the 1.0 release series, and is no longer developed.
     * Messages will be posted to the
-      `developers@ClusterLabs.org <http://ClusterLabs.org/mailman/listinfo/developers>`_
+      `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
       mailing list during the release cycle, with instructions about which
       branches to use when submitting requests.
 
@@ -112,7 +112,7 @@ Frequently Asked Questions
     `Revised BSD <https://opensource.org/licenses/BSD-3-Clause>`_ license. If you find
     any deviations from this policy, or wish to inquire about alternate licensing
     arrangements, please e-mail the
-    `developers@ClusterLabs.org <http://ClusterLabs.org/mailman/listinfo/developers>`_
+    `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
     mailing list. Licensing issues are also discussed on the
     `ClusterLabs wiki <https://wiki.ClusterLabs.org/wiki/License>`_.
 
@@ -121,10 +121,10 @@ Frequently Asked Questions
 :Q: How can I contribute my changes to the project?
 :A: Contributions of bug fixes or new features are very much appreciated!
     Patches can be submitted as
-    `pull requests <https://help.github.com/articles/using-pull-requests/>`_
+    `pull requests <https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests>`_
     via GitHub (the preferred method, due to its excellent
     `features <https://github.com/features/>`_), or e-mailed to the
-    `developers@ClusterLabs.org <http://ClusterLabs.org/mailman/listinfo/developers>`_
+    `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
     mailing list as an attachment in a format Git can import. Authors may only
     submit changes that they have the right to submit under the open source
     license indicated in the affected files.
@@ -135,9 +135,9 @@ Frequently Asked Questions
 
 :Q: What if I still have questions?
 :A: Ask on the
-    `developers@ClusterLabs.org <http://ClusterLabs.org/mailman/listinfo/developers>`_
+    `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
     mailing list for development-related questions, or on the
-    `users@ClusterLabs.org <http://ClusterLabs.org/mailman/listinfo/users>`_
+    `users@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/users>`_
     mailing list for general questions about using Pacemaker.
     Developers often also hang out on `freenode's <http://freenode.net/>`_
     #clusterlabs IRC channel.

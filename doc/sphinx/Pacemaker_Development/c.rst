@@ -219,7 +219,7 @@ _____________
 
 All public API header files, functions, structs, enums, etc.,
 should be documented with Doxygen comment blocks, as Pacemaker's
-`online API documentation <http://clusterlabs.org/pacemaker/doxygen/>`_
+`online API documentation <https://clusterlabs.org/pacemaker/doxygen/>`_
 is automatically generated via Doxygen. It is helpful to document
 private symbols in the same way, with an ``\internal`` tag in the
 Doxygen comment.
