@@ -36,9 +36,10 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
         char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
         pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
         free(buf);
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_no_output;
     }
-
-    return 0;
 }
 
 static int
@@ -52,7 +53,7 @@ last_fenced_text(pcmk__output_t *out, va_list args) {
         pcmk__indented_printf(out, "Node %s has never been fenced\n", target);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -68,9 +69,10 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
 
         free(buf);
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_no_output;
     }
-
-    return 0;
 }
 
 static int
@@ -117,7 +119,7 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -154,7 +156,7 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
     }
 
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -199,7 +201,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
         free(buf);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static int
