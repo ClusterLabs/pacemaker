@@ -39,9 +39,16 @@ static pe_working_set_t *data_set = NULL;
 #define MESSAGE_TIMEOUT_S 60
 
 // Clean up and exit
-_Noreturn static void
+static void
 bye(crm_exit_t exit_code)
 {
+    static bool crm_resourece_shutdown_flag = FALSE;
+
+    if (crm_resourece_shutdown_flag) {
+        return;
+    }
+    crm_resourece_shutdown_flag = TRUE;
+
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
@@ -51,7 +58,9 @@ bye(crm_exit_t exit_code)
         pcmk_free_controld_api(controld_api);
     }
     pe_free_working_set(data_set);
+    data_set = NULL;
     crm_exit(exit_code);
+    return;
 }
 
 static gboolean
@@ -61,6 +70,7 @@ resource_ipc_timeout(gpointer data)
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
     bye(CRM_EX_TIMEOUT);
+    return FALSE;
 }
 
 static void
