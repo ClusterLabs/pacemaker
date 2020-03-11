@@ -235,6 +235,10 @@ static struct pcmk__rc_info {
     { "pcmk_rc_after_range",
       "Result occurs after given range",
       -pcmk_err_generic,
+    },
+    { "pcmk_rc_no_output",
+      "Output message produced no output",
+      -pcmk_err_generic,
     }
 };
 
@@ -655,6 +659,7 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_EXISTS;
 
         case EIO:
+        case pcmk_rc_no_output:
             return CRM_EX_IOERR;
 
         case ENOTSUP:
