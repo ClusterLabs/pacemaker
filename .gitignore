@@ -146,6 +146,7 @@ publican.cfg
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
 /doc/sphinx/*/_build
+/doc/sphinx/*/conf.py
 /lib/common/md5.c
 /maint/testcc
 /maint/mocked/based

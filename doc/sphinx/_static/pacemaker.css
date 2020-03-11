@@ -1,0 +1,115 @@
+@import url("pyramid.css");
+
+/* Defaults for entire page */
+body {
+    color: #3f3f3f;
+    font-family: "Open Sans", sans-serif;
+    font-size: 11pt;
+    font-weight: 400;
+    line-height: 1.65;
+}
+
+/* Strip at top of page */
+div.related {
+    line-height: 1.65;
+    color: #3f3f3f;
+    font-size: 10pt;
+    background-color: #fff;
+
+    border-bottom: solid 4px #00b2e2;
+    font-family: "Roboto Slab", serif;
+}
+div.related a {
+    color: #1d2429;
+}
+div.related ul {
+    padding-left: 1em;
+}
+
+/* Sidebar */
+div.bodywrapper {
+    /* The final value must match the sidebarwidth theme option */
+    margin: 0 0 0 230px;
+}
+div.sphinxsidebar {
+    color: #1d2429;
+    background-color: #f5f6f7;
+    font-family: "Roboto Slab", serif;
+    font-size: 0.9em;
+    line-height: 1.65;
+    letter-spacing: 0.075em;
+    /*text-transform: uppercase;*/
+}
+div.sphinxsidebar h3,
+div.sphinxsidebar h4 {
+    font-family: "Roboto Slab", serif;
+    color: #1d2429;
+    font-size: 1.4em;
+    font-weight: 700;
+    border-bottom: 3px solid #00b2e2;
+
+    line-height: 1.5;
+    letter-spacing: 0.075em;
+    background-color: #f5f6f7;
+}
+div.sphinxsidebar p,
+div.sphinxsidebar ul,
+div.sphinxsidebar h3 a,
+div.sphinxsidebar a {
+    color: #1d2429;
+}
+
+/* Main text */
+div.body {
+    color: #3f3f3f;
+    font-size: 11pt;
+    border: none;
+}
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+    font-family: "Roboto Slab", serif;
+    font-weight: 700;
+    color: #1d2429;
+
+    font-variant: none;
+    line-height: 1.5;
+}
+div.body h1 {
+    border-top: none;
+    font-size: 3.5em;
+    background-color: #fff;
+    border-bottom: solid 3px #00b2e2;
+}
+div.body h2 {
+    font-size: 1.75em;
+    background-color: #fff;
+    border-bottom: solid 2px #00b2e2;
+}
+div.body h3 {
+    font-size: 1.5em;
+    background-color: #fff;
+    border-bottom: solid 1px #00b2e2;
+}
+div.body p,
+div.body dd,
+div.body li {
+    line-height: 1.65;
+}
+pre {
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+    background-color: #f5f6f7;
+    color: #1d2429;
+    border: none;
+    border-radius: 11px;
+    box-shadow: 0px 2px 5px #aaaaaa inset;
+}
+.viewcode-back,
+.download {
+    font-family: "Open Sans", sans-serif;
+}

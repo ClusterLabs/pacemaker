@@ -40,7 +40,14 @@ EXTRA_DIST	= $(wildcard */*.rst)
 BOOK		= none
 
 if BUILD_SPHINX_DOCS
-$(BOOK)/_build: $(wildcard $(srcdir)/$(BOOK)/*.rst)
+$(BOOKS:%=%/conf.py): conf.py.in
+	$(AM_V_GEN)sed							\
+		-e 's/%VERSION%/$(VERSION)/g'				\
+		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'			\
+		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'	\
+		$(<) > "$@"
+
+$(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(wildcard $(srcdir)/$(BOOK)/*.rst)
 	@echo 'Building "$(subst _, ,$(BOOK))" because of $?' $(PCMK_quiet)
 	$(AM_V_at)rm -rf "$@"
 	$(AM_V_BOOK)for format in $(BOOK_FORMATS); do			\
