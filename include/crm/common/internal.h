@@ -93,7 +93,7 @@ int pcmk__lock_pidfile(const char *filename, const char *name);
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
 char *generate_notify_key(const char *rsc_id, const char *notify_type,
                           const char *op_type);
-char *generate_transition_key(int action, int transition_id, int target_rc,
+char *generate_transition_key(int transition_id, int action_id, int target_rc,
                               const char *node);
 void filter_action_parameters(xmlNode *param_set, const char *version);
 
