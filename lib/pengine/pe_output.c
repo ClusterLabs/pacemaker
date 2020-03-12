@@ -12,10 +12,10 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
-#define SUMMARY_HEADER(printed, out) do { \
-        if (printed == FALSE) { \
+#define SUMMARY_HEADER(rc, out) do { \
+        if (rc == pcmk_rc_no_output) { \
             out->begin_list(out, NULL, NULL, "Cluster Summary"); \
-            printed = TRUE; \
+            rc = pcmk_rc_ok; \
         } \
     } while (0)
 
@@ -213,12 +213,12 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
     gboolean show_times = va_arg(args, gboolean);
     gboolean show_counts = va_arg(args, gboolean);
     gboolean show_options = va_arg(args, gboolean);
+    int rc = pcmk_rc_no_output;
 
     const char *stack_s = get_cluster_stack(data_set);
-    gboolean header_printed = FALSE;
 
     if (show_stack) {
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -232,7 +232,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
 
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
         free(dc_name);
     }
@@ -243,31 +243,32 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (show_counts) {
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 
     if (show_options) {
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-options", data_set);
     }
 
-    if (header_printed) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
     }
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
+        rc = pcmk_rc_ok;
     }
 
-    return 0;
+    return rc;
 }
 
 int
@@ -279,12 +280,12 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
     gboolean show_times = va_arg(args, gboolean);
     gboolean show_counts = va_arg(args, gboolean);
     gboolean show_options = va_arg(args, gboolean);
+    int rc = pcmk_rc_no_output;
 
     const char *stack_s = get_cluster_stack(data_set);
-    gboolean header_printed = FALSE;
 
     if (show_stack) {
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -298,7 +299,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
 
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
         free(dc_name);
     }
@@ -309,12 +310,12 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (show_counts) {
-        SUMMARY_HEADER(header_printed, out);
+        SUMMARY_HEADER(rc, out);
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
@@ -325,7 +326,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
          * function so we can put all the options into their own list.  We
          * only want to do this on HTML output, though.
          */
-        if (header_printed == TRUE) {
+        if (rc == pcmk_rc_ok) {
             out->end_list(out);
         }
 
@@ -333,15 +334,16 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-options", data_set);
     }
 
-    if (header_printed) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
     }
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
+        rc = pcmk_rc_ok;
     }
 
-    return 0;
+    return rc;
 }
 
 char *
@@ -424,7 +426,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     if (is_list) {
         pcmk__output_xml_push_parent(out, xml_node);
     }
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -443,7 +445,7 @@ pe__ban_html(pcmk__output_t *out, va_list args) {
 
     free(node_name);
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -459,7 +461,7 @@ pe__ban_text(pcmk__output_t *out, va_list args) {
                    node_name);
 
     free(node_name);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -479,7 +481,7 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
                (pcmkXmlStr) (location->role_filter == RSC_ROLE_MASTER ? "true" : "false"));
 
     free(weight_s);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -540,7 +542,7 @@ pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
         free(s);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -573,7 +575,7 @@ pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
                        nresources, pcmk__plural_s(nresources));
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -602,7 +604,7 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(resources_node, (pcmkXmlStr) "blocked", (pcmkXmlStr) s);
     free(s);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -635,7 +637,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(node ,"span", NULL, "warning", "NONE");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -653,7 +655,7 @@ pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
         out->list_item(out, "Current DC", "NONE");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -675,7 +677,7 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(node, (pcmkXmlStr) "present", (pcmkXmlStr) "false");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -683,7 +685,7 @@ pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
     fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
     fprintf(out->dest, "\n");
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -725,7 +727,7 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
         out->list_item(out, NULL, "Resource management: enabled");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -734,9 +736,10 @@ pe__cluster_options_log(pcmk__output_t *out, va_list args) {
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_no_output;
     }
-
-    return 0;
 }
 
 int
@@ -767,7 +770,7 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -801,7 +804,7 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(node, (pcmkXmlStr) "maintenance-mode",
                (pcmkXmlStr) (is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false"));
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -812,14 +815,14 @@ pe__cluster_stack_html(pcmk__output_t *out, va_list args) {
     pcmk_create_html_node(node, "span", NULL, "bold", "Stack: ");
     pcmk_create_html_node(node, "span", NULL, NULL, stack_s);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
 pe__cluster_stack_text(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
     out->list_item(out, "Stack", "%s", stack_s);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -829,7 +832,7 @@ pe__cluster_stack_xml(pcmk__output_t *out, va_list args) {
 
     xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) stack_s);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -852,7 +855,7 @@ pe__cluster_times_html(pcmk__output_t *out, va_list args) {
     pcmk_create_html_node(changed_node, "span", NULL, NULL, buf);
 
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -872,7 +875,7 @@ pe__cluster_times_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(changed_node, (pcmkXmlStr) "client", (pcmkXmlStr) (client ? client : ""));
     xmlSetProp(changed_node, (pcmkXmlStr) "origin", (pcmkXmlStr) (origin ? origin : ""));
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -888,7 +891,7 @@ pe__cluster_times_text(pcmk__output_t *out, va_list args) {
     out->list_item(out, "Last change", " %s", buf);
 
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -898,7 +901,7 @@ pe__failed_action_text(pcmk__output_t *out, va_list args) {
 
     out->list_item(out, NULL, "%s", s);
     free(s);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -957,7 +960,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
 
     free(reason_s);
     free(rc_s);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1017,7 +1020,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
     free(buf);
     free(node_name);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1072,7 +1075,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
         out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, print_clone_detail));
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1138,7 +1141,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1163,7 +1166,7 @@ pe__node_attribute_text(pcmk__output_t *out, va_list args) {
         out->list_item(out, NULL, "%-32s\t: %-10s", name, value);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1192,7 +1195,7 @@ pe__node_attribute_html(pcmk__output_t *out, va_list args) {
         out->list_item(out, NULL, "%s: %s", name, value);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1212,7 +1215,7 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
         free(buf);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1228,7 +1231,7 @@ pe__op_history_text(pcmk__output_t *out, va_list args) {
     out->list_item(out, NULL, "%s", buf);
 
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1292,7 +1295,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) rc_s);
     xmlSetProp(node, (pcmkXmlStr) "rc_text", (pcmkXmlStr) services_ocf_exitcode_str(rc));
     free(rc_s);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1313,7 +1316,7 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
     }
 
     free(buf);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1354,7 +1357,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_xml_pop_parent(out);
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1374,7 +1377,7 @@ pe__ticket_html(pcmk__output_t *out, va_list args) {
                        ticket->standby ? " [standby]" : "");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1394,7 +1397,7 @@ pe__ticket_text(pcmk__output_t *out, va_list args) {
                        ticket->standby ? " [standby]" : "");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1413,7 +1416,7 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
                    (pcmkXmlStr) pcmk__epoch2str(&ticket->last_granted));
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {

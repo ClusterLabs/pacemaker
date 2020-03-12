@@ -108,12 +108,12 @@ pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *formats) {
 int
 pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
     va_list args;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
     pcmk__message_fn_t fn;
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     va_start(args, message_id);

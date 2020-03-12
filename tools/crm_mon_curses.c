@@ -325,7 +325,7 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
 
     free(buf);
     crm_time_free(crm_when);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -335,7 +335,7 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     printw("\n");
     clrtoeol();
     refresh();
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {

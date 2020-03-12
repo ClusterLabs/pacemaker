@@ -286,8 +286,7 @@ pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
         when = stonith_api_time(0, target, FALSE);
     }
 
-    out->message(out, "last-fenced", target, when);
-    return pcmk_rc_ok;
+    return out->message(out, "last-fenced", target, when);
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER

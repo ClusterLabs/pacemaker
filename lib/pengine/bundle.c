@@ -1501,7 +1501,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe__bundle_variant_data_t *bundle_data = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -1514,7 +1514,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                  , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
                  , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
                  , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed)));
-    CRM_ASSERT(rc == 0);
+    CRM_ASSERT(rc == pcmk_rc_ok);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1525,7 +1525,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
         rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
         free(id);
-        CRM_ASSERT(rc == 0);
+        CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (replica->ip != NULL) {
             out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip);
@@ -1634,7 +1634,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     }
 
     out->end_list(out);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -1719,7 +1719,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     }
 
     out->end_list(out);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 static void

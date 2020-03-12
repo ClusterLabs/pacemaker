@@ -584,7 +584,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                  , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
                  , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
                  , "target_role", configured_role_str(rsc));
-    CRM_ASSERT(rc == 0);
+    CRM_ASSERT(rc == pcmk_rc_ok);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -781,7 +781,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     out->end_list(out);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -968,8 +968,9 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     out->end_list(out);
 
-    return 0;
+    return pcmk_rc_ok;
 }
+
 void
 clone_free(resource_t * rsc)
 {

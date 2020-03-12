@@ -107,6 +107,7 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_no_output           = -1026,
     pcmk_rc_after_range         = -1025,
     pcmk_rc_within_range        = -1024,
     pcmk_rc_before_range        = -1023,

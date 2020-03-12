@@ -303,10 +303,10 @@ struct pcmk__output_s {
      *                           previous call to register_message.
      * \param[in] ...            Arguments to be passed to the registered function.
      *
-     * \return 0 if a function was registered for the message, that function was
-     *         called, and returned successfully.  A negative value is returned if
-     *         no function was registered.  A positive value is returned if the
-     *         function was called but encountered an error.
+     * \return A standard Pacemaker return code.  Generally: 0 if a function was
+     *         registered for the message, that function was called, and returned
+     *         successfully; EINVAL if no function was registered; or pcmk_rc_no_output
+     *         if a function was called but produced no output.
      */
     int (*message) (pcmk__output_t *out, const char *message_id, ...);
 

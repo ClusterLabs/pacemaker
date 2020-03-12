@@ -196,7 +196,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                       , "id", rsc->id
                                       , "number_resources", count);
     free(count);
-    CRM_ASSERT(rc == 0);
+    CRM_ASSERT(rc == pcmk_rc_ok);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -228,7 +228,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
 
     out->end_list(out);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -251,7 +251,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
     }
     out->end_list(out);
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 void

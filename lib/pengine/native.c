@@ -665,7 +665,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
     return retval;
 }
 
-void
+int
 pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
                        const char *name, node_t *node, long options)
 {
@@ -682,7 +682,7 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
         if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
             crm_trace("skipping print of internal resource %s", rsc->id);
-            return;
+            return pcmk_rc_no_output;
         }
         target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     }
@@ -750,9 +750,11 @@ pe__common_output_html(pcmk__output_t *out, resource_t * rsc,
         }
         out->end_list(out);
     }
+
+    return pcmk_rc_ok;
 }
 
-void
+int
 pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
                        const char *name, node_t *node, long options)
 {
@@ -764,7 +766,7 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
         if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
             crm_trace("skipping print of internal resource %s", rsc->id);
-            return;
+            return pcmk_rc_no_output;
         }
         target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     }
@@ -812,6 +814,8 @@ pe__common_output_text(pcmk__output_t *out, resource_t * rsc,
         }
         out->end_list(out);
     }
+
+    return pcmk_rc_ok;
 }
 
 void
@@ -1003,7 +1007,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
     char *priority = NULL;
-    int rc = 0;
+    int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -1034,7 +1038,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     free(priority);
     free(nodes_running_on);
 
-    CRM_ASSERT(rc == 0);
+    CRM_ASSERT(rc == pcmk_rc_ok);
 
     if (rsc->running_on != NULL) {
         GListPtr gIter = rsc->running_on;
@@ -1046,7 +1050,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                           , "name", node->details->uname
                                           , "id", node->details->id
                                           , "cached", BOOL2STR(node->details->online));
-            CRM_ASSERT(rc == 0);
+            CRM_ASSERT(rc == pcmk_rc_ok);
         }
     }
 
@@ -1067,8 +1071,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
         // This is set only if a non-probe action is pending on this node
         node = rsc->pending_node;
     }
-    pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
-    return 0;
+    return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
 }
 
 int
@@ -1085,8 +1088,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
         // This is set only if a non-probe action is pending on this node
         node = rsc->pending_node;
     }
-    pe__common_output_text(out, rsc, rsc_printable_id(rsc), node, options);
-    return 0;
+    return pe__common_output_text(out, rsc, rsc_printable_id(rsc), node, options);
 }
 
 void
@@ -1325,7 +1327,7 @@ print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
     }
 }
 
-void
+int
 pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all)
 {
     GHashTable *rsc_table = crm_str_table_new();
@@ -1334,6 +1336,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
     GHashTableIter hash_iter;
     char *type = NULL;
     int *rsc_counter = NULL;
+    int rc = pcmk_rc_no_output;
 
     get_rscs_brief(rsc_list, rsc_table, active_table);
 
@@ -1369,12 +1372,15 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
                                *active_counter, type,
                                (*active_counter > 0) && node_name ? node_name : "");
             }
+
+            rc = pcmk_rc_ok;
         }
 
         if (print_all && active_counter_all == 0) {
             out->list_item(out, NULL, " %d/%d\t(%s):\tActive",
                            active_counter_all,
                            rsc_counter ? *rsc_counter : 0, type);
+            rc = pcmk_rc_ok;
         }
     }
 
@@ -1386,4 +1392,6 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
         g_hash_table_destroy(active_table);
         active_table = NULL;
     }
+
+    return rc;
 }
