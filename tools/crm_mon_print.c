@@ -131,13 +131,13 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                 gboolean print_summary, gboolean print_spacer)
 {
     GListPtr rsc_iter;
-    gboolean printed_resource = FALSE;
+    int rc = pcmk_rc_no_output;
 
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
     if (is_set(mon_ops, mon_op_group_by_node) && is_not_set(mon_ops, mon_op_inactive_resources)) {
-        return pcmk_rc_no_output;
+        return rc;
     }
 
     /* Add a blank line between this section and the one before it. */
@@ -184,13 +184,11 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         }
 
         /* Print this resource */
-        if (printed_resource == FALSE) {
-            printed_resource = TRUE;
-        }
+        rc = pcmk_rc_ok;
         out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc);
     }
 
-    if (print_summary && !printed_resource) {
+    if (print_summary && rc != pcmk_rc_ok) {
         print_resources_closing(out, mon_ops);
     }
 
@@ -237,7 +235,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
                   xmlNode *rsc_entry, unsigned int mon_ops, GListPtr op_list)
 {
     GListPtr gIter = NULL;
-    gboolean printed = FALSE;
+    int rc = pcmk_rc_no_output;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -248,7 +246,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
         const char *interval_ms_s = crm_element_value(xml_op,
                                                       XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-        int rc = crm_parse_int(op_rc, "0");
+        int op_rc_i = crm_parse_int(op_rc, "0");
 
         /* Display 0-interval monitors as "probe" */
         if (safe_str_eq(task, CRMD_ACTION_STATUS)
@@ -257,34 +255,33 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
         }
 
         /* Ignore notifies and some probes */
-        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (rc == 7))) {
+        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (op_rc_i == 7))) {
             continue;
         }
 
         /* If this is the first printed operation, print heading for resource */
-        if (printed == FALSE) {
+        if (rc == pcmk_rc_no_output) {
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
             out->message(out, "resource-history", rsc, rsc_id, TRUE, failcount, last_failure, TRUE);
-            printed = TRUE;
+            rc = pcmk_rc_ok;
         }
 
         /* Print the operation */
         out->message(out, "op-history", xml_op, task, interval_ms_s,
-                     rc, is_set(mon_ops, mon_op_print_timing));
+                     op_rc_i, is_set(mon_ops, mon_op_print_timing));
     }
 
     /* Free the list we created (no need to free the individual items) */
     g_list_free(op_list);
 
     /* If we printed anything, close the resource */
-    if (printed) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
@@ -305,10 +302,10 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
     node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     if (!node || !node->details || !node->details->online) {
-        return pcmk_rc_no_output;
+        return rc;
     }
 
     lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
@@ -329,8 +326,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
             if (failcount > 0) {
-                if (printed_header == FALSE) {
-                    printed_header = TRUE;
+                if (rc == pcmk_rc_no_output) {
+                    rc = pcmk_rc_ok;
                     out->message(out, "node", node, get_resource_display_options(mon_ops),
                                  FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
                                  is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
@@ -342,8 +339,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
         } else {
             GListPtr op_list = get_operation_list(rsc_entry);
 
-            if (printed_header == FALSE) {
-                printed_header = TRUE;
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
                 out->message(out, "node", node, get_resource_display_options(mon_ops),
                              FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
                              is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
@@ -355,12 +352,11 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
         }
     }
 
-    if (printed_header) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
@@ -467,10 +463,10 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
 {
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(cib_status) == 0) {
-        return pcmk_rc_no_output;
+        return rc;
     }
 
     /* Print each node in the CIB status */
@@ -480,7 +476,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
             continue;
         }
 
-        if (printed_header == FALSE) {
+        if (rc == pcmk_rc_no_output) {
             /* Add a blank line between this section and the one before it. */
             if (print_spacer) {
                 out->info(out, "%s", "");
@@ -492,18 +488,17 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                 out->begin_list(out, NULL, NULL, "Migration Summary");
             }
 
-            printed_header = TRUE;
+            rc = pcmk_rc_ok;
         }
 
         print_node_history(out, data_set, node_state, operations, mon_ops);
     }
 
-    if (printed_header == TRUE) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
@@ -558,7 +553,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                     unsigned int mon_ops, const char *prefix, gboolean print_spacer)
 {
     GListPtr gIter, gIter2;
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
@@ -569,13 +564,13 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
             pe_node_t *node = (pe_node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                if (printed_header == FALSE) {
+                if (rc == pcmk_rc_no_output) {
                     /* Add a blank line between this section and the one before it. */
                     if (print_spacer) {
                         out->info(out, "%s", "");
                     }
 
-                    printed_header = TRUE;
+                    rc = pcmk_rc_ok;
                     out->begin_list(out, NULL, NULL, "Negative Location Constraints");
                 }
 
@@ -584,12 +579,11 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
         }
     }
 
-    if (printed_header) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
@@ -605,7 +599,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                       unsigned int mon_ops, gboolean print_spacer)
 {
     GListPtr gIter = NULL;
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     /* Unpack all resource parameters (it would be more efficient to do this
      * only when needed for the first time in add_extra_info())
@@ -635,13 +629,13 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                 continue;
             }
 
-            if (printed_header == FALSE) {
+            if (rc == pcmk_rc_no_output) {
                 /* Add a blank line between this section and the one before it. */
                 if (print_spacer) {
                     out->info(out, "%s", "");
                 }
 
-                printed_header = TRUE;
+                rc = pcmk_rc_ok;
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
 
@@ -655,12 +649,11 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     /* Print section footer */
-    if (printed_header) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
@@ -760,7 +753,7 @@ static int
 print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
                       unsigned int mon_ops, gboolean print_spacer)
 {
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     /* xml-output always shows the full history
      * so we'll never have to show pending-actions
@@ -771,14 +764,13 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
         stonith_history_t *hp;
 
         /* Print section heading */
-        if (printed_header == FALSE) {
-            printed_header = TRUE;
-
+        if (rc == pcmk_rc_no_output) {
             /* Add a blank line between this section and the one before it. */
             if (print_spacer) {
                 out->info(out, "%s", "");
             }
 
+            rc = pcmk_rc_ok;
             out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
         }
 
@@ -792,15 +784,12 @@ print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
         }
 
         /* End section */
-        if (printed_header == TRUE) {
+        if (rc == pcmk_rc_ok) {
             out->end_list(out);
-            return pcmk_rc_ok;
-        } else {
-            return pcmk_rc_no_output;
         }
     }
 
-    return pcmk_rc_no_output;
+    return rc;
 }
 
 /*!
@@ -818,10 +807,10 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
                       unsigned int mon_ops, gboolean print_spacer)
 {
     stonith_history_t *hp;
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     if (history == NULL) {
-        return pcmk_rc_no_output;
+        return rc;
     }
 
     for (hp = history; hp; hp = hp->next) {
@@ -829,14 +818,13 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
             /* Print the header the first time we have an event to print out to
              * prevent printing headers with empty sections underneath.
              */
-            if (printed_header == FALSE) {
-                printed_header = TRUE;
-
+            if (rc == pcmk_rc_no_output) {
                 /* Add a blank line between this section and the one before it. */
                 if (print_spacer) {
                     out->info(out, "%s", "");
                 }
 
+                rc = pcmk_rc_ok;
                 out->begin_list(out, NULL, NULL, "Fencing History");
             }
 
@@ -846,12 +834,11 @@ print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
         }
     }
 
-    if (printed_header == TRUE) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_no_output;
     }
+
+    return rc;
 }
 
 /*!
