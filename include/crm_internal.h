@@ -131,7 +131,11 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 
 
-#  define PCMK_ENV_PHYSICAL_HOST "physical_host"
+/*
+ * Environment variables used by Pacemaker
+ */
+
+#define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
 
 #  if SUPPORT_COROSYNC

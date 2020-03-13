@@ -289,7 +289,7 @@ pcmk__node_attr_target(const char *name)
 
     } else {
         char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
-        char *phys_var = crm_meta_name(PCMK_ENV_PHYSICAL_HOST);
+        char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
         const char *target = getenv(target_var);
         const char *host_physical = getenv(phys_var);
 

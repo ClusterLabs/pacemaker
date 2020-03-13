@@ -1287,7 +1287,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             if(host) {
                 hash2metafield((gpointer)XML_RSC_ATTR_TARGET,
                                (gpointer)g_hash_table_lookup(action->rsc->meta, XML_RSC_ATTR_TARGET), (gpointer)args_xml);
-                hash2metafield((gpointer)PCMK_ENV_PHYSICAL_HOST, (gpointer)host->details->uname, (gpointer)args_xml);
+                hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+                               (gpointer)host->details->uname,
+                               (gpointer)args_xml);
             }
         }
 
