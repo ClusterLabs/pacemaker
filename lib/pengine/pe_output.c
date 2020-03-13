@@ -1490,6 +1490,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "resource-history", "text", pe__resource_history_text },
     { "resource-history", "xml", pe__resource_history_xml },
     { "ticket", "html", pe__ticket_html },
+    { "ticket", "log", pe__ticket_text },
     { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", pe__ticket_xml },
 
