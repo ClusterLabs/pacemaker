@@ -27,8 +27,8 @@ time_t_string(time_t when) {
     return buf;
 }
 
-static int
-failed_fencing_history(pcmk__output_t *out, va_list args) {
+int
+stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
@@ -60,8 +60,8 @@ failed_fencing_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-fencing_history(pcmk__output_t *out, va_list args) {
+int
+stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
@@ -95,8 +95,8 @@ fencing_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-full_fencing_history(pcmk__output_t *out, va_list args) {
+int
+stonith__full_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
@@ -125,8 +125,8 @@ full_fencing_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-last_fenced_html(pcmk__output_t *out, va_list args) {
+int
+stonith__last_fenced_html(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -140,8 +140,8 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
     }
 }
 
-static int
-last_fenced_text(pcmk__output_t *out, va_list args) {
+int
+stonith__last_fenced_text(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -154,8 +154,8 @@ last_fenced_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-static int
-last_fenced_xml(pcmk__output_t *out, va_list args) {
+int
+stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -173,8 +173,8 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     }
 }
 
-static int
-pending_fencing_actions(pcmk__output_t *out, va_list args) {
+int
+stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
@@ -207,8 +207,8 @@ pending_fencing_actions(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-stonith_event_html(pcmk__output_t *out, va_list args) {
+int
+stonith__event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
@@ -254,8 +254,8 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-static int
-stonith_event_text(pcmk__output_t *out, va_list args) {
+int
+stonith__event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
@@ -291,8 +291,8 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-static int
-stonith_event_xml(pcmk__output_t *out, va_list args) {
+int
+stonith__event_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history G_GNUC_UNUSED = va_arg(args, gboolean);
@@ -336,8 +336,8 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-static int
-validate_agent_html(pcmk__output_t *out, va_list args) {
+int
+stonith__validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
@@ -360,8 +360,8 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-validate_agent_text(pcmk__output_t *out, va_list args) {
+int
+stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
@@ -387,8 +387,8 @@ validate_agent_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-static int
-validate_agent_xml(pcmk__output_t *out, va_list args) {
+int
+stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "validate");
 
     const char *agent = va_arg(args, const char *);
@@ -411,27 +411,27 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "failed-fencing-history", "html", failed_fencing_history },
-    { "failed-fencing-history", "text", failed_fencing_history },
-    { "failed-fencing-history", "xml", failed_fencing_history },
-    { "fencing-history", "html", fencing_history },
-    { "fencing-history", "text", fencing_history },
-    { "fencing-history", "xml", fencing_history },
-    { "full-fencing-history", "html", full_fencing_history },
-    { "full-fencing-history", "text", full_fencing_history },
-    { "full-fencing-history", "xml", full_fencing_history },
-    { "last-fenced", "html", last_fenced_html },
-    { "last-fenced", "text", last_fenced_text },
-    { "last-fenced", "xml", last_fenced_xml },
-    { "pending-fencing-actions", "html", pending_fencing_actions },
-    { "pending-fencing-actions", "text", pending_fencing_actions },
-    { "pending-fencing-actions", "xml", pending_fencing_actions },
-    { "stonith-event", "html", stonith_event_html },
-    { "stonith-event", "text", stonith_event_text },
-    { "stonith-event", "xml", stonith_event_xml },
-    { "validate", "html", validate_agent_html },
-    { "validate", "text", validate_agent_text },
-    { "validate", "xml", validate_agent_xml },
+    { "failed-fencing-history", "html", stonith__failed_history },
+    { "failed-fencing-history", "text", stonith__failed_history },
+    { "failed-fencing-history", "xml", stonith__failed_history },
+    { "fencing-history", "html", stonith__history },
+    { "fencing-history", "text", stonith__history },
+    { "fencing-history", "xml", stonith__history },
+    { "full-fencing-history", "html", stonith__full_history },
+    { "full-fencing-history", "text", stonith__full_history },
+    { "full-fencing-history", "xml", stonith__full_history },
+    { "last-fenced", "html", stonith__last_fenced_html },
+    { "last-fenced", "text", stonith__last_fenced_text },
+    { "last-fenced", "xml", stonith__last_fenced_xml },
+    { "pending-fencing-actions", "html", stonith__pending_actions },
+    { "pending-fencing-actions", "text", stonith__pending_actions },
+    { "pending-fencing-actions", "xml", stonith__pending_actions },
+    { "stonith-event", "html", stonith__event_html },
+    { "stonith-event", "text", stonith__event_text },
+    { "stonith-event", "xml", stonith__event_xml },
+    { "validate", "html", stonith__validate_agent_html },
+    { "validate", "text", stonith__validate_agent_text },
+    { "validate", "xml", stonith__validate_agent_xml },
 
     { NULL, NULL, NULL }
 };
