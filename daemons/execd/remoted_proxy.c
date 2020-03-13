@@ -123,13 +123,13 @@ stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 cib_proxy_accept_rw(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RW);
+    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RW);
 }
 
 static int32_t
 cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RO);
+    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RO);
 }
 
 void
@@ -413,15 +413,11 @@ ipc_proxy_init(void)
 {
     ipc_clients = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
 
-    cib_ipc_servers_init(&cib_ro,
-                         &cib_rw,
-                         &cib_shm,
-                         &cib_proxy_callbacks_ro,
-                         &cib_proxy_callbacks_rw);
-
-    attrd_ipc_server_init(&attrd_ipcs, &attrd_proxy_callbacks);
-    stonith_ipc_server_init(&stonith_ipcs, &stonith_proxy_callbacks);
-    crmd_ipcs = crmd_ipc_server_init(&crmd_proxy_callbacks);
+    pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
+                          &cib_proxy_callbacks_rw);
+    pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
+    pcmk__serve_fenced_ipc(&stonith_ipcs, &stonith_proxy_callbacks);
+    crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
         crm_err("Failed to create controller: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
@@ -440,7 +436,7 @@ ipc_proxy_cleanup(void)
         g_hash_table_destroy(ipc_clients);
         ipc_clients = NULL;
     }
-    cib_ipc_servers_destroy(cib_ro, cib_rw, cib_shm);
+    pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
     qb_ipcs_destroy(stonith_ipcs);
     qb_ipcs_destroy(crmd_ipcs);

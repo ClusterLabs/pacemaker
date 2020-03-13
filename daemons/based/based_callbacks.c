@@ -1524,7 +1524,7 @@ terminate_cib(const char *caller, int fast)
 
     if (fast > 0) {
         /* Quit fast on error */
-        cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(fast);
 
     } else if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
@@ -1542,7 +1542,7 @@ terminate_cib(const char *caller, int fast)
         /* Quit via clean exit. Even the peer status callback can disconnect
          * here, because we're not returning control to the caller. */
         crm_cluster_disconnect(&crm_cluster);
-        cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(CRM_EX_OK);
     }
 }

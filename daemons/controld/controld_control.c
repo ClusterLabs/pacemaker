@@ -480,7 +480,7 @@ do_started(long long action,
     }
 
     crm_debug("Init server comms");
-    ipcs = crmd_ipc_server_init(&crmd_callbacks);
+    ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);

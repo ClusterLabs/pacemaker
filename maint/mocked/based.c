@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
         crm_log_preinit(NULL, argc, argv);
         crm_log_init(NULL, LOG_DEBUG, false, true, argc, argv, false);
         qb_ipcs_service_t *ipcs_command =
-            mainloop_add_ipc_server(CIB_CHANNEL_RW, QB_IPC_NATIVE,
+            mainloop_add_ipc_server(PCMK__SERVER_BASED_RW, QB_IPC_NATIVE,
                                     &cib_ipc_callbacks);
         g_main_loop_run(g_main_loop_new(NULL, false));
         qb_ipcs_destroy(ipcs_command);

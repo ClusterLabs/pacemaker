@@ -116,6 +116,14 @@ pid_t pcmk_locate_sbd(void);
 
 
 /*
+ * IPC service names that are only used internally
+ */
+
+#  define PCMK__SERVER_BASED_RO		"cib_ro"
+#  define PCMK__SERVER_BASED_RW		"cib_rw"
+#  define PCMK__SERVER_BASED_SHM		"cib_shm"
+
+/*
  * IPC commands that can be sent to Pacemaker daemons
  */
 
@@ -156,24 +164,6 @@ typedef struct {
 } __attribute__ ((aligned(8))) cs_ipc_header_response_t;
 
 #  endif
-
-void
-attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
-void
-stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
-
-qb_ipcs_service_t *
-crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb);
-
-void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
-        qb_ipcs_service_t **ipcs_rw,
-        qb_ipcs_service_t **ipcs_shm,
-        struct qb_ipcs_service_handlers *ro_cb,
-        struct qb_ipcs_service_handlers *rw_cb);
-
-void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
-        qb_ipcs_service_t *ipcs_rw,
-        qb_ipcs_service_t *ipcs_shm);
 
 static inline void *
 realloc_safe(void *ptr, size_t size)

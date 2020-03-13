@@ -191,15 +191,15 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
 
     if (type == cib_command) {
         cib->state = cib_connected_command;
-        channel = CIB_CHANNEL_RW;
+        channel = PCMK__SERVER_BASED_RW;
 
     } else if (type == cib_command_nonblocking) {
         cib->state = cib_connected_command;
-        channel = CIB_CHANNEL_SHM;
+        channel = PCMK__SERVER_BASED_SHM;
 
     } else if (type == cib_query) {
         cib->state = cib_connected_query;
-        channel = CIB_CHANNEL_RO;
+        channel = PCMK__SERVER_BASED_RO;
 
     } else {
         return -ENOTCONN;

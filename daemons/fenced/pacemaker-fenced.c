@@ -1525,7 +1525,7 @@ main(int argc, char **argv)
         }
     }
 
-    stonith_ipc_server_init(&ipcs, &ipc_callbacks);
+    pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
