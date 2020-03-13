@@ -97,6 +97,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
 
 int
 stonith__full_history(pcmk__output_t *out, va_list args) {
+    crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
@@ -123,6 +124,33 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
     }
 
     return rc;
+}
+ 
+int
+stonith__full_history_xml(pcmk__output_t *out, va_list args) {
+    crm_exit_t history_rc = va_arg(args, crm_exit_t);
+    stonith_history_t *history = va_arg(args, stonith_history_t *);
+    gboolean full_history = va_arg(args, gboolean);
+    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
+
+    if (history_rc == 0) {
+        out->begin_list(out, NULL, NULL, "Fencing History");
+
+        for (stonith_history_t *hp = history; hp; hp = hp->next) {
+            out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
+            out->increment_list(out);
+        }
+
+        out->end_list(out);
+    } else {
+        xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_history");
+        char *rc_s = crm_itoa(history_rc);
+
+        xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) rc_s);
+        free(rc_s);
+    }
+
+    return pcmk_rc_ok;
 }
 
 int
@@ -419,7 +447,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "fencing-history", "xml", stonith__history },
     { "full-fencing-history", "html", stonith__full_history },
     { "full-fencing-history", "text", stonith__full_history },
-    { "full-fencing-history", "xml", stonith__full_history },
+    { "full-fencing-history", "xml", stonith__full_history_xml },
     { "last-fenced", "html", stonith__last_fenced_html },
     { "last-fenced", "text", stonith__last_fenced_text },
     { "last-fenced", "xml", stonith__last_fenced_xml },

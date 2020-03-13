@@ -1874,6 +1874,7 @@ mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
+    int history_rc = 0;
 
     last_refresh = time(NULL);
 
@@ -1893,7 +1894,9 @@ mon_refresh_display(gpointer user_data)
      */
     while (is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
-            if (st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120)) {
+            history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
+
+            if (history_rc != 0) {
                 out->err(out, "Critical: Unable to get stonith-history");
                 mon_cib_connection_destroy(NULL);
             } else {
@@ -1945,8 +1948,9 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_legacy_xml:
         case mon_output_xml:
-            print_xml_status(out, mon_data_set, stonith_history, options.mon_ops,
-                             show, options.neg_location_prefix);
+            print_xml_status(out, mon_data_set, crm_errno2exit(history_rc),
+                             stonith_history, options.mon_ops, show,
+                             options.neg_location_prefix);
             break;
 
         case mon_output_monitor:

@@ -915,8 +915,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 void
 print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                 stonith_history_t *stonith_history, unsigned int mon_ops,
-                 unsigned int show, char *prefix)
+                 crm_exit_t history_rc, stonith_history_t *stonith_history,
+                 unsigned int mon_ops, unsigned int show, char *prefix)
 {
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
@@ -965,7 +965,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print stonith history */
     if (is_set(show, mon_show_fencing_all) && is_set(mon_ops, mon_op_fence_history)) {
-        out->message(out, "full-fencing-history", stonith_history,
+        out->message(out, "full-fencing-history", history_rc, stonith_history,
                      is_set(mon_ops, mon_op_fence_full_history), FALSE);
     }
 

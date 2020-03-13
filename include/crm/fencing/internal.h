@@ -157,6 +157,7 @@ int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
 int stonith__failed_history(pcmk__output_t *out, va_list args);
 int stonith__history(pcmk__output_t *out, va_list args);
 int stonith__full_history(pcmk__output_t *out, va_list args);
+int stonith__full_history_xml(pcmk__output_t *out, va_list args);
 int stonith__last_fenced_html(pcmk__output_t *out, va_list args);
 int stonith__last_fenced_text(pcmk__output_t *out, va_list args);
 int stonith__last_fenced_xml(pcmk__output_t *out, va_list args);
