@@ -671,7 +671,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
 #if ENABLE_ACL
-        user_name = crm_acl_get_set_user(stored_msg, F_CRM_USER, NULL);
+        user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
 #endif
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,

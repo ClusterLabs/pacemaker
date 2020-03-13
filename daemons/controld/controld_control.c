@@ -382,7 +382,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 
 #if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
-    crm_acl_get_set_user(msg, F_CRM_USER, client->user);
+    pcmk__update_acl_user(msg, F_CRM_USER, client->user);
 #endif
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);

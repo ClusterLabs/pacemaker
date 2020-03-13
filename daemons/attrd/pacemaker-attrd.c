@@ -258,7 +258,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
 #if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
-    crm_acl_get_set_user(xml, F_ATTRD_USER, client->user);
+    pcmk__update_acl_user(xml, F_ATTRD_USER, client->user);
 #endif
 
     op = crm_element_value(xml, F_ATTRD_TASK);

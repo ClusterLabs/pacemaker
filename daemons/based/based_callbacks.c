@@ -257,7 +257,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
 #if ENABLE_ACL
     CRM_LOG_ASSERT(cib_client->user != NULL);
-    crm_acl_get_set_user(op_request, F_CIB_USER, cib_client->user);
+    pcmk__update_acl_user(op_request, F_CIB_USER, cib_client->user);
 #endif
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);

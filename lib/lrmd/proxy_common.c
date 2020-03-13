@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 David Vossel <davidvossel@gmail.com>
+ * Copyright 2015-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -247,7 +249,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
 #if ENABLE_ACL
         CRM_ASSERT(node_name);
-        crm_acl_get_set_user(request, F_LRMD_IPC_USER, node_name);
+        pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
 #endif
 
         if(is_set(flags, crm_ipc_proxied)) {

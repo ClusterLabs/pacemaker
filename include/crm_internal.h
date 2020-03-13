@@ -33,21 +33,15 @@ void *find_library_function(void **handle, const char *lib, const char *fn, int 
 
 /* For ACLs */
 char *pcmk__uid2username(uid_t uid);
-const char *crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user);
+const char *pcmk__update_acl_user(xmlNode *request, const char *field,
+                                  const char *peer_user);
 
 #  if ENABLE_ACL
 #    include <string.h>
-static inline gboolean
-is_privileged(const char *user)
+static inline bool
+pcmk__is_privileged(const char *user)
 {
-    if (user == NULL) {
-        return FALSE;
-    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
-        return TRUE;
-    } else if (strcmp(user, "root") == 0) {
-        return TRUE;
-    }
-    return FALSE;
+    return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 #  endif
 

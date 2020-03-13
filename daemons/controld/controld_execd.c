@@ -1520,7 +1520,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     op->interval_ms = 0;
 
 #if ENABLE_ACL
-    if (user_name && is_privileged(user_name) == FALSE) {
+    if (user_name && !pcmk__is_privileged(user_name)) {
         crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
         controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
         lrmd_free_event(op);
@@ -1759,7 +1759,7 @@ do_lrm_invoke(long long action,
     CRM_ASSERT(lrm_state != NULL);
 
 #if ENABLE_ACL
-    user_name = crm_acl_get_set_user(input->msg, F_CRM_USER, NULL);
+    user_name = pcmk__update_acl_user(input->msg, F_CRM_USER, NULL);
 #endif
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
