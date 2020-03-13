@@ -43,6 +43,11 @@ int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
 
 
+/* internal digest-related utilities (from digest.c) */
+
+bool pcmk__verify_digest(xmlNode *input, const char *expected);
+
+
 /* internal I/O utilities (from io.c) */
 
 int pcmk__real_path(const char *path, char **resolved_path);

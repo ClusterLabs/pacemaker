@@ -182,8 +182,6 @@ const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
-
 /* IPC Proxy Backend Shared Functions */
 typedef struct remote_proxy_s {
     char *node_name;
