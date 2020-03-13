@@ -53,14 +53,6 @@ static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set
                                  unsigned int mon_ops, gboolean print_spacer);
 static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
                                 gboolean print_spacer);
-static int print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
-                                        unsigned int mon_ops, gboolean print_spacer);
-static int print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
-                                 unsigned int mon_ops, gboolean print_spacer);
-static int print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
-                                 unsigned int mon_ops, gboolean print_spacer);
-static int print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history,
-                                      unsigned int mon_ops);
 
 /*!
  * \internal
@@ -694,189 +686,6 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
 
 /*!
  * \internal
- * \brief Print a section for failed stonith actions
- *
- * \note This function should not be called for XML output.
- *
- * \param[in] out      The output functions structure.
- * \param[in] history  List of stonith actions.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static int
-print_failed_stonith_actions(pcmk__output_t *out, stonith_history_t *history,
-                             unsigned int mon_ops, gboolean print_spacer)
-{
-    stonith_history_t *hp;
-
-    for (hp = history; hp; hp = hp->next) {
-        if (hp->state == st_failed) {
-            break;
-        }
-    }
-    if (!hp) {
-        return pcmk_rc_no_output;
-    }
-
-    /* Add a blank line between this section and the one before it. */
-    if (print_spacer) {
-        out->info(out, "%s", "");
-    }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
-
-    /* Print each failed stonith action */
-    for (hp = history; hp; hp = hp->next) {
-        if (hp->state == st_failed) {
-            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
-                         stonith__later_succeeded(hp, history));
-            out->increment_list(out);
-        }
-    }
-
-    /* End section */
-    out->end_list(out);
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Print pending stonith actions
- *
- * \note This function should not be called for XML output.
- *
- * \param[in] out      The output functions structure.
- * \param[in] history  List of stonith actions.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static int
-print_stonith_pending(pcmk__output_t *out, stonith_history_t *history,
-                      unsigned int mon_ops, gboolean print_spacer)
-{
-    int rc = pcmk_rc_no_output;
-
-    /* xml-output always shows the full history
-     * so we'll never have to show pending-actions
-     * separately
-     */
-    if (history && (history->state != st_failed) &&
-        (history->state != st_done)) {
-        stonith_history_t *hp;
-
-        /* Print section heading */
-        if (rc == pcmk_rc_no_output) {
-            /* Add a blank line between this section and the one before it. */
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
-        }
-
-        for (hp = history; hp; hp = hp->next) {
-            if ((hp->state == st_failed) || (hp->state == st_done)) {
-                break;
-            }
-            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
-                         stonith__later_succeeded(hp, history));
-            out->increment_list(out);
-        }
-
-        /* End section */
-        if (rc == pcmk_rc_ok) {
-            out->end_list(out);
-        }
-    }
-
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Print fencing history, skipping all failed actions.
- *
- * \note This function should not be called for XML output.
- *
- * \param[in] out      The output functions structure.
- * \param[in] history  List of stonith actions.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static int
-print_stonith_history(pcmk__output_t *out, stonith_history_t *history,
-                      unsigned int mon_ops, gboolean print_spacer)
-{
-    stonith_history_t *hp;
-    int rc = pcmk_rc_no_output;
-
-    if (history == NULL) {
-        return rc;
-    }
-
-    for (hp = history; hp; hp = hp->next) {
-        if (hp->state != st_failed) {
-            /* Print the header the first time we have an event to print out to
-             * prevent printing headers with empty sections underneath.
-             */
-            if (rc == pcmk_rc_no_output) {
-                /* Add a blank line between this section and the one before it. */
-                if (print_spacer) {
-                    out->info(out, "%s", "");
-                }
-
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Fencing History");
-            }
-
-            out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
-                         stonith__later_succeeded(hp, history));
-            out->increment_list(out);
-        }
-    }
-
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Print fencing history, including failed actions.
- *
- * \note This function should be called for XML output.  It may also be
- *       interesting for other output formats.
- *
- * \param[in] out      The output functions structure.
- * \param[in] history  List of stonith actions.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static int
-print_stonith_history_full(pcmk__output_t *out, stonith_history_t *history, unsigned int mon_ops)
-{
-    stonith_history_t *hp;
-
-    if (history == NULL) {
-        return pcmk_rc_no_output;
-    }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "Fencing History");
-
-    for (hp = history; hp; hp = hp->next) {
-        out->message(out, "stonith-event", hp, is_set(mon_ops, mon_op_fence_full_history),
-                     stonith__later_succeeded(hp, history));
-        out->increment_list(out);
-    }
-
-    /* End section */
-    out->end_list(out);
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
  * \brief Top-level printing function for text/curses output.
  *
  * \param[in] out             The output functions structure.
@@ -1052,8 +861,13 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
-        rc = print_failed_stonith_actions(out, stonith_history, mon_ops,
-                                          rc == pcmk_rc_ok);
+        for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+            if (hp->state == st_failed) {
+                rc = out->message(out, "failed-fencing-history", hp,
+                                  is_set(mon_ops, mon_op_fence_full_history), rc = pcmk_rc_ok);
+                break;
+            }
+        }
     }
 
     /* Print tickets if requested */
@@ -1069,9 +883,21 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
         if (is_set(show, mon_show_fence_worked)) {
-            rc = print_stonith_history(out, stonith_history, mon_ops, rc == pcmk_rc_ok);
+            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+                if (hp->state != st_failed) {
+                    rc = out->message(out, "fencing-history", hp,
+                                      is_set(mon_ops, mon_op_fence_full_history), rc == pcmk_rc_ok);
+                    break;
+                }
+            }
         } else if (is_set(show, mon_show_fence_pending)) {
-            rc = print_stonith_pending(out, stonith_history, mon_ops, rc == pcmk_rc_ok);
+            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+                if (hp->state != st_failed && hp->state != st_done) {
+                    rc = out->message(out, "pending-fencing-actions", hp,
+                                      is_set(mon_ops, mon_op_fence_full_history), rc == pcmk_rc_ok);
+                    break;
+                }
+            }
         }
     }
 }
@@ -1139,7 +965,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print stonith history */
     if (is_set(show, mon_show_fencing_all) && is_set(mon_ops, mon_op_fence_history)) {
-        print_stonith_history_full(out, stonith_history, mon_ops);
+        out->message(out, "full-fencing-history", stonith_history,
+                     is_set(mon_ops, mon_op_fence_full_history), FALSE);
     }
 
     /* Print tickets if requested */
@@ -1217,15 +1044,33 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
-        print_failed_stonith_actions(out, stonith_history, mon_ops, FALSE);
+        for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+            if (hp->state == st_failed) {
+                out->message(out, "failed-fencing-history", hp,
+                             is_set(mon_ops, mon_op_fence_full_history), FALSE);
+                break;
+            }
+        }
     }
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
         if (is_set(show, mon_show_fence_worked)) {
-            print_stonith_history(out, stonith_history, mon_ops, FALSE);
+            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+                if (hp->state != st_failed) {
+                    out->message(out, "fencing-history", hp,
+                                 is_set(mon_ops, mon_op_fence_full_history), FALSE);
+                    break;
+                }
+            }
         } else if (is_set(show, mon_show_fence_pending)) {
-            print_stonith_pending(out, stonith_history, mon_ops, FALSE);
+            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
+                if (hp->state != st_failed && hp->state != st_done) {
+                    out->message(out, "pending-fencing-actions", hp,
+                                 is_set(mon_ops, mon_op_fence_full_history), FALSE);
+                    break;
+                }
+            }
         }
     }
 
