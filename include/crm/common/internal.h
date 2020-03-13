@@ -10,14 +10,15 @@
 #ifndef CRM_COMMON_INTERNAL__H
 #define CRM_COMMON_INTERNAL__H
 
-#include <glib.h>       /* for gboolean */
-#include <dirent.h>     /* for struct dirent */
-#include <unistd.h>     /* for getpid() */
-#include <stdbool.h>    /* for bool */
-#include <sys/types.h>  // uid_t, gid_t, pid_t
+#include <unistd.h>             // getpid()
+#include <stdbool.h>            // bool
+#include <string.h>             // strcmp()
+#include <sys/types.h>          // uid_t, gid_t, pid_t
 
-#include <crm/common/logging.h>
+#include <glib.h>               // guint, GList, GHashTable
+#include <libxml/tree.h>        // xmlNode
 
+#include <crm/common/util.h>    // crm_strdup_printf()
 
 // Internal ACL-related utilities (from acl.c)
 
