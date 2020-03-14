@@ -134,8 +134,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             }
 
         } else {
-            crm_config_warn("No value specified for cluster"
-                            " preference: %s", series[series_id].param);
+            pcmk__config_warn("No value specified for cluster preference: %s",
+                              series[series_id].param);
         }
 
         if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,

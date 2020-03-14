@@ -166,7 +166,9 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     clone_data->ordered = crm_is_true(ordered);
 
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
-        crm_config_err("Anonymous clones (%s) may only support one copy per node", rsc->id);
+        pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
+                         "because anonymous clones support only one instance "
+                         "per node", rsc->id);
         clone_data->clone_node_max = 1;
     }
 
@@ -190,7 +192,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (clone_data->xml_obj_child == NULL) {
-        crm_config_err("%s has nothing to clone", rsc->id);
+        pcmk__config_err("%s has nothing to clone", rsc->id);
         return FALSE;
     }
 

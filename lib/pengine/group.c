@@ -74,14 +74,8 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (group_data->num_children == 0) {
-#if 0
-        /* Bug #1287 */
-        crm_config_err("Group %s did not have any children", rsc->id);
-        return FALSE;
-#else
-        crm_config_warn("Group %s did not have any children", rsc->id);
-        return TRUE;
-#endif
+        pcmk__config_warn("Group %s does not have any children", rsc->id);
+        return TRUE; // Allow empty groups, children can be added later
     }
 
     pe_rsc_trace(rsc, "Added %d children to resource %s...", group_data->num_children, rsc->id);

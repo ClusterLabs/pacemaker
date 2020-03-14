@@ -475,9 +475,9 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
         } else if (is_set(rsc->flags, pe_rsc_managed)) {
             /* what to do? we can't enforce per-node limits in this case */
-            crm_config_err("%s not found in %s (list=%d)",
-                           chosen->details->id, rsc->parent->id,
-                           g_hash_table_size(rsc->parent->allowed_nodes));
+            pcmk__config_err("%s not found in %s (list of %d)",
+                             chosen->details->id, rsc->parent->id,
+                             g_hash_table_size(rsc->parent->allowed_nodes));
         }
     }
 
@@ -1096,9 +1096,9 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     if(crm_is_true(interleave_s) && constraint->rsc_lh->variant > pe_group) {
         // TODO: Do we actually care about multiple RH copies sharing a LH copy anymore?
         if (copies_per_node(constraint->rsc_lh) != copies_per_node(constraint->rsc_rh)) {
-            crm_config_err("Cannot interleave %s and %s because"
-                           " they do not support the same number of copies per node",
-                           constraint->rsc_lh->id, constraint->rsc_rh->id);
+            pcmk__config_err("Cannot interleave %s and %s because they do not "
+                             "support the same number of instances per node",
+                             constraint->rsc_lh->id, constraint->rsc_rh->id);
 
         } else {
             do_interleave = TRUE;

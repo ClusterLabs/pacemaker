@@ -676,7 +676,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
         if (pcmk__list_of_multiple(list)) {
-            crm_config_err("Cannot promote non-colocated child %s", child_rsc->id);
+            pcmk__config_err("Cannot promote non-colocated child %s",
+                             child_rsc->id);
         }
 
         g_list_free(list);

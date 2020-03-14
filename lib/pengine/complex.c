@@ -611,13 +611,17 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     } else if (safe_str_eq(value, "unfencing")) {
         if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            crm_config_warn("%s is a fencing device but requires (un)fencing", (*rsc)->id);
+            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                              "to 'quorum' because fencing devices cannot "
+                              "require unfencing", (*rsc)->id);
             value = "quorum";
             isdefault = TRUE;
             goto handle_requires_pref;
 
         } else if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_config_warn("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
+            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                              "to 'quorum' because fencing is disabled",
+                              (*rsc)->id);
             value = "quorum";
             isdefault = TRUE;
             goto handle_requires_pref;
@@ -630,15 +634,12 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_config_warn("%s requires fencing but fencing is disabled", (*rsc)->id);
+            pcmk__config_warn("%s requires fencing but fencing is disabled",
+                              (*rsc)->id);
         }
 
     } else {
-        if (value) {
-            crm_config_err("Invalid value for %s->requires: %s%s",
-                           (*rsc)->id, value,
-                           is_set(data_set->flags, pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
-        }
+        const char *orig_value = value;
 
         isdefault = TRUE;
         if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
@@ -664,6 +665,13 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         } else {
             value = "quorum";
         }
+
+        if (orig_value != NULL) {
+            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                             "to '%s' because '%s' is not valid",
+                              (*rsc)->id, value, orig_value);
+        }
+
         goto handle_requires_pref;
     }
 

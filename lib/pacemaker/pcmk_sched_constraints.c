@@ -36,7 +36,7 @@ enum pe_order_kind {
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {				\
 	__rsc = pe_find_constraint_resource(data_set->resources, __name);		\
 	if(__rsc == NULL) {						\
-	    crm_config_err("%s: No resource found for %s", __set, __name); \
+	    pcmk__config_err("%s: No resource found for %s", __set, __name);    \
 	    return FALSE;						\
 	}								\
     } while(0)
@@ -79,7 +79,8 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
         const char *tag = crm_element_name(xml_obj);
 
         if (id == NULL) {
-            crm_config_err("Constraint <%s...> must have an id", tag);
+            pcmk__config_err("Ignoring <%s> constraint without "
+                             XML_ATTR_ID, tag);
             continue;
         }
 
@@ -87,9 +88,10 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
 
         lifetime = first_named_child(xml_obj, "lifetime");
         if (lifetime) {
-            crm_config_warn("Support for the lifetime tag, used by %s, is deprecated."
-                            " The rules it contains should instead be direct descendents of the constraint object",
-                            id);
+            pcmk__config_warn("Support for 'lifetime' attribute (in %s) is "
+                              "deprecated (the rules it contains should "
+                              "instead be direct descendents of the "
+                              "constraint object)", id);
         }
 
         if (lifetime && !evaluate_lifetime(lifetime, data_set)) {
@@ -142,7 +144,7 @@ invert_action(const char *action)
     } else if (safe_str_eq(action, RSC_STOPPED)) {
         return RSC_STARTED;
     }
-    crm_config_warn("Unknown action: %s", action);
+    crm_warn("Unknown action '%s' specified in order constraint", action);
     return NULL;
 }
 
@@ -179,9 +181,9 @@ get_ordering_type(xmlNode * xml_obj)
         kind_e = pe_order_kind_serialize;
 
     } else {
-        const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-
-        crm_config_err("Constraint %s: Unknown type '%s'", id, kind);
+        pcmk__config_err("Resetting '" XML_ORDER_ATTR_KIND "' for constraint "
+                         "'%s' to Mandatory because '%s' is not valid",
+                         crm_str(ID(xml_obj)), kind);
     }
     return kind_e;
 }
@@ -223,16 +225,16 @@ pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, tag_t ** ta
                                           NULL, (gpointer*) tag);
 
         if (rc == FALSE) {
-            crm_config_warn("No template/tag named '%s'", id);
+            crm_warn("No template or tag named '%s'", id);
             return FALSE;
 
         } else if (*tag == NULL) {
-            crm_config_warn("No resource is tagged with '%s'", id);
+            crm_warn("No resource is tagged with '%s'", id);
             return FALSE;
         }
 
     } else if (*tag == NULL) {
-        crm_config_warn("No resource is derived from template '%s'", id);
+        crm_warn("No resource is derived from template '%s'", id);
         return FALSE;
     }
 
@@ -283,9 +285,9 @@ order_is_symmetrical(xmlNode * xml_obj,
         gboolean symmetrical = crm_is_true(symmetrical_s);
 
         if (symmetrical && kind == pe_order_kind_serialize) {
-            crm_config_warn("Cannot invert serialized order %s."
-                            " Ignoring symmetrical=\"%s\"",
-                            id, symmetrical_s);
+            pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
+                              " for '%s' because not valid with "
+                              XML_ORDER_ATTR_KIND " of 'Serialize'", id);
             return FALSE;
         }
 
@@ -321,14 +323,12 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     const char *id = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -350,9 +350,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         action_then = action_first;
     }
 
-    if (id_then == NULL || id_first == NULL) {
-        crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
-                       id, crm_str(id_then), crm_str(id_first));
+    if (id_first == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' without "
+                         XML_ORDER_ATTR_FIRST, id);
+        return FALSE;
+    }
+    if (id_then == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' without "
+                         XML_ORDER_ATTR_THEN, id);
         return FALSE;
     }
 
@@ -360,31 +365,34 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
 
     if (rsc_then == NULL) {
-        crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_then);
         return FALSE;
 
     } else if (rsc_first == NULL) {
-        crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_first);
         return FALSE;
 
     } else if (instance_then && pe_rsc_is_clone(rsc_then) == FALSE) {
-        crm_config_err("Invalid constraint '%s':"
-                       " Resource '%s' is not a clone but instance %s was requested",
-                       id, id_then, instance_then);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "is not a clone but instance '%s' was requested",
+                         id, id_then, instance_then);
         return FALSE;
 
     } else if (instance_first && pe_rsc_is_clone(rsc_first) == FALSE) {
-        crm_config_err("Invalid constraint '%s':"
-                       " Resource '%s' is not a clone but instance %s was requested",
-                       id, id_first, instance_first);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "is not a clone but instance '%s' was requested",
+                         id, id_first, instance_first);
         return FALSE;
     }
 
     if (instance_then) {
         rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
         if (rsc_then == NULL) {
-            crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_then,
-                            id_then);
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              id, id_then, instance_then);
             return FALSE;
         }
     }
@@ -392,8 +400,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (instance_first) {
         rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
         if (rsc_first == NULL) {
-            crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_first,
-                            id_first);
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              "'%s'", id, id_first, instance_first);
             return FALSE;
         }
     }
@@ -481,8 +490,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     action_then = invert_action(action_then);
     action_first = invert_action(action_first);
     if (action_then == NULL || action_first == NULL) {
-        crm_config_err("Cannot invert rsc_order constraint %s."
-                       " Please specify the inverse manually.", id);
+        pcmk__config_err("Cannot invert constraint '%s' "
+                         "(please specify inverse manually)", id);
         return TRUE;
     }
 
@@ -512,10 +521,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
 
     *expanded_xml = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
     new_xml = copy_xml(xml_obj);
     cons_id = ID(new_xml);
@@ -543,7 +549,9 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
             }
 
             if (valid_resource_or_tag(data_set, id, &rsc, &tag) == FALSE) {
-                crm_config_err("Constraint '%s': Invalid reference to '%s'", cons_id, id);
+                pcmk__config_err("Ignoring resource sets for constraint '%s' "
+                                 "because '%s' is not a valid resource or tag",
+                                 cons_id, id);
                 free_xml(new_xml);
                 return FALSE;
 
@@ -637,19 +645,12 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
 
     *rsc_set = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK((xml_obj != NULL) && (attr != NULL), return FALSE);
 
-    if (attr == NULL) {
-        crm_config_err("No attribute name to process.");
-        return FALSE;
-    }
-
-    cons_id = crm_element_value(xml_obj, XML_ATTR_ID);
+    cons_id = ID(xml_obj);
     if (cons_id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -659,7 +660,8 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     }
 
     if (valid_resource_or_tag(data_set, id, &rsc, &tag) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", cons_id, id);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", cons_id, id);
         return FALSE;
 
     } else if (tag) {
@@ -732,7 +734,9 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
 
         if (regcomp(r_patt, value, REG_EXTENDED)) {
-            crm_config_err("Bad regex '%s' for constraint '%s'", value, id);
+            pcmk__config_err("Ignoring constraint '%s' because "
+                             XML_LOC_ATTR_SOURCE_PATTERN
+                             " has invalid value '%s'", id, value);
             regfree(r_patt);
             free(r_patt);
             return FALSE;
@@ -796,8 +800,8 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
     const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
 
     if (rsc_lh == NULL) {
-        /* only a warn as BSC adds the constraint then the resource */
-        crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+        pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                          "does not exist", id, id_lh);
         return FALSE;
     }
 
@@ -831,8 +835,8 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
         }
 
         if (empty) {
-            crm_config_err("Invalid location constraint %s:"
-                           " rsc_location must contain at least one rule", id);
+            pcmk__config_err("Ignoring constraint '%s' because it contains "
+                             "no rules", id);
         }
 
         /* If there is a point in the future when the evaluation of a rule will
@@ -891,14 +895,12 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     *expanded_xml = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -917,7 +919,8 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
     }
 
     if (valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_lh);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_lh);
         return FALSE;
 
     } else if (rsc_lh) {
@@ -962,14 +965,13 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
     const char *role;
     const char *local_score;
 
-    if (set == NULL) {
-        crm_config_err("No resource_set object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(set != NULL, return FALSE);
 
     set_id = ID(set);
     if (set_id == NULL) {
-        crm_config_err("resource_set must have an id");
+        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
+                         XML_ATTR_ID " in constraint '%s'",
+                         crm_str(ID(location)));
         return FALSE;
     }
 
@@ -1344,12 +1346,9 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 {
     rsc_colocation_t *new_con = NULL;
 
-    if (rsc_lh == NULL) {
-        crm_config_err("No resource found for LHS %s", id);
-        return FALSE;
-
-    } else if (rsc_rh == NULL) {
-        crm_config_err("No resource found for RHS of %s", id);
+    if ((rsc_lh == NULL) || (rsc_rh == NULL)) {
+        pcmk__config_err("Ignoring colocation '%s' because resource "
+                         "does not exist", id);
         return FALSE;
     }
 
@@ -1590,7 +1589,7 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
 
     if ((lh_action == NULL && lh_rsc == NULL)
         || (rh_action == NULL && rh_rsc == NULL)) {
-        crm_config_err("Invalid inputs %p.%p %p.%p", lh_rsc, lh_action, rh_rsc, rh_action);
+        crm_err("Invalid ordering (bug?)");
         free(lh_action_task);
         free(rh_action_task);
         return -1;
@@ -2062,14 +2061,12 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
 
     *expanded_xml = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -2089,12 +2086,14 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     }
 
     if (valid_resource_or_tag(data_set, id_first, &rsc_first, &tag_first) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_first);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_first);
         return FALSE;
     }
 
     if (valid_resource_or_tag(data_set, id_then, &rsc_then, &tag_then) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_then);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_then);
         return FALSE;
     }
 
@@ -2481,31 +2480,34 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
 
     if (rsc_lh == NULL) {
-        crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_lh);
         return FALSE;
 
     } else if (rsc_rh == NULL) {
-        crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_rh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_rh);
         return FALSE;
 
     } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
-        crm_config_err
-            ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
-             id, id_lh, instance_lh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "is not a clone but instance '%s' was requested",
+                         id, id_lh, instance_lh);
         return FALSE;
 
     } else if (instance_rh && pe_rsc_is_clone(rsc_rh) == FALSE) {
-        crm_config_err
-            ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
-             id, id_rh, instance_rh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "is not a clone but instance '%s' was requested",
+                         id, id_rh, instance_rh);
         return FALSE;
     }
 
     if (instance_lh) {
         rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
         if (rsc_lh == NULL) {
-            crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_lh,
-                            id_lh);
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              id, id_lh, instance_lh);
             return FALSE;
         }
     }
@@ -2513,15 +2515,17 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (instance_rh) {
         rsc_rh = find_clone_instance(rsc_rh, instance_rh, data_set);
         if (rsc_rh == NULL) {
-            crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_rh,
-                            id_rh);
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              "'%s'", id, id_rh, instance_rh);
             return FALSE;
         }
     }
 
     if (crm_is_true(symmetrical)) {
-        crm_config_warn("The %s colocation constraint attribute has been removed."
-                        "  It didn't do what you think it did anyway.", XML_CONS_ATTR_SYMMETRICAL);
+        pcmk__config_warn("The colocation constraint '"
+                          XML_CONS_ATTR_SYMMETRICAL
+                          "' attribute has been removed");
     }
 
     if (score) {
@@ -2554,14 +2558,12 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     *expanded_xml = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -2581,12 +2583,14 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     }
 
     if (valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_lh);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_lh);
         return FALSE;
     }
 
     if (valid_resource_or_tag(data_set, id_rh, &rsc_rh, &tag_rh) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_rh);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_rh);
         return FALSE;
     }
 
@@ -2597,8 +2601,8 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     if (tag_lh && tag_rh) {
         /* A colocation constraint between two templates/tags makes no sense. */
-        crm_config_err("Either LHS or RHS of %s should be a normal resource instead of a template/tag",
-                       id);
+        pcmk__config_err("Ignoring constraint '%s' because two templates or "
+                         "tags cannot be colocated", id);
         return FALSE;
     }
 
@@ -2713,7 +2717,8 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
     rsc_ticket_t *new_rsc_ticket = NULL;
 
     if (rsc_lh == NULL) {
-        crm_config_err("No resource found for LHS %s", id);
+        pcmk__config_err("Ignoring ticket '%s' because resource "
+                         "does not exist", id);
         return FALSE;
     }
 
@@ -2735,8 +2740,9 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
-            crm_config_err("Resetting %s loss-policy to 'stop': fencing is not configured",
-                           ticket->id);
+            pcmk__config_err("Resetting '" XML_TICKET_ATTR_LOSS_POLICY
+                             "' for ticket '%s' to 'stop' "
+                             "because fencing is not configured", ticket->id);
             loss_policy = "stop";
         }
     }
@@ -2807,7 +2813,8 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
 
     set_id = ID(set);
     if (set_id == NULL) {
-        crm_config_err("resource_set must have an id");
+        pcmk__config_err("Ignoring <" XML_CONS_TAG_RSC_SET "> without "
+                         XML_ATTR_ID);
         return FALSE;
     }
 
@@ -2828,7 +2835,7 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
 static gboolean
 unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
 
@@ -2842,51 +2849,54 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     resource_t *rsc_lh = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No rsc_ticket constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
     if (ticket_str == NULL) {
-        crm_config_err("Invalid constraint '%s': No ticket specified", id);
+        pcmk__config_err("Ignoring constraint '%s' without ticket specified",
+                         id);
         return FALSE;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
     }
 
     if (ticket == NULL) {
-        crm_config_err("Invalid constraint '%s': No ticket named '%s'", id, ticket_str);
+        pcmk__config_err("Ignoring constraint '%s' because ticket '%s' "
+                         "does not exist", id, ticket_str);
         return FALSE;
     }
 
     if (id_lh == NULL) {
-        crm_config_err("Invalid constraint '%s': No resource specified", id);
+        pcmk__config_err("Ignoring constraint '%s' without resource", id);
         return FALSE;
     } else {
         rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     }
 
     if (rsc_lh == NULL) {
-        crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_lh);
         return FALSE;
 
     } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
-        crm_config_err
-            ("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested",
-             id, id_lh, instance_lh);
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "is not a clone but instance '%s' was requested",
+                         id, id_lh, instance_lh);
         return FALSE;
     }
 
     if (instance_lh) {
         rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
         if (rsc_lh == NULL) {
-            crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_lh,
-                            id_lh);
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              "'%s'", id, id_lh, instance_lh);
             return FALSE;
         }
     }
@@ -2911,14 +2921,12 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     *expanded_xml = NULL;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -2937,7 +2945,8 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     }
 
     if (valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh) == FALSE) {
-        crm_config_err("Constraint '%s': Invalid reference to '%s'", id, id_lh);
+        pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
+                         "valid resource or tag", id, id_lh);
         return FALSE;
 
     } else if (rsc_lh) {
@@ -2981,7 +2990,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *set = NULL;
     gboolean any_sets = FALSE;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
 
@@ -2992,13 +3001,12 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     gboolean rc = TRUE;
 
-    if (xml_obj == NULL) {
-        crm_config_err("No rsc_ticket constraint object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(xml_obj != NULL, return FALSE);
 
+    id = ID(xml_obj);
     if (id == NULL) {
-        crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
+        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+                         crm_element_name(xml_obj));
         return FALSE;
     }
 
@@ -3008,7 +3016,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (ticket_str == NULL) {
-        crm_config_err("Invalid constraint '%s': No ticket specified", id);
+        pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return FALSE;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);

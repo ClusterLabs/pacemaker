@@ -1204,6 +1204,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
+        // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
 
         converted = copy_xml(*xml);
@@ -1211,32 +1212,46 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
+            // Updated configuration schema is still not acceptable
+
             if (version < orig_version || orig_version == -1) {
+                // We couldn't validate any schema at all
                 if (to_logs) {
-                    crm_config_err("Your current configuration %s could not"
-                                   " validate with any schema in range [%s, %s],"
-                                   " cannot upgrade to %s.",
-                                   orig_value,
-                                   get_schema_name(orig_version),
-                                   xml_latest_schema(),
-                                   get_schema_name(min_version));
+                    pcmk__config_err("Cannot upgrade configuration (claiming "
+                                     "schema %s) to at least %s because it "
+                                     "does not validate with any schema from "
+                                     "%s to %s",
+                                     orig_value,
+                                     get_schema_name(min_version),
+                                     get_schema_name(orig_version),
+                                     xml_latest_schema());
                 } else {
-                    fprintf(stderr, "Your current configuration %s could not"
-                                    " validate with any schema in range [%s, %s],"
-                                    " cannot upgrade to %s.\n",
+                    fprintf(stderr, "Cannot upgrade configuration (claiming "
+                                    "schema %s) to at least %s because it "
+                                    "does not validate with any schema from "
+                                    "%s to %s\n",
                                     orig_value,
+                                    get_schema_name(min_version),
                                     get_schema_name(orig_version),
-                                    xml_latest_schema(),
-                                    get_schema_name(min_version));
+                                    xml_latest_schema());
                 }
-            } else if (to_logs) {
-                crm_config_err("Your current configuration could only be upgraded to %s... "
-                               "the minimum requirement is %s.", crm_str(value),
-                               get_schema_name(min_version));
             } else {
-                fprintf(stderr, "Your current configuration could only be upgraded to %s... "
-                        "the minimum requirement is %s.\n",
-                        crm_str(value), get_schema_name(min_version));
+                // We updated configuration successfully, but still too low
+                if (to_logs) {
+                    pcmk__config_err("Cannot upgrade configuration (claiming "
+                                     "schema %s) to at least %s because it "
+                                     "would not upgrade past %s",
+                                     orig_value,
+                                     get_schema_name(min_version),
+                                     crm_str(value));
+                } else {
+                    fprintf(stderr, "Cannot upgrade configuration (claiming "
+                                    "schema %s) to at least %s because it "
+                                    "would not upgrade past %s\n",
+                                    orig_value,
+                                    get_schema_name(min_version),
+                                    crm_str(value));
+                }
             }
 
             free_xml(converted);
@@ -1244,28 +1259,37 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             rc = FALSE;
 
         } else {
+            // Updated configuration schema is acceptable
             free_xml(*xml);
             *xml = converted;
 
             if (version < xml_latest_schema_index()) {
-                crm_config_warn("Your configuration was internally updated to %s... "
-                                "which is acceptable but not the most recent",
-                                get_schema_name(version));
-
-            } else if (to_logs) {
-                crm_info("Your configuration was internally updated to the latest version (%s)",
-                         get_schema_name(version));
+                if (to_logs) {
+                    pcmk__config_warn("Configuration with schema %s was "
+                                      "internally upgraded to acceptable (but "
+                                      "not most recent) %s",
+                                      orig_value, get_schema_name(version));
+                }
+            } else {
+                if (to_logs) {
+                    crm_info("Configuration with schema %s was internally "
+                             "upgraded to latest version %s",
+                             orig_value, get_schema_name(version));
+                }
             }
         }
 
     } else if (version >= get_schema_version("none")) {
+        // Schema validation is disabled
         if (to_logs) {
-            crm_config_warn("Configuration validation is currently disabled."
-                            " It is highly encouraged and prevents many common cluster issues.");
+            pcmk__config_warn("Schema validation of configuration is disabled "
+                              "(enabling is encouraged and prevents common "
+                              "misconfigurations)");
 
         } else {
-            fprintf(stderr, "Configuration validation is currently disabled."
-                    " It is highly encouraged and prevents many common cluster issues.\n");
+            fprintf(stderr, "Schema validation of configuration is disabled "
+                            "(enabling is encouraged and prevents common "
+                            "misconfigurations)\n");
         }
     }
 

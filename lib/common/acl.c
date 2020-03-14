@@ -271,11 +271,11 @@ pcmk__apply_acl(xmlNode *xml)
                 && (is_set(p->flags, xpf_acl_read)
                     || is_set(p->flags, xpf_acl_write)
                     || is_set(p->flags, xpf_acl_deny))) {
-                crm_config_warn("Configuration element %s is matched by "
-                                "multiple ACL rules, only the first applies "
-                                "('%s' wins over '%s')",
-                                path, __xml_acl_to_text(p->flags),
-                                __xml_acl_to_text(acl->mode));
+                pcmk__config_warn("Configuration element %s is matched by "
+                                  "multiple ACL rules, only the first applies "
+                                  "('%s' wins over '%s')",
+                                  path, __xml_acl_to_text(p->flags),
+                                  __xml_acl_to_text(acl->mode));
                 free(path);
                 continue;
             }

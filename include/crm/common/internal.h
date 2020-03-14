@@ -72,6 +72,19 @@ const char *pcmk__get_tmpdir(void);
 void pcmk__close_fds_in_child(bool);
 
 
+/* internal logging utilities */
+
+#  define pcmk__config_err(fmt...) do {     \
+        crm_config_error = TRUE;            \
+        crm_err(fmt);                       \
+    } while (0)
+
+#  define pcmk__config_warn(fmt...) do {    \
+        crm_config_warning = TRUE;          \
+        crm_warn(fmt);                      \
+    } while (0)
+
+
 /* internal procfs utilities (from procfs.c) */
 
 pid_t pcmk__procfs_pid_of(const char *name);

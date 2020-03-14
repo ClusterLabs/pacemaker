@@ -82,9 +82,6 @@ void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);
 
-#  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
-#  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
-
 
 /*
  * XML attribute names used only by internal code

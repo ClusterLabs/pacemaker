@@ -726,7 +726,9 @@ unpack_operation_on_fail(action_t * action)
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
     if (safe_str_eq(action->task, CRMD_ACTION_STOP) && safe_str_eq(value, "standby")) {
-        crm_config_err("on-fail=standby is not allowed for stop actions: %s", action->rsc->id);
+        pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
+                         "action to default value because 'standby' is not "
+                         "allowed for stop", action->rsc->id);
         return NULL;
     } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
         /* demote on_fail defaults to master monitor value if present */
@@ -844,9 +846,9 @@ unpack_interval_origin(const char *value, xmlNode *xml_obj, guint interval_ms,
     // Parse interval origin from text
     origin = crm_time_new(value);
     if (origin == NULL) {
-        crm_config_err("Operation '%s' contains invalid " XML_OP_ATTR_ORIGIN
-                       " '%s'",
-                       (ID(xml_obj)? ID(xml_obj) : "(unspecified)"), value);
+        pcmk__config_err("Ignoring '" XML_OP_ATTR_ORIGIN "' for operation "
+                         "'%s' because '%s' is not valid",
+                         (ID(xml_obj)? ID(xml_obj) : "(missing ID)"), value);
         return false;
     }
 
@@ -1105,7 +1107,9 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         value = "node fencing";
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-            crm_config_err("Specifying on_fail=fence and" " stonith-enabled=false makes no sense");
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+                             "operation '%s' to 'stop' because 'fence' is not "
+                             "valid when fencing is disabled", action->uuid);
             action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
             value = "stop resource";
@@ -1808,7 +1812,8 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
 
     local_role = text2role(value);
     if (local_role == RSC_ROLE_UNKNOWN) {
-        crm_config_err("%s: Unknown value for %s: %s", rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+        pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+                         "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
@@ -1819,8 +1824,9 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
             }
 
         } else {
-            crm_config_err("%s is not part of a promotable clone resource, a %s of '%s' makes no sense",
-                           rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+            pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+                             "because '%s' only makes sense for promotable "
+                             "clones", rsc->id, value);
             return FALSE;
         }
     }
