@@ -184,6 +184,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     int lpc = 0;
     char *sigfile = NULL;
+    char *sigfilepath = NULL;
     char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
@@ -201,12 +202,13 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     filename = crm_strdup_printf("%s/%s", dir, file);
-    sigfile = crm_strdup_printf("%s/%s", dir, sigfile);
+    sigfilepath = crm_strdup_printf("%s/%s", dir, sigfile);
+    free(sigfile);
 
     cib_status = pcmk_ok;
-    root = retrieveCib(filename, sigfile);
+    root = retrieveCib(filename, sigfilepath);
     free(filename);
-    free(sigfile);
+    free(sigfilepath);
 
     if (root == NULL) {
         crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
