@@ -316,11 +316,12 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
             const char *tag = crm_element_name(rsc->xml);
 
             if (attr_set == NULL) {
-                local_attr_set = crm_concat(lookup_id, attr_set_type, '-');
+                local_attr_set = crm_strdup_printf("%s-%s", lookup_id,
+                                                   attr_set_type);
                 attr_set = local_attr_set;
             }
             if (attr_id == NULL) {
-                local_attr_id = crm_concat(attr_set, attr_name, '-');
+                local_attr_id = crm_strdup_printf("%s-%s", attr_set, attr_name);
                 attr_id = local_attr_id;
             }
 

@@ -162,13 +162,6 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 // Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
 #define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
 
-static inline char *
-crm_concat(const char *prefix, const char *suffix, char join)
-{
-    CRM_ASSERT(prefix && suffix);
-    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
-}
-
 static inline int
 crm_strlen_zero(const char *s)
 {

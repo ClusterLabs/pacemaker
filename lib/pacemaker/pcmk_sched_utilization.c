@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the Pacemaker project contributors
+ * Copyright 2014-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -340,7 +340,8 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
         colocated_rscs = find_colocated_rscs(colocated_rscs, rsc, rsc);
         if (colocated_rscs) {
             GHashTable *unallocated_utilization = NULL;
-            char *rscs_id = crm_concat(rsc->id, "and its colocated resources", ' ');
+            char *rscs_id = crm_strdup_printf("%s and its colocated resources",
+                                              rsc->id);
             node_t *most_capable_node = NULL;
 
             unallocated_utilization = sum_unallocated_utilization(rsc, colocated_rscs);

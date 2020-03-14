@@ -232,7 +232,7 @@ static char *name = NULL;
 
 gboolean
 add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *key = crm_concat("OCF_RESKEY", optarg, '_');
+    char *key = crm_strdup_printf("OCF_RESKEY_%s", optarg);
     const char *env = getenv(key);
     gboolean retval = TRUE;
 

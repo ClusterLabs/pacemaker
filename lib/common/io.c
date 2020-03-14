@@ -331,7 +331,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
     // If file is given, check whether it exists as a regular file
     if (file != NULL) {
-        full_file = crm_concat(dir, file, '/');
+        full_file = crm_strdup_printf("%s/%s", dir, file);
         target = full_file;
 
         s_res = stat(full_file, &buf);

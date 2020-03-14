@@ -442,7 +442,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
      * start min number of clones -> pseudo action is runnable -> dependency runnable. */
     if (min_required_before) {
         GListPtr rIter = NULL;
-        char *task = crm_concat(CRM_OP_RELAXED_CLONE, id, ':');
+        char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
         action_t *unordered_action = get_pseudo_op(task, data_set);
         free(task);
 
@@ -1743,9 +1743,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
     }
 
     /*
-       pseudo_id = crm_concat(id, action, '-');
-       end_id    = crm_concat(pseudo_id, "end", '-');
-       begin_id  = crm_concat(pseudo_id, "begin", '-');
+       pseudo_id = crm_strdup_printf("%s-%s", id, action);
+       end_id    = crm_strdup_printf("%s-%s", pseudo_id, "end");
+       begin_id  = crm_strdup_printf("%s-%s", pseudo_id, "begin");
      */
 
     *rsc = NULL;
@@ -1803,9 +1803,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
     action = invert_action(action);
 
     /*
-       pseudo_id = crm_concat(id, action, '-');
-       end_id    = crm_concat(pseudo_id, "end", '-');
-       begin_id  = crm_concat(pseudo_id, "begin", '-');
+       pseudo_id = crm_strdup_printf("%s-%s", id, action);
+       end_id    = crm_strdup_printf("%s-%s", pseudo_id, "end");
+       begin_id  = crm_strdup_printf("%s-%s", pseudo_id, "begin");
 
        *inv_end = get_pseudo_op(end_id, data_set);
        *inv_begin = get_pseudo_op(begin_id, data_set);
@@ -1896,7 +1896,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 
     /* If we have an un-ordered set1, whether it is sequential or not is irrelevant in regards to set2. */
     if (!require_all) {
-        char *task = crm_concat(CRM_OP_RELAXED_SET, ID(set1), ':');
+        char *task = crm_strdup_printf(CRM_OP_RELAXED_SET ":%s", ID(set1));
         action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);

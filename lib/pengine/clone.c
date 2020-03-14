@@ -48,7 +48,7 @@ find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * dat
     get_clone_variant_data(clone_data, rsc);
 
     child_base = ID(clone_data->xml_obj_child);
-    child_id = crm_concat(child_base, sub_id, ':');
+    child_id = crm_strdup_printf("%s:%s", child_base, sub_id);
     child = pe_find_resource(rsc->children, child_id);
 
     free(child_id);
@@ -306,7 +306,7 @@ configured_role(resource_t * rsc)
 static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    char *child_text = crm_concat(pre_text, "   ", ' ');
+    char *child_text = crm_strdup_printf("%s    ", pre_text);
     const char *target_role = configured_role_str(rsc);
     GListPtr gIter = rsc->children;
 
@@ -388,7 +388,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     get_clone_variant_data(clone_data, rsc);
 
-    child_text = crm_concat(pre_text, "   ", ' ');
+    child_text = crm_strdup_printf("%s    ", pre_text);
 
     status_print("%sClone Set: %s [%s]%s%s%s",
                  pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),

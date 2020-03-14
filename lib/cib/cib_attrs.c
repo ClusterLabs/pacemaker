@@ -1,19 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -249,25 +240,27 @@ update_attr_delegate(cib_t * the_cib, int call_options,
                 local_set_name = strdup(CIB_OPTIONS_FIRST);
 
             } else if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
-                local_set_name = crm_concat(section, XML_CIB_TAG_TICKETS, '-');
+                local_set_name = crm_strdup_printf("%s-%s", section,
+                                                   XML_CIB_TAG_TICKETS);
 
             } else if (node_uuid) {
-                local_set_name = crm_concat(section, node_uuid, '-');
+                local_set_name = crm_strdup_printf("%s-%s", section, node_uuid);
 
                 if (set_type) {
                     char *tmp_set_name = local_set_name;
 
-                    local_set_name = crm_concat(tmp_set_name, set_type, '-');
+                    local_set_name = crm_strdup_printf("%s-%s", tmp_set_name,
+                                                       set_type);
                     free(tmp_set_name);
                 }
             } else {
-                local_set_name = crm_concat(section, "options", '-');
+                local_set_name = crm_strdup_printf("%s-options", section);
             }
             set_name = local_set_name;
         }
 
         if (attr_id == NULL) {
-            local_attr_id = crm_concat(set_name, attr_name, '-');
+            local_attr_id = crm_strdup_printf("%s-%s", set_name, attr_name);
             crm_xml_sanitize_id(local_attr_id);
             attr_id = local_attr_id;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -118,7 +118,7 @@ static void
 group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     GListPtr gIter = rsc->children;
-    char *child_text = crm_concat(pre_text, "    ", ' ');
+    char *child_text = crm_strdup_printf("%s     ", pre_text);
 
     status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
@@ -149,7 +149,7 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         return;
     }
 
-    child_text = crm_concat(pre_text, "   ", ' ');
+    child_text = crm_strdup_printf("%s    ", pre_text);
 
     status_print("%sResource Group: %s", pre_text ? pre_text : "", rsc->id);
 

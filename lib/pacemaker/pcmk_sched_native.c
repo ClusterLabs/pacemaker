@@ -1515,7 +1515,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
             node_t *current = (node_t *) gIter->data;
 
-            char *load_stopped_task = crm_concat(LOAD_STOPPED, current->details->uname, '_');
+            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+                                                        current->details->uname);
             action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {
@@ -1529,7 +1530,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *next = item->data;
-            char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
+            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+                                                        next->details->uname);
             action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {

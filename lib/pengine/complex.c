@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -189,7 +189,7 @@ template_op_key(xmlNode * op)
         role = RSC_ROLE_UNKNOWN_S;
     }
 
-    key = crm_concat(name, role, '-');
+    key = crm_strdup_printf("%s-%s", name, role);
     return key;
 }
 
@@ -437,7 +437,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
     if (value) {
-        (*rsc)->id = crm_concat(id, value, ':');
+        (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
         add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
 
     } else {

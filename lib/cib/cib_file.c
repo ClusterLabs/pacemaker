@@ -146,7 +146,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
 
     /* If sigfile is not specified, use original file name plus .sig */
     if (sigfile == NULL) {
-        sigfile = local_sigfile = crm_concat(filename, "sig", '.');
+        sigfile = local_sigfile = crm_strdup_printf("%s.sig", filename);
     }
 
     /* Verify that digests match */
@@ -226,8 +226,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
     unsigned int seq;
-    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
-    char *cib_digest = crm_concat(cib_path, "sig", '.');
+    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
+    char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
     char *backup_path;
     char *backup_digest;
 
@@ -239,7 +239,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     }
     backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
                                         CIB_SERIES_BZIP);
-    backup_digest = crm_concat(backup_path, "sig", '.');
+    backup_digest = crm_strdup_printf("%s.sig", backup_path);
 
     /* Remove the old backups if they exist */
     unlink(backup_path);
@@ -349,8 +349,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                                 XML_ATTR_GENERATION_ADMIN);
 
     /* Determine full CIB and signature pathnames */
-    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
-    char *digest_path = crm_concat(cib_path, "sig", '.');
+    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
+    char *digest_path = crm_strdup_printf("%s.sig", cib_path);
 
     /* Create temporary file name patterns for writing out CIB and signature */
     char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);

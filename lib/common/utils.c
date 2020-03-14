@@ -127,7 +127,8 @@ score2char(int score)
 char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
-    char *hash_key = crm_concat(sys ? sys : "none", crm_msg_reference, '_');
+    char *hash_key = crm_strdup_printf("%s_%s", (sys? sys : "none"),
+                                       crm_msg_reference, '_');
 
     crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
@@ -464,7 +465,7 @@ crm_meta_name(const char *field)
     char *crm_name = NULL;
 
     CRM_CHECK(field != NULL, return NULL);
-    crm_name = crm_concat(CRM_META, field, '_');
+    crm_name = crm_strdup_printf(CRM_META "_%s", field);
 
     /* Massage the names so they can be used as shell variables */
     max = strlen(crm_name);
