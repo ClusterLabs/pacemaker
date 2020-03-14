@@ -1150,7 +1150,7 @@ main(int argc, char **argv)
         };
 
 
-        client_uuid = crm_getpid_s();
+        client_uuid = pcmk__getpid_s();
         controld_api = pcmk_new_controld_api(crm_system_name, client_uuid);
         free(client_uuid);
 

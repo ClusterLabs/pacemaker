@@ -169,7 +169,7 @@ pcmk__str_empty(const char *s)
 }
 
 static inline char *
-crm_getpid_s()
+pcmk__getpid_s()
 {
     return crm_strdup_printf("%lu", (unsigned long) getpid());
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -202,7 +202,7 @@ send_controller_hello(crm_ipc_t *controller)
     xmlNode *hello = NULL;
     int rc;
 
-    pid_s = crm_getpid_s();
+    pid_s = pcmk__getpid_s();
     hello = create_hello_message(pid_s, crm_system_name, "1", "0");
     rc = crm_ipc_send(controller, hello, 0, 0, NULL);
     free_xml(hello);
