@@ -1031,7 +1031,7 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     const char *p, *last_match_index;
     char *p_dst, *result = NULL;
 
-    if (!string || string[0] == '\0' || !match_data) {
+    if (pcmk__str_empty(string) || !match_data) {
         return NULL;
     }
 

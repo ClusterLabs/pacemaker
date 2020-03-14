@@ -701,7 +701,7 @@ bool
 pcmk_acl_required(const char *user)
 {
 #if ENABLE_ACL
-    if ((user == NULL) || (*user == '\0')) {
+    if (pcmk__str_empty(user)) {
         crm_trace("ACLs not required because no user set");
         return FALSE;
 

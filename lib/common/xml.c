@@ -4512,7 +4512,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
     if (base == NULL) {
         base = getenv("PCMK_schema_directory");
     }
-    if (base == NULL || base[0] == '\0') {
+    if (pcmk__str_empty(base)) {
         base = CRM_SCHEMA_DIRECTORY;
     }
 

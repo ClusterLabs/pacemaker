@@ -768,7 +768,7 @@ parse_date(const char *date_str)
     int day = 0;
     int rc = 0;
 
-    if ((date_str == NULL) || (date_str[0] == '\0')) {
+    if (pcmk__str_empty(date_str)) {
         crm_err("No ISO 8601 date/time specification given");
         goto invalid;
     }
@@ -985,7 +985,7 @@ crm_time_parse_duration(const char *period_s)
     gboolean is_time = FALSE;
     crm_time_t *diff = NULL;
 
-    if ((period_s == NULL) || (period_s[0] == '\0')) {
+    if (pcmk__str_empty(period_s)) {
         crm_err("No ISO 8601 time duration given");
         goto invalid;
     }
@@ -1093,7 +1093,7 @@ crm_time_parse_period(const char *period_str)
     const char *original = period_str;
     crm_time_period_t *period = NULL;
 
-    if ((period_str == NULL) || (period_str[0] == '\0')) {
+    if (pcmk__str_empty(period_str)) {
         crm_err("No ISO 8601 time period given");
         goto invalid;
     }
