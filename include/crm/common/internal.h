@@ -163,9 +163,9 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 #define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
 
 static inline int
-crm_strlen_zero(const char *s)
+pcmk__str_empty(const char *s)
 {
-    return !s || *s == '\0';
+    return (s == NULL) || (s[0] == '\0');
 }
 
 static inline char *

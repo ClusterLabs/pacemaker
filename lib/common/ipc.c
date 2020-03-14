@@ -1814,8 +1814,8 @@ create_hello_message(const char *uuid,
     xmlNode *hello_node = NULL;
     xmlNode *hello = NULL;
 
-    if (crm_strlen_zero(uuid) || crm_strlen_zero(client_name)
-        || crm_strlen_zero(major_version) || crm_strlen_zero(minor_version)) {
+    if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
+        || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "missing information",
                 client_name? client_name : "unknown client",

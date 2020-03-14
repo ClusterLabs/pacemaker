@@ -175,28 +175,28 @@ resources_action_create(const char *name, const char *standard,
      * build the svc_action_t instance.
      */
 
-    if (crm_strlen_zero(name)) {
+    if (pcmk__str_empty(name)) {
         crm_err("Cannot create operation without resource name");
         goto return_error;
     }
 
-    if (crm_strlen_zero(standard)) {
+    if (pcmk__str_empty(standard)) {
         crm_err("Cannot create operation for %s without resource class", name);
         goto return_error;
     }
     ra_caps = pcmk_get_ra_caps(standard);
 
-    if (is_set(ra_caps, pcmk_ra_cap_provider) && crm_strlen_zero(provider)) {
+    if (is_set(ra_caps, pcmk_ra_cap_provider) && pcmk__str_empty(provider)) {
         crm_err("Cannot create operation for %s without provider", name);
         goto return_error;
     }
 
-    if (crm_strlen_zero(agent)) {
+    if (pcmk__str_empty(agent)) {
         crm_err("Cannot create operation for %s without agent name", name);
         goto return_error;
     }
 
-    if (crm_strlen_zero(action)) {
+    if (pcmk__str_empty(action)) {
         crm_err("Cannot create operation for %s without operation name", name);
         goto return_error;
     }

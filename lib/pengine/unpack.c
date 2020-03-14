@@ -1483,7 +1483,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 const char *
 pe_base_name_end(const char *id)
 {
-    if (!crm_strlen_zero(id)) {
+    if (!pcmk__str_empty(id)) {
         const char *end = id + strlen(id) - 1;
 
         for (const char *s = end; s > id; --s) {
