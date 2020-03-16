@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019 the Pacemaker project contributors
+# Copyright 2014-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,6 +36,10 @@ am__v_SCHEMA_1 =
 AM_V_PUB = $(am__v_PUB_$(V))
 am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
 am__v_PUB_1 = 
+
+AM_V_BOOK = $(am__v_BOOK_$(V))
+am__v_BOOK_0 = @echo "  BOOK    $(@:%/_build=%): $(BOOK_FORMATS)";
+am__v_BOOK_1 = 
 
 MAINTAINERCLEANFILES	= Makefile.in
 

@@ -16,7 +16,7 @@ DEPRECATED_GENERATED	+= $(DEPRECATED_ORIGINAL:%.txt=%.html)
 endif
 DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) $(DEPRECATED_GENERATED)
 
-# Current Publican/docbook-based documentation
+# Current documentation based on asciidoc, DocBook, and pandoc
 BOOKS		= Clusters_from_Scratch		\
 		  Pacemaker_Administration	\
 		  Pacemaker_Development		\
@@ -25,6 +25,10 @@ BOOKS		= Clusters_from_Scratch		\
 
 doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
+
+# The sphinx docs are not yet built by default, but we still want to distribute
+# them so configure can build the Makefile in a distribution.
+DIST_SUBDIRS	= sphinx
 
 EXTRA_DIST	= $(DEPRECATED_ORIGINAL) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
@@ -347,23 +351,6 @@ books-clean:
 		publican-catalog-fallback	\
 		publican-catalog
 
-
-# Update the translation template
-pot:
-	@for book in $(BOOKS); do					\
-		echo "Updating translation templates in: $$book";	\
-		( cd $$book && RPM_BUILD_DIR=""				\
-		  $(PUBLICAN) --src_dir="$(srcdir)" update_pot );	\
-	done
-
-# Update the actual translations
-po: pot
-	@for book in $(BOOKS); do					\
-		echo "Updating translations in: $$book";		\
-		( cd $$book && RPM_BUILD_DIR=""				\
-		  $(PUBLICAN) --src_dir="$(srcdir)" update_po		\
-		  --langs=all );					\
-	done
 
 if BUILD_DOCBOOK
 all-local: $(BOOKS:%=%.build) */publican.cfg
