@@ -265,7 +265,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
 {
     char *key = NULL;
     char *timeout = NULL;
-    char *interval_ms_s = NULL;
+    guint interval_ms = 0;
 
     const char *attr_filter[] = {
         XML_ATTR_ID,
@@ -276,55 +276,43 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         "pcmk_external_ip"
     };
 
-    gboolean do_delete = FALSE;
-    int lpc = 0;
-    static int meta_len = 0;
-
-    if (meta_len == 0) {
-        meta_len = strlen(CRM_META);
-    }
+    const int meta_len = strlen(CRM_META);
 
     if (param_set == NULL) {
         return;
     }
 
-    for (lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
+    // Remove the specific attributes listed in attr_filter
+    for (int lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
         xml_remove_prop(param_set, attr_filter[lpc]);
     }
 
     key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms_s = crm_element_value_copy(param_set, key);
+    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
+        interval_ms = 0;
+    }
     free(key);
 
     key = crm_meta_name(XML_ATTR_TIMEOUT);
     timeout = crm_element_value_copy(param_set, key);
 
-    if (param_set) {
-        xmlAttrPtr xIter = param_set->properties;
+    // Remove all CRM_meta_* attributes
+    for (xmlAttrPtr xIter = param_set->properties; xIter != NULL; ) {
+        const char *prop_name = (const char *) (xIter->name);
 
-        while (xIter) {
-            const char *prop_name = (const char *)xIter->name;
+        xIter = xIter->next;
 
-            xIter = xIter->next;
-            do_delete = FALSE;
-            if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
-                do_delete = TRUE;
-            }
-
-            if (do_delete) {
-                xml_remove_prop(param_set, prop_name);
-            }
+        // @TODO Why is this case-insensitive?
+        if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
+            xml_remove_prop(param_set, prop_name);
         }
     }
 
-    if (interval_ms_s && strcmp(interval_ms_s, "0")) {
-        /* Re-instate the operation's timeout value */
-        if (timeout != NULL) {
-            crm_xml_add(param_set, key, timeout);
-        }
+    if ((interval_ms != 0) && (timeout != NULL)) {
+        // Add the timeout back, it's useful for recurring operation digests
+        crm_xml_add(param_set, key, timeout);
     }
 
-    free(interval_ms_s);
     free(timeout);
     free(key);
 }
