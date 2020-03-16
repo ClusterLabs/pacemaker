@@ -2072,7 +2072,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         }
 #endif
 
-        filter_action_parameters(data->params_all, op_version);
+        pcmk__filter_op_for_digest(data->params_all);
 
         g_hash_table_destroy(local_rsc_params);
         pe_free_action(action);

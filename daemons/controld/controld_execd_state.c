@@ -63,7 +63,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     active_op_t *op = value;
 
-    crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
+    crm_trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval_ms,
               lrm_state->node_name, (char*)key, op->user_data);
 

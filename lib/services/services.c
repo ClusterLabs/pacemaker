@@ -894,7 +894,7 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = action_exec_helper(op);
     }
-    crm_trace(" > " CRM_OP_FMT ": %s = %d",
+    crm_trace(" > " PCMK__OP_FMT ": %s = %d",
               op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);

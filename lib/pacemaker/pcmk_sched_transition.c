@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -701,7 +701,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         const char *match_name = NULL;
 
         // Allow user to specify anonymous clone with or without instance number
-        key = crm_strdup_printf(CRM_OP_FMT "@%s=", resource, op->op_type,
+        key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
                                 op->interval_ms, node);
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             match_name = resource;
@@ -709,7 +709,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         free(key);
 
         if ((match_name == NULL) && strcmp(resource, lrm_name)) {
-            key = crm_strdup_printf(CRM_OP_FMT "@%s=", lrm_name, op->op_type,
+            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", lrm_name, op->op_type,
                                     op->interval_ms, node);
             if (strncasecmp(key, spec, strlen(key)) == 0) {
                 match_name = lrm_name;

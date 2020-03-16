@@ -41,7 +41,7 @@ pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
     CRM_ASSERT(rsc_id != NULL);
     CRM_ASSERT(op_type != NULL);
-    return crm_strdup_printf(CRM_OP_FMT, rsc_id, op_type, interval_ms);
+    return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
 gboolean
@@ -126,7 +126,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 }
 
 char *
-generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type)
+pcmk__notify_key(const char *rsc_id, const char *notify_type,
+                 const char *op_type)
 {
     CRM_CHECK(rsc_id != NULL, return NULL);
     CRM_CHECK(op_type != NULL, return NULL);
@@ -192,7 +193,8 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 }
 
 char *
-generate_transition_key(int transition_id, int action_id, int target_rc, const char *node)
+pcmk__transition_key(int transition_id, int action_id, int target_rc,
+                     const char *node)
 {
     CRM_CHECK(node != NULL, return NULL);
     return crm_strdup_printf("%d:%d:%d:%-*s",
@@ -260,8 +262,14 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Remove XML attributes not needed for operation digest
+ *
+ * \param[in,out] param_set  XML with operation parameters
+ */
 void
-filter_action_parameters(xmlNode * param_set, const char *version)
+pcmk__filter_op_for_digest(xmlNode *param_set)
 {
     char *key = NULL;
     char *timeout = NULL;

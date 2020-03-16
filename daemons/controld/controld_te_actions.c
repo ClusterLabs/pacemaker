@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -148,8 +148,8 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
 
-    counter =
-        generate_transition_key(transition_graph->id, action->id, get_target_rc(action), te_uuid);
+    counter = pcmk__transition_key(transition_graph->id, action->id,
+                                   get_target_rc(action), te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
@@ -244,7 +244,8 @@ controld_record_action_timeout(crm_action_t *action)
     op = convert_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
                               PCMK_OCF_UNKNOWN_ERROR);
     op->call_id = -1;
-    op->user_data = generate_transition_key(transition_graph->id, action->id, target_rc, te_uuid);
+    op->user_data = pcmk__transition_key(transition_graph->id, action->id,
+                                         target_rc, te_uuid);
 
     xml_op = pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc,
                                       target, __FUNCTION__, LOG_INFO);
@@ -303,8 +304,8 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         router_node = on_node;
     }
 
-    counter =
-        generate_transition_key(transition_graph->id, action->id, get_target_rc(action), te_uuid);
+    counter = pcmk__transition_key(transition_graph->id, action->id,
+                                   get_target_rc(action), te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
     if (safe_str_eq(router_node, fsa_our_uname)) {

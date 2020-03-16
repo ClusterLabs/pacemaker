@@ -495,7 +495,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
 
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
-    filter_action_parameters(args_xml, version);
+    pcmk__filter_op_for_digest(args_xml);
     digest = calculate_operation_digest(args_xml, version);
 
 #if 0
@@ -572,7 +572,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
         CRM_LOG_ASSERT(n_type != NULL);
         CRM_LOG_ASSERT(n_task != NULL);
-        op_id = generate_notify_key(op->rsc_id, n_type, n_task);
+        op_id = pcmk__notify_key(op->rsc_id, n_type, n_task);
 
         if (op->op_status != PCMK_LRM_OP_PENDING) {
             /* Ignore notify errors.
@@ -606,10 +606,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for: " CRM_OP_FMT " %d from %s",
-                  op->rsc_id, op->op_type, op->interval_ms,
+        crm_debug("Generating fake transition key for: " PCMK__OP_FMT
+                  " %d from %s", op->rsc_id, op->op_type, op->interval_ms,
                   op->call_id, origin);
-        local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
+        local_user_data = pcmk__transition_key(-1, op->call_id, target_rc,
+                                               FAKE_TE_ID);
         op->user_data = local_user_data;
     }
 
@@ -634,7 +635,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (" CRM_OP_FMT "): last=%u change=%u exec=%u queue=%u",
+            crm_trace("Timing data (" PCMK__OP_FMT
+                      "): last=%u change=%u exec=%u queue=%u",
                       op->rsc_id, op->op_type, op->interval_ms,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 

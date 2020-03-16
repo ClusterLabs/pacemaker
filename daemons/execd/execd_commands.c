@@ -288,7 +288,8 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->params = xml2list(rsc_xml);
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
-        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for " CRM_OP_FMT,
+        crm_debug("Setting flag to leave pid group on timeout and "
+                  "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
     }
@@ -417,10 +418,10 @@ merge_dup:
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" CRM_OP_FMT "), merging with previous op entry",
-            rsc->rsc_id,
-            normalize_action_name(rsc, dup->action),
-            dup->interval_ms);
+    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
+             "), merging with previous op entry",
+             rsc->rsc_id, normalize_action_name(rsc, dup->action),
+             dup->interval_ms);
 
     /* merge */
     dup->first_notify_sent = 0;

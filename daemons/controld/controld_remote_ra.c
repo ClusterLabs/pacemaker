@@ -1054,7 +1054,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 
 handle_dup:
 
-    crm_trace("merging duplicate monitor cmd " CRM_OP_FMT,
+    crm_trace("merging duplicate monitor cmd " PCMK__OP_FMT,
               cmd->rsc_id, "monitor", interval_ms);
 
     /* update the userdata */

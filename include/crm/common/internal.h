@@ -106,12 +106,15 @@ int pcmk__lock_pidfile(const char *filename, const char *name);
 
 /* interal functions related to resource operations (from operations.c) */
 
+// printf-style format to create operation ID from resource, action, interval
+#define PCMK__OP_FMT "%s_%s_%u"
+
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
-char *generate_notify_key(const char *rsc_id, const char *notify_type,
-                          const char *op_type);
-char *generate_transition_key(int transition_id, int action_id, int target_rc,
-                              const char *node);
-void filter_action_parameters(xmlNode *param_set, const char *version);
+char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
+                       const char *op_type);
+char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
+                           const char *node);
+void pcmk__filter_op_for_digest(xmlNode *param_set);
 
 
 // miscellaneous utilities (from utils.c)

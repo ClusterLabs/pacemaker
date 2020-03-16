@@ -200,12 +200,12 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     target_rc = rsc_op_expected_rc(op);
     if (op->op_status == PCMK_LRM_OP_CANCELLED) {
         if (op->interval_ms > 0) {
-            crm_trace("Removing cancelled recurring op: " CRM_OP_FMT,
+            crm_trace("Removing cancelled recurring op: " PCMK__OP_FMT,
                       op->rsc_id, op->op_type, op->interval_ms);
             history_remove_recurring_op(entry, op);
             return;
         } else {
-            crm_trace("Skipping " CRM_OP_FMT " rc=%d, status=%d",
+            crm_trace("Skipping " PCMK__OP_FMT " rc=%d, status=%d",
                       op->rsc_id, op->op_type, op->interval_ms, op->rc,
                       op->op_status);
         }
@@ -243,12 +243,12 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         /* Ensure there are no duplicates */
         history_remove_recurring_op(entry, op);
 
-        crm_trace("Adding recurring op: " CRM_OP_FMT,
+        crm_trace("Adding recurring op: " PCMK__OP_FMT,
                   op->rsc_id, op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
     } else if (entry->recurring_op_list && safe_str_eq(op->op_type, RSC_STATUS) == FALSE) {
-        crm_trace("Dropping %d recurring ops because of: " CRM_OP_FMT,
+        crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
                   g_list_length(entry->recurring_op_list), op->rsc_id,
                   op->op_type, op->interval_ms);
         history_free_recurring_ops(entry);
@@ -687,7 +687,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     lrm_state = lrm_state_find(node_name);
     if (lrm_state == NULL) {
-        crm_warn("Cannot calculate digests for operation " CRM_OP_FMT
+        crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
                  " because we have no connection to executor for %s",
                  op->rsc_id, op->op_type, op->interval_ms, node_name);
         return TRUE;
@@ -1001,7 +1001,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
         free(op_id);
     }
 
-    crm_debug("Erasing resource operation history for " CRM_OP_FMT " (call=%d)",
+    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
@@ -1464,7 +1464,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
         fake_op_status(lrm_state, op, op_status, rc);
     }
 
-    crm_info("Faking " CRM_OP_FMT " result (%d) on %s",
+    crm_info("Faking " PCMK__OP_FMT " result (%d) on %s",
              op->rsc_id, op->op_type, op->interval_ms, op->rc, target_node);
 
     // Process the result as if it came from the LRM
@@ -2078,7 +2078,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_log_xml_trace(update, "[direct ACK]");
 
-    crm_debug("ACK'ing resource op " CRM_OP_FMT " from %s: %s",
+    crm_debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s",
               op->rsc_id, op->op_type, op->interval_ms, op->user_data,
               crm_element_value(reply, XML_ATTR_REFERENCE));
 
@@ -2178,7 +2178,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     op->t_rcchange = op->t_run;
 
     /* write a "pending" entry to the CIB, inhibit notification */
-    crm_debug("Recording pending op " CRM_OP_FMT " on %s in the CIB",
+    crm_debug("Recording pending op " PCMK__OP_FMT " on %s in the CIB",
               op->rsc_id, op->op_type, op->interval_ms, node_name);
 
     do_update_resource(node_name, rsc, op, 0);
@@ -2238,14 +2238,14 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
             lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
 
         if (removed) {
-            crm_debug("Stopped %u recurring operation%s in preparation for " CRM_OP_FMT,
-                      removed, pcmk__plural_s(removed),
+            crm_debug("Stopped %u recurring operation%s in preparation for "
+                      PCMK__OP_FMT, removed, pcmk__plural_s(removed),
                       rsc->id, operation, op->interval_ms);
         }
     }
 
     /* now do the op */
-    crm_info("Performing key=%s op=" CRM_OP_FMT,
+    crm_info("Performing key=%s op=" PCMK__OP_FMT,
              transition, rsc->id, operation, op->interval_ms);
 
     if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
@@ -2806,7 +2806,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
     if (op->output) {
         char *prefix =
-            crm_strdup_printf("%s-" CRM_OP_FMT ":%d", node_name,
+            crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
                               op->rsc_id, op->op_type, op->interval_ms,
                               op->call_id);
 

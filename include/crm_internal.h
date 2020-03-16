@@ -41,9 +41,6 @@ extern int node_score_yellow;
 /* Assorted convenience functions */
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 
-// printf-style format to create operation ID from resource, action, interval
-#define CRM_OP_FMT "%s_%s_%u"
-
 static inline long long
 crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
 {
