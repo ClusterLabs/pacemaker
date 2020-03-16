@@ -154,4 +154,19 @@ int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
                            const char *agent, GHashTable *params,
                            int timeout, char **output, char **error_output);
 
+int stonith__failed_history(pcmk__output_t *out, va_list args);
+int stonith__history(pcmk__output_t *out, va_list args);
+int stonith__full_history(pcmk__output_t *out, va_list args);
+int stonith__full_history_xml(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_html(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_text(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_xml(pcmk__output_t *out, va_list args);
+int stonith__pending_actions(pcmk__output_t *out, va_list args);
+int stonith__event_html(pcmk__output_t *out, va_list args);
+int stonith__event_text(pcmk__output_t *out, va_list args);
+int stonith__event_xml(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_html(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_text(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_xml(pcmk__output_t *out, va_list args);
+
 #endif

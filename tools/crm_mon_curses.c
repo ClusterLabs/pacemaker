@@ -12,6 +12,8 @@
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
 #include <crm/common/output.h>
+#include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
 
@@ -349,11 +351,15 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-summary", "console", pe__cluster_summary },
     { "cluster-times", "console", pe__cluster_times_text },
     { "failed-action", "console", pe__failed_action_text },
+    { "failed-fencing-history", "console", stonith__failed_history },
+    { "fencing-history", "console", stonith__history },
+    { "full-fencing-history", "console", stonith__full_history },
     { "group", "console", pe__group_text },
     { "maint-mode", "console", cluster_maint_mode_console },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },
     { "op-history", "console", pe__op_history_text },
+    { "pending-fencing-actions", "console", stonith__pending_actions },
     { "primitive", "console", pe__resource_text },
     { "resource-history", "console", pe__resource_history_text },
     { "stonith-event", "console", stonith_event_console },

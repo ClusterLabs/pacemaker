@@ -9,7 +9,7 @@
     <define name="element-crm_mon-old">
         <element name="crm_mon">
             <attribute name="version"> <text/> </attribute>
-            <externalRef href="api/crm_mon-2.1.rng" />
+            <externalRef href="api/crm_mon-2.2.rng" />
         </element>
     </define>
 
