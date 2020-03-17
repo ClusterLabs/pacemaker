@@ -697,6 +697,13 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
     return TRUE;
 }
 
+/*!
+ * \brief Check whether ACLs are required for a given user
+ *
+ * \param[in]  User name to check
+ *
+ * \return true if the user requires ACLs, false otherwise
+ */
 bool
 pcmk_acl_required(const char *user)
 {
