@@ -176,6 +176,7 @@ struct pe_working_set_s {
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
     int ninstances;     // Total number of resource instances
     guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
+    int priority_fencing_delay; // Enforced priority fencing delay
 };
 
 enum pe_check_parameters {
@@ -220,6 +221,7 @@ struct pe_node_shared_s {
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
+    int priority; // calculated based on the priority of resources running on the node
 };
 
 struct pe_node_s {
