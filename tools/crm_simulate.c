@@ -186,7 +186,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
     fprintf(stdout, "\n");
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         if (is_set(rsc->flags, pe_rsc_orphan)
             && rsc->role == RSC_ROLE_STOPPED) {
@@ -1071,7 +1071,7 @@ main(int argc, char **argv)
 
             LogNodeActions(data_set, TRUE);
             for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-                resource_t *rsc = (resource_t *) gIter->data;
+                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
                 LogActions(rsc, data_set, TRUE);
             }

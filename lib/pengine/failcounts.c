@@ -77,7 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
+block_failure(node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     char *xml_name = clone_strip(rsc->id);
@@ -174,7 +174,7 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(resource_t *rsc)
+rsc_fail_name(pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -231,7 +231,7 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \note The caller is responsible for freeing the expressions with regfree().
  */
 static void
-generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
+generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
     char *rsc_name = rsc_fail_name(rsc);
@@ -248,7 +248,7 @@ generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+pe_get_failcount(node_t *node, pe_resource_t *rsc, time_t *last_failure,
                  uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
@@ -315,7 +315,7 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         GListPtr gIter = NULL;
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
+            pe_resource_t *filler = (pe_resource_t *) gIter->data;
             time_t filler_last_failure = 0;
 
             failcount += pe_get_failcount(node, filler, &filler_last_failure,

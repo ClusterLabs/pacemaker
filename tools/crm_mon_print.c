@@ -189,7 +189,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
 }
 
 static int
-failure_count(pe_working_set_t *data_set, node_t *node, resource_t *rsc, time_t *last_failure) {
+failure_count(pe_working_set_t *data_set, node_t *node, pe_resource_t *rsc, time_t *last_failure) {
     return rsc ? pe_get_failcount(node, rsc, last_failure, pe_fc_default,
                                   NULL, data_set)
                : 0;
@@ -229,7 +229,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
     GListPtr gIter = NULL;
     int rc = pcmk_rc_no_output;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+    pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     /* Print each operation */
     for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
@@ -313,7 +313,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
 
         if (operations == FALSE) {
             const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-            resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+            pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
@@ -373,7 +373,7 @@ add_extra_info(pcmk__output_t *out, node_t *node, GListPtr rsc_list,
     GListPtr gIter = NULL;
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
         const char *type = g_hash_table_lookup(rsc->meta, "type");
         const char *name = NULL;
 

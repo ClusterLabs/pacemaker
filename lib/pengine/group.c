@@ -19,7 +19,7 @@
 #include "./variant.h"
 
 gboolean
-group_unpack(resource_t * rsc, pe_working_set_t * data_set)
+group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_native_rsc = NULL;
@@ -51,7 +51,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
     for (xml_native_rsc = __xml_first_child_element(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = __xml_next_element(xml_native_rsc)) {
         if (crm_str_eq((const char *)xml_native_rsc->name, XML_CIB_TAG_RESOURCE, TRUE)) {
-            resource_t *new_rsc = NULL;
+            pe_resource_t *new_rsc = NULL;
 
             crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
             if (common_unpack(xml_native_rsc, &new_rsc, rsc, data_set) == FALSE) {
@@ -84,14 +84,14 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 gboolean
-group_active(resource_t * rsc, gboolean all)
+group_active(pe_resource_t * rsc, gboolean all)
 {
     gboolean c_all = TRUE;
     gboolean c_any = FALSE;
     GListPtr gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         if (child_rsc->fns->active(child_rsc, all)) {
             c_any = TRUE;
@@ -109,7 +109,7 @@ group_active(resource_t * rsc, gboolean all)
 }
 
 static void
-group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     GListPtr gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
@@ -119,7 +119,7 @@ group_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     status_print(">\n");
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->fns->print(child_rsc, child_text, options, print_data);
     }
@@ -129,7 +129,7 @@ group_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
 }
 
 void
-group_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     char *child_text = NULL;
     GListPtr gIter = rsc->children;
@@ -159,7 +159,7 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     } else {
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             if (options & pe_print_html) {
                 status_print("<li>\n");
@@ -249,14 +249,14 @@ pe__group_text(pcmk__output_t *out, va_list args)
 }
 
 void
-group_free(resource_t * rsc)
+group_free(pe_resource_t * rsc)
 {
     CRM_CHECK(rsc != NULL, return);
 
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
     for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
         pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
@@ -270,13 +270,13 @@ group_free(resource_t * rsc)
 }
 
 enum rsc_role_e
-group_resource_state(const resource_t * rsc, gboolean current)
+group_resource_state(const pe_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
     GListPtr gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
 
         if (role > group_role) {

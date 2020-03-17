@@ -22,30 +22,30 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-void native_rsc_colocation_rh_must(resource_t * rsc_lh, gboolean update_lh,
-                                   resource_t * rsc_rh, gboolean update_rh);
+void native_rsc_colocation_rh_must(pe_resource_t * rsc_lh, gboolean update_lh,
+                                   pe_resource_t * rsc_rh, gboolean update_rh);
 
-void native_rsc_colocation_rh_mustnot(resource_t * rsc_lh, gboolean update_lh,
-                                      resource_t * rsc_rh, gboolean update_rh);
+void native_rsc_colocation_rh_mustnot(pe_resource_t * rsc_lh, gboolean update_lh,
+                                      pe_resource_t * rsc_rh, gboolean update_rh);
 
-static void Recurring(resource_t *rsc, pe_action_t *start, node_t *node,
+static void Recurring(pe_resource_t *rsc, pe_action_t *start, node_t *node,
                       pe_working_set_t *data_set);
-static void RecurringOp(resource_t *rsc, pe_action_t *start, node_t *node,
+static void RecurringOp(pe_resource_t *rsc, pe_action_t *start, node_t *node,
                         xmlNode *operation, pe_working_set_t *data_set);
-static void Recurring_Stopped(resource_t *rsc, pe_action_t *start, node_t *node,
+static void Recurring_Stopped(pe_resource_t *rsc, pe_action_t *start, node_t *node,
                               pe_working_set_t *data_set);
-static void RecurringOp_Stopped(resource_t *rsc, pe_action_t *start, node_t *node,
+static void RecurringOp_Stopped(pe_resource_t *rsc, pe_action_t *start, node_t *node,
                                 xmlNode *operation, pe_working_set_t *data_set);
 
-void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
-gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
-gboolean StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean PromoteRsc(resource_t * rsc, node_t * next, gboolean optional,
+void ReloadRsc(pe_resource_t * rsc, node_t *node, pe_working_set_t * data_set);
+gboolean DeleteRsc(pe_resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
+gboolean StopRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
+gboolean StartRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
+gboolean DemoteRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
+gboolean PromoteRsc(pe_resource_t * rsc, node_t * next, gboolean optional,
                     pe_working_set_t * data_set);
-gboolean RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
+gboolean RoleError(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
+gboolean NullOp(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set);
 
 /* *INDENT-OFF* */
 enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
@@ -58,7 +58,7 @@ enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
-gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gboolean,pe_working_set_t*) = {
+gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(pe_resource_t*,node_t*,gboolean,pe_working_set_t*) = {
 /* Current State */
 /*       Next State:       Unknown	Stopped		Started		Slave		Master */
     /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
@@ -70,7 +70,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 /* *INDENT-ON* */
 
 static gboolean
-native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+native_choose_node(pe_resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
     GListPtr nodes = NULL;
     node_t *chosen = NULL;
@@ -461,7 +461,7 @@ node_has_been_unfenced(node_t *node)
 }
 
 static inline bool
-is_unfence_device(resource_t *rsc, pe_working_set_t *data_set)
+is_unfence_device(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     return is_set(rsc->flags, pe_rsc_fence_device)
            && is_set(data_set->flags, pe_flag_enable_unfencing);
@@ -496,7 +496,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
 
         GHashTable *archive = NULL;
-        resource_t *rsc_rh = constraint->rsc_rh;
+        pe_resource_t *rsc_rh = constraint->rsc_rh;
 
         if (constraint->score == 0) {
             continue;
@@ -629,7 +629,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 }
 
 static gboolean
-is_op_dup(resource_t *rsc, const char *name, guint interval_ms)
+is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
 {
     gboolean dup = FALSE;
     const char *id = NULL;
@@ -678,7 +678,7 @@ op_cannot_recur(const char *name)
 }
 
 static void
-RecurringOp(resource_t * rsc, pe_action_t * start, node_t * node,
+RecurringOp(pe_resource_t * rsc, pe_action_t * start, node_t * node,
             xmlNode * operation, pe_working_set_t * data_set)
 {
     char *key = NULL;
@@ -857,7 +857,7 @@ RecurringOp(resource_t * rsc, pe_action_t * start, node_t * node,
 }
 
 static void
-Recurring(resource_t * rsc, pe_action_t * start, node_t * node, pe_working_set_t * data_set)
+Recurring(pe_resource_t * rsc, pe_action_t * start, node_t * node, pe_working_set_t * data_set)
 {
     if (is_not_set(rsc->flags, pe_rsc_maintenance) &&
         (node == NULL || node->details->maintenance == FALSE)) {
@@ -875,7 +875,7 @@ Recurring(resource_t * rsc, pe_action_t * start, node_t * node, pe_working_set_t
 }
 
 static void
-RecurringOp_Stopped(resource_t * rsc, pe_action_t * start, node_t * node,
+RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, node_t * node,
                     xmlNode * operation, pe_working_set_t * data_set)
 {
     char *key = NULL;
@@ -1067,7 +1067,7 @@ RecurringOp_Stopped(resource_t * rsc, pe_action_t * start, node_t * node,
 }
 
 static void
-Recurring_Stopped(resource_t * rsc, pe_action_t * start, node_t * node, pe_working_set_t * data_set)
+Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, node_t * node, pe_working_set_t * data_set)
 {
     if (is_not_set(rsc->flags, pe_rsc_maintenance) && 
         (node == NULL || node->details->maintenance == FALSE)) {
@@ -1085,7 +1085,7 @@ Recurring_Stopped(resource_t * rsc, pe_action_t * start, node_t * node, pe_worki
 }
 
 static void
-handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_working_set_t * data_set)
+handle_migration_actions(pe_resource_t * rsc, node_t *current, node_t *chosen, pe_working_set_t * data_set)
 {
     pe_action_t *migrate_to = NULL;
     pe_action_t *migrate_from = NULL;
@@ -1173,7 +1173,7 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
 }
 
 void
-native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
+native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_action_t *start = NULL;
     node_t *chosen = NULL;
@@ -1374,7 +1374,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static void
-rsc_avoids_remote_nodes(resource_t *rsc)
+rsc_avoids_remote_nodes(pe_resource_t *rsc)
 {
     GHashTableIter iter;
     node_t *node = NULL;
@@ -1416,7 +1416,7 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     /* This function is on the critical path and worth optimizing as much as possible */
 
@@ -1552,7 +1552,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->container) {
-        resource_t *remote_rsc = NULL;
+        pe_resource_t *remote_rsc = NULL;
 
         if (rsc->is_remote_node) {
             // rsc is the implicit remote connection for a guest or bundle node
@@ -1664,7 +1664,7 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 enum filter_colocation_res
-filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
+filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                              rsc_colocation_t * constraint, gboolean preview)
 {
     if (constraint->score == 0) {
@@ -1749,7 +1749,7 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
 }
 
 static void
-influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
     const char *rh_value = NULL;
     const char *lh_value = NULL;
@@ -1789,7 +1789,7 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
 }
 
 static void
-colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
     const char *tmp = NULL;
     const char *value = NULL;
@@ -1890,7 +1890,7 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 static gboolean
-filter_rsc_ticket(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket)
+filter_rsc_ticket(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket)
 {
     if (rsc_ticket->role_lh != RSC_ROLE_UNKNOWN && rsc_ticket->role_lh != rsc_lh->role) {
         pe_rsc_trace(rsc_lh, "LH: Skipping constraint: \"%s\" state filter",
@@ -1902,7 +1902,7 @@ filter_rsc_ticket(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket)
 }
 
 void
-rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working_set_t * data_set)
+rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working_set_t * data_set)
 {
     if (rsc_ticket == NULL) {
         pe_err("rsc_ticket was NULL");
@@ -1924,7 +1924,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
         pe_rsc_trace(rsc_lh, "Processing ticket dependencies from %s", rsc_lh->id);
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             rsc_ticket_constraint(child_rsc, rsc_ticket, data_set);
         }
@@ -2085,7 +2085,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                  first->flags, then->uuid, then->flags);
 
     if (type & pe_order_asymmetrical) {
-        resource_t *then_rsc = then->rsc;
+        pe_resource_t *then_rsc = then->rsc;
         enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
 
         if (!then_rsc) {
@@ -2291,7 +2291,7 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-native_expand(resource_t * rsc, pe_working_set_t * data_set)
+native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
@@ -2306,7 +2306,7 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->expand(child_rsc, data_set);
     }
@@ -2339,7 +2339,7 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
 static int rsc_width = 5;
 static int detail_width = 5;
 static void
-LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
+LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
 {
     int len = 0;
     char *reason = NULL;
@@ -2439,7 +2439,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
 
 
 void
-LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
+LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 {
     node_t *next = NULL;
     node_t *current = NULL;
@@ -2463,7 +2463,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         GListPtr gIter = NULL;
 
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             LogActions(child_rsc, data_set, terminal);
         }
@@ -2627,7 +2627,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 }
 
 gboolean
-StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+StopRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
@@ -2678,7 +2678,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 }
 
 static void
-order_after_unfencing(resource_t *rsc, pe_node_t *node, pe_action_t *action,
+order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
                       enum pe_ordering order, pe_working_set_t *data_set)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
@@ -2711,7 +2711,7 @@ order_after_unfencing(resource_t *rsc, pe_node_t *node, pe_action_t *action,
 }
 
 gboolean
-StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+StartRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     pe_action_t *start = NULL;
 
@@ -2730,7 +2730,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 }
 
 gboolean
-PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+PromoteRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     gboolean runnable = TRUE;
@@ -2771,7 +2771,7 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
 }
 
 gboolean
-DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+DemoteRsc(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
@@ -2789,7 +2789,7 @@ DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 }
 
 gboolean
-RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+RoleError(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     CRM_ASSERT(rsc);
     crm_err("%s on %s", rsc->id, next ? next->details->uname : "N/A");
@@ -2798,7 +2798,7 @@ RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 }
 
 gboolean
-NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
+NullOp(pe_resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
@@ -2806,7 +2806,7 @@ NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * da
 }
 
 gboolean
-DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set)
+DeleteRsc(pe_resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set)
 {
     if (is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed", rsc->id, node->details->uname);
@@ -2836,7 +2836,7 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
 }
 
 gboolean
-native_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
+native_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
                     gboolean force, pe_working_set_t * data_set)
 {
     enum pe_ordering flags = pe_order_optional;
@@ -2844,7 +2844,7 @@ native_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
     pe_action_t *probe = NULL;
     node_t *running = NULL;
     node_t *allowed = NULL;
-    resource_t *top = uber_parent(rsc);
+    pe_resource_t *top = uber_parent(rsc);
 
     static const char *rc_master = NULL;
     static const char *rc_inactive = NULL;
@@ -2887,7 +2887,7 @@ native_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
         gboolean any_created = FALSE;
 
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             any_created = child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set)
                 || any_created;
@@ -2943,7 +2943,7 @@ native_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
     }
 
     if (pe__is_guest_node(node)) {
-        resource_t *remote = node->details->remote_rsc->container;
+        pe_resource_t *remote = node->details->remote_rsc->container;
 
         if(remote->role == RSC_ROLE_STOPPED) {
             /* If the container is stopped, then we know anything that
@@ -3099,7 +3099,7 @@ rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
  * \param[in] data_set    Cluster information
  */
 static void
-native_start_constraints(resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
+native_start_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
 {
     node_t *target;
     GListPtr gIter = NULL;
@@ -3144,13 +3144,13 @@ native_start_constraints(resource_t * rsc, pe_action_t * stonith_op, pe_working_
 }
 
 static void
-native_stop_constraints(resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
+native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
     bool order_implicit = false;
 
-    resource_t *top = uber_parent(rsc);
+    pe_resource_t *top = uber_parent(rsc);
     pe_action_t *parent_stop = NULL;
     node_t *target;
 
@@ -3308,13 +3308,13 @@ native_stop_constraints(resource_t * rsc, pe_action_t * stonith_op, pe_working_s
 }
 
 void
-rsc_stonith_ordering(resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
+rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
 {
     if (rsc->children) {
         GListPtr gIter = NULL;
 
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             rsc_stonith_ordering(child_rsc, stonith_op, data_set);
         }
@@ -3329,14 +3329,14 @@ rsc_stonith_ordering(resource_t * rsc, pe_action_t * stonith_op, pe_working_set_
 }
 
 void
-ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
+ReloadRsc(pe_resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     pe_action_t *reload = NULL;
 
     if (rsc->children) {
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             ReloadRsc(child_rsc, node, data_set);
         }
@@ -3376,10 +3376,10 @@ ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 }
 
 void
-native_append_meta(resource_t * rsc, xmlNode * xml)
+native_append_meta(pe_resource_t * rsc, xmlNode * xml)
 {
     char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
-    resource_t *parent;
+    pe_resource_t *parent;
 
     if (value) {
         char *name = NULL;

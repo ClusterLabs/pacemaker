@@ -122,7 +122,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
-        resource_t *rsc = (resource_t *) iter->data;
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
             node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);

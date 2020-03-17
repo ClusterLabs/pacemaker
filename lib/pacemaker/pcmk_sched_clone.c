@@ -16,13 +16,13 @@
 #include <lib/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
-static void append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all);
+static void append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all);
 
 static gint
 sort_rsc_id(gconstpointer a, gconstpointer b)
 {
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
     long num1, num2;
 
     CRM_ASSERT(resource1 != NULL);
@@ -43,7 +43,7 @@ sort_rsc_id(gconstpointer a, gconstpointer b)
 }
 
 static node_t *
-parent_node_instance(const resource_t * rsc, node_t * node)
+parent_node_instance(const pe_resource_t * rsc, node_t * node)
 {
     node_t *ret = NULL;
 
@@ -56,7 +56,7 @@ parent_node_instance(const resource_t * rsc, node_t * node)
 }
 
 static gboolean
-did_fail(const resource_t * rsc)
+did_fail(const pe_resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
 
@@ -65,7 +65,7 @@ did_fail(const resource_t * rsc)
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         if (did_fail(child_rsc)) {
             return TRUE;
@@ -88,8 +88,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     gboolean can1 = TRUE;
     gboolean can2 = TRUE;
 
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
 
     CRM_ASSERT(resource1 != NULL);
     CRM_ASSERT(resource2 != NULL);
@@ -370,7 +370,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 }
 
 static node_t *
-can_run_instance(resource_t * rsc, node_t * node, int limit)
+can_run_instance(pe_resource_t * rsc, node_t * node, int limit)
 {
     node_t *local_node = NULL;
 
@@ -488,7 +488,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 }
 
 static void
-append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
+append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all)
 {
 
     GListPtr gIter = NULL;
@@ -520,11 +520,11 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
 
 
 void
-distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
                     int max, int per_host_max, pe_working_set_t * data_set);
 
 void
-distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
                     int max, int per_host_max, pe_working_set_t * data_set) 
 {
     int loop_max = 0;
@@ -553,7 +553,7 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
 
     /* Pre-allocate as many instances as we can to their current location */
     for (GListPtr gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on && is_set(child->flags, pe_rsc_provisional)
             && is_not_set(child->flags, pe_rsc_failed)) {
@@ -585,7 +585,7 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
     pe_rsc_trace(rsc, "Done pre-allocating (%d of %d)", allocated, max);
 
     for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on != NULL) {
             node_t *child_node = pe__current_node(child);
@@ -683,7 +683,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 }
 
 static void
-clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * starting,
+clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * starting,
                            gboolean * active)
 {
     GListPtr gIter = NULL;
@@ -692,7 +692,7 @@ clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * sta
 
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             clone_update_pseudo_status(child, stopping, starting, active);
         }
@@ -794,7 +794,7 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
 }
 
 static void
-child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
+child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_action_t *stop = NULL;
     pe_action_t *start = NULL;
@@ -813,7 +813,7 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
     rsc->children = g_list_sort(rsc->children, sort_rsc_id);
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         stop = find_rsc_action(child, RSC_STOP, active_only, NULL);
         if (stop) {
@@ -836,7 +836,7 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
+clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     clone_variant_data_t *clone_data = NULL;
 
@@ -850,7 +850,7 @@ clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 void
 clone_create_pseudo_actions(
-    resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+    pe_resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
 {
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
@@ -866,7 +866,7 @@ clone_create_pseudo_actions(
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
     for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
 
@@ -911,9 +911,9 @@ clone_create_pseudo_actions(
 }
 
 void
-clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
+clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    resource_t *last_rsc = NULL;
+    pe_resource_t *last_rsc = NULL;
     GListPtr gIter;
     clone_variant_data_t *clone_data = NULL;
 
@@ -934,7 +934,7 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
         rsc->children = g_list_sort(rsc->children, sort_rsc_id);
     }
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
@@ -960,14 +960,14 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 bool
-assign_node(resource_t * rsc, node_t * node, gboolean force)
+assign_node(pe_resource_t * rsc, node_t * node, gboolean force)
 {
     bool changed = FALSE;
 
     if (rsc->children) {
 
         for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             changed |= assign_node(child_rsc, node, force);
         }
@@ -984,7 +984,7 @@ assign_node(resource_t * rsc, node_t * node, gboolean force)
 }
 
 gboolean
-is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current) 
+is_child_compatible(pe_resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current) 
 {
     node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
@@ -1018,7 +1018,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
                       enum rsc_role_e filter, gboolean current,
                       pe_working_set_t *data_set)
 {
-    resource_t *pair = NULL;
+    pe_resource_t *pair = NULL;
     GListPtr gIter = NULL;
     GListPtr scratch = NULL;
     node_t *local_node = NULL;
@@ -1110,7 +1110,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
 
     } else if (do_interleave) {
-        resource_t *rh_child = NULL;
+        pe_resource_t *rh_child = NULL;
 
         rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN,
                                          FALSE, data_set);
@@ -1135,7 +1135,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
         gIter = rsc_rh->children;
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
             node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
@@ -1151,7 +1151,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
     gIter = rsc_rh->children;
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
                                            data_set);
@@ -1162,7 +1162,7 @@ enum action_tasks
 clone_child_action(pe_action_t * action)
 {
     enum action_tasks result = no_action;
-    resource_t *child = (resource_t *) action->rsc->children->data;
+    pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
 
     if (safe_str_eq(action->task, "notify")
         || safe_str_eq(action->task, "notified")) {
@@ -1209,7 +1209,7 @@ summary_action_flags(pe_action_t * action, GListPtr children, node_t * node)
 
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_action_t *child_action = NULL;
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
         pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
@@ -1257,14 +1257,14 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     native_rsc_location(rsc, constraint);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->rsc_location(child_rsc, constraint);
     }
 }
 
 void
-clone_expand(resource_t * rsc, pe_working_set_t * data_set)
+clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -1306,7 +1306,7 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->expand(child_rsc, data_set);
     }
@@ -1332,7 +1332,7 @@ rsc_known_on(const pe_resource_t *rsc, const pe_node_t *node)
         for (GList *child_iter = rsc->children; child_iter != NULL;
              child_iter = child_iter->next) {
 
-            resource_t *child = (resource_t *) child_iter->data;
+            pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
             if (rsc_known_on(child, node)) {
                 return TRUE;
@@ -1358,7 +1358,7 @@ static pe_resource_t *
 find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 {
     for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (rsc_known_on(child, node)) {
             return child;
@@ -1377,7 +1377,7 @@ probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
     for (GList *child_iter = rsc->children; child_iter != NULL;
          child_iter = child_iter->next) {
 
-        resource_t *child = (resource_t *) child_iter->data;
+        pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
         any_created |= child->cmds->create_probe(child, node, complete, force,
                                                  data_set);
@@ -1400,7 +1400,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
              child_iter = child_iter->next) {
 
             node_t *local_node = NULL;
-            resource_t *child_rsc = (resource_t *) child_iter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) child_iter->data;
 
             local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
             if (local_node && (local_node->details == node->details)) {
@@ -1417,7 +1417,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
 }
 
 gboolean
-clone_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
+clone_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
                    gboolean force, pe_working_set_t * data_set)
 {
     gboolean any_created = FALSE;
@@ -1457,7 +1457,7 @@ clone_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
 }
 
 void
-clone_append_meta(resource_t * rsc, xmlNode * xml)
+clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
 {
     char *name = NULL;
     clone_variant_data_t *clone_data = NULL;

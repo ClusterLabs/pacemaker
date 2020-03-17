@@ -40,8 +40,8 @@ enum pe_weights {
 struct rsc_colocation_s {
     const char *id;
     const char *node_attribute;
-    resource_t *rsc_lh;
-    resource_t *rsc_rh;
+    pe_resource_t *rsc_lh;
+    pe_resource_t *rsc_rh;
 
     int role_lh;
     int role_rh;
@@ -58,7 +58,7 @@ enum loss_ticket_policy_e {
 
 struct rsc_ticket_s {
     const char *id;
-    resource_t *rsc_lh;
+    pe_resource_t *rsc_lh;
     pe_ticket_t *ticket;
     enum loss_ticket_policy_e loss_policy;
 
@@ -84,12 +84,12 @@ extern gboolean shutdown_constraints(node_t * node, pe_action_t * shutdown_op,
 
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
-extern int custom_action_order(resource_t * lh_rsc, char *lh_task, pe_action_t * lh_action,
-                               resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
+extern int custom_action_order(pe_resource_t * lh_rsc, char *lh_task, pe_action_t * lh_action,
+                               pe_resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
                                enum pe_ordering type, pe_working_set_t * data_set);
 
-extern int new_rsc_order(resource_t * lh_rsc, const char *lh_task,
-                         resource_t * rh_rsc, const char *rh_task,
+extern int new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
+                         pe_resource_t * rh_rsc, const char *rh_task,
                          enum pe_ordering type, pe_working_set_t * data_set);
 
 #  define order_start_start(rsc1,rsc2, type)				\

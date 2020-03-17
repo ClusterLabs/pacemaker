@@ -25,9 +25,9 @@
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(pe_action_t * action, xmlNode * xml_obj, resource_t * container,
+void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                       pe_working_set_t * data_set);
-static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
+static xmlNode *find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
 #if ENABLE_VERSIONED_ATTRS
@@ -425,7 +425,7 @@ dump_node_capacity(int level, const char *comment, node_t * node)
 }
 
 void
-dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node)
+dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, node_t * node)
 {
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         comment, rsc->id, node->details->uname);
@@ -446,8 +446,8 @@ dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * 
 gint
 sort_rsc_index(gconstpointer a, gconstpointer b)
 {
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -473,8 +473,8 @@ sort_rsc_index(gconstpointer a, gconstpointer b)
 gint
 sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -498,7 +498,7 @@ sort_rsc_priority(gconstpointer a, gconstpointer b)
 }
 
 pe_action_t *
-custom_action(resource_t * rsc, char *key, const char *task,
+custom_action(pe_resource_t * rsc, char *key, const char *task,
               node_t * on_node, gboolean optional, gboolean save_action,
               pe_working_set_t * data_set)
 {
@@ -772,7 +772,7 @@ unpack_operation_on_fail(pe_action_t * action)
 }
 
 static xmlNode *
-find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
+find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 {
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
@@ -883,7 +883,7 @@ unpack_timeout(const char *value)
 }
 
 int
-pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t *data_set)
+pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
 {
     xmlNode *child = NULL;
     const char *timeout = NULL;
@@ -967,7 +967,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * \param[in]     data_set   Cluster state
  */
 void
-unpack_operation(pe_action_t * action, xmlNode * xml_obj, resource_t * container,
+unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                  pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
@@ -1251,7 +1251,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, resource_t * container
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled)
+find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_disabled)
 {
     guint interval_ms = 0;
     gboolean do_retry = TRUE;
@@ -1317,7 +1317,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 }
 
 xmlNode *
-find_rsc_op_entry(resource_t * rsc, const char *key)
+find_rsc_op_entry(pe_resource_t * rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
@@ -1431,7 +1431,7 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
 }
 
 enum action_tasks
-get_complex_task(resource_t * rsc, const char *name, gboolean allow_non_atomic)
+get_complex_task(pe_resource_t * rsc, const char *name, gboolean allow_non_atomic)
 {
     enum action_tasks task = text2task(name);
 
@@ -1590,7 +1590,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
 }
 
 static void
-resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
+resource_node_score(pe_resource_t * rsc, node_t * node, int score, const char *tag)
 {
     node_t *match = NULL;
 
@@ -1606,7 +1606,7 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             resource_node_score(child_rsc, node, score, tag);
         }
@@ -1622,7 +1622,7 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
 }
 
 void
-resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
+resource_location(pe_resource_t * rsc, node_t * node, int score, const char *tag,
                   pe_working_set_t * data_set)
 {
     if (node != NULL) {
@@ -1798,7 +1798,7 @@ get_effective_time(pe_working_set_t * data_set)
 }
 
 gboolean
-get_target_role(resource_t * rsc, enum rsc_role_e * role)
+get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
 {
     enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -2108,7 +2108,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 }
 
 op_digest_cache_t *
-rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
+rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, node_t * node,
                       pe_working_set_t * data_set)
 {
     op_digest_cache_t *data = NULL;
@@ -2289,7 +2289,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     return data;
 }
 
-const char *rsc_printable_id(resource_t *rsc)
+const char *rsc_printable_id(pe_resource_t *rsc)
 {
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
         return ID(rsc->xml);
@@ -2298,26 +2298,26 @@ const char *rsc_printable_id(resource_t *rsc)
 }
 
 void
-clear_bit_recursive(resource_t * rsc, unsigned long long flag)
+clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
 
     clear_bit(rsc->flags, flag);
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         clear_bit_recursive(child_rsc, flag);
     }
 }
 
 void
-set_bit_recursive(resource_t * rsc, unsigned long long flag)
+set_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
 
     set_bit(rsc->flags, flag);
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         set_bit_recursive(child_rsc, flag);
     }
@@ -2327,7 +2327,7 @@ static GListPtr
 find_unfencing_devices(GListPtr candidates, GListPtr matches) 
 {
     for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        resource_t *candidate = gIter->data;
+        pe_resource_t *candidate = gIter->data;
         const char *provides = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_PROVIDES);
         const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
@@ -2383,7 +2383,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
             GListPtr matches = find_unfencing_devices(data_set->resources, NULL);
 
             for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
-                resource_t *match = gIter->data;
+                pe_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
@@ -2428,7 +2428,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
 
 void
 trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
+    pe_resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
 {
     if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */

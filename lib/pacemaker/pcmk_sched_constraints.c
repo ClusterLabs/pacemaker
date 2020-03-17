@@ -188,15 +188,15 @@ get_ordering_type(xmlNode * xml_obj)
     return kind_e;
 }
 
-static resource_t *
+static pe_resource_t *
 pe_find_constraint_resource(GListPtr rsc_list, const char *id)
 {
     GListPtr rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        resource_t *parent = rIter->data;
-        resource_t *match = parent->fns->find_rsc(parent, id, NULL,
-                                                  pe_find_renamed);
+        pe_resource_t *parent = rIter->data;
+        pe_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
+                                                     pe_find_renamed);
 
         if (match != NULL) {
             if(safe_str_neq(match->id, id)) {
@@ -243,7 +243,7 @@ pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, pe_tag_t **
 
 static gboolean
 valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
-                      resource_t ** rsc, pe_tag_t ** tag)
+                      pe_resource_t ** rsc, pe_tag_t ** tag)
 {
     gboolean rc = FALSE;
 
@@ -307,8 +307,8 @@ static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     int order_id = 0;
-    resource_t *rsc_then = NULL;
-    resource_t *rsc_first = NULL;
+    pe_resource_t *rsc_then = NULL;
+    pe_resource_t *rsc_first = NULL;
     gboolean invert_bool = TRUE;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
@@ -462,7 +462,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__, __LINE__);
 
         for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
-            resource_t *child = rIter->data;
+            pe_resource_t *child = rIter->data;
             /* order each clone instance before the pseudo action */
             custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
                                 NULL, NULL, NULL, unordered_action,
@@ -540,7 +540,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
         for (xml_rsc = __xml_first_child_element(set); xml_rsc != NULL;
              xml_rsc = __xml_next_element(xml_rsc)) {
 
-            resource_t *rsc = NULL;
+            pe_resource_t *rsc = NULL;
             pe_tag_t *tag = NULL;
             const char *id = ID(xml_rsc);
 
@@ -640,7 +640,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     const char *cons_id = NULL;
     const char *id = NULL;
 
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     pe_tag_t *tag = NULL;
 
     *rsc_set = NULL;
@@ -707,7 +707,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     return TRUE;
 }
 
-static gboolean unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
+static gboolean unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
                              const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data);
 
 static gboolean
@@ -717,7 +717,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if(value) {
-        resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
+        pe_resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
 
         return unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
     }
@@ -743,7 +743,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
 
         for (rIter = data_set->resources; rIter; rIter = rIter->next) {
-            resource_t *r = rIter->data;
+            pe_resource_t *r = rIter->data;
             int nregs = 0;
             regmatch_t *pmatch = NULL;
             int status;
@@ -790,7 +790,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static gboolean
-unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
+unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
                     const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
 {
     pe__location_t *location = NULL;
@@ -886,7 +886,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
     const char *id_lh = NULL;
     const char *state_lh = NULL;
 
-    resource_t *rsc_lh = NULL;
+    pe_resource_t *rsc_lh = NULL;
 
     pe_tag_t *tag_lh = NULL;
 
@@ -960,7 +960,7 @@ static gboolean
 unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    resource_t *resource = NULL;
+    pe_resource_t *resource = NULL;
     const char *set_id;
     const char *role;
     const char *local_score;
@@ -1036,7 +1036,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static int
-get_node_score(const char *rule, const char *score, gboolean raw, node_t * node, resource_t *rsc)
+get_node_score(const char *rule, const char *score, gboolean raw, node_t * node, pe_resource_t *rsc)
 {
     int score_f = 0;
 
@@ -1298,8 +1298,8 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
 }
 
 static void
-anti_colocation_order(resource_t * first_rsc, int first_role,
-                      resource_t * then_rsc, int then_role,
+anti_colocation_order(pe_resource_t * first_rsc, int first_role,
+                      pe_resource_t * then_rsc, int then_role,
                       pe_working_set_t * data_set)
 {
     const char *first_tasks[] = { NULL, NULL };
@@ -1341,7 +1341,7 @@ anti_colocation_order(resource_t * first_rsc, int first_role,
 
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
-                   resource_t * rsc_lh, resource_t * rsc_rh,
+                   pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                    const char *state_lh, const char *state_rh, pe_working_set_t * data_set)
 {
     rsc_colocation_t *new_con = NULL;
@@ -1396,8 +1396,8 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 
 /* LHS before RHS */
 int
-new_rsc_order(resource_t * lh_rsc, const char *lh_task,
-              resource_t * rh_rsc, const char *rh_task,
+new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
+              pe_resource_t * rh_rsc, const char *rh_task,
               enum pe_ordering type, pe_working_set_t * data_set)
 {
     char *lh_key = NULL;
@@ -1574,8 +1574,8 @@ cleanup_order:
 
 /* LHS before RHS */
 int
-custom_action_order(resource_t * lh_rsc, char *lh_action_task, pe_action_t * lh_action,
-                    resource_t * rh_rsc, char *rh_action_task, pe_action_t * rh_action,
+custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * lh_action,
+                    pe_resource_t * rh_rsc, char *rh_action_task, pe_action_t * rh_action,
                     enum pe_ordering type, pe_working_set_t * data_set)
 {
     pe__ordering_t *order = NULL;
@@ -1674,7 +1674,7 @@ get_flags(const char *id, enum pe_order_kind kind,
 }
 
 static gboolean
-unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rsc,
+unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t ** rsc,
                  pe_action_t ** begin, pe_action_t ** end, pe_action_t ** inv_begin,
                  pe_action_t ** inv_end, const char *parent_symmetrical_s,
                  pe_working_set_t * data_set)
@@ -1683,8 +1683,8 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
     GListPtr set_iter = NULL;
     GListPtr resources = NULL;
 
-    resource_t *last = NULL;
-    resource_t *resource = NULL;
+    pe_resource_t *last = NULL;
+    pe_resource_t *resource = NULL;
 
     int local_kind = parent_kind;
     gboolean sequential = FALSE;
@@ -1760,7 +1760,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (resource_t *) set_iter->data;
+        resource = (pe_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         key = pcmk__op_key(resource->id, action, 0);
@@ -1779,7 +1779,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
             GListPtr gIter = NULL;
 
             for (gIter = set_iter; gIter != NULL; gIter = gIter->next) {
-                resource_t *then_rsc = (resource_t *) gIter->data;
+                pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 custom_action_order(resource, strdup(key), NULL, then_rsc, then_key, NULL,
@@ -1819,7 +1819,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rs
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (resource_t *) set_iter->data;
+        resource = (pe_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         /*
@@ -1853,8 +1853,8 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     xmlNode *xml_rsc = NULL;
     xmlNode *xml_rsc_2 = NULL;
 
-    resource_t *rsc_1 = NULL;
-    resource_t *rsc_2 = NULL;
+    pe_resource_t *rsc_1 = NULL;
+    pe_resource_t *rsc_2 = NULL;
 
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
@@ -2050,8 +2050,8 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     const char *action_first = NULL;
     const char *action_then = NULL;
 
-    resource_t *rsc_first = NULL;
-    resource_t *rsc_then = NULL;
+    pe_resource_t *rsc_first = NULL;
+    pe_resource_t *rsc_then = NULL;
     pe_tag_t *tag_first = NULL;
     pe_tag_t *tag_then = NULL;
 
@@ -2155,10 +2155,10 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     gboolean any_sets = FALSE;
 
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
 
     /*
-       resource_t *last_rsc = NULL;
+       pe_resource_t *last_rsc = NULL;
      */
 
     pe_action_t *set_end = NULL;
@@ -2281,8 +2281,8 @@ static gboolean
 unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    resource_t *with = NULL;
-    resource_t *resource = NULL;
+    pe_resource_t *with = NULL;
+    pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
     const char *sequential = crm_element_value(set, "sequential");
@@ -2318,7 +2318,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
             }
         }
     } else if (local_score >= 0) {
-        resource_t *last = NULL;
+        pe_resource_t *last = NULL;
         for (xml_rsc = __xml_first_child_element(set); xml_rsc != NULL;
              xml_rsc = __xml_next_element(xml_rsc)) {
 
@@ -2375,8 +2375,8 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
                   pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    resource_t *rsc_1 = NULL;
-    resource_t *rsc_2 = NULL;
+    pe_resource_t *rsc_1 = NULL;
+    pe_resource_t *rsc_2 = NULL;
 
     const char *role_1 = crm_element_value(set1, "role");
     const char *role_2 = crm_element_value(set2, "role");
@@ -2477,8 +2477,8 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
     const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
 
-    resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
-    resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
+    pe_resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
+    pe_resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
 
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
@@ -2546,8 +2546,8 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     const char *state_lh = NULL;
     const char *state_rh = NULL;
 
-    resource_t *rsc_lh = NULL;
-    resource_t *rsc_rh = NULL;
+    pe_resource_t *rsc_lh = NULL;
+    pe_resource_t *rsc_rh = NULL;
 
     pe_tag_t *tag_lh = NULL;
     pe_tag_t *tag_rh = NULL;
@@ -2712,7 +2712,7 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 gboolean
-rsc_ticket_new(const char *id, resource_t * rsc_lh, pe_ticket_t * ticket,
+rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
                const char *state_lh, const char *loss_policy, pe_working_set_t * data_set)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
@@ -2805,7 +2805,7 @@ unpack_rsc_ticket_set(xmlNode * set, pe_ticket_t * ticket, const char *loss_poli
                       pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    resource_t *resource = NULL;
+    pe_resource_t *resource = NULL;
     const char *set_id = NULL;
     const char *role = NULL;
 
@@ -2848,7 +2848,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
     const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
 
-    resource_t *rsc_lh = NULL;
+    pe_resource_t *rsc_lh = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
 
@@ -2913,7 +2913,7 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     const char *id_lh = NULL;
     const char *state_lh = NULL;
 
-    resource_t *rsc_lh = NULL;
+    pe_resource_t *rsc_lh = NULL;
     pe_tag_t *tag_lh = NULL;
 
     xmlNode *new_xml = NULL;

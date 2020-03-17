@@ -177,7 +177,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 }
 
 static char *
-resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
+resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
                         int failcount, time_t last_failure) {
     char *buf = NULL;
 
@@ -1307,7 +1307,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__resource_history_text(pcmk__output_t *out, va_list args) {
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
@@ -1328,7 +1328,7 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
 
 int
 pe__resource_history_xml(pcmk__output_t *out, va_list args) {
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
@@ -1535,7 +1535,7 @@ pe__output_node(node_t *node, gboolean details, pcmk__output_t *out)
         crm_trace("\t\t=== Resources");
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
             // @TODO pe_print_log probably doesn't belong here
             out->message(out, crm_map_element_name(rsc->xml),

@@ -57,7 +57,7 @@ get_action_flags(pe_action_t * action, node_t * node)
 }
 
 static char *
-convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
+convert_non_atomic_uuid(char *old_uuid, pe_resource_t * rsc, gboolean allow_notify,
                         gboolean free_original)
 {
     guint interval_ms = 0;
@@ -138,7 +138,7 @@ rsc_expand_action(pe_action_t * action)
 {
     gboolean notify = FALSE;
     pe_action_t *result = action;
-    resource_t *rsc = action->rsc;
+    pe_resource_t *rsc = action->rsc;
 
     if (rsc == NULL) {
         return action;
@@ -472,7 +472,7 @@ void
 update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
 
     if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
         rsc = uber_parent(action->rsc);
@@ -493,7 +493,7 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
     /* if rsc has children, all the children need to have start set to
      * unrunnable before we follow the colo chain for the parent. */
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *)gIter->data;
+        pe_resource_t *child = (pe_resource_t *)gIter->data;
         pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
         if (start == NULL || is_set(start->flags, pe_action_runnable)) {
             return;
@@ -1246,7 +1246,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
         const char *value = g_hash_table_lookup(action->rsc->meta, "external-ip");
-        resource_t *parent = action->rsc;
+        pe_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
             parent->cmds->append_meta(parent, args_xml);

@@ -551,7 +551,7 @@ fencing_topology_init()
  * \return Pointer to node object if found, NULL otherwise
  */
 static node_t *
-our_node_allowed_for(resource_t *rsc)
+our_node_allowed_for(pe_resource_t *rsc)
 {
     GHashTableIter iter;
     node_t *node = NULL;
@@ -576,7 +576,7 @@ our_node_allowed_for(resource_t *rsc)
  * \param[in] rsc       Resource to check
  * \param[in] data_set  Cluster working set with device information
  */
-static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
+static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     const char *value = NULL;

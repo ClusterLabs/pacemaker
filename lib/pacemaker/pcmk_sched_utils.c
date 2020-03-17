@@ -193,7 +193,7 @@ sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
 }
 
 void
-native_deallocate(resource_t * rsc)
+native_deallocate(pe_resource_t * rsc)
 {
     if (rsc->allocated_to) {
         node_t *old = rsc->allocated_to;
@@ -211,7 +211,7 @@ native_deallocate(resource_t * rsc)
 }
 
 gboolean
-native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -397,7 +397,7 @@ can_run_any(GHashTable * nodes)
 }
 
 pe_action_t *
-create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
+create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
 {
     pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
                                         task, NULL, optional, TRUE, data_set);

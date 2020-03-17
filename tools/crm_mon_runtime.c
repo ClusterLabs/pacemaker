@@ -67,7 +67,7 @@ append_attr_list(GList *attr_list, char *name)
 }
 
 void
-crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
+crm_mon_get_parameters(pe_resource_t *rsc, pe_working_set_t * data_set)
 {
     get_rsc_attributes(rsc->parameters, rsc, NULL, data_set);
     if(rsc->children) {

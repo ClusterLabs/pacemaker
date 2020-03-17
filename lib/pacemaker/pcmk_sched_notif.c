@@ -12,7 +12,7 @@
 #include <pacemaker-internal.h>
 
 typedef struct notify_entry_s {
-    resource_t *rsc;
+    pe_resource_t *rsc;
     node_t *node;
 } notify_entry_t;
 
@@ -233,7 +233,7 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
 }
 
 static pe_action_t *
-pe_notify(resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * confirm,
+pe_notify(pe_resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * confirm,
           notify_data_t * n_data, pe_working_set_t * data_set)
 {
     char *key = NULL;
@@ -278,7 +278,7 @@ pe_notify(resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * confi
 }
 
 static void
-pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
+pe_post_notify(pe_resource_t * rsc, node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     pe_action_t *notify = NULL;
 
@@ -316,7 +316,7 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
 }
 
 notify_data_t *
-create_notification_boundaries(resource_t * rsc, const char *action, pe_action_t * start,
+create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_action_t * start,
                                pe_action_t * end, pe_working_set_t * data_set)
 {
     /* Create the pseudo ops that precede and follow the actual notifications */
@@ -425,7 +425,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, pe_action_t
 }
 
 void
-collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
+collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity,
                           notify_data_t * n_data)
 {
 
@@ -437,7 +437,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             collect_notification_data(child, state, activity, n_data);
         }
@@ -534,7 +534,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
     } while (0)
 
 gboolean
-expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     /* Expand the notification entries into a key=value hashtable
      * This hashtable is later used in action2xml()
@@ -672,7 +672,7 @@ find_remote_start(pe_action_t *action)
 }
 
 void
-create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     pe_action_t *stop = NULL;
@@ -682,7 +682,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
     if (rsc->children) {
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             create_notifications(child, n_data, data_set);
         }
@@ -820,7 +820,7 @@ free_notification_data(notify_data_t * n_data)
 }
 
 void
-create_secondary_notification(pe_action_t *action, resource_t *rsc,
+create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
                               pe_action_t *stonith_op,
                               pe_working_set_t *data_set)
 {

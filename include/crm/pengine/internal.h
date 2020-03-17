@@ -38,12 +38,12 @@ typedef struct pe__order_constraint_s {
     enum pe_ordering type;
 
     void *lh_opaque;
-    resource_t *lh_rsc;
+    pe_resource_t *lh_rsc;
     pe_action_t *lh_action;
     char *lh_action_task;
 
     void *rh_opaque;
-    resource_t *rh_rsc;
+    pe_resource_t *rh_rsc;
     pe_action_t *rh_action;
     char *rh_action_task;
 } pe__ordering_t;
@@ -75,32 +75,32 @@ bool pe_can_fence(pe_working_set_t *data_set, node_t *node);
 int merge_weights(int w1, int w2);
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
-char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
+char *native_parameter(pe_resource_t * rsc, node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
 pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 
 void pe_metadata(void);
 void verify_pe_options(GHashTable * options);
 
-void common_update_score(resource_t * rsc, const char *id, int score);
-void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set);
+void common_update_score(pe_resource_t * rsc, const char *id, int score);
+void native_add_running(pe_resource_t * rsc, node_t * node, pe_working_set_t * data_set);
 
-gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
-gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
-gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
+gboolean native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
+gboolean group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
+gboolean clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
 gboolean pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set);
 
-resource_t *native_find_rsc(resource_t *rsc, const char *id, const node_t *node,
-                            int flags);
+pe_resource_t *native_find_rsc(pe_resource_t *rsc, const char *id, const node_t *node,
+                               int flags);
 
-gboolean native_active(resource_t * rsc, gboolean all);
-gboolean group_active(resource_t * rsc, gboolean all);
-gboolean clone_active(resource_t * rsc, gboolean all);
+gboolean native_active(pe_resource_t * rsc, gboolean all);
+gboolean group_active(pe_resource_t * rsc, gboolean all);
+gboolean clone_active(pe_resource_t * rsc, gboolean all);
 gboolean pe__bundle_active(pe_resource_t *rsc, gboolean all);
 
-void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
+void native_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
+void group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
+void clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
@@ -159,23 +159,23 @@ int pe__ticket_html(pcmk__output_t *out, va_list args);
 int pe__ticket_text(pcmk__output_t *out, va_list args);
 int pe__ticket_xml(pcmk__output_t *out, va_list args);
 
-void native_free(resource_t * rsc);
-void group_free(resource_t * rsc);
-void clone_free(resource_t * rsc);
+void native_free(pe_resource_t * rsc);
+void group_free(pe_resource_t * rsc);
+void clone_free(pe_resource_t * rsc);
 void pe__free_bundle(pe_resource_t *rsc);
 
-enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
-enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
-enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
+enum rsc_role_e native_resource_state(const pe_resource_t * rsc, gboolean current);
+enum rsc_role_e group_resource_state(const pe_resource_t * rsc, gboolean current);
+enum rsc_role_e clone_resource_state(const pe_resource_t * rsc, gboolean current);
 enum rsc_role_e pe__bundle_resource_state(const pe_resource_t *rsc,
                                           gboolean current);
 
 void pe__count_common(pe_resource_t *rsc);
 void pe__count_bundle(pe_resource_t *rsc);
 
-gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
+gboolean common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc, pe_resource_t * parent,
                        pe_working_set_t * data_set);
-void common_free(resource_t * rsc);
+void common_free(pe_resource_t * rsc);
 
 extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
@@ -189,7 +189,7 @@ enum pe_fc_flags_e {
     pe_fc_fillers   = 0x02, // if container, include filler failures in count
 };
 
-int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+int pe_get_failcount(node_t *node, pe_resource_t *rsc, time_t *last_failure,
                      uint32_t flags, xmlNode *xml_op,
                      pe_working_set_t *data_set);
 
@@ -237,7 +237,7 @@ extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
 extern void pe__output_node(node_t * node, gboolean details, pcmk__output_t *out);
 
 extern void dump_node_capacity(int level, const char *comment, node_t * node);
-extern void dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node);
+extern void dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, node_t * node);
 
 void pe__show_node_weights_as(const char *file, const char *function,
                               int line, bool to_log, pe_resource_t *rsc,
@@ -251,9 +251,9 @@ void pe__show_node_weights_as(const char *file, const char *function,
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
 extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
-extern xmlNode *find_rsc_op_entry(resource_t * rsc, const char *key);
+extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
 
-extern pe_action_t *custom_action(resource_t * rsc, char *key, const char *task, node_t * on_node,
+extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *task, node_t * on_node,
                                   gboolean optional, gboolean foo, pe_working_set_t * data_set);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
@@ -302,12 +302,12 @@ extern pe_action_t *custom_action(resource_t * rsc, char *key, const char *task,
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)
 
-extern int pe_get_configured_timeout(resource_t *rsc, const char *action,
+extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
 
 extern pe_action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
                                       node_t * on_node);
-extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,
+extern enum action_tasks get_complex_task(pe_resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
 extern GListPtr find_actions(GListPtr input, const char *key, const node_t *on_node);
@@ -319,14 +319,14 @@ GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
 
 extern void pe_free_action(pe_action_t * action);
 
-extern void resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
+extern void resource_location(pe_resource_t * rsc, node_t * node, int score, const char *tag,
                               pe_working_set_t * data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
-extern gboolean get_target_role(resource_t * rsc, enum rsc_role_e *role);
+extern gboolean get_target_role(pe_resource_t * rsc, enum rsc_role_e *role);
 
-extern resource_t *find_clone_instance(resource_t * rsc, const char *sub_id,
-                                       pe_working_set_t * data_set);
+extern pe_resource_t *find_clone_instance(pe_resource_t * rsc, const char *sub_id,
+                                          pe_working_set_t * data_set);
 
 extern void destroy_ticket(gpointer data);
 extern pe_ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
@@ -337,7 +337,7 @@ char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
 static inline bool
-pe_base_name_eq(resource_t *rsc, const char *id)
+pe_base_name_eq(pe_resource_t *rsc, const char *id)
 {
     if (id && rsc && rsc->id) {
         // Number of characters in rsc->id before any clone suffix
@@ -351,7 +351,7 @@ pe_base_name_eq(resource_t *rsc, const char *id)
 int pe__target_rc_from_xml(xmlNode *xml_op);
 
 gint sort_node_uname(gconstpointer a, gconstpointer b);
-bool is_set_recursive(resource_t * rsc, long long flag, bool any);
+bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
     /*! Digests are the same */
@@ -375,12 +375,12 @@ typedef struct op_digest_cache_s {
     char *digest_restart_calc;
 } op_digest_cache_t;
 
-op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
+op_digest_cache_t *rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
 pe_action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
 void trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set);
+    pe_resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set);
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
 void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);
@@ -388,8 +388,8 @@ void pe_action_set_flag_reason(const char *function, long line, pe_action_t *act
 #define pe_action_required(action, reason, text) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, text, pe_action_optional, FALSE)
 #define pe_action_implies(action, reason, flag) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, NULL, flag, FALSE)
 
-void set_bit_recursive(resource_t * rsc, unsigned long long flag);
-void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
+void set_bit_recursive(pe_resource_t * rsc, unsigned long long flag);
+void clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
@@ -400,9 +400,9 @@ void pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reaso
 
 node_t *pe_create_node(const char *id, const char *uname, const char *type,
                        const char *score, pe_working_set_t * data_set);
-void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
-int pe__common_output_text(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
-int pe__common_output_html(pcmk__output_t *out, resource_t * rsc, const char *name, node_t *node, long options);
+void common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
+int pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc, const char *name, node_t *node, long options);
+int pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc, const char *name, node_t *node, long options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
@@ -410,7 +410,7 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml,
                                        const char *field);
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
-                                         const resource_t *rsc);
+                                         const pe_resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
 bool pe__is_universal_clone(pe_resource_t *rsc,
                             pe_working_set_t *data_set);

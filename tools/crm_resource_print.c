@@ -48,7 +48,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 }
 
 void
-cli_resource_print_cts(resource_t * rsc)
+cli_resource_print_cts(pe_resource_t * rsc)
 {
     GListPtr lpc = NULL;
     const char *host = NULL;
@@ -75,7 +75,7 @@ cli_resource_print_cts(resource_t * rsc)
            rsc->flags);
 
     for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-        resource_t *child = (resource_t *) lpc->data;
+        pe_resource_t *child = (pe_resource_t *) lpc->data;
 
         cli_resource_print_cts(child);
     }
@@ -83,7 +83,7 @@ cli_resource_print_cts(resource_t * rsc)
 
 
 void
-cli_resource_print_raw(resource_t * rsc)
+cli_resource_print_raw(pe_resource_t * rsc)
 {
     GListPtr lpc = NULL;
     GListPtr children = rsc->children;
@@ -93,7 +93,7 @@ cli_resource_print_raw(resource_t * rsc)
     }
 
     for (lpc = children; lpc != NULL; lpc = lpc->next) {
-        resource_t *child = (resource_t *) lpc->data;
+        pe_resource_t *child = (pe_resource_t *) lpc->data;
 
         cli_resource_print_raw(child);
     }
@@ -108,7 +108,7 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
     int opts = pe_print_printf | pe_print_rsconly | pe_print_pending;
 
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        resource_t *rsc = (resource_t *) lpc->data;
+        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
 
         if (is_set(rsc->flags, pe_rsc_orphan)
             && rsc->fns->active(rsc, TRUE) == FALSE) {
@@ -130,7 +130,7 @@ int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active,
                          pe_working_set_t * data_set)
 {
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     int opts = pe_print_printf | pe_print_rsconly | pe_print_suppres_nl | pe_print_pending;
     GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
     GListPtr lpc = NULL;
@@ -169,7 +169,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
 }
 
 void
-cli_resource_print_location(resource_t * rsc, const char *prefix)
+cli_resource_print_location(pe_resource_t * rsc, const char *prefix)
 {
     GListPtr lpc = NULL;
     GListPtr list = rsc->rsc_location;
@@ -196,7 +196,7 @@ cli_resource_print_location(resource_t * rsc, const char *prefix)
 }
 
 void
-cli_resource_print_colocation(resource_t * rsc, bool dependents, bool recursive, int offset)
+cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursive, int offset)
 {
     char *prefix = NULL;
     GListPtr lpc = NULL;
@@ -221,7 +221,7 @@ cli_resource_print_colocation(resource_t * rsc, bool dependents, bool recursive,
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 
         char *score = NULL;
-        resource_t *peer = cons->rsc_rh;
+        pe_resource_t *peer = cons->rsc_rh;
 
         if (dependents) {
             peer = cons->rsc_lh;
@@ -259,7 +259,7 @@ cli_resource_print_colocation(resource_t * rsc, bool dependents, bool recursive,
 }
 
 int
-cli_resource_print(resource_t *rsc, pe_working_set_t *data_set, bool expanded)
+cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     char *rsc_xml = NULL;
     int opts = pe_print_printf | pe_print_pending;
@@ -274,7 +274,7 @@ cli_resource_print(resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 }
 
 int
-cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
     int rc = -ENXIO;
     unsigned int count = 0;
@@ -318,7 +318,7 @@ cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t
 
 
 int
-cli_resource_print_property(resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
     const char *value = crm_element_value(rsc->xml, attr);
 
