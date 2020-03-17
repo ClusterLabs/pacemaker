@@ -522,7 +522,7 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
     /* Print each ticket */
     g_hash_table_iter_init(&iter, data_set->tickets);
     while (g_hash_table_iter_next(&iter, &key, &value)) {
-        ticket_t *ticket = (ticket_t *) value;
+        pe_ticket_t *ticket = (pe_ticket_t *) value;
         out->message(out, "ticket", ticket);
     }
 

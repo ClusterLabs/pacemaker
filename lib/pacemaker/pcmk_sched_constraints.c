@@ -2712,7 +2712,7 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 gboolean
-rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
+rsc_ticket_new(const char *id, resource_t * rsc_lh, pe_ticket_t * ticket,
                const char *state_lh, const char *loss_policy, pe_working_set_t * data_set)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
@@ -2801,7 +2801,7 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
 }
 
 static gboolean
-unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
+unpack_rsc_ticket_set(xmlNode * set, pe_ticket_t * ticket, const char *loss_policy,
                       pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
@@ -2840,7 +2840,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
 
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -2995,7 +2995,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
 
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;

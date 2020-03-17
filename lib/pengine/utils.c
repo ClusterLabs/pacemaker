@@ -1907,7 +1907,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 void
 destroy_ticket(gpointer data)
 {
-    ticket_t *ticket = data;
+    pe_ticket_t *ticket = data;
 
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
@@ -1916,10 +1916,10 @@ destroy_ticket(gpointer data)
     free(ticket);
 }
 
-ticket_t *
+pe_ticket_t *
 ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 {
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
         return NULL;
@@ -1934,7 +1934,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
 
-        ticket = calloc(1, sizeof(ticket_t));
+        ticket = calloc(1, sizeof(pe_ticket_t));
         if (ticket == NULL) {
             crm_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;

@@ -839,7 +839,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
     const char *standby = NULL;
     xmlAttrPtr xIter = NULL;
 
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     ticket_id = ID(xml_ticket);
     if (ticket_id == NULL || strlen(ticket_id) == 0) {

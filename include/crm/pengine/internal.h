@@ -329,7 +329,7 @@ extern resource_t *find_clone_instance(resource_t * rsc, const char *sub_id,
                                        pe_working_set_t * data_set);
 
 extern void destroy_ticket(gpointer data);
-extern ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
+extern pe_ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
 
 // Resources for manipulating resource names
 const char *pe_base_name_end(const char *id);

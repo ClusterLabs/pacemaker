@@ -59,7 +59,7 @@ enum loss_ticket_policy_e {
 struct rsc_ticket_s {
     const char *id;
     resource_t *rsc_lh;
-    ticket_t *ticket;
+    pe_ticket_t *ticket;
     enum loss_ticket_policy_e loss_policy;
 
     int role_lh;

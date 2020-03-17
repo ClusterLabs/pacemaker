@@ -1371,7 +1371,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
@@ -1391,7 +1391,7 @@ pe__ticket_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__ticket_text(pcmk__output_t *out, va_list args) {
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
@@ -1413,7 +1413,7 @@ int
 pe__ticket_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
 
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     node = pcmk__output_create_xml_node(out, "ticket");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) ticket->id);

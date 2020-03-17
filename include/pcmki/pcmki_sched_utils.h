@@ -33,7 +33,7 @@ extern gboolean rsc_colocation_new(const char *id, const char *node_attr, int sc
                                    const char *state_lh, const char *state_rh,
                                    pe_working_set_t * data_set);
 
-extern gboolean rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
+extern gboolean rsc_ticket_new(const char *id, resource_t * rsc_lh, pe_ticket_t * ticket,
                                const char *state_lh, const char *loss_policy,
                                pe_working_set_t * data_set);
 
