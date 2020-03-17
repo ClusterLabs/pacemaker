@@ -23,7 +23,7 @@ void update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set);
 gboolean rsc_update_action(pe_action_t * first, pe_action_t * then, enum pe_ordering type);
 
 static enum pe_action_flags
-get_action_flags(pe_action_t * action, node_t * node)
+get_action_flags(pe_action_t * action, pe_node_t * node)
 {
     enum pe_action_flags flags = action->flags;
 
@@ -172,7 +172,7 @@ rsc_expand_action(pe_action_t * action)
 }
 
 static enum pe_graph_flags
-graph_update_action(pe_action_t * first, pe_action_t * then, node_t * node,
+graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                     enum pe_action_flags first_flags, enum pe_action_flags then_flags,
                     pe_action_wrapper_t *order, pe_working_set_t *data_set)
 {
@@ -549,8 +549,8 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
         pe_action_t *first = other->action;
 
-        node_t *then_node = then->node;
-        node_t *first_node = first->node;
+        pe_node_t *then_node = then->node;
+        pe_node_t *first_node = first->node;
 
         enum pe_action_flags then_flags = 0;
         enum pe_action_flags first_flags = 0;
@@ -632,7 +632,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
              *   constraint to instances on the supplied node
              *
              */
-            node_t *node = then->node;
+            pe_node_t *node = then->node;
             changed |= graph_update_action(first, then, node, first_flags,
                                            then_flags, other, data_set);
 
@@ -704,7 +704,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 }
 
 gboolean
-shutdown_constraints(node_t * node, pe_action_t * shutdown_op, pe_working_set_t * data_set)
+shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set_t * data_set)
 {
     /* add the stop to the before lists so it counts as a pre-req
      * for the shutdown
@@ -767,12 +767,12 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
     }
 }
 
-static node_t *
+static pe_node_t *
 get_router_node(pe_action_t *action)
 {
-    node_t *began_on = NULL;
-    node_t *ended_on = NULL;
-    node_t *router_node = NULL;
+    pe_node_t *began_on = NULL;
+    pe_node_t *ended_on = NULL;
+    pe_node_t *router_node = NULL;
     bool partial_migration = FALSE;
     const char *task = action->task;
 
@@ -868,7 +868,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
  * \param[in,out] xml   XML to add node to
  */
 static void
-add_node_to_xml(const node_t *node, void *xml)
+add_node_to_xml(const pe_node_t *node, void *xml)
 {
     add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
 }
@@ -890,7 +890,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 
     for (gIter = data_set->nodes; gIter != NULL;
          gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
         struct pe_node_shared_s *details = node->details;
 
         if (!pe__is_guest_or_remote_node(node)) {
@@ -1103,7 +1103,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
     if (needs_node_info && action->node != NULL) {
-        node_t *router_node = get_router_node(action);
+        pe_node_t *router_node = get_router_node(action);
 
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);

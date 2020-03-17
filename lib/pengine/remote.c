@@ -16,7 +16,7 @@
 gboolean
 pe__resource_is_remote_conn(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    node_t *node;
+    pe_node_t *node;
 
     if (rsc == NULL) {
         return FALSE;
@@ -112,8 +112,8 @@ xml_contains_remote_node(xmlNode *xml)
  * \param[in,out] user_data  Pointer to pass to helper function
  */
 void
-pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
-                      void (*helper)(const node_t*, void*), void *user_data)
+pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
+                      void (*helper)(const pe_node_t*, void*), void *user_data)
 {
     GListPtr iter;
 
@@ -125,7 +125,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
-            node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
+            pe_node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
 
             if (guest_node) {
                 (*helper)(guest_node, user_data);

@@ -33,12 +33,12 @@ static int print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                            unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
                            gboolean print_summary, gboolean print_spacer);
 static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
-                             node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
+                             pe_node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                              GListPtr op_list);
 static int print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               xmlNode *node_state, gboolean operations,
                               unsigned int mon_ops);
-static gboolean add_extra_info(pcmk__output_t *out, node_t * node, GListPtr rsc_list,
+static gboolean add_extra_info(pcmk__output_t *out, pe_node_t * node, GListPtr rsc_list,
                                const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
@@ -189,7 +189,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
 }
 
 static int
-failure_count(pe_working_set_t *data_set, node_t *node, pe_resource_t *rsc, time_t *last_failure) {
+failure_count(pe_working_set_t *data_set, pe_node_t *node, pe_resource_t *rsc, time_t *last_failure) {
     return rsc ? pe_get_failcount(node, rsc, last_failure, pe_fc_default,
                                   NULL, data_set)
                : 0;
@@ -223,7 +223,7 @@ get_operation_list(xmlNode *rsc_entry) {
  * \param[in] op_list   A list of operations to print.
  */
 static int
-print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, node_t *node,
+print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *node,
                   xmlNode *rsc_entry, unsigned int mon_ops, GListPtr op_list)
 {
     GListPtr gIter = NULL;
@@ -291,7 +291,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                    xmlNode *node_state, gboolean operations,
                    unsigned int mon_ops)
 {
-    node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+    pe_node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
     int rc = pcmk_rc_no_output;
@@ -367,7 +367,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  *       or degraded.
  */
 static gboolean
-add_extra_info(pcmk__output_t *out, node_t *node, GListPtr rsc_list,
+add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
                const char *attrname, int *expected_score)
 {
     GListPtr gIter = NULL;
@@ -418,7 +418,7 @@ add_extra_info(pcmk__output_t *out, node_t *node, GListPtr rsc_list,
 /* structure for passing multiple user data to g_list_foreach() */
 struct mon_attr_data {
     pcmk__output_t *out;
-    node_t *node;
+    pe_node_t *node;
 };
 
 static void
@@ -605,7 +605,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
         struct mon_attr_data data;
 
         data.out = out;
-        data.node = (node_t *) gIter->data;
+        data.node = (pe_node_t *) gIter->data;
 
         if (data.node && data.node->details && data.node->details->online) {
             GList *attr_list = NULL;
@@ -729,7 +729,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
         out->begin_list(out, NULL, NULL, "Node List");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
             const char *node_mode = NULL;
             char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
 
@@ -933,7 +933,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(show, mon_show_nodes)) {
         out->begin_list(out, NULL, NULL, "nodes");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
@@ -1011,7 +1011,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(show, mon_show_nodes)) {
         out->begin_list(out, NULL, NULL, "Node List");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));

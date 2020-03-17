@@ -550,11 +550,11 @@ fencing_topology_init()
  *
  * \return Pointer to node object if found, NULL otherwise
  */
-static node_t *
+static pe_node_t *
 our_node_allowed_for(pe_resource_t *rsc)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (rsc && stonith_our_uname) {
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -578,10 +578,10 @@ our_node_allowed_for(pe_resource_t *rsc)
  */
 static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     const char *value = NULL;
     const char *rclass = NULL;
-    node_t *parent = NULL;
+    pe_node_t *parent = NULL;
     gboolean remove = TRUE;
 
     /* If this is a complex resource, check children rather than this resource itself.

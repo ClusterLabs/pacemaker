@@ -77,7 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
+block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     char *xml_name = clone_strip(rsc->id);
@@ -248,7 +248,7 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-pe_get_failcount(node_t *node, pe_resource_t *rsc, time_t *last_failure,
+pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
                  uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;

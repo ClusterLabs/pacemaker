@@ -395,10 +395,10 @@ pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flag
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
 {
-    node_t *match = pe_find_node_id(nodes, id);
+    pe_node_t *match = pe_find_node_id(nodes, id);
 
     if (match) {
         return match;
@@ -407,13 +407,13 @@ pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
     return pe_find_node(nodes, uname);
 }
 
-node_t *
+pe_node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->id, id)) {
             return node;
@@ -423,13 +423,13 @@ pe_find_node_id(GListPtr nodes, const char *id)
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->uname, uname)) {
             return node;

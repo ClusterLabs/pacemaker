@@ -35,13 +35,13 @@ is_multiply_active(pe_resource_t *rsc)
 }
 
 void
-native_add_running(pe_resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     GListPtr gIter = rsc->running_on;
 
     CRM_CHECK(node != NULL, return);
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *a_node = (node_t *) gIter->data;
+        pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         CRM_CHECK(a_node != NULL, return);
         if (safe_str_eq(a_node->details->id, node->details->id)) {
@@ -80,7 +80,7 @@ native_add_running(pe_resource_t * rsc, node_t * node, pe_working_set_t * data_s
             case recovery_stop_only:
                 {
                     GHashTableIter gIter;
-                    node_t *local_node = NULL;
+                    pe_node_t *local_node = NULL;
 
                     /* make sure it doesn't come up again */
                     if (rsc->allowed_nodes != NULL) {
@@ -184,7 +184,7 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static bool
-rsc_is_on_node(pe_resource_t *rsc, const node_t *node, int flags)
+rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
 {
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, node->details->uname);
@@ -192,7 +192,7 @@ rsc_is_on_node(pe_resource_t *rsc, const node_t *node, int flags)
     if (is_set(flags, pe_find_current) && rsc->running_on) {
 
         for (GListPtr iter = rsc->running_on; iter; iter = iter->next) {
-            node_t *loc = (node_t *) iter->data;
+            pe_node_t *loc = (pe_node_t *) iter->data;
 
             if (loc->details == node->details) {
                 return TRUE;
@@ -210,7 +210,7 @@ rsc_is_on_node(pe_resource_t *rsc, const node_t *node, int flags)
 }
 
 pe_resource_t *
-native_find_rsc(pe_resource_t * rsc, const char *id, const node_t *on_node,
+native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
                 int flags)
 {
     bool match = FALSE;
@@ -265,7 +265,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const node_t *on_node,
 }
 
 char *
-native_parameter(pe_resource_t * rsc, node_t * node, gboolean create, const char *name,
+native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
                  pe_working_set_t * data_set)
 {
     char *value_copy = NULL;
@@ -315,7 +315,7 @@ native_active(pe_resource_t * rsc, gboolean all)
     GListPtr gIter = rsc->running_on;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *a_node = (node_t *) gIter->data;
+        pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
             crm_debug("Resource %s: node %s is unclean", rsc->id, a_node->details->uname);
@@ -478,7 +478,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
 
         status_print(">\n");
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
             status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
                          node->details->uname, node->details->id,
@@ -667,7 +667,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
 
 int
 pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, node_t *node, long options)
+                       const char *name, pe_node_t *node, long options)
 {
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
@@ -729,7 +729,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (is_set(options, pe_print_dev)) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         out->begin_list(out, NULL, NULL, "Allowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -741,7 +741,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (is_set(options, pe_print_max_details)) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         out->begin_list(out, NULL, NULL, "=== Allowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -756,7 +756,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
 int
 pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, node_t *node, long options)
+                       const char *name, pe_node_t *node, long options)
 {
     const char *target_role = NULL;
 
@@ -793,7 +793,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (is_set(options, pe_print_dev)) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         out->begin_list(out, NULL, NULL, "Allowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -805,7 +805,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (is_set(options, pe_print_max_details)) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         out->begin_list(out, NULL, NULL, "=== Allowed Nodes");
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -819,7 +819,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
 }
 
 void
-common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data)
+common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_node_t *node, long options, void *print_data)
 {
     const char *target_role = NULL;
 
@@ -900,7 +900,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t
         }
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *n = (node_t *) gIter->data;
+            pe_node_t *n = (pe_node_t *) gIter->data;
 
             counter++;
 
@@ -949,7 +949,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t
 
     if (options & pe_print_dev) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         status_print("%s\tAllowed Nodes", pre_text);
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -960,7 +960,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t
 
     if (options & pe_print_max_details) {
         GHashTableIter iter;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
 
         status_print("%s\t=== Allowed Nodes\n", pre_text);
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -973,7 +973,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, node_t
 void
 native_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     CRM_ASSERT(rsc->variant == pe_native);
     if (options & pe_print_xml) {
@@ -1044,7 +1044,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         GListPtr gIter = rsc->running_on;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
             rc = pe__name_and_nvpairs_xml(out, false, "node", 3
                                           , "name", node->details->uname
@@ -1063,7 +1063,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    node_t *node = pe__current_node(rsc);
+    pe_node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -1080,7 +1080,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
-    node_t *node = pe__current_node(rsc);
+    pe_node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -1123,7 +1123,7 @@ native_resource_state(const pe_resource_t * rsc, gboolean current)
 pe_node_t *
 native_location(const pe_resource_t *rsc, GList **list, int current)
 {
-    node_t *one = NULL;
+    pe_node_t *one = NULL;
     GListPtr result = NULL;
 
     if (rsc->children) {
@@ -1157,7 +1157,7 @@ native_location(const pe_resource_t *rsc, GList **list, int current)
         GListPtr gIter = result;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
             if (*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
                 *list = g_list_append(*list, node);
@@ -1212,7 +1212,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
             GListPtr gIter2 = rsc->running_on;
 
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
-                node_t *node = (node_t *) gIter2->data;
+                pe_node_t *node = (pe_node_t *) gIter2->data;
                 GHashTable *node_table = NULL;
 
                 if (node->details->unclean == FALSE && node->details->online == FALSE) {

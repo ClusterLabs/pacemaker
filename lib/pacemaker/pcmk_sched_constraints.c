@@ -811,7 +811,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
 
     if (node != NULL && score != NULL) {
         int score_i = char2score(score);
-        node_t *match = pe_find_node(data_set->nodes, node);
+        pe_node_t *match = pe_find_node(data_set->nodes, node);
 
         if (!match) {
             return FALSE;
@@ -1036,7 +1036,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static int
-get_node_score(const char *rule, const char *score, gboolean raw, node_t * node, pe_resource_t *rsc)
+get_node_score(const char *rule, const char *score, gboolean raw, pe_node_t * node, pe_resource_t *rsc)
 {
     int score_f = 0;
 
@@ -1138,7 +1138,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            pe_node_t *node = (pe_node_t *) gIter->data;
 
             node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
@@ -1146,7 +1146,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         int score_f = 0;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
                               data_set->now, next_change, match_data);
@@ -1160,7 +1160,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 /* 			} */
 
         if (accept) {
-            node_t *local = pe_find_node_id(match_L, node->details->id);
+            pe_node_t *local = pe_find_node_id(match_L, node->details->id);
 
             if (local == NULL && do_and) {
                 continue;
@@ -1177,7 +1177,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         } else if (do_and && !accept) {
             /* remove it */
-            node_t *delete = pe_find_node_id(match_L, node->details->id);
+            pe_node_t *delete = pe_find_node_id(match_L, node->details->id);
 
             if (delete != NULL) {
                 match_L = g_list_remove(match_L, delete);

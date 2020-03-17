@@ -83,7 +83,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
         const char *node_mode = NULL;
         char *node_name = NULL;
 

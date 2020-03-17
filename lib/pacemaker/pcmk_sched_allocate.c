@@ -24,8 +24,8 @@
 CRM_TRACE_INIT_DATA(pacemaker);
 
 void set_alloc_actions(pe_working_set_t * data_set);
-extern void ReloadRsc(pe_resource_t * rsc, node_t *node, pe_working_set_t * data_set);
-extern gboolean DeleteRsc(pe_resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
+extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
+extern gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
 static void apply_remote_node_ordering(pe_working_set_t *data_set);
 static enum remote_connection_state get_remote_node_state(pe_node_t *node);
 
@@ -144,7 +144,7 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
 }
 
 static gboolean
-check_rsc_parameters(pe_resource_t * rsc, node_t * node, xmlNode * rsc_entry,
+check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
                      gboolean active_here, pe_working_set_t * data_set)
 {
     int attr_lpc = 0;
@@ -191,7 +191,7 @@ check_rsc_parameters(pe_resource_t * rsc, node_t * node, xmlNode * rsc_entry,
 }
 
 static void
-CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, node_t * active_node,
+CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
             const char *reason, pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
@@ -217,7 +217,7 @@ CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 }
 
 static gboolean
-check_action_definition(pe_resource_t * rsc, node_t * active_node, xmlNode * xml_op,
+check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
 {
     char *key = NULL;
@@ -387,7 +387,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 }
 
 static void
-check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     int offset = -1;
@@ -555,7 +555,7 @@ static void
 check_actions(pe_working_set_t * data_set)
 {
     const char *id = NULL;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     xmlNode *lrm_rscs = NULL;
     xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
@@ -627,7 +627,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
 }
 
 static gboolean
-failcount_clear_action_exists(node_t * node, pe_resource_t * rsc)
+failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
 {
     gboolean rc = FALSE;
     GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
@@ -648,7 +648,7 @@ failcount_clear_action_exists(node_t * node, pe_resource_t * rsc)
  * \param[in,out] data_set  Cluster working set to update
  */
 static void
-check_migration_threshold(pe_resource_t *rsc, node_t *node,
+check_migration_threshold(pe_resource_t *rsc, pe_node_t *node,
                           pe_working_set_t *data_set)
 {
     int fail_count, countdown;
@@ -693,7 +693,7 @@ check_migration_threshold(pe_resource_t *rsc, node_t *node,
 }
 
 static void
-common_apply_stickiness(pe_resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     if (rsc->children) {
         GListPtr gIter = rsc->children;
@@ -708,8 +708,8 @@ common_apply_stickiness(pe_resource_t * rsc, node_t * node, pe_working_set_t * d
 
     if (is_set(rsc->flags, pe_rsc_managed)
         && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
-        node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-        node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        pe_node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
+        pe_node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
         if (current == NULL) {
 
@@ -722,7 +722,7 @@ common_apply_stickiness(pe_resource_t * rsc, node_t * node, pe_working_set_t * d
                          node->details->uname, rsc->stickiness);
         } else {
             GHashTableIter iter;
-            node_t *nIter = NULL;
+            pe_node_t *nIter = NULL;
 
             pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
                          " and node %s is not explicitly allowed", rsc->id, node->details->uname);
@@ -854,7 +854,7 @@ apply_system_health(pe_working_set_t * data_set)
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         int system_health = base_health;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         /* Search through the node hash table for system health entries. */
         g_hash_table_foreach(node->details->attrs, calculate_system_health, &system_health);
@@ -910,7 +910,7 @@ probe_resources(pe_working_set_t * data_set)
     pe_action_t *probe_node_complete = NULL;
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
         if (node->details->online == FALSE) {
@@ -948,11 +948,11 @@ probe_resources(pe_working_set_t * data_set)
 }
 
 static void
-rsc_discover_filter(pe_resource_t *rsc, node_t *node)
+rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
     GListPtr gIter = rsc->children;
     pe_resource_t *top = uber_parent(rsc);
-    node_t *match;
+    pe_node_t *match;
 
     if (rsc->exclusive_discover == FALSE && top->exclusive_discover == FALSE) {
         return;
@@ -1102,7 +1102,7 @@ stage2(pe_working_set_t * data_set)
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
         GListPtr gIter2 = NULL;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         gIter2 = data_set->resources;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
@@ -1164,8 +1164,8 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     const pe_resource_t *resource1 = a;
     const pe_resource_t *resource2 = b;
 
-    node_t *r1_node = NULL;
-    node_t *r2_node = NULL;
+    pe_node_t *r1_node = NULL;
+    pe_node_t *r2_node = NULL;
     GListPtr gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
@@ -1241,7 +1241,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 
     reason = "score";
     for (gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         r1_node = NULL;
         r2_node = NULL;
@@ -1359,7 +1359,7 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->online
             && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
@@ -1398,7 +1398,7 @@ stage5(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         dump_node_capacity(log_prio, "Original", node);
     }
@@ -1410,7 +1410,7 @@ stage5(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         dump_node_capacity(log_prio, "Remaining", node);
     }
@@ -1638,7 +1638,7 @@ stage6(pe_working_set_t * data_set)
 
     /* Check each node for stonith/shutdown */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
@@ -2033,7 +2033,7 @@ static enum remote_connection_state
 get_remote_node_state(pe_node_t *node) 
 {
     pe_resource_t *remote_rsc = NULL;
-    node_t *cluster_node = NULL;
+    pe_node_t *cluster_node = NULL;
 
     CRM_ASSERT(node);
 
@@ -2204,7 +2204,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                                         pe_order_implies_then, data_set);
 
             } else {
-                node_t *cluster_node = pe__current_node(remote_rsc);
+                pe_node_t *cluster_node = pe__current_node(remote_rsc);
 
                 if(task == monitor_rsc && state == remote_state_failed) {
                     /* We would only be here if we do not know the

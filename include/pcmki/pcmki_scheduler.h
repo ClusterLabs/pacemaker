@@ -79,7 +79,7 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
-extern gboolean shutdown_constraints(node_t * node, pe_action_t * shutdown_op,
+extern gboolean shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);

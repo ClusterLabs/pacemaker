@@ -47,7 +47,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         }
 
         if (foo_node != NULL) {
-            node_t *copy = node_copy(foo_node);
+            pe_node_t *copy = node_copy(foo_node);
 
             copy->weight = node_weight;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -61,7 +61,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
 }
 
 gboolean
-can_run_resources(const node_t * node)
+can_run_resources(const pe_node_t * node)
 {
     if (node == NULL) {
         return FALSE;
@@ -95,8 +95,8 @@ struct node_weight_s {
 static gint
 sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const node_t *node1 = (const node_t *)a;
-    const node_t *node2 = (const node_t *)b;
+    const pe_node_t *node1 = (const pe_node_t *)a;
+    const pe_node_t *node2 = (const pe_node_t *)b;
     struct node_weight_s *nw = data;
 
     int node1_weight = 0;
@@ -196,7 +196,7 @@ void
 native_deallocate(pe_resource_t * rsc)
 {
     if (rsc->allocated_to) {
-        node_t *old = rsc->allocated_to;
+        pe_node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
         set_bit(rsc->flags, pe_rsc_provisional);
@@ -211,7 +211,7 @@ native_deallocate(pe_resource_t * rsc)
 }
 
 gboolean
-native_assign_node(pe_resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -380,7 +380,7 @@ gboolean
 can_run_any(GHashTable * nodes)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (nodes == NULL) {
         return FALSE;

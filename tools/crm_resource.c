@@ -1268,7 +1268,7 @@ main(int argc, char **argv)
         rc = cli_resource_print(rsc, data_set, FALSE);
 
     } else if (rsc_cmd == 'Y') {
-        node_t *dest = NULL;
+        pe_node_t *dest = NULL;
 
         if (host_uname) {
             dest = pe_find_node(data_set->nodes, host_uname);
@@ -1285,7 +1285,7 @@ main(int argc, char **argv)
         GListPtr after = NULL;
         GListPtr remaining = NULL;
         GListPtr ele = NULL;
-        node_t *dest = NULL;
+        pe_node_t *dest = NULL;
 
         if (BE_QUIET == FALSE) {
             before = build_constraint_list(data_set->input);
@@ -1336,7 +1336,7 @@ main(int argc, char **argv)
         rc = cli_resource_move(rsc, rsc_id, host_uname, cib_conn, data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        node_t *dest = pe_find_node(data_set->nodes, host_uname);
+        pe_node_t *dest = pe_find_node(data_set->nodes, host_uname);
 
         if (dest == NULL) {
             rc = -pcmk_err_node_unknown;
@@ -1487,7 +1487,7 @@ main(int argc, char **argv)
         int attr_options = pcmk__node_attr_none;
 
         if (host_uname) {
-            node_t *node = pe_find_node(data_set->nodes, host_uname);
+            pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
             if (pe__is_guest_or_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);

@@ -24,10 +24,10 @@ extern gboolean unpack_status(xmlNode * status, pe_working_set_t * data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
-extern gboolean unpack_lrm_resources(node_t * node, xmlNode * lrm_state,
+extern gboolean unpack_lrm_resources(pe_node_t * node, xmlNode * lrm_state,
                                      pe_working_set_t * data_set);
 
-extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node,
+extern gboolean determine_online_status(xmlNode * node_state, pe_node_t * this_node,
                                         pe_working_set_t * data_set);
 
 // Some warnings we don't want to print every transition

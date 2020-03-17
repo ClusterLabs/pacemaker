@@ -20,8 +20,8 @@ pe_node_t *
 pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
 {
-    node_t *node = NULL;
-    node_t *group_node = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *group_node = NULL;
     GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
@@ -379,7 +379,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 enum pe_action_flags
-group_action_flags(pe_action_t * action, node_t * node)
+group_action_flags(pe_action_t * action, pe_node_t * node)
 {
     GListPtr gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);

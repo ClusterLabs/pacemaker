@@ -21,8 +21,8 @@ static void group_add_unallocated_utilization(GHashTable * all_utilization, pe_r
                                               GListPtr all_rscs);
 
 struct compare_data {
-    const node_t *node1;
-    const node_t *node2;
+    const pe_node_t *node1;
+    const pe_node_t *node2;
     int result;
 };
 
@@ -69,7 +69,7 @@ do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
  * rc > 0 if 'node1' has less capacity remaining
  */
 int
-compare_capacity(const node_t * node1, const node_t * node2)
+compare_capacity(const pe_node_t * node1, const pe_node_t * node2)
 {
     struct compare_data data;
 
@@ -123,7 +123,7 @@ calculate_utilization(GHashTable * current_utilization,
 
 
 struct capacity_data {
-    node_t *node;
+    pe_node_t *node;
     const char *rsc_id;
     gboolean is_enough;
 };
@@ -149,7 +149,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
 }
 
 static gboolean
-have_enough_capacity(node_t * node, const char * rsc_id, GHashTable * utilization)
+have_enough_capacity(pe_node_t * node, const char * rsc_id, GHashTable * utilization)
 {
     struct capacity_data data;
 
@@ -328,21 +328,21 @@ find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t 
 }
 
 void
-process_utilization(pe_resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set)
+process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set)
 {
     CRM_CHECK(rsc && prefer && data_set, return);
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
         GListPtr colocated_rscs = NULL;
         gboolean any_capable = FALSE;
-        node_t *node = NULL;
+        pe_node_t *node = NULL;
 
         colocated_rscs = find_colocated_rscs(colocated_rscs, rsc, rsc);
         if (colocated_rscs) {
             GHashTable *unallocated_utilization = NULL;
             char *rscs_id = crm_strdup_printf("%s and its colocated resources",
                                               rsc->id);
-            node_t *most_capable_node = NULL;
+            pe_node_t *most_capable_node = NULL;
 
             unallocated_utilization = sum_unallocated_utilization(rsc, colocated_rscs);
 

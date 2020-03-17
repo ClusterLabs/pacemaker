@@ -20,9 +20,9 @@
 struct resource_alloc_functions_s {
     GHashTable *(*merge_weights) (pe_resource_t *, const char *, GHashTable *, const char *, float,
                                   enum pe_weights);
-    node_t *(*allocate) (pe_resource_t *, node_t *, pe_working_set_t *);
+    pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
     void (*create_actions) (pe_resource_t *, pe_working_set_t *);
-     gboolean(*create_probe) (pe_resource_t *, node_t *, pe_action_t *, gboolean, pe_working_set_t *);
+     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
 
     void (*rsc_colocation_lh) (pe_resource_t *, pe_resource_t *,
@@ -32,7 +32,7 @@ struct resource_alloc_functions_s {
 
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
-    enum pe_action_flags (*action_flags) (pe_action_t *, node_t *);
+    enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
     enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
                                            pe_node_t *, enum pe_action_flags,
                                            enum pe_action_flags,
@@ -63,11 +63,11 @@ void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                               pe_working_set_t *data_set);
 extern void rsc_ticket_constraint(pe_resource_t * lh_rsc, rsc_ticket_t * rsc_ticket,
                                   pe_working_set_t * data_set);
-extern enum pe_action_flags native_action_flags(pe_action_t * action, node_t * node);
+extern enum pe_action_flags native_action_flags(pe_action_t * action, pe_node_t * node);
 
 void native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void native_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean native_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
+extern gboolean native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
                                     gboolean force, pe_working_set_t * data_set);
 extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
 
@@ -81,7 +81,7 @@ void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
 void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);
-extern enum pe_action_flags group_action_flags(pe_action_t * action, node_t * node);
+extern enum pe_action_flags group_action_flags(pe_action_t * action, pe_node_t * node);
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(pe_resource_t * rsc, xmlNode * xml);
@@ -120,9 +120,9 @@ void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-extern enum pe_action_flags clone_action_flags(pe_action_t * action, node_t * node);
+extern enum pe_action_flags clone_action_flags(pe_action_t * action, pe_node_t * node);
 extern void clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean clone_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
+extern gboolean clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
 

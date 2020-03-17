@@ -13,7 +13,7 @@
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
-    node_t *node;
+    pe_node_t *node;
 } notify_entry_t;
 
 static gint
@@ -90,7 +90,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         int len = 0;
         int existing_len = 0;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->uname == NULL) {
             continue;
@@ -233,7 +233,7 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
 }
 
 static pe_action_t *
-pe_notify(pe_resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * confirm,
+pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t * confirm,
           notify_data_t * n_data, pe_working_set_t * data_set)
 {
     char *key = NULL;
@@ -278,7 +278,7 @@ pe_notify(pe_resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * co
 }
 
 static void
-pe_post_notify(pe_resource_t * rsc, node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
+pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     pe_action_t *notify = NULL;
 
@@ -750,7 +750,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
         if (task == stop_rsc || task == action_demote) {
             gIter = rsc->running_on;
             for (; gIter != NULL; gIter = gIter->next) {
-                node_t *current_node = (node_t *) gIter->data;
+                pe_node_t *current_node = (pe_node_t *) gIter->data;
 
                 /* if this stop action is a pseudo action as a result of the current
                  * node being fenced, this stop action is implied by the fencing 

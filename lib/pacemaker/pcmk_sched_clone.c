@@ -42,10 +42,10 @@ sort_rsc_id(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-static node_t *
-parent_node_instance(const pe_resource_t * rsc, node_t * node)
+static pe_node_t *
+parent_node_instance(const pe_resource_t * rsc, pe_node_t * node)
 {
-    node_t *ret = NULL;
+    pe_node_t *ret = NULL;
 
     if (node != NULL && rsc->parent) {
         ret = pe_hash_table_lookup(rsc->parent->allowed_nodes, node->details->id);
@@ -78,10 +78,10 @@ gint
 sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
     int rc = 0;
-    node_t *node1 = NULL;
-    node_t *node2 = NULL;
-    node_t *current_node1 = NULL;
-    node_t *current_node2 = NULL;
+    pe_node_t *node1 = NULL;
+    pe_node_t *node2 = NULL;
+    pe_node_t *current_node1 = NULL;
+    pe_node_t *current_node2 = NULL;
     unsigned int nnodes1 = 0;
     unsigned int nnodes2 = 0;
 
@@ -119,7 +119,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     node1 = current_node1;
     node2 = current_node2;
     if (node1) {
-        node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
+        pe_node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 
         if (match == NULL || match->weight < 0) {
             crm_trace("%s: current location is unavailable", resource1->id);
@@ -129,7 +129,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     if (node2) {
-        node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
+        pe_node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
 
         if (match == NULL || match->weight < 0) {
             crm_trace("%s: current location is unavailable", resource2->id);
@@ -220,7 +220,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     if (node1 && node2) {
         int lpc = 0;
         int max = 0;
-        node_t *n = NULL;
+        pe_node_t *n = NULL;
         GListPtr gIter = NULL;
         GListPtr list1 = NULL;
         GListPtr list2 = NULL;
@@ -369,10 +369,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     return rc;
 }
 
-static node_t *
-can_run_instance(pe_resource_t * rsc, node_t * node, int limit)
+static pe_node_t *
+can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
 {
-    node_t *local_node = NULL;
+    pe_node_t *local_node = NULL;
 
     if (node == NULL && rsc->allowed_nodes) {
         GHashTableIter iter;
@@ -422,7 +422,7 @@ static pe_node_t *
 allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
                   int limit, pe_working_set_t *data_set)
 {
-    node_t *chosen = NULL;
+    pe_node_t *chosen = NULL;
     GHashTable *backup = NULL;
 
     CRM_ASSERT(rsc);
@@ -444,7 +444,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
     append_parent_colocation(rsc->parent, rsc, all_coloc);
 
     if (prefer) {
-        node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
+        pe_node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
 
         if (local_prefer == NULL || local_prefer->weight < 0) {
             pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id,
@@ -557,8 +557,8 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
 
         if (child->running_on && is_set(child->flags, pe_rsc_provisional)
             && is_not_set(child->flags, pe_rsc_failed)) {
-            node_t *child_node = pe__current_node(child);
-            node_t *local_node = parent_node_instance(child, child_node);
+            pe_node_t *child_node = pe__current_node(child);
+            pe_node_t *local_node = parent_node_instance(child, child_node);
 
             pe_rsc_trace(rsc, "Checking pre-allocation of %s to %s (%d remaining of %d)",
                          child->id, child_node->details->uname, max - allocated, max);
@@ -588,8 +588,8 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on != NULL) {
-            node_t *child_node = pe__current_node(child);
-            node_t *local_node = parent_node_instance(child, child_node);
+            pe_node_t *child_node = pe__current_node(child);
+            pe_node_t *local_node = parent_node_instance(child, child_node);
 
             if (local_node == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
@@ -960,7 +960,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 bool
-assign_node(pe_resource_t * rsc, node_t * node, gboolean force)
+assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
 {
     bool changed = FALSE;
 
@@ -984,9 +984,9 @@ assign_node(pe_resource_t * rsc, node_t * node, gboolean force)
 }
 
 gboolean
-is_child_compatible(pe_resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current) 
+is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
     CRM_CHECK(child_rsc && local_node, return FALSE);
@@ -1021,7 +1021,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     pe_resource_t *pair = NULL;
     GListPtr gIter = NULL;
     GListPtr scratch = NULL;
-    node_t *local_node = NULL;
+    pe_node_t *local_node = NULL;
 
     local_node = local_child->fns->location(local_child, NULL, current);
     if (local_node) {
@@ -1033,7 +1033,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         pair = find_compatible_child_by_node(local_child, node, rsc, filter, current);
         if (pair) {
@@ -1136,7 +1136,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         gIter = rsc_rh->children;
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
                 pe_rsc_trace(rsc_rh, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
@@ -1198,7 +1198,7 @@ clone_child_action(pe_action_t * action)
 }
 
 enum pe_action_flags
-summary_action_flags(pe_action_t * action, GListPtr children, node_t * node)
+summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
 {
     GListPtr gIter = NULL;
     gboolean any_runnable = FALSE;
@@ -1242,7 +1242,7 @@ summary_action_flags(pe_action_t * action, GListPtr children, node_t * node)
 }
 
 enum pe_action_flags
-clone_action_flags(pe_action_t * action, node_t * node)
+clone_action_flags(pe_action_t * action, pe_node_t * node)
 {
     return summary_action_flags(action, action->rsc->children, node);
 }
@@ -1341,7 +1341,7 @@ rsc_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 
     } else if (rsc->known_on) {
         GHashTableIter iter;
-        node_t *known_node = NULL;
+        pe_node_t *known_node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
@@ -1399,7 +1399,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
         for (GList *child_iter = rsc->children; child_iter && !child;
              child_iter = child_iter->next) {
 
-            node_t *local_node = NULL;
+            pe_node_t *local_node = NULL;
             pe_resource_t *child_rsc = (pe_resource_t *) child_iter->data;
 
             local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
@@ -1417,7 +1417,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
 }
 
 gboolean
-clone_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
+clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
                    gboolean force, pe_working_set_t * data_set)
 {
     gboolean any_created = FALSE;
@@ -1431,7 +1431,7 @@ clone_create_probe(pe_resource_t * rsc, node_t * node, pe_action_t * complete,
     }
 
     if (rsc->exclusive_discover) {
-        node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if (allowed && allowed->rsc_discover_mode != pe_discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on

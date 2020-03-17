@@ -59,7 +59,7 @@ get_containers_or_children(pe_resource_t *rsc)
 }
 
 static bool
-migration_threshold_reached(pe_resource_t *rsc, node_t *node,
+migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
                             pe_working_set_t *data_set)
 {
     int fail_count, countdown;
@@ -397,7 +397,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 {
     GListPtr scratch = NULL;
     pe_resource_t *pair = NULL;
-    node_t *active_node_lh = NULL;
+    pe_node_t *active_node_lh = NULL;
 
     active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, current);
     if (active_node_lh) {
@@ -409,7 +409,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
     for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         pair = compatible_replica_for_node(rsc_lh, node, rsc, filter, current);
         if (pair) {
@@ -522,8 +522,8 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                                                         constraint, data_set);
 
         } else {
-            node_t *chosen = replica->container->fns->location(replica->container,
-                                                               NULL, FALSE);
+            pe_node_t *chosen = replica->container->fns->location(replica->container,
+                                                                  NULL, FALSE);
 
             if ((chosen == NULL)
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
@@ -580,7 +580,7 @@ pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
 }
 
 pe_resource_t *
-find_compatible_child_by_node(pe_resource_t * local_child, node_t * local_node, pe_resource_t * rsc,
+find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
                               enum rsc_role_e filter, gboolean current)
 {
     GListPtr gIter = NULL;

@@ -95,7 +95,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 
 void
 get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
-                    node_t * node, pe_working_set_t * data_set)
+                    pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -129,7 +129,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
 void
 get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
-                   node_t * node, pe_working_set_t * data_set)
+                   pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -154,7 +154,7 @@ get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 #if ENABLE_VERSIONED_ATTRS
 void
 pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
-                            node_t * node, pe_working_set_t * data_set)
+                            pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -733,7 +733,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 void
 common_update_score(pe_resource_t * rsc, const char *id, int score)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {

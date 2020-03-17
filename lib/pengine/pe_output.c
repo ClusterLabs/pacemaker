@@ -354,7 +354,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
 }
 
 char *
-pe__node_display_name(node_t *node, bool print_detail)
+pe__node_display_name(pe_node_t *node, bool print_detail)
 {
     char *node_name;
     const char *node_host = NULL;
@@ -365,7 +365,7 @@ pe__node_display_name(node_t *node, bool print_detail)
 
     /* Host is displayed only if this is a guest node */
     if (pe__is_guest_node(node)) {
-        node_t *host_node = pe__current_node(node->details->remote_rsc);
+        pe_node_t *host_node = pe__current_node(node->details->remote_rsc);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -618,7 +618,7 @@ int
 pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
@@ -649,7 +649,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
@@ -669,7 +669,7 @@ int
 pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "current_dc");
 
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name G_GNUC_UNUSED = va_arg(args, char *);
@@ -972,7 +972,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_html(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
@@ -1032,7 +1032,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_text(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode = va_arg(args, const char *);
@@ -1087,7 +1087,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_xml(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
@@ -1512,7 +1512,7 @@ pe__register_messages(pcmk__output_t *out) {
 }
 
 void
-pe__output_node(node_t *node, gboolean details, pcmk__output_t *out)
+pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
 {
     if (node == NULL) {
         crm_trace("<NULL>");

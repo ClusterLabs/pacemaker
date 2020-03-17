@@ -704,7 +704,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
         GListPtr rsc_iter = NULL;
-        node_t *node = NULL;
+        pe_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
         char *port_s = NULL;
@@ -799,7 +799,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                             node_copy(replica->node));
 
         {
-            node_t *copy = node_copy(replica->node);
+            pe_node_t *copy = node_copy(replica->node);
             copy->weight = -INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
@@ -1551,7 +1551,7 @@ static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                long options)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -1641,7 +1641,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                long options)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -1726,7 +1726,7 @@ static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;

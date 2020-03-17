@@ -445,7 +445,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         } else if (child_rsc->fns->active(child_rsc, TRUE)) {
             // Instance of fully active anonymous clone
 
-            node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+            pe_node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 
             if (location) {
                 // Instance is active on a single node
@@ -486,7 +486,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     /* Masters */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
 	active_instances++;
@@ -500,7 +500,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
 	active_instances++;
@@ -549,7 +549,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
 
             list = g_list_sort(list, sort_node_uname);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
-                node_t *node = (node_t *)nIter->data;
+                pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
                     stopped_list = pcmk__add_word(stopped_list,
@@ -662,7 +662,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         } else if (child_rsc->fns->active(child_rsc, TRUE)) {
             // Instance of fully active anonymous clone
 
-            node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+            pe_node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 
             if (location) {
                 // Instance is active on a single node
@@ -697,7 +697,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     /* Masters */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -713,7 +713,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -765,7 +765,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
             list = g_list_sort(list, sort_node_uname);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
-                node_t *node = (node_t *)nIter->data;
+                pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
                     stopped_list = pcmk__add_word(stopped_list,
@@ -850,7 +850,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         } else if (child_rsc->fns->active(child_rsc, TRUE)) {
             // Instance of fully active anonymous clone
 
-            node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+            pe_node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 
             if (location) {
                 // Instance is active on a single node
@@ -885,7 +885,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     /* Masters */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -901,7 +901,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
-        node_t *host = gIter->data;
+        pe_node_t *host = gIter->data;
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -952,7 +952,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
             list = g_list_sort(list, sort_node_uname);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
-                node_t *node = (node_t *)nIter->data;
+                pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
                     stopped_list = pcmk__add_word(stopped_list,

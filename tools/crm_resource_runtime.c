@@ -21,7 +21,7 @@ do_find_resource(const char *rsc, pe_resource_t * the_rsc, pe_working_set_t * da
     GListPtr lpc = NULL;
 
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
-        node_t *node = (node_t *) lpc->data;
+        pe_node_t *node = (pe_node_t *) lpc->data;
 
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
@@ -666,7 +666,7 @@ clear_rsc_failures(pcmk_controld_api_t *controld_api, const char *node_name,
 
 static int
 clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, node_t *node)
+                     const char *interval_spec, pe_node_t *node)
 {
     int rc = pcmk_ok;
     int attr_options = pcmk__node_attr_none;
@@ -689,7 +689,7 @@ cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
                     pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -731,7 +731,7 @@ cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            node = (node_t *) lpc->data;
+            node = (pe_node_t *) lpc->data;
 
             if (node->details->online) {
                 rc = cli_resource_delete(controld_api, node->details->uname,
@@ -807,7 +807,7 @@ cli_cleanup_all(pcmk_controld_api_t *controld_api, const char *node_name,
     }
 
     if (node_name) {
-        node_t *node = pe_find_node(data_set->nodes, node_name);
+        pe_node_t *node = pe_find_node(data_set->nodes, node_name);
 
         if (node == NULL) {
             CMD_ERR("Unknown node: %s", node_name);
@@ -1893,8 +1893,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 {
     int rc = pcmk_ok;
     unsigned int count = 0;
-    node_t *current = NULL;
-    node_t *dest = pe_find_node(data_set->nodes, host_name);
+    pe_node_t *current = NULL;
+    pe_node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = FALSE;
 
     if (dest == NULL) {
@@ -2030,7 +2030,7 @@ cli_resource_why_with_rsc_and_host(cib_t *cib_conn, GListPtr resources,
 }
 
 static void
-cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,node_t *node)
+cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,pe_node_t *node)
 {
     const char* host_uname =  node->details->uname;
     GListPtr allResources = node->details->allocated_rsc;
@@ -2069,7 +2069,7 @@ cli_resource_why_with_rsc_without_host(cib_t *cib_conn, GListPtr resources,
 }
 
 void cli_resource_why(cib_t *cib_conn, GListPtr resources, pe_resource_t *rsc,
-                      node_t *node)
+                      pe_node_t *node)
 {
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 

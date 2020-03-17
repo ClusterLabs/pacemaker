@@ -149,11 +149,11 @@ static void apply_master_location(pe_resource_t *child, GListPtr location_constr
     }
 }
 
-static node_t *
+static pe_node_t *
 can_be_master(pe_resource_t * rsc)
 {
-    node_t *node = NULL;
-    node_t *local_node = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *local_node = NULL;
     pe_resource_t *parent = uber_parent(rsc);
     clone_variant_data_t *clone_data = NULL;
 
@@ -256,8 +256,8 @@ static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
-    node_t *node = NULL;
-    node_t *chosen = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *chosen = NULL;
     clone_variant_data_t *clone_data = NULL;
     char score[33];
     size_t len = sizeof(score);
@@ -288,7 +288,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             continue;
         }
 
-        node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
+        node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
         /* adds in master preferences and rsc_location.role=Master */
         score2char_stack(child->sort_index, score, len);
@@ -373,7 +373,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             pe_rsc_trace(rsc, "%s: %d", child->id, child->sort_index);
 
         } else {
-            node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
+            node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
             CRM_ASSERT(node != NULL);
 
             child->sort_index = node->weight;
@@ -387,7 +387,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 static gboolean
-filter_anonymous_instance(pe_resource_t *rsc, const node_t *node)
+filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
     GListPtr rIter = NULL;
     char *key = clone_strip(rsc->id);
@@ -439,7 +439,7 @@ filter_anonymous_instance(pe_resource_t *rsc, const node_t *node)
 }
 
 static const char *
-lookup_promotion_score(pe_resource_t *rsc, const node_t *node, const char *name)
+lookup_promotion_score(pe_resource_t *rsc, const pe_node_t *node, const char *name)
 {
     const char *attr_value = NULL;
 
@@ -453,12 +453,12 @@ lookup_promotion_score(pe_resource_t *rsc, const node_t *node, const char *name)
 }
 
 static int
-promotion_score(pe_resource_t *rsc, const node_t *node, int not_set_value)
+promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
 {
     char *name = rsc->id;
     const char *attr_value = NULL;
     int score = not_set_value;
-    node_t *match = NULL;
+    pe_node_t *match = NULL;
 
     CRM_CHECK(node != NULL, return not_set_value);
 
@@ -488,7 +488,7 @@ promotion_score(pe_resource_t *rsc, const node_t *node, int not_set_value)
          * skip this code, to make sure we take into account any permanent
          * promotion scores set previously.
          */
-        node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
+        pe_node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
         match = pe_find_node_id(rsc->running_on, node->details->id);
         if ((match == NULL) && (known == NULL)) {
@@ -558,7 +558,7 @@ apply_master_prefs(pe_resource_t *rsc)
 
     for (; gIter != NULL; gIter = gIter->next) {
         GHashTableIter iter;
-        node_t *node = NULL;
+        pe_node_t *node = NULL;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
@@ -645,8 +645,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
     GHashTableIter iter;
-    node_t *node = NULL;
-    node_t *chosen = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *chosen = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
     char score[33];
     size_t len = sizeof(score);
@@ -933,10 +933,10 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static void
-node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int score)
+node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int score)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     const char *value = NULL;
 
     if (other == NULL) {
@@ -973,7 +973,7 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
         for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
             enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 
             pe_rsc_trace(rsc_rh, "Processing: %s", child_rsc->id);

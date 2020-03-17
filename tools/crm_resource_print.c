@@ -185,7 +185,7 @@ cli_resource_print_location(pe_resource_t * rsc, const char *prefix)
         GListPtr lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
-            node_t *node = (node_t *) lpc2->data;
+            pe_node_t *node = (pe_node_t *) lpc2->data;
             char *score = score2char(node->weight);
 
             fprintf(stdout, "%s: Node %-*s (score=%s, id=%s)\n",
@@ -280,7 +280,7 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
     unsigned int count = 0;
     GHashTable *params = NULL;
     const char *value = NULL;
-    node_t *current = pe__find_active_on(rsc, &count, NULL);
+    pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
 
     if (count > 1) {
         CMD_ERR("%s is active on more than one node,"
