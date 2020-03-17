@@ -710,7 +710,7 @@ clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * sta
 
     gIter = rsc->actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (*starting && *stopping) {
             return;
@@ -744,11 +744,11 @@ clone_update_pseudo_status(resource_t * rsc, gboolean * stopping, gboolean * sta
     }
 }
 
-static action_t *
+static pe_action_t *
 find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
                 GList **list)
 {
-    action_t *match = NULL;
+    pe_action_t *match = NULL;
     GListPtr possible = NULL;
     GListPtr active = NULL;
 
@@ -758,7 +758,7 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
         GListPtr gIter = possible;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
 
             if (is_set(op->flags, pe_action_optional) == FALSE) {
                 active = g_list_prepend(active, op);
@@ -796,10 +796,10 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
 static void
 child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
-    action_t *stop = NULL;
-    action_t *start = NULL;
-    action_t *last_stop = NULL;
-    action_t *last_start = NULL;
+    pe_action_t *stop = NULL;
+    pe_action_t *start = NULL;
+    pe_action_t *last_stop = NULL;
+    pe_action_t *last_start = NULL;
     GListPtr gIter = NULL;
     gboolean active_only = TRUE;        /* change to false to get the old behavior */
     clone_variant_data_t *clone_data = NULL;
@@ -857,11 +857,11 @@ clone_create_pseudo_actions(
     gboolean child_stopping = FALSE;
     gboolean allow_dependent_migrations = TRUE;
 
-    action_t *stop = NULL;
-    action_t *stopped = NULL;
+    pe_action_t *stop = NULL;
+    pe_action_t *stopped = NULL;
 
-    action_t *start = NULL;
-    action_t *started = NULL;
+    pe_action_t *start = NULL;
+    pe_action_t *started = NULL;
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
@@ -1159,7 +1159,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 enum action_tasks
-clone_child_action(action_t * action)
+clone_child_action(pe_action_t * action)
 {
     enum action_tasks result = no_action;
     resource_t *child = (resource_t *) action->rsc->children->data;
@@ -1198,7 +1198,7 @@ clone_child_action(action_t * action)
 }
 
 enum pe_action_flags
-summary_action_flags(action_t * action, GListPtr children, node_t * node)
+summary_action_flags(pe_action_t * action, GListPtr children, node_t * node)
 {
     GListPtr gIter = NULL;
     gboolean any_runnable = FALSE;
@@ -1208,7 +1208,7 @@ summary_action_flags(action_t * action, GListPtr children, node_t * node)
     const char *task_s = task2text(task);
 
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        action_t *child_action = NULL;
+        pe_action_t *child_action = NULL;
         resource_t *child = (resource_t *) gIter->data;
 
         child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
@@ -1242,7 +1242,7 @@ summary_action_flags(action_t * action, GListPtr children, node_t * node)
 }
 
 enum pe_action_flags
-clone_action_flags(action_t * action, node_t * node)
+clone_action_flags(pe_action_t * action, node_t * node)
 {
     return summary_action_flags(action, action->rsc->children, node);
 }
@@ -1273,7 +1273,7 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
 
     gIter = rsc->actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *op = (action_t *) gIter->data;
+        pe_action_t *op = (pe_action_t *) gIter->data;
 
         rsc->cmds->action_flags(op, NULL);
     }
@@ -1417,7 +1417,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
 }
 
 gboolean
-clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
+clone_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
                    gboolean force, pe_working_set_t * data_set)
 {
     gboolean any_created = FALSE;

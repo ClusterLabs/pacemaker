@@ -39,12 +39,12 @@ typedef struct pe__order_constraint_s {
 
     void *lh_opaque;
     resource_t *lh_rsc;
-    action_t *lh_action;
+    pe_action_t *lh_action;
     char *lh_action_task;
 
     void *rh_opaque;
     resource_t *rh_rsc;
-    action_t *rh_action;
+    pe_action_t *rh_action;
     char *rh_action_task;
 } pe__ordering_t;
 
@@ -53,10 +53,10 @@ typedef struct notify_data_s {
 
     const char *action;
 
-    action_t *pre;
-    action_t *post;
-    action_t *pre_done;
-    action_t *post_done;
+    pe_action_t *pre;
+    pe_action_t *post;
+    pe_action_t *pre_done;
+    pe_action_t *post_done;
 
     GListPtr active;            /* notify_entry_t*  */
     GListPtr inactive;          /* notify_entry_t*  */
@@ -226,8 +226,8 @@ pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
     return NULL;
 }
 
-extern action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
-extern gboolean order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order);
+extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
+extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
 
 GHashTable *node_hash_dup(GHashTable * hash);
 
@@ -253,8 +253,8 @@ extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
 extern xmlNode *find_rsc_op_entry(resource_t * rsc, const char *key);
 
-extern action_t *custom_action(resource_t * rsc, char *key, const char *task, node_t * on_node,
-                               gboolean optional, gboolean foo, pe_working_set_t * data_set);
+extern pe_action_t *custom_action(resource_t * rsc, char *key, const char *task, node_t * on_node,
+                                  gboolean optional, gboolean foo, pe_working_set_t * data_set);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
@@ -305,8 +305,8 @@ extern action_t *custom_action(resource_t * rsc, char *key, const char *task, no
 extern int pe_get_configured_timeout(resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
 
-extern action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
-                                   node_t * on_node);
+extern pe_action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
+                                      node_t * on_node);
 extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
@@ -317,7 +317,7 @@ extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
 GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                             const char *task, bool require_node);
 
-extern void pe_free_action(action_t * action);
+extern void pe_free_action(pe_action_t * action);
 
 extern void resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
                               pe_working_set_t * data_set);
@@ -378,9 +378,9 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
-action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
+pe_action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
 void trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set);
+    resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set);
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
 void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);

@@ -116,7 +116,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line)
+update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char *source, int line)
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
@@ -195,7 +195,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
             const char *reason, pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
-    action_t *cancel = NULL;
+    pe_action_t *cancel = NULL;
 
     const char *task = NULL;
     const char *call_id = NULL;
@@ -308,7 +308,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = pcmk__op_key(rsc->id, task, interval_ms);
 
         if (interval_ms > 0) {
-            action_t *op = NULL;
+            pe_action_t *op = NULL;
 
 #if 0
             /* Always reload/restart the entire resource */
@@ -907,7 +907,7 @@ stage0(pe_working_set_t * data_set)
 gboolean
 probe_resources(pe_working_set_t * data_set)
 {
-    action_t *probe_node_complete = NULL;
+    pe_action_t *probe_node_complete = NULL;
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -931,8 +931,8 @@ probe_resources(pe_working_set_t * data_set)
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
-                                               CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
+            pe_action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
+                                                  CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
 
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
             continue;
@@ -1330,7 +1330,7 @@ allocate_resources(pe_working_set_t * data_set)
  */
 
 static inline void
-order_start_then_action(resource_t *lh_rsc, action_t *rh_action,
+order_start_then_action(resource_t *lh_rsc, pe_action_t *rh_action,
                         enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_rsc && rh_action && data_set) {
@@ -1342,7 +1342,7 @@ order_start_then_action(resource_t *lh_rsc, action_t *rh_action,
 }
 
 static inline void
-order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
+order_action_then_stop(pe_action_t *lh_action, resource_t *rh_rsc,
                        enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_action && rh_rsc && data_set) {
@@ -1613,8 +1613,8 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
 gboolean
 stage6(pe_working_set_t * data_set)
 {
-    action_t *dc_down = NULL;
-    action_t *stonith_op = NULL;
+    pe_action_t *dc_down = NULL;
+    pe_action_t *stonith_op = NULL;
     gboolean integrity_lost = FALSE;
     gboolean need_stonith = TRUE;
     GListPtr gIter;
@@ -1688,7 +1688,7 @@ stage6(pe_working_set_t * data_set)
                  * if we can come up with a good use for this in the future, we will. */
                     pe__is_guest_or_remote_node(node) == FALSE) {
 
-            action_t *down_op = sched_shutdown_op(node, data_set);
+            pe_action_t *down_op = sched_shutdown_op(node, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being shut down
@@ -1726,7 +1726,7 @@ stage6(pe_working_set_t * data_set)
          */
         if (safe_str_eq(dc_down->task, CRM_OP_SHUTDOWN)) {
             for (gIter = shutdown_ops; gIter != NULL; gIter = gIter->next) {
-                action_t *node_stop = (action_t *) gIter->data;
+                pe_action_t *node_stop = (pe_action_t *) gIter->data;
 
                 crm_debug("Ordering shutdown on %s before %s on DC %s",
                           node_stop->node->details->uname,
@@ -1801,7 +1801,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 {
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
-    action_t *rh_action = NULL;
+    pe_action_t *rh_action = NULL;
     enum pe_ordering type;
 
     CRM_CHECK(rsc != NULL, return);
@@ -1835,7 +1835,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 
     gIter = rh_actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *rh_action_iter = (action_t *) gIter->data;
+        pe_action_t *rh_action_iter = (pe_action_t *) gIter->data;
 
         if (lh_action) {
             order_actions(lh_action, rh_action_iter, type);
@@ -1857,7 +1857,7 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
 {
     GListPtr gIter = NULL;
     GListPtr lh_actions = NULL;
-    action_t *lh_action = order->lh_action;
+    pe_action_t *lh_action = order->lh_action;
     resource_t *rh_rsc = order->rh_rsc;
 
     crm_trace("Processing LH of ordering constraint %d", order->id);
@@ -1900,7 +1900,7 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
 
     gIter = lh_actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *lh_action_iter = (action_t *) gIter->data;
+        pe_action_t *lh_action_iter = (pe_action_t *) gIter->data;
 
         if (rh_rsc == NULL && order->rh_action) {
             rh_rsc = order->rh_action->rsc;
@@ -1920,7 +1920,7 @@ extern void update_colo_start_chain(pe_action_t *action,
                                     pe_working_set_t *data_set);
 
 static int
-is_recurring_action(action_t *action)
+is_recurring_action(pe_action_t *action)
 {
     guint interval_ms;
 
@@ -1933,7 +1933,7 @@ is_recurring_action(action_t *action)
 }
 
 static void
-apply_container_ordering(action_t *action, pe_working_set_t *data_set)
+apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 {
     /* VMs are also classified as containers for these purposes... in
      * that they both involve a 'thing' running on a real or remote
@@ -2107,7 +2107,7 @@ get_remote_node_state(pe_node_t *node)
  * \brief Order actions on remote node relative to actions for the connection
  */
 static void
-apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
+apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 {
     resource_t *remote_rsc = NULL;
     enum action_tasks task = text2task(action->task);
@@ -2243,7 +2243,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
     }
 
     for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
         resource_t *remote = NULL;
 
         // We are only interested in resource actions
@@ -2728,7 +2728,7 @@ order_then_probes(pe_working_set_t * data_set)
          * with the ever narrowing usecase suggests that this code
          * should remain disabled until someone gets smarter.
          */
-        action_t *start = NULL;
+        pe_action_t *start = NULL;
         GListPtr actions = NULL;
         GListPtr probes = NULL;
 
@@ -2750,7 +2750,7 @@ order_then_probes(pe_working_set_t * data_set)
             action_wrapper_t *before = (action_wrapper_t *) actions->data;
 
             GListPtr pIter = NULL;
-            action_t *first = before->action;
+            pe_action_t *first = before->action;
             resource_t *first_rsc = first->rsc;
 
             if(first->required_runnable_before) {
@@ -2784,7 +2784,7 @@ order_then_probes(pe_working_set_t * data_set)
             crm_err("Applying %s before %s %d", first->uuid, start->uuid, uber_parent(first_rsc)->variant);
 
             for (pIter = probes; pIter != NULL; pIter = pIter->next) {
-                action_t *probe = (action_t *) pIter->data;
+                pe_action_t *probe = (pe_action_t *) pIter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pe_order_optional);
@@ -2840,7 +2840,7 @@ stage7(pe_working_set_t * data_set)
     }
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         update_colo_start_chain(action, data_set);
     }
@@ -2850,7 +2850,7 @@ stage7(pe_working_set_t * data_set)
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         update_action(action, data_set);
     }
@@ -2956,7 +2956,7 @@ stage8(pe_working_set_t * data_set)
     }
 
 /* errors...
-   slist_iter(action, action_t, action_list, lpc,
+   slist_iter(action, pe_action_t, action_list, lpc,
    if(action->optional == FALSE && action->runnable == FALSE) {
    print_action("Ignoring", action, TRUE);
    }
@@ -2986,7 +2986,7 @@ stage8(pe_working_set_t * data_set)
 
     gIter = data_set->actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (action->rsc
             && action->node
@@ -3028,7 +3028,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         char *node_name = NULL;
         char *task = NULL;
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (action->rsc != NULL) {
             continue;

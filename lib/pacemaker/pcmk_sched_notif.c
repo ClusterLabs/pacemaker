@@ -232,12 +232,12 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
     }
 }
 
-static action_t *
-pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
+static pe_action_t *
+pe_notify(resource_t * rsc, node_t * node, pe_action_t * op, pe_action_t * confirm,
           notify_data_t * n_data, pe_working_set_t * data_set)
 {
     char *key = NULL;
-    action_t *trigger = NULL;
+    pe_action_t *trigger = NULL;
     const char *value = NULL;
     const char *task = NULL;
 
@@ -280,7 +280,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
 static void
 pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
 {
-    action_t *notify = NULL;
+    pe_action_t *notify = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
@@ -298,7 +298,7 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
         GListPtr gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *mon = (action_t *) gIter->data;
+            pe_action_t *mon = (pe_action_t *) gIter->data;
             const char *interval_ms_s = g_hash_table_lookup(mon->meta,
                                                             XML_LRM_ATTR_INTERVAL_MS);
 
@@ -316,8 +316,8 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
 }
 
 notify_data_t *
-create_notification_boundaries(resource_t * rsc, const char *action, action_t * start,
-                               action_t * end, pe_working_set_t * data_set)
+create_notification_boundaries(resource_t * rsc, const char *action, pe_action_t * start,
+                               pe_action_t * end, pe_working_set_t * data_set)
 {
     /* Create the pseudo ops that precede and follow the actual notifications */
 
@@ -487,7 +487,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
         GListPtr gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
 
             if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
                 task = text2task(op->task);
@@ -675,8 +675,8 @@ void
 create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    action_t *stop = NULL;
-    action_t *start = NULL;
+    pe_action_t *stop = NULL;
+    pe_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
 
     if (rsc->children) {
@@ -692,7 +692,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
     /* Copy notification details into standard ops */
 
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *op = (action_t *) gIter->data;
+        pe_action_t *op = (pe_action_t *) gIter->data;
 
         if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
             enum action_tasks t = text2task(op->task);

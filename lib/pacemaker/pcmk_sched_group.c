@@ -81,7 +81,7 @@ void group_update_pseudo_status(resource_t * parent, resource_t * child);
 void
 group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
-    action_t *op = NULL;
+    pe_action_t *op = NULL;
     const char *value = NULL;
     GListPtr gIter = rsc->children;
 
@@ -144,7 +144,7 @@ group_update_pseudo_status(resource_t * parent, resource_t * child)
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (is_set(action->flags, pe_action_optional)) {
             continue;
@@ -379,7 +379,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 enum pe_action_flags
-group_action_flags(action_t * action, node_t * node)
+group_action_flags(pe_action_t * action, node_t * node)
 {
     GListPtr gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
@@ -388,7 +388,7 @@ group_action_flags(action_t * action, node_t * node)
         resource_t *child = (resource_t *) gIter->data;
         enum action_tasks task = get_complex_task(child, action->task, TRUE);
         const char *task_s = task2text(task);
-        action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
+        pe_action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
 
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
@@ -433,7 +433,7 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
-        action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
+        pe_action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
             changed |= child->cmds->update_actions(first, child_action, node,

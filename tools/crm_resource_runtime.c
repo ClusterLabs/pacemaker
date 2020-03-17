@@ -1209,7 +1209,7 @@ max_delay_for_resource(pe_working_set_t * data_set, resource_t *rsc)
 
     } else if(rsc) {
         char *key = crm_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
-        action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
+        pe_action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
 
         max_delay = value? (int) crm_parse_ll(value, NULL) : -1;
@@ -1529,7 +1529,7 @@ done:
     return rc;
 }
 
-static inline int action_is_pending(action_t *action) 
+static inline int action_is_pending(pe_action_t *action) 
 {
     if(is_set(action->flags, pe_action_optional)) {
         return FALSE;
@@ -1557,7 +1557,7 @@ actions_are_pending(GListPtr actions)
     GListPtr action;
 
     for (action = actions; action != NULL; action = action->next) {
-        action_t *a = (action_t *)action->data;
+        pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=0x%.8x)", a->uuid, a->flags);
             return TRUE;
@@ -1581,7 +1581,7 @@ print_pending_actions(GListPtr actions)
 
     fprintf(stderr, "Pending actions:\n");
     for (action = actions; action != NULL; action = action->next) {
-        action_t *a = (action_t *) action->data;
+        pe_action_t *a = (pe_action_t *) action->data;
 
         if (action_is_pending(a)) {
             fprintf(stderr, "\tAction %d: %s", a->id, a->uuid);

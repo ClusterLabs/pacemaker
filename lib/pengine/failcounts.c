@@ -361,7 +361,7 @@ pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;
-    action_t *clear = NULL;
+    pe_action_t *clear = NULL;
 
     CRM_CHECK(rsc && node && reason && data_set, return NULL);
 

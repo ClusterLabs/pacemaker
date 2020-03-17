@@ -24,7 +24,7 @@
 
 notify_data_t * create_notification_boundaries(resource_t *rsc,
                                                const char *action,
-                                               action_t *start, action_t *end,
+                                               pe_action_t *start, pe_action_t *end,
                                                pe_working_set_t *data_set);
 
 void collect_notification_data(resource_t *rsc, gboolean state,

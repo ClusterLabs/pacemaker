@@ -25,7 +25,7 @@
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+void unpack_operation(pe_action_t * action, xmlNode * xml_obj, resource_t * container,
                       pe_working_set_t * data_set);
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
@@ -497,12 +497,12 @@ sort_rsc_priority(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-action_t *
+pe_action_t *
 custom_action(resource_t * rsc, char *key, const char *task,
               node_t * on_node, gboolean optional, gboolean save_action,
               pe_working_set_t * data_set)
 {
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
     GListPtr possible_matches = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
@@ -547,7 +547,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
                          (on_node? on_node->details->uname : "no node"));
         }
 
-        action = calloc(1, sizeof(action_t));
+        action = calloc(1, sizeof(pe_action_t));
         if (save_action) {
             action->id = data_set->action_id++;
         } else {
@@ -720,7 +720,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 }
 
 static const char *
-unpack_operation_on_fail(action_t * action)
+unpack_operation_on_fail(pe_action_t * action)
 {
 
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
@@ -967,7 +967,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * \param[in]     data_set   Cluster state
  */
 void
-unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+unpack_operation(pe_action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
@@ -1370,7 +1370,7 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-pe_free_action(action_t * action)
+pe_free_action(pe_action_t * action)
 {
     if (action == NULL) {
         return;
@@ -1406,7 +1406,7 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
     CRM_CHECK(input != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL_MS);
         if (value == NULL) {
@@ -1454,7 +1454,7 @@ get_complex_task(resource_t * rsc, const char *name, gboolean allow_non_atomic)
     return task;
 }
 
-action_t *
+pe_action_t *
 find_first_action(GListPtr input, const char *uuid, const char *task, node_t * on_node)
 {
     GListPtr gIter = NULL;
@@ -1462,7 +1462,7 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
     CRM_CHECK(uuid || task, return NULL);
 
     for (gIter = input; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (uuid != NULL && safe_str_neq(uuid, action->uuid)) {
             continue;
@@ -1493,7 +1493,7 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (safe_str_neq(key, action->uuid)) {
             crm_trace("%s does not match action %s", key, action->uuid);
@@ -1836,7 +1836,7 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
 }
 
 gboolean
-order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order)
+order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
 {
     GListPtr gIter = NULL;
     action_wrapper_t *wrapper = NULL;
@@ -1887,10 +1887,10 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
     return TRUE;
 }
 
-action_t *
+pe_action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
-    action_t *op = NULL;
+    pe_action_t *op = NULL;
 
     if(data_set->singletons) {
         op = g_hash_table_lookup(data_set->singletons, name);
@@ -2023,7 +2023,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
         GHashTable *local_rsc_params = crm_str_table_new();
-        action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+        pe_action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
 #if ENABLE_VERSIONED_ATTRS
         xmlNode *local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
         const char *ra_version = NULL;
@@ -2344,11 +2344,11 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
 }
 
 
-action_t *
+pe_action_t *
 pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set)
 {
     char *op_key = NULL;
-    action_t *stonith_op = NULL;
+    pe_action_t *stonith_op = NULL;
 
     if(op == NULL) {
         op = data_set->stonith_action;
@@ -2428,7 +2428,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
 
 void
 trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set) 
+    resource_t * rsc, node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
 {
     if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */
@@ -2442,7 +2442,7 @@ trigger_unfencing(
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        action_t *unfence = pe_fence_op(node, "on", FALSE, reason, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", FALSE, reason, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pe_order_optional);

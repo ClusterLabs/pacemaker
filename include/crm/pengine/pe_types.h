@@ -506,7 +506,6 @@ typedef struct pe_action_wrapper_s {
 } pe_action_wrapper_t;
 
 // Deprecated type aliases
-typedef struct pe_action_s action_t;                 //!< \deprecated Use pe_action_t instead
 typedef struct pe_action_wrapper_s action_wrapper_t; //!< \deprecated Use pe_action_wrapper_t instead
 typedef struct pe_node_s node_t;                     //!< \deprecated Use pe_node_t instead
 typedef struct pe_resource_s resource_t;             //!< \deprecated Use pe_resource_t instead
@@ -518,6 +517,8 @@ typedef enum pe_quorum_policy no_quorum_policy_t;    //!< \deprecated Use enum p
  * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
  */
 
+//!< \deprecated Use pe_action_t instead
+typedef struct pe_action_s action_t;
 //!< \deprecated Use pe_tag_t instead
 typedef struct pe_tag_s tag_t;
 

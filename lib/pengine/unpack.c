@@ -2058,7 +2058,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
         GListPtr gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *stop = (action_t *) gIter->data;
+            pe_action_t *stop = (pe_action_t *) gIter->data;
 
             stop->flags |= pe_action_optional;
         }
@@ -2749,7 +2749,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 {
     guint interval_ms = 0;
     bool is_probe = false;
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
 
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
@@ -3281,7 +3281,7 @@ static enum action_fail_response
 get_action_on_fail(resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
 {
     int result = action_fail_recover;
-    action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
+    pe_action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
 
     result = action->on_fail;
     pe_free_action(action);

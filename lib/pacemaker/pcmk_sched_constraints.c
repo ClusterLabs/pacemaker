@@ -452,7 +452,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (min_required_before) {
         GListPtr rIter = NULL;
         char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
-        action_t *unordered_action = get_pseudo_op(task, data_set);
+        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
         free(task);
 
         /* require the pseudo action to have "min_required_before" number of
@@ -1424,7 +1424,7 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
 }
 
 static char *
-task_from_action_or_key(action_t *action, const char *key)
+task_from_action_or_key(pe_action_t *action, const char *key)
 {
     char *res = NULL;
 
@@ -1574,8 +1574,8 @@ cleanup_order:
 
 /* LHS before RHS */
 int
-custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_action,
-                    resource_t * rh_rsc, char *rh_action_task, action_t * rh_action,
+custom_action_order(resource_t * lh_rsc, char *lh_action_task, pe_action_t * lh_action,
+                    resource_t * rh_rsc, char *rh_action_task, pe_action_t * rh_action,
                     enum pe_ordering type, pe_working_set_t * data_set)
 {
     pe__ordering_t *order = NULL;
@@ -1675,8 +1675,9 @@ get_flags(const char *id, enum pe_order_kind kind,
 
 static gboolean
 unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rsc,
-                 action_t ** begin, action_t ** end, action_t ** inv_begin, action_t ** inv_end,
-                 const char *parent_symmetrical_s, pe_working_set_t * data_set)
+                 pe_action_t ** begin, pe_action_t ** end, pe_action_t ** inv_begin,
+                 pe_action_t ** inv_end, const char *parent_symmetrical_s,
+                 pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
     GListPtr set_iter = NULL;
@@ -1896,7 +1897,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     /* If we have an un-ordered set1, whether it is sequential or not is irrelevant in regards to set2. */
     if (!require_all) {
         char *task = crm_strdup_printf(CRM_OP_RELAXED_SET ":%s", ID(set1));
-        action_t *unordered_action = get_pseudo_op(task, data_set);
+        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
         update_action_flags(unordered_action, pe_action_requires_any, __FUNCTION__, __LINE__);
@@ -2160,11 +2161,11 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
        resource_t *last_rsc = NULL;
      */
 
-    action_t *set_end = NULL;
-    action_t *set_begin = NULL;
+    pe_action_t *set_end = NULL;
+    pe_action_t *set_begin = NULL;
 
-    action_t *set_inv_end = NULL;
-    action_t *set_inv_begin = NULL;
+    pe_action_t *set_inv_end = NULL;
+    pe_action_t *set_inv_begin = NULL;
 
     xmlNode *set = NULL;
     xmlNode *last = NULL;
@@ -2173,10 +2174,10 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *expanded_xml = NULL;
 
     /*
-       action_t *last_end = NULL;
-       action_t *last_begin = NULL;
-       action_t *last_inv_end = NULL;
-       action_t *last_inv_begin = NULL;
+       pe_action_t *last_end = NULL;
+       pe_action_t *last_begin = NULL;
+       pe_action_t *last_inv_end = NULL;
+       pe_action_t *last_inv_begin = NULL;
      */
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);

@@ -288,7 +288,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
     fprintf(dot_strm, " digraph \"g\" {\n");
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
@@ -333,7 +333,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     }
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         GListPtr gIter2 = NULL;
 

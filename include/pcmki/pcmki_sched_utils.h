@@ -46,7 +46,7 @@ extern gboolean native_assign_node(resource_t * rsc, GListPtr candidates, node_t
 void native_deallocate(resource_t * rsc);
 
 extern void log_action(unsigned int log_level, const char *pre_text,
-                       action_t * action, gboolean details);
+                       pe_action_t * action, gboolean details);
 
 gboolean can_run_any(GHashTable * nodes);
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
@@ -57,8 +57,8 @@ resource_t *find_compatible_child_by_node(resource_t * local_child, node_t * loc
                                           enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);
 bool assign_node(resource_t * rsc, node_t * node, gboolean force);
-enum pe_action_flags summary_action_flags(action_t * action, GListPtr children, node_t * node);
-enum action_tasks clone_child_action(action_t * action);
+enum pe_action_flags summary_action_flags(pe_action_t * action, GListPtr children, node_t * node);
+enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(resource_t * rsc);
 
 enum filter_colocation_res {

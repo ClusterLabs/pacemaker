@@ -20,10 +20,10 @@
 #include <pacemaker-internal.h>
 
 void update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set);
-gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);
+gboolean rsc_update_action(pe_action_t * first, pe_action_t * then, enum pe_ordering type);
 
 static enum pe_action_flags
-get_action_flags(action_t * action, node_t * node)
+get_action_flags(pe_action_t * action, node_t * node)
 {
     enum pe_action_flags flags = action->flags;
 
@@ -133,11 +133,11 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     return uuid;
 }
 
-static action_t *
-rsc_expand_action(action_t * action)
+static pe_action_t *
+rsc_expand_action(pe_action_t * action)
 {
     gboolean notify = FALSE;
-    action_t *result = action;
+    pe_action_t *result = action;
     resource_t *rsc = action->rsc;
 
     if (rsc == NULL) {
@@ -172,7 +172,7 @@ rsc_expand_action(action_t * action)
 }
 
 static enum pe_graph_flags
-graph_update_action(action_t * first, action_t * then, node_t * node,
+graph_update_action(pe_action_t * first, pe_action_t * then, node_t * node,
                     enum pe_action_flags first_flags, enum pe_action_flags then_flags,
                     action_wrapper_t *order, pe_working_set_t *data_set)
 {
@@ -454,7 +454,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (safe_str_neq(action->task, RSC_START)) {
             continue;
@@ -494,7 +494,7 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
      * unrunnable before we follow the colo chain for the parent. */
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *)gIter->data;
-        action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
+        pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
         if (start == NULL || is_set(start->flags, pe_action_runnable)) {
             return;
         }
@@ -547,7 +547,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
         action_wrapper_t *other = (action_wrapper_t *) lpc->data;
-        action_t *first = other->action;
+        pe_action_t *first = other->action;
 
         node_t *then_node = then->node;
         node_t *first_node = first->node;
@@ -704,7 +704,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 }
 
 gboolean
-shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * data_set)
+shutdown_constraints(node_t * node, pe_action_t * shutdown_op, pe_working_set_t * data_set)
 {
     /* add the stop to the before lists so it counts as a pre-req
      * for the shutdown
@@ -712,7 +712,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
     GListPtr lpc = NULL;
 
     for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
-        action_t *action = (action_t *) lpc->data;
+        pe_action_t *action = (pe_action_t *) lpc->data;
 
         if (action->rsc == NULL || action->node == NULL) {
             continue;
@@ -768,7 +768,7 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
 }
 
 static node_t *
-get_router_node(action_t *action)
+get_router_node(pe_action_t *action)
 {
     node_t *began_on = NULL;
     node_t *ended_on = NULL;
@@ -920,7 +920,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 void
 add_maintenance_update(pe_working_set_t *data_set)
 {
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
 
     if (add_maintenance_nodes(NULL, data_set)) {
         crm_trace("adding maintenance state update pseudo action");
@@ -942,7 +942,7 @@ add_maintenance_update(pe_working_set_t *data_set)
  * \param[in]     data_set  Working set for cluster
  */
 static void
-add_downed_nodes(xmlNode *xml, const action_t *action,
+add_downed_nodes(xmlNode *xml, const pe_action_t *action,
                  const pe_working_set_t *data_set)
 {
     CRM_CHECK(xml && action && action->node && data_set, return);
@@ -971,7 +971,7 @@ add_downed_nodes(xmlNode *xml, const action_t *action,
          * unless it's part of a migration
          */
         GListPtr iter;
-        action_t *input;
+        pe_action_t *input;
         gboolean migrating = FALSE;
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
@@ -1010,7 +1010,7 @@ should_lock_action(pe_action_t *action)
 }
 
 static xmlNode *
-action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
+action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
     gboolean needs_node_info = TRUE;
     gboolean needs_maintenance_info = FALSE;

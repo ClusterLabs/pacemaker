@@ -22,7 +22,7 @@ struct resource_alloc_functions_s {
                                   enum pe_weights);
     node_t *(*allocate) (resource_t *, node_t *, pe_working_set_t *);
     void (*create_actions) (resource_t *, pe_working_set_t *);
-     gboolean(*create_probe) (resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
+     gboolean(*create_probe) (resource_t *, node_t *, pe_action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (resource_t *, pe_working_set_t *);
 
     void (*rsc_colocation_lh) (pe_resource_t *, pe_resource_t *,
@@ -32,7 +32,7 @@ struct resource_alloc_functions_s {
 
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
-    enum pe_action_flags (*action_flags) (action_t *, node_t *);
+    enum pe_action_flags (*action_flags) (pe_action_t *, node_t *);
     enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
                                            pe_node_t *, enum pe_action_flags,
                                            enum pe_action_flags,
@@ -63,11 +63,11 @@ void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                               pe_working_set_t *data_set);
 extern void rsc_ticket_constraint(resource_t * lh_rsc, rsc_ticket_t * rsc_ticket,
                                   pe_working_set_t * data_set);
-extern enum pe_action_flags native_action_flags(action_t * action, node_t * node);
+extern enum pe_action_flags native_action_flags(pe_action_t * action, node_t * node);
 
 void native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void native_expand(resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
+extern gboolean native_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
                                     gboolean force, pe_working_set_t * data_set);
 extern void native_append_meta(resource_t * rsc, xmlNode * xml);
 
@@ -81,7 +81,7 @@ void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
 void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);
-extern enum pe_action_flags group_action_flags(action_t * action, node_t * node);
+extern enum pe_action_flags group_action_flags(pe_action_t * action, node_t * node);
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(resource_t * rsc, xmlNode * xml);
@@ -120,9 +120,9 @@ void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-extern enum pe_action_flags clone_action_flags(action_t * action, node_t * node);
+extern enum pe_action_flags clone_action_flags(pe_action_t * action, node_t * node);
 extern void clone_expand(resource_t * rsc, pe_working_set_t * data_set);
-extern gboolean clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
+extern gboolean clone_create_probe(resource_t * rsc, node_t * node, pe_action_t * complete,
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(resource_t * rsc, xmlNode * xml);
 
@@ -152,7 +152,7 @@ void LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal
 void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
                               gboolean terminal);
 
-extern void rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op,
+extern void rsc_stonith_ordering(resource_t * rsc, pe_action_t * stonith_op,
                                  pe_working_set_t * data_set);
 
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
@@ -175,7 +175,7 @@ enum pe_graph_flags pcmk__multi_update_actions(pe_action_t *first,
                                                enum pe_ordering type,
                                                pe_working_set_t *data_set);
 
-gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
+gboolean update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(resource_t * rsc);
 void pcmk__log_transition_summary(const char *filename);

@@ -834,7 +834,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             resource_t *then_child = (resource_t *) gIter->data;
             enum pe_graph_flags then_child_changed = pe_graph_none;
-            action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
+            pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
@@ -1031,8 +1031,8 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
              */
             char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS,
                                                0);
-            action_t *probe = find_first_action(replica->remote->actions,
-                                                probe_uuid, NULL, node);
+            pe_action_t *probe = find_first_action(replica->remote->actions,
+                                                   probe_uuid, NULL, node);
 
             free(probe_uuid);
             if (probe) {

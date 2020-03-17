@@ -110,7 +110,7 @@ check_promotable_actions(resource_t *rsc, gboolean *demoting,
 
     gIter = rsc->actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (*promoting && *demoting) {
             return;
@@ -799,9 +799,9 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 void
 create_promotable_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
     GListPtr gIter = rsc->children;
-    action_t *action_complete = NULL;
+    pe_action_t *action_complete = NULL;
     gboolean any_promoting = FALSE;
     gboolean any_demoting = FALSE;
     resource_t *last_promote_rsc = NULL;

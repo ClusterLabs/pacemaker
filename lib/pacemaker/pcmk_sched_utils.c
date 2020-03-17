@@ -250,7 +250,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
         rsc->next_role = RSC_ROLE_STOPPED;
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
             const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
@@ -290,7 +290,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 }
 
 void
-log_action(unsigned int log_level, const char *pre_text, action_t * action, gboolean details)
+log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, gboolean details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
