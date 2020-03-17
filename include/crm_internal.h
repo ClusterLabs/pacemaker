@@ -17,39 +17,21 @@
 #  include <stdbool.h>
 #  include <libxml/tree.h>
 
+/* Public API headers can guard deprecated code with this symbol, thus
+ * preventing internal code (which includes this header) from using it, while
+ * still allowing external code (which can't include this header) to use it,
+ * for backward compatibility.
+ */
+#define PCMK__NO_COMPAT
+
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/ipcs_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-/* This symbol allows us to deprecate public API and prevent internal code from
- * using it while still keeping it for backward compatibility.
- */
-#define PCMK__NO_COMPAT
-
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
-
-/* For ACLs */
-char *pcmk__uid2username(uid_t uid);
-const char *crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user);
-
-#  if ENABLE_ACL
-#    include <string.h>
-static inline gboolean
-is_privileged(const char *user)
-{
-    if (user == NULL) {
-        return FALSE;
-    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
-        return TRUE;
-    } else if (strcmp(user, "root") == 0) {
-        return TRUE;
-    }
-    return FALSE;
-}
-#  endif
 
 /* char2score */
 extern int node_score_red;
@@ -58,9 +40,6 @@ extern int node_score_yellow;
 
 /* Assorted convenience functions */
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
-
-// printf-style format to create operation ID from resource, action, interval
-#define CRM_OP_FMT "%s_%s_%u"
 
 static inline long long
 crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
@@ -103,44 +82,62 @@ void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);
 
-#  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
-#  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
-#  define F_ATTRD_KEY		"attr_key"
-#  define F_ATTRD_ATTRIBUTE	"attr_name"
-#  define F_ATTRD_REGEX 	"attr_regex"
-#  define F_ATTRD_TASK		"task"
-#  define F_ATTRD_VALUE		"attr_value"
-#  define F_ATTRD_SET		"attr_set"
-#  define F_ATTRD_IS_REMOTE	"attr_is_remote"
-#  define F_ATTRD_IS_PRIVATE     "attr_is_private"
-#  define F_ATTRD_SECTION	"attr_section"
-#  define F_ATTRD_DAMPEN	"attr_dampening"
-#  define F_ATTRD_HOST		"attr_host"
-#  define F_ATTRD_HOST_ID	"attr_host_id"
-#  define F_ATTRD_USER		"attr_user"
-#  define F_ATTRD_WRITER	"attr_writer"
-#  define F_ATTRD_VERSION	"attr_version"
-#  define F_ATTRD_RESOURCE          "attr_resource"
-#  define F_ATTRD_OPERATION         "attr_clear_operation"
-#  define F_ATTRD_INTERVAL          "attr_clear_interval"
-#  define F_ATTRD_IS_FORCE_WRITE "attrd_is_force_write"
+/*
+ * XML attribute names used only by internal code
+ */
 
-/* attrd operations */
-#  define ATTRD_OP_PEER_REMOVE   "peer-remove"
-#  define ATTRD_OP_UPDATE        "update"
-#  define ATTRD_OP_UPDATE_BOTH   "update-both"
-#  define ATTRD_OP_UPDATE_DELAY  "update-delay"
-#  define ATTRD_OP_QUERY         "query"
-#  define ATTRD_OP_REFRESH       "refresh"
-#  define ATTRD_OP_FLUSH         "flush"
-#  define ATTRD_OP_SYNC          "sync"
-#  define ATTRD_OP_SYNC_RESPONSE "sync-response"
-#  define ATTRD_OP_CLEAR_FAILURE "clear-failure"
+#define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
+#define PCMK__XA_ATTR_FORCE             "attrd_is_force_write"
+#define PCMK__XA_ATTR_INTERVAL          "attr_clear_interval"
+#define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
+#define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
+#define PCMK__XA_ATTR_NAME              "attr_name"
+#define PCMK__XA_ATTR_NODE_ID           "attr_host_id"
+#define PCMK__XA_ATTR_NODE_NAME         "attr_host"
+#define PCMK__XA_ATTR_OPERATION         "attr_clear_operation"
+#define PCMK__XA_ATTR_PATTERN           "attr_regex"
+#define PCMK__XA_ATTR_RESOURCE          "attr_resource"
+#define PCMK__XA_ATTR_SECTION           "attr_section"
+#define PCMK__XA_ATTR_SET               "attr_set"
+#define PCMK__XA_ATTR_USER              "attr_user"
+#define PCMK__XA_ATTR_UUID              "attr_key"
+#define PCMK__XA_ATTR_VALUE             "attr_value"
+#define PCMK__XA_ATTR_VERSION           "attr_version"
+#define PCMK__XA_ATTR_WRITER            "attr_writer"
+#define PCMK__XA_MODE                   "mode"
+#define PCMK__XA_TASK                   "task"
 
-#  define PCMK__XA_MODE             "mode"
 
-#  define PCMK_ENV_PHYSICAL_HOST "physical_host"
+/*
+ * IPC service names that are only used internally
+ */
+
+#  define PCMK__SERVER_BASED_RO		"cib_ro"
+#  define PCMK__SERVER_BASED_RW		"cib_rw"
+#  define PCMK__SERVER_BASED_SHM		"cib_shm"
+
+/*
+ * IPC commands that can be sent to Pacemaker daemons
+ */
+
+#define PCMK__ATTRD_CMD_PEER_REMOVE     "peer-remove"
+#define PCMK__ATTRD_CMD_UPDATE          "update"
+#define PCMK__ATTRD_CMD_UPDATE_BOTH     "update-both"
+#define PCMK__ATTRD_CMD_UPDATE_DELAY    "update-delay"
+#define PCMK__ATTRD_CMD_QUERY           "query"
+#define PCMK__ATTRD_CMD_REFRESH         "refresh"
+#define PCMK__ATTRD_CMD_FLUSH           "flush"
+#define PCMK__ATTRD_CMD_SYNC            "sync"
+#define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
+#define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
+
+
+/*
+ * Environment variables used by Pacemaker
+ */
+
+#define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
 
 #  if SUPPORT_COROSYNC
@@ -162,24 +159,6 @@ typedef struct {
 
 #  endif
 
-void
-attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
-void
-stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
-
-qb_ipcs_service_t *
-crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb);
-
-void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
-        qb_ipcs_service_t **ipcs_rw,
-        qb_ipcs_service_t **ipcs_shm,
-        struct qb_ipcs_service_handlers *ro_cb,
-        struct qb_ipcs_service_handlers *rw_cb);
-
-void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
-        qb_ipcs_service_t *ipcs_rw,
-        qb_ipcs_service_t *ipcs_shm);
-
 static inline void *
 realloc_safe(void *ptr, size_t size)
 {
@@ -199,8 +178,6 @@ realloc_safe(void *ptr, size_t size)
 const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
-
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 /* IPC Proxy Backend Shared Functions */
 typedef struct remote_proxy_s {

@@ -80,7 +80,7 @@ static pcmk_child_t pcmk_children[] = {
     {
         0, crm_proc_based,      1, 0, TRUE,  "pacemaker-based",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-based",
-        CIB_CHANNEL_RO
+        PCMK__SERVER_BASED_RO
     },
     {
         0, crm_proc_controld,   6, 0, TRUE, "pacemaker-controld",

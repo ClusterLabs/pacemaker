@@ -175,7 +175,7 @@ main(int argc, char **argv)
 
     crm_notice("Starting Pacemaker CIB manager");
 
-    old_instance = crm_ipc_new(CIB_CHANNEL_RO, 0);
+    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
@@ -216,7 +216,7 @@ main(int argc, char **argv)
      * terminate_cib() was called with fast=-1.
      */
     crm_cluster_disconnect(&crm_cluster);
-    cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
     return CRM_EX_OK;
 }
 
@@ -337,11 +337,8 @@ cib_init(void)
         cib_our_uname = strdup("localhost");
     }
 
-    cib_ipc_servers_init(&ipcs_ro,
-                         &ipcs_rw,
-                         &ipcs_shm,
-                         &ipc_ro_callbacks,
-                         &ipc_rw_callbacks);
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
+                          &ipc_rw_callbacks);
 
     if (stand_alone) {
         cib_is_master = TRUE;

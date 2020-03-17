@@ -255,7 +255,8 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
                 data_set->no_quorum_policy = no_quorum_stop;
             }
         } else {
-            crm_config_err("Resetting no-quorum-policy to 'stop': stonith is not configured");
+            pcmk__config_err("Resetting no-quorum-policy to 'stop' because "
+                             "fencing is disabled");
             data_set->no_quorum_policy = no_quorum_stop;
         }
 
@@ -356,8 +357,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     node_t *new_node = NULL;
 
     if (pe_find_node(data_set->nodes, uname) != NULL) {
-        crm_config_warn("Detected multiple node entries with uname=%s"
-                        " - this is rarely intended", uname);
+        pcmk__config_warn("More than one node entry has name '%s'", uname);
     }
 
     new_node = calloc(1, sizeof(node_t));
@@ -513,7 +513,8 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
-                crm_config_err("Must specify id tag in <node>");
+                pcmk__config_err("Ignoring <" XML_CIB_TAG_NODE
+                                 "> entry in configuration without id");
                 continue;
             }
             new_node = pe_create_node(id, uname, type, score, data_set);
@@ -748,8 +749,9 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
         } else {
-            crm_config_err("Failed unpacking %s %s",
-                           crm_element_name(xml_obj), crm_element_value(xml_obj, XML_ATTR_ID));
+            pcmk__config_err("Ignoring <%s> resource '%s' "
+                             "because configuration is invalid",
+                             crm_element_name(xml_obj), crm_str(ID(xml_obj)));
             if (new_rsc != NULL && new_rsc->fns != NULL) {
                 new_rsc->fns->free(new_rsc);
             }
@@ -770,9 +772,9 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
 
-        crm_config_err("Resource start-up disabled since no STONITH resources have been defined");
-        crm_config_err("Either configure some or disable STONITH with the stonith-enabled option");
-        crm_config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
+        pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
+        pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");
+        pcmk__config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
     }
 
     return TRUE;
@@ -797,8 +799,8 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
         }
 
         if (tag_id == NULL) {
-            crm_config_err("Failed unpacking %s: %s should be specified",
-                           crm_element_name(xml_tag), XML_ATTR_ID);
+            pcmk__config_err("Ignoring <%s> without " XML_ATTR_ID,
+                             crm_element_name(xml_tag));
             continue;
         }
 
@@ -812,8 +814,8 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
             }
 
             if (obj_ref == NULL) {
-                crm_config_err("Failed unpacking %s for tag %s: %s should be specified",
-                               crm_element_name(xml_obj_ref), tag_id, XML_ATTR_ID);
+                pcmk__config_err("Ignoring <%s> for tag '%s' without " XML_ATTR_ID,
+                                 crm_element_name(xml_obj_ref), tag_id);
                 continue;
             }
 
@@ -1105,7 +1107,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 continue;
 
             } else if (this_node == NULL) {
-                crm_config_warn("Node %s in status section no longer exists", uname);
+                pcmk__config_warn("Ignoring recorded node status for '%s' "
+                                  "because no longer in configuration", uname);
                 continue;
 
             } else if (pe__is_guest_or_remote_node(this_node)) {
@@ -1408,10 +1411,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     gboolean online = FALSE;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
-    if (this_node == NULL) {
-        crm_config_err("No node to check");
-        return online;
-    }
+    CRM_CHECK(this_node != NULL, return FALSE);
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
@@ -1483,7 +1483,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 const char *
 pe_base_name_end(const char *id)
 {
-    if (!crm_strlen_zero(id)) {
+    if (!pcmk__str_empty(id)) {
         const char *end = id + strlen(id) - 1;
 
         for (const char *s = end; s > id; --s) {
@@ -2029,12 +2029,13 @@ process_rsc_state(resource_t * rsc, node_t * node,
     if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
         if (is_set(rsc->flags, pe_rsc_orphan)) {
             if (is_set(rsc->flags, pe_rsc_managed)) {
-                crm_config_warn("Detected active orphan %s running on %s",
-                                rsc->id, node->details->uname);
+                pcmk__config_warn("Detected active orphan %s running on %s",
+                                  rsc->id, node->details->uname);
             } else {
-                crm_config_warn("Cluster configured not to stop active orphans."
-                                " %s must be stopped manually on %s",
-                                rsc->id, node->details->uname);
+                pcmk__config_warn("Resource '%s' must be stopped manually on "
+                                  "%s because cluster is configured not to "
+                                  "stop active orphans",
+                                  rsc->id, node->details->uname);
             }
         }
 

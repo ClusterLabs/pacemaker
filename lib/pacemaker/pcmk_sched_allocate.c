@@ -207,7 +207,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
-    crm_info("Action " CRM_OP_FMT " on %s will be stopped: %s",
+    crm_info("Action " PCMK__OP_FMT " on %s will be stopped: %s",
              rsc->id, task, interval_ms,
              active_node->details->uname, (reason? reason : "unknown"));
 
@@ -254,7 +254,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
-    crm_trace("Testing " CRM_OP_FMT " on %s",
+    crm_trace("Testing " PCMK__OP_FMT " on %s",
               rsc->id, task, interval_ms, active_node->details->uname);
     if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
@@ -279,7 +279,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
         if (is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to " CRM_OP_FMT " on %s changed: %s\n",
+            printf("Only 'private' parameters to " PCMK__OP_FMT
+                   " on %s changed: %s\n",
                    rsc->id, task, interval_ms, active_node->details->uname,
                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }

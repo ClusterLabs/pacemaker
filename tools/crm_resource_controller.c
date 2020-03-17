@@ -310,8 +310,8 @@ controller_resource_op(pcmk_controld_api_t *api, const char *op,
     /* The controller logs the transition key from resource op requests, so we
      * need to have *something* for it.
      */
-    key = generate_transition_key(0, getpid(), 0,
-                                  "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
+    key = pcmk__transition_key(0, getpid(), 0,
+                               "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
     crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
     free(key);
 

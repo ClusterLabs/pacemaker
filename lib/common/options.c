@@ -475,9 +475,10 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
         if ((value == NULL) && old_name) {
             value = g_hash_table_lookup(options, old_name);
             if (value != NULL) {
-                crm_config_warn("Support for legacy name '%s' for cluster option '%s'"
-                                " is deprecated and will be removed in a future release",
-                                old_name, name);
+                pcmk__config_warn("Support for legacy name '%s' for cluster "
+                                  "option '%s' is deprecated and will be "
+                                  "removed in a future release",
+                                  old_name, name);
 
                 // Inserting copy with current name ensures we only warn once
                 new_value = strdup(value);
@@ -487,8 +488,8 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
         }
 
         if (value && validate && (validate(value) == FALSE)) {
-            crm_config_err("Resetting cluster option '%s' to default: value '%s' is invalid",
-                           name, value);
+            pcmk__config_err("Using default value for cluster option '%s' "
+                             "because '%s' is invalid", name, value);
             value = NULL;
         }
 

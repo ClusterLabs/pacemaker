@@ -302,16 +302,6 @@ crm_signal_handler(int sig, sighandler_t dispatch)
     return old.sa_handler;
 }
 
-/*
- * \brief Use crm_signal_handler() instead
- * \deprecated
- */
-gboolean
-crm_signal(int sig, void (*dispatch) (int sig))
-{
-    return crm_signal_handler(sig, dispatch) != SIG_ERR;
-}
-
 static void
 mainloop_destroy_signal_entry(int sig)
 {
@@ -1389,3 +1379,17 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
         g_source_remove(timer);
     }
 }
+
+// Deprecated functions kept only for backward API compatibility
+gboolean crm_signal(int sig, void (*dispatch) (int sig));
+
+/*
+ * \brief Use crm_signal_handler() instead
+ * \deprecated
+ */
+gboolean
+crm_signal(int sig, void (*dispatch) (int sig))
+{
+    return crm_signal_handler(sig, dispatch) != SIG_ERR;
+}
+

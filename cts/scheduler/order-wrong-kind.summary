@@ -1,4 +1,4 @@
-Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
 
 Current cluster status:
 Online: [ node1 ]

@@ -478,7 +478,7 @@ authorize_version(xmlNode *message_data, const char *field,
 {
     const char *version = crm_element_value(message_data, field);
 
-    if ((version == NULL) || (version[0] == '\0')) {
+    if (pcmk__str_empty(version)) {
         crm_warn("IPC hello from %s rejected: No protocol %s",
                  CRM_XS " ref=%s uuid=%s",
                  client_name, field, (ref? ref : "none"), uuid);
@@ -535,7 +535,7 @@ controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
     message_data = get_message_xml(client_msg, F_CRM_DATA);
 
     client_name = crm_element_value(message_data, "client_name");
-    if ((client_name == NULL) || (client_name[0] == '\0')) {
+    if (pcmk__str_empty(client_name)) {
         crm_warn("IPC hello from client rejected: No client name",
                  CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
@@ -671,7 +671,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
 #if ENABLE_ACL
-        user_name = crm_acl_get_set_user(stored_msg, F_CRM_USER, NULL);
+        user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
 #endif
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,

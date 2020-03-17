@@ -238,10 +238,10 @@ generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
     const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
-    generate_fail_regex(CRM_FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+    generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
                         is_set(rsc->flags, pe_rsc_unique), failcount_re);
 
-    generate_fail_regex(CRM_LAST_FAILURE_PREFIX, rsc_name, is_legacy,
+    generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
                         is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
 
     free(rsc_name);

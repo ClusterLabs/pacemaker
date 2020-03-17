@@ -111,7 +111,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
 
     if (task != no_action) {
         if (is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
-            uuid = generate_notify_key(rid, "confirmed-post", task2text(task + 1));
+            uuid = pcmk__notify_key(rid, "confirmed-post", task2text(task + 1));
 
         } else {
             uuid = pcmk__op_key(rid, task2text(task + 1), 0);
@@ -1082,7 +1082,8 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             CRM_CHECK(n_type != NULL, crm_err("No notify type value found for %s", action->uuid));
             CRM_CHECK(n_task != NULL,
                       crm_err("No notify operation value found for %s", action->uuid));
-            clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
+            clone_key = pcmk__notify_key(action->rsc->clone_name,
+                                         n_type, n_task);
 
         } else if(action->cancel_task) {
             clone_key = pcmk__op_key(action->rsc->clone_name,
@@ -1287,7 +1288,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             if(host) {
                 hash2metafield((gpointer)XML_RSC_ATTR_TARGET,
                                (gpointer)g_hash_table_lookup(action->rsc->meta, XML_RSC_ATTR_TARGET), (gpointer)args_xml);
-                hash2metafield((gpointer)PCMK_ENV_PHYSICAL_HOST, (gpointer)host->details->uname, (gpointer)args_xml);
+                hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+                               (gpointer)host->details->uname,
+                               (gpointer)args_xml);
             }
         }
 

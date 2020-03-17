@@ -814,6 +814,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     const char *uuid = NULL;
     const char *target = NULL;
     const char *type = NULL;
+    char *transition_key = NULL;
     gboolean invalid_action = FALSE;
     enum stonith_call_options options = st_opt_none;
 
@@ -847,11 +848,11 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
                                   (int) (transition_graph->stonith_timeout / 1000),
                                   0);
 
+    transition_key = pcmk__transition_key(transition_graph->id, action->id, 0,
+                                          te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,
                                          (int) (transition_graph->stonith_timeout / 1000),
-                                         st_opt_timeout_updates,
-                                         generate_transition_key(transition_graph->id, action->id,
-                                                                 0, te_uuid),
+                                         st_opt_timeout_updates, transition_key,
                                          "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;

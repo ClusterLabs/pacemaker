@@ -657,9 +657,9 @@ is_op_dup(resource_t *rsc, const char *name, guint interval_ms)
                 id = ID(operation);
 
             } else {
-                crm_config_err("Operation %s is a duplicate of %s", ID(operation), id);
-                crm_config_err
-                    ("Do not use the same (name, interval) combination more than once per resource");
+                pcmk__config_err("Operation %s is duplicate of %s (do not use "
+                                 "same name and interval combination more "
+                                 "than once per resource)", ID(operation), id);
                 dup = TRUE;
             }
         }
@@ -714,8 +714,8 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     }
 
     if (op_cannot_recur(name)) {
-        crm_config_err("Ignoring %s because action '%s' cannot be recurring",
-                       ID(operation), name);
+        pcmk__config_err("Ignoring %s because action '%s' cannot be recurring",
+                         ID(operation), name);
         return;
     }
 
@@ -908,7 +908,8 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     }
 
     if (op_cannot_recur(name)) {
-        crm_config_err("Invalid recurring action %s wth name: '%s'", ID(operation), name);
+        pcmk__config_err("Ignoring %s because action '%s' cannot be recurring",
+                         ID(operation), name);
         return;
     }
 
@@ -1515,7 +1516,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
             node_t *current = (node_t *) gIter->data;
 
-            char *load_stopped_task = crm_concat(LOAD_STOPPED, current->details->uname, '_');
+            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+                                                        current->details->uname);
             action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {
@@ -1529,7 +1531,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *next = item->data;
-            char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
+            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+                                                        next->details->uname);
             action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {

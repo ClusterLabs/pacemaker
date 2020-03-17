@@ -101,7 +101,7 @@ update_validation 	debug: Testing 'pacemaker-3.2' validation (16 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 update_validation 	trace: pacemaker-3.2 validation failed
-Your current configuration pacemaker-1.2 could not validate with any schema in range [pacemaker-1.2, pacemaker-3.2], cannot upgrade to pacemaker-3.0.
+Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.2
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
@@ -191,7 +191,7 @@ update_validation 	trace: pacemaker-3.1 validation failed
 update_validation 	debug: Testing 'pacemaker-3.2' validation (16 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 update_validation 	trace: pacemaker-3.2 validation failed
-Your current configuration pacemaker-9999.0 could not validate with any schema in range [unknown, pacemaker-3.2], cannot upgrade to pacemaker-3.0.
+Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.2
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
@@ -320,7 +320,7 @@ Revised cluster status:
 =#=#=#= End test: Make resulting CIB valid, although without validate-with attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Make resulting CIB valid, although without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with valid CIB, but without validate-with attribute =#=#=#=
-Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -399,7 +399,7 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 =#=#=#= End test: Make resulting CIB invalid, and without validate-with attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Make resulting CIB invalid, and without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
-Configuration validation is currently disabled. It is highly encouraged and prevents many common cluster issues.
+Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
@@ -439,7 +439,7 @@ validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constr
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-unpack_simple_rsc_order 	error: Cannot invert rsc_order constraint ord_1-2. Please specify the inverse manually.
+unpack_simple_rsc_order 	error: Cannot invert constraint 'ord_1-2' (please specify inverse manually)
 
 Current cluster status:
 

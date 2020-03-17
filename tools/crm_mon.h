@@ -15,7 +15,7 @@
 #include <crm/stonith-ng.h>
 
 /* Never display node attributes whose name starts with one of these prefixes */
-#define FILTER_STR { CRM_FAIL_COUNT_PREFIX, CRM_LAST_FAILURE_PREFIX,       \
+#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
                      "shutdown", "terminate", "standby", "probe_complete", \
                      "#", NULL }
 

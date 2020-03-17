@@ -260,7 +260,7 @@ main(int argc, char **argv)
     }
 
     if (validate_xml(cib_object, NULL, FALSE) == FALSE) {
-        crm_config_err("CIB did not pass schema validation");
+        pcmk__config_err("CIB did not pass schema validation");
         free_xml(cib_object);
         cib_object = NULL;
 

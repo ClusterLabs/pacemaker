@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,14 +74,8 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (group_data->num_children == 0) {
-#if 0
-        /* Bug #1287 */
-        crm_config_err("Group %s did not have any children", rsc->id);
-        return FALSE;
-#else
-        crm_config_warn("Group %s did not have any children", rsc->id);
-        return TRUE;
-#endif
+        pcmk__config_warn("Group %s does not have any children", rsc->id);
+        return TRUE; // Allow empty groups, children can be added later
     }
 
     pe_rsc_trace(rsc, "Added %d children to resource %s...", group_data->num_children, rsc->id);
@@ -118,7 +112,7 @@ static void
 group_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     GListPtr gIter = rsc->children;
-    char *child_text = crm_concat(pre_text, "    ", ' ');
+    char *child_text = crm_strdup_printf("%s     ", pre_text);
 
     status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
@@ -149,7 +143,7 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         return;
     }
 
-    child_text = crm_concat(pre_text, "   ", ' ');
+    child_text = crm_strdup_printf("%s    ", pre_text);
 
     status_print("%sResource Group: %s", pre_text ? pre_text : "", rsc->id);
 

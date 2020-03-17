@@ -31,6 +31,7 @@ extern "C" {
 #  include <libxml/tree.h>
 
 #  include <crm/lrmd.h>
+#  include <crm/common/acl.h>
 #  include <crm/common/results.h>
 
 #  define ONLINESTATUS  "online"  // Status of an online client
@@ -202,8 +203,6 @@ int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 void crm_gnutls_global_init(void);
 #endif
 
-bool pcmk_acl_required(const char *user);
-
 char *pcmk_hostname(void);
 
 #ifndef PCMK__NO_COMPAT
@@ -213,10 +212,11 @@ char *pcmk_hostname(void);
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
-#endif
 
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
+
+#endif // PCMK__NO_COMPAT
 
 #ifdef __cplusplus
 }

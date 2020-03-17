@@ -127,7 +127,8 @@ score2char(int score)
 char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
-    char *hash_key = crm_concat(sys ? sys : "none", crm_msg_reference, '_');
+    char *hash_key = crm_strdup_printf("%s_%s", (sys? sys : "none"),
+                                       crm_msg_reference);
 
     crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
@@ -464,7 +465,7 @@ crm_meta_name(const char *field)
     char *crm_name = NULL;
 
     CRM_CHECK(field != NULL, return NULL);
-    crm_name = crm_concat(CRM_META, field, '_');
+    crm_name = crm_strdup_printf(CRM_META "_%s", field);
 
     /* Massage the names so they can be used as shell variables */
     max = strlen(crm_name);
@@ -491,63 +492,6 @@ crm_meta_value(GHashTable * hash, const char *field)
     }
 
     return value;
-}
-
-void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
-        qb_ipcs_service_t **ipcs_rw,
-        qb_ipcs_service_t **ipcs_shm,
-        struct qb_ipcs_service_handlers *ro_cb,
-        struct qb_ipcs_service_handlers *rw_cb)
-{
-    *ipcs_ro = mainloop_add_ipc_server(CIB_CHANNEL_RO, QB_IPC_NATIVE, ro_cb);
-    *ipcs_rw = mainloop_add_ipc_server(CIB_CHANNEL_RW, QB_IPC_NATIVE, rw_cb);
-    *ipcs_shm = mainloop_add_ipc_server(CIB_CHANNEL_SHM, QB_IPC_SHM, rw_cb);
-
-    if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
-        crm_exit(CRM_EX_FATAL);
-    }
-}
-
-void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
-        qb_ipcs_service_t *ipcs_rw,
-        qb_ipcs_service_t *ipcs_shm)
-{
-    qb_ipcs_destroy(ipcs_ro);
-    qb_ipcs_destroy(ipcs_rw);
-    qb_ipcs_destroy(ipcs_shm);
-}
-
-qb_ipcs_service_t *
-crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb)
-{
-    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, cb);
-}
-
-void
-attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
-{
-    *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
-
-    if (*ipcs == NULL) {
-        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(CRM_EX_FATAL);
-    }
-}
-
-void
-stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
-{
-    *ipcs = mainloop_add_ipc_server_with_prio("stonith-ng", QB_IPC_NATIVE, cb,
-                                              QB_LOOP_HIGH);
-
-    if (*ipcs == NULL) {
-        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(CRM_EX_FATAL);
-    }
 }
 
 void *

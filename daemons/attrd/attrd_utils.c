@@ -174,7 +174,7 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
     };
 
     ipc_callbacks.msg_process = dispatch_fn;
-    attrd_ipc_server_init(ipcs, &ipc_callbacks);
+    pcmk__serve_attrd_ipc(ipcs, &ipc_callbacks);
 }
 
 void

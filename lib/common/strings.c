@@ -374,7 +374,7 @@ pcmk__starts_with(const char *str, const char *prefix)
 static inline bool
 ends_with(const char *s, const char *match, bool as_extension)
 {
-    if ((match == NULL) || (match[0] == '\0')) {
+    if (pcmk__str_empty(match)) {
         return true;
     } else if (s == NULL) {
         return false;

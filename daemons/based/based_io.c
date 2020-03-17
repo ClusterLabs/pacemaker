@@ -184,6 +184,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     int lpc = 0;
     char *sigfile = NULL;
+    char *sigfilepath = NULL;
     char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
@@ -193,20 +194,21 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = crm_concat(file, "sig", '.');
+    sigfile = crm_strdup_printf("%s.sig", file);
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
 
-    filename = crm_concat(dir, file, '/');
-    sigfile = crm_concat(dir, sigfile, '/');
+    filename = crm_strdup_printf("%s/%s", dir, file);
+    sigfilepath = crm_strdup_printf("%s/%s", dir, sigfile);
+    free(sigfile);
 
     cib_status = pcmk_ok;
-    root = retrieveCib(filename, sigfile);
+    root = retrieveCib(filename, sigfilepath);
     free(filename);
-    free(sigfile);
+    free(sigfilepath);
 
     if (root == NULL) {
         crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
@@ -222,7 +224,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         lpc--;
 
         filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
-        sigfile = crm_concat(filename, "sig", '.');
+        sigfile = crm_strdup_printf("%s.sig", filename);
 
         crm_info("Reading cluster configuration file %s (digest: %s)",
                  filename, sigfile);

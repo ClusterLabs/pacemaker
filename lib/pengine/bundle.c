@@ -1466,7 +1466,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     if (pre_text == NULL) {
         pre_text = "";
     }
-    child_text = crm_concat(pre_text, "       ", ' ');
+    child_text = crm_strdup_printf("%s        ", pre_text);
 
     get_bundle_variant_data(bundle_data, rsc);
 

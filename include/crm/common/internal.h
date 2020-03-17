@@ -10,13 +10,30 @@
 #ifndef CRM_COMMON_INTERNAL__H
 #define CRM_COMMON_INTERNAL__H
 
-#include <glib.h>       /* for gboolean */
-#include <dirent.h>     /* for struct dirent */
-#include <unistd.h>     /* for getpid() */
-#include <stdbool.h>    /* for bool */
-#include <sys/types.h>  // uid_t, gid_t, pid_t
+#include <unistd.h>             // getpid()
+#include <stdbool.h>            // bool
+#include <string.h>             // strcmp()
+#include <sys/types.h>          // uid_t, gid_t, pid_t
 
-#include <crm/common/logging.h>
+#include <glib.h>               // guint, GList, GHashTable
+#include <libxml/tree.h>        // xmlNode
+
+#include <crm/common/util.h>    // crm_strdup_printf()
+
+// Internal ACL-related utilities (from acl.c)
+
+char *pcmk__uid2username(uid_t uid);
+const char *pcmk__update_acl_user(xmlNode *request, const char *field,
+                                  const char *peer_user);
+
+#if ENABLE_ACL
+#  include <string.h>
+static inline bool
+pcmk__is_privileged(const char *user)
+{
+    return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
+}
+#endif
 
 
 #if SUPPORT_CIBSECRETS
@@ -24,6 +41,11 @@
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
+
+
+/* internal digest-related utilities (from digest.c) */
+
+bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 
 /* internal I/O utilities (from io.c) */
@@ -48,6 +70,19 @@ int pcmk__set_nonblocking(int fd);
 const char *pcmk__get_tmpdir(void);
 
 void pcmk__close_fds_in_child(bool);
+
+
+/* internal logging utilities */
+
+#  define pcmk__config_err(fmt...) do {     \
+        crm_config_error = TRUE;            \
+        crm_err(fmt);                       \
+    } while (0)
+
+#  define pcmk__config_warn(fmt...) do {    \
+        crm_config_warning = TRUE;          \
+        crm_warn(fmt);                      \
+    } while (0)
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -90,12 +125,15 @@ int pcmk__lock_pidfile(const char *filename, const char *name);
 
 /* interal functions related to resource operations (from operations.c) */
 
+// printf-style format to create operation ID from resource, action, interval
+#define PCMK__OP_FMT "%s_%s_%u"
+
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
-char *generate_notify_key(const char *rsc_id, const char *notify_type,
-                          const char *op_type);
-char *generate_transition_key(int transition_id, int action_id, int target_rc,
-                              const char *node);
-void filter_action_parameters(xmlNode *param_set, const char *version);
+char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
+                       const char *op_type);
+char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
+                           const char *node);
+void pcmk__filter_op_for_digest(xmlNode *param_set);
 
 
 // miscellaneous utilities (from utils.c)
@@ -137,21 +175,14 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 // Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
 #define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
 
-static inline char *
-crm_concat(const char *prefix, const char *suffix, char join)
-{
-    CRM_ASSERT(prefix && suffix);
-    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
-}
-
 static inline int
-crm_strlen_zero(const char *s)
+pcmk__str_empty(const char *s)
 {
-    return !s || *s == '\0';
+    return (s == NULL) || (s[0] == '\0');
 }
 
 static inline char *
-crm_getpid_s()
+pcmk__getpid_s()
 {
     return crm_strdup_printf("%lu", (unsigned long) getpid());
 }
@@ -172,8 +203,8 @@ pcmk__list_of_multiple(GList *list)
 
 /* convenience functions for failure-related node attributes */
 
-#define CRM_FAIL_COUNT_PREFIX   "fail-count"
-#define CRM_LAST_FAILURE_PREFIX "last-failure"
+#define PCMK__FAIL_COUNT_PREFIX   "fail-count"
+#define PCMK__LAST_FAILURE_PREFIX "last-failure"
 
 /*!
  * \internal
@@ -193,7 +224,7 @@ pcmk__list_of_multiple(GList *list)
  *       action labels like "myrsc_monitor_30000".
  */
 static inline char *
-crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
+pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
                    guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
@@ -201,15 +232,17 @@ crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__failcount_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
+    return pcmk__fail_attr_name(PCMK__FAIL_COUNT_PREFIX, rsc_id, op,
+                                interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
+    return pcmk__fail_attr_name(PCMK__LAST_FAILURE_PREFIX, rsc_id, op,
+                                interval_ms);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

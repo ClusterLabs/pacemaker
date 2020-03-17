@@ -238,7 +238,7 @@ create_action_name(pe_action_t *action)
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
-            key = generate_notify_key(clone_name, n_type, n_task);
+            key = pcmk__notify_key(clone_name, n_type, n_task);
 
         } else {
             key = pcmk__op_key(clone_name, task, interval_ms);
@@ -429,7 +429,7 @@ setup_input(const char *input, const char *output)
     }
 
     if (output == NULL) {
-        char *pid = crm_getpid_s();
+        char *pid = pcmk__getpid_s();
 
         local_output = get_shadow_file(pid);
         temp_shadow = strdup(local_output);

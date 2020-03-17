@@ -48,7 +48,7 @@ find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * dat
     get_clone_variant_data(clone_data, rsc);
 
     child_base = ID(clone_data->xml_obj_child);
-    child_id = crm_concat(child_base, sub_id, ':');
+    child_id = crm_strdup_printf("%s:%s", child_base, sub_id);
     child = pe_find_resource(rsc->children, child_id);
 
     free(child_id);
@@ -166,7 +166,9 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     clone_data->ordered = crm_is_true(ordered);
 
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
-        crm_config_err("Anonymous clones (%s) may only support one copy per node", rsc->id);
+        pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
+                         "because anonymous clones support only one instance "
+                         "per node", rsc->id);
         clone_data->clone_node_max = 1;
     }
 
@@ -190,7 +192,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (clone_data->xml_obj_child == NULL) {
-        crm_config_err("%s has nothing to clone", rsc->id);
+        pcmk__config_err("%s has nothing to clone", rsc->id);
         return FALSE;
     }
 
@@ -306,7 +308,7 @@ configured_role(resource_t * rsc)
 static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    char *child_text = crm_concat(pre_text, "   ", ' ');
+    char *child_text = crm_strdup_printf("%s    ", pre_text);
     const char *target_role = configured_role_str(rsc);
     GListPtr gIter = rsc->children;
 
@@ -388,7 +390,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     get_clone_variant_data(clone_data, rsc);
 
-    child_text = crm_concat(pre_text, "   ", ' ');
+    child_text = crm_strdup_printf("%s    ", pre_text);
 
     status_print("%sClone Set: %s [%s]%s%s%s",
                  pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),

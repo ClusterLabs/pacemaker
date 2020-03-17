@@ -970,6 +970,118 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     }
 }
 
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemaker-based API
+ *
+ * \param[out] ipcs_ro   New IPC server for read-only pacemaker-based API
+ * \param[out] ipcs_rw   New IPC server for read/write pacemaker-based API
+ * \param[out] ipcs_shm  New IPC server for shared-memory pacemaker-based API
+ * \param[in]  ro_cb     IPC callbacks for read-only API
+ * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
+ *
+ * \note This function exits fatally if unable to create the servers.
+ */
+void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
+                           qb_ipcs_service_t **ipcs_rw,
+                           qb_ipcs_service_t **ipcs_shm,
+                           struct qb_ipcs_service_handlers *ro_cb,
+                           struct qb_ipcs_service_handlers *rw_cb)
+{
+    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO,
+                                       QB_IPC_NATIVE, ro_cb);
+
+    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW,
+                                       QB_IPC_NATIVE, rw_cb);
+
+    *ipcs_shm = mainloop_add_ipc_server(PCMK__SERVER_BASED_SHM,
+                                        QB_IPC_SHM, rw_cb);
+
+    if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
+        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
+        crm_exit(CRM_EX_FATAL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Destroy IPC servers for pacemaker-based API
+ *
+ * \param[out] ipcs_ro   IPC server for read-only pacemaker-based API
+ * \param[out] ipcs_rw   IPC server for read/write pacemaker-based API
+ * \param[out] ipcs_shm  IPC server for shared-memory pacemaker-based API
+ *
+ * \note This is a convenience function for calling qb_ipcs_destroy() for each
+ *       argument.
+ */
+void
+pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
+                     qb_ipcs_service_t *ipcs_rw,
+                     qb_ipcs_service_t *ipcs_shm)
+{
+    qb_ipcs_destroy(ipcs_ro);
+    qb_ipcs_destroy(ipcs_rw);
+    qb_ipcs_destroy(ipcs_shm);
+}
+
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemaker-controld API
+ *
+ * \param[in] cb  IPC callbacks
+ *
+ * \return Newly created IPC server
+ */
+qb_ipcs_service_t *
+pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
+{
+    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, cb);
+}
+
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemaker-attrd API
+ *
+ * \param[in] cb  IPC callbacks
+ *
+ * \note This function exits fatally if unable to create the servers.
+ */
+void
+pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
+                      struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(CRM_EX_FATAL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemaker-fenced API
+ *
+ * \param[in] cb  IPC callbacks
+ *
+ * \note This function exits fatally if unable to create the servers.
+ */
+void
+pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
+                       struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server_with_prio("stonith-ng", QB_IPC_NATIVE, cb,
+                                              QB_LOOP_HIGH);
+
+    if (*ipcs == NULL) {
+        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(CRM_EX_FATAL);
+    }
+}
+
 /* Client... */
 
 #define MIN_MSG_SIZE    12336   /* sizeof(struct qb_ipc_connection_response) */
@@ -1702,8 +1814,8 @@ create_hello_message(const char *uuid,
     xmlNode *hello_node = NULL;
     xmlNode *hello = NULL;
 
-    if (crm_strlen_zero(uuid) || crm_strlen_zero(client_name)
-        || crm_strlen_zero(major_version) || crm_strlen_zero(minor_version)) {
+    if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
+        || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "missing information",
                 client_name? client_name : "unknown client",

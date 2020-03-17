@@ -63,7 +63,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     active_op_t *op = value;
 
-    crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
+    crm_trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval_ms,
               lrm_state->node_name, (char*)key, op->user_data);
 
@@ -530,7 +530,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 #if ENABLE_ACL
         CRM_CHECK(lrm_state->node_name, return);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
-        crm_acl_get_set_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
+        pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 #endif
 
         /* Pacemaker Remote nodes don't know their own names (as known to the

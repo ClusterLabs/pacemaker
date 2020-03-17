@@ -184,11 +184,18 @@ resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
     if (rsc == NULL) {
         buf = crm_strdup_printf("%s: orphan", rsc_id);
     } else if (all || failcount || last_failure > 0) {
-        char *failcount_s = failcount > 0 ? crm_strdup_printf(" %s=%d", CRM_FAIL_COUNT_PREFIX, failcount) : strdup("");
+        char *failcount_s = NULL;
         char *lastfail_s = NULL;
 
+        if (failcount > 0) {
+            failcount_s = crm_strdup_printf(" %s=%d", PCMK__FAIL_COUNT_PREFIX,
+                                            failcount);
+        } else {
+            failcount_s = strdup("");
+        }
         if (last_failure > 0) {
-            lastfail_s = crm_strdup_printf(" %s='%s'", CRM_LAST_FAILURE_PREFIX,
+            lastfail_s = crm_strdup_printf(" %s='%s'",
+                                           PCMK__LAST_FAILURE_PREFIX,
                                            pcmk__epoch2str(&last_failure));
         }
 
@@ -1343,12 +1350,14 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
 
         if (failcount > 0) {
             char *s = crm_itoa(failcount);
-            xmlSetProp(node, (pcmkXmlStr) CRM_FAIL_COUNT_PREFIX, (pcmkXmlStr) s);
+
+            xmlSetProp(node, (pcmkXmlStr) PCMK__FAIL_COUNT_PREFIX,
+                       (pcmkXmlStr) s);
             free(s);
         }
 
         if (last_failure > 0) {
-            xmlSetProp(node, (pcmkXmlStr) CRM_LAST_FAILURE_PREFIX,
+            xmlSetProp(node, (pcmkXmlStr) PCMK__LAST_FAILURE_PREFIX,
                        (pcmkXmlStr) pcmk__epoch2str(&last_failure));
         }
     }

@@ -262,7 +262,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
 
     pe_rsc_trace(rsc, "Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
 
-    key = generate_notify_key(rsc->id, value, task);
+    key = pcmk__notify_key(rsc->id, value, task);
     trigger = custom_action(rsc, key, op->task, node,
                             is_set(op->flags, pe_action_optional), TRUE, data_set);
     g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
@@ -340,7 +340,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     if (start) {
         /* create pre-event notification wrappers */
-        key = generate_notify_key(rsc->id, "pre", start->task);
+        key = pcmk__notify_key(rsc->id, "pre", start->task);
         n_data->pre =
             custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
@@ -355,7 +355,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         add_hash_param(n_data->pre->meta, "notify_key_operation", start->task);
 
         /* create pre_notify_complete */
-        key = generate_notify_key(rsc->id, "confirmed-pre", start->task);
+        key = pcmk__notify_key(rsc->id, "confirmed-pre", start->task);
         n_data->pre_done =
             custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
@@ -375,7 +375,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     if (end) {
         /* create post-event notification wrappers */
-        key = generate_notify_key(rsc->id, "post", end->task);
+        key = pcmk__notify_key(rsc->id, "post", end->task);
         n_data->post =
             custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(end->flags, pe_action_optional), TRUE,
                           data_set);
@@ -395,7 +395,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         add_hash_param(n_data->post->meta, "notify_key_operation", end->task);
 
         /* create post_notify_complete */
-        key = generate_notify_key(rsc->id, "confirmed-post", end->task);
+        key = pcmk__notify_key(rsc->id, "confirmed-post", end->task);
         n_data->post_done =
             custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(end->flags, pe_action_optional),
                           TRUE, data_set);

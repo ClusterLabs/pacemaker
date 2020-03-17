@@ -271,11 +271,11 @@ pcmk__apply_acl(xmlNode *xml)
                 && (is_set(p->flags, xpf_acl_read)
                     || is_set(p->flags, xpf_acl_write)
                     || is_set(p->flags, xpf_acl_deny))) {
-                crm_config_warn("Configuration element %s is matched by "
-                                "multiple ACL rules, only the first applies "
-                                "('%s' wins over '%s')",
-                                path, __xml_acl_to_text(p->flags),
-                                __xml_acl_to_text(acl->mode));
+                pcmk__config_warn("Configuration element %s is matched by "
+                                  "multiple ACL rules, only the first applies "
+                                  "('%s' wins over '%s')",
+                                  path, __xml_acl_to_text(p->flags),
+                                  __xml_acl_to_text(acl->mode));
                 free(path);
                 continue;
             }
@@ -697,11 +697,18 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
     return TRUE;
 }
 
+/*!
+ * \brief Check whether ACLs are required for a given user
+ *
+ * \param[in]  User name to check
+ *
+ * \return true if the user requires ACLs, false otherwise
+ */
 bool
 pcmk_acl_required(const char *user)
 {
 #if ENABLE_ACL
-    if ((user == NULL) || (*user == '\0')) {
+    if (pcmk__str_empty(user)) {
         crm_trace("ACLs not required because no user set");
         return FALSE;
 
@@ -730,8 +737,27 @@ pcmk__uid2username(uid_t uid)
     return strdup(pwent->pw_name);
 }
 
+/*!
+ * \internal
+ * \brief Set the ACL user field properly on an XML request
+ *
+ * Multiple user names are potentially involved in an XML request: the effective
+ * user of the current process; the user name known from an IPC client
+ * connection; and the user name obtained from the request itself, whether by
+ * the current standard XML attribute name or an older legacy attribute name.
+ * This function chooses the appropriate one that should be used for ACLs, sets
+ * it in the request (using the standard attribute name, and the legacy name if
+ * given), and returns it.
+ *
+ * \param[in,out] request    XML request to update
+ * \param[in]     field      Alternate name for ACL user name XML attribute
+ * \param[in]     peer_user  User name as known from IPC connection
+ *
+ * \return ACL user name actually used
+ */
 const char *
-crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
+pcmk__update_acl_user(xmlNode *request, const char *field,
+                      const char *peer_user)
 {
     static const char *effective_user = NULL;
     const char *requested_user = NULL;
@@ -756,7 +782,7 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
         requested_user = crm_element_value(request, field);
     }
 
-    if (is_privileged(effective_user) == FALSE) {
+    if (!pcmk__is_privileged(effective_user)) {
         /* We're not running as a privileged user, set or overwrite any existing
          * value for $XML_ACL_TAG_USER
          */
@@ -772,7 +798,7 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
         /* No user known, trusting 'requested_user' */
         user = requested_user;
 
-    } else if (is_privileged(peer_user) == FALSE) {
+    } else if (!pcmk__is_privileged(peer_user)) {
         /* The peer is not a privileged user, set or overwrite any existing
          * value for $XML_ACL_TAG_USER
          */

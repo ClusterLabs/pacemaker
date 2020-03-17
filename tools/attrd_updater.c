@@ -303,9 +303,9 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     }
     crm_xml_add(query, F_TYPE, T_ATTRD);
     crm_xml_add(query, F_ORIG, crm_system_name);
-    crm_xml_add(query, F_ATTRD_HOST, host);
-    crm_xml_add(query, F_ATTRD_TASK, ATTRD_OP_QUERY);
-    crm_xml_add(query, F_ATTRD_ATTRIBUTE, name);
+    crm_xml_add(query, PCMK__XA_ATTR_NODE_NAME, host);
+    crm_xml_add(query, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
+    crm_xml_add(query, PCMK__XA_ATTR_NAME, name);
 
     /* Connect to pacemaker-attrd, send query XML and get reply */
     crm_debug("Sending query for value of %s on %s", name, (host? host : "all nodes"));
@@ -346,7 +346,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
     }
     crm_log_xml_trace(reply, "Reply");
 
-    reply_attr = crm_element_value(reply, F_ATTRD_ATTRIBUTE);
+    reply_attr = crm_element_value(reply, PCMK__XA_ATTR_NAME);
     if (reply_attr == NULL) {
         fprintf(stderr, "Could not query value of %s: attribute does not exist\n",
                 attr_name);
@@ -354,7 +354,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
     }
 
     if (safe_str_neq(crm_element_value(reply, F_TYPE), T_ATTRD)
-        || (crm_element_value(reply, F_ATTRD_VERSION) == NULL)
+        || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
         || strcmp(reply_attr, attr_name)) {
             fprintf(stderr,
                     "Could not query value of %s: reply did not contain expected identification\n",
@@ -384,12 +384,12 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
         if (safe_str_neq((const char*)child->name, XML_CIB_TAG_NODE)) {
             crm_warn("Ignoring unexpected %s tag in query reply", child->name);
         } else {
-            reply_host = crm_element_value(child, F_ATTRD_HOST);
-            reply_value = crm_element_value(child, F_ATTRD_VALUE);
+            reply_host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
+            reply_value = crm_element_value(child, PCMK__XA_ATTR_VALUE);
 
             if (reply_host == NULL) {
                 crm_warn("Ignoring %s tag without %s attribute in query reply",
-                         XML_CIB_TAG_NODE, F_ATTRD_HOST);
+                         XML_CIB_TAG_NODE, PCMK__XA_ATTR_NODE_NAME);
             } else {
                 printf("name=\"%s\" host=\"%s\" value=\"%s\"\n",
                        attr_name, reply_host, (reply_value? reply_value : ""));

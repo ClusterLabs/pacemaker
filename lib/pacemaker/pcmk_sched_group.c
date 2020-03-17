@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -313,8 +313,9 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
 
     } else if (constraint->score >= INFINITY) {
-        crm_config_err("%s: Cannot perform mandatory colocation"
-                       " between non-colocated group and %s", rsc_lh->id, rsc_rh->id);
+        pcmk__config_err("%s: Cannot perform mandatory colocation "
+                         "between non-colocated group and %s",
+                         rsc_lh->id, rsc_rh->id);
         return;
     }
 
@@ -364,8 +365,8 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
 
     } else if (constraint->score >= INFINITY) {
-        crm_config_err("%s: Cannot perform mandatory colocation with"
-                       " non-colocated group: %s", rsc_lh->id, rsc_rh->id);
+        pcmk__config_err("%s: Cannot perform mandatory colocation with"
+                         " non-colocated group %s", rsc_lh->id, rsc_rh->id);
         return;
     }
 

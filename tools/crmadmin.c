@@ -387,7 +387,7 @@ do_init(void)
     mainloop_io_t *source =
         mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
 
-    admin_uuid = crm_getpid_s();
+    admin_uuid = pcmk__getpid_s();
 
     crmd_channel = mainloop_get_ipc_client(source);
 
