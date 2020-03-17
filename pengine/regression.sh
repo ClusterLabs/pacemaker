@@ -573,6 +573,7 @@ do_test probe-timeout "cl#5099 - Default probe timeout"
 do_test order-first-probes "cl#5301 - respect order constraints when relevant resources are being probed"
 
 do_test concurrent-fencing "Allow performing fencing operations in parallel"
+do_test priority-fencing-delay "Delay fencing targeting the more significant node"
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
