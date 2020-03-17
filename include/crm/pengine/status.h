@@ -153,6 +153,7 @@ typedef struct pe_working_set_s {
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
     int ninstances;     // Total number of resource instances
+    int priority_fencing_delay; // Enforced priority fencing delay
 } pe_working_set_t;
 
 enum pe_check_parameters {
@@ -202,6 +203,7 @@ struct node_shared_s {
     gboolean remote_was_fenced;
     gboolean remote_maintenance; /* what the remote-rsc is thinking */
     gboolean unpacked;
+    int priority; // calculated based on the priority of resources running on the node
 };
 
 struct node_s {

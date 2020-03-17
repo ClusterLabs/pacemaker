@@ -622,7 +622,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             if (is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc
                 && action->node->details->unclean == FALSE) {
-                pe_fence_node(data_set, action->node, "resource actions are unrunnable");
+                pe_fence_node(data_set, action->node, "resource actions are unrunnable", FALSE);
             }
 
         } else if (action->node->details->pending) {
@@ -2342,9 +2342,76 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
     return matches;
 }
 
+static int
+node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
+{
+    int member_count = 0;
+    int online_count = 0;
+    int top_priority = 0;
+    int lowest_priority = 0;
+    GListPtr gIter = NULL;
 
-action_t *
-pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set)
+    // `priority-fencing-delay` is disabled
+    if (data_set->priority_fencing_delay < 0) {
+        return -1;
+    }
+
+    /* No need to delay fencing if the fencing target is not a normal cluster
+     * member, for example if it's a remote node or a guest node. */
+    if (node->details->type != node_member) {
+        return 0;
+    }
+
+    // No need to delay fencing if the fencing target is in our partition
+    if (node->details->online) {
+        return 0;
+    }
+
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *n =  gIter->data;
+
+        if (n->details->type != node_member) {
+            continue;
+        }
+
+        member_count ++;
+
+        if (n->details->online) {
+            online_count++;
+        }
+
+        if (member_count == 1
+            || n->details->priority > top_priority) {
+            top_priority = n->details->priority;
+        }
+
+        if (member_count == 1
+            || n->details->priority < lowest_priority) {
+            lowest_priority = n->details->priority;
+        }
+    }
+
+    // No need to delay if we have more than half of the cluster members
+    if (online_count > member_count / 2) {
+        return 0;
+    }
+
+    /* All the nodes have equal priority.
+     * Any configured corresponding `pcmk_delay_base/max` will be applied. */
+    if (lowest_priority == top_priority) {
+        return -1;
+    }
+
+    if (node->details->priority < top_priority) {
+        return 0;
+    }
+
+    return data_set->priority_fencing_delay;
+}
+
+pe_action_t *
+pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
+            bool priority_delay, pe_working_set_t * data_set)
 {
     char *op_key = NULL;
     action_t *stonith_op = NULL;
@@ -2415,6 +2482,29 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
         free(op_key);
     }
 
+    if (data_set->priority_fencing_delay >= 0
+
+            /* It's a suitable case where `priority-fencing-delay` applies.
+             * At least add `priority-fencing-delay` field as an indicator. */
+        && (priority_delay
+
+            /* Re-calculate priority delay for the suitable case when
+             * pe_fence_op() is called again by stage6() after node priority has
+             * been actually calculated with native_add_running() */
+            || g_hash_table_lookup(stonith_op->meta,
+                                   XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
+
+            /* Add `priority-fencing-delay` to the fencing op even if it's 0 for
+             * the targeting node. So that it takes precedence over any possible
+             * `pcmk_delay_base/max`.
+             */
+            char *delay_s = crm_itoa(node_priority_fencing_delay(node, data_set));
+
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
+                                delay_s);
+    }
+
     if(optional == FALSE && pe_can_fence(data_set, node)) {
         pe_action_required(stonith_op, NULL, reason);
     } else if(reason && stonith_op->reason == NULL) {
@@ -2440,7 +2530,7 @@ trigger_unfencing(
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        action_t *unfence = pe_fence_op(node, "on", FALSE, reason, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", FALSE, reason, FALSE, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pe_order_optional);

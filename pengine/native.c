@@ -1501,7 +1501,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *node = item->data;
-            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -1970,7 +1970,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 for (gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
                     node_t *node = (node_t *) gIter->data;
 
-                    pe_fence_node(data_set, node, "deadman ticket was lost");
+                    pe_fence_node(data_set, node, "deadman ticket was lost", FALSE);
                 }
                 break;
 
@@ -2685,7 +2685,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         }
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
+            pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (!node_has_been_unfenced(current)) {
@@ -2715,7 +2715,7 @@ order_after_unfencing(resource_t *rsc, pe_node_t *node, action_t *action,
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
 
         order_actions(unfence, action, order);
 

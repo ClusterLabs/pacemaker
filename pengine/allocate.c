@@ -958,7 +958,7 @@ probe_resources(pe_working_set_t * data_set)
             if (is_baremetal_remote_node(node) && node->details->remote_rsc
                 && (get_remote_node_state(node) == remote_state_failed)) {
 
-                pe_fence_node(data_set, node, "the connection is unrecoverable");
+                pe_fence_node(data_set, node, "the connection is unrecoverable", FALSE);
             }
             continue;
 
@@ -1494,7 +1494,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     /* Create a fence pseudo-event, so we have an event to order actions
      * against, and crmd can always detect it.
      */
-    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", data_set);
+    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", FALSE, data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
                         __FUNCTION__, __LINE__);
 
@@ -1503,7 +1503,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      * (even though start might be closer to what is done for a real reboot).
      */
     if(stop && is_set(stop->flags, pe_action_pseudo)) {
-        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, data_set);
+        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, FALSE, data_set);
         crm_info("Implying guest node %s is down (action %d) after %s fencing",
                  node->details->uname, stonith_op->id, stop->node->details->uname);
         order_actions(parent_stonith_op, stonith_op,
@@ -1596,7 +1596,7 @@ stage6(pe_working_set_t * data_set)
         if (node->details->unclean
             && need_stonith && pe_can_fence(data_set, node)) {
 
-            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
+            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", FALSE, data_set);
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
             stonith_constraints(node, stonith_op, data_set);
@@ -1895,7 +1895,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     CRM_ASSERT(container);
 
     if(is_set(container->flags, pe_rsc_failed)) {
-        pe_fence_node(data_set, action->node, "container failed");
+        pe_fence_node(data_set, action->node, "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
@@ -2102,7 +2102,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
+                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable", FALSE);
 
             } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
                 /* State must be remote_state_unknown or remote_state_stopped.
@@ -2150,7 +2150,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                      * Since we have no way to find out, it is
                      * necessary to fence the node.
                      */
-                    pe_fence_node(data_set, action->node, "resources are in an unknown state and the connection is unrecoverable");
+                    pe_fence_node(data_set, action->node, "resources are in an unknown state and the connection is unrecoverable", FALSE);
                 }
 
                 if(cluster_node && state == remote_state_stopped) {
