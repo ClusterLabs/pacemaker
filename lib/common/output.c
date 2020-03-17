@@ -81,7 +81,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     if (formatters == NULL) {
-        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
     }
 
     if (options != NULL && group != NULL) {
@@ -102,6 +102,13 @@ pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *formats) {
 
     for (entry = formats; entry->name != NULL; entry++) {
         pcmk__register_format(group, entry->name, entry->create, entry->options);
+    }
+}
+
+void
+pcmk__unregister_formats() {
+    if (formatters != NULL) {
+        g_hash_table_destroy(formatters);
     }
 }
 

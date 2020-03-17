@@ -345,6 +345,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     pe_free_working_set(sched_data_set);
+    pcmk__unregister_formats();
     crm_info("Exiting %s", crm_system_name);
     crm_exit(CRM_EX_OK);
 }

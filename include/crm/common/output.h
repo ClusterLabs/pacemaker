@@ -514,6 +514,14 @@ pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *table);
 
 /*!
  * \internal
+ * \brief Unregister a previously registered table of custom formatting
+ *        functions and destroy the internal data structures associated with them.
+ */
+void
+pcmk__unregister_formats(void);
+
+/*!
+ * \internal
  * \brief Register a function to handle a custom message.
  *
  * \note This function is for implementing custom formatters.  It should not

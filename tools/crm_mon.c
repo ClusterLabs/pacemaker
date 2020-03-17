@@ -2157,6 +2157,7 @@ clean_up(crm_exit_t exit_code)
         }
 
         pcmk__output_free(out);
+        pcmk__unregister_formats();
     }
 
     crm_exit(exit_code);
