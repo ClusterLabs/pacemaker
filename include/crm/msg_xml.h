@@ -378,6 +378,7 @@
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
 #  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
 #  define XML_CONFIG_ATTR_FENCE_REACTION	"fence-reaction"
+#  define XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY "priority-fencing-delay"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
