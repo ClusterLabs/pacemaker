@@ -174,7 +174,7 @@ rsc_expand_action(pe_action_t * action)
 static enum pe_graph_flags
 graph_update_action(pe_action_t * first, pe_action_t * then, node_t * node,
                     enum pe_action_flags first_flags, enum pe_action_flags then_flags,
-                    action_wrapper_t *order, pe_working_set_t *data_set)
+                    pe_action_wrapper_t *order, pe_working_set_t *data_set)
 {
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_ordering type = order->type;
@@ -546,7 +546,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
-        action_wrapper_t *other = (action_wrapper_t *) lpc->data;
+        pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
         pe_action_t *first = other->action;
 
         node_t *then_node = then->node;
@@ -664,7 +664,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                              pe_action_pseudo) ? "pseudo" : first->node ? first->node->details->
                       uname : "");
             for (lpc2 = first->actions_after; lpc2 != NULL; lpc2 = lpc2->next) {
-                action_wrapper_t *other = (action_wrapper_t *) lpc2->data;
+                pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc2->data;
 
                 update_action(other->action, data_set);
             }
@@ -694,7 +694,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         }
         update_action(then, data_set);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
-            action_wrapper_t *other = (action_wrapper_t *) lpc->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
 
             update_action(other->action, data_set);
         }
@@ -975,7 +975,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
         gboolean migrating = FALSE;
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
-            input = ((action_wrapper_t *) iter->data)->action;
+            input = ((pe_action_wrapper_t *) iter->data)->action;
             if (input->rsc && safe_str_eq(action->rsc->id, input->rsc->id)
                && safe_str_eq(input->task, CRMD_ACTION_MIGRATED)) {
                 migrating = TRUE;
@@ -1442,8 +1442,8 @@ should_dump_action(pe_action_t *action)
 static gint
 sort_action_id(gconstpointer a, gconstpointer b)
 {
-    const action_wrapper_t *action_wrapper2 = (const action_wrapper_t *)a;
-    const action_wrapper_t *action_wrapper1 = (const action_wrapper_t *)b;
+    const pe_action_wrapper_t *action_wrapper2 = (const pe_action_wrapper_t *)a;
+    const pe_action_wrapper_t *action_wrapper1 = (const pe_action_wrapper_t *)b;
 
     if (a == NULL) {
         return 1;

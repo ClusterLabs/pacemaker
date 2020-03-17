@@ -338,7 +338,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
         GListPtr gIter2 = NULL;
 
         for (gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
-            action_wrapper_t *before = (action_wrapper_t *) gIter2->data;
+            pe_action_wrapper_t *before = (pe_action_wrapper_t *) gIter2->data;
 
             char *before_name = NULL;
             char *after_name = NULL;

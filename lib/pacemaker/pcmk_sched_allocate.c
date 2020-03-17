@@ -2747,7 +2747,7 @@ order_then_probes(pe_working_set_t * data_set)
         probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
         for (actions = start->actions_before; actions != NULL; actions = actions->next) {
-            action_wrapper_t *before = (action_wrapper_t *) actions->data;
+            pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
             GListPtr pIter = NULL;
             pe_action_t *first = before->action;
@@ -2756,7 +2756,7 @@ order_then_probes(pe_working_set_t * data_set)
             if(first->required_runnable_before) {
                 GListPtr clone_actions = NULL;
                 for (clone_actions = first->actions_before; clone_actions != NULL; clone_actions = clone_actions->next) {
-                    before = (action_wrapper_t *) clone_actions->data;
+                    before = (pe_action_wrapper_t *) clone_actions->data;
 
                     crm_trace("Testing %s -> %s (%p) for %s", first->uuid, before->action->uuid, before->action->rsc, start->uuid);
 

@@ -354,7 +354,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
 
         gIter = action->actions_before;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
@@ -363,7 +363,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
 
         gIter = action->actions_after;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }

@@ -1375,8 +1375,8 @@ pe_free_action(pe_action_t * action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* action_wrapper_t* */
-    g_list_free_full(action->actions_after, free);      /* action_wrapper_t* */
+    g_list_free_full(action->actions_before, free);     /* pe_action_wrapper_t* */
+    g_list_free_full(action->actions_after, free);      /* pe_action_wrapper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
@@ -1839,7 +1839,7 @@ gboolean
 order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
 {
     GListPtr gIter = NULL;
-    action_wrapper_t *wrapper = NULL;
+    pe_action_wrapper_t *wrapper = NULL;
     GListPtr list = NULL;
 
     if (order == pe_order_none) {
@@ -1858,14 +1858,14 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *after = (action_wrapper_t *) gIter->data;
+        pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
 
         if (after->action == rh_action && (after->type & order)) {
             return FALSE;
         }
     }
 
-    wrapper = calloc(1, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
     wrapper->type = order;
 
@@ -1878,7 +1878,7 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
 /* 	order |= pe_order_implies_then; */
 /* 	order ^= pe_order_implies_then; */
 
-    wrapper = calloc(1, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
     wrapper->type = order;
     list = rh_action->actions_before;
