@@ -757,17 +757,28 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Gather node information (and print if in bad state or grouping by node) */
     if (is_set(show, mon_show_nodes)) {
-        if (rc == pcmk_rc_ok) {
-            out->info(out, "%s", "");
-        } else {
-            rc = pcmk_rc_ok;
-        }
+        gboolean printed_header = FALSE;
 
-        out->begin_list(out, NULL, NULL, "Node List");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
             const char *node_mode = NULL;
             char *node_name = pe__node_display_name(node, is_set(mon_ops, mon_op_print_clone_detail));
+
+            if (!pcmk__str_in_list(unames, node->details->uname)) {
+                free(node_name);
+                continue;
+            }
+
+            if (printed_header == FALSE) {
+                if (rc == pcmk_rc_ok) {
+                    out->info(out, "%s", "");
+                } else {
+                    rc = pcmk_rc_ok;
+                }
+
+                out->begin_list(out, NULL, NULL, "Node List");
+                printed_header = TRUE;
+            }
 
             /* Get node mode */
             if (node->details->unclean) {
@@ -866,7 +877,9 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
             free(online_guest_nodes);
         }
 
-        out->end_list(out);
+        if (printed_header == TRUE) {
+            out->end_list(out);
+        }
     }
 
     /* Print resources section, if needed */
@@ -1007,6 +1020,11 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
         out->begin_list(out, NULL, NULL, "nodes");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
+
+            if (!pcmk__str_in_list(unames, node->details->uname)) {
+                continue;
+            }
+
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
@@ -1088,14 +1106,28 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /*** NODE LIST ***/
     if (is_set(show, mon_show_nodes)) {
-        out->begin_list(out, NULL, NULL, "Node List");
+        gboolean printed_header = FALSE;
+
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
+
+            if (!pcmk__str_in_list(unames, node->details->uname)) {
+                continue;
+            }
+
+            if (printed_header == FALSE) {
+                printed_header = TRUE;
+                out->begin_list(out, NULL, NULL, "Node List");
+            }
+
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
         }
-        out->end_list(out);
+
+        if (printed_header == TRUE) {
+            out->end_list(out);
+        }
     }
 
     /* Print resources section, if needed */
