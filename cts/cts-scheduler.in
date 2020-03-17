@@ -625,6 +625,7 @@ TESTS = [
         [ "order-first-probes",
           "cl#5301 - respect order constraints when relevant resources are being probed" ],
         [ "concurrent-fencing", "Allow performing fencing operations in parallel" ],
+        [ "priority-fencing-delay", "Delay fencing targeting the more significant node" ],
     ],
     [
         [ "systemhealth1", "System Health ()               #1" ],
