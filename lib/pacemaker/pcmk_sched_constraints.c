@@ -1171,7 +1171,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             }
 
             if (do_and == FALSE) {
-                local->weight = merge_weights(local->weight, score_f);
+                local->weight = pe__add_scores(local->weight, score_f);
             }
             crm_trace("node %s now has weight %d", node->details->uname, local->weight);
 

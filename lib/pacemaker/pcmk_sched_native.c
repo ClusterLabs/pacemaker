@@ -276,7 +276,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
             }
         }
 
-        new_score = merge_weights(weight, node->weight);
+        new_score = pe__add_scores(weight, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
@@ -1785,7 +1785,8 @@ influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocatio
         score_multiplier = -1;
     }
 
-    rsc_lh->priority = merge_weights(score_multiplier * constraint->score, rsc_lh->priority);
+    rsc_lh->priority = pe__add_scores(score_multiplier * constraint->score,
+                                      rsc_lh->priority);
 }
 
 static void
@@ -1828,14 +1829,14 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
             if (constraint->score < INFINITY) {
                 pe_rsc_trace(rsc_lh, "%s: %s.%s += %d", constraint->id, rsc_lh->id,
                              node->details->uname, constraint->score);
-                node->weight = merge_weights(constraint->score, node->weight);
+                node->weight = pe__add_scores(constraint->score, node->weight);
             }
 
         } else if (do_check == FALSE || constraint->score >= INFINITY) {
             pe_rsc_trace(rsc_lh, "%s: %s.%s -= %d (%s)", constraint->id, rsc_lh->id,
                          node->details->uname, constraint->score,
                          do_check ? "failed" : "unallocated");
-            node->weight = merge_weights(-constraint->score, node->weight);
+            node->weight = pe__add_scores(-constraint->score, node->weight);
         }
     }
 
@@ -2266,7 +2267,8 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
             pe_rsc_trace(rsc, "%s + %s: %d + %d",
                          node->details->uname,
                          other_node->details->uname, node->weight, other_node->weight);
-            other_node->weight = merge_weights(other_node->weight, node->weight);
+            other_node->weight = pe__add_scores(other_node->weight,
+                                                node->weight);
 
         } else {
             other_node = node_copy(node);

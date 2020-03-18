@@ -794,7 +794,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
         score = char2score(value);
 
         /* Add it to the running total */
-        *system_health = merge_weights(score, *system_health);
+        *system_health = pe__add_scores(score, *system_health);
     }
 }
 
