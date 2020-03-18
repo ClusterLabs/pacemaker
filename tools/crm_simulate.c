@@ -83,7 +83,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
         const char *node_mode = NULL;
         char *node_name = NULL;
 
@@ -186,7 +186,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
     fprintf(stdout, "\n");
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         if (is_set(rsc->flags, pe_rsc_orphan)
             && rsc->role == RSC_ROLE_STOPPED) {
@@ -288,7 +288,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
     fprintf(dot_strm, " digraph \"g\" {\n");
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
@@ -333,12 +333,12 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     }
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         GListPtr gIter2 = NULL;
 
         for (gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
-            action_wrapper_t *before = (action_wrapper_t *) gIter2->data;
+            pe_action_wrapper_t *before = (pe_action_wrapper_t *) gIter2->data;
 
             char *before_name = NULL;
             char *after_name = NULL;
@@ -1071,7 +1071,7 @@ main(int argc, char **argv)
 
             LogNodeActions(data_set, TRUE);
             for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-                resource_t *rsc = (resource_t *) gIter->data;
+                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
                 LogActions(rsc, data_set, TRUE);
             }

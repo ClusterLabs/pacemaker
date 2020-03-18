@@ -641,7 +641,7 @@ main(int argc, char **argv)
 
     char *xml_file = NULL;
     xmlNode *cib_xml_copy = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     bool recursive = FALSE;
 
     bool validate_cmdline = FALSE; /* whether we are just validating based on command line options */
@@ -1174,7 +1174,7 @@ main(int argc, char **argv)
 
         rc = pcmk_ok;
         for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            rsc = (resource_t *) lpc->data;
+            rsc = (pe_resource_t *) lpc->data;
 
             found++;
             cli_resource_print_raw(rsc);
@@ -1214,7 +1214,7 @@ main(int argc, char **argv)
         rsc = uber_parent(rsc);
 
         for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            resource_t *r = (resource_t *) lpc->data;
+            pe_resource_t *r = (pe_resource_t *) lpc->data;
 
             clear_bit(r->flags, pe_rsc_allocating);
         }
@@ -1225,7 +1225,7 @@ main(int argc, char **argv)
         cli_resource_print_location(rsc, NULL);
 
         for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            resource_t *r = (resource_t *) lpc->data;
+            pe_resource_t *r = (pe_resource_t *) lpc->data;
 
             clear_bit(r->flags, pe_rsc_allocating);
         }
@@ -1237,7 +1237,7 @@ main(int argc, char **argv)
 
         rc = pcmk_ok;
         for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            rsc = (resource_t *) lpc->data;
+            rsc = (pe_resource_t *) lpc->data;
             cli_resource_print_cts(rsc);
         }
         cli_resource_print_cts_constraints(data_set);
@@ -1268,7 +1268,7 @@ main(int argc, char **argv)
         rc = cli_resource_print(rsc, data_set, FALSE);
 
     } else if (rsc_cmd == 'Y') {
-        node_t *dest = NULL;
+        pe_node_t *dest = NULL;
 
         if (host_uname) {
             dest = pe_find_node(data_set->nodes, host_uname);
@@ -1285,7 +1285,7 @@ main(int argc, char **argv)
         GListPtr after = NULL;
         GListPtr remaining = NULL;
         GListPtr ele = NULL;
-        node_t *dest = NULL;
+        pe_node_t *dest = NULL;
 
         if (BE_QUIET == FALSE) {
             before = build_constraint_list(data_set->input);
@@ -1336,7 +1336,7 @@ main(int argc, char **argv)
         rc = cli_resource_move(rsc, rsc_id, host_uname, cib_conn, data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        node_t *dest = pe_find_node(data_set->nodes, host_uname);
+        pe_node_t *dest = pe_find_node(data_set->nodes, host_uname);
 
         if (dest == NULL) {
             rc = -pcmk_err_node_unknown;
@@ -1359,7 +1359,7 @@ main(int argc, char **argv)
 
             current = NULL;
             for(iter = rsc->children; iter; iter = iter->next) {
-                resource_t *child = (resource_t *)iter->data;
+                pe_resource_t *child = (pe_resource_t *)iter->data;
                 enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
                 if(child_role == RSC_ROLE_MASTER) {
@@ -1487,7 +1487,7 @@ main(int argc, char **argv)
         int attr_options = pcmk__node_attr_none;
 
         if (host_uname) {
-            node_t *node = pe_find_node(data_set->nodes, host_uname);
+            pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
             if (pe__is_guest_or_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);

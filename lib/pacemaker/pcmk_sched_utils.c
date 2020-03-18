@@ -47,7 +47,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         }
 
         if (foo_node != NULL) {
-            node_t *copy = node_copy(foo_node);
+            pe_node_t *copy = node_copy(foo_node);
 
             copy->weight = node_weight;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -61,7 +61,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
 }
 
 gboolean
-can_run_resources(const node_t * node)
+can_run_resources(const pe_node_t * node)
 {
     if (node == NULL) {
         return FALSE;
@@ -95,8 +95,8 @@ struct node_weight_s {
 static gint
 sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const node_t *node1 = (const node_t *)a;
-    const node_t *node2 = (const node_t *)b;
+    const pe_node_t *node1 = (const pe_node_t *)a;
+    const pe_node_t *node2 = (const pe_node_t *)b;
     struct node_weight_s *nw = data;
 
     int node1_weight = 0;
@@ -193,10 +193,10 @@ sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
 }
 
 void
-native_deallocate(resource_t * rsc)
+native_deallocate(pe_resource_t * rsc)
 {
     if (rsc->allocated_to) {
-        node_t *old = rsc->allocated_to;
+        pe_node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
         set_bit(rsc->flags, pe_rsc_provisional);
@@ -211,7 +211,7 @@ native_deallocate(resource_t * rsc)
 }
 
 gboolean
-native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -250,7 +250,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
         rsc->next_role = RSC_ROLE_STOPPED;
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
             const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
@@ -290,7 +290,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 }
 
 void
-log_action(unsigned int log_level, const char *pre_text, action_t * action, gboolean details)
+log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, gboolean details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
@@ -354,7 +354,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
 
         gIter = action->actions_before;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
@@ -363,7 +363,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
 
         gIter = action->actions_after;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
@@ -380,7 +380,7 @@ gboolean
 can_run_any(GHashTable * nodes)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (nodes == NULL) {
         return FALSE;
@@ -397,7 +397,7 @@ can_run_any(GHashTable * nodes)
 }
 
 pe_action_t *
-create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
+create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
 {
     pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
                                         task, NULL, optional, TRUE, data_set);

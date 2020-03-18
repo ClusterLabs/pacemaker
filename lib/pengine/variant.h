@@ -100,7 +100,7 @@ typedef struct pe__bundle_variant_data_s {
         char *launcher_options;
         const char *attribute_target;
 
-        resource_t *child;
+        pe_resource_t *child;
 
         GList *replicas;    // pe__bundle_replica_t *
         GList *ports;       // pe__bundle_port_t *
@@ -119,8 +119,8 @@ typedef struct pe__bundle_variant_data_s {
 
 typedef struct group_variant_data_s {
     int num_children;
-    resource_t *first_child;
-    resource_t *last_child;
+    pe_resource_t *first_child;
+    pe_resource_t *last_child;
 
     gboolean colocated;
     gboolean ordered;

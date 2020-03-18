@@ -45,10 +45,10 @@ char ticket_cmd = 'S';
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-static ticket_t *
+static pe_ticket_t *
 find_ticket(const char *ticket_id, pe_working_set_t * data_set)
 {
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
 
@@ -71,7 +71,7 @@ print_date(time_t time)
 }
 
 static int
-print_ticket(ticket_t * ticket, gboolean raw, gboolean details)
+print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
 {
     if (raw) {
         fprintf(stdout, "%s\n", ticket->id);
@@ -122,7 +122,7 @@ static int
 print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
 {
     GHashTableIter iter;
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     g_hash_table_iter_init(&iter, data_set->tickets);
 
@@ -266,7 +266,7 @@ static int
 get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value,
                       pe_working_set_t * data_set)
 {
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     CRM_ASSERT(attr_value != NULL);
     *attr_value = NULL;
@@ -379,7 +379,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     char *key = NULL;
     char *value = NULL;
 
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
     if (rc == pcmk_ok) {
@@ -906,7 +906,7 @@ main(int argc, char **argv)
         }
 
         if (ticket_id) {
-            ticket_t *ticket = find_ticket(ticket_id, data_set);
+            pe_ticket_t *ticket = find_ticket(ticket_id, data_set);
 
             if (ticket == NULL) {
                 CMD_ERR("No such ticket '%s'", ticket_id);
@@ -963,7 +963,7 @@ main(int argc, char **argv)
         }
 
         if (do_force == FALSE) {
-            ticket_t *ticket = NULL;
+            pe_ticket_t *ticket = NULL;
 
             ticket = find_ticket(ticket_id, data_set);
             if (ticket == NULL) {

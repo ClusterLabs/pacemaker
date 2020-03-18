@@ -177,7 +177,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 }
 
 static char *
-resource_history_string(resource_t *rsc, const char *rsc_id, gboolean all,
+resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
                         int failcount, time_t last_failure) {
     char *buf = NULL;
 
@@ -354,7 +354,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
 }
 
 char *
-pe__node_display_name(node_t *node, bool print_detail)
+pe__node_display_name(pe_node_t *node, bool print_detail)
 {
     char *node_name;
     const char *node_host = NULL;
@@ -365,7 +365,7 @@ pe__node_display_name(node_t *node, bool print_detail)
 
     /* Host is displayed only if this is a guest node */
     if (pe__is_guest_node(node)) {
-        node_t *host_node = pe__current_node(node->details->remote_rsc);
+        pe_node_t *host_node = pe__current_node(node->details->remote_rsc);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -618,7 +618,7 @@ int
 pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
@@ -649,7 +649,7 @@ pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
@@ -669,7 +669,7 @@ int
 pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "current_dc");
 
-    node_t *dc = va_arg(args, node_t *);
+    pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name G_GNUC_UNUSED = va_arg(args, char *);
@@ -972,7 +972,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_html(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
@@ -1032,7 +1032,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_text(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode = va_arg(args, const char *);
@@ -1087,7 +1087,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
 int
 pe__node_xml(pcmk__output_t *out, va_list args) {
-    node_t *node = va_arg(args, node_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
@@ -1307,7 +1307,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__resource_history_text(pcmk__output_t *out, va_list args) {
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
@@ -1328,7 +1328,7 @@ pe__resource_history_text(pcmk__output_t *out, va_list args) {
 
 int
 pe__resource_history_xml(pcmk__output_t *out, va_list args) {
-    resource_t *rsc = va_arg(args, resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
     int failcount = va_arg(args, int);
@@ -1371,7 +1371,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
 
 int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
@@ -1391,7 +1391,7 @@ pe__ticket_html(pcmk__output_t *out, va_list args) {
 
 int
 pe__ticket_text(pcmk__output_t *out, va_list args) {
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
@@ -1413,7 +1413,7 @@ int
 pe__ticket_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
 
-    ticket_t *ticket = va_arg(args, ticket_t *);
+    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     node = pcmk__output_create_xml_node(out, "ticket");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) ticket->id);
@@ -1512,7 +1512,7 @@ pe__register_messages(pcmk__output_t *out) {
 }
 
 void
-pe__output_node(node_t *node, gboolean details, pcmk__output_t *out)
+pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
 {
     if (node == NULL) {
         crm_trace("<NULL>");
@@ -1535,7 +1535,7 @@ pe__output_node(node_t *node, gboolean details, pcmk__output_t *out)
         crm_trace("\t\t=== Resources");
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
             // @TODO pe_print_log probably doesn't belong here
             out->message(out, crm_map_element_name(rsc->xml),

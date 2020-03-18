@@ -545,7 +545,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         const char *rclass = NULL;
         const char *rprovider = NULL;
 
-        resource_t *rsc = NULL;
+        pe_resource_t *rsc = NULL;
 
         quiet_log(" + Injecting %s into the configuration\n", spec);
 

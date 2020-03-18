@@ -94,8 +94,8 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
-                    node_t * node, pe_working_set_t * data_set)
+get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
+                    pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -128,8 +128,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
 }
 
 void
-get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
-                   node_t * node, pe_working_set_t * data_set)
+get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
+                   pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -153,8 +153,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
 
 #if ENABLE_VERSIONED_ATTRS
 void
-pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
-                            node_t * node, pe_working_set_t * data_set)
+pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
+                            pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -343,7 +343,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static bool
-detect_promotable(resource_t *rsc)
+detect_promotable(pe_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
                                                  XML_RSC_ATTR_PROMOTABLE);
@@ -365,8 +365,8 @@ detect_promotable(resource_t *rsc)
 }
 
 gboolean
-common_unpack(xmlNode * xml_obj, resource_t ** rsc,
-              resource_t * parent, pe_working_set_t * data_set)
+common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
+              pe_resource_t * parent, pe_working_set_t * data_set)
 {
     bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
@@ -394,7 +394,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         return FALSE;
     }
 
-    *rsc = calloc(1, sizeof(resource_t));
+    *rsc = calloc(1, sizeof(pe_resource_t));
     (*rsc)->cluster = data_set;
 
     if (expanded_xml) {
@@ -731,9 +731,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 }
 
 void
-common_update_score(resource_t * rsc, const char *id, int score)
+common_update_score(pe_resource_t * rsc, const char *id, int score)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {
@@ -745,7 +745,7 @@ common_update_score(resource_t * rsc, const char *id, int score)
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             common_update_score(child_rsc, id, score);
         }
@@ -753,9 +753,9 @@ common_update_score(resource_t * rsc, const char *id, int score)
 }
 
 gboolean
-is_parent(resource_t *child, resource_t *rsc)
+is_parent(pe_resource_t *child, pe_resource_t *rsc)
 {
-    resource_t *parent = child;
+    pe_resource_t *parent = child;
 
     if (parent == NULL || rsc == NULL) {
         return FALSE;
@@ -769,10 +769,10 @@ is_parent(resource_t *child, resource_t *rsc)
     return FALSE;
 }
 
-resource_t *
-uber_parent(resource_t * rsc)
+pe_resource_t *
+uber_parent(pe_resource_t * rsc)
 {
-    resource_t *parent = rsc;
+    pe_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -784,7 +784,7 @@ uber_parent(resource_t * rsc)
 }
 
 void
-common_free(resource_t * rsc)
+common_free(pe_resource_t * rsc)
 {
     if (rsc == NULL) {
         return;

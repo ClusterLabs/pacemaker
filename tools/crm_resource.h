@@ -46,27 +46,27 @@ int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, 
 int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool scope_master);
 
 /* print */
-void cli_resource_print_cts(resource_t * rsc);
-void cli_resource_print_raw(resource_t * rsc);
+void cli_resource_print_cts(pe_resource_t * rsc);
+void cli_resource_print_raw(pe_resource_t * rsc);
 void cli_resource_print_cts_constraints(pe_working_set_t * data_set);
-void cli_resource_print_location(resource_t * rsc, const char *prefix);
-void cli_resource_print_colocation(resource_t * rsc, bool dependents, bool recursive, int offset);
+void cli_resource_print_location(pe_resource_t * rsc, const char *prefix);
+void cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursive, int offset);
 
-int cli_resource_print(resource_t *rsc, pe_working_set_t *data_set,
+int cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set,
                        bool expanded);
 int cli_resource_print_list(pe_working_set_t * data_set, bool raw);
-int cli_resource_print_attribute(resource_t *rsc, const char *attr,
+int cli_resource_print_attribute(pe_resource_t *rsc, const char *attr,
                                  pe_working_set_t *data_set);
-int cli_resource_print_property(resource_t *rsc, const char *attr,
+int cli_resource_print_property(pe_resource_t *rsc, const char *attr,
                                 pe_working_set_t *data_set);
 int cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active, pe_working_set_t * data_set);
 
 /* runtime */
-void cli_resource_check(cib_t * cib, resource_t *rsc);
+void cli_resource_check(cib_t * cib, pe_resource_t *rsc);
 int cli_resource_fail(pcmk_controld_api_t *controld_api,
                       const char *host_uname, const char *rsc_id,
                       pe_working_set_t *data_set);
-int cli_resource_search(resource_t *rsc, const char *requested_name,
+int cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                         pe_working_set_t *data_set);
 int cli_resource_delete(pcmk_controld_api_t *controld_api,
                         const char *host_uname, pe_resource_t *rsc,
@@ -77,24 +77,24 @@ int cli_cleanup_all(pcmk_controld_api_t *controld_api, const char *node_name,
                     pe_working_set_t *data_set);
 int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
                          cib_t *cib);
-int cli_resource_move(resource_t *rsc, const char *rsc_id,
+int cli_resource_move(pe_resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
                       pe_working_set_t *data_set);
 int cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                      const char *rsc_prov, const char *rsc_type,
                                      const char *rsc_action, GHashTable *params,
                                      GHashTable *override_hash, int timeout_ms);
-int cli_resource_execute(resource_t *rsc, const char *requested_name,
+int cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                          const char *rsc_action, GHashTable *override_hash,
                          int timeout_ms, cib_t *cib,
                          pe_working_set_t *data_set);
 
-int cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
+int cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                   const char *attr_set, const char *attr_id,
                                   const char *attr_name, const char *attr_value,
                                   bool recursive, cib_t *cib,
                                   pe_working_set_t *data_set);
-int cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
+int cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
                                   const char *attr_set, const char *attr_id,
                                   const char *attr_name, cib_t *cib,
                                   pe_working_set_t *data_set);
@@ -103,5 +103,5 @@ GList* subtract_lists(GList *from, GList *items, GCompareFunc cmp);
 
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);
-void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
-                      node_t *node);
+void cli_resource_why(cib_t *cib_conn, GListPtr resources, pe_resource_t *rsc,
+                      pe_node_t *node);

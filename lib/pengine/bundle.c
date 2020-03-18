@@ -679,7 +679,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
  * \param[in]     uname  Name of node to ban
  */
 static void
-disallow_node(resource_t *rsc, const char *uname)
+disallow_node(pe_resource_t *rsc, const char *uname)
 {
     gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
 
@@ -691,7 +691,7 @@ disallow_node(resource_t *rsc, const char *uname)
         GListPtr child;
 
         for (child = rsc->children; child != NULL; child = child->next) {
-            disallow_node((resource_t *) (child->data), uname);
+            disallow_node((pe_resource_t *) (child->data), uname);
         }
     }
 }
@@ -704,7 +704,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
         GListPtr rsc_iter = NULL;
-        node_t *node = NULL;
+        pe_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
         char *port_s = NULL;
@@ -780,7 +780,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * resources, so the weight is correct before any copies are made.
          */
         for (rsc_iter = data_set->resources; rsc_iter; rsc_iter = rsc_iter->next) {
-            disallow_node((resource_t *) (rsc_iter->data), uname);
+            disallow_node((pe_resource_t *) (rsc_iter->data), uname);
         }
 
         replica->node = node_copy(node);
@@ -799,7 +799,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                             node_copy(replica->node));
 
         {
-            node_t *copy = node_copy(replica->node);
+            pe_node_t *copy = node_copy(replica->node);
             copy->weight = -INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
@@ -928,7 +928,7 @@ port_free(pe__bundle_port_t *port)
 static pe__bundle_replica_t *
 replica_for_remote(pe_resource_t *remote)
 {
-    resource_t *top = remote;
+    pe_resource_t *top = remote;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     if (top == NULL) {
@@ -1218,7 +1218,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     if(xml_resource) {
         int lpc = 0;
         GListPtr childIter = NULL;
-        resource_t *new_rsc = NULL;
+        pe_resource_t *new_rsc = NULL;
         pe__bundle_port_t *port = NULL;
 
         int offset = 0, max = 1024;
@@ -1428,7 +1428,7 @@ pe__find_bundle_replica(const pe_resource_t *bundle, const pe_node_t *node)
 }
 
 static void
-print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
+print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
                   void *print_data)
 {
     if (rsc != NULL) {
@@ -1551,7 +1551,7 @@ static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                long options)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -1641,7 +1641,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                long options)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -1726,7 +1726,7 @@ static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -1903,7 +1903,7 @@ pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
  * \return Number of configured replicas, or 0 on error
  */
 int
-pe_bundle_replicas(const resource_t *rsc)
+pe_bundle_replicas(const pe_resource_t *rsc)
 {
     if ((rsc == NULL) || (rsc->variant != pe_container)) {
         return 0;

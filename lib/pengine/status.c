@@ -151,11 +151,11 @@ cluster_status(pe_working_set_t * data_set)
 static void
 pe_free_resources(GListPtr resources)
 {
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     GListPtr iterator = resources;
 
     while (iterator != NULL) {
-        rsc = (resource_t *) iterator->data;
+        rsc = (pe_resource_t *) iterator->data;
         iterator = iterator->next;
         rsc->fns->free(rsc);
     }
@@ -371,21 +371,21 @@ set_working_set_defaults(pe_working_set_t * data_set)
 #endif
 }
 
-resource_t *
+pe_resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id)
 {
     return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed);
 }
 
-resource_t *
+pe_resource_t *
 pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags)
 {
     GListPtr rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        resource_t *parent = rIter->data;
+        pe_resource_t *parent = rIter->data;
 
-        resource_t *match =
+        pe_resource_t *match =
             parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;
@@ -395,10 +395,10 @@ pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flag
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
 {
-    node_t *match = pe_find_node_id(nodes, id);
+    pe_node_t *match = pe_find_node_id(nodes, id);
 
     if (match) {
         return match;
@@ -407,13 +407,13 @@ pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
     return pe_find_node(nodes, uname);
 }
 
-node_t *
+pe_node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->id, id)) {
             return node;
@@ -423,13 +423,13 @@ pe_find_node_id(GListPtr nodes, const char *id)
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->uname, uname)) {
             return node;

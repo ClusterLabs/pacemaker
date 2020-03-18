@@ -29,7 +29,7 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
 }
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
-void distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
+void distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
 static GList *
@@ -59,7 +59,7 @@ get_containers_or_children(pe_resource_t *rsc)
 }
 
 static bool
-migration_threshold_reached(resource_t *rsc, node_t *node,
+migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
                             pe_working_set_t *data_set)
 {
     int fail_count, countdown;
@@ -396,8 +396,8 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                    pe_working_set_t *data_set)
 {
     GListPtr scratch = NULL;
-    resource_t *pair = NULL;
-    node_t *active_node_lh = NULL;
+    pe_resource_t *pair = NULL;
+    pe_node_t *active_node_lh = NULL;
 
     active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, current);
     if (active_node_lh) {
@@ -409,7 +409,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
     for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         pair = compatible_replica_for_node(rsc_lh, node, rsc, filter, current);
         if (pair) {
@@ -435,7 +435,7 @@ pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
     CRM_ASSERT(FALSE);
 }
 
-int copies_per_node(resource_t * rsc) 
+int copies_per_node(pe_resource_t * rsc) 
 {
     /* Strictly speaking, there should be a 'copies_per_node' addition
      * to the resource function table and each case would be a
@@ -488,7 +488,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
         return;
 
     } else if(constraint->rsc_lh->variant > pe_group) {
-        resource_t *rh_child = compatible_replica(rsc_lh, rsc,
+        pe_resource_t *rh_child = compatible_replica(rsc_lh, rsc,
                                                   RSC_ROLE_UNKNOWN, FALSE,
                                                   data_set);
 
@@ -522,8 +522,8 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                                                         constraint, data_set);
 
         } else {
-            node_t *chosen = replica->container->fns->location(replica->container,
-                                                               NULL, FALSE);
+            pe_node_t *chosen = replica->container->fns->location(replica->container,
+                                                                  NULL, FALSE);
 
             if ((chosen == NULL)
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
@@ -579,8 +579,8 @@ pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
     return flags;
 }
 
-resource_t *
-find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
+pe_resource_t *
+find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
                               enum rsc_role_e filter, gboolean current)
 {
     GListPtr gIter = NULL;
@@ -596,7 +596,7 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
 
     children = get_containers_or_children(rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         if(is_child_compatible(child_rsc, local_node, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
@@ -778,7 +778,7 @@ static bool
 can_interleave_actions(pe_action_t *first, pe_action_t *then)
 {
     bool interleave = FALSE;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     const char *interleave_s = NULL;
 
     if(first->rsc == NULL || then->rsc == NULL) {
@@ -832,9 +832,9 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
-            resource_t *then_child = (resource_t *) gIter->data;
+            pe_resource_t *then_child = (pe_resource_t *) gIter->data;
             enum pe_graph_flags then_child_changed = pe_graph_none;
-            action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
+            pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
@@ -846,7 +846,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 changed |= then_child_changed;
                 if (then_child_changed & pe_graph_updated_then) {
                     for (GListPtr lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
-                        action_wrapper_t *next = (action_wrapper_t *) lpc->data;
+                        pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
                         update_action(next->action, data_set);
                     }
                 }
@@ -1031,8 +1031,8 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
              */
             char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS,
                                                0);
-            action_t *probe = find_first_action(replica->remote->actions,
-                                                probe_uuid, NULL, node);
+            pe_action_t *probe = find_first_action(replica->remote->actions,
+                                                   probe_uuid, NULL, node);
 
             free(probe_uuid);
             if (probe) {

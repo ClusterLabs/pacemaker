@@ -1418,7 +1418,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->standby && node->details->online) {
             nodes_standby++;

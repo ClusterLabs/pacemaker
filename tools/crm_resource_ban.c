@@ -69,7 +69,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
     if(host == NULL) {
         GListPtr n = allnodes;
         for(; n && rc == pcmk_ok; n = n->next) {
-            node_t *target = n->data;
+            pe_node_t *target = n->data;
 
             rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn);
         }
@@ -296,7 +296,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
          * On the first error, abort.
          */
         for(; n; n = n->next) {
-            node_t *target = n->data;
+            pe_node_t *target = n->data;
 
             rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn, clear_ban_constraints);
             if (rc != pcmk_ok) {

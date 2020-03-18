@@ -43,7 +43,7 @@ static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           xmlNode **last_failure,
                           enum action_fail_response *failed,
                           pe_working_set_t *data_set);
-static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
+static gboolean determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_node);
 static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
 
@@ -52,7 +52,7 @@ static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
 uint32_t pe_wo = 0;
 
 static gboolean
-is_dangling_guest_node(node_t *node)
+is_dangling_guest_node(pe_node_t *node)
 {
     /* we are looking for a remote-node that was supposed to be mapped to a
      * container resource, but all traces of that container have disappeared 
@@ -76,13 +76,13 @@ is_dangling_guest_node(node_t *node)
  * \param[in]     reason    Text description of why fencing is needed
  */
 void
-pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
+pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *reason)
 {
     CRM_CHECK(node, return);
 
     /* A guest node is fenced by marking its container as failed */
     if (pe__is_guest_node(node)) {
-        resource_t *rsc = node->details->remote_rsc->container;
+        pe_resource_t *rsc = node->details->remote_rsc->container;
 
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             if (!is_set(rsc->flags, pe_rsc_managed)) {
@@ -112,7 +112,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
 
     } else if (pe__is_remote_node(node)) {
-        resource_t *rsc = node->details->remote_rsc;
+        pe_resource_t *rsc = node->details->remote_rsc;
 
         if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
             crm_notice("Not fencing remote node %s "
@@ -350,17 +350,17 @@ destroy_digest_cache(gpointer ptr)
     free(data);
 }
 
-node_t *
+pe_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
                const char *score, pe_working_set_t * data_set)
 {
-    node_t *new_node = NULL;
+    pe_node_t *new_node = NULL;
 
     if (pe_find_node(data_set->nodes, uname) != NULL) {
         pcmk__config_warn("More than one node entry has name '%s'", uname);
     }
 
-    new_node = calloc(1, sizeof(node_t));
+    new_node = calloc(1, sizeof(pe_node_t));
     if (new_node == NULL) {
         return NULL;
     }
@@ -466,7 +466,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 }
 
 static void
-handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
+handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
 {
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
@@ -494,7 +494,7 @@ gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
-    node_t *new_node = NULL;
+    pe_node_t *new_node = NULL;
     const char *id = NULL;
     const char *uname = NULL;
     const char *type = NULL;
@@ -550,7 +550,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 }
 
 static void
-setup_container(resource_t * rsc, pe_working_set_t * data_set)
+setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     const char *container_id = NULL;
 
@@ -558,7 +558,7 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             setup_container(child_rsc, data_set);
         }
@@ -567,7 +567,7 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
 
     container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
     if (container_id && safe_str_neq(container_id, rsc->id)) {
-        resource_t *container = pe_find_resource(data_set->resources, container_id);
+        pe_resource_t *container = pe_find_resource(data_set->resources, container_id);
 
         if (container) {
             rsc->container = container;
@@ -658,9 +658,9 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
  * easy access to the connection resource during the scheduler calculations.
  */
 static void
-link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
+link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
 {
-    node_t *remote_node = NULL;
+    pe_node_t *remote_node = NULL;
 
     if (new_rsc->is_remote_node == FALSE) {
         return;
@@ -696,7 +696,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
 static void
 destroy_tag(gpointer data)
 {
-    tag_t *tag = data;
+    pe_tag_t *tag = data;
 
     if (tag) {
         free(tag->id);
@@ -730,7 +730,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_resources); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        resource_t *new_rsc = NULL;
+        pe_resource_t *new_rsc = NULL;
 
         if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
             const char *template_id = ID(xml_obj);
@@ -759,7 +759,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     }
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         setup_container(rsc, data_set);
         link_rsc2remotenode(data_set, rsc);
@@ -839,7 +839,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
     const char *standby = NULL;
     xmlAttrPtr xIter = NULL;
 
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     ticket_id = ID(xml_ticket);
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
@@ -913,11 +913,11 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
 }
 
 static void
-unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t * data_set) 
+unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_t * data_set) 
 {
     const char *resource_discovery_enabled = NULL;
     xmlNode *attrs = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
 
     if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
         return;
@@ -987,7 +987,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 
         const char *id = NULL;
         const char *uname = NULL;
-        node_t *this_node = NULL;
+        pe_node_t *this_node = NULL;
         bool process = FALSE;
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
@@ -1013,7 +1013,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 
         } else if (pe__is_guest_or_remote_node(this_node)) {
             bool check = FALSE;
-            resource_t *rsc = this_node->details->remote_rsc;
+            pe_resource_t *rsc = this_node->details->remote_rsc;
 
             if(fence) {
                 check = TRUE;
@@ -1079,7 +1079,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     const char *uname = NULL;
 
     xmlNode *state = NULL;
-    node_t *this_node = NULL;
+    pe_node_t *this_node = NULL;
 
     crm_trace("Beginning unpack");
 
@@ -1187,7 +1187,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     }
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *this_node = gIter->data;
+        pe_node_t *this_node = gIter->data;
 
         if (this_node == NULL) {
             continue;
@@ -1204,7 +1204,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
 static gboolean
 determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_state,
-                                   node_t * this_node)
+                                   pe_node_t * this_node)
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
@@ -1238,7 +1238,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
 static gboolean
 determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_state,
-                                node_t * this_node)
+                                pe_node_t * this_node)
 {
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
@@ -1336,10 +1336,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 }
 
 static gboolean
-determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node)
+determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_node)
 {
-    resource_t *rsc = this_node->details->remote_rsc;
-    resource_t *container = NULL;
+    pe_resource_t *rsc = this_node->details->remote_rsc;
+    pe_resource_t *container = NULL;
     pe_node_t *host = NULL;
 
     /* If there is a node state entry for a (former) Pacemaker Remote node
@@ -1406,7 +1406,7 @@ remote_online_done:
 }
 
 gboolean
-determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set_t * data_set)
+determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_set_t * data_set)
 {
     gboolean online = FALSE;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
@@ -1558,10 +1558,10 @@ clone_zero(const char *last_rsc_id)
     return zero;
 }
 
-static resource_t *
+static pe_resource_t *
 create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t * data_set)
 {
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
     copy_in_properties(xml_rsc, rsc_entry);
@@ -1573,7 +1573,7 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     }
 
     if (xml_contains_remote_node(xml_rsc)) {
-        node_t *node;
+        pe_node_t *node;
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
         node = pe_find_node(data_set->nodes, rsc_id);
@@ -1630,8 +1630,8 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
  * \param[in] parent    Clone to check
  * \param[in] rsc_id    Name of cloned resource in history (without instance)
  */
-static resource_t *
-find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent,
+static pe_resource_t *
+find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_t * parent,
                      const char *rsc_id)
 {
     GListPtr rIter = NULL;
@@ -1647,7 +1647,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
         GListPtr locations = NULL;
-        resource_t *child = rIter->data;
+        pe_resource_t *child = rIter->data;
 
         /* Check whether this instance is already known to be active or pending
          * anywhere, at this stage of unpacking. Because this function is called
@@ -1753,12 +1753,12 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     return rsc;
 }
 
-static resource_t *
-unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc_id,
+static pe_resource_t *
+unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *rsc_id,
                      xmlNode * rsc_entry)
 {
-    resource_t *rsc = NULL;
-    resource_t *parent = NULL;
+    pe_resource_t *rsc = NULL;
+    pe_resource_t *parent = NULL;
 
     crm_trace("looking for %s", rsc_id);
     rsc = pe_find_resource(data_set->resources, rsc_id);
@@ -1769,7 +1769,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
          * a single :0 orphan to match against here.
          */
         char *clone0_id = clone_zero(rsc_id);
-        resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
+        pe_resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
 
         if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
@@ -1815,10 +1815,10 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     return rsc;
 }
 
-static resource_t *
-process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * data_set)
+static pe_resource_t *
+process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t * data_set)
 {
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
 
     crm_debug("Detected orphan resource %s on %s", rsc_id, node->details->uname);
@@ -1836,11 +1836,11 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
 }
 
 static void
-process_rsc_state(resource_t * rsc, node_t * node,
+process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                   enum action_fail_response on_fail,
                   xmlNode * migrate_op, pe_working_set_t * data_set)
 {
-    node_t *tmpnode = NULL;
+    pe_node_t *tmpnode = NULL;
     char *reason = NULL;
 
     CRM_ASSERT(rsc);
@@ -1849,11 +1849,11 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
     /* process current state */
     if (rsc->role != RSC_ROLE_UNKNOWN) {
-        resource_t *iter = rsc;
+        pe_resource_t *iter = rsc;
 
         while (iter) {
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
-                node_t *n = node_copy(node);
+                pe_node_t *n = node_copy(node);
 
                 pe_rsc_trace(rsc, "%s (aka. %s) known on %s", rsc->id, rsc->clone_name,
                              n->details->uname);
@@ -2058,7 +2058,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
         GListPtr gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *stop = (action_t *) gIter->data;
+            pe_action_t *stop = (pe_action_t *) gIter->data;
 
             stop->flags |= pe_action_optional;
         }
@@ -2069,7 +2069,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
 /* create active recurring operations as optional */
 static void
-process_recurring(node_t * node, resource_t * rsc,
+process_recurring(pe_node_t * node, pe_resource_t * rsc,
                   int start_index, int stop_index,
                   GListPtr sorted_op_list, pe_working_set_t * data_set)
 {
@@ -2194,8 +2194,8 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
     }
 }
 
-static resource_t *
-unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
+static pe_resource_t *
+unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     int stop_index = -1;
@@ -2205,7 +2205,7 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
     const char *task = NULL;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
 
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
 
@@ -2308,8 +2308,8 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
     for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
 
-        resource_t *rsc;
-        resource_t *container;
+        pe_resource_t *rsc;
+        pe_resource_t *container;
         const char *rsc_id;
         const char *container_id;
 
@@ -2343,7 +2343,7 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
 }
 
 gboolean
-unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
+unpack_lrm_resources(pe_node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
 {
     xmlNode *rsc_entry = NULL;
     gboolean found_orphaned_container_filler = FALSE;
@@ -2356,7 +2356,7 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
          rsc_entry = __xml_next_element(rsc_entry)) {
 
         if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-            resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
+            pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
             if (!rsc) {
                 continue;
             }
@@ -2376,9 +2376,9 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
 }
 
 static void
-set_active(resource_t * rsc)
+set_active(pe_resource_t * rsc)
 {
-    resource_t *top = uber_parent(rsc);
+    pe_resource_t *top = uber_parent(rsc);
 
     if (top && is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_SLAVE;
@@ -2390,7 +2390,7 @@ set_active(resource_t * rsc)
 static void
 set_node_score(gpointer key, gpointer value, gpointer user_data)
 {
-    node_t *node = value;
+    pe_node_t *node = value;
     int *score = user_data;
 
     node->weight = *score;
@@ -2608,7 +2608,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * migrate_from, so assume the resource is still active on the target
          * (if it is up).
          */
-        node_t *target_node = pe_find_node(data_set->nodes, target);
+        pe_node_t *target_node = pe_find_node(data_set->nodes, target);
 
         pe_rsc_trace(rsc, "stop (%d) + migrate_from (%d)",
                      target_stop_id, target_migrate_from_id);
@@ -2744,12 +2744,12 @@ last_change_str(xmlNode *xml_op)
 }
 
 static void
-unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
+unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
     bool is_probe = false;
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
 
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
@@ -2863,10 +2863,10 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     if (action->fail_role == RSC_ROLE_STOPPED) {
         int score = -INFINITY;
 
-        resource_t *fail_rsc = rsc;
+        pe_resource_t *fail_rsc = rsc;
 
         if (fail_rsc->parent) {
-            resource_t *parent = uber_parent(fail_rsc);
+            pe_resource_t *parent = uber_parent(fail_rsc);
 
             if (pe_rsc_is_clone(parent)
                 && is_not_set(parent->flags, pe_rsc_unique)) {
@@ -2910,7 +2910,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
  */
 static int
 determine_op_status(
-    resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
+    pe_resource_t *rsc, int rc, int target_rc, pe_node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
 {
     guint interval_ms = 0;
     bool is_probe = false;
@@ -3278,10 +3278,10 @@ int pe__target_rc_from_xml(xmlNode *xml_op)
 }
 
 static enum action_fail_response
-get_action_on_fail(resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
+get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
 {
     int result = action_fail_recover;
-    action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
+    pe_action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
 
     result = action->on_fail;
     pe_free_action(action);
@@ -3290,7 +3290,7 @@ get_action_on_fail(resource_t *rsc, const char *key, const char *task, pe_workin
 }
 
 static void
-update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const char * task, int rc,
+update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, const char * task, int rc,
                       xmlNode * last_failure, enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     gboolean clear_past_failure = FALSE;
@@ -3442,7 +3442,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     const char *task_key = NULL;
     const char *exit_reason = NULL;
     bool expired = FALSE;
-    resource_t *parent = rsc;
+    pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
 
     CRM_CHECK(rsc && node && xml_op, return);
@@ -3563,7 +3563,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 /* If a pending migrate_to action is out on a unclean node,
                  * we have to force the stop action on the target. */
                 const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-                node_t *target = pe_find_node(data_set->nodes, migrate_target);
+                pe_node_t *target = pe_find_node(data_set->nodes, migrate_target);
                 if (target) {
                     stop_action(rsc, target, FALSE);
                 }
@@ -3802,7 +3802,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     xmlNode *tmp = NULL;
     xmlNode *status = find_xml_node(data_set->input, XML_CIB_TAG_STATUS, TRUE);
 
-    node_t *this_node = NULL;
+    pe_node_t *this_node = NULL;
 
     xmlNode *node_state = NULL;
 

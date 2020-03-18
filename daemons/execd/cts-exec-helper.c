@@ -425,7 +425,7 @@ generate_params(void)
     int rc = 0;
     pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTableIter iter;

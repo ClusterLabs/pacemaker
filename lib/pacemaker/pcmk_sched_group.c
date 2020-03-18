@@ -20,8 +20,8 @@ pe_node_t *
 pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
 {
-    node_t *node = NULL;
-    node_t *group_node = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *group_node = NULL;
     GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
@@ -56,7 +56,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "Allocating group %s member %s",
                      rsc->id, child_rsc->id);
@@ -76,19 +76,19 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     return NULL;
 }
 
-void group_update_pseudo_status(resource_t * parent, resource_t * child);
+void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
 
 void
-group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
+group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    action_t *op = NULL;
+    pe_action_t *op = NULL;
     const char *value = NULL;
     GListPtr gIter = rsc->children;
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->create_actions(child_rsc, data_set);
         group_update_pseudo_status(rsc, child_rsc);
@@ -127,7 +127,7 @@ group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-group_update_pseudo_status(resource_t * parent, resource_t * child)
+group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
 {
     GListPtr gIter = child->actions;
     group_variant_data_t *group_data = NULL;
@@ -144,7 +144,7 @@ group_update_pseudo_status(resource_t * parent, resource_t * child)
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (is_set(action->flags, pe_action_optional)) {
             continue;
@@ -162,12 +162,12 @@ group_update_pseudo_status(resource_t * parent, resource_t * child)
 }
 
 void
-group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = rsc->children;
-    resource_t *last_rsc = NULL;
-    resource_t *last_active = NULL;
-    resource_t *top = uber_parent(rsc);
+    pe_resource_t *last_rsc = NULL;
+    pe_resource_t *last_active = NULL;
+    pe_resource_t *top = uber_parent(rsc);
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
@@ -177,7 +177,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         int stop = pe_order_none;
         int stopped = pe_order_implies_then_printed;
         int start = pe_order_implies_then | pe_order_runnable_left;
@@ -320,7 +320,7 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint,
                                            data_set);
@@ -371,7 +371,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
                                            data_set);
@@ -379,16 +379,16 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 enum pe_action_flags
-group_action_flags(action_t * action, node_t * node)
+group_action_flags(pe_action_t * action, pe_node_t * node)
 {
     GListPtr gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
 
     for (gIter = action->rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
         enum action_tasks task = get_complex_task(child, action->task, TRUE);
         const char *task_s = task2text(task);
-        action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
+        pe_action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
 
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
@@ -432,8 +432,8 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                                      data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
-        action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pe_action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
             changed |= child->cmds->update_actions(first, child_action, node,
@@ -461,7 +461,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     native_rsc_location(rsc, constraint);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->rsc_location(child_rsc, constraint);
         if (group_data->colocated && reset_scores) {
@@ -475,7 +475,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-group_expand(resource_t * rsc, pe_working_set_t * data_set)
+group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     CRM_CHECK(rsc != NULL, return);
 
@@ -483,7 +483,7 @@ group_expand(resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->expand(child_rsc, data_set);
     }
@@ -527,6 +527,6 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
 }
 
 void
-group_append_meta(resource_t * rsc, xmlNode * xml)
+group_append_meta(pe_resource_t * rsc, xmlNode * xml)
 {
 }

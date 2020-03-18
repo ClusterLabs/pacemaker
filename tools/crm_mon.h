@@ -106,7 +106,7 @@ int print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
 GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
-void crm_mon_get_parameters(resource_t *rsc, pe_working_set_t *data_set);
+void crm_mon_get_parameters(pe_resource_t *rsc, pe_working_set_t *data_set);
 unsigned int get_resource_display_options(unsigned int mon_ops);
 
 void crm_mon_register_messages(pcmk__output_t *out);
