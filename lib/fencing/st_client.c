@@ -1069,8 +1069,8 @@ stonith_api_status(stonith_t * stonith, int call_options, const char *id, const 
 }
 
 static int
-stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const char *action,
-                  int timeout, int tolerance)
+stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *node,
+                             const char *action, int timeout, int tolerance, int delay)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -1081,10 +1081,22 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
 
+    if (delay >= 0) {
+        crm_xml_add_int(data, F_STONITH_DELAY, delay);
+    }
+
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
 
     return rc;
+}
+
+static int
+stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const char *action,
+                  int timeout, int tolerance)
+{
+    return stonith_api_fence_with_delay(stonith, call_options, node, action,
+                                        timeout, tolerance, -1);
 }
 
 static int
@@ -1863,6 +1875,14 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
+    if (data) {
+        const char *delay_s = crm_element_value(data, F_STONITH_DELAY);
+
+        if (delay_s) {
+            crm_xml_add(op_msg, F_STONITH_DELAY, delay_s);
+        }
+    }
+
     {
         enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
@@ -2117,6 +2137,7 @@ stonith_api_new(void)
     new_stonith->cmds->monitor    = stonith_api_monitor;
     new_stonith->cmds->status     = stonith_api_status;
     new_stonith->cmds->fence      = stonith_api_fence;
+    new_stonith->cmds->fence_with_delay = stonith_api_fence_with_delay;
     new_stonith->cmds->confirm    = stonith_api_confirm;
     new_stonith->cmds->history    = stonith_api_history;
 
