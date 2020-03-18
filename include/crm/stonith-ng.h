@@ -404,6 +404,25 @@ typedef struct stonith_api_operations_s
                     stonith_key_value_t *params, int timeout, char **output,
                     char **error_output);
 
+    /*!
+     * \brief Issue a fencing action against a node with enforced fencing delay.
+     *
+     * \note Possible actions are, 'on', 'off', and 'reboot'.
+     *
+     * \param st, stonith connection
+     * \param options, call options
+     * \param node, The target node to fence
+     * \param action, The fencing action to take
+     * \param timeout, The default per device timeout to use with each device
+     *                 capable of fencing the target.
+     * \param delay, Any enforced fencing delay. -1 to disable
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
+    int (*fence_with_delay)(stonith_t *st, int options, const char *node, const char *action,
+                            int timeout, int tolerance, int delay);
+
 } stonith_api_operations_t;
 
 struct stonith_s
