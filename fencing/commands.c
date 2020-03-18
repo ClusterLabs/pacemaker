@@ -80,7 +80,7 @@ typedef struct async_command_s {
     int default_timeout; /* seconds */
     int timeout; /* seconds */
 
-    int start_delay; /* milliseconds */
+    int start_delay; /* seconds */
     int delay_id;
 
     char *op;
@@ -123,7 +123,7 @@ static int
 get_action_delay_max(stonith_device_t * device, const char * action)
 {
     const char *value = NULL;
-    int delay_max_ms = 0;
+    int delay_max = 0;
 
     if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
         return 0;
@@ -131,17 +131,17 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_MAX);
     if (value) {
-       delay_max_ms = crm_get_msec(value);
+       delay_max = crm_get_msec(value) / 1000;
     }
 
-    return delay_max_ms;
+    return delay_max;
 }
 
 static int
 get_action_delay_base(stonith_device_t * device, const char * action)
 {
     const char *value = NULL;
-    int delay_base_ms = 0;
+    int delay_base = 0;
 
     if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
         return 0;
@@ -149,10 +149,10 @@ get_action_delay_base(stonith_device_t * device, const char * action)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_BASE);
     if (value) {
-       delay_base_ms = crm_get_msec(value);
+       delay_base = crm_get_msec(value) / 1000;
     }
 
-    return delay_base_ms;
+    return delay_base;
 }
 
 /*!
@@ -243,6 +243,9 @@ create_async_command(xmlNode * msg)
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
+    // Default value -1 means no enforced fencing delay
+    cmd->start_delay = -1;
+    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
@@ -349,7 +352,7 @@ stonith_device_execute(stonith_device_t * device)
 
         if (pending_op && pending_op->delay_id) {
             crm_trace
-                ("Operation '%s'%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
+                ("Operation '%s'%s%s on %s was asked to run too early, waiting for start_delay timeout of %ds",
                  pending_op->action, pending_op->victim ? " targeting " : "",
                  pending_op->victim ? pending_op->victim : "",
                  device->id, pending_op->start_delay);
@@ -464,6 +467,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 {
     int delay_max = 0;
     int delay_base = 0;
+    bool delay_enforced = (cmd->start_delay >= 0);
 
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
@@ -496,30 +500,37 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     device->pending_ops = g_list_append(device->pending_ops, cmd);
     mainloop_set_trigger(device->work);
 
-    delay_max = get_action_delay_max(device, cmd->action);
-    delay_base = get_action_delay_base(device, cmd->action);
-    if (delay_max == 0) {
-        delay_max = delay_base;
+    // No enforced fencing delay
+    if (delay_enforced == FALSE) {
+        delay_max = get_action_delay_max(device, cmd->action);
+        delay_base = get_action_delay_base(device, cmd->action);
+        if (delay_max == 0) {
+            delay_max = delay_base;
+        }
+        if (delay_max < delay_base) {
+            crm_warn("Base-delay (%ds) is larger than max-delay (%ds) "
+                     "for %s on %s - limiting to max-delay",
+                     delay_base, delay_max, cmd->action, device->id);
+            delay_base = delay_max;
+        }
+        if (delay_max > 0) {
+            // coverity[dont_call] We're not using rand() for security
+            cmd->start_delay =
+                ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
+                + delay_base;
+        }
     }
-    if (delay_max < delay_base) {
-        crm_warn("Base-delay (%dms) is larger than max-delay (%dms) "
-                 "for %s on %s - limiting to max-delay",
-                 delay_base, delay_max, cmd->action, device->id);
-        delay_base = delay_max;
-    }
-    if (delay_max > 0) {
-        // coverity[dont_call] We're not using rand() for security
-        cmd->start_delay =
-            ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
-            + delay_base;
-        crm_notice("Delaying '%s' action%s%s on %s for %dms (timeout=%ds, base=%dms, "
-                   "max=%dms)",
-                    cmd->action,
-                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
-                    device->id, cmd->start_delay, cmd->timeout,
-                    delay_base, delay_max);
+
+    if (cmd->start_delay > 0) {
+        crm_notice("Delaying '%s' action%s%s on %s for %s%ds (timeout=%ds, base=%ds, "
+                   "max=%ds)",
+                   cmd->action,
+                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                   device->id, delay_enforced ? "enforced " : "",
+                   cmd->start_delay, cmd->timeout,
+                   delay_base, delay_max);
         cmd->delay_id =
-            g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+            g_timeout_add_seconds(cmd->start_delay, start_delay_helper, cmd);
     }
 }
 
