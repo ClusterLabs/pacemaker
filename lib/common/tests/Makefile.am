@@ -1,1 +1,1 @@
-SUBDIRS = strings
+SUBDIRS = strings utils

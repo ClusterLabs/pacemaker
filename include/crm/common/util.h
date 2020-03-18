@@ -205,6 +205,9 @@ void crm_gnutls_global_init(void);
 
 char *pcmk_hostname(void);
 
+bool pcmk_str_is_infinity(const char *s);
+bool pcmk_str_is_minus_infinity(const char *s);
+
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
  * compatibility. It will be moved to compatibility.h when 2.1.0 is released.

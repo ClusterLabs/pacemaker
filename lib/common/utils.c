@@ -67,13 +67,10 @@ char2score(const char *score)
 
     if (score == NULL) {
 
-    } else if (safe_str_eq(score, CRM_MINUS_INFINITY_S)) {
+    } else if (pcmk_str_is_minus_infinity(score)) {
         score_f = -CRM_SCORE_INFINITY;
 
-    } else if (safe_str_eq(score, CRM_INFINITY_S)) {
-        score_f = CRM_SCORE_INFINITY;
-
-    } else if (safe_str_eq(score, CRM_PLUS_INFINITY_S)) {
+    } else if (pcmk_str_is_infinity(score)) {
         score_f = CRM_SCORE_INFINITY;
 
     } else if (safe_str_eq(score, "red")) {
@@ -651,4 +648,14 @@ pcmk_hostname()
     struct utsname hostinfo;
 
     return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
+}
+
+bool
+pcmk_str_is_infinity(const char *s) {
+    return crm_str_eq(s, CRM_INFINITY_S, TRUE) || crm_str_eq(s, CRM_PLUS_INFINITY_S, TRUE);
+}
+
+bool
+pcmk_str_is_minus_infinity(const char *s) {
+    return crm_str_eq(s, CRM_MINUS_INFINITY_S, TRUE);
 }
