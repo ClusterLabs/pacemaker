@@ -382,8 +382,8 @@ pcmk__valid_number(const char *value)
     if (value == NULL) {
         return false;
 
-    } else if (safe_str_eq(value, CRM_MINUS_INFINITY_S)
-               || safe_str_eq(value, CRM_INFINITY_S)) {
+    } else if (pcmk_str_is_minus_infinity(value) ||
+               pcmk_str_is_infinity(value)) {
         return true;
     }
 
@@ -395,8 +395,8 @@ pcmk__valid_number(const char *value)
 bool
 pcmk__valid_positive_number(const char *value)
 {
-    return safe_str_eq(value, CRM_INFINITY_S)
-           || (crm_parse_ll(value, NULL) > 0);
+    return pcmk_str_is_infinity(value) ||
+           (crm_parse_ll(value, NULL) > 0);
 }
 
 bool

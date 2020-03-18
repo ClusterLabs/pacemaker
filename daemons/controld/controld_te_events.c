@@ -156,7 +156,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     /* Fail count will be either incremented or set to infinity */
-    if (value == NULL || safe_str_neq(value, CRM_INFINITY_S)) {
+    if (!pcmk_str_is_infinity(value)) {
         value = XML_NVPAIR_ATTR_VALUE "++";
     }
 
