@@ -229,10 +229,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         GHashTable *hash2 =
             g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
 
-        n = node_copy(current_node1);
+        n = pe__copy_node(current_node1);
         g_hash_table_insert(hash1, (gpointer) n->details->id, n);
 
-        n = node_copy(current_node2);
+        n = pe__copy_node(current_node2);
         g_hash_table_insert(hash2, (gpointer) n->details->id, n);
 
         if(resource1->parent) {

@@ -1866,7 +1866,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         while (iter) {
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
-                pe_node_t *n = node_copy(node);
+                pe_node_t *n = pe__copy_node(node);
 
                 pe_rsc_trace(rsc, "%s (aka. %s) known on %s", rsc->id, rsc->clone_name,
                              n->details->uname);
@@ -2895,7 +2895,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
         if (fail_rsc->allowed_nodes != NULL) {
             g_hash_table_destroy(fail_rsc->allowed_nodes);
         }
-        fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+        fail_rsc->allowed_nodes = pe__node_list2table(data_set->nodes);
         g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
     }
 

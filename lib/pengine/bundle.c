@@ -783,7 +783,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             disallow_node((pe_resource_t *) (rsc_iter->data), uname);
         }
 
-        replica->node = node_copy(node);
+        replica->node = pe__copy_node(node);
         replica->node->weight = 500;
         replica->node->rsc_discover_mode = pe_discover_exclusive;
 
@@ -796,10 +796,10 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                                                               NULL, free);
         g_hash_table_insert(replica->child->allowed_nodes,
                             (gpointer) replica->node->details->id,
-                            node_copy(replica->node));
+                            pe__copy_node(replica->node));
 
         {
-            pe_node_t *copy = node_copy(replica->node);
+            pe_node_t *copy = pe__copy_node(replica->node);
             copy->weight = -INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);

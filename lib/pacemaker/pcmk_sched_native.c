@@ -305,7 +305,7 @@ node_hash_dup(GHashTable * hash)
 {
     /* Hack! */
     GListPtr list = g_hash_table_get_values(hash);
-    GHashTable *result = node_hash_from_list(list);
+    GHashTable *result = pe__node_list2table(list);
 
     g_list_free(list);
     return result;
@@ -1521,7 +1521,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {
-                load_stopped->node = node_copy(current);
+                load_stopped->node = pe__copy_node(current);
                 update_action_flags(load_stopped, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
             }
 
@@ -1536,7 +1536,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 
             if (load_stopped->node == NULL) {
-                load_stopped->node = node_copy(next);
+                load_stopped->node = pe__copy_node(next);
                 update_action_flags(load_stopped, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
             }
 
@@ -2271,7 +2271,7 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
                                                 node->weight);
 
         } else {
-            other_node = node_copy(node);
+            other_node = pe__copy_node(node);
 
             pe_rsc_trace(rsc, "%s: %d (insert %d)", other_node->details->uname, other_node->weight, constraint->discover_mode);
             g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);

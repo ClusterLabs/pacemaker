@@ -177,7 +177,7 @@ gboolean common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc, pe_resource_t * 
                        pe_working_set_t * data_set);
 void common_free(pe_resource_t * rsc);
 
-extern pe_node_t *node_copy(const pe_node_t *this_node);
+pe_node_t *pe__copy_node(const pe_node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
@@ -216,7 +216,8 @@ pe__current_node(const pe_resource_t *rsc)
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
 extern GListPtr node_list_dup(GListPtr list, gboolean reset, gboolean filter);
 
-extern GHashTable *node_hash_from_list(GListPtr list);
+GHashTable *pe__node_list2table(GList *list);
+
 static inline gpointer
 pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
 {

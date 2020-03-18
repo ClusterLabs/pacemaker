@@ -1166,7 +1166,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                 continue;
 
             } else if (local == NULL) {
-                local = node_copy(node);
+                local = pe__copy_node(node);
                 match_L = g_list_append(match_L, local);
             }
 

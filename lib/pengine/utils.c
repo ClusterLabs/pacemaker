@@ -128,17 +128,24 @@ pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Copy a node object
+ *
+ * \param[in] this_node  Node object to copy
+ *
+ * \return Newly allocated shallow copy of this_node
+ * \note This function asserts on errors and is guaranteed to return non-NULL.
+ */
 pe_node_t *
-node_copy(const pe_node_t *this_node)
+pe__copy_node(const pe_node_t *this_node)
 {
     pe_node_t *new_node = NULL;
 
-    CRM_CHECK(this_node != NULL, return NULL);
+    CRM_ASSERT(this_node != NULL);
 
     new_node = calloc(1, sizeof(pe_node_t));
     CRM_ASSERT(new_node != NULL);
-
-    crm_trace("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
@@ -176,7 +183,7 @@ node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
         other_node = pe_hash_table_lookup(result, node->details->id);
 
         if (other_node == NULL) {
-            pe_node_t *new_node = node_copy(node);
+            pe_node_t *new_node = pe__copy_node(node);
 
             new_node->weight = -INFINITY;
             g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
@@ -184,20 +191,25 @@ node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a node hash table from a node list
+ *
+ * \param[in] list  Node list
+ *
+ * \return Hash table equivalent of node list
+ */
 GHashTable *
-node_hash_from_list(GListPtr list)
+pe__node_list2table(GList *list)
 {
-    GListPtr gIter = list;
-    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                               free);
+    GHashTable *result = NULL;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        pe_node_t *n = node_copy(node);
+    result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
 
-        g_hash_table_insert(result, (gpointer) n->details->id, n);
+        g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
-
     return result;
 }
 
@@ -215,13 +227,11 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
             continue;
         }
 
-        new_node = node_copy(this_node);
+        new_node = pe__copy_node(this_node);
         if (reset) {
             new_node->weight = 0;
         }
-        if (new_node != NULL) {
-            result = g_list_prepend(result, new_node);
-        }
+        result = g_list_prepend(result, new_node);
     }
 
     return result;
@@ -557,7 +567,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         CRM_ASSERT(task != NULL);
         action->task = strdup(task);
         if (on_node) {
-            action->node = node_copy(on_node);
+            action->node = pe__copy_node(on_node);
         }
         action->uuid = strdup(key);
 
@@ -1507,7 +1517,7 @@ find_actions(GListPtr input, const char *key, const pe_node_t *on_node)
             crm_trace("Action %s matches (unallocated, assigning to %s)",
                       key, on_node->details->uname);
 
-            action->node = node_copy(on_node);
+            action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
         } else if (on_node->details == action->node->details) {
@@ -1615,7 +1625,7 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
     pe_rsc_trace(rsc, "Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
-        match = node_copy(node);
+        match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pe__add_scores(match->weight, score);

@@ -47,7 +47,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         }
 
         if (foo_node != NULL) {
-            pe_node_t *copy = node_copy(foo_node);
+            pe_node_t *copy = pe__copy_node(foo_node);
 
             copy->weight = node_weight;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -277,7 +277,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     }
 
     crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-    rsc->allocated_to = node_copy(chosen);
+    rsc->allocated_to = pe__copy_node(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
     chosen->details->num_resources++;
