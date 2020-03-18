@@ -164,6 +164,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     const char *uuid = NULL;
     const char *target = NULL;
     const char *type = NULL;
+    const char *priority_delay = NULL;
     gboolean invalid_action = FALSE;
     enum stonith_call_options options = st_opt_none;
 
@@ -182,9 +183,11 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
+    priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+
     crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%d",
-               type, target, id, transition_graph->stonith_timeout);
+               CRM_XS " action=%s timeout=%u priority_delay=%s",
+               type, target, id, transition_graph->stonith_timeout, priority_delay);
 
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
@@ -193,8 +196,9 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         options |= st_opt_allow_suicide;
     }
 
-    rc = stonith_api->cmds->fence(stonith_api, options, target, type,
-                                  transition_graph->stonith_timeout / 1000, 0);
+    rc = stonith_api->cmds->fence_with_delay(stonith_api, options, target, type,
+                                             (int) (transition_graph->stonith_timeout / 1000),
+                                             0, crm_atoi(priority_delay, "-1"));
 
     stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
                                          st_opt_timeout_updates,
