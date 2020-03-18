@@ -842,6 +842,11 @@ stonith_topology_next(remote_fencing_op_t * op)
                   op->client_name, op->originator, op->id);
         set_op_device_list(op, tp->levels[op->level]);
 
+        // The enforced delay has been applied for the first fencing level
+        if (op->level > 1 && op->delay > 0) {
+            op->delay = 0;
+        }
+
         if (g_list_next(op->devices_list) && safe_str_eq(op->action, "reboot")) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
@@ -999,6 +1004,10 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op = calloc(1, sizeof(remote_fencing_op_t));
 
     crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
+
+    // Default value -1 means no enforced fencing delay
+    op->delay = -1;
+    crm_element_value_int(request, F_STONITH_DELAY, &(op->delay));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
@@ -1448,6 +1457,12 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next targeting %s on behalf of %s@%s (rc was %d)",
                   op->target, op->originator, op->client_name, rc);
+
+        // The enforced delay has been applied for the first device
+        if (op->delay > 0) {
+            op->delay = 0;
+        }
+
         call_remote_stonith(op, NULL);
     } else {
         /* We're done with all devices and phases, so finalize operation */
@@ -1502,6 +1517,10 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
+
+        if (op->delay >= 0) {
+            crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
+        }
 
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
