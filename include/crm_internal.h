@@ -179,34 +179,4 @@ const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
-/* IPC Proxy Backend Shared Functions */
-typedef struct remote_proxy_s {
-    char *node_name;
-    char *session_id;
-
-    gboolean is_local;
-
-    crm_ipc_t *ipc;
-    mainloop_io_t *source;
-    uint32_t last_request_id;
-    lrmd_t *lrm;
-
-} remote_proxy_t;
-
-remote_proxy_t *remote_proxy_new(
-    lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
-    const char *node_name, const char *session_id, const char *channel);
-
-int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
-void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
-void remote_proxy_ack_shutdown(lrmd_t *lrmd);
-void remote_proxy_nack_shutdown(lrmd_t *lrmd);
-
-int  remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata);
-void remote_proxy_disconnected(gpointer data);
-void remote_proxy_free(gpointer data);
-
-void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
-void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
-
 #endif                          /* CRM_INTERNAL__H */
