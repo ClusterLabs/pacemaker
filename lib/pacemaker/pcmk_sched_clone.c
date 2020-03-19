@@ -455,7 +455,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     can_run_instance(rsc, NULL, limit);
 
-    backup = node_hash_dup(rsc->allowed_nodes);
+    backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen && prefer && (chosen->details != prefer->details)) {

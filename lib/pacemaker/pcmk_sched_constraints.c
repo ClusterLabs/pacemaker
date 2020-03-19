@@ -1136,7 +1136,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (do_and) {
         GListPtr gIter = NULL;
 
-        match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
+        match_L = pcmk__copy_node_list(data_set->nodes, true);
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
 

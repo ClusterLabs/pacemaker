@@ -300,17 +300,6 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
     }
 }
 
-GHashTable *
-node_hash_dup(GHashTable * hash)
-{
-    /* Hack! */
-    GListPtr list = g_hash_table_get_values(hash);
-    GHashTable *result = pe__node_list2table(list);
-
-    g_list_free(list);
-    return result;
-}
-
 /*!
  * \internal
  * \brief Incorporate colocation constraint scores into node weights
@@ -351,14 +340,14 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
             work = pcmk__native_merge_weights(last_rsc, rhs, NULL, attr, factor,
                                               flags);
         } else {
-            work = node_hash_dup(rsc->allowed_nodes);
+            work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
         clear_bit(flags, pe_weights_init);
 
     } else if ((rsc->variant == pe_group) && (rsc->children != NULL)) {
         pe_rsc_trace(rsc, "%s: Merging scores from %d members of group %s (at %.6f)",
                      rhs, g_list_length(rsc->children), rsc->id, factor);
-        work = node_hash_dup(nodes);
+        work = pcmk__copy_node_table(nodes);
         for (GList *iter = rsc->children; iter->next != NULL;
              iter = iter->next) {
             work = pcmk__native_merge_weights(iter->data, rhs, work, attr,
@@ -368,7 +357,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
                      rhs, rsc->id, factor);
-        work = node_hash_dup(nodes);
+        work = pcmk__copy_node_table(nodes);
         node_hash_update(work, rsc->allowed_nodes, attr, factor,
                          is_set(flags, pe_weights_positive));
     }
@@ -504,7 +493,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         if (constraint->role_lh >= RSC_ROLE_MASTER
             || (constraint->score < 0 && constraint->score > -INFINITY)) {
-            archive = node_hash_dup(rsc->allowed_nodes);
+            archive = pcmk__copy_node_table(rsc->allowed_nodes);
         }
 
         pe_rsc_trace(rsc,
@@ -1820,7 +1809,7 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
         return;
     }
 
-    work = node_hash_dup(rsc_lh->allowed_nodes);
+    work = pcmk__copy_node_table(rsc_lh->allowed_nodes);
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {

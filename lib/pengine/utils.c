@@ -213,30 +213,6 @@ pe__node_list2table(GList *list)
     return result;
 }
 
-GListPtr
-node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
-{
-    GListPtr result = NULL;
-    GListPtr gIter = list1;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *new_node = NULL;
-        pe_node_t *this_node = (pe_node_t *) gIter->data;
-
-        if (filter && this_node->weight < 0) {
-            continue;
-        }
-
-        new_node = pe__copy_node(this_node);
-        if (reset) {
-            new_node->weight = 0;
-        }
-        result = g_list_prepend(result, new_node);
-    }
-
-    return result;
-}
-
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {

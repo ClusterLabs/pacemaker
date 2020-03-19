@@ -214,7 +214,6 @@ pe__current_node(const pe_resource_t *rsc)
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
-extern GListPtr node_list_dup(GListPtr list, gboolean reset, gboolean filter);
 
 GHashTable *pe__node_list2table(GList *list);
 
@@ -229,8 +228,6 @@ pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
 
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
 extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
-
-GHashTable *node_hash_dup(GHashTable * hash);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, pe_node_t * node, gboolean details);
