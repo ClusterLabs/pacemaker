@@ -1316,7 +1316,8 @@ allocate_resources(pe_working_set_t * data_set)
         if (rsc->is_remote_node == TRUE) {
             continue;
         }
-        pe_rsc_trace(rsc, "Allocating resource '%s'", rsc->id);
+        pe_rsc_trace(rsc, "Allocating %s resource '%s'",
+                     crm_element_name(rsc->xml), rsc->id);
         rsc->cmds->allocate(rsc, NULL, data_set);
     }
 }
