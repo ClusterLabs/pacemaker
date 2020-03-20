@@ -41,10 +41,6 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
-#ifndef MAXLINE
-#  define MAXLINE 512
-#endif
-
 #ifndef PW_BUFFER_LEN
 #  define PW_BUFFER_LEN		500
 #endif
