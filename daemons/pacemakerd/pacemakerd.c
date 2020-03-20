@@ -227,9 +227,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 break;
 
             case CRM_EX_PANIC:
-                do_crm_log_always(LOG_EMERG,
-                                  "%s[%d] instructed the machine to reset",
-                                  name, pid);
+                crm_emerg("%s[%d] instructed the machine to reset", name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
                 pcmk_panic(__FUNCTION__);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -296,26 +296,6 @@ unsigned int get_crm_log_level(void);
     } while (0)
 
 /*!
- * \brief Log a message using constant priority
- *
- * \param[in] level     Priority at which to log the message
- * \param[in] fmt       printf-style format string literal for message
- * \param[in] args      Any arguments needed by format string
- *
- * \note This is a macro, and \p level may be evaluated more than once.
- *       This does nothing when level is LOG_STDOUT.
- */
-#  define do_crm_log_always(level, fmt, args...) do {                       \
-        switch (level) {                                                    \
-            case LOG_STDOUT: case LOG_NEVER:                                \
-                break;                                                      \
-            default:                                                        \
-                qb_log((level), fmt , ##args);                              \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
-
-/*!
  * \brief Send a system error message to both the log and stderr
  *
  * \param[in] level  Priority at which to log the message
@@ -376,6 +356,7 @@ unsigned int get_crm_log_level(void);
         }                                                                   \
     } while (0)
 
+#  define crm_emerg(fmt, args...)   qb_log(LOG_EMERG,       fmt , ##args)
 #  define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
 #  define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
 #  define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
@@ -404,6 +385,35 @@ unsigned int get_crm_log_level(void);
     } while(0)
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
+
+#ifndef PCMK__NO_COMPAT
+
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
+/*!
+ * \brief Log a message using constant priority
+ *
+ * \param[in] level     Priority at which to log the message
+ * \param[in] fmt       printf-style format string literal for message
+ * \param[in] args      Any arguments needed by format string
+ *
+ * \deprecated Use one of the other logging functions instead
+ * \note This is a macro, and \p level may be evaluated more than once.
+ *       This does nothing when level is LOG_STDOUT.
+ */
+#  define do_crm_log_always(level, fmt, args...) do {                       \
+        switch (level) {                                                    \
+            case LOG_STDOUT: case LOG_NEVER:                                \
+                break;                                                      \
+            default:                                                        \
+                qb_log((level), fmt , ##args);                              \
+                break;                                                      \
+        }                                                                   \
+    } while (0)
+
+#endif // PCMK__NO_COMPAT
 
 #ifdef __cplusplus
 }
