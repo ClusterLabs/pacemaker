@@ -142,12 +142,14 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
 gchar **
 pcmk__cmdline_preproc(char **argv, const char *special) {
     gchar **retval = NULL;
-    GPtrArray *arr = g_ptr_array_new();
+    GPtrArray *arr = NULL;
     bool saw_dash_dash = false;
 
     if (argv == NULL) {
         return retval;
     }
+
+    arr = g_ptr_array_new();
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* If this is the first time we saw "--" in the command line, set
