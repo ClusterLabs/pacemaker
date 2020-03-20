@@ -22,12 +22,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-void native_rsc_colocation_rh_must(pe_resource_t * rsc_lh, gboolean update_lh,
-                                   pe_resource_t * rsc_rh, gboolean update_rh);
-
-void native_rsc_colocation_rh_mustnot(pe_resource_t * rsc_lh, gboolean update_lh,
-                                      pe_resource_t * rsc_rh, gboolean update_rh);
-
 static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                       pe_working_set_t *data_set);
 static void RecurringOp(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
