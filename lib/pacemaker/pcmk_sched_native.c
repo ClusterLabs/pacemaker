@@ -1738,7 +1738,7 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
     if (constraint->score > 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh != rsc_rh->next_role) {
         crm_trace("RH: Skipping constraint: \"%s\" state filter", role2text(constraint->role_rh));
-        return FALSE;
+        return influence_nothing;
     }
 
     if (constraint->score < 0
