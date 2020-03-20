@@ -104,6 +104,7 @@ enum mon_output_format_e {
 char *output_filename = NULL;   /* if sending output to a file, its name */
 
 /* other globals */
+static GIOChannel *io_channel = NULL;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 char *snmp_community = NULL;
@@ -986,13 +987,19 @@ main(int argc, char **argv)
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;
-        g_io_add_watch(g_io_channel_unix_new(STDIN_FILENO), G_IO_IN, detect_user_input, NULL);
+
+        io_channel = g_io_channel_unix_new(STDIN_FILENO);
+        g_io_add_watch(io_channel, G_IO_IN, detect_user_input, NULL);
     }
 #endif
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
     g_main_run(mainloop);
     g_main_destroy(mainloop);
+
+    if (io_channel != NULL) {
+        g_io_channel_shutdown(io_channel, TRUE, NULL);
+    }
 
     crm_info("Exiting %s", crm_system_name);
 
