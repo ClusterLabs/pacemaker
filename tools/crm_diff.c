@@ -332,7 +332,10 @@ main(int argc, char **argv)
     }
 
     if (optind > argc) {
-        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        fprintf(stderr, "%s", help);
+        free(help);
         rc = CRM_EX_USAGE;
         goto done;
     }

@@ -238,7 +238,10 @@ main(int argc, char **argv)
     }
 
     if (optind > argc) {
-        CMD_ERR("%s", g_option_context_get_help(context, TRUE, NULL));
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        CMD_ERR("%s", help);
+        free(help);
         exit_code = CRM_EX_USAGE;
         goto bail;
     }

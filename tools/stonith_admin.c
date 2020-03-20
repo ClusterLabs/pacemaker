@@ -473,14 +473,20 @@ main(int argc, char **argv)
     }
 
     if (optind > argc || action == 0) {
-        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        out->err(out, "%s", help);
+        free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
     if (required_agent && options.agent == NULL) {
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
         out->err(out, "Please specify an agent to query using -a,--agent [value]");
-        out->err(out, "%s", g_option_context_get_help(context, TRUE, NULL));
+        out->err(out, "%s", help);
+        free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
