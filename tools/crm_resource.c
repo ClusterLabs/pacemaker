@@ -72,7 +72,8 @@ bye(crm_exit_t exit_code)
 static gboolean
 resource_ipc_timeout(gpointer data)
 {
-    fprintf(stderr, "Aborting because no messages received in %d seconds\n",
+    // Start with newline because "Waiting for ..." message doesn't have one
+    fprintf(stderr, "\nAborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
     bye(CRM_EX_TIMEOUT);

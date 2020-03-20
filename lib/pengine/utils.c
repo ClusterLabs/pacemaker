@@ -541,7 +541,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
     if (action == NULL) {
         if (save_action) {
             pe_rsc_trace(rsc, "Creating %s action %d: %s for %s (%s) on %s",
-                         (optional? "optional" : " mandatory"),
+                         (optional? "optional" : "mandatory"),
                          data_set->action_id, key,
                          (rsc? rsc->id : "no resource"), task,
                          (on_node? on_node->details->uname : "no node"));

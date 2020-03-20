@@ -1018,7 +1018,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             continue;
 
         } else if (this_node->details->unpacked) {
-            crm_info("Node %s is already processed", id);
+            crm_trace("Node %s was already processed", id);
             continue;
 
         } else if (!pe__is_guest_or_remote_node(this_node)

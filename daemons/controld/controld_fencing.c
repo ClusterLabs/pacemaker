@@ -547,9 +547,8 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
         } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
                    && is_not_set(peer->flags, crm_remote_node)) {
 
-            crm_notice("Target %s our leader %s (recorded: %s)",
-                       fsa_our_dc ? "was" : "may have been", st_event->target,
-                       fsa_our_dc ? fsa_our_dc : "<unset>");
+            crm_notice("Fencing target %s %s our leader",
+                       st_event->target, (fsa_our_dc? "was" : "may have been"));
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
@@ -613,8 +612,8 @@ te_connect_stonith(gpointer user_data)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
         if (rc != pcmk_ok) {
             if (is_set(fsa_input_register, R_ST_REQUIRED)) {
-                crm_err("Fencer connection failed (will retry): %s "
-                        CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                crm_notice("Fencer connection failed (will retry): %s "
+                           CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);
             } else {
                 crm_info("Fencer connection failed (ignoring because no longer required): %s "
