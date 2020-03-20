@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,9 +26,6 @@ extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 extern gboolean unpack_lrm_resources(pe_node_t * node, xmlNode * lrm_state,
                                      pe_working_set_t * data_set);
-
-extern gboolean determine_online_status(xmlNode * node_state, pe_node_t * this_node,
-                                        pe_working_set_t * data_set);
 
 // Some warnings we don't want to print every transition
 
