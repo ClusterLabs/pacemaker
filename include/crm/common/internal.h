@@ -71,6 +71,23 @@ const char *pcmk__get_tmpdir(void);
 
 void pcmk__close_fds_in_child(bool);
 
+/*!
+ * \internal
+ * \brief Open /dev/null to consume next available file descriptor
+ *
+ * Open /dev/null, disregarding the result. This is intended when daemonizing to
+ * be able to null stdin, stdout, and stderr.
+ *
+ * \param[in] flags  O_RDONLY (stdin) or O_WRONLY (stdout and stderr)
+ */
+static inline void
+pcmk__open_devnull(int flags)
+{
+    // Static analysis clutter
+    // cppcheck-suppress leakReturnValNotUsed
+    (void) open("/dev/null", flags);
+}
+
 
 /* internal logging utilities */
 

@@ -408,7 +408,6 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
     int rc;
     pid_t pid;
-    const char *devnull = "/dev/null";
 
     if (daemonize == FALSE) {
         return;
@@ -446,11 +445,13 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
     close(STDIN_FILENO);
-    (void)open(devnull, O_RDONLY);      /* Stdin:  fd 0 */
+    pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
+
     close(STDOUT_FILENO);
-    (void)open(devnull, O_WRONLY);      /* Stdout: fd 1 */
+    pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
+
     close(STDERR_FILENO);
-    (void)open(devnull, O_WRONLY);      /* Stderr: fd 2 */
+    pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
 char *
