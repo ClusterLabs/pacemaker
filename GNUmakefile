@@ -181,6 +181,7 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	else 										\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
 	fi | sed									\
+	    -e "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" \
 	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
 	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
 	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
