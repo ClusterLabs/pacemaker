@@ -39,28 +39,34 @@ static pe_working_set_t *data_set = NULL;
 #define MESSAGE_TIMEOUT_S 60
 
 // Clean up and exit
-static void
+static crm_exit_t
 bye(crm_exit_t exit_code)
 {
-    static bool crm_resourece_shutdown_flag = FALSE;
+    static bool crm_resource_shutdown_flag = false;
 
-    if (crm_resourece_shutdown_flag) {
-        return;
+    if (crm_resource_shutdown_flag) {
+        // Allow usage like "return bye(...);"
+        return exit_code;
     }
-    crm_resourece_shutdown_flag = TRUE;
+    crm_resource_shutdown_flag = true;
 
     if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
+        cib_t *save_cib_conn = cib_conn;
+
         cib_conn = NULL;
+        save_cib_conn->cmds->signoff(save_cib_conn);
+        cib_delete(save_cib_conn);
     }
     if (controld_api != NULL) {
-        pcmk_free_controld_api(controld_api);
+        pcmk_controld_api_t *save_controld_api = controld_api;
+
+        controld_api = NULL;
+        pcmk_free_controld_api(save_controld_api);
     }
     pe_free_working_set(data_set);
     data_set = NULL;
     crm_exit(exit_code);
-    return;
+    return exit_code;
 }
 
 static gboolean
@@ -732,7 +738,7 @@ main(int argc, char **argv)
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    bye(exit_code);
+                    return bye(exit_code);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
                     char *standard = NULL;
@@ -761,7 +767,7 @@ main(int argc, char **argv)
                         exit_code = crm_errno2exit(rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    bye(exit_code);
+                    return bye(exit_code);
 
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -785,7 +791,7 @@ main(int argc, char **argv)
                         exit_code = CRM_EX_NOSUCH;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    bye(exit_code);
+                    return bye(exit_code);
 
                 } else if (safe_str_eq("class", longname)) {
                     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
@@ -793,8 +799,8 @@ main(int argc, char **argv)
                             fprintf(stdout, "Standard %s does not support parameters\n",
                                     optarg);
                         }
+                        return bye(exit_code);
 
-                        bye(exit_code);
                     } else {
                         v_class = optarg;
                     }
@@ -1068,13 +1074,13 @@ main(int argc, char **argv)
                                                   "validate-all", validate_options,
                                                   override_params, timeout_ms);
             exit_code = crm_errno2exit(rc);
-            bye(exit_code);
+            return bye(exit_code);
         }
     }
 
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
-        bye(CRM_EX_USAGE);
+        return bye(CRM_EX_USAGE);
     }
 
     if (do_force) {
@@ -1554,5 +1560,5 @@ main(int argc, char **argv)
         }
     }
 
-    bye(exit_code);
+    return bye(exit_code);
 }
