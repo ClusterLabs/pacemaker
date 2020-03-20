@@ -346,7 +346,7 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
  * \brief Check whether a string starts with a certain sequence
  *
  * \param[in] str    String to check
- * \param[in] match  Sequence to match against beginning of \p str
+ * \param[in] prefix Sequence to match against beginning of \p str
  *
  * \return \c true if \p str begins with match, \c false otherwise
  * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
