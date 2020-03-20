@@ -2119,7 +2119,10 @@ clean_up(crm_exit_t exit_code)
      * message.
      */
     if (exit_code == CRM_EX_USAGE && (output_format == mon_output_console || output_format == mon_output_plain)) {
-        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        fprintf(stderr, "%s", help);
+        free(help);
     }
 
     pcmk__free_arg_context(context);
