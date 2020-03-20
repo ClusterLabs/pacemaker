@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <dlfcn.h>
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -489,36 +488,6 @@ crm_meta_value(GHashTable * hash, const char *field)
     }
 
     return value;
-}
-
-void *
-find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal)
-{
-    char *error;
-    void *a_function;
-
-    if (*handle == NULL) {
-        *handle = dlopen(lib, RTLD_LAZY);
-    }
-
-    if (!(*handle)) {
-        crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
-        if (fatal) {
-            crm_exit(CRM_EX_FATAL);
-        }
-        return NULL;
-    }
-
-    a_function = dlsym(*handle, fn);
-    if (a_function == NULL) {
-        error = dlerror();
-        crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
-        if (fatal) {
-            crm_exit(CRM_EX_FATAL);
-        }
-    }
-
-    return a_function;
 }
 
 #ifdef HAVE_UUID_UUID_H

@@ -30,9 +30,6 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-/* Dynamic loading of libraries */
-void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
-
 /* char2score */
 extern int node_score_red;
 extern int node_score_green;
