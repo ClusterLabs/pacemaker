@@ -306,7 +306,7 @@ have equal priority, then any pcmk_delay_base/max configured for
 the corresponding fencing resources will be applied. Otherwise as
 long as it's set, even if to 0, it takes precedence over any
 configured pcmk_delay_base/max. By default, priority fencing
-delay is disabled.
+delay is disabled. '(since 2.0.4)'
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
@@ -420,6 +420,7 @@ cleared using the `--refresh` option of `crm_resource` (both the resource and
 node must be specified; this works with remote nodes if their connection
 resource's target-role is set to Stopped, but not if Pacemaker Remote is
 stopped on the remote node without disabling the connection resource).
+'(since 2.0.4)'
 indexterm:[shutdown-lock,Cluster Option]
 indexterm:[Cluster,Option,shutdown-lock]
 
@@ -428,7 +429,7 @@ If shutdown-lock is true, and this is set to a nonzero time duration, locked
 resources will be allowed to start after this much time has passed since the
 node shutdown was initiated, even if the node has not rejoined. (This works
 with remote nodes only if their connection resource's target-role is set to
-Stopped.)
+Stopped.) '(since 2.0.4)'
 indexterm:[shutdown-lock-limit,Cluster Option]
 indexterm:[Cluster,Option,shutdown-lock-limit]
 
