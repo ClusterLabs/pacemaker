@@ -378,7 +378,7 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                                          pe_working_set_t * data_set);
 
-pe_action_t *pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
+pe_action_t *pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason, bool priority_delay, pe_working_set_t * data_set);
 void trigger_unfencing(
     pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set);
 
@@ -396,7 +396,7 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 int pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all);
-void pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *reason);
+void pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *reason, bool priority_delay);
 
 pe_node_t *pe_create_node(const char *id, const char *uname, const char *type,
                           const char *score, pe_working_set_t * data_set);

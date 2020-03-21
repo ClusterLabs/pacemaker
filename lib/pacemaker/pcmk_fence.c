@@ -30,6 +30,7 @@ static struct {
     char *name;
     unsigned int timeout;
     unsigned int tolerance;
+    int delay;
     int rc;
 } async_fence_data;
 
@@ -109,12 +110,13 @@ async_fence_helper(gpointer user_data)
 
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, notify_callback);
 
-    call_id = st->cmds->fence(st,
-                              st_opt_allow_suicide,
-                              async_fence_data.target,
-                              async_fence_data.action,
-                              async_fence_data.timeout/1000,
-                              async_fence_data.tolerance/1000);
+    call_id = st->cmds->fence_with_delay(st,
+                                         st_opt_allow_suicide,
+                                         async_fence_data.target,
+                                         async_fence_data.action,
+                                         async_fence_data.timeout/1000,
+                                         async_fence_data.tolerance/1000,
+                                         async_fence_data.delay);
 
     if (call_id < 0) {
         g_main_loop_quit(mainloop);
@@ -131,7 +133,8 @@ async_fence_helper(gpointer user_data)
 
 int
 pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                   const char *name, unsigned int timeout, unsigned int tolerance)
+                   const char *name, unsigned int timeout, unsigned int tolerance,
+                   int delay)
 {
     crm_trigger_t *trig;
 
@@ -141,6 +144,7 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
     async_fence_data.action = action;
     async_fence_data.timeout = timeout;
     async_fence_data.tolerance = tolerance;
+    async_fence_data.delay = delay;
     async_fence_data.rc = pcmk_err_generic;
 
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
@@ -157,8 +161,10 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                  const char *name, unsigned int timeout, unsigned int tolerance) {
-    return pcmk__fence_action(st, target, action, name, timeout, tolerance);
+                  const char *name, unsigned int timeout, unsigned int tolerance,
+                  int delay)
+{
+    return pcmk__fence_action(st, target, action, name, timeout, tolerance, delay);
 }
 #endif
 

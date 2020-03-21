@@ -34,6 +34,51 @@ is_multiply_active(pe_resource_t *rsc)
     return count > 1;
 }
 
+static void
+native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
+{
+    int priority = 0;
+
+    if (rsc->priority == 0) {
+        return;
+    }
+
+    if (rsc->role == RSC_ROLE_MASTER) {
+        // Promoted instance takes base priority + 1
+        priority = rsc->priority + 1;
+
+    } else {
+        priority = rsc->priority;
+    }
+
+    node->details->priority += priority;
+    pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s)",
+                 node->details->uname, node->details->priority,
+                 rsc->role == RSC_ROLE_MASTER ? "promoted " : "",
+                 rsc->id, rsc->priority,
+                 rsc->role == RSC_ROLE_MASTER ? " + 1" : "");
+
+    /* Priority of a resource running on a guest node is added to the cluster
+     * node as well. */
+    if (node->details->remote_rsc
+        && node->details->remote_rsc->container) {
+        GListPtr gIter = node->details->remote_rsc->container->running_on;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            pe_node_t *a_node = gIter->data;
+
+            a_node->details->priority += priority;
+            pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s) "
+                         "from guest node '%s'",
+                         a_node->details->uname, a_node->details->priority,
+                         rsc->role == RSC_ROLE_MASTER ? "promoted " : "",
+                         rsc->id, rsc->priority,
+                         rsc->role == RSC_ROLE_MASTER ? " + 1" : "",
+                         node->details->uname);
+        }
+    }
+}
+
 void
 native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
@@ -55,6 +100,8 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pe_native) {
         node->details->running_rsc = g_list_append(node->details->running_rsc, rsc);
+
+        native_priority_to_node(rsc, node);
     }
 
     if (rsc->variant == pe_native && node->details->maintenance) {

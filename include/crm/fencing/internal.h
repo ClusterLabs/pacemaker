@@ -68,6 +68,7 @@ stonith_history_t *stonith__sort_history(stonith_history_t *history);
 /*! Timeout period per a device execution */
 #  define F_STONITH_TIMEOUT       "st_timeout"
 #  define F_STONITH_TOLERANCE     "st_tolerance"
+#  define F_STONITH_DELAY         "st_delay"
 /*! Action specific timeout period returned in query of fencing devices. */
 #  define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
 /*! Host in query result is not allowed to run this action */

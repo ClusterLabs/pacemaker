@@ -54,6 +54,7 @@ struct {
     int fence_level;
     int timeout ;
     int tolerance;
+    int delay;
     char *agent;
     char *confirm_host;
     char *fence_host;
@@ -69,7 +70,8 @@ struct {
     char *unregister_dev;
     char *unregister_level;
 } options = {
-    .timeout = 120
+    .timeout = 120,
+    .delay = -1
 };
 
 gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -204,6 +206,10 @@ static GOptionEntry addl_entries[] = {
     { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
       "Operation timeout in seconds (default 120;\n"
       INDENT "used with most commands).",
+      "SECONDS" },
+    { "delay", 'y', 0, G_OPTION_ARG_INT, &options.delay,
+      "Enforced fencing delay in seconds (default -1 (disabled);\n"
+      INDENT "with --fence, --reboot, --unfence).",
       "SECONDS" },
     { "as-node-id", 'n', 0, G_OPTION_ARG_NONE, &options.as_nodeid,
       "(Advanced) The supplied node is the corosync node ID\n"
@@ -566,17 +572,17 @@ main(int argc, char **argv)
 
         case 'B':
             rc = pcmk__fence_action(st, target, "reboot", name, options.timeout*1000,
-                                      options.tolerance*1000);
+                                    options.tolerance*1000, options.delay);
             break;
 
         case 'F':
             rc = pcmk__fence_action(st, target, "off", name, options.timeout*1000,
-                                      options.tolerance*1000);
+                                    options.tolerance*1000, options.delay);
             break;
 
         case 'U':
             rc = pcmk__fence_action(st, target, "on", name, options.timeout*1000,
-                                      options.tolerance*1000);
+                                    options.tolerance*1000, options.delay);
             break;
 
         case 'h':

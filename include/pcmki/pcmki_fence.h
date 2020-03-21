@@ -26,11 +26,13 @@
  * \param[in] tolerance If a successful action for \p target happened within
  *                      this many ms, return 0 without performing the action
  *                      again.
+ * \param[in] delay     Enforce a fencing delay. Value -1 means disabled.
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                      const char *name, unsigned int timeout, unsigned int tolerance);
+                       const char *name, unsigned int timeout, unsigned int tolerance,
+                       int delay);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.

@@ -292,6 +292,22 @@ are +stop+ to attempt to immediately stop pacemaker and stay stopped, or
 on failure. The default is likely to be changed to +panic+ in a future release.
 '(since 2.0.3)'
 
+| priority-fencing-delay  | |
+indexterm:[priority-fencing-delay,Cluster Option]
+indexterm:[Cluster,Option,priority-fencing-delay]
+Enforce specified delay for the fencings that are targeting the lost
+nodes with the highest total resource priority in case we don't
+have the majority of the nodes in our cluster partition, so that
+the more significant nodes potentially win any fencing match,
+which is especially meaningful under split-brain of 2-node
+cluster. A promoted resource instance takes the base priority + 1
+on calculation if the base priority is not 0. If all the nodes
+have equal priority, then any pcmk_delay_base/max configured for
+the corresponding fencing resources will be applied. Otherwise as
+long as it's set, even if to 0, it takes precedence over any
+configured pcmk_delay_base/max. By default, priority fencing
+delay is disabled.
+
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
 indexterm:[Cluster,Option,cluster-delay]
