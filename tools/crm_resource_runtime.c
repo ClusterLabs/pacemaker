@@ -1732,6 +1732,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
         crm_exit(CRM_EX_DATAERR);
+        return rc; // Never reached, but helps static analysis
     }
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
