@@ -367,14 +367,21 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         clear_bit(flags, pe_weights_init);
 
     } else if (is_nonempty_group(rsc)) {
+        /* The first member of the group will recursively incorporate any
+         * constraints involving other members (including the group internal
+         * colocation).
+         *
+         * @TODO The indirect colocations from the dependent group's other
+         *       members will be incorporated at full strength rather than by
+         *       factor, so the group's combined stickiness will be treated as
+         *       (factor + (#members - 1)) * stickiness. It is questionable what
+         *       the right approach should be.
+         */
         pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
                      "(at %.6f)", rhs, rsc->id, factor);
         work = pcmk__copy_node_table(nodes);
-        for (GList *iter = rsc->children; iter->next != NULL;
-             iter = iter->next) {
-            work = pcmk__native_merge_weights(iter->data, rhs, work, attr,
-                                              factor, flags);
-        }
+        work = pcmk__native_merge_weights(rsc->children->data, rhs, work, attr,
+                                          factor, flags);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
