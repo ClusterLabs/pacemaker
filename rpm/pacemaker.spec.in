@@ -21,7 +21,7 @@
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
-%global pcmkversion 2.0.3
+%global pcmkversion X.Y.Z
 %global specversion 1
 
 ## Upstream commit (or git tag, such as "Pacemaker-" plus the

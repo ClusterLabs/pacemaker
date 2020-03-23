@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <dlfcn.h>
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -42,10 +41,6 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
-#ifndef MAXLINE
-#  define MAXLINE 512
-#endif
-
 #ifndef PW_BUFFER_LEN
 #  define PW_BUFFER_LEN		500
 #endif
@@ -56,9 +51,9 @@ gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
 
-int node_score_red = 0;
-int node_score_green = 0;
-int node_score_yellow = 0;
+int pcmk__score_red = 0;
+int pcmk__score_green = 0;
+int pcmk__score_yellow = 0;
 
 int
 char2score(const char *score)
@@ -74,13 +69,13 @@ char2score(const char *score)
         score_f = CRM_SCORE_INFINITY;
 
     } else if (safe_str_eq(score, "red")) {
-        score_f = node_score_red;
+        score_f = pcmk__score_red;
 
     } else if (safe_str_eq(score, "yellow")) {
-        score_f = node_score_yellow;
+        score_f = pcmk__score_yellow;
 
     } else if (safe_str_eq(score, "green")) {
-        score_f = node_score_green;
+        score_f = pcmk__score_green;
 
     } else {
         score_f = crm_parse_int(score, NULL);
@@ -409,7 +404,6 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
     int rc;
     pid_t pid;
-    const char *devnull = "/dev/null";
 
     if (daemonize == FALSE) {
         return;
@@ -447,11 +441,13 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
     close(STDIN_FILENO);
-    (void)open(devnull, O_RDONLY);      /* Stdin:  fd 0 */
+    pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
+
     close(STDOUT_FILENO);
-    (void)open(devnull, O_WRONLY);      /* Stdout: fd 1 */
+    pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
+
     close(STDERR_FILENO);
-    (void)open(devnull, O_WRONLY);      /* Stderr: fd 2 */
+    pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
 char *
@@ -489,36 +485,6 @@ crm_meta_value(GHashTable * hash, const char *field)
     }
 
     return value;
-}
-
-void *
-find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal)
-{
-    char *error;
-    void *a_function;
-
-    if (*handle == NULL) {
-        *handle = dlopen(lib, RTLD_LAZY);
-    }
-
-    if (!(*handle)) {
-        crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
-        if (fatal) {
-            crm_exit(CRM_EX_FATAL);
-        }
-        return NULL;
-    }
-
-    a_function = dlsym(*handle, fn);
-    if (a_function == NULL) {
-        error = dlerror();
-        crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
-        if (fatal) {
-            crm_exit(CRM_EX_FATAL);
-        }
-    }
-
-    return a_function;
 }
 
 #ifdef HAVE_UUID_UUID_H

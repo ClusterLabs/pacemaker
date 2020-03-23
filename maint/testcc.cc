@@ -8,11 +8,9 @@
  */
 
 #include <crm/crm.h>
-#include <crm/attrd.h>
 #include <crm/cib.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election.h>
-#include <crm/common/cib_secrets.h>
 #include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/services.h>

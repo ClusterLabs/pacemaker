@@ -43,9 +43,12 @@ static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           xmlNode **last_failure,
                           enum action_fail_response *failed,
                           pe_working_set_t *data_set);
-static gboolean determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_node);
+static void determine_remote_online_status(pe_working_set_t *data_set,
+                                           pe_node_t *this_node);
 static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
+static void determine_online_status(xmlNode *node_state, pe_node_t *this_node,
+                                    pe_working_set_t *data_set);
 
 
 // Bitmask for warnings we only want to print once
@@ -321,9 +324,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
-    node_score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
-    node_score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
-    node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
+    pcmk__score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
+    pcmk__score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
+    pcmk__score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
 
     crm_debug("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
              pe_pref(data_set->config_hash, "node-health-red"),
@@ -1015,7 +1018,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             continue;
 
         } else if (this_node->details->unpacked) {
-            crm_info("Node %s is already processed", id);
+            crm_trace("Node %s was already processed", id);
             continue;
 
         } else if (!pe__is_guest_or_remote_node(this_node)
@@ -1348,7 +1351,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     return online;
 }
 
-static gboolean
+static void
 determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_node)
 {
     pe_resource_t *rsc = this_node->details->remote_rsc;
@@ -1415,16 +1418,15 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
 remote_online_done:
     crm_trace("Remote node %s online=%s",
         this_node->details->id, this_node->details->online ? "TRUE" : "FALSE");
-    return this_node->details->online;
 }
 
-gboolean
+static void
 determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_set_t * data_set)
 {
     gboolean online = FALSE;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
-    CRM_CHECK(this_node != NULL, return FALSE);
+    CRM_CHECK(this_node != NULL, return);
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
@@ -1481,8 +1483,6 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
     } else {
         crm_trace("Node %s is offline", this_node->details->uname);
     }
-
-    return online;
 }
 
 /*!

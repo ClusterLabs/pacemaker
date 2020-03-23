@@ -753,7 +753,6 @@ crm_exit(crm_exit_t rc)
     mainloop_cleanup();
     crm_xml_cleanup();
 
-    qb_log_fini();
     pcmk__cli_option_cleanup();
 
     if (crm_system_name) {
@@ -762,6 +761,7 @@ crm_exit(crm_exit_t rc)
     } else {
         crm_trace("Exiting with status %d", rc);
     }
+    qb_log_fini(); // Don't log anything after this point
 
     exit(rc);
 }

@@ -227,9 +227,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 break;
 
             case CRM_EX_PANIC:
-                do_crm_log_always(LOG_EMERG,
-                                  "%s[%d] instructed the machine to reset",
-                                  name, pid);
+                crm_emerg("%s[%d] instructed the machine to reset", name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
                 pcmk_panic(__FUNCTION__);
@@ -296,7 +294,6 @@ start_child(pcmk_child_t * child)
     gid_t gid = 0;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
-    const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
@@ -399,9 +396,9 @@ start_child(pcmk_child_t * child)
 
         pcmk__close_fds_in_child(true);
 
-        (void)open(devnull, O_RDONLY);  /* Stdin:  fd 0 */
-        (void)open(devnull, O_WRONLY);  /* Stdout: fd 1 */
-        (void)open(devnull, O_WRONLY);  /* Stderr: fd 2 */
+        pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
+        pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
+        pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 
         if (use_valgrind) {
             (void)execvp(VALGRIND_BIN, opts_vgrind);

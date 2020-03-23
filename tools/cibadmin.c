@@ -729,8 +729,8 @@ do_init(void)
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        crm_err("Connection to the CIB manager failed: %s", pcmk_strerror(rc));
-        fprintf(stderr, "Connection to the CIB manager failed: %s\n",
+        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
     }
 

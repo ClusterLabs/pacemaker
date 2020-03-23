@@ -107,6 +107,8 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 
     free(desc);
 
+    // main_group is now owned by context, we don't free it here
+    // cppcheck-suppress memleak
     return context;
 }
 
@@ -137,6 +139,8 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
     group = g_option_group_new(name, header, desc, NULL, NULL);
     g_option_group_add_entries(group, entries);
     g_option_context_add_group(context, group);
+    // group is now owned by context, we don't free it here
+    // cppcheck-suppress memleak
 }
 
 gchar **

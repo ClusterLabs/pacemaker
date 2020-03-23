@@ -464,6 +464,8 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
                                                    local_notify_destroy_callback);
     }
 
+    // notify will get freed when the hash table is destroyed
+    // cppcheck-suppress memleak
     g_hash_table_insert(local_notify_queue, GINT_TO_POINTER(cib_local_bcast_num), notify);
 }
 

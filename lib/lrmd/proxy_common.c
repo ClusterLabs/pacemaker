@@ -20,6 +20,7 @@
 #include <crm/pengine/status.h>
 #include <crm/cib.h>
 #include <crm/lrmd.h>
+#include <crm/lrmd_internal.h>
 
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 GHashTable *proxy_table = NULL;

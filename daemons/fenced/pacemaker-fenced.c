@@ -54,7 +54,6 @@ static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 
 static cib_t *cib_api = NULL;
-static void *cib_library = NULL;
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -1198,16 +1197,8 @@ static void
 setup_cib(void)
 {
     int rc, retries = 0;
-    static cib_t *(*cib_new_fn) (void) = NULL;
 
-    if (cib_new_fn == NULL) {
-        cib_new_fn = find_library_function(&cib_library, CIB_LIBRARY, "cib_new", TRUE);
-    }
-
-    if (cib_new_fn != NULL) {
-        cib_api = (*cib_new_fn) ();
-    }
-
+    cib_api = cib_new();
     if (cib_api == NULL) {
         crm_err("No connection to the CIB manager");
         return;

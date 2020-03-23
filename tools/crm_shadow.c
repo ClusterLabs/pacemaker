@@ -414,7 +414,8 @@ main(int argc, char **argv)
         real_cib = cib_new_no_shadow();
         rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
+            fprintf(stderr, "Could not connect to CIB: %s\n",
+                    pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
             goto done;
         }

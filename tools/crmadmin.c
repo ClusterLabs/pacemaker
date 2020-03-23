@@ -309,6 +309,8 @@ do_work(void)
         int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
         if (rc != pcmk_ok) {
+            fprintf(stderr, "Could not connect to CIB: %s\n",
+                    pcmk_strerror(rc));
             return -1;
         }
 

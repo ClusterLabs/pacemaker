@@ -227,7 +227,8 @@ stonith_xml_history_to_list(xmlNode *history)
          xml_op = __xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
-        int completed, state;
+        int state;
+        long long completed;
 
         if (!id) {
             crm_warn("History to convert to hashtable has no id in entry");
@@ -244,7 +245,7 @@ stonith_xml_history_to_list(xmlNode *history)
         op->originator = crm_element_value_copy(xml_op, F_STONITH_ORIGIN);
         op->delegate = crm_element_value_copy(xml_op, F_STONITH_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op, F_STONITH_CLIENTNAME);
-        crm_element_value_int(xml_op, F_STONITH_DATE, &completed);
+        crm_element_value_ll(xml_op, F_STONITH_DATE, &completed);
         op->completed = (time_t) completed;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
@@ -306,7 +307,7 @@ stonith_local_history_diff(GHashTable *remote_history,
                 crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
                 crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
                 crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
-                crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+                crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
             }
     }

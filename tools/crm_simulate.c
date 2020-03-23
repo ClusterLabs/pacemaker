@@ -970,7 +970,7 @@ main(int argc, char **argv)
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB manager: %s\n",
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
         goto done;
     }

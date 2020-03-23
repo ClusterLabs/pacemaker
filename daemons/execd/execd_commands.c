@@ -207,16 +207,17 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
     }
+#ifdef PCMK__TIME_USE_CGT
     do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
-#ifdef PCMK__TIME_USE_CGT
                " (execution time %dms, queue time %dms)",
-#endif
                cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc
-#ifdef PCMK__TIME_USE_CGT
-               , exec_time, queue_time
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc,
+               exec_time, queue_time);
+#else
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
+               cmd->rsc_id, cmd->action, cmd->call_id,
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc);
 #endif
-               );
 }
 
 static void

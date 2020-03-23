@@ -218,8 +218,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
                               &(connection->tcp_socket), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_err("Remote connection to %s:%d failed: %s " CRM_XS " rc=%d",
-                private->server, private->port, pcmk_rc_str(rc), rc);
+        crm_info("Remote connection to %s:%d failed: %s " CRM_XS " rc=%d",
+                 private->server, private->port, pcmk_rc_str(rc), rc);
         return -ENOTCONN;
     }
 
@@ -399,7 +399,6 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
             fprintf(stderr, "\n");
         }
 
-        /* fprintf(stderr, "entered: '%s'\n", buffer); */
         if (rc < 1) {
             private->passwd = NULL;
         }
@@ -429,13 +428,14 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_notice("%s: Opened connection to %s:%d", name, private->server, private->port);
+        crm_info("Opened connection to %s:%d for %s",
+                 private->server, private->port, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        fprintf(stderr, "%s: Connection to %s:%d failed: %s\n",
-                name, private->server, private->port, pcmk_strerror(rc));
+        crm_info("Connection to %s:%d for %s failed: %s\n",
+                 private->server, private->port, name, pcmk_strerror(rc));
     }
 
     return rc;

@@ -33,6 +33,7 @@ pacemaker_fenced_YFLAGS		= -d
 pacemaker_fenced_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_fenced_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pacemaker_fenced_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la		\
+				  $(top_builddir)/lib/cib/libcib.la		\
 				  $(top_builddir)/lib/cluster/libcrmcluster.la		\
 				  $(top_builddir)/lib/fencing/libstonithd.la		\
 				  $(top_builddir)/lib/pengine/libpe_status.la		\
