@@ -15,6 +15,7 @@
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/fencing/internal.h>
+#include <crm/pengine/internal.h>
 
 static char *
 time_t_string(time_t when) {
@@ -30,6 +31,7 @@ time_t_string(time_t when) {
 int
 stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
@@ -37,6 +39,10 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
         if (hp->state != st_failed) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_show, hp->target)) {
             continue;
         }
 
@@ -63,12 +69,17 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
 int
 stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
+        if (!pcmk__str_in_list(only_show, hp->target)) {
+            continue;
+        }
+
         if (hp->state != st_failed) {
             /* Print the header the first time we have an event to print out to
              * prevent printing headers with empty sections underneath.
@@ -99,12 +110,17 @@ int
 stonith__full_history(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
+        if (!pcmk__str_in_list(only_show, hp->target)) {
+            continue;
+        }
+
         if (rc == pcmk_rc_no_output) {
             /* Add a blank line between this section and the one before it. */
             if (print_spacer) {
@@ -130,27 +146,41 @@ int
 stonith__full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
-    if (history_rc == 0) {
-        out->begin_list(out, NULL, NULL, "Fencing History");
+    int rc = pcmk_rc_no_output;
 
+    if (history_rc == 0) {
         for (stonith_history_t *hp = history; hp; hp = hp->next) {
+            if (!pcmk__str_in_list(only_show, hp->target)) {
+                continue;
+            }
+
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
+                out->begin_list(out, NULL, NULL, "Fencing History");
+            }
+
             out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
 
-        out->end_list(out);
+        if (rc == pcmk_rc_ok) {
+            out->end_list(out);
+        }
     } else {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_history");
         char *rc_s = crm_itoa(history_rc);
 
         xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) rc_s);
         free(rc_s);
+
+        rc = pcmk_rc_ok;
     }
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
 int
@@ -204,12 +234,17 @@ stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
 int
 stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
     gboolean full_history = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
+        if (!pcmk__str_in_list(only_show, hp->target)) {
+            continue;
+        }
+
         /* Skip the rest of the history after we see a failed/done action */
         if ((hp->state == st_failed) || (hp->state == st_done)) {
             break;
