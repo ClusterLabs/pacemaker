@@ -1537,9 +1537,8 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-            // @TODO pe_print_log probably doesn't belong here
             out->message(out, crm_map_element_name(rsc->xml),
-                         pe_print_log|pe_print_pending, rsc);
+                         pe_print_pending, rsc);
         }
     }
 }
