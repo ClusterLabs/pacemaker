@@ -792,29 +792,27 @@ do_read_config(long long action,
 void
 crm_shutdown(int nsig)
 {
-    if (crmd_mainloop != NULL && g_main_loop_is_running(crmd_mainloop)) {
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Escalating the shutdown");
-            register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
-
-        } else {
-            set_bit(fsa_input_register, R_SHUTDOWN);
-            register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-
-            if (shutdown_escalation_timer->period_ms == 0) {
-                const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
-
-                shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
-            }
-
-            /* can't rely on this... */
-            crm_notice("Shutting down cluster resource manager " CRM_XS
-                       " limit=%ums", shutdown_escalation_timer->period_ms);
-            controld_start_timer(shutdown_escalation_timer);
-        }
-
-    } else {
-        crm_info("exit from shutdown");
+    if ((crmd_mainloop == NULL) || !g_main_loop_is_running(crmd_mainloop)) {
         crmd_exit(CRM_EX_OK);
+        return;
     }
+
+    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        crm_err("Escalating shutdown");
+        register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
+        return;
+    }
+
+    set_bit(fsa_input_register, R_SHUTDOWN);
+    register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+
+    if (shutdown_escalation_timer->period_ms == 0) {
+        const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
+
+        shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    }
+
+    crm_notice("Initiating controller shutdown sequence " CRM_XS
+               " limit=%ums", shutdown_escalation_timer->period_ms);
+    controld_start_timer(shutdown_escalation_timer);
 }
