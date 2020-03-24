@@ -36,14 +36,14 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
 
-    group_data->ordered = TRUE;
-    group_data->colocated = TRUE;
-
-    if (group_ordered != NULL) {
-        crm_str_to_boolean(group_ordered, &(group_data->ordered));
+    // We don't actually need the null checks but it speeds up the common case
+    if ((group_ordered == NULL)
+        || (crm_str_to_boolean(group_ordered, &(group_data->ordered)) < 0)) {
+        group_data->ordered = TRUE;
     }
-    if (group_colocated != NULL) {
-        crm_str_to_boolean(group_colocated, &(group_data->colocated));
+    if ((group_colocated == NULL)
+        || (crm_str_to_boolean(group_colocated, &(group_data->colocated)) < 0)) {
+        group_data->colocated = TRUE;
     }
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
