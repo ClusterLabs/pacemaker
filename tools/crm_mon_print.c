@@ -53,7 +53,7 @@ static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set
                                  unsigned int mon_ops, GListPtr only_show,
                                  gboolean print_spacer);
 static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                                gboolean print_spacer);
+                                GListPtr only_show, gboolean print_spacer);
 
 static GListPtr
 build_uname_list(pe_working_set_t *data_set, const char *s) {
@@ -702,31 +702,39 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 static int
 print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                     gboolean print_spacer)
+                     GListPtr only_show, gboolean print_spacer)
 {
     xmlNode *xml_op = NULL;
+    int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(data_set->failed) == 0) {
-        return pcmk_rc_no_output;
+        return rc;
     }
 
-    /* Add a blank line between this section and the one before it. */
-    if (print_spacer) {
-        out->info(out, "%s", "");
-    }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "Failed Resource Actions");
-
-    /* Print each failed action */
     for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
+        if (!pcmk__str_in_list(only_show, crm_element_value(xml_op, XML_ATTR_UNAME))) {
+            continue;
+        }
+
+        if (rc == pcmk_rc_no_output) {
+            /* Add a blank line between this section and the one before it. */
+            if (print_spacer) {
+                out->info(out, "%s", "");
+            }
+
+            rc = pcmk_rc_ok;
+            out->begin_list(out, NULL, NULL, "Failed Resource Actions");
+        }
+
         out->message(out, "failed-action", xml_op);
     }
 
-    /* End section */
-    out->end_list(out);
-    return pcmk_rc_ok;
+    if (rc == pcmk_rc_ok) {
+        out->end_list(out);
+    }
+
+    return rc;
 }
 
 /*!
@@ -927,7 +935,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* If there were any failed actions, print them */
     if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
-        int x = print_failed_actions(out, data_set, rc == pcmk_rc_ok);
+        int x = print_failed_actions(out, data_set, unames, rc == pcmk_rc_ok);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;
         }
@@ -1065,7 +1073,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* If there were any failed actions, print them */
     if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
-        print_failed_actions(out, data_set, FALSE);
+        print_failed_actions(out, data_set, unames, FALSE);
     }
 
     /* Print stonith history */
@@ -1165,7 +1173,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* If there were any failed actions, print them */
     if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
-        print_failed_actions(out, data_set, FALSE);
+        print_failed_actions(out, data_set, unames, FALSE);
     }
 
     /* Print failed stonith actions */
