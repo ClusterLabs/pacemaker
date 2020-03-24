@@ -335,7 +335,7 @@ main(int argc, char **argv)
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         fprintf(stderr, "%s", help);
-        free(help);
+        g_free(help);
         rc = CRM_EX_USAGE;
         goto done;
     }

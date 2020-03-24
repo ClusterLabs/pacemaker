@@ -482,7 +482,7 @@ main(int argc, char **argv)
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         out->err(out, "%s", help);
-        free(help);
+        g_free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -492,7 +492,7 @@ main(int argc, char **argv)
 
         out->err(out, "Please specify an agent to query using -a,--agent [value]");
         out->err(out, "%s", help);
-        free(help);
+        g_free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
     }

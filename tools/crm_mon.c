@@ -2140,7 +2140,7 @@ clean_up(crm_exit_t exit_code)
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         fprintf(stderr, "%s", help);
-        free(help);
+        g_free(help);
     }
 
     pcmk__free_arg_context(context);
