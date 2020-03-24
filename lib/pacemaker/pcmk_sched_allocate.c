@@ -1170,16 +1170,6 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
 
-    if (a == NULL && b == NULL) {
-        goto done;
-    }
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
     reason = "priority";
     r1_weight = resource1->priority;
     r2_weight = resource2->priority;
