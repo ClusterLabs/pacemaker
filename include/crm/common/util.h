@@ -140,12 +140,13 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
 
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
-    pcmk_ra_cap_none         = 0x000,
-    pcmk_ra_cap_provider     = 0x001, // Requires provider
-    pcmk_ra_cap_status       = 0x002, // Supports status instead of monitor
-    pcmk_ra_cap_params       = 0x004, // Supports parameters
-    pcmk_ra_cap_unique       = 0x008, // Supports unique clones
-    pcmk_ra_cap_promotable   = 0x010, // Supports promotable clones
+    pcmk_ra_cap_none         = 0,
+    pcmk_ra_cap_provider     = (1 << 0), // Requires provider
+    pcmk_ra_cap_status       = (1 << 1), // Supports status instead of monitor
+    pcmk_ra_cap_params       = (1 << 2), // Supports parameters
+    pcmk_ra_cap_unique       = (1 << 3), // Supports unique clones
+    pcmk_ra_cap_promotable   = (1 << 4), // Supports promotable clones
+    pcmk_ra_cap_stdin        = (1 << 5), // Reads from standard input
 };
 
 uint32_t pcmk_get_ra_caps(const char *standard);
