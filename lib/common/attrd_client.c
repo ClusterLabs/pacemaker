@@ -183,6 +183,10 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
             task = PCMK__ATTRD_CMD_QUERY;
             name_as = PCMK__XA_ATTR_NAME;
             break;
+	case 'c':
+            task = PCMK__ATTRD_CMD_PEER_CLEAR;
+            display_command = "clear";
+            break;
         case 'C':
             task = PCMK__ATTRD_CMD_PEER_REMOVE;
             display_command = "purge";

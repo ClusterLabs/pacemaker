@@ -121,7 +121,9 @@ pid_t pcmk_locate_sbd(void);
  * IPC commands that can be sent to Pacemaker daemons
  */
 
+#define PCMK__ATTRD_CMD_ATTR_REMOVE     "attr-remove"
 #define PCMK__ATTRD_CMD_PEER_REMOVE     "peer-remove"
+#define PCMK__ATTRD_CMD_PEER_CLEAR      "peer-clear"
 #define PCMK__ATTRD_CMD_UPDATE          "update"
 #define PCMK__ATTRD_CMD_UPDATE_BOTH     "update-both"
 #define PCMK__ATTRD_CMD_UPDATE_DELAY    "update-delay"

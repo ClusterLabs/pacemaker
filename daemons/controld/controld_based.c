@@ -262,6 +262,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         // CIB library handles freeing desc
     }
     free(xpath);
+    update_attrd_helper(uname, NULL, NULL, NULL, NULL, FALSE, 'c');
 }
 
 // Takes node name and resource ID

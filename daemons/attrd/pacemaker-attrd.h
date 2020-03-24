@@ -106,6 +106,10 @@ typedef struct attribute_value_s {
         char *current;
         char *requested;
         gboolean seen;
+  	//YAMAUCHI
+	/* After both flags are set, the attribute is cleared. */
+	gboolean need_clear; /* Mark the attrd node received in the ATTRD_OP_PEER_CLEAR message. */
+	gboolean node_left;  /* Mark the attrd node leaving the cluster. */
 } attribute_value_t;
 
 extern crm_cluster_t *attrd_cluster;
