@@ -31,7 +31,7 @@ static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
 static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
 static int print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                            unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                           gboolean print_summary, gboolean print_spacer);
+                           gboolean print_summary, GListPtr only_show, gboolean print_spacer);
 static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              pe_node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                              GListPtr op_list);
@@ -153,7 +153,7 @@ print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
 static int
 print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                 unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                gboolean print_summary, gboolean print_spacer)
+                gboolean print_summary, GListPtr only_show, gboolean print_spacer)
 {
     GListPtr rsc_iter;
     int rc = pcmk_rc_no_output;
@@ -208,9 +208,15 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
             continue;
         }
 
+        if (is_active || partially_active) {
+            if (!pe__rsc_running_on_any_node_in_list(rsc->running_on, only_show)) {
+                continue;
+            }
+        }
+
         /* Print this resource */
         rc = pcmk_rc_ok;
-        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc);
+        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc, only_show);
     }
 
     if (print_summary && rc != pcmk_rc_ok) {
@@ -907,7 +913,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(show, mon_show_resources)) {
         int x = print_resources(out, data_set, print_opts, mon_ops,
                                 is_set(mon_ops, mon_op_print_brief), TRUE,
-                                rc == pcmk_rc_ok);
+                                unames, rc == pcmk_rc_ok);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;
         }
@@ -1055,7 +1061,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
-        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE, FALSE);
+        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE, unames, FALSE);
     }
 
     /* print Node Attributes section if requested */
@@ -1155,7 +1161,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
         print_resources(out, data_set, print_opts, mon_ops,
-                        is_set(mon_ops, mon_op_print_brief), TRUE, FALSE);
+                        is_set(mon_ops, mon_op_print_brief), TRUE, unames, FALSE);
     }
 
     /* print Node Attributes section if requested */
