@@ -54,6 +54,38 @@ static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set
 static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
                                 gboolean print_spacer);
 
+static GListPtr
+build_uname_list(pe_working_set_t *data_set, const char *s) {
+    GListPtr unames = NULL;
+
+    if (s == NULL || strcmp(s, "*") == 0) {
+        /* Nothing was given so return a list of all node names.  Or, '*' was
+         * given.  This would normally fall into the pe__unames_with_tag branch
+         * where it will return an empty list.  Catch it here instead.
+         */
+        unames = g_list_prepend(unames, strdup("*"));
+    } else {
+        pe_node_t *node = pe_find_node(data_set->nodes, s);
+
+        if (node) {
+            /* The given string was a valid uname for a node.  Return a
+             * singleton list containing just that uname.
+             */
+            unames = g_list_prepend(unames, strdup(s));
+        } else {
+            /* The given string was not a valid uname.  It's either a tag or
+             * it's a typo or something.  In the first case, we'll return a
+             * list of all the unames of the nodes with the given tag.  In the
+             * second case, we'll return a NULL pointer and nothing will
+             * get displayed.
+             */
+            unames = pe__unames_with_tag(data_set, s);
+        }
+    }
+
+    return unames;
+}
+
 /*!
  * \internal
  * \brief Print resources section heading appropriate to options
@@ -700,6 +732,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
              stonith_history_t *stonith_history, unsigned int mon_ops,
              unsigned int show, char *prefix, char *only_show)
 {
+    GListPtr unames = NULL;
+
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
@@ -718,6 +752,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                       is_set(show, mon_show_times),
                       is_set(show, mon_show_counts),
                       is_set(show, mon_show_options));
+
+    unames = build_uname_list(data_set, only_show);
 
     /* Gather node information (and print if in bad state or grouping by node) */
     if (is_set(show, mon_show_nodes)) {
@@ -930,6 +966,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
             }
         }
     }
+
+    g_list_free_full(unames, free);
 }
 
 /*!
@@ -949,6 +987,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  unsigned int mon_ops, unsigned int show, char *prefix,
                  char *only_show)
 {
+    GListPtr unames = NULL;
+
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
@@ -959,6 +999,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  is_set(show, mon_show_times),
                  is_set(show, mon_show_counts),
                  is_set(show, mon_show_options));
+
+    unames = build_uname_list(data_set, only_show);
 
     /*** NODES ***/
     if (is_set(show, mon_show_nodes)) {
@@ -1009,6 +1051,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(show, mon_show_bans)) {
         print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
     }
+
+    g_list_free_full(unames, free);
 }
 
 /*!
@@ -1027,6 +1071,8 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
                   unsigned int show, char *prefix, char *only_show)
 {
+    GListPtr unames = NULL;
+
     GListPtr gIter = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
@@ -1037,6 +1083,8 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  is_set(show, mon_show_times),
                  is_set(show, mon_show_counts),
                  is_set(show, mon_show_options));
+
+    unames = build_uname_list(data_set, only_show);
 
     /*** NODE LIST ***/
     if (is_set(show, mon_show_nodes)) {
@@ -1115,5 +1163,6 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
         print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
     }
 
+    g_list_free_full(unames, free);
     return 0;
 }
