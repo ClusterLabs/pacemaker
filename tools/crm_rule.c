@@ -241,7 +241,7 @@ main(int argc, char **argv)
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         CMD_ERR("%s", help);
-        free(help);
+        g_free(help);
         exit_code = CRM_EX_USAGE;
         goto bail;
     }
