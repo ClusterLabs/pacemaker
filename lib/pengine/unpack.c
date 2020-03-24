@@ -23,7 +23,6 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/iso8601_internal.h>
-#include <unpack.h>
 #include <pe_status_private.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
@@ -49,6 +48,9 @@ static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
 static void determine_online_status(xmlNode *node_state, pe_node_t *this_node,
                                     pe_working_set_t *data_set);
+
+static void unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_state,
+                                 pe_working_set_t *data_set);
 
 
 // Bitmask for warnings we only want to print once
@@ -2355,15 +2357,12 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
     }
 }
 
-gboolean
-unpack_lrm_resources(pe_node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
+static void
+unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
+                     pe_working_set_t *data_set)
 {
     xmlNode *rsc_entry = NULL;
     gboolean found_orphaned_container_filler = FALSE;
-
-    CRM_CHECK(node != NULL, return FALSE);
-
-    crm_trace("Unpacking resources on %s", node->details->uname);
 
     for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
@@ -2385,7 +2384,6 @@ unpack_lrm_resources(pe_node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t 
     if (found_orphaned_container_filler) {
         handle_orphaned_container_fillers(lrm_rsc_list, data_set);
     }
-    return TRUE;
 }
 
 static void

@@ -25,6 +25,32 @@
 #  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 #  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 
+// Some warnings we don't want to print every transition
+
+enum pe_warn_once_e {
+    pe_wo_blind         = 0x0001,
+    pe_wo_restart_type  = 0x0002,
+    pe_wo_role_after    = 0x0004,
+    pe_wo_poweroff      = 0x0008,
+    pe_wo_require_all   = 0x0010,
+    pe_wo_order_score   = 0x0020,
+    pe_wo_neg_threshold = 0x0040,
+};
+
+extern uint32_t pe_wo;
+
+#define pe_warn_once(pe_wo_bit, fmt...) do {    \
+        if (is_not_set(pe_wo, pe_wo_bit)) {     \
+            if (pe_wo_bit == pe_wo_blind) {     \
+                crm_warn(fmt);                  \
+            } else {                            \
+                pe_warn(fmt);                   \
+            }                                   \
+            set_bit(pe_wo, pe_wo_bit);          \
+        }                                       \
+    } while (0);
+
+
 typedef struct pe__location_constraint_s {
     char *id;                           // Constraint XML ID
     pe_resource_t *rsc_lh;              // Resource being located

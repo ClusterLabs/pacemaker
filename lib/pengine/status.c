@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <glib.h>
 
 #include <crm/pengine/internal.h>
-#include <unpack.h>
+#include <pe_status_private.h>
 
 /*!
  * \brief Create a new working set

@@ -13,8 +13,6 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 
-#include <unpack.h>
-
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {

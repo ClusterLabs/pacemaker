@@ -14,7 +14,7 @@ SUBDIRS = tests
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 
 ## SOURCES
-noinst_HEADERS		= unpack.h variant.h pe_status_private.h
+noinst_HEADERS		= variant.h pe_status_private.h
 
 libpe_rules_la_LDFLAGS	= -version-info 27:0:1
 
