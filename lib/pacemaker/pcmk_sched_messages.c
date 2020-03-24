@@ -24,7 +24,6 @@
 
 gboolean show_scores = FALSE;
 gboolean show_utilization = FALSE;
-int utilization_log_level = LOG_TRACE;
 
 static void
 log_resource_details(pe_working_set_t *data_set)

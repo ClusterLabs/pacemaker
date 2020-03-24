@@ -283,7 +283,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     chosen->details->num_resources++;
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
-    dump_rsc_utilization((show_utilization? LOG_STDOUT : utilization_log_level),
+    dump_rsc_utilization((show_utilization? LOG_STDOUT : LOG_TRACE),
                          __FUNCTION__, rsc, chosen);
 
     return TRUE;
