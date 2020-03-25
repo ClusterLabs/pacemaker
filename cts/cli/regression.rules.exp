@@ -565,9 +565,9 @@ Error checking rule: No such device or address
 =#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - No such object (105) =#=#=#=
 * Passed: crm_rule       - Try to check a rule whose date_spec contains years= and moon=
 =#=#=#= Begin test: Try to check a rule with no date_expression =#=#=#=
-unpack_resources       error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources       error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources       error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Can't check rule cli-no-date_expression-rule because it does not have exactly one date_expression
 Error checking rule: Operation not supported
 =#=#=#= Current cib after: Try to check a rule with no date_expression =#=#=#=
