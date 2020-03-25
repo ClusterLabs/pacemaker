@@ -239,6 +239,10 @@ static struct pcmk__rc_info {
     { "pcmk_rc_no_output",
       "Output message produced no output",
       -pcmk_err_generic,
+    },
+    { "pcmk_rc_no_input",
+      "Input file not available",
+      -pcmk_err_generic,
     }
 };
 
@@ -699,6 +703,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_within_range:
             return CRM_EX_OK;
+
+        case pcmk_rc_no_input:
+            return CRM_EX_NOINPUT;
 
         default:
             return CRM_EX_ERROR;
