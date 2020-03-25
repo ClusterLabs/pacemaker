@@ -306,15 +306,18 @@ create_action_name(pe_action_t *action)
     return action_name;
 }
 
-static void
-create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions)
+static bool
+create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions,
+               GError **error)
 {
     GListPtr gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for writing", dot_file);
-        return;
+        g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(errno),
+                    "Could not open %s for writing: %s", dot_file,
+                    pcmk_rc_str(errno));
+        return false;
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
@@ -406,12 +409,13 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     fprintf(dot_strm, "}\n");
     fflush(dot_strm);
     fclose(dot_strm);
+    return true;
 }
 
-static void
-setup_input(const char *input, const char *output)
+static int
+setup_input(const char *input, const char *output, GError **error)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
     char *local_output = NULL;
@@ -420,8 +424,9 @@ setup_input(const char *input, const char *output)
         /* Use live CIB */
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_scope_local | cib_sync_call);
         }
 
@@ -429,13 +434,16 @@ setup_input(const char *input, const char *output)
         cib_delete(cib_conn);
         cib_conn = NULL;
 
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Live CIB query failed: %s (%d)\n", pcmk_strerror(rc), rc);
-            crm_exit(crm_errno2exit(rc));
+        if (rc != pcmk_rc_ok) {
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Live CIB query failed: %s (%d)", pcmk_rc_str(rc), rc);
+            return rc;
 
         } else if (cib_object == NULL) {
-            fprintf(stderr, "Live CIB query failed: empty result\n");
-            crm_exit(CRM_EX_NOINPUT);
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_NOINPUT,
+                        "Live CIB query failed: empty result");
+            return pcmk_rc_no_input;
         }
 
     } else if (safe_str_eq(input, "-")) {
@@ -451,12 +459,12 @@ setup_input(const char *input, const char *output)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        crm_exit(CRM_EX_CONFIG);
+        return pcmk_rc_transform_failed;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        crm_exit(CRM_EX_CONFIG);
+        return pcmk_rc_schema_validation;
     }
 
     if (output == NULL) {
@@ -473,12 +481,15 @@ setup_input(const char *input, const char *output)
     cib_object = NULL;
 
     if (rc < 0) {
-        fprintf(stderr, "Could not create '%s': %s\n",
-                output, pcmk_strerror(rc));
-        crm_exit(CRM_EX_CANTCREAT);
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_CANTCREAT,
+                    "Could not create '%s': %s", output, pcmk_rc_str(rc));
+        return rc;
+    } else {
+        setenv("CIB_file", output, 1);
+        free(local_output);
+        return pcmk_rc_ok;
     }
-    setenv("CIB_file", output, 1);
-    free(local_output);
 }
 
 
@@ -787,7 +798,8 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char 
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
+    GError *error = NULL;
+    int rc = pcmk_rc_ok;
 
     gboolean have_stdout = FALSE;
 
@@ -988,8 +1000,9 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_ERR, "Could not allocate working set");
-        rc = -ENOMEM;
+        rc = ENOMEM;
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not allocate working set");
         goto done;
     }
     set_bit(data_set->flags, pe_flag_no_compat);
@@ -1004,22 +1017,29 @@ main(int argc, char **argv)
             }
         }
         profile_all(options.test_dir, options.repeat, data_set, options.use_date);
-        return CRM_EX_OK;
+        rc = pcmk_rc_ok;
+        goto done;
     }
 
-    setup_input(options.xml_file, options.store ? options.xml_file : options.output_file);
+    rc = setup_input(options.xml_file, options.store ? options.xml_file : options.output_file, &error);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
 
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not get local CIB: %s\n", pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not get local CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1059,8 +1079,10 @@ main(int argc, char **argv)
                              options.ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not get modified CIB: %s\n", pcmk_strerror(rc));
+        if (rc != pcmk_rc_ok) {
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Could not get modified CIB: %s", pcmk_rc_str(rc));
             goto done;
         }
 
@@ -1078,8 +1100,9 @@ main(int argc, char **argv)
     if (options.input_file != NULL) {
         rc = write_xml_file(input, options.input_file, FALSE);
         if (rc < 0) {
-            fprintf(stderr, "Could not create '%s': %s\n",
-                    options.input_file, pcmk_strerror(rc));
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Could not create '%s': %s", options.input_file, pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -1103,7 +1126,9 @@ main(int argc, char **argv)
         }
 
         if (options.dot_file != NULL) {
-            create_dotfile(data_set, options.dot_file, options.all_actions);
+            if (!create_dotfile(data_set, options.dot_file, options.all_actions, &error)) {
+                goto done;
+            }
         }
 
         if (quiet == FALSE) {
@@ -1122,11 +1147,11 @@ main(int argc, char **argv)
         }
     }
 
-    rc = pcmk_ok;
+    rc = pcmk_rc_ok;
 
     if (options.simulate) {
-        if (run_simulation(data_set, global_cib, options.op_fail, quiet) != pcmk_ok) {
-            rc = pcmk_err_generic;
+        if (run_simulation(data_set, global_cib, options.op_fail, quiet) != pcmk_rc_ok) {
+            rc = pcmk_rc_error;
         }
         if(quiet == FALSE) {
             get_date(data_set, true, options.use_date);
@@ -1139,6 +1164,11 @@ main(int argc, char **argv)
     }
 
   done:
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error->message);
+        g_clear_error(&error);
+    }
+
     /* There sure is a lot to free in options. */
     free(options.dot_file);
     free(options.graph_file);
@@ -1174,5 +1204,5 @@ main(int argc, char **argv)
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    crm_exit(crm_errno2exit(rc));
+    crm_exit(pcmk_rc2exitc(rc));
 }
