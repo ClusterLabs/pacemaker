@@ -1139,10 +1139,6 @@ main(int argc, char **argv)
     }
 
   done:
-    pe_free_working_set(data_set);
-    global_cib->cmds->signoff(global_cib);
-    cib_delete(global_cib);
-
     /* There sure is a lot to free in options. */
     free(options.dot_file);
     free(options.graph_file);
@@ -1162,6 +1158,15 @@ main(int argc, char **argv)
     free(options.use_date);
     free(options.watchdog);
     free(options.xml_file);
+
+    if (data_set) {
+        pe_free_working_set(data_set);
+    }
+
+    if (global_cib) {
+        global_cib->cmds->signoff(global_cib);
+        cib_delete(global_cib);
+    }
 
     fflush(stderr);
 
