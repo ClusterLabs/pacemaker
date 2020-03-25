@@ -26,11 +26,44 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
+/* show_scores and show_utilization can't be added to this struct.  They
+ * actually come from include/pcmki/pcmki_scheduler.h where they are
+ * defined as extern.
+ */
+struct {
+    gboolean all_actions;
+    char *dot_file;
+    char *graph_file;
+    gchar *input_file;
+    guint modified;
+    GListPtr node_up;
+    GListPtr node_down;
+    GListPtr node_fail;
+    GListPtr op_fail;
+    GListPtr op_inject;
+    gchar *output_file;
+    gboolean print_pending;
+    gboolean process;
+    char *quorum;
+    long long repeat;
+    gboolean simulate;
+    gboolean store;
+    gchar *test_dir;
+    GListPtr ticket_grant;
+    GListPtr ticket_revoke;
+    GListPtr ticket_standby;
+    GListPtr ticket_activate;
+    char *use_date;
+    char *watchdog;
+    char *xml_file;
+} options = {
+    .print_pending = TRUE,
+    .repeat = 1
+};
+
 cib_t *global_cib = NULL;
-GListPtr op_fail = NULL;
 bool action_numbers = FALSE;
 gboolean quiet = FALSE;
-gboolean print_pending = TRUE;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
 
@@ -40,10 +73,8 @@ extern gboolean bringing_nodes_online;
 	}					\
     } while(0)
 
-char *use_date = NULL;
-
 static void
-get_date(pe_working_set_t *data_set, bool print_original)
+get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 {
     time_t original_date = 0;
 
@@ -681,7 +712,7 @@ static pcmk__cli_option_t long_options[] = {
 };
 
 static void
-profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
+profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
     xmlNode *cib_object = NULL;
     clock_t start = 0;
@@ -711,7 +742,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
         xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
 
         data_set->input = input;
-        get_date(data_set, false);
+        get_date(data_set, false, use_date);
         pcmk__schedule_actions(data_set, input, NULL);
         pe_reset_working_set(data_set);
     }
@@ -723,7 +754,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
 #endif
 
 static void
-profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
+profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
     struct dirent **namelist;
 
@@ -745,7 +776,7 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
             }
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_one(buffer, repeat, data_set);
+                profile_one(buffer, repeat, data_set, use_date);
             }
             free(namelist[file_num]);
         }
@@ -757,41 +788,20 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_ok;
-    guint modified = 0;
 
-    gboolean store = FALSE;
-    gboolean process = FALSE;
-    gboolean simulate = FALSE;
-    gboolean all_actions = FALSE;
     gboolean have_stdout = FALSE;
 
     pe_working_set_t *data_set = NULL;
 
-    const char *xml_file = "-";
-    const char *quorum = NULL;
-    const char *watchdog = NULL;
-    const char *test_dir = NULL;
-    const char *dot_file = NULL;
-    const char *graph_file = NULL;
-    const char *input_file = NULL;
-    const char *output_file = NULL;
     const char *repeat_s = NULL;
 
     int flag = 0;
     int index = 0;
     int argerr = 0;
-    long long repeat = 1;
-
-    GListPtr node_up = NULL;
-    GListPtr node_down = NULL;
-    GListPtr node_fail = NULL;
-    GListPtr op_inject = NULL;
-    GListPtr ticket_grant = NULL;
-    GListPtr ticket_revoke = NULL;
-    GListPtr ticket_standby = NULL;
-    GListPtr ticket_activate = NULL;
 
     xmlNode *input = NULL;
+
+    options.xml_file = strdup("-");
 
     crm_log_cli_init("crm_simulate");
     pcmk__set_cli_options(NULL, "<data source> <operation> [options]",
@@ -824,108 +834,140 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'p':
-                xml_file = "-";
+                if (options.xml_file) {
+                    free(options.xml_file);
+                }
+
+                options.xml_file = strdup("-");
                 break;
             case 'Q':
                 quiet = TRUE;
                 break;
             case 'L':
-                xml_file = NULL;
+                if (options.xml_file) {
+                    free(options.xml_file);
+                }
+
+                options.xml_file = NULL;
                 break;
             case 'x':
-                xml_file = optarg;
+                if (options.xml_file) {
+                    free(options.xml_file);
+                }
+
+                options.xml_file = strdup(optarg);
                 break;
             case 'u':
-                modified++;
+                options.modified++;
                 bringing_nodes_online = TRUE;
-                node_up = g_list_append(node_up, optarg);
+                options.node_up = g_list_append(options.node_up, optarg);
                 break;
             case 'd':
-                modified++;
-                node_down = g_list_append(node_down, optarg);
+                options.modified++;
+                options.node_down = g_list_append(options.node_down, optarg);
                 break;
             case 'f':
-                modified++;
-                node_fail = g_list_append(node_fail, optarg);
+                options.modified++;
+                options.node_fail = g_list_append(options.node_fail, optarg);
                 break;
             case 't':
-                use_date = strdup(optarg);
+                if (options.use_date) {
+                    free(options.use_date);
+                }
+
+                options.use_date = strdup(optarg);
                 break;
             case 'i':
-                modified++;
-                op_inject = g_list_append(op_inject, optarg);
+                options.modified++;
+                options.op_inject = g_list_append(options.op_inject, optarg);
                 break;
             case 'F':
-                process = TRUE;
-                simulate = TRUE;
-                op_fail = g_list_append(op_fail, optarg);
+                options.process = TRUE;
+                options.simulate = TRUE;
+                options.op_fail = g_list_append(options.op_fail, optarg);
                 break;
             case 'w':
-                modified++;
-                watchdog = optarg;
+                if (options.watchdog) {
+                    free(options.watchdog);
+                }
+
+                options.modified++;
+                options.watchdog = strdup(optarg);
                 break;
             case 'q':
-                modified++;
-                quorum = optarg;
+                if (options.quorum) {
+                    free(options.quorum);
+                }
+
+                options.modified++;
+                options.quorum = strdup(optarg);
                 break;
             case 'g':
-                modified++;
-                ticket_grant = g_list_append(ticket_grant, optarg);
+                options.modified++;
+                options.ticket_grant = g_list_append(options.ticket_grant, optarg);
                 break;
             case 'r':
-                modified++;
-                ticket_revoke = g_list_append(ticket_revoke, optarg);
+                options.modified++;
+                options.ticket_revoke = g_list_append(options.ticket_revoke, optarg);
                 break;
             case 'b':
-                modified++;
-                ticket_standby = g_list_append(ticket_standby, optarg);
+                options.modified++;
+                options.ticket_standby = g_list_append(options.ticket_standby, optarg);
                 break;
             case 'e':
-                modified++;
-                ticket_activate = g_list_append(ticket_activate, optarg);
+                options.modified++;
+                options.ticket_activate = g_list_append(options.ticket_activate, optarg);
                 break;
             case 'a':
-                all_actions = TRUE;
+                options.all_actions = TRUE;
                 break;
             case 's':
-                process = TRUE;
+                options.process = TRUE;
                 show_scores = TRUE;
                 break;
             case 'U':
-                process = TRUE;
+                options.process = TRUE;
                 show_utilization = TRUE;
                 break;
             case 'j':
-                print_pending = TRUE;
+                options.print_pending = TRUE;
                 break;
             case 'S':
-                process = TRUE;
-                simulate = TRUE;
+                options.process = TRUE;
+                options.simulate = TRUE;
                 break;
             case 'X':
-                store = TRUE;
-                process = TRUE;
-                simulate = TRUE;
+                options.store = TRUE;
+                options.process = TRUE;
+                options.simulate = TRUE;
                 break;
             case 'R':
-                process = TRUE;
+                options.process = TRUE;
                 break;
             case 'D':
-                process = TRUE;
-                dot_file = optarg;
+                if (options.dot_file) {
+                    free(options.dot_file);
+                }
+
+                options.process = TRUE;
+                options.dot_file = strdup(optarg);
                 break;
             case 'G':
-                process = TRUE;
-                graph_file = optarg;
+                if (options.graph_file) {
+                    free(options.graph_file);
+                }
+
+                options.process = TRUE;
+                options.graph_file = strdup(optarg);
                 break;
             case 'I':
-                input_file = optarg;
+                options.input_file = optarg;
                 break;
             case 'O':
-                output_file = optarg;
+                options.output_file = optarg;
                 break;
             case 'P':
-                test_dir = optarg;
+                options.test_dir = optarg;
                 break;
             case 'N':
                 repeat_s = optarg;
@@ -952,20 +994,20 @@ main(int argc, char **argv)
     }
     set_bit(data_set->flags, pe_flag_no_compat);
 
-    if (test_dir != NULL) {
+    if (options.test_dir != NULL) {
         if (repeat_s != NULL) {
-            repeat = crm_parse_ll(repeat_s, NULL);
-            if (errno || (repeat < 1)) {
+            options.repeat = crm_parse_ll(repeat_s, NULL);
+            if (errno || (options.repeat < 1)) {
                 fprintf(stderr, "--repeat must be positive integer, not '%s' -- using 1",
                         repeat_s);
-                repeat = 1;
+                options.repeat = 1;
             }
         }
-        profile_all(test_dir, repeat, data_set);
+        profile_all(options.test_dir, options.repeat, data_set, options.use_date);
         return CRM_EX_OK;
     }
 
-    setup_input(xml_file, store ? xml_file : output_file);
+    setup_input(options.xml_file, options.store ? options.xml_file : options.output_file);
 
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
@@ -982,15 +1024,15 @@ main(int argc, char **argv)
     }
 
     data_set->input = input;
-    get_date(data_set, true);
-    if(xml_file) {
+    get_date(data_set, true, options.use_date);
+    if(options.xml_file) {
         set_bit(data_set->flags, pe_flag_sanitized);
     }
     set_bit(data_set->flags, pe_flag_stdout);
     cluster_status(data_set);
 
     if (quiet == FALSE) {
-        int options = print_pending ? pe_print_pending : 0;
+        int opts = options.print_pending ? pe_print_pending : 0;
 
         if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
@@ -1006,13 +1048,15 @@ main(int argc, char **argv)
         }
 
         quiet_log("\nCurrent cluster status:\n");
-        print_cluster_status(data_set, options);
+        print_cluster_status(data_set, opts);
     }
 
-    if (modified) {
+    if (options.modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
-                             ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
+        modify_configuration(data_set, global_cib, options.quorum, options.watchdog, options.node_up,
+                             options.node_down, options.node_fail, options.op_inject,
+                             options.ticket_grant, options.ticket_revoke, options.ticket_standby,
+                             options.ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != pcmk_ok) {
@@ -1022,25 +1066,25 @@ main(int argc, char **argv)
 
         cleanup_calculations(data_set);
         data_set->input = input;
-        get_date(data_set, true);
+        get_date(data_set, true, options.use_date);
 
-        if(xml_file) {
+        if(options.xml_file) {
             set_bit(data_set->flags, pe_flag_sanitized);
         }
         set_bit(data_set->flags, pe_flag_stdout);
         cluster_status(data_set);
     }
 
-    if (input_file != NULL) {
-        rc = write_xml_file(input, input_file, FALSE);
+    if (options.input_file != NULL) {
+        rc = write_xml_file(input, options.input_file, FALSE);
         if (rc < 0) {
             fprintf(stderr, "Could not create '%s': %s\n",
-                    input_file, pcmk_strerror(rc));
+                    options.input_file, pcmk_strerror(rc));
             goto done;
         }
     }
 
-    if (process || simulate) {
+    if (options.process || options.simulate) {
         crm_time_t *local_date = NULL;
 
         if (show_scores && show_utilization) {
@@ -1054,19 +1098,19 @@ main(int argc, char **argv)
         pcmk__schedule_actions(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
-        if (graph_file != NULL) {
-            write_xml_file(data_set->graph, graph_file, FALSE);
+        if (options.graph_file != NULL) {
+            write_xml_file(data_set->graph, options.graph_file, FALSE);
         }
 
-        if (dot_file != NULL) {
-            create_dotfile(data_set, dot_file, all_actions);
+        if (options.dot_file != NULL) {
+            create_dotfile(data_set, options.dot_file, options.all_actions);
         }
 
         if (quiet == FALSE) {
             GListPtr gIter = NULL;
 
             quiet_log("%sTransition Summary:\n", show_scores || show_utilization
-                      || modified ? "\n" : "");
+                      || options.modified ? "\n" : "");
             fflush(stdout);
 
             LogNodeActions(data_set, TRUE);
@@ -1080,12 +1124,12 @@ main(int argc, char **argv)
 
     rc = pcmk_ok;
 
-    if (simulate) {
-        if (run_simulation(data_set, global_cib, op_fail, quiet) != pcmk_ok) {
+    if (options.simulate) {
+        if (run_simulation(data_set, global_cib, options.op_fail, quiet) != pcmk_ok) {
             rc = pcmk_err_generic;
         }
         if(quiet == FALSE) {
-            get_date(data_set, true);
+            get_date(data_set, true, options.use_date);
 
             quiet_log("\nRevised cluster status:\n");
             set_bit(data_set->flags, pe_flag_stdout);
@@ -1098,7 +1142,27 @@ main(int argc, char **argv)
     pe_free_working_set(data_set);
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
-    free(use_date);
+
+    /* There sure is a lot to free in options. */
+    free(options.dot_file);
+    free(options.graph_file);
+    g_free(options.input_file);
+    g_list_free_full(options.node_up, g_free);
+    g_list_free_full(options.node_down, g_free);
+    g_list_free_full(options.node_fail, g_free);
+    g_list_free_full(options.op_fail, g_free);
+    g_list_free_full(options.op_inject, g_free);
+    g_free(options.output_file);
+    free(options.quorum);
+    g_free(options.test_dir);
+    g_list_free_full(options.ticket_grant, g_free);
+    g_list_free_full(options.ticket_revoke, g_free);
+    g_list_free_full(options.ticket_standby, g_free);
+    g_list_free_full(options.ticket_activate, g_free);
+    free(options.use_date);
+    free(options.watchdog);
+    free(options.xml_file);
+
     fflush(stderr);
 
     if (temp_shadow) {
