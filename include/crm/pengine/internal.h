@@ -98,7 +98,7 @@ typedef struct notify_data_s {
 
 bool pe_can_fence(pe_working_set_t *data_set, pe_node_t *node);
 
-int merge_weights(int w1, int w2);
+int pe__add_scores(int score1, int score2);
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
 char *native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
@@ -203,7 +203,7 @@ gboolean common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc, pe_resource_t * 
                        pe_working_set_t * data_set);
 void common_free(pe_resource_t * rsc);
 
-extern pe_node_t *node_copy(const pe_node_t *this_node);
+pe_node_t *pe__copy_node(const pe_node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
@@ -240,9 +240,9 @@ pe__current_node(const pe_resource_t *rsc)
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
-extern GListPtr node_list_dup(GListPtr list, gboolean reset, gboolean filter);
 
-extern GHashTable *node_hash_from_list(GListPtr list);
+GHashTable *pe__node_list2table(GList *list);
+
 static inline gpointer
 pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
 {
@@ -254,8 +254,6 @@ pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
 
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
 extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
-
-GHashTable *node_hash_dup(GHashTable * hash);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, pe_node_t * node, gboolean details);

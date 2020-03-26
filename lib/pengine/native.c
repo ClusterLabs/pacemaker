@@ -133,7 +133,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     if (rsc->allowed_nodes != NULL) {
                         g_hash_table_destroy(rsc->allowed_nodes);
                     }
-                    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+                    rsc->allowed_nodes = pe__node_list2table(data_set->nodes);
                     g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
                         local_node->weight = -INFINITY;

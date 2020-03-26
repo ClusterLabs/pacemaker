@@ -264,7 +264,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     g_hash_table_iter_init(&iter, node->details->attrs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
-            failcount = merge_weights(failcount, char2score(value));
+            failcount = pe__add_scores(failcount, char2score(value));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
             last = QB_MAX(last, (time_t) crm_parse_ll(value, NULL));
         }

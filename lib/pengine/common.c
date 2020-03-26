@@ -499,40 +499,73 @@ text2role(const char *role)
     return RSC_ROLE_UNKNOWN;
 }
 
+/*!
+ * \internal
+ * \brief Add two scores (bounding to +/- INFINITY)
+ *
+ * \param[in] score1  First score to add
+ * \param[in] score2  Second score to add
+ */
 int
-merge_weights(int w1, int w2)
+pe__add_scores(int score1, int score2)
 {
-    int result = w1 + w2;
+    int result = score1 + score2;
 
-    if (w1 <= -INFINITY || w2 <= -INFINITY) {
-        if (w1 >= INFINITY || w2 >= INFINITY) {
-            crm_trace("-INFINITY + INFINITY == -INFINITY");
-        }
-        return -INFINITY;
+    // First handle the cases where one or both is infinite
 
-    } else if (w1 >= INFINITY || w2 >= INFINITY) {
-        return INFINITY;
-    }
+    if (score1 <= -CRM_SCORE_INFINITY) {
 
-    /* detect wrap-around */
-    if (result > 0) {
-        if (w1 <= 0 && w2 < 0) {
-            result = -INFINITY;
+        if (score2 <= -CRM_SCORE_INFINITY) {
+            crm_trace("-INFINITY + -INFINITY = -INFINITY");
+        } else if (score2 >= CRM_SCORE_INFINITY) {
+            crm_trace("-INFINITY + +INFINITY = -INFINITY");
+        } else {
+            crm_trace("-INFINITY + %d = -INFINITY", score2);
         }
 
-    } else if (w1 > 0 && w2 > 0) {
-        result = INFINITY;
+        return -CRM_SCORE_INFINITY;
+
+    } else if (score2 <= -CRM_SCORE_INFINITY) {
+
+        if (score1 >= CRM_SCORE_INFINITY) {
+            crm_trace("+INFINITY + -INFINITY = -INFINITY");
+        } else {
+            crm_trace("%d + -INFINITY = -INFINITY", score1);
+        }
+
+        return -CRM_SCORE_INFINITY;
+
+    } else if (score1 >= CRM_SCORE_INFINITY) {
+
+        if (score2 >= CRM_SCORE_INFINITY) {
+            crm_trace("+INFINITY + +INFINITY = +INFINITY");
+        } else {
+            crm_trace("+INFINITY + %d = +INFINITY", score2);
+        }
+
+        return CRM_SCORE_INFINITY;
+
+    } else if (score2 >= CRM_SCORE_INFINITY) {
+        crm_trace("%d + +INFINITY = +INFINITY", score1);
+        return CRM_SCORE_INFINITY;
     }
 
-    /* detect +/- INFINITY */
-    if (result >= INFINITY) {
-        result = INFINITY;
+    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
+     * we can ignore the possibility of integer overflow
+     */
 
-    } else if (result <= -INFINITY) {
-        result = -INFINITY;
+    // Bound result to infinity
+
+    if (result >= CRM_SCORE_INFINITY) {
+        crm_trace("%d + %d = +INFINITY", score1, score2);
+        return CRM_SCORE_INFINITY;
+
+    } else if (result <= -CRM_SCORE_INFINITY) {
+        crm_trace("%d + %d = -INFINITY", score1, score2);
+        return -CRM_SCORE_INFINITY;
     }
 
-    crm_trace("%d + %d = %d", w1, w2, result);
+    crm_trace("%d + %d = %d", score1, score2, result);
     return result;
 }
 

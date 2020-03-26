@@ -450,7 +450,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = rsc->children;
     GListPtr saved = constraint->node_list_rh;
-    GListPtr zero = node_list_dup(constraint->node_list_rh, TRUE, FALSE);
+    GListPtr zero = pcmk__copy_node_list(constraint->node_list_rh, true);
     gboolean reset_scores = TRUE;
     group_variant_data_t *group_data = NULL;
 

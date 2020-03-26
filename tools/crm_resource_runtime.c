@@ -713,7 +713,7 @@ cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
         if(nodes == NULL && do_force) {
-            nodes = node_list_dup(data_set->nodes, FALSE, FALSE);
+            nodes = pcmk__copy_node_list(data_set->nodes, false);
 
         } else if(nodes == NULL && rsc->exclusive_discover) {
             GHashTableIter iter;

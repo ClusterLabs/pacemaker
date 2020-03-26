@@ -139,7 +139,8 @@ static void apply_master_location(pe_resource_t *child, GListPtr location_constr
             cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
         }
         if (cons_node != NULL) {
-            int new_priority = merge_weights(child->priority, cons_node->weight);
+            int new_priority = pe__add_scores(child->priority,
+                                              cons_node->weight);
 
             pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)",
                          child->id, cons_node->details->uname, child->priority,
@@ -294,7 +295,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
-        node->weight = merge_weights(child->sort_index, node->weight);
+        node->weight = pe__add_scores(child->sort_index, node->weight);
     }
 
     pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes);
@@ -573,7 +574,7 @@ apply_master_prefs(pe_resource_t *rsc)
 
             score = promotion_score(child_rsc, node, 0);
             if (score > 0) {
-                new_score = merge_weights(node->weight, score);
+                new_score = pe__add_scores(node->weight, score);
                 if (new_score != node->weight) {
                     pe_rsc_trace(rsc, "\t%s: Updating preference for %s (%d->%d)",
                                  child_rsc->id, node->details->uname, node->weight, new_score);
@@ -953,7 +954,7 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
 
         if (safe_str_eq(value, tmp)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
-            node->weight = merge_weights(node->weight, score);
+            node->weight = pe__add_scores(node->weight, score);
         }
     }
 }
@@ -1008,7 +1009,8 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
             rsc_lh->priority = -INFINITY;
 
         } else if (rh_child != NULL) {
-            int new_priority = merge_weights(rsc_lh->priority, constraint->score);
+            int new_priority = pe__add_scores(rsc_lh->priority,
+                                              constraint->score);
 
             pe_rsc_debug(rsc_lh, "Applying %s to %s", constraint->id, rsc_lh->id);
             pe_rsc_debug(rsc_lh, "\t%s: %d->%d", rsc_lh->id, rsc_lh->priority, new_priority);

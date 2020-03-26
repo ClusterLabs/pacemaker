@@ -727,7 +727,7 @@ common_update_score(pe_resource_t * rsc, const char *id, int score)
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {
         pe_rsc_trace(rsc, "Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
-        node->weight = merge_weights(node->weight, score);
+        node->weight = pe__add_scores(node->weight, score);
     }
 
     if (rsc->children) {

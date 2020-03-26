@@ -1133,7 +1133,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (do_and) {
         GListPtr gIter = NULL;
 
-        match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
+        match_L = pcmk__copy_node_list(data_set->nodes, true);
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
 
@@ -1163,12 +1163,12 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                 continue;
 
             } else if (local == NULL) {
-                local = node_copy(node);
+                local = pe__copy_node(node);
                 match_L = g_list_append(match_L, local);
             }
 
             if (do_and == FALSE) {
-                local->weight = merge_weights(local->weight, score_f);
+                local->weight = pe__add_scores(local->weight, score_f);
             }
             crm_trace("node %s now has weight %d", node->details->uname, local->weight);
 

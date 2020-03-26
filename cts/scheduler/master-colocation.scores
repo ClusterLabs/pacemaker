@@ -16,8 +16,8 @@ pcmk__group_allocate: sship allocation score on box2: 100
 pcmk__group_allocate: virtualips allocation score on box1: 0
 pcmk__group_allocate: virtualips allocation score on box2: 0
 pcmk__native_allocate: conntrackd-stateful:0 allocation score on box1: 105
-pcmk__native_allocate: conntrackd-stateful:0 allocation score on box2: 0
-pcmk__native_allocate: conntrackd-stateful:1 allocation score on box1: -INFINITY
+pcmk__native_allocate: conntrackd-stateful:0 allocation score on box2: -INFINITY
+pcmk__native_allocate: conntrackd-stateful:1 allocation score on box1: 0
 pcmk__native_allocate: conntrackd-stateful:1 allocation score on box2: 105
 pcmk__native_allocate: externalip allocation score on box1: 0
 pcmk__native_allocate: externalip allocation score on box2: 300

@@ -37,6 +37,8 @@ extern gboolean rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket
                                const char *state_lh, const char *loss_policy,
                                pe_working_set_t * data_set);
 
+GHashTable *pcmk__copy_node_table(GHashTable *nodes);
+GList *pcmk__copy_node_list(const GList *list, bool reset);
 GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
                             pe_working_set_t *data_set);
 

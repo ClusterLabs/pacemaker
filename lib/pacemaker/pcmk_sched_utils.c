@@ -47,7 +47,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         }
 
         if (foo_node != NULL) {
-            pe_node_t *copy = node_copy(foo_node);
+            pe_node_t *copy = pe__copy_node(foo_node);
 
             copy->weight = node_weight;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -81,6 +81,62 @@ can_run_resources(const pe_node_t * node)
         return FALSE;
     }
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Copy a hash table of node objects
+ *
+ * \param[in] nodes  Hash table to copy
+ *
+ * \return New copy of nodes (or NULL if nodes is NULL)
+ */
+GHashTable *
+pcmk__copy_node_table(GHashTable *nodes)
+{
+    GHashTable *new_table = NULL;
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+
+    if (nodes == NULL) {
+        return NULL;
+    }
+    new_table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    g_hash_table_iter_init(&iter, nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        pe_node_t *new_node = pe__copy_node(node);
+
+        g_hash_table_insert(new_table, (gpointer) new_node->details->id,
+                            new_node);
+    }
+    return new_table;
+}
+
+/*!
+ * \internal
+ * \brief Copy a list of node objects
+ *
+ * \param[in] list   List to copy
+ * \param[in] reset  Set copies' scores to 0
+ *
+ * \return New list of shallow copies of nodes in original list
+ */
+GList *
+pcmk__copy_node_list(const GList *list, bool reset)
+{
+    GList *result = NULL;
+
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = NULL;
+        pe_node_t *this_node = (pe_node_t *) gIter->data;
+
+        new_node = pe__copy_node(this_node);
+        if (reset) {
+            new_node->weight = 0;
+        }
+        result = g_list_prepend(result, new_node);
+    }
+    return result;
 }
 
 struct node_weight_s {
@@ -277,7 +333,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     }
 
     crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-    rsc->allocated_to = node_copy(chosen);
+    rsc->allocated_to = pe__copy_node(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
     chosen->details->num_resources++;

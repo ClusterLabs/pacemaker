@@ -229,10 +229,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         GHashTable *hash2 =
             g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
 
-        n = node_copy(current_node1);
+        n = pe__copy_node(current_node1);
         g_hash_table_insert(hash1, (gpointer) n->details->id, n);
 
-        n = node_copy(current_node2);
+        n = pe__copy_node(current_node2);
         g_hash_table_insert(hash2, (gpointer) n->details->id, n);
 
         if(resource1->parent) {
@@ -455,7 +455,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     can_run_instance(rsc, NULL, limit);
 
-    backup = node_hash_dup(rsc->allowed_nodes);
+    backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen && prefer && (chosen->details != prefer->details)) {
