@@ -1106,9 +1106,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
         value = crm_element_value(xml_obj, "add-host");
-        if (pcmk__valid_boolean(value)) {
-            crm_str_to_boolean(value, &bundle_data->add_host);
-        } else {
+        if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
         }
 

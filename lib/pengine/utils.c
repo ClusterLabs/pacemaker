@@ -20,8 +20,6 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
-#include <unpack.h>
-
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);

@@ -24,7 +24,6 @@
 
 gboolean show_scores = FALSE;
 gboolean show_utilization = FALSE;
-int utilization_log_level = LOG_TRACE;
 
 static void
 log_resource_details(pe_working_set_t *data_set)
@@ -52,8 +51,7 @@ log_resource_details(pe_working_set_t *data_set)
         // Log all resources except inactive orphans
         if (is_not_set(rsc->flags, pe_rsc_orphan)
             || (rsc->role != RSC_ROLE_STOPPED)) {
-            out->message(out, crm_map_element_name(rsc->xml), pe_print_log,
-                         rsc);
+            out->message(out, crm_map_element_name(rsc->xml), 0, rsc);
         }
     }
     pcmk__output_free(out);

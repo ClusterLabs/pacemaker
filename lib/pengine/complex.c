@@ -13,8 +13,6 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 
-#include <unpack.h>
-
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -510,26 +508,17 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && safe_str_neq("default", value)) {
-        gboolean bool_value = TRUE;
-
-        crm_str_to_boolean(value, &bool_value);
-        if (bool_value == FALSE) {
-            clear_bit((*rsc)->flags, pe_rsc_managed);
-        } else {
+        if (crm_is_true(value)) {
             set_bit((*rsc)->flags, pe_rsc_managed);
+        } else {
+            clear_bit((*rsc)->flags, pe_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
-    if (value != NULL && safe_str_neq("default", value)) {
-        gboolean bool_value = FALSE;
-
-        crm_str_to_boolean(value, &bool_value);
-        if (bool_value == TRUE) {
-            clear_bit((*rsc)->flags, pe_rsc_managed);
-            set_bit((*rsc)->flags, pe_rsc_maintenance);
-        }
-
+    if (crm_is_true(value)) {
+        clear_bit((*rsc)->flags, pe_rsc_managed);
+        set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         clear_bit((*rsc)->flags, pe_rsc_managed);

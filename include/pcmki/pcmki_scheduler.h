@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the Pacemaker project contributors
+ * Copyright 2014-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -105,7 +105,6 @@ bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern gboolean show_scores;
 extern gboolean show_utilization;
-extern int utilization_log_level;
 extern const char *transition_idle_timeout;
 
 #endif

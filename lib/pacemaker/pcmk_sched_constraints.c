@@ -12,20 +12,17 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <glib.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/iso8601.h>
-
-#include <glib.h>
-
 #include <crm/pengine/status.h>
-#include <pacemaker-internal.h>
+#include <crm/pengine/internal.h>
 #include <crm/pengine/rules.h>
-
-#include <../lib/pengine/unpack.h>
+#include <pacemaker-internal.h>
 
 enum pe_order_kind {
     pe_order_kind_optional,

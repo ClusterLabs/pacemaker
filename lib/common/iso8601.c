@@ -1258,6 +1258,15 @@ crm_time_set_timet(crm_time_t * target, time_t * source)
 }
 
 crm_time_t *
+pcmk_copy_time(crm_time_t *source)
+{
+    crm_time_t *target = crm_time_new_undefined();
+
+    crm_time_set(target, source);
+    return target;
+}
+
+crm_time_t *
 crm_time_add(crm_time_t * dt, crm_time_t * value)
 {
     crm_time_t *utc = NULL;
@@ -1268,8 +1277,7 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
         return NULL;
     }
 
-    answer = crm_time_new_undefined();
-    crm_time_set(answer, dt);
+    answer = pcmk_copy_time(dt);
 
     utc = crm_get_utc_time(value);
     if (utc == NULL) {
@@ -1336,8 +1344,7 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
         return NULL;
     }
 
-    answer = crm_time_new_undefined();
-    crm_time_set(answer, dt);
+    answer = pcmk_copy_time(dt);
     answer->years -= utc->years;
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);

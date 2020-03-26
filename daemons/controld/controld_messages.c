@@ -858,6 +858,68 @@ verify_feature_set(xmlNode *msg)
     }
 }
 
+// DC gets own shutdown all-clear
+static enum crmd_fsa_input
+handle_shutdown_self_ack(xmlNode *stored_msg)
+{
+    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+
+    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        // The expected case -- we initiated own shutdown sequence
+        crm_info("Shutting down controller");
+        return I_STOP;
+    }
+
+    if (safe_str_eq(host_from, fsa_our_dc)) {
+        // Must be logic error -- DC confirming its own unrequested shutdown
+        crm_err("Shutting down controller immediately due to "
+                "unexpected shutdown confirmation");
+        return I_TERMINATE;
+    }
+
+    if (fsa_state != S_STOPPING) {
+        // Shouldn't happen -- non-DC confirming unrequested shutdown
+        crm_err("Starting new DC election because %s is "
+                "confirming shutdown we did not request",
+                (host_from? host_from : "another node"));
+        return I_ELECTION;
+    }
+
+    // Shouldn't happen, but we are already stopping anyway
+    crm_debug("Ignoring unexpected shutdown confirmation from %s",
+              (host_from? host_from : "another node"));
+    return I_NULL;
+}
+
+// Non-DC gets shutdown all-clear from DC
+static enum crmd_fsa_input
+handle_shutdown_ack(xmlNode *stored_msg)
+{
+    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+
+    if (host_from == NULL) {
+        crm_warn("Ignoring shutdown request without origin specified");
+        return I_NULL;
+    }
+
+    if ((fsa_our_dc == NULL) || (strcmp(host_from, fsa_our_dc) == 0)) {
+
+        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+            crm_info("Shutting down controller after confirmation from %s",
+                     host_from);
+        } else {
+            crm_err("Shutting down controller after unexpected "
+                    "shutdown request from %s", host_from);
+            set_bit(fsa_input_register, R_STAYDOWN);
+        }
+        return I_STOP;
+    }
+
+    crm_warn("Ignoring shutdown request from %s because DC is %s",
+             host_from, fsa_our_dc);
+    return I_NULL;
+}
+
 static enum crmd_fsa_input
 handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 {
@@ -893,22 +955,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             return I_JOIN_RESULT;
 
         } else if (strcmp(op, CRM_OP_SHUTDOWN) == 0) {
-            const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-            gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
-
-            if (is_set(fsa_input_register, R_SHUTDOWN)) {
-                crm_info("Shutting ourselves down (DC)");
-                return I_STOP;
-
-            } else if (dc_match) {
-                crm_err("We didn't ask to be shut down, yet our"
-                        " TE is telling us to. Better get out now!");
-                return I_TERMINATE;
-
-            } else if (fsa_state != S_STOPPING) {
-                crm_err("Another node is asking us to shutdown" " but we think we're ok.");
-                return I_ELECTION;
-            }
+            return handle_shutdown_self_ack(stored_msg);
 
         } else if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
             /* a slave wants to shut down */
@@ -1027,22 +1074,10 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         remote_ra_process_maintenance_nodes(xml);
 
         /*========== (NOT_DC)-Only Actions ==========*/
-    } else if (AM_I_DC == FALSE && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+    } else if (!AM_I_DC) {
 
-        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
-
-        if (dc_match || fsa_our_dc == NULL) {
-            if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
-                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
-                set_bit(fsa_input_register, R_STAYDOWN);
-                return I_STOP;
-            }
-            crm_info("Shutting down");
-            return I_STOP;
-
-        } else {
-            crm_warn("Discarding %s op from %s", op, host_from);
+        if (strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+            return handle_shutdown_ack(stored_msg);
         }
 
     } else {

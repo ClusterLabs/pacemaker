@@ -391,7 +391,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=25	\
+	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=30	\
 		--library=posix --library=gnu --library=gtk	\
 		--inline-suppr -q replace lib daemons tools
 
