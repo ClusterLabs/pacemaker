@@ -185,6 +185,8 @@ do_test anti-colocation-master "Organize order of actions for master resources i
 do_test anti-colocation-slave "Organize order of actions for slave resources in anti-colocations"
 do_test enforce-colo1 "Always enforce B with A INFINITY."
 do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
+do_test coloc-dependee-should-stay "Stickiness outweighs gorup colocation"
+do_test coloc-dependee-should-move "Group colocation outweighs stickiness"
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
