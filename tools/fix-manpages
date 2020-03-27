@@ -26,7 +26,7 @@
 # This leaves the --help-all output looking good and removes redundant
 # stuff from the man page.  Feel free to add additional headers here.
 # Not all tools will have all headers.
-/.SH NOTES\|.SH OUTPUT CONTROL\|.SH TIME SPECIFICATION/{ n
+/.SH NOTES\|.SH OPERATION SPECIFICATION\|.SH OUTPUT CONTROL\|.SH TIME SPECIFICATION/{ n
 N
 N
 d
