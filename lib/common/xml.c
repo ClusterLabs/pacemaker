@@ -368,10 +368,10 @@ bool xml_document_dirty(xmlNode *xml)
   <change operation="delete" xpath="/cib/configuration/nodes/node[@id='node3'] /">
   <change operation="update" xpath="/cib/configuration/resources/group[@id='g1']">
     <change-list>
-      <change-attr operation="set" name="description" value="some grabage here"/>
+      <change-attr operation="set" name="description" value="some garbage here"/>
     </change-list>
     <change-result>
-      <group id="g1" description="some grabage here"/><!-- NOTE: not recursive -->
+      <group id="g1" description="some garbage here"/><!-- NOTE: not recursive -->
     </change-result>
   </change>
   <change operation="update" xpath="/cib/status/node_state[@id='node2]/lrm[@id='node2']/lrm_resources/lrm_resource[@id='Fence']">
