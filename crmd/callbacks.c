@@ -158,6 +158,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 old = *(const uint32_t *)data;
                 changed = node->processes ^ old;
             }
+            appeared = ((node->processes & proc_flags) != 0);
 
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
             crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
@@ -182,7 +183,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
             }
 
-            appeared = (node->processes & proc_flags) != 0;
             if (safe_str_eq(node->uname, fsa_our_uname) && (node->processes & proc_flags) == 0) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
