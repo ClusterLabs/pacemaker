@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -184,8 +184,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Remove a fencing level for a specific node.
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *
      * \retval 0, success
      * \retval negative error code on failure
      */
@@ -195,8 +193,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register a fencing level containing the fencing devices to be used
      *        at that level for a specific node.
-     *
-     * \note This feature is not available when stonith is in standalone mode.
      *
      * \retval 0, success
      * \retval negative error code on failure
@@ -293,8 +289,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Retrieve a list of fencing operations that have occurred for a specific node.
      *
-     * \note History is not available in standalone mode.
-     *
      * \retval 0 success
      * \retval negative error code on failure.
      */
@@ -348,8 +342,7 @@ typedef struct stonith_api_operations_s
      *
      * \return 0 on success, negative error code otherwise
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *       The caller should set only one of node, pattern or attr/value.
+     * \note The caller should set only one of node, pattern or attr/value.
      */
     int (*remove_level_full)(stonith_t *st, int options,
                              const char *node, const char *pattern,
@@ -369,8 +362,7 @@ typedef struct stonith_api_operations_s
      *
      * \return 0 on success, negative error code otherwise
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *       The caller should set only one of node, pattern or attr/value.
+     * \note The caller should set only one of node, pattern or attr/value.
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
