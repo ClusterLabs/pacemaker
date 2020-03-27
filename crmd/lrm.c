@@ -1815,8 +1815,6 @@ do_lrm_invoke(long long action,
                        rc, pcmk_strerror(rc), ID(input->xml));
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok,
                              user_name);
-            send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
-                             from_host, from_sys);
             return;
 
         } else if (rc == -EINVAL) {

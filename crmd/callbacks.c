@@ -158,6 +158,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 old = *(const uint32_t *)data;
                 changed = node->processes ^ old;
             }
+            appeared = ((node->processes & proc_flags) != 0);
 
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
             crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
@@ -182,7 +183,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
             }
 
-            appeared = (node->processes & proc_flags) != 0;
             if (safe_str_eq(node->uname, fsa_our_uname) && (node->processes & proc_flags) == 0) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
@@ -207,7 +207,11 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                                                cib_scope_local);
                 }
 
-            } else if(AM_I_DC) {
+            } else if (AM_I_DC || (fsa_our_dc == NULL)) {
+                /* This only needs to be done once, so normally the DC should do
+                 * it. However if there is no DC, every node must do it, since
+                 * there is no other way to ensure some one node does it.
+                 */
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
                 } else {
