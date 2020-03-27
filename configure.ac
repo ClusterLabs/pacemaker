@@ -81,8 +81,12 @@ AC_PROG_CC dnl Can force other with environment variable "CC".
 AC_PROG_CC_STDC
 AC_PROG_CXX dnl C++ is not needed for build, just maintainer utilities
 
+dnl We use md5.c from gnulib, which has its own m4 macros. Per its docs:
+dnl "The macro gl_EARLY must be called as soon as possible after verifying that
+dnl the C compiler is working. ... The core part of the gnulib checks are done
+dnl by the macro gl_INIT." In addition, prevent gnulib from introducing OpenSSL
+dnl as a dependency.
 gl_EARLY
-# We expressly don't want to introduce OpenSSL dependency by default.
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
