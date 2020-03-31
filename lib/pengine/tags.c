@@ -14,12 +14,11 @@
 #include <crm/pengine/internal.h>
 #include <crm/pengine/pe_types.h>
 
-gchar **
+GListPtr
 pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
 {
     gpointer value;
-    GPtrArray *arr = NULL;
-    gchar **retval = NULL;
+    GListPtr retval = NULL;
 
     if (data_set->tags == NULL) {
         return retval;
@@ -41,39 +40,24 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
             continue;
         }
 
-        if (arr == NULL) {
-            arr = g_ptr_array_new();
-        }
-
         /* Get the uname for the node and add it to the return list. */
-        g_ptr_array_add(arr, g_strdup((gchar *) node->details->uname));
+        retval = g_list_append(retval, strdup(node->details->uname));
     }
 
-    if (arr == NULL) {
-        return NULL;
-    }
-
-    /* Convert the GPtrArray into a gchar **. */
-    retval = calloc(arr->len+1, sizeof(gchar *));
-    for (int i = 0; i < arr->len; i++) {
-        retval[i] = (gchar *) g_ptr_array_index(arr, i);
-    }
-
-    g_ptr_array_free(arr, FALSE);
     return retval;
 }
 
 bool
 pe__uname_has_tag(pe_working_set_t *data_set, const char *node_name, const char *tag_name)
 {
-    gchar **unames = pe__unames_with_tag(data_set, tag_name);
+    GListPtr unames = pe__unames_with_tag(data_set, tag_name);
     bool retval = false;
 
     if (unames == NULL) {
         return retval;
     }
 
-    retval = g_strv_contains((const gchar * const *) unames, node_name);
-    g_strfreev(unames);
+    retval = g_list_find_custom(unames, node_name, (GCompareFunc) strcmp) != NULL;
+    g_list_free_full(unames, free);
     return retval;
 }
