@@ -31,10 +31,18 @@ log_resource_details(pe_working_set_t *data_set)
     int rc = pcmk_rc_ok;
     pcmk__output_t *out = NULL;
     const char* argv[] = { "", NULL };
+    GListPtr unames = NULL;
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_LOG,
         { NULL, NULL, NULL }
     };
+
+    /* We need a list of nodes that we are allowed to output information for.
+     * This is necessary because out->message for all the resource-related
+     * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
+     * we just make it a list of all the nodes.
+     */
+    unames = g_list_append(unames, strdup("*"));
 
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
@@ -51,10 +59,12 @@ log_resource_details(pe_working_set_t *data_set)
         // Log all resources except inactive orphans
         if (is_not_set(rsc->flags, pe_rsc_orphan)
             || (rsc->role != RSC_ROLE_STOPPED)) {
-            out->message(out, crm_map_element_name(rsc->xml), 0, rsc);
+            out->message(out, crm_map_element_name(rsc->xml), 0, rsc, unames);
         }
     }
+
     pcmk__output_free(out);
+    g_list_free_full(unames, free);
 }
 
 /*!
