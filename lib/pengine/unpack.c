@@ -226,8 +226,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_debug("Concurrent fencing is %s",
               is_set(data_set->flags, pe_flag_concurrent_fencing) ? "enabled" : "disabled");
 
-    // Default value -1 means `priority-fencing-delay` is disabled
-    data_set->priority_fencing_delay = -1;
     value = pe_pref(data_set->config_hash,
                     XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
     if (value) {

@@ -123,20 +123,20 @@ pe_cluster_option pe_opts[] = {
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
     {
         XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
-        NULL, &check_timer,
-        "Enforced fencing delay targeting the lost nodes with the highest total resource priority",
-        "Enforce specified delay for the fencings that are targeting the lost "
+        "0", &check_timer,
+        "Apply fencing delay targeting the lost nodes with the highest total resource priority",
+        "Apply specified delay for the fencings that are targeting the lost "
             "nodes with the highest total resource priority in case we don't "
             "have the majority of the nodes in our cluster partition, so that "
             "the more significant nodes potentially win any fencing match, "
             "which is especially meaningful under split-brain of 2-node "
             "cluster. A promoted resource instance takes the base priority + 1 "
-            "on calculation if the base priority is not 0. If all the nodes "
-            "have equal priority, then any pcmk_delay_base/max configured for "
-            "the corresponding fencing resources will be applied. Otherwise as "
-            "long as it's set, even if to 0, it takes precedence over any "
-            "configured pcmk_delay_base/max. By default, priority fencing "
-            "delay is disabled."
+            "on calculation if the base priority is not 0. Any static/random "
+            "delays that are introduced by `pcmk_delay_base/max` configured "
+            "for the corresponding fencing resources will be added to this "
+            "delay. This delay should be significantly greater than, safely "
+            "twice, the maximum `pcmk_delay_base/max`. By default, priority "
+            "fencing delay is disabled."
     },
 
 	/* Timeouts etc */

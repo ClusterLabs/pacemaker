@@ -153,7 +153,7 @@ typedef struct pe_working_set_s {
     GList *param_check; // History entries that need to be checked
     GList *stop_needed; // Containers that need stop actions
     int ninstances;     // Total number of resource instances
-    int priority_fencing_delay; // Enforced priority fencing delay
+    int priority_fencing_delay; // Priority fencing delay
 } pe_working_set_t;
 
 enum pe_check_parameters {
