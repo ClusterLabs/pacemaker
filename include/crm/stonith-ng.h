@@ -393,7 +393,7 @@ typedef struct stonith_api_operations_s
                     char **error_output);
 
     /*!
-     * \brief Issue a fencing action against a node with enforced fencing delay.
+     * \brief Issue a fencing action against a node with requested fencing delay.
      *
      * \note Possible actions are, 'on', 'off', and 'reboot'.
      *
@@ -403,7 +403,8 @@ typedef struct stonith_api_operations_s
      * \param action, The fencing action to take
      * \param timeout, The default per device timeout to use with each device
      *                 capable of fencing the target.
-     * \param delay, Any enforced fencing delay. -1 to disable
+     * \param delay, Apply a fencing delay. Value -1 means disable also any
+     *               static/random fencing delays from pcmk_delay_base/max
      *
      * \retval 0 success
      * \retval negative error code on failure.

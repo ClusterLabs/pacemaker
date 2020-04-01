@@ -1080,10 +1080,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
-
-    if (delay >= 0) {
-        crm_xml_add_int(data, F_STONITH_DELAY, delay);
-    }
+    crm_xml_add_int(data, F_STONITH_DELAY, delay);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
@@ -1096,7 +1093,7 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
                   int timeout, int tolerance)
 {
     return stonith_api_fence_with_delay(stonith, call_options, node, action,
-                                        timeout, tolerance, -1);
+                                        timeout, tolerance, 0);
 }
 
 static int
