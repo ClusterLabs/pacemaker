@@ -177,8 +177,10 @@ static struct crm_option long_options[] = {
         "\t\t\tused with most commands)."
     },
     {   "delay", required_argument, NULL, 'y',
-        "Enforced fencing delay in seconds (default -1 (disabled);\n"
-        "\t\t\twith --fence, --reboot, --unfence)."
+        "Apply a fencing delay in seconds. Any static/random delays from\n"
+        "\t\t\tpcmk_delay_base/max will be added, otherwise all\n"
+        "\t\t\tdisabled with the value -1\n"
+        "\t\t\t(default 0; with --fence, --reboot, --unfence)."
     },
     {   "as-node-id", no_argument, NULL, 'n',
         "(Advanced) The supplied node is the corosync node ID\n"
@@ -501,7 +503,7 @@ main(int argc, char **argv)
     int verbose = 0;
     int argerr = 0;
     int timeout = 120;
-    int delay = -1;
+    int delay = 0;
     int option_index = 0;
     int fence_level = 0;
     int no_connect = 0;
