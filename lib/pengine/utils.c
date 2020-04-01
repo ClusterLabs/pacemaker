@@ -2748,3 +2748,16 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
     return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
                          data_set);
 }
+
+bool
+pe__rsc_running_on_any_node_in_list(GListPtr rsc_nodes, GListPtr node_list)
+{
+    for (GListPtr ele = rsc_nodes; ele; ele = ele->next) {
+        pe_node_t *node = (pe_node_t *) ele->data;
+        if (pcmk__str_in_list(node_list, node->details->uname)) {
+            return true;
+        }
+    }
+
+    return false;
+}
