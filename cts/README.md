@@ -152,7 +152,7 @@ setting the following environment variables on all cluster nodes:
 
 and running CTS with these options:
 
-    --valgrind-tests --valgrind-procs="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
+    --valgrind-tests --valgrind-procs "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable
