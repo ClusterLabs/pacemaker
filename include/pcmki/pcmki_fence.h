@@ -26,7 +26,8 @@
  * \param[in] tolerance If a successful action for \p target happened within
  *                      this many ms, return 0 without performing the action
  *                      again.
- * \param[in] delay     Enforce a fencing delay. Value -1 means disabled.
+ * \param[in] delay     Apply a fencing delay. Value -1 means disable also any
+ *                      static/random fencing delays from pcmk_delay_base/max
  *
  * \return Standard Pacemaker return code
  */

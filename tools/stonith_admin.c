@@ -71,7 +71,7 @@ struct {
     char *unregister_level;
 } options = {
     .timeout = 120,
-    .delay = -1
+    .delay = 0
 };
 
 gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -208,8 +208,10 @@ static GOptionEntry addl_entries[] = {
       INDENT "used with most commands).",
       "SECONDS" },
     { "delay", 'y', 0, G_OPTION_ARG_INT, &options.delay,
-      "Enforced fencing delay in seconds (default -1 (disabled);\n"
-      INDENT "with --fence, --reboot, --unfence).",
+      "Apply a fencing delay in seconds. Any static/random delays from\n"
+      INDENT "pcmk_delay_base/max will be added, otherwise all\n"
+      INDENT "disabled with the value -1\n"
+      INDENT "(default 0; with --fence, --reboot, --unfence).",
       "SECONDS" },
     { "as-node-id", 'n', 0, G_OPTION_ARG_NONE, &options.as_nodeid,
       "(Advanced) The supplied node is the corosync node ID\n"
