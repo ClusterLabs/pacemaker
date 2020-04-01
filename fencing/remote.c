@@ -835,7 +835,7 @@ stonith_topology_next(remote_fencing_op_t * op)
                   op->client_name, op->originator, op->id);
         set_op_device_list(op, tp->levels[op->level]);
 
-        // The enforced delay has been applied for the first fencing level
+        // The requested delay has been applied for the first fencing level
         if (op->level > 1 && op->delay > 0) {
             op->delay = 0;
         }
@@ -997,9 +997,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op = calloc(1, sizeof(remote_fencing_op_t));
 
     crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
-
-    // Default value -1 means no enforced fencing delay
-    op->delay = -1;
+    // Value -1 means disable any static/random fencing delays
     crm_element_value_int(request, F_STONITH_DELAY, &(op->delay));
 
     if (peer && dev) {
@@ -1450,7 +1448,7 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
         crm_trace("Next targeting %s on behalf of %s@%s (rc was %d)",
                   op->target, op->originator, op->client_name, rc);
 
-        // The enforced delay has been applied for the first device
+        // The requested delay has been applied for the first device
         if (op->delay > 0) {
             op->delay = 0;
         }
@@ -1509,10 +1507,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
-
-        if (op->delay >= 0) {
-            crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
-        }
+        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
 
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
