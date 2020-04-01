@@ -198,7 +198,7 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
 
     rc = stonith_api->cmds->fence_with_delay(stonith_api, options, target, type,
                                              (int) (transition_graph->stonith_timeout / 1000),
-                                             0, crm_atoi(priority_delay, "-1"));
+                                             0, crm_atoi(priority_delay, "0"));
 
     stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
                                          st_opt_timeout_updates,
