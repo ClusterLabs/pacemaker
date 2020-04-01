@@ -2352,17 +2352,17 @@ node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     // `priority-fencing-delay` is disabled
-    if (data_set->priority_fencing_delay < 0) {
-        return -1;
+    if (data_set->priority_fencing_delay <= 0) {
+        return 0;
     }
 
-    /* No need to delay fencing if the fencing target is not a normal cluster
+    /* No need to request a delay if the fencing target is not a normal cluster
      * member, for example if it's a remote node or a guest node. */
     if (node->details->type != node_member) {
         return 0;
     }
 
-    // No need to delay fencing if the fencing target is in our partition
+    // No need to request a delay if the fencing target is in our partition
     if (node->details->online) {
         return 0;
     }
@@ -2399,7 +2399,7 @@ node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
     /* All the nodes have equal priority.
      * Any configured corresponding `pcmk_delay_base/max` will be applied. */
     if (lowest_priority == top_priority) {
-        return -1;
+        return 0;
     }
 
     if (node->details->priority < top_priority) {
@@ -2482,7 +2482,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
         free(op_key);
     }
 
-    if (data_set->priority_fencing_delay >= 0
+    if (data_set->priority_fencing_delay > 0
 
             /* It's a suitable case where `priority-fencing-delay` applies.
              * At least add `priority-fencing-delay` field as an indicator. */
