@@ -21,16 +21,52 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
+#define SUMMARY "crm_simulate - simulate a Pacemaker cluster's response to events"
+
+/* show_scores and show_utilization can't be added to this struct.  They
+ * actually come from include/pcmki/pcmki_scheduler.h where they are
+ * defined as extern.
+ */
+struct {
+    gboolean all_actions;
+    char *dot_file;
+    char *graph_file;
+    gchar *input_file;
+    guint modified;
+    GListPtr node_up;
+    GListPtr node_down;
+    GListPtr node_fail;
+    GListPtr op_fail;
+    GListPtr op_inject;
+    gchar *output_file;
+    gboolean print_pending;
+    gboolean process;
+    char *quorum;
+    long long repeat;
+    gboolean simulate;
+    gboolean store;
+    gchar *test_dir;
+    GListPtr ticket_grant;
+    GListPtr ticket_revoke;
+    GListPtr ticket_standby;
+    GListPtr ticket_activate;
+    char *use_date;
+    char *watchdog;
+    char *xml_file;
+} options = {
+    .print_pending = TRUE,
+    .repeat = 1
+};
+
 cib_t *global_cib = NULL;
-GListPtr op_fail = NULL;
 bool action_numbers = FALSE;
 gboolean quiet = FALSE;
-gboolean print_pending = TRUE;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
 
@@ -40,10 +76,276 @@ extern gboolean bringing_nodes_online;
 	}					\
     } while(0)
 
-char *use_date = NULL;
+#define INDENT "                                   "
+
+static gboolean
+in_place_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.store = TRUE;
+    options.process = TRUE;
+    options.simulate = TRUE;
+    return TRUE;
+}
+
+static gboolean
+live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.xml_file) {
+        free(options.xml_file);
+    }
+
+    options.xml_file = NULL;
+    return TRUE;
+}
+
+static gboolean
+node_down_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.node_down = g_list_append(options.node_down, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.node_fail = g_list_append(options.node_fail, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    bringing_nodes_online = TRUE;
+    options.node_up = g_list_append(options.node_up, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+op_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.process = TRUE;
+    options.simulate = TRUE;
+    options.op_fail = g_list_append(options.op_fail, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+op_inject_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.op_inject = g_list_append(options.op_inject, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.quorum) {
+        free(options.quorum);
+    }
+
+    options.modified++;
+    options.quorum = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
+save_dotfile_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.dot_file) {
+        free(options.dot_file);
+    }
+
+    options.process = TRUE;
+    options.dot_file = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
+save_graph_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.graph_file) {
+        free(options.graph_file);
+    }
+
+    options.process = TRUE;
+    options.graph_file = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
+show_scores_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.process = TRUE;
+    show_scores = TRUE;
+    return TRUE;
+}
+
+static gboolean
+simulate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.process = TRUE;
+    options.simulate = TRUE;
+    return TRUE;
+}
+
+static gboolean
+ticket_activate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.ticket_activate = g_list_append(options.ticket_activate, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+ticket_grant_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.ticket_grant = g_list_append(options.ticket_grant, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+ticket_revoke_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.ticket_revoke = g_list_append(options.ticket_revoke, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.modified++;
+    options.ticket_standby = g_list_append(options.ticket_standby, (gchar *) g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.process = TRUE;
+    show_utilization = TRUE;
+    return TRUE;
+}
+
+static gboolean
+watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.watchdog) {
+        free(options.watchdog);
+    }
+
+    options.modified++;
+    options.watchdog = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
+xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.xml_file) {
+        free(options.xml_file);
+    }
+
+    options.xml_file = strdup("-");
+    return TRUE;
+}
+
+static GOptionEntry operation_entries[] = {
+    { "run", 'R', 0, G_OPTION_ARG_NONE, &options.process,
+      "Determine cluster's response to the given configuration and status",
+      NULL },
+    { "simulate", 'S', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, simulate_cb,
+      "Simulate transition's execution and display resulting cluster status",
+      NULL },
+    { "in-place", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, in_place_cb,
+      "Simulate transition's execution and store result back to input file",
+      NULL },
+    { "show-scores", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_scores_cb,
+      "Show allocation scores",
+      NULL },
+    { "show-utilization", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
+      "Show utilization information",
+      NULL },
+    { "profile", 'P', 0, G_OPTION_ARG_FILENAME, &options.test_dir,
+      "Run all tests in the named directory to create profiling data",
+      NULL },
+    { "repeat", 'N', 0, G_OPTION_ARG_INT, &options.repeat,
+      "With --profile, repeat each test N times and print timings",
+      "N" },
+    { "pending", 'j', 0, G_OPTION_ARG_NONE, &options.print_pending,
+      "Display pending state if 'record-pending' is enabled",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry synthetic_entries[] = {
+    { "node-up", 'u', 0, G_OPTION_ARG_CALLBACK, node_up_cb,
+      "Bring a node online",
+      "NODE" },
+    { "node-down", 'd', 0, G_OPTION_ARG_CALLBACK, node_down_cb,
+      "Take a node offline",
+      "NODE" },
+    { "node-fail", 'f', 0, G_OPTION_ARG_CALLBACK, node_fail_cb,
+      "Mark a node as failed",
+      "NODE" },
+    { "op-inject", 'i', 0, G_OPTION_ARG_CALLBACK, op_inject_cb,
+      "Generate a failure for the cluster to react to in the simulation.\n"
+      INDENT "See `Operation Specification` help for more information.",
+      "OPSPEC" },
+    { "op-fail", 'F', 0, G_OPTION_ARG_CALLBACK, op_fail_cb,
+      "If the specified task occurs during the simulation, have it fail with return code ${rc}.\n"
+      INDENT "The transition will normally stop at the failed action.\n"
+      INDENT "Save the result with --save-output and re-run with --xml-file.\n"
+      INDENT "See `Operation Specification` help for more information.",
+      "OPSPEC" },
+    { "set-datetime", 't', 0, G_OPTION_ARG_STRING, &options.use_date,
+      "Set date/time (ISO 8601 format, see https://en.wikipedia.org/wiki/ISO_8601)",
+      "DATETIME" },
+    { "quorum", 'q', 0, G_OPTION_ARG_CALLBACK, quorum_cb,
+      "Specify a value for quorum",
+      "QUORUM" },
+    { "watchdog", 'w', 0, G_OPTION_ARG_CALLBACK, watchdog_cb,
+      "Assume a watchdog device is active",
+      "DEVICE" },
+    { "ticket-grant", 'g', 0, G_OPTION_ARG_CALLBACK, ticket_grant_cb,
+      "Grant a ticket",
+      "TICKET" },
+    { "ticket-revoke", 'r', 0, G_OPTION_ARG_CALLBACK, ticket_revoke_cb,
+      "Revoke a ticket",
+      "TICKET" },
+    { "ticket-standby", 'b', 0, G_OPTION_ARG_CALLBACK, ticket_standby_cb,
+      "Make a ticket standby",
+      "TICKET" },
+    { "ticket-activate", 'e', 0, G_OPTION_ARG_CALLBACK, ticket_activate_cb,
+      "Activate a ticket",
+      "TICKET" },
+
+    { NULL }
+};
+
+static GOptionEntry output_entries[] = {
+    { "save-input", 'I', 0, G_OPTION_ARG_FILENAME, &options.input_file,
+      "Save the input configuration to the named file",
+      "FILE" },
+    { "save-output", 'O', 0, G_OPTION_ARG_FILENAME, &options.output_file,
+      "Save the output configuration to the named file",
+      "FILE" },
+    { "save-graph", 'G', 0, G_OPTION_ARG_CALLBACK, save_graph_cb,
+      "Save the transition graph (XML format) to the named file",
+      "FILE" },
+    { "save-dotfile", 'D', 0, G_OPTION_ARG_CALLBACK, save_dotfile_cb,
+      "Save the transition graph (DOT format) to the named file",
+      "FILE" },
+    { "all-actions", 'a', 0, G_OPTION_ARG_NONE, &options.all_actions,
+      "Display all possible actions in DOT graph (even if not part of transition)",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry source_entries[] = {
+    { "live-check", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, live_check_cb,
+      "Connect to CIB mamager and use the current CIB contents as input",
+      NULL },
+    { "xml-file", 'x', 0, G_OPTION_ARG_FILENAME, &options.xml_file,
+      "Retrieve XML from the named file",
+      "FILE" },
+    { "xml-pipe", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, xml_pipe_cb,
+      "Retrieve XML from stdin",
+      NULL },
+
+    { NULL }
+};
 
 static void
-get_date(pe_working_set_t *data_set, bool print_original)
+get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 {
     time_t original_date = 0;
 
@@ -275,15 +577,18 @@ create_action_name(pe_action_t *action)
     return action_name;
 }
 
-static void
-create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions)
+static bool
+create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions,
+               GError **error)
 {
     GListPtr gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for writing", dot_file);
-        return;
+        g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(errno),
+                    "Could not open %s for writing: %s", dot_file,
+                    pcmk_rc_str(errno));
+        return false;
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
@@ -375,12 +680,13 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     fprintf(dot_strm, "}\n");
     fflush(dot_strm);
     fclose(dot_strm);
+    return true;
 }
 
-static void
-setup_input(const char *input, const char *output)
+static int
+setup_input(const char *input, const char *output, GError **error)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
     char *local_output = NULL;
@@ -389,8 +695,9 @@ setup_input(const char *input, const char *output)
         /* Use live CIB */
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_scope_local | cib_sync_call);
         }
 
@@ -398,13 +705,16 @@ setup_input(const char *input, const char *output)
         cib_delete(cib_conn);
         cib_conn = NULL;
 
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Live CIB query failed: %s (%d)\n", pcmk_strerror(rc), rc);
-            crm_exit(crm_errno2exit(rc));
+        if (rc != pcmk_rc_ok) {
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Live CIB query failed: %s (%d)", pcmk_rc_str(rc), rc);
+            return rc;
 
         } else if (cib_object == NULL) {
-            fprintf(stderr, "Live CIB query failed: empty result\n");
-            crm_exit(CRM_EX_NOINPUT);
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_NOINPUT,
+                        "Live CIB query failed: empty result");
+            return pcmk_rc_no_input;
         }
 
     } else if (safe_str_eq(input, "-")) {
@@ -420,12 +730,12 @@ setup_input(const char *input, const char *output)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        crm_exit(CRM_EX_CONFIG);
+        return pcmk_rc_transform_failed;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        crm_exit(CRM_EX_CONFIG);
+        return pcmk_rc_schema_validation;
     }
 
     if (output == NULL) {
@@ -442,246 +752,19 @@ setup_input(const char *input, const char *output)
     cib_object = NULL;
 
     if (rc < 0) {
-        fprintf(stderr, "Could not create '%s': %s\n",
-                output, pcmk_strerror(rc));
-        crm_exit(CRM_EX_CANTCREAT);
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(error, G_OPTION_ERROR, CRM_EX_CANTCREAT,
+                    "Could not create '%s': %s", output, pcmk_rc_str(rc));
+        return rc;
+    } else {
+        setenv("CIB_file", output, 1);
+        free(local_output);
+        return pcmk_rc_ok;
     }
-    setenv("CIB_file", output, 1);
-    free(local_output);
 }
 
-
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "quiet", no_argument, NULL, 'Q',
-        "\tDisplay only essential output", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nOperations:", pcmk__option_default
-    },
-    {
-        "run", no_argument, NULL, 'R',
-        "\tDetermine cluster's response to the given configuration and status",
-        pcmk__option_default
-    },
-    {
-        "simulate", no_argument, NULL, 'S',
-        "Simulate transition's execution and display resulting cluster status",
-        pcmk__option_default
-    },
-    {
-        "in-place", no_argument, NULL, 'X',
-        "Simulate transition's execution and store result back to input file",
-        pcmk__option_default
-    },
-    {
-        "show-scores", no_argument, NULL, 's',
-        "Show allocation scores", pcmk__option_default
-    },
-    {
-        "show-utilization", no_argument, NULL, 'U',
-        "Show utilization information", pcmk__option_default
-    },
-    {
-        "profile", required_argument, NULL, 'P',
-        "Run all tests in the named directory to create profiling data",
-        pcmk__option_default
-    },
-    {
-        "repeat", required_argument, NULL, 'N',
-        "With --profile, repeat each test N times and print timings",
-        pcmk__option_default
-    },
-    {
-        "pending", no_argument, NULL, 'j',
-        "\tDisplay pending state if 'record-pending' is enabled",
-        pcmk__option_hidden
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nSynthetic Cluster Events:", pcmk__option_default
-    },
-    {
-        "node-up", required_argument, NULL, 'u',
-        "\tBring a node online", pcmk__option_default
-    },
-    {
-        "node-down", required_argument, NULL, 'd',
-        "\tTake a node offline", pcmk__option_default
-    },
-    {
-        "node-fail", required_argument, NULL, 'f',
-        "\tMark a node as failed", pcmk__option_default
-    },
-    {
-        "op-inject", required_argument, NULL, 'i',
-        "\tGenerate a failure for the cluster to react to in the simulation",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\tValue is of the form "
-            "${resource}_${task}_${interval_in_ms}@${node}=${rc}.",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\t(for example, memcached_monitor_20000@bart.example.com=7)",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\tFor more information on OCF return codes, refer to: "
-            "https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/"
-            "2.0/html/Pacemaker_Administration/s-ocf-return-codes.html",
-        pcmk__option_default
-    },
-    {
-        "op-fail", required_argument, NULL, 'F',
-        "\tIf the specified task occurs during the simulation, have it fail "
-            "with return code ${rc}",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\tValue is of the form "
-            "${resource}_${task}_${interval_in_ms}@${node}=${rc}.",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\t(for example, memcached_stop_0@bart.example.com=1)\n",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\tThe transition will normally stop at the failed action. Save "
-            "the result with --save-output and re-run with --xml-file",
-        pcmk__option_default
-    },
-    {   "set-datetime", required_argument, NULL, 't',
-        "Set date/time (ISO 8601 format, see "
-            "https://en.wikipedia.org/wiki/ISO_8601)",
-        pcmk__option_default
-    },
-    {
-        "quorum", required_argument, NULL, 'q',
-        "\tSpecify a value for quorum", pcmk__option_default
-    },
-    {
-        "watchdog", required_argument, NULL, 'w',
-        "\tAssume a watchdog device is active", pcmk__option_default
-    },
-    {
-        "ticket-grant", required_argument, NULL, 'g',
-        "Grant a ticket", pcmk__option_default
-    },
-    {
-        "ticket-revoke", required_argument, NULL, 'r',
-        "Revoke a ticket", pcmk__option_default
-    },
-    {
-        "ticket-standby", required_argument, NULL, 'b',
-        "Make a ticket standby", pcmk__option_default
-    },
-    {
-        "ticket-activate", required_argument, NULL, 'e',
-        "Activate a ticket", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nOutput Options:", pcmk__option_default
-    },
-    {
-        "save-input", required_argument, NULL, 'I',
-        "\tSave the input configuration to the named file", pcmk__option_default
-    },
-    {
-        "save-output", required_argument, NULL, 'O',
-        "Save the output configuration to the named file", pcmk__option_default
-    },
-    {
-        "save-graph", required_argument, NULL, 'G',
-        "\tSave the transition graph (XML format) to the named file",
-        pcmk__option_default
-    },
-    {
-        "save-dotfile", required_argument, NULL, 'D',
-        "Save the transition graph (DOT format) to the named file",
-        pcmk__option_default
-    },
-    {
-        "all-actions", no_argument, NULL, 'a',
-        "\tDisplay all possible actions in DOT graph (even if not part "
-            "of transition)",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nData Source:", pcmk__option_default
-    },
-    {
-        "live-check", no_argument, NULL, 'L',
-        "\tConnect to CIB mamager and use the current CIB contents as input",
-        pcmk__option_default
-    },
-    {
-        "xml-file", required_argument, NULL, 'x',
-        "\tRetrieve XML from the named file", pcmk__option_default
-    },
-    {
-        "xml-pipe", no_argument, NULL, 'p',
-        "\tRetrieve XML from stdin", pcmk__option_default
-    },
-
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nExamples:\n", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Pretend a recurring monitor action found memcached stopped on node "
-            "fred.example.com and, during recovery, that the memcached stop "
-            "action failed",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_simulate -LS --op-inject "
-            "memcached:0_monitor_20000@bart.example.com=7 "
-            "--op-fail memcached:0_stop_0@fred.example.com=1 "
-            "--save-output /tmp/memcached-test.xml",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Now see what the reaction to the stop failure would be",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_simulate -S --xml-file /tmp/memcached-test.xml",
-        pcmk__option_example
-    },
-    { 0, 0, 0, 0 }
-};
-
 static void
-profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
+profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
     xmlNode *cib_object = NULL;
     clock_t start = 0;
@@ -711,7 +794,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
         xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
 
         data_set->input = input;
-        get_date(data_set, false);
+        get_date(data_set, false, use_date);
         pcmk__schedule_actions(data_set, input, NULL);
         pe_reset_working_set(data_set);
     }
@@ -723,7 +806,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set)
 #endif
 
 static void
-profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
+profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
     struct dirent **namelist;
 
@@ -745,7 +828,7 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
             }
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_one(buffer, repeat, data_set);
+                profile_one(buffer, repeat, data_set, use_date);
             }
             free(namelist[file_num]);
         }
@@ -753,244 +836,150 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set)
     }
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
+    GOptionContext *context = NULL;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Display only essential output",
+          NULL },
+
+        { NULL }
+    };
+
+    const char *description = "Operation Specification:\n\n"
+                              "The OPSPEC in any command line option is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc} "
+                              "memcached_monitor_20000@bart.example.com=7, for example).  ${rc} is an OCF return code.  For more "
+                              "information on these return codes, refer to "
+                              "https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html\n\n"
+                              "Examples:\n\n"
+                              "Pretend a recurring monitor action found memcached stopped on node "
+                              "fred.example.com and, during recovery, that the memcached stop "
+                              "action failed:\n\n"
+                              "\tcrm_simulate -LS --op-inject memcached:0_monitor_20000@bart.example.com=7 "
+                              "--op-fail memcached:0_stop_0@fred.example.com=1 --save-output /tmp/memcached-test.xml\n\n"
+                              "Now see what the reaction to the stop failed would be:\n\n"
+                              "\tcrm_simulate -S --xml-file /tmp/memcached-test.xml\n\n";
+
+    context = pcmk__build_arg_context(args, NULL, group);
+    pcmk__add_main_args(context, extra_prog_entries);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "operations", "Operations:",
+                        "Show operations options", operation_entries);
+    pcmk__add_arg_group(context, "synthetic", "Synthetic Cluster Events:",
+                        "Show synthetic cluster event options", synthetic_entries);
+    pcmk__add_arg_group(context, "output", "Output Options:",
+                        "Show output options", output_entries);
+    pcmk__add_arg_group(context, "source", "Data Source:",
+                        "Show data source options", source_entries);
+
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
-    guint modified = 0;
+    GError *error = NULL;
+    GOptionGroup *output_group = NULL;
+    gchar **processed_args = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
-    gboolean store = FALSE;
-    gboolean process = FALSE;
-    gboolean simulate = FALSE;
-    gboolean all_actions = FALSE;
-    gboolean have_stdout = FALSE;
-
+    int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
-
-    const char *xml_file = "-";
-    const char *quorum = NULL;
-    const char *watchdog = NULL;
-    const char *test_dir = NULL;
-    const char *dot_file = NULL;
-    const char *graph_file = NULL;
-    const char *input_file = NULL;
-    const char *output_file = NULL;
-    const char *repeat_s = NULL;
-
-    int flag = 0;
-    int index = 0;
-    int argerr = 0;
-    long long repeat = 1;
-
-    GListPtr node_up = NULL;
-    GListPtr node_down = NULL;
-    GListPtr node_fail = NULL;
-    GListPtr op_inject = NULL;
-    GListPtr ticket_grant = NULL;
-    GListPtr ticket_revoke = NULL;
-    GListPtr ticket_standby = NULL;
-    GListPtr ticket_activate = NULL;
 
     xmlNode *input = NULL;
 
-    crm_log_cli_init("crm_simulate");
-    pcmk__set_cli_options(NULL, "<data source> <operation> [options]",
-                          long_options,
-                          "simulate a Pacemaker cluster's response to events");
+    options.xml_file = strdup("-");
 
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    crm_log_cli_init("crm_simulate");
+
+    processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINO");
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        goto done;
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
+    }
 
-        switch (flag) {
-            case 'V':
-                if (have_stdout == FALSE) {
-                    /* Redirect stderr to stdout so we can grep the output */
-                    have_stdout = TRUE;
-                    close(STDERR_FILENO);
-                    dup2(STDOUT_FILENO, STDERR_FILENO);
-                }
-
-                crm_bump_log_level(argc, argv);
-                action_numbers = TRUE;
-                break;
-            case '?':
-            case '$':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'p':
-                xml_file = "-";
-                break;
-            case 'Q':
-                quiet = TRUE;
-                break;
-            case 'L':
-                xml_file = NULL;
-                break;
-            case 'x':
-                xml_file = optarg;
-                break;
-            case 'u':
-                modified++;
-                bringing_nodes_online = TRUE;
-                node_up = g_list_append(node_up, optarg);
-                break;
-            case 'd':
-                modified++;
-                node_down = g_list_append(node_down, optarg);
-                break;
-            case 'f':
-                modified++;
-                node_fail = g_list_append(node_fail, optarg);
-                break;
-            case 't':
-                use_date = strdup(optarg);
-                break;
-            case 'i':
-                modified++;
-                op_inject = g_list_append(op_inject, optarg);
-                break;
-            case 'F':
-                process = TRUE;
-                simulate = TRUE;
-                op_fail = g_list_append(op_fail, optarg);
-                break;
-            case 'w':
-                modified++;
-                watchdog = optarg;
-                break;
-            case 'q':
-                modified++;
-                quorum = optarg;
-                break;
-            case 'g':
-                modified++;
-                ticket_grant = g_list_append(ticket_grant, optarg);
-                break;
-            case 'r':
-                modified++;
-                ticket_revoke = g_list_append(ticket_revoke, optarg);
-                break;
-            case 'b':
-                modified++;
-                ticket_standby = g_list_append(ticket_standby, optarg);
-                break;
-            case 'e':
-                modified++;
-                ticket_activate = g_list_append(ticket_activate, optarg);
-                break;
-            case 'a':
-                all_actions = TRUE;
-                break;
-            case 's':
-                process = TRUE;
-                show_scores = TRUE;
-                break;
-            case 'U':
-                process = TRUE;
-                show_utilization = TRUE;
-                break;
-            case 'j':
-                print_pending = TRUE;
-                break;
-            case 'S':
-                process = TRUE;
-                simulate = TRUE;
-                break;
-            case 'X':
-                store = TRUE;
-                process = TRUE;
-                simulate = TRUE;
-                break;
-            case 'R':
-                process = TRUE;
-                break;
-            case 'D':
-                process = TRUE;
-                dot_file = optarg;
-                break;
-            case 'G':
-                process = TRUE;
-                graph_file = optarg;
-                break;
-            case 'I':
-                input_file = optarg;
-                break;
-            case 'O':
-                output_file = optarg;
-                break;
-            case 'P':
-                test_dir = optarg;
-                break;
-            case 'N':
-                repeat_s = optarg;
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    if (args->version) {
+        /* FIXME:  When crm_simulate is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+        goto done;
     }
 
     if (optind > argc) {
-        ++argerr;
+        gchar *help = g_option_context_get_help(context, TRUE, NULL);
+        fprintf(stderr, "%s", help);
+        g_free(help);
+        goto done;
     }
 
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (args->verbosity > 0) {
+        /* Redirect stderr to stdout so we can grep the output */
+        close(STDERR_FILENO);
+        dup2(STDOUT_FILENO, STDERR_FILENO);
+
+        crm_bump_log_level(argc, argv);
+        action_numbers = TRUE;
+    }
+
+    if (args->quiet) {
+        quiet = TRUE;
     }
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_ERR, "Could not allocate working set");
-        rc = -ENOMEM;
+        rc = ENOMEM;
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not allocate working set");
         goto done;
     }
     set_bit(data_set->flags, pe_flag_no_compat);
 
-    if (test_dir != NULL) {
-        if (repeat_s != NULL) {
-            repeat = crm_parse_ll(repeat_s, NULL);
-            if (errno || (repeat < 1)) {
-                fprintf(stderr, "--repeat must be positive integer, not '%s' -- using 1",
-                        repeat_s);
-                repeat = 1;
-            }
-        }
-        profile_all(test_dir, repeat, data_set);
-        return CRM_EX_OK;
+    if (options.test_dir != NULL) {
+        profile_all(options.test_dir, options.repeat, data_set, options.use_date);
+        rc = pcmk_rc_ok;
+        goto done;
     }
 
-    setup_input(xml_file, store ? xml_file : output_file);
+    rc = setup_input(options.xml_file, options.store ? options.xml_file : options.output_file, &error);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
 
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not get local CIB: %s\n", pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                    "Could not get local CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     data_set->input = input;
-    get_date(data_set, true);
-    if(xml_file) {
+    get_date(data_set, true, options.use_date);
+    if(options.xml_file) {
         set_bit(data_set->flags, pe_flag_sanitized);
     }
     set_bit(data_set->flags, pe_flag_stdout);
     cluster_status(data_set);
 
     if (quiet == FALSE) {
-        int options = print_pending ? pe_print_pending : 0;
+        int opts = options.print_pending ? pe_print_pending : 0;
 
         if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
@@ -1006,41 +995,46 @@ main(int argc, char **argv)
         }
 
         quiet_log("\nCurrent cluster status:\n");
-        print_cluster_status(data_set, options);
+        print_cluster_status(data_set, opts);
     }
 
-    if (modified) {
+    if (options.modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
-                             ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
+        modify_configuration(data_set, global_cib, options.quorum, options.watchdog, options.node_up,
+                             options.node_down, options.node_fail, options.op_inject,
+                             options.ticket_grant, options.ticket_revoke, options.ticket_standby,
+                             options.ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not get modified CIB: %s\n", pcmk_strerror(rc));
+        if (rc != pcmk_rc_ok) {
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Could not get modified CIB: %s", pcmk_rc_str(rc));
             goto done;
         }
 
         cleanup_calculations(data_set);
         data_set->input = input;
-        get_date(data_set, true);
+        get_date(data_set, true, options.use_date);
 
-        if(xml_file) {
+        if(options.xml_file) {
             set_bit(data_set->flags, pe_flag_sanitized);
         }
         set_bit(data_set->flags, pe_flag_stdout);
         cluster_status(data_set);
     }
 
-    if (input_file != NULL) {
-        rc = write_xml_file(input, input_file, FALSE);
+    if (options.input_file != NULL) {
+        rc = write_xml_file(input, options.input_file, FALSE);
         if (rc < 0) {
-            fprintf(stderr, "Could not create '%s': %s\n",
-                    input_file, pcmk_strerror(rc));
+            rc = pcmk_legacy2rc(rc);
+            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+                        "Could not create '%s': %s", options.input_file, pcmk_rc_str(rc));
             goto done;
         }
     }
 
-    if (process || simulate) {
+    if (options.process || options.simulate) {
         crm_time_t *local_date = NULL;
 
         if (show_scores && show_utilization) {
@@ -1054,19 +1048,21 @@ main(int argc, char **argv)
         pcmk__schedule_actions(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
-        if (graph_file != NULL) {
-            write_xml_file(data_set->graph, graph_file, FALSE);
+        if (options.graph_file != NULL) {
+            write_xml_file(data_set->graph, options.graph_file, FALSE);
         }
 
-        if (dot_file != NULL) {
-            create_dotfile(data_set, dot_file, all_actions);
+        if (options.dot_file != NULL) {
+            if (!create_dotfile(data_set, options.dot_file, options.all_actions, &error)) {
+                goto done;
+            }
         }
 
         if (quiet == FALSE) {
             GListPtr gIter = NULL;
 
             quiet_log("%sTransition Summary:\n", show_scores || show_utilization
-                      || modified ? "\n" : "");
+                      || options.modified ? "\n" : "");
             fflush(stdout);
 
             LogNodeActions(data_set, TRUE);
@@ -1078,14 +1074,14 @@ main(int argc, char **argv)
         }
     }
 
-    rc = pcmk_ok;
+    rc = pcmk_rc_ok;
 
-    if (simulate) {
-        if (run_simulation(data_set, global_cib, op_fail, quiet) != pcmk_ok) {
-            rc = pcmk_err_generic;
+    if (options.simulate) {
+        if (run_simulation(data_set, global_cib, options.op_fail, quiet) != pcmk_rc_ok) {
+            rc = pcmk_rc_error;
         }
         if(quiet == FALSE) {
-            get_date(data_set, true);
+            get_date(data_set, true, options.use_date);
 
             quiet_log("\nRevised cluster status:\n");
             set_bit(data_set->flags, pe_flag_stdout);
@@ -1095,15 +1091,48 @@ main(int argc, char **argv)
     }
 
   done:
-    pe_free_working_set(data_set);
-    global_cib->cmds->signoff(global_cib);
-    cib_delete(global_cib);
-    free(use_date);
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error->message);
+        g_clear_error(&error);
+    }
+
+    /* There sure is a lot to free in options. */
+    free(options.dot_file);
+    free(options.graph_file);
+    g_free(options.input_file);
+    g_list_free_full(options.node_up, g_free);
+    g_list_free_full(options.node_down, g_free);
+    g_list_free_full(options.node_fail, g_free);
+    g_list_free_full(options.op_fail, g_free);
+    g_list_free_full(options.op_inject, g_free);
+    g_free(options.output_file);
+    free(options.quorum);
+    g_free(options.test_dir);
+    g_list_free_full(options.ticket_grant, g_free);
+    g_list_free_full(options.ticket_revoke, g_free);
+    g_list_free_full(options.ticket_standby, g_free);
+    g_list_free_full(options.ticket_activate, g_free);
+    free(options.use_date);
+    free(options.watchdog);
+    free(options.xml_file);
+
+    pcmk__free_arg_context(context);
+    g_strfreev(processed_args);
+
+    if (data_set) {
+        pe_free_working_set(data_set);
+    }
+
+    if (global_cib) {
+        global_cib->cmds->signoff(global_cib);
+        cib_delete(global_cib);
+    }
+
     fflush(stderr);
 
     if (temp_shadow) {
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    crm_exit(crm_errno2exit(rc));
+    crm_exit(pcmk_rc2exitc(rc));
 }
