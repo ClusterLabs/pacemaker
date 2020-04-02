@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the Pacemaker project contributors
+ * Copyright 2018-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,17 @@
 
 /* This header is for the sole use of libcrmcommon, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
+ */
+
+#include <stdint.h>         // uint8_t, uint32_t
+#include <stdbool.h>        // bool
+#include <sys/types.h>      // size_t
+#include <glib.h>           // GList
+#include <libxml/tree.h>    // xmlNode, xmlAttr
+#include <qb/qbipcc.h>      // struct qb_ipc_response_header
+
+/*
+ * XML and ACLs
  */
 
 enum xml_private_flags {
@@ -40,8 +51,8 @@ typedef struct xml_private_s {
         long check;
         uint32_t flags;
         char *user;
-        GListPtr acls;
-        GListPtr deleted_objs;
+        GList *acls;
+        GList *deleted_objs;
 } xml_private_t;
 
 G_GNUC_INTERNAL
@@ -85,5 +96,25 @@ pcmk__xml_attr_value(const xmlAttr *attr)
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
 }
+
+/*
+ * IPC
+ */
+
+#define PCMK__IPC_VERSION 1
+
+typedef struct pcmk__ipc_header_s {
+    struct qb_ipc_response_header qb;
+    uint32_t size_uncompressed;
+    uint32_t size_compressed;
+    uint32_t flags;
+    uint8_t version;
+} pcmk__ipc_header_t;
+
+G_GNUC_INTERNAL
+unsigned int pcmk__ipc_buffer_size(unsigned int max);
+
+G_GNUC_INTERNAL
+bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
 
 #endif  // CRMCOMMON_PRIVATE__H

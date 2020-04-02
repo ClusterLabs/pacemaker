@@ -24,16 +24,29 @@ extern "C" {
 #include <qb/qbipcc.h>
 #include <crm/common/xml.h>
 
-/* clplumbing based IPC */
+/*
+ * Message creation utilities
+ *
+ * These are used for both IPC messages and cluster layer messages. However,
+ * since this is public API, they stay in this header for backward
+ * compatibility.
+ */
 
-#  define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
-xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data, const char *origin);
+#define create_reply(request, xml_response_data)    \
+    create_reply_adv(request, xml_response_data, __FUNCTION__)
 
-#  define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, __FUNCTION__)
+xmlNode *create_reply_adv(xmlNode *request, xmlNode *xml_response_data,
+                          const char *origin);
 
-xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *host_to,
-                            const char *sys_to, const char *sys_from, const char *uuid_from,
+#define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
+    create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
+                       __FUNCTION__)
+
+xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
+                            const char *host_to, const char *sys_to,
+                            const char *sys_from, const char *uuid_from,
                             const char *origin);
+
 
 /* *INDENT-OFF* */
 enum crm_ipc_flags

@@ -85,6 +85,11 @@ extern "C" {
 int pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
                                           gid_t refgid, pid_t *gotpid);
 
+
+/*
+ * Server-related
+ */
+
 typedef struct pcmk__client_s pcmk__client_t;
 
 enum pcmk__client_type {
