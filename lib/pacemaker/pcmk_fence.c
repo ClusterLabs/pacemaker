@@ -190,6 +190,12 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
                            safe_str_eq(target, "*") ? NULL : target,
                            &history, timeout/1000);
 
+    if (cleanup) {
+        // Cleanup doesn't return a history list
+        stonith_history_free(history);
+        return pcmk_legacy2rc(rc);
+    }
+
     out->begin_list(out, "event", "events", "Fencing history");
 
     history = stonith__sort_history(history);

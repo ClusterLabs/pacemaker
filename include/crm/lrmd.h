@@ -294,13 +294,10 @@ typedef struct lrmd_api_operations_s {
 
     /*!
      * \brief Initiate an executor connection without blocking
-     * \note this function requires the use of mainloop.
      *
-     * \note The is returned using the event callback.
-     * \note When this function returns 0, the callback will be invoked
-     *       to report the final result of the connect.
-     * \retval 0, connect in progress, wait for event callback
-     * \retval -1, failure.
+     * \return 0 on success (in which case the event callback will be called
+     *         later with the connection result), -1 otherwise
+     * \note This function requires a mainloop.
      */
     int (*connect_async) (lrmd_t * lrmd, const char *client_name, int timeout /*ms */ );
 

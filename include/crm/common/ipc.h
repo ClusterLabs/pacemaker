@@ -102,7 +102,7 @@ unsigned int crm_ipc_default_buffer_size(void);
  *
  * \note While this function is tolerant on what constitutes authorized
  *       IPC daemon process (its effective user matches UID=0 or \p refuid,
- *       or at least its group matches \p refroup), either or both (in case
+ *       or at least its group matches \p refgid), either or both (in case
  *       of UID=0) mismatches on the expected credentials of such peer
  *       process \e shall be investigated at the caller when value of 1
  *       gets returned there, since higher-than-expected privileges in

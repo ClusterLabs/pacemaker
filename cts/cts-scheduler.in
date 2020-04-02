@@ -193,6 +193,8 @@ TESTS = [
         [ "anti-colocation-slave", "Organize order of actions for slave resources in anti-colocations" ],
         [ "enforce-colo1", "Always enforce B with A INFINITY" ],
         [ "complex_enforce_colo", "Always enforce B with A INFINITY. (make sure heat-engine stops)" ],
+        [ "coloc-dependee-should-stay", "Stickiness outweighs group colocation" ],
+        [ "coloc-dependee-should-move", "Group colocation outweighs stickiness" ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],

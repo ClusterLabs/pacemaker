@@ -28,6 +28,8 @@ EXTRA_CLEAN_TARGETS	= ancillary-clean
 abs_srcdir	?= $(shell pwd)
 abs_builddir	?= $(shell pwd)
 
+GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
+
 PACKAGE		?= pacemaker
 
 
@@ -393,6 +395,7 @@ CPPCHECK_ARGS ?=
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=30	\
 		--library=posix --library=gnu --library=gtk	\
+		$(GLIB_CFLAGS) -D__GNUC__			\
 		--inline-suppr -q replace lib daemons tools
 
 clang:

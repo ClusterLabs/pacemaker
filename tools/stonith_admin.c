@@ -531,6 +531,7 @@ main(int argc, char **argv)
             if (rc != pcmk_rc_ok) {
                 rc = st->cmds->list(st, st_opts, device, NULL, options.timeout);
             }
+            rc = pcmk_legacy2rc(rc);
             break;
 
         case 's':
@@ -544,10 +545,12 @@ main(int argc, char **argv)
         case 'R':
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
                                            options.params);
+            rc = pcmk_legacy2rc(rc);
             break;
 
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
+            rc = pcmk_legacy2rc(rc);
             break;
 
         case 'd':
@@ -568,6 +571,7 @@ main(int argc, char **argv)
 
         case 'C':
             rc = st->cmds->confirm(st, st_opts, target);
+            rc = pcmk_legacy2rc(rc);
             break;
 
         case 'B':
@@ -601,8 +605,8 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-    exit_code = crm_errno2exit(rc);
+    crm_info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
+    exit_code = pcmk_rc2exitc(rc);
 
   done:
     g_strfreev(processed_args);
