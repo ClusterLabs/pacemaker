@@ -176,7 +176,7 @@ struct pe_working_set_s {
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
     int ninstances;     // Total number of resource instances
     guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
-    int priority_fencing_delay; // Enforced priority fencing delay
+    int priority_fencing_delay; // Priority fencing delay
 };
 
 enum pe_check_parameters {
