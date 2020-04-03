@@ -16,7 +16,8 @@ extern "C" {
 
 /**
  * \file
- * \brief Wrappers for and extensions to libqb IPC
+ * \brief IPC interface to Pacemaker daemons
+ *
  * \ingroup core
  */
 
@@ -48,6 +49,96 @@ xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
                             const char *origin);
 
 
+/*
+ * The library supports two methods of creating IPC connections. The older code
+ * allows connecting to any arbitrary IPC name. The newer code only allows
+ * connecting to one of the Pacemaker daemons.
+ *
+ * As daemons are converted to use the new model, the old functions should be
+ * considered deprecated for use with those daemons. Once all daemons are
+ * converted, the old functions should be officially deprecated as public API
+ * and eventually made internal API.
+ */
+
+/*
+ * Pacemaker daemon IPC
+ */
+
+//! Available IPC interfaces
+enum pcmk_ipc_server {
+    pcmk_ipc_attrd,         //!< Attribute manager
+    pcmk_ipc_based,         //!< CIB manager
+    pcmk_ipc_controld,      //!< Controller
+    pcmk_ipc_execd,         //!< Executor
+    pcmk_ipc_fenced,        //!< Fencer
+    pcmk_ipc_pacemakerd,    //!< Launcher
+    pcmk_ipc_schedulerd,    //!< Scheduler
+};
+
+//! Possible event types that an IPC event callback can be called for
+enum pcmk_ipc_event {
+    pcmk_ipc_event_connect,     //!< Result of asynchronous connection attempt
+    pcmk_ipc_event_disconnect,  //!< Termination of IPC connection
+    pcmk_ipc_event_reply,       //!< Daemon's reply to client IPC request
+    pcmk_ipc_event_notify,      //!< Notification from daemon
+};
+
+//! How IPC replies should be dispatched
+enum pcmk_ipc_dispatch {
+    pcmk_ipc_dispatch_main, //!< Attach IPC to GMainLoop for dispatch
+    pcmk_ipc_dispatch_poll, //!< Caller will poll and dispatch IPC
+    pcmk_ipc_dispatch_sync, //!< Sending a command will wait for any reply
+};
+
+//! Client connection to Pacemaker IPC
+typedef struct pcmk_ipc_api_s pcmk_ipc_api_t;
+
+/*!
+ * \brief Callback function type for Pacemaker daemon IPC APIs
+ *
+ * \param[in] api         IPC API connection
+ * \param[in] event_type  The type of event that occurred
+ * \param[in] status      Event status
+ * \param[in] event_data  Event-specific data
+ * \param[in] user_data   Caller data provided when callback was registered
+ *
+ * \note For connection and disconnection events, event_data may be NULL (for
+ *       local IPC) or the name of the connected node (for remote IPC, for
+ *       daemons that support that). For reply and notify events, event_data is
+ *       defined by the specific daemon API.
+ */
+typedef void (*pcmk_ipc_callback_t)(pcmk_ipc_api_t *api,
+                                    enum pcmk_ipc_event event_type,
+                                    crm_exit_t status,
+                                    void *event_data, void *user_data);
+
+int pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server);
+
+void pcmk_free_ipc_api(pcmk_ipc_api_t *api);
+
+int pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type);
+
+void pcmk_disconnect_ipc(pcmk_ipc_api_t *api);
+
+int pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms);
+
+void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
+
+void pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
+                                void *user_data);
+
+const char *pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log);
+
+bool pcmk_ipc_is_connected(pcmk_ipc_api_t *api);
+
+int pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name,
+                        uint32_t nodeid);
+
+
+/*
+ * Generic IPC API (to eventually be deprecated as public API and made internal)
+ */
+
 /* *INDENT-OFF* */
 enum crm_ipc_flags
 {
@@ -58,7 +149,7 @@ enum crm_ipc_flags
     crm_ipc_proxied         = 0x00000100, /* _ALL_ replies to proxied connections need to be sent as events */
     crm_ipc_client_response = 0x00000200, /* A Response is expected in reply */
 
-    // These are options only for pcmk__ipc_send_iov()
+    // These are options for Pacemaker's internal use only (pcmk__ipc_send_*())
     crm_ipc_server_event    = 0x00010000, /* Send an Event instead of a Response */
     crm_ipc_server_free     = 0x00020000, /* Free the iovec after sending */
     crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/

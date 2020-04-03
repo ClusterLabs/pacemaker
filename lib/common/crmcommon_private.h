@@ -103,6 +103,84 @@ pcmk__xml_attr_value(const xmlAttr *attr)
 
 #define PCMK__IPC_VERSION 1
 
+// IPC behavior that varies by daemon
+typedef struct pcmk__ipc_methods_s {
+    /*!
+     * \internal
+     * \brief Allocate any private data needed by daemon IPC
+     *
+     * \param[in] api  IPC API connection
+     *
+     * \return Standard Pacemaker return code
+     */
+    int (*new_data)(pcmk_ipc_api_t *api);
+
+    /*!
+     * \internal
+     * \brief Free any private data used by daemon IPC
+     *
+     * \param[in] api_data  Data allocated by new_data() method
+     */
+    void (*free_data)(void *api_data);
+
+    /*!
+     * \internal
+     * \brief Perform daemon-specific handling after successful connection
+     *
+     * Some daemons require clients to register before sending any other
+     * commands. The controller requires a CRM_OP_HELLO (with no reply), and
+     * the CIB manager, executor, and fencer require a CRM_OP_REGISTER (with a
+     * reply). Ideally this would be consistent across all daemons, but for now
+     * this allows each to do its own authorization.
+     *
+     * \param[in] api  IPC API connection
+     *
+     * \return Standard Pacemaker return code
+     */
+    int (*post_connect)(pcmk_ipc_api_t *api);
+
+    /*!
+     * \internal
+     * \brief Check whether an IPC request results in a reply
+     *
+     * \parma[in] api      IPC API connection
+     * \param[in] request  IPC request XML
+     *
+     * \return true if request would result in an IPC reply, false otherwise
+     */
+    bool (*reply_expected)(pcmk_ipc_api_t *api, xmlNode *request);
+
+    /*!
+     * \internal
+     * \brief Perform daemon-specific handling of an IPC message
+     *
+     * \param[in] api  IPC API connection
+     * \param[in] msg  Message read from IPC connection
+     */
+    void (*dispatch)(pcmk_ipc_api_t *api, xmlNode *msg);
+
+    /*!
+     * \internal
+     * \brief Perform daemon-specific handling of an IPC disconnect
+     *
+     * \param[in] api  IPC API connection
+     */
+    void (*post_disconnect)(pcmk_ipc_api_t *api);
+} pcmk__ipc_methods_t;
+
+// Implementation of pcmk_ipc_api_t
+struct pcmk_ipc_api_s {
+    enum pcmk_ipc_server server;          // Daemon this IPC API instance is for
+    enum pcmk_ipc_dispatch dispatch_type; // How replies should be dispatched
+    crm_ipc_t *ipc;                       // IPC connection
+    mainloop_io_t *mainloop_io;     // If using mainloop, I/O source for IPC
+    bool free_on_disconnect;        // Whether disconnect should free object
+    pcmk_ipc_callback_t cb;         // Caller-registered callback (if any)
+    void *user_data;                // Caller-registered data (if any)
+    void *api_data;                 // For daemon-specific use
+    pcmk__ipc_methods_t *cmds;      // Behavior that varies by daemon
+};
+
 typedef struct pcmk__ipc_header_s {
     struct qb_ipc_response_header qb;
     uint32_t size_uncompressed;
@@ -110,6 +188,14 @@ typedef struct pcmk__ipc_header_s {
     uint32_t flags;
     uint8_t version;
 } pcmk__ipc_header_t;
+
+G_GNUC_INTERNAL
+int pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request);
+
+G_GNUC_INTERNAL
+void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,
+                             enum pcmk_ipc_event event_type,
+                             crm_exit_t status, void *event_data);
 
 G_GNUC_INTERNAL
 unsigned int pcmk__ipc_buffer_size(unsigned int max);
