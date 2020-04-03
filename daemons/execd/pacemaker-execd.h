@@ -11,7 +11,7 @@
 #  define PACEMAKER_EXECD__H
 
 #  include <glib.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 

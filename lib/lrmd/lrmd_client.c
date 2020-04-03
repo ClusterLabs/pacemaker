@@ -27,7 +27,7 @@
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/msg_xml.h>
 

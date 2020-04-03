@@ -10,7 +10,7 @@
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"

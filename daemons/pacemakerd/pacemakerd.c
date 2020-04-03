@@ -24,12 +24,10 @@
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
 #include <crm/cib/internal.h>  /* cib_channel_ro */
 #include <crm/msg_xml.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
-
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID*, ... */
 
 #ifdef SUPPORT_COROSYNC
 #include <corosync/cfg.h>

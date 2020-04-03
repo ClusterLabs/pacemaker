@@ -26,7 +26,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 

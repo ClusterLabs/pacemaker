@@ -35,9 +35,7 @@
 #include <crm/crm.h>   /* indirectly: pcmk_err_generic */
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
-
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
+#include <crm/common/ipc_internal.h>
 
 #define PCMK_IPC_VERSION 1
 
