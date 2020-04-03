@@ -15,7 +15,6 @@ extern "C" {
 #endif
 
 #  include <glib.h>
-#  include <regex.h>
 
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
@@ -32,18 +31,6 @@ enum expression_type {
     rsc_expr,
     op_expr
 };
-
-typedef struct pe_re_match_data {
-    char *string;
-    int nregs;
-    regmatch_t *pmatch;
-} pe_re_match_data_t;
-
-typedef struct pe_match_data {
-    pe_re_match_data_t *re;
-    GHashTable *params;
-    GHashTable *meta;
-} pe_match_data_t;
 
 enum expression_type find_expression_type(xmlNode * expr);
 

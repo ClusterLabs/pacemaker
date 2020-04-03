@@ -219,201 +219,34 @@ find_expression_type(xmlNode * expr)
 }
 
 gboolean
-pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
+pe_test_role_expression(xmlNode *expr, enum rsc_role_e role, crm_time_t *now)
 {
-    gboolean accept = FALSE;
-    const char *op = NULL;
-    const char *value = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = role,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    if (role == RSC_ROLE_UNKNOWN) {
-        return accept;
-    }
-
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-
-    if (safe_str_eq(op, "defined")) {
-        if (role > RSC_ROLE_STARTED) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "not_defined")) {
-        if (role < RSC_ROLE_SLAVE && role > RSC_ROLE_UNKNOWN) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "eq")) {
-        if (text2role(value) == role) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "ne")) {
-        // Test "ne" only with promotable clone roles
-        if (role < RSC_ROLE_SLAVE && role > RSC_ROLE_UNKNOWN) {
-            accept = FALSE;
-
-        } else if (text2role(value) != role) {
-            accept = TRUE;
-        }
-    }
-    return accept;
+    return pe__eval_role_expr(expr, &rule_data);
 }
 
 gboolean
 pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
                         pe_match_data_t *match_data)
 {
-    gboolean accept = FALSE;
-    gboolean attr_allocated = FALSE;
-    int cmp = 0;
-    const char *h_val = NULL;
-    GHashTable *table = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    const char *op = NULL;
-    const char *type = NULL;
-    const char *attr = NULL;
-    const char *value = NULL;
-    const char *value_source = NULL;
-
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
-    type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
-    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
-
-    if (attr == NULL || op == NULL) {
-        pe_err("Invalid attribute or operation in expression"
-               " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
-        return FALSE;
-    }
-
-    if (match_data) {
-        if (match_data->re) {
-            char *resolved_attr = pe_expand_re_matches(attr, match_data->re);
-
-            if (resolved_attr) {
-                attr = (const char *) resolved_attr;
-                attr_allocated = TRUE;
-            }
-        }
-
-        if (safe_str_eq(value_source, "param")) {
-            table = match_data->params;
-        } else if (safe_str_eq(value_source, "meta")) {
-            table = match_data->meta;
-        }
-    }
-
-    if (table) {
-        const char *param_name = value;
-        const char *param_value = NULL;
-
-        if (param_name && param_name[0]) {
-            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
-                value = param_value;
-            }
-        }
-    }
-
-    if (hash != NULL) {
-        h_val = (const char *)g_hash_table_lookup(hash, attr);
-    }
-
-    if (attr_allocated) {
-        free((char *)attr);
-        attr = NULL;
-    }
-
-    if (value != NULL && h_val != NULL) {
-        if (type == NULL) {
-            if (safe_str_eq(op, "lt")
-                || safe_str_eq(op, "lte")
-                || safe_str_eq(op, "gt")
-                || safe_str_eq(op, "gte")) {
-                type = "number";
-
-            } else {
-                type = "string";
-            }
-            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
-        }
-
-        if (safe_str_eq(type, "string")) {
-            cmp = strcasecmp(h_val, value);
-
-        } else if (safe_str_eq(type, "number")) {
-            int h_val_f = crm_parse_int(h_val, NULL);
-            int value_f = crm_parse_int(value, NULL);
-
-            if (h_val_f < value_f) {
-                cmp = -1;
-            } else if (h_val_f > value_f) {
-                cmp = 1;
-            } else {
-                cmp = 0;
-            }
-
-        } else if (safe_str_eq(type, "version")) {
-            cmp = compare_version(h_val, value);
-
-        }
-
-    } else if (value == NULL && h_val == NULL) {
-        cmp = 0;
-    } else if (value == NULL) {
-        cmp = 1;
-    } else {
-        cmp = -1;
-    }
-
-    if (safe_str_eq(op, "defined")) {
-        if (h_val != NULL) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "not_defined")) {
-        if (h_val == NULL) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "eq")) {
-        if ((h_val == value) || cmp == 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "ne")) {
-        if ((h_val == NULL && value != NULL)
-            || (h_val != NULL && value == NULL)
-            || cmp != 0) {
-            accept = TRUE;
-        }
-
-    } else if (value == NULL || h_val == NULL) {
-        // The comparison is meaningless from this point on
-        accept = FALSE;
-
-    } else if (safe_str_eq(op, "lt")) {
-        if (cmp < 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "lte")) {
-        if (cmp <= 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "gt")) {
-        if (cmp > 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "gte")) {
-        if (cmp >= 0) {
-            accept = TRUE;
-        }
-    }
-
-    return accept;
+    return pe__eval_attr_expr(expr, &rule_data);
 }
 
 /* As per the nethack rules:
@@ -587,10 +420,18 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
  * \return TRUE if date expression is in effect at given time, FALSE otherwise
  */
 gboolean
-pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
-                        crm_time_t *next_change)
+pe_test_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
 {
-    switch (pe_eval_date_expression(time_expr, now, next_change)) {
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    switch (pe__eval_date_expr(expr, &rule_data, next_change)) {
         case pcmk_rc_within_range:
         case pcmk_rc_ok:
             return TRUE;
@@ -623,86 +464,18 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
  * \return Standard Pacemaker return code
  */
 int
-pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
-                        crm_time_t *next_change)
+pe_eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
 {
-    crm_time_t *start = NULL;
-    crm_time_t *end = NULL;
-    const char *value = NULL;
-    const char *op = crm_element_value(time_expr, "operation");
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    xmlNode *duration_spec = NULL;
-    xmlNode *date_spec = NULL;
-
-    // "undetermined" will also be returned for parsing errors
-    int rc = pcmk_rc_undetermined;
-
-    crm_trace("Testing expression: %s", ID(time_expr));
-
-    duration_spec = first_named_child(time_expr, "duration");
-    date_spec = first_named_child(time_expr, "date_spec");
-
-    value = crm_element_value(time_expr, "start");
-    if (value != NULL) {
-        start = crm_time_new(value);
-    }
-    value = crm_element_value(time_expr, "end");
-    if (value != NULL) {
-        end = crm_time_new(value);
-    }
-
-    if (start != NULL && end == NULL && duration_spec != NULL) {
-        end = pe_parse_xml_duration(start, duration_spec);
-    }
-
-    if ((op == NULL) || safe_str_eq(op, "in_range")) {
-        if ((start == NULL) && (end == NULL)) {
-            // in_range requires at least one of start or end
-        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
-            rc = pcmk_rc_before_range;
-            crm_time_set_if_earlier(next_change, start);
-        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
-            rc = pcmk_rc_after_range;
-        } else {
-            rc = pcmk_rc_within_range;
-            if (end && next_change) {
-                // Evaluation doesn't change until second after end
-                crm_time_add_seconds(end, 1);
-                crm_time_set_if_earlier(next_change, end);
-            }
-        }
-
-    } else if (safe_str_eq(op, "date_spec")) {
-        rc = pe_cron_range_satisfied(now, date_spec);
-        // @TODO set next_change appropriately
-
-    } else if (safe_str_eq(op, "gt")) {
-        if (start == NULL) {
-            // gt requires start
-        } else if (crm_time_compare(now, start) > 0) {
-            rc = pcmk_rc_within_range;
-        } else {
-            rc = pcmk_rc_before_range;
-
-            // Evaluation doesn't change until second after start
-            crm_time_add_seconds(start, 1);
-            crm_time_set_if_earlier(next_change, start);
-        }
-
-    } else if (safe_str_eq(op, "lt")) {
-        if (end == NULL) {
-            // lt requires end
-        } else if (crm_time_compare(now, end) < 0) {
-            rc = pcmk_rc_within_range;
-            crm_time_set_if_earlier(next_change, end);
-        } else {
-            rc = pcmk_rc_after_range;
-        }
-    }
-
-    crm_time_free(start);
-    crm_time_free(end);
-    return rc;
+    return pe__eval_date_expr(expr, &rule_data, next_change);
 }
 
 // Information about a block of nvpair elements
@@ -1110,6 +883,285 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
     return hash;
 }
 #endif
+
+gboolean
+pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    gboolean accept = FALSE;
+    gboolean attr_allocated = FALSE;
+    int cmp = 0;
+    const char *h_val = NULL;
+    GHashTable *table = NULL;
+
+    const char *op = NULL;
+    const char *type = NULL;
+    const char *attr = NULL;
+    const char *value = NULL;
+    const char *value_source = NULL;
+
+    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
+    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
+
+    if (attr == NULL || op == NULL) {
+        pe_err("Invalid attribute or operation in expression"
+               " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
+        return FALSE;
+    }
+
+    if (rule_data->match_data) {
+        if (rule_data->match_data->re) {
+            char *resolved_attr = pe_expand_re_matches(attr, rule_data->match_data->re);
+
+            if (resolved_attr) {
+                attr = (const char *) resolved_attr;
+                attr_allocated = TRUE;
+            }
+        }
+
+        if (safe_str_eq(value_source, "param")) {
+            table = rule_data->match_data->params;
+        } else if (safe_str_eq(value_source, "meta")) {
+            table = rule_data->match_data->meta;
+        }
+    }
+
+    if (table) {
+        const char *param_name = value;
+        const char *param_value = NULL;
+
+        if (param_name && param_name[0]) {
+            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
+                value = param_value;
+            }
+        }
+    }
+
+    if (rule_data->node_hash != NULL) {
+        h_val = (const char *)g_hash_table_lookup(rule_data->node_hash, attr);
+    }
+
+    if (attr_allocated) {
+        free((char *)attr);
+        attr = NULL;
+    }
+
+    if (value != NULL && h_val != NULL) {
+        if (type == NULL) {
+            if (safe_str_eq(op, "lt")
+                || safe_str_eq(op, "lte")
+                || safe_str_eq(op, "gt")
+                || safe_str_eq(op, "gte")) {
+                type = "number";
+
+            } else {
+                type = "string";
+            }
+            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
+        }
+
+        if (safe_str_eq(type, "string")) {
+            cmp = strcasecmp(h_val, value);
+
+        } else if (safe_str_eq(type, "number")) {
+            int h_val_f = crm_parse_int(h_val, NULL);
+            int value_f = crm_parse_int(value, NULL);
+
+            if (h_val_f < value_f) {
+                cmp = -1;
+            } else if (h_val_f > value_f) {
+                cmp = 1;
+            } else {
+                cmp = 0;
+            }
+
+        } else if (safe_str_eq(type, "version")) {
+            cmp = compare_version(h_val, value);
+
+        }
+
+    } else if (value == NULL && h_val == NULL) {
+        cmp = 0;
+    } else if (value == NULL) {
+        cmp = 1;
+    } else {
+        cmp = -1;
+    }
+
+    if (safe_str_eq(op, "defined")) {
+        if (h_val != NULL) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "not_defined")) {
+        if (h_val == NULL) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "eq")) {
+        if ((h_val == value) || cmp == 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "ne")) {
+        if ((h_val == NULL && value != NULL)
+            || (h_val != NULL && value == NULL)
+            || cmp != 0) {
+            accept = TRUE;
+        }
+
+    } else if (value == NULL || h_val == NULL) {
+        // The comparison is meaningless from this point on
+        accept = FALSE;
+
+    } else if (safe_str_eq(op, "lt")) {
+        if (cmp < 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "lte")) {
+        if (cmp <= 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "gt")) {
+        if (cmp > 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "gte")) {
+        if (cmp >= 0) {
+            accept = TRUE;
+        }
+    }
+
+    return accept;
+}
+
+int
+pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
+    const char *value = NULL;
+    const char *op = crm_element_value(expr, "operation");
+
+    xmlNode *duration_spec = NULL;
+    xmlNode *date_spec = NULL;
+
+    // "undetermined" will also be returned for parsing errors
+    int rc = pcmk_rc_undetermined;
+
+    crm_trace("Testing expression: %s", ID(expr));
+
+    duration_spec = first_named_child(expr, "duration");
+    date_spec = first_named_child(expr, "date_spec");
+
+    value = crm_element_value(expr, "start");
+    if (value != NULL) {
+        start = crm_time_new(value);
+    }
+    value = crm_element_value(expr, "end");
+    if (value != NULL) {
+        end = crm_time_new(value);
+    }
+
+    if (start != NULL && end == NULL && duration_spec != NULL) {
+        end = pe_parse_xml_duration(start, duration_spec);
+    }
+
+    if ((op == NULL) || safe_str_eq(op, "in_range")) {
+        if ((start == NULL) && (end == NULL)) {
+            // in_range requires at least one of start or end
+        } else if ((start != NULL) && (crm_time_compare(rule_data->now, start) < 0)) {
+            rc = pcmk_rc_before_range;
+            crm_time_set_if_earlier(next_change, start);
+        } else if ((end != NULL) && (crm_time_compare(rule_data->now, end) > 0)) {
+            rc = pcmk_rc_after_range;
+        } else {
+            rc = pcmk_rc_within_range;
+            if (end && next_change) {
+                // Evaluation doesn't change until second after end
+                crm_time_add_seconds(end, 1);
+                crm_time_set_if_earlier(next_change, end);
+            }
+        }
+
+    } else if (safe_str_eq(op, "date_spec")) {
+        rc = pe_cron_range_satisfied(rule_data->now, date_spec);
+        // @TODO set next_change appropriately
+
+    } else if (safe_str_eq(op, "gt")) {
+        if (start == NULL) {
+            // gt requires start
+        } else if (crm_time_compare(rule_data->now, start) > 0) {
+            rc = pcmk_rc_within_range;
+        } else {
+            rc = pcmk_rc_before_range;
+
+            // Evaluation doesn't change until second after start
+            crm_time_add_seconds(start, 1);
+            crm_time_set_if_earlier(next_change, start);
+        }
+
+    } else if (safe_str_eq(op, "lt")) {
+        if (end == NULL) {
+            // lt requires end
+        } else if (crm_time_compare(rule_data->now, end) < 0) {
+            rc = pcmk_rc_within_range;
+            crm_time_set_if_earlier(next_change, end);
+        } else {
+            rc = pcmk_rc_after_range;
+        }
+    }
+
+    crm_time_free(start);
+    crm_time_free(end);
+    return rc;
+}
+
+gboolean
+pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    gboolean accept = FALSE;
+    const char *op = NULL;
+    const char *value = NULL;
+
+    if (rule_data->role == RSC_ROLE_UNKNOWN) {
+        return accept;
+    }
+
+    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+
+    if (safe_str_eq(op, "defined")) {
+        if (rule_data->role > RSC_ROLE_STARTED) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "not_defined")) {
+        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "eq")) {
+        if (text2role(value) == rule_data->role) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "ne")) {
+        // Test "ne" only with promotable clone roles
+        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+            accept = FALSE;
+
+        } else if (text2role(value) != rule_data->role) {
+            accept = TRUE;
+        }
+    }
+    return accept;
+}
 
 // Deprecated functions kept only for backward API compatibility
 gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);

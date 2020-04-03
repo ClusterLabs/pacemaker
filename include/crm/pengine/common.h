@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,9 @@ extern "C" {
 #endif
 
 #  include <glib.h>
+#  include <regex.h>
+
+#  include <crm/common/iso8601.h>
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
@@ -130,6 +133,38 @@ recovery2text(enum rsc_recovery_type type)
     }
     return "Unknown";
 }
+
+typedef struct pe_re_match_data {
+    char *string;
+    int nregs;
+    regmatch_t *pmatch;
+} pe_re_match_data_t;
+
+typedef struct pe_match_data {
+    pe_re_match_data_t *re;
+    GHashTable *params;
+    GHashTable *meta;
+} pe_match_data_t;
+
+typedef struct pe_rsc_eval_data {
+    const char *standard;
+    const char *provider;
+    const char *agent;
+} pe_rsc_eval_data_t;
+
+typedef struct pe_op_eval_data {
+    const char *op_name;
+    guint interval;
+} pe_op_eval_data_t;
+
+typedef struct pe_rule_eval_data {
+    GHashTable *node_hash;
+    enum rsc_role_e role;
+    crm_time_t *now;
+    pe_match_data_t *match_data;
+    pe_rsc_eval_data_t *rsc_data;
+    pe_op_eval_data_t *op_data;
+} pe_rule_eval_data_t;
 
 #ifdef __cplusplus
 }
