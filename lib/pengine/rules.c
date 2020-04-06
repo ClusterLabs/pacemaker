@@ -189,6 +189,12 @@ find_expression_type(xmlNode * expr)
     if (safe_str_eq(tag, "date_expression")) {
         return time_expr;
 
+    } else if (safe_str_eq(tag, "rsc_expression")) {
+        return rsc_expr;
+
+    } else if (safe_str_eq(tag, "op_expression")) {
+        return op_expr;
+
     } else if (safe_str_eq(tag, XML_TAG_RULE)) {
         return nested_rule;
 

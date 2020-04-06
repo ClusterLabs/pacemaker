@@ -28,7 +28,9 @@ enum expression_type {
     loc_expr,
     role_expr,
     time_expr,
-    version_expr
+    version_expr,
+    rsc_expr,
+    op_expr
 };
 
 typedef struct pe_re_match_data {
