@@ -217,7 +217,9 @@ unsigned int crm_ipc_default_buffer_size(void);
 int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
-/* Utils */
+/* This is controller-specific but is declared in this header for C API
+ * backward compatibility.
+ */
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
 

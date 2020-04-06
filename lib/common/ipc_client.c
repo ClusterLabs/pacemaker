@@ -40,7 +40,8 @@
  * \return Standard Pacemaker result code
  *
  * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
- * \note This is intended to supersede crm_ipc_new() but is not yet usable.
+ * \note This is intended to supersede crm_ipc_new() but currently only
+ *       supports the controller IPC API.
  */
 int
 pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
@@ -73,6 +74,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         case pcmk_ipc_controld:
+            (*api)->cmds = pcmk__controld_api_methods();
             break;
 
         case pcmk_ipc_execd:
@@ -247,7 +249,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
             return for_log? "CIB manager" : NULL /* PCMK__SERVER_BASED_RW */;
 
         case pcmk_ipc_controld:
-            return for_log? "controller" : NULL /* CRM_SYSTEM_CRMD */;
+            return for_log? "controller" : CRM_SYSTEM_CRMD;
 
         case pcmk_ipc_execd:
             return for_log? "executor" : NULL /* CRM_SYSTEM_LRMD */;
@@ -1411,44 +1413,4 @@ bail:
         qb_ipcc_disconnect(c);
     }
     return rc;
-}
-
-xmlNode *
-create_hello_message(const char *uuid,
-                     const char *client_name, const char *major_version, const char *minor_version)
-{
-    xmlNode *hello_node = NULL;
-    xmlNode *hello = NULL;
-
-    if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
-        || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "missing information",
-                client_name? client_name : "unknown client",
-                uuid? uuid : "unknown");
-        return NULL;
-    }
-
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if (hello_node == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Message data creation failed", client_name, uuid);
-        return NULL;
-    }
-
-    crm_xml_add(hello_node, "major_version", major_version);
-    crm_xml_add(hello_node, "minor_version", minor_version);
-    crm_xml_add(hello_node, "client_name", client_name);
-    crm_xml_add(hello_node, "client_uuid", uuid);
-
-    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
-    if (hello == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Request creation failed", client_name, uuid);
-        return NULL;
-    }
-    free_xml(hello_node);
-
-    crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
-    return hello;
 }

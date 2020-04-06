@@ -103,6 +103,9 @@ pcmk__xml_attr_value(const xmlAttr *attr)
 
 #define PCMK__IPC_VERSION 1
 
+#define PCMK__CONTROLD_API_MAJOR "1"
+#define PCMK__CONTROLD_API_MINOR "0"
+
 // IPC behavior that varies by daemon
 typedef struct pcmk__ipc_methods_s {
     /*!
@@ -202,5 +205,8 @@ unsigned int pcmk__ipc_buffer_size(unsigned int max);
 
 G_GNUC_INTERNAL
 bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
+
+G_GNUC_INTERNAL
+pcmk__ipc_methods_t *pcmk__controld_api_methods(void);
 
 #endif  // CRMCOMMON_PRIVATE__H
