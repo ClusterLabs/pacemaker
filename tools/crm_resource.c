@@ -11,62 +11,70 @@
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
-
-#include <crm/crm.h>
-#include <crm/stonith-ng.h>
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <time.h>
 
+#include <crm/crm.h>
+#include <crm/stonith-ng.h>
+#include <crm/common/ipc_controld.h>
+
 bool BE_QUIET = FALSE;
 bool scope_master = FALSE;
 int cib_options = cib_sync_call;
-
-static GMainLoop *mainloop = NULL;
+static crm_exit_t exit_code = CRM_EX_OK;
 
 // Things that should be cleaned up on exit
+static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
-static pcmk_controld_api_t *controld_api = NULL;
+static pcmk_ipc_api_t *controld_api = NULL;
 static pe_working_set_t *data_set = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
 
 // Clean up and exit
 static crm_exit_t
-bye(crm_exit_t exit_code)
+bye(crm_exit_t ec)
 {
-    static bool crm_resource_shutdown_flag = false;
-
-    if (crm_resource_shutdown_flag) {
-        // Allow usage like "return bye(...);"
-        return exit_code;
-    }
-    crm_resource_shutdown_flag = true;
-
     if (cib_conn != NULL) {
         cib_t *save_cib_conn = cib_conn;
 
-        cib_conn = NULL;
+        cib_conn = NULL; // Ensure we can't free this twice
         save_cib_conn->cmds->signoff(save_cib_conn);
         cib_delete(save_cib_conn);
     }
     if (controld_api != NULL) {
-        pcmk_controld_api_t *save_controld_api = controld_api;
+        pcmk_ipc_api_t *save_controld_api = controld_api;
 
-        controld_api = NULL;
-        pcmk_free_controld_api(save_controld_api);
+        controld_api = NULL; // Ensure we can't free this twice
+        pcmk_free_ipc_api(save_controld_api);
+    }
+    if (mainloop != NULL) {
+        g_main_loop_unref(mainloop);
+        mainloop = NULL;
     }
     pe_free_working_set(data_set);
     data_set = NULL;
-    crm_exit(exit_code);
-    return exit_code;
+    crm_exit(ec);
+    return ec;
+}
+
+static void
+quit_main_loop(crm_exit_t ec)
+{
+    exit_code = ec;
+    if (mainloop != NULL) {
+        GMainLoop *mloop = mainloop;
+
+        mainloop = NULL; // Don't re-enter this block
+        pcmk_quit_main_loop(mloop, 10);
+        g_main_loop_unref(mloop);
+    }
 }
 
 static gboolean
@@ -76,39 +84,54 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "\nAborting because no messages received in %d seconds\n",
             MESSAGE_TIMEOUT_S);
     crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
-    bye(CRM_EX_TIMEOUT);
+    quit_main_loop(CRM_EX_TIMEOUT);
     return FALSE;
 }
 
 static void
-handle_controller_reply(pcmk_controld_api_t *capi, void *api_data,
-                        void *user_data)
+controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
+                          crm_exit_t status, void *event_data, void *user_data)
 {
-    fprintf(stderr, ".");
-    if ((capi->replies_expected(capi) == 0)
-        && mainloop && g_main_loop_is_running(mainloop)) {
-        fprintf(stderr, " OK\n");
-        crm_debug("Got all the replies we expected");
-        bye(CRM_EX_OK);
+    switch (event_type) {
+        case pcmk_ipc_event_disconnect:
+            if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
+                crm_info("Connection to controller was terminated");
+            }
+            quit_main_loop(exit_code);
+            break;
+
+        case pcmk_ipc_event_reply:
+            if (status != CRM_EX_OK) {
+                fprintf(stderr, "\nError: bad reply from controller: %s\n",
+                        crm_exit_str(status));
+                pcmk_disconnect_ipc(api);
+                quit_main_loop(status);
+            } else {
+                fprintf(stderr, ".");
+                if ((pcmk_controld_api_replies_expected(api) == 0)
+                    && mainloop && g_main_loop_is_running(mainloop)) {
+                    fprintf(stderr, " OK\n");
+                    crm_debug("Got all the replies we expected");
+                    pcmk_disconnect_ipc(api);
+                    quit_main_loop(CRM_EX_OK);
+                }
+            }
+            break;
+
+        default:
+            break;
     }
 }
 
 static void
-handle_controller_drop(pcmk_controld_api_t *capi, void *api_data,
-                       void *user_data)
+start_mainloop(pcmk_ipc_api_t *capi)
 {
-    crm_info("Connection to controller was terminated");
-    bye(CRM_EX_DISCONNECT);
-}
+    unsigned int count = pcmk_controld_api_replies_expected(capi);
 
-static void
-start_mainloop(pcmk_controld_api_t *capi)
-{
-    if (capi->replies_expected(capi) > 0) {
-        unsigned int count = capi->replies_expected(capi);
-
+    if (count > 0) {
         fprintf(stderr, "Waiting for %d %s from the controller",
                 count, pcmk__plural_alt(count, "reply", "replies"));
+        exit_code = CRM_EX_DISCONNECT; // For unexpected disconnects
         mainloop = g_main_loop_new(NULL, FALSE);
         g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
         g_main_loop_run(mainloop);
@@ -664,7 +687,6 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     int find_flags = 0;           // Flags to use when searching for resource
-    crm_exit_t exit_code = CRM_EX_OK;
 
     crm_log_cli_init("crm_resource");
     pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
@@ -1151,21 +1173,15 @@ main(int argc, char **argv)
 
     // Establish a connection to the controller if needed
     if (require_crmd) {
-        char *client_uuid;
-        pcmk_controld_api_cb_t dispatch_cb = {
-            handle_controller_reply, NULL
-        };
-        pcmk_controld_api_cb_t destroy_cb = {
-            handle_controller_drop, NULL
-        };
-
-
-        client_uuid = pcmk__getpid_s();
-        controld_api = pcmk_new_controld_api(crm_system_name, client_uuid);
-        free(client_uuid);
-
-        rc = controld_api->connect(controld_api, true, &dispatch_cb,
-                                   &destroy_cb);
+        rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
+        if (rc != pcmk_rc_ok) {
+            CMD_ERR("Error connecting to the controller: %s", pcmk_rc_str(rc));
+            rc = pcmk_rc2legacy(rc);
+            goto bail;
+        }
+        pcmk_register_ipc_callback(controld_api, controller_event_callback,
+                                   NULL);
+        rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
         if (rc != pcmk_rc_ok) {
             CMD_ERR("Error connecting to the controller: %s", pcmk_rc_str(rc));
             rc = pcmk_rc2legacy(rc);
@@ -1525,8 +1541,8 @@ main(int argc, char **argv)
                                                           NULL, NULL, NULL,
                                                           NULL, attr_options));
 
-        if (controld_api->reprobe(controld_api, host_uname,
-                                  router_node) == pcmk_rc_ok) {
+        if (pcmk_controld_api_reprobe(controld_api, host_uname,
+                                      router_node) == pcmk_rc_ok) {
             start_mainloop(controld_api);
         }
 

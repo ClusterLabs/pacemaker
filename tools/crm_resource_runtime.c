@@ -8,6 +8,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm/common/ipc_controld.h>
 
 int resource_verbose = 0;
 bool do_force = FALSE;
@@ -460,7 +461,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 static int
-send_lrm_rsc_op(pcmk_controld_api_t *controld_api, bool do_fail_resource,
+send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
                 pe_working_set_t *data_set)
 {
@@ -528,14 +529,13 @@ send_lrm_rsc_op(pcmk_controld_api_t *controld_api, bool do_fail_resource,
         rsc_api_id = rsc->id;
     }
     if (do_fail_resource) {
-        return controld_api->fail_resource(controld_api, host_uname,
-                                           router_node, rsc_api_id, rsc_long_id,
-                                           rsc_class, rsc_provider, rsc_type);
+        return pcmk_controld_api_fail(controld_api, host_uname, router_node,
+                                      rsc_api_id, rsc_long_id,
+                                      rsc_class, rsc_provider, rsc_type);
     } else {
-        return controld_api->refresh_resource(controld_api, host_uname,
-                                              router_node, rsc_api_id,
-                                              rsc_long_id, rsc_class,
-                                              rsc_provider, rsc_type, cib_only);
+        return pcmk_controld_api_refresh(controld_api, host_uname, router_node,
+                                         rsc_api_id, rsc_long_id, rsc_class,
+                                         rsc_provider, rsc_type, cib_only);
     }
 }
 
@@ -558,7 +558,7 @@ rsc_fail_name(pe_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_history(pcmk_controld_api_t *controld_api, const char *host_uname,
+clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
                   const char *rsc_id, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
@@ -574,16 +574,16 @@ clear_rsc_history(pcmk_controld_api_t *controld_api, const char *host_uname,
     }
 
     crm_trace("Processing %d mainloop inputs",
-              controld_api->replies_expected(controld_api));
+              pcmk_controld_api_replies_expected(controld_api));
     while (g_main_context_iteration(NULL, FALSE)) {
         crm_trace("Processed mainloop input, %d still remaining",
-                  controld_api->replies_expected(controld_api));
+                  pcmk_controld_api_replies_expected(controld_api));
     }
     return rc;
 }
 
 static int
-clear_rsc_failures(pcmk_controld_api_t *controld_api, const char *node_name,
+clear_rsc_failures(pcmk_ipc_api_t *controld_api, const char *node_name,
                    const char *rsc_id, const char *operation,
                    const char *interval_spec, pe_working_set_t *data_set)
 {
@@ -683,7 +683,7 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
 }
 
 int
-cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
+cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set)
@@ -792,7 +792,7 @@ cli_resource_delete(pcmk_controld_api_t *controld_api, const char *host_uname,
 }
 
 int
-cli_cleanup_all(pcmk_controld_api_t *controld_api, const char *node_name,
+cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
                 pe_working_set_t *data_set)
 {
@@ -905,7 +905,7 @@ cli_resource_check(cib_t * cib_conn, pe_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_fail(pcmk_controld_api_t *controld_api, const char *host_uname,
+cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
                   const char *rsc_id, pe_working_set_t *data_set)
 {
     crm_notice("Failing %s on %s", rsc_id, host_uname);
