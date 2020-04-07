@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/msg_xml.h>
 
 /*!
@@ -143,4 +146,21 @@ create_reply_adv(xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     return reply;
+}
+
+xmlNode *
+get_message_xml(xmlNode *msg, const char *field)
+{
+    xmlNode *tmp = first_named_child(msg, field);
+
+    return __xml_first_child(tmp);
+}
+
+gboolean
+add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
+{
+    xmlNode *holder = create_xml_node(msg, field);
+
+    add_node_copy(holder, xml);
+    return TRUE;
 }
