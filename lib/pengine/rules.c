@@ -555,10 +555,9 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
 
 typedef struct unpack_data_s {
     gboolean overwrite;
-    GHashTable *node_hash;
     void *hash;
-    crm_time_t *now;
     crm_time_t *next_change;
+    pe_rule_eval_data_t *rule_data;
     xmlNode *top;
 } unpack_data_t;
 
@@ -568,14 +567,14 @@ unpack_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
-                           unpack_data->now, unpack_data->next_change)) {
+    if (!pe_eval_rules(pair->attr_set, unpack_data->rule_data,
+                       unpack_data->next_change)) {
         return;
     }
 
 #if ENABLE_VERSIONED_ATTRS
-    if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash,
+    if (get_versioned_rule(pair->attr_set) && !(unpack_data->rule_data->node_hash &&
+        g_hash_table_lookup_extended(unpack_data->rule_data->node_hash,
                                      CRM_ATTR_RA_VERSION, NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
@@ -593,8 +592,8 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
-                          unpack_data->now, unpack_data->next_change)) {
+    if (pe_eval_rules(pair->attr_set, unpack_data->rule_data,
+                      unpack_data->next_change)) {
         add_versioned_attributes(pair->attr_set, unpack_data->hash);
     }
 }
@@ -658,19 +657,17 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
  * \param[in]  top           XML document root (used to expand id-ref's)
  * \param[in]  xml_obj       XML element containing blocks of nvpair elements
  * \param[in]  set_name      If not NULL, only use blocks of this element type
- * \param[in]  node_hash     Node attributes to use when evaluating rules
  * \param[out] hash          Where to store extracted name/value pairs
  * \param[in]  always_first  If not NULL, process block with this ID first
  * \param[in]  overwrite     Whether to replace existing values with same name
- * \param[in]  now           Time to use when evaluating rules
+ * \param[in]  rule_data     Matching parameters to use when unpacking
  * \param[out] next_change   If not NULL, set to when rule evaluation will change
  * \param[in]  unpack_func   Function to call to unpack each block
  */
 static void
 unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                     GHashTable *node_hash, void *hash,
-                     const char *always_first, gboolean overwrite,
-                     crm_time_t *now, crm_time_t *next_change,
+                     void *hash, const char *always_first, gboolean overwrite,
+                     pe_rule_eval_data_t *rule_data, crm_time_t *next_change,
                      GFunc unpack_func)
 {
     GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
@@ -678,11 +675,10 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     if (pairs) {
         unpack_data_t data = {
             .hash = hash,
-            .node_hash = node_hash,
-            .now = now,
             .overwrite = overwrite,
             .next_change = next_change,
             .top = top,
+            .rule_data = rule_data
         };
 
         g_list_foreach(pairs, unpack_func, &data);
@@ -709,8 +705,17 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                   const char *always_first, gboolean overwrite,
                   crm_time_t *now, crm_time_t *next_change)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, next_change, unpack_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
+                         overwrite, &rule_data, next_change, unpack_attr_set);
 }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -720,8 +725,17 @@ pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
                                xmlNode *hash, crm_time_t *now,
                                crm_time_t *next_change)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, NULL, FALSE,
-                         now, next_change, unpack_versioned_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE,
+                         &rule_data, next_change, unpack_versioned_attr_set);
 }
 #endif
 
@@ -1366,6 +1380,15 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                            const char *always_first, gboolean overwrite,
                            crm_time_t *now)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, NULL, unpack_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
+                         overwrite, &rule_data, NULL, unpack_attr_set);
 }
