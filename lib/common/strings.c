@@ -655,3 +655,17 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 
     return pcmk_rc_ok;
 }
+
+gboolean
+pcmk__str_in_list(GList *lst, const gchar *s)
+{
+    if (lst == NULL) {
+        return FALSE;
+    }
+
+    if (strcmp(lst->data, "*") == 0 && lst->next == NULL) {
+        return TRUE;
+    }
+
+    return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
+}

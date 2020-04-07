@@ -60,6 +60,7 @@ guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
