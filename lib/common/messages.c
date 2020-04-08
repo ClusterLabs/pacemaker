@@ -51,11 +51,12 @@ create_request_adv(const char *task, xmlNode * msg_data,
                                         (long long) time(NULL), ref_counter++);
 
     if (uuid_from != NULL) {
-        true_from = generate_hash_key(sys_from, uuid_from);
+        true_from = crm_strdup_printf("%s_%s", uuid_from,
+                                      (sys_from? sys_from : "none"));
     } else if (sys_from != NULL) {
         true_from = strdup(sys_from);
     } else {
-        crm_err("No sys from specified");
+        crm_err("Cannot create IPC request: No originating system specified");
     }
 
     // host_from will get set for us if necessary by the controller when routed
