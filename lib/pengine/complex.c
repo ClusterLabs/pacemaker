@@ -95,10 +95,17 @@ void
 get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
                     pe_node_t * node, pe_working_set_t * data_set)
 {
-    GHashTable *node_hash = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
     if (node) {
-        node_hash = node->details->attrs;
+        rule_data.node_hash = node->details->attrs;
     }
 
     if (rsc->xml) {
@@ -112,7 +119,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
         }
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, node_hash,
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
                                meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
@@ -122,20 +129,27 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
     /* and finally check the defaults */
     pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
-                               node_hash, meta_hash, NULL, FALSE, data_set);
+                               &rule_data, meta_hash, NULL, FALSE, data_set);
 }
 
 void
 get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
                    pe_node_t * node, pe_working_set_t * data_set)
 {
-    GHashTable *node_hash = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
     if (node) {
-        node_hash = node->details->attrs;
+        rule_data.node_hash = node->details->attrs;
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, &rule_data,
                                meta_hash, NULL, FALSE, data_set);
 
     /* set anything else based on the parent */
@@ -145,7 +159,7 @@ get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
     } else {
         /* and finally check the defaults */
         pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   node_hash, meta_hash, NULL, FALSE, data_set);
+                                   &rule_data, meta_hash, NULL, FALSE, data_set);
     }
 }
 
@@ -375,6 +389,15 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     bool guest_node = FALSE;
     bool remote_node = FALSE;
     bool has_versioned_params = FALSE;
+
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
@@ -706,7 +729,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     (*rsc)->utilization = crm_str_table_new();
 
-    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, NULL,
+    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, data_set);
 
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */

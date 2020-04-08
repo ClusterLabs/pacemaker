@@ -686,6 +686,16 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     }
 }
 
+void
+pe_eval_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                const char *always_first, gboolean overwrite,
+                crm_time_t *next_change)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
+                         overwrite, rule_data, next_change, unpack_attr_set);
+}
+
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
@@ -714,11 +724,20 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
-                         overwrite, &rule_data, next_change, unpack_attr_set);
+    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash,
+                    always_first, overwrite, next_change);
 }
 
 #if ENABLE_VERSIONED_ATTRS
+void
+pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                             pe_rule_eval_data_t *rule_data, xmlNode *hash,
+                             crm_time_t *next_change)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE, rule_data,
+                         next_change, unpack_versioned_attr_set);
+}
+
 void
 pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
                                const char *set_name, GHashTable *node_hash,

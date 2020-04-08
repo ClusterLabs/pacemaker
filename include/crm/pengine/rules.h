@@ -46,12 +46,21 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             crm_time_t *next_change,
                             pe_match_data_t *match_data);
 
+void pe_eval_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                     pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                     const char *always_first, gboolean overwrite,
+                     crm_time_t *next_change);
+
 void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                        GHashTable *node_hash, GHashTable *hash,
                        const char *always_first, gboolean overwrite,
                        crm_time_t *now, crm_time_t *next_change);
 
 #if ENABLE_VERSIONED_ATTRS
+void pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
+                                  const char *set_name, pe_rule_eval_data_t *rule_data,
+                                  xmlNode *hash, crm_time_t *next_change);
+
 void pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
                                     const char *set_name, GHashTable *node_hash,
                                     xmlNode *hash, crm_time_t *now,
