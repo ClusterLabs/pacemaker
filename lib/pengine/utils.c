@@ -24,7 +24,7 @@ extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 static void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                             pe_working_set_t * data_set);
+                             pe_working_set_t * data_set, guint interval_ms);
 static xmlNode *find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
@@ -568,9 +568,13 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         }
 
         if (rsc != NULL) {
-            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+            guint interval_ms = 0;
 
-            unpack_operation(action, action->op_entry, rsc->container, data_set);
+            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+            parse_op_key(key, NULL, NULL, &interval_ms);
+
+            unpack_operation(action, action->op_entry, rsc->container, data_set,
+                             interval_ms);
 
             if (save_action) {
                 rsc->actions = g_list_prepend(rsc->actions, action);
@@ -963,20 +967,20 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * and start delay values as integer milliseconds), requirements, and
  * failure policy.
  *
- * \param[in,out] action     Action to unpack into
- * \param[in]     xml_obj    Operation XML (or NULL if all defaults)
- * \param[in]     container  Resource that contains affected resource, if any
- * \param[in]     data_set   Cluster state
+ * \param[in,out] action      Action to unpack into
+ * \param[in]     xml_obj     Operation XML (or NULL if all defaults)
+ * \param[in]     container   Resource that contains affected resource, if any
+ * \param[in]     data_set    Cluster state
+ * \param[in]     interval_ms How frequently to perform the operation
  */
 static void
 unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                 pe_working_set_t * data_set)
+                 pe_working_set_t * data_set, guint interval_ms)
 {
-    guint interval_ms = 0;
     int timeout = 0;
     char *value_ms = NULL;
     const char *value = NULL;
-    const char *field = NULL;
+    const char *field = XML_LRM_ATTR_INTERVAL;
     char *default_timeout = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
@@ -1038,23 +1042,11 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     g_hash_table_remove(action->meta, "id");
 
     // Normalize interval to milliseconds
-    field = XML_LRM_ATTR_INTERVAL;
-    value = g_hash_table_lookup(action->meta, field);
-    if (value != NULL) {
-        interval_ms = crm_parse_interval_spec(value);
-
-    } else if ((xml_obj == NULL) && !strcmp(action->task, RSC_STATUS)) {
-        /* An orphaned recurring monitor will not have any XML. However, we
-         * want the interval to be set, so the action can be properly detected
-         * as a recurring monitor. Parse it from the key in this case.
-         */
-        parse_op_key(action->uuid, NULL, NULL, &interval_ms);
-    }
     if (interval_ms > 0) {
         value_ms = crm_strdup_printf("%u", interval_ms);
         g_hash_table_replace(action->meta, strdup(field), value_ms);
 
-    } else if (value) {
+    } else if (g_hash_table_lookup(action->meta, field) != NULL) {
         g_hash_table_remove(action->meta, field);
     }
 
