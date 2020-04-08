@@ -23,8 +23,8 @@
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                      pe_working_set_t * data_set);
+static void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
+                             pe_working_set_t * data_set);
 static xmlNode *find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
@@ -968,7 +968,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * \param[in]     container  Resource that contains affected resource, if any
  * \param[in]     data_set   Cluster state
  */
-void
+static void
 unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                  pe_working_set_t * data_set)
 {
