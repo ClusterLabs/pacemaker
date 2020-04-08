@@ -895,7 +895,7 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
  *       within a peer cache iteration if the iterator is supplied.
  */
 static crm_node_t *
-crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, int membership, GHashTableIter *iter)
+crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, uint64_t membership, GHashTableIter *iter)
 {
     gboolean is_member;
 
@@ -962,7 +962,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
  *       otherwise reaping could invalidate the iterator.
  */
 crm_node_t *
-crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
+crm_update_peer_state(const char *source, crm_node_t * node, const char *state, uint64_t membership)
 {
     return crm_update_peer_state_iter(source, node, state, membership, NULL);
 }
