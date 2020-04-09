@@ -95,12 +95,18 @@ void
 get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
                     pe_node_t * node, pe_working_set_t * data_set)
 {
+    pe_rsc_eval_data_t rsc_rule_data = {
+        .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
+        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
+        .agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE)
+    };
+
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = RSC_ROLE_UNKNOWN,
         .now = data_set->now,
         .match_data = NULL,
-        .rsc_data = NULL,
+        .rsc_data = &rsc_rule_data,
         .op_data = NULL
     };
 

@@ -986,13 +986,24 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
 
+    pe_rsc_eval_data_t rsc_rule_data = {
+        .standard = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_CLASS),
+        .provider = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_PROVIDER),
+        .agent = crm_element_value(action->rsc->xml, XML_EXPR_ATTR_TYPE)
+    };
+
+    pe_op_eval_data_t op_rule_data = {
+        .op_name = action->task,
+        .interval = interval_ms
+    };
+
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = RSC_ROLE_UNKNOWN,
         .now = data_set->now,
         .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
+        .rsc_data = &rsc_rule_data,
+        .op_data = &op_rule_data
     };
 
     CRM_CHECK(action && action->rsc, return);
