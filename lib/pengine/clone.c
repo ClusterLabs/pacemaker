@@ -575,6 +575,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
 
@@ -591,6 +592,10 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
+        if (!pe__rsc_running_on_any_node_in_list(child_rsc->running_on, only_show)) {
+            continue;
+        }
+
         out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
     }
 
@@ -603,6 +608,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -626,6 +632,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         gboolean print_full = FALSE;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
+
+        if (!pe__rsc_running_on_any_node_in_list(child_rsc->running_on, only_show)) {
+            continue;
+        }
 
         if (options & pe_print_clone_details) {
             print_full = TRUE;
@@ -791,6 +801,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -814,6 +825,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         gboolean print_full = FALSE;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
+
+        if (!pe__rsc_running_on_any_node_in_list(child_rsc->running_on, only_show)) {
+            continue;
+        }
 
         if (options & pe_print_clone_details) {
             print_full = TRUE;

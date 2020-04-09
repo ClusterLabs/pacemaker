@@ -182,6 +182,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
     char *count = crm_itoa(g_list_length(gIter));
@@ -207,6 +208,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
@@ -230,6 +232,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 

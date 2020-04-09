@@ -1498,6 +1498,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
+
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
 
@@ -1520,6 +1522,10 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         char *id = crm_itoa(replica->offset);
 
         CRM_ASSERT(replica);
+
+        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+            continue;
+        }
 
         rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
         free(id);
@@ -1546,8 +1552,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               long options)
+pe__bundle_replica_output_html(pcmk__output_t *out, GListPtr only_show,
+                               pe__bundle_replica_t *replica, long options)
 {
     pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
@@ -1572,7 +1578,9 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     }
 
     node = pe__current_node(replica->container);
-    pe__common_output_html(out, rsc, buffer, node, options);
+    if (pcmk__str_in_list(only_show, node->details->uname)) {
+        pe__common_output_html(out, rsc, buffer, node, options);
+    }
 }
 
 int
@@ -1580,6 +1588,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
+
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
 
@@ -1599,6 +1609,10 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
+
+        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+            continue;
+        }
 
         pcmk__output_xml_create_parent(out, "li");
         if (is_set(options, pe_print_implicit)) {
@@ -1625,7 +1639,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            pe__bundle_replica_output_html(out, replica, options);
+            pe__bundle_replica_output_html(out, only_show, replica, options);
         }
 
         pcmk__output_xml_pop_parent(out);
@@ -1636,8 +1650,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               long options)
+pe__bundle_replica_output_text(pcmk__output_t *out, GListPtr only_show,
+                               pe__bundle_replica_t *replica, long options)
 {
     pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
@@ -1662,7 +1676,9 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     }
 
     node = pe__current_node(replica->container);
-    pe__common_output_text(out, rsc, buffer, node, options);
+    if (pcmk__str_in_list(only_show, node->details->uname)) {
+        pe__common_output_text(out, rsc, buffer, node, options);
+    }
 }
 
 int
@@ -1670,6 +1686,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1688,6 +1705,10 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
+
+        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+            continue;
+        }
 
         if (is_set(options, pe_print_implicit)) {
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1712,7 +1733,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            pe__bundle_replica_output_text(out, replica, options);
+            pe__bundle_replica_output_text(out, only_show, replica, options);
         }
     }
 
