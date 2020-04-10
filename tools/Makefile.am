@@ -24,6 +24,7 @@ endif
 noinst_SCRIPTS		= pcmk_simtimes
 
 EXTRA_DIST		= crm_diff.8.inc \
+				  crm_error.8.inc \
 			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
