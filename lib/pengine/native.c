@@ -623,7 +623,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
             g_string_append(outstr, " FAILED");
         }
     } else {
-        g_string_append(outstr, native_displayable_state(rsc, options));
+        g_string_append_printf(outstr, " %s", native_displayable_state(rsc, options));
     }
     if (node) {
         g_string_append_printf(outstr, " %s", node->details->uname);
