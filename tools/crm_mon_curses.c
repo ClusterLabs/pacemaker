@@ -81,7 +81,7 @@ curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **co
 
 static void
 curses_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out->priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     curses_free_priv(out);
     curses_init(out);

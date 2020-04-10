@@ -181,14 +181,15 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 html_reset(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT(priv != NULL);
+    if (out->priv != NULL) {
+        private_data_t *priv = out->priv;
+        htmlDocDump(out->dest, priv->root->doc);
+    }
 
-    htmlDocDump(out->dest, priv->root->doc);
-
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_free_priv(out);
+    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_init(out);
 }
 

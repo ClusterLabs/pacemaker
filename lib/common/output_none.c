@@ -33,6 +33,7 @@ none_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 none_reset(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     none_free_priv(out);
     none_init(out);
 }

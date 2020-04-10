@@ -156,14 +156,16 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 static void
 xml_reset(pcmk__output_t *out) {
     char *buf = NULL;
-    private_data_t *priv = out->priv;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
-    buf = dump_xml_formatted_with_text(priv->root);
-    fprintf(out->dest, "%s", buf);
+    if (out->priv != NULL) {
+        private_data_t *priv = out->priv;
+        buf = dump_xml_formatted_with_text(priv->root);
+        fprintf(out->dest, "%s", buf);
+        free(buf);
+    }
 
-    free(buf);
     xml_free_priv(out);
     xml_init(out);
 }
