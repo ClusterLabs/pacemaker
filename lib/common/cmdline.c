@@ -60,7 +60,7 @@ free_common_args(gpointer data) {
 
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
-                        GOptionGroup **output_group) {
+                        GOptionGroup **output_group, const char *param_string) {
     char *desc = crm_strdup_printf("Report bugs to %s\n", PACKAGE_BUGREPORT);
     GOptionContext *context;
     GOptionGroup *main_group;
@@ -79,7 +79,7 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
     main_group = g_option_group_new(NULL, "Application Options:", NULL, common_args, free_common_args);
     g_option_group_add_entries(main_group, main_entries);
 
-    context = g_option_context_new(NULL);
+    context = g_option_context_new(param_string);
     g_option_context_set_summary(context, common_args->summary);
     g_option_context_set_description(context, desc);
     g_option_context_set_main_group(context, main_group);

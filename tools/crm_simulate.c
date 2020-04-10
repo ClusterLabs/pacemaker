@@ -862,7 +862,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Now see what the reaction to the stop failed would be:\n\n"
                               "\tcrm_simulate -S --xml-file /tmp/memcached-test.xml\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, group);
+    context = pcmk__build_arg_context(args, NULL, group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 

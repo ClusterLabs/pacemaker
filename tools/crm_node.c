@@ -577,7 +577,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL, &group);
+    context = pcmk__build_arg_context(args, NULL, &group, NULL);
 
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.

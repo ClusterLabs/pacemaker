@@ -58,10 +58,12 @@ pcmk__new_common_args(const char *summary);
  * \param[in]     fmts         The help string for which formats are supported.
  * \param[in,out] output_group A ::GOptionGroup that formatted output related
  *                             command line arguments should be added to.
+ * \param[in]     param_string A string describing any remaining command line
+ *                             arguments.
  */
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
-                        GOptionGroup **output_group);
+                        GOptionGroup **output_group, const char *param_string);
 
 /*!
  * \internal

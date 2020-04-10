@@ -1028,7 +1028,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                               "\tcrm_mon --output-as xml\n\n";
 
-    context = pcmk__build_arg_context(args, "console (default), html, text, xml", group);
+    context = pcmk__build_arg_context(args, "console (default), html, text, xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 

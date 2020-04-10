@@ -186,7 +186,7 @@ build_arg_context(pcmk__common_args_t *args) {
     const char *description = "This tool is currently experimental.\n"
                               "The interface, behavior, and output may change with any version of pacemaker.";
 
-    context = pcmk__build_arg_context(args, NULL, NULL);
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "modes", "Modes (mutually exclusive):",

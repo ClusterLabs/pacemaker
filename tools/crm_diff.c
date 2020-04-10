@@ -285,7 +285,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "Apply the patch to the running cluster:\n\n"
                               "\t# cibadmin --patch -x patch.xml\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL);
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "xml", "Original XML:",
