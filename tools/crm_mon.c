@@ -1049,14 +1049,8 @@ add_output_args() {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
-    } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &err, "%s --html-title \"Cluster Status\"",
-                              g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &err, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --html-cgi", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
@@ -1157,6 +1151,17 @@ main(int argc, char **argv)
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
 
     fence_history_cb("--fence-history", "1", NULL, NULL);
+
+    /* Set an HTML title regardless of what format we will eventually use.  This can't
+     * be done in add_output_args.  That function is called after command line
+     * arguments are processed in the next block, which means it'll override whatever
+     * title the user provides.  Doing this here means the user can give their own
+     * title on the command line.
+     */
+    if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
+                          g_get_prgname())) {
+        return clean_up(CRM_EX_USAGE);
+    }
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         return clean_up(CRM_EX_USAGE);
