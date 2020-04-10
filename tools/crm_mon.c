@@ -797,9 +797,6 @@ cib_connect(gboolean full)
         if (rc != pcmk_ok) {
             out->err(out, "Could not connect to the CIB: %s",
                      pcmk_strerror(rc));
-            if (output_format == mon_output_console) {
-                sleep(2);
-            }
             return rc;
         }
 
@@ -829,9 +826,6 @@ cib_connect(gboolean full)
 
             if (rc != pcmk_ok) {
                 out->err(out, "Notification setup failed, could not monitor CIB actions");
-                if (output_format == mon_output_console) {
-                    sleep(2);
-                }
                 clean_up_connections();
             }
         }
@@ -1375,9 +1369,6 @@ main(int argc, char **argv)
                 g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
-        if (output_format == mon_output_console) {
-            sleep(2);
-        }
         return clean_up(crm_errno2exit(rc));
     }
 
@@ -1907,9 +1898,6 @@ mon_refresh_display(gpointer user_data)
             cib->cmds->signoff(cib);
         }
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
-        if (output_format == mon_output_console) {
-            sleep(2);
-        }
         clean_up(CRM_EX_CONFIG);
         return FALSE;
     }
@@ -1935,9 +1923,6 @@ mon_refresh_display(gpointer user_data)
         }
         free_xml(cib_copy);
         out->err(out, "Reading stonith-history failed");
-        if (output_format == mon_output_console) {
-            sleep(2);
-        }
         return FALSE;
     }
 
