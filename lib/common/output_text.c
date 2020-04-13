@@ -72,7 +72,7 @@ text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 text_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out->priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     text_free_priv(out);
     text_init(out);

@@ -81,7 +81,7 @@ curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **co
 
 static void
 curses_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out->priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     curses_free_priv(out);
     curses_init(out);
@@ -117,7 +117,27 @@ curses_ver(pcmk__output_t *out, bool extended) {
 
 G_GNUC_PRINTF(2, 3)
 static void
-curses_err_info(pcmk__output_t *out, const char *format, ...) {
+curses_error(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    /* Informational output does not get indented, to separate it from other
+     * potentially indented list output.
+     */
+    va_start(ap, format);
+    vw_printw(stdscr, format, ap);
+    va_end(ap);
+
+    /* Add a newline. */
+    addch('\n');
+
+    clrtoeol();
+    refresh();
+    sleep(2);
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
+curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
     /* Informational output does not get indented, to separate it from other
@@ -242,8 +262,8 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->subprocess_output = curses_subprocess_output;
     retval->version = curses_ver;
-    retval->err = curses_err_info;
-    retval->info = curses_err_info;
+    retval->err = curses_error;
+    retval->info = curses_info;
     retval->output_xml = curses_output_xml;
 
     retval->begin_list = curses_begin_list;

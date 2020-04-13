@@ -69,7 +69,7 @@ log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 log_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out && out->priv);
+    CRM_ASSERT(out != NULL);
 
     log_free_priv(out);
     log_init(out);

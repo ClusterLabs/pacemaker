@@ -797,9 +797,6 @@ cib_connect(gboolean full)
         if (rc != pcmk_ok) {
             out->err(out, "Could not connect to the CIB: %s",
                      pcmk_strerror(rc));
-            if (output_format == mon_output_console) {
-                sleep(2);
-            }
             return rc;
         }
 
@@ -829,9 +826,6 @@ cib_connect(gboolean full)
 
             if (rc != pcmk_ok) {
                 out->err(out, "Notification setup failed, could not monitor CIB actions");
-                if (output_format == mon_output_console) {
-                    sleep(2);
-                }
                 clean_up_connections();
             }
         }
@@ -1055,14 +1049,8 @@ add_output_args() {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
-    } else if (output_format == mon_output_html) {
-        if (!pcmk__force_args(context, &err, "%s --html-title \"Cluster Status\"",
-                              g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
     } else if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &err, "%s --html-cgi --html-title \"Cluster Status\"", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --html-cgi", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
@@ -1163,6 +1151,17 @@ main(int argc, char **argv)
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
 
     fence_history_cb("--fence-history", "1", NULL, NULL);
+
+    /* Set an HTML title regardless of what format we will eventually use.  This can't
+     * be done in add_output_args.  That function is called after command line
+     * arguments are processed in the next block, which means it'll override whatever
+     * title the user provides.  Doing this here means the user can give their own
+     * title on the command line.
+     */
+    if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
+                          g_get_prgname())) {
+        return clean_up(CRM_EX_USAGE);
+    }
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         return clean_up(CRM_EX_USAGE);
@@ -1374,9 +1373,6 @@ main(int argc, char **argv)
             } else {
                 g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
             }
-        }
-        if (output_format == mon_output_console) {
-            sleep(2);
         }
         return clean_up(crm_errno2exit(rc));
     }
@@ -1907,9 +1903,6 @@ mon_refresh_display(gpointer user_data)
             cib->cmds->signoff(cib);
         }
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
-        if (output_format == mon_output_console) {
-            sleep(2);
-        }
         clean_up(CRM_EX_CONFIG);
         return FALSE;
     }
@@ -1935,9 +1928,6 @@ mon_refresh_display(gpointer user_data)
         }
         free_xml(cib_copy);
         out->err(out, "Reading stonith-history failed");
-        if (output_format == mon_output_console) {
-            sleep(2);
-        }
         return FALSE;
     }
 
