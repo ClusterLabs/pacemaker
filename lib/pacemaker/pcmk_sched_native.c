@@ -41,27 +41,36 @@ gboolean PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional,
 gboolean RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 
-/* *INDENT-OFF* */
-enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current State */
-/*       Next State:    Unknown 	  Stopped	     Started	        Slave	          Master */
+/* This array says what the *next* role should be when transitioning from one
+ * role to another. For example going from Stopped to Master, the next role is
+ * RSC_ROLE_SLAVE, because the resource must be started before being promoted.
+ * The current state then becomes Started, which is fed into this array again,
+ * giving a next role of RSC_ROLE_MASTER.
+ */
+static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
+    /* Current state  Next state*/
+    /*                Unknown         Stopped           Started           Slave             Master */
     /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
     /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
     /* Started */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Slave */	  { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Slave   */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Master  */ { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
-gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(pe_resource_t*,pe_node_t*,gboolean,pe_working_set_t*) = {
-/* Current State */
-/*       Next State:       Unknown	Stopped		Started		Slave		Master */
-    /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
-    /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
-    /* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,		PromoteRsc, },
-    /* Slave */	        { RoleError,	StopRsc,	StopRsc, 	NullOp,		PromoteRsc, },
-    /* Master */	{ RoleError,	DemoteRsc,	DemoteRsc,	DemoteRsc,	NullOp,     },
+typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
+                                      gboolean optional,
+                                      pe_working_set_t *data_set);
+
+// This array picks the function needed to transition from one role to another
+static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
+    /* Current state  Next state                                        */
+    /*                Unknown  Stopped    Started    Slave      Master  */
+    /* Unknown */ { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
+    /* Stopped */ { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
+    /* Started */ { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
+    /* Slave   */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
+    /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
 };
-/* *INDENT-ON* */
 
 static gboolean
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
