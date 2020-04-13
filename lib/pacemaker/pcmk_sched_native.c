@@ -2561,9 +2561,17 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
             LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
+
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
-            pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role),
-                        next->details->uname);
+            if ((demote != NULL) && (promote != NULL)
+                && is_not_set(demote->flags, pe_action_optional)
+                && is_not_set(promote->flags, pe_action_optional)) {
+                LogAction("Re-promote", rsc, current, next, promote, demote,
+                          terminal);
+            } else {
+                pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
+                            role2text(rsc->role), next->details->uname);
+            }
 
         } else if (is_not_set(start->flags, pe_action_runnable)) {
             LogAction("Stop", rsc, current, NULL, stop,
