@@ -8,56 +8,44 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/cmdline_internal.h>
 
 #include <crm/crm.h>
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "name", no_argument, NULL, 'n',
-        "\tShow error's name with its description (useful for looking for "
-            "sources of the error in source code)",
-        pcmk__option_default
-    },
-    {
-        "list", no_argument, NULL, 'l',
-        "\tShow all known errors", pcmk__option_default
-    },
-    {
-        "exit", no_argument, NULL, 'X',
-        "\tInterpret as exit code rather than legacy function return value",
-        pcmk__option_default
-    },
-    {
-        "rc", no_argument, NULL, 'r',
-        "\tInterpret as return code rather than legacy function return value",
-        pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
-};
+#define SUMMARY "crm_error - display name or description of a Pacemaker error code"
 
-static bool as_exit_code = false;
-static bool as_rc = false;
+struct {
+    gboolean as_exit_code;
+    gboolean as_rc;
+    gboolean with_name;
+    gboolean do_list;
+} options;
+
+static GOptionEntry entries[] = {
+    { "name", 'n', 0, G_OPTION_ARG_NONE, &options.with_name,
+      "Show error's name with its description (useful for looking for sources "
+      "of the error in source code)",
+       NULL },
+    { "list", 'l', 0, G_OPTION_ARG_NONE, &options.do_list,
+      "Show all known errors",
+      NULL },
+    { "exit", 'X', 0, G_OPTION_ARG_NONE, &options.as_exit_code,
+      "Interpret as exit code rather than legacy function return value",
+      NULL },
+    { "rc", 'r', 0, G_OPTION_ARG_NONE, &options.as_rc,
+      "Interpret as return code rather than legacy function return value",
+      NULL },
+
+    { NULL }
+};
 
 static void
 get_strings(int rc, const char **name, const char **str)
 {
-    if (as_exit_code) {
+    if (options.as_exit_code) {
         *str = crm_exit_str((crm_exit_t) rc);
         *name = crm_exit_name(rc);
-    } else if (as_rc) {
+    } else if (options.as_rc) {
         *str = pcmk_rc_str(rc);
         *name = pcmk_rc_name(rc);
     } else {
@@ -66,60 +54,53 @@ get_strings(int rc, const char **name, const char **str)
     }
 }
 
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, NULL, group, "-- <rc> [...]");
+    pcmk__add_main_args(context, entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int rc = 0;
-    int lpc = 0;
-    int flag = 0;
-    int option_index = 0;
+    GError *error = NULL;
+    GOptionGroup *output_group = NULL;
+    gchar **processed_args = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
-    bool do_list = FALSE;
-    bool with_name = FALSE;
-
+    int rc = pcmk_rc_ok;
+    int lpc;
     const char *name = NULL;
     const char *desc = NULL;
 
     crm_log_cli_init("crm_error");
-    pcmk__set_cli_options(NULL, "[options] -- <rc> [...]", long_options,
-                          "display name or description of a Pacemaker "
-                          "error code");
 
-    while (flag >= 0) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        switch (flag) {
-            case -1:
-                break;
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'n':
-                with_name = TRUE;
-                break;
-            case 'l':
-                do_list = TRUE;
-                break;
-            case 'r':
-                as_rc = true;
-                break;
-            case 'X':
-                as_exit_code = TRUE;
-                break;
-            default:
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-        }
+    processed_args = pcmk__cmdline_preproc(argv, "lrnX");
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        return CRM_EX_USAGE;
     }
 
-    if(do_list) {
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
+    }
+
+    if (args->version) {
+        /* FIXME:  When crm_error is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+    }
+
+    if (options.do_list) {
         int start, end, width;
 
         // 256 is a hacky magic number that "should" be enough
-        if (as_rc) {
+        if (options.as_rc) {
             start = pcmk_rc_error - 256;
             end = PCMK_CUSTOM_OFFSET;
             width = 4;
@@ -137,7 +118,7 @@ main(int argc, char **argv)
             get_strings(rc, &name, &desc);
             if (!name || !strcmp(name, "Unknown") || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 // Undefined
-            } else if(with_name) {
+            } else if(options.with_name) {
                 printf("% .*d: %-26s  %s\n", width, rc, name, desc);
             } else {
                 printf("% .*d: %s\n", width, rc, desc);
@@ -145,10 +126,18 @@ main(int argc, char **argv)
         }
 
     } else {
-        for (lpc = optind; lpc < argc; lpc++) {
-            rc = crm_atoi(argv[lpc], NULL);
+        if (g_strv_length(processed_args) < 2) {
+            char *help = g_option_context_get_help(context, TRUE, NULL);
+            fprintf(stderr, "%s", help);
+            free(help);
+            return CRM_EX_USAGE;
+        }
+
+        /* Skip #1 because that's the program name. */
+        for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            rc = crm_atoi(processed_args[lpc], NULL);
             get_strings(rc, &name, &desc);
-            if (with_name) {
+            if (options.with_name) {
                 printf("%s - %s\n", name, desc);
             } else {
                 printf("%s\n", desc);
