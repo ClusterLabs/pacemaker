@@ -2348,8 +2348,6 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         }                                                               \
     } while(0)
 
-static int rsc_width = 5;
-static int detail_width = 5;
 static void
 LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
 {
@@ -2359,6 +2357,9 @@ LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *
     bool same_host = FALSE;
     bool same_role = FALSE;
     bool need_role = FALSE;
+
+    static int rsc_width = 5;
+    static int detail_width = 5;
 
     CRM_ASSERT(action);
     CRM_ASSERT(destination != NULL || origin != NULL);
@@ -2384,36 +2385,40 @@ LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *
         same_role = TRUE;
     }
 
-    if(need_role && origin == NULL) {
-        /* Promoting from Stopped */
+    if (need_role && (origin == NULL)) {
+        /* Starting and promoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
 
-    } else if(need_role && destination == NULL) {
-        /* Demoting a Master or Stopping a Slave */
+    } else if (origin == NULL) {
+        /* Starting a resource */
+        details = crm_strdup_printf("%s", destination->details->uname);
+
+    } else if (need_role && (destination == NULL)) {
+        /* Stopping a promotable clone instance */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
-    } else if(origin == NULL || destination == NULL) {
-        /* Starting or stopping a resource */
-        details = crm_strdup_printf("%s", origin?origin->details->uname:destination->details->uname);
+    } else if (destination == NULL) {
+        /* Stopping a resource */
+        details = crm_strdup_printf("%s", origin->details->uname);
 
-    } else if(need_role && same_role && same_host) {
-        /* Recovering or restarting a promotable clone resource */
+    } else if (need_role && same_role && same_host) {
+        /* Recovering, restarting or re-promoting a promotable clone instance */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
-    } else if(same_role && same_host) {
+    } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
         details = crm_strdup_printf("%s", origin->details->uname);
 
-    } else if(same_role && need_role) {
-        /* Moving a promotable clone resource */
+    } else if (need_role && same_role) {
+        /* Moving a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
 
-    } else if(same_role) {
+    } else if (same_role) {
         /* Moving a normal resource */
         details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
 
-    } else if(same_host) {
-        /* Promoting or demoting a promotable clone resource */
+    } else if (same_host) {
+        /* Promoting or demoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
 
     } else {
@@ -2560,7 +2565,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role),
                         next->details->uname);
 
-        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
+        } else if (is_not_set(start->flags, pe_action_runnable)) {
             LogAction("Stop", rsc, current, NULL, stop,
                       (stop && stop->reason)? stop : start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
