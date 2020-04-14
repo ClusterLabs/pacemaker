@@ -130,25 +130,6 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Exit crm_node
- * Clean up memory, and either quit mainloop (if running) or exit
- *
- * \param[in] value  Exit status
- */
-static void
-crm_node_exit(crm_exit_t value)
-{
-    exit_code = value;
-
-    if (mainloop && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-    } else {
-        crm_exit(exit_code);
-    }
-}
-
 static void
 controller_event_cb(pcmk_ipc_api_t *controld_api,
                     enum pcmk_ipc_event event_type, crm_exit_t status,
@@ -660,6 +641,5 @@ done:
     g_strfreev(processed_args);
     g_clear_error(&error);
     pcmk__free_arg_context(context);
-    crm_node_exit(exit_code);
-    return exit_code;
+    return crm_exit(exit_code);
 }
