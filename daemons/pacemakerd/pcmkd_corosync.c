@@ -93,13 +93,14 @@ cluster_disconnect_cfg(void)
     } while(counter < max)
 
 gboolean
-cluster_connect_cfg(uint32_t * nodeid)
+cluster_connect_cfg(void)
 {
     cs_error_t rc;
     int fd = -1, retries = 0, rv;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
+    uint32_t nodeid;
 
     static struct mainloop_fd_callbacks cfg_fd_callbacks = {
         .dispatch = pcmk_cfg_dispatch,
@@ -134,14 +135,14 @@ cluster_connect_cfg(uint32_t * nodeid)
     }
 
     retries = 0;
-    cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, nodeid));
+    cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
 
     if (rc != CS_OK) {
         crm_err("corosync cfg local_get error %d", rc);
         goto bail;
     }
 
-    crm_debug("Our nodeid: %d", *nodeid);
+    crm_debug("Our nodeid: %lu", (unsigned long) nodeid);
     mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
 
     return TRUE;
