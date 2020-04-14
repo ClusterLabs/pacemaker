@@ -979,6 +979,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     char *node_name = pe__node_display_name(node, print_clone_detail);
     char *buf = crm_strdup_printf("Node: %s", node_name);
@@ -1017,7 +1018,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, NULL);
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
             }
             out->end_list(out);
         }
@@ -1039,6 +1040,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     if (full) {
         char *node_name = pe__node_display_name(node, print_clone_detail);
@@ -1066,7 +1068,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
                     pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
-                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
                 }
             }
 
@@ -1094,6 +1096,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean print_brief G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
+    GListPtr only_show = va_arg(args, GListPtr);
 
     if (full) {
         const char *node_type = "unknown";
@@ -1136,7 +1139,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
             }
         }
 
@@ -1527,6 +1530,9 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
     if (details) {
         char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
+        GListPtr unames = NULL;
+
+        unames = g_list_prepend(unames, strdup("*"));
 
         crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
@@ -1538,7 +1544,9 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
             pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
             out->message(out, crm_map_element_name(rsc->xml),
-                         pe_print_pending, rsc);
+                         pe_print_pending, rsc, unames);
         }
+
+        g_list_free_full(unames, free);
     }
 }

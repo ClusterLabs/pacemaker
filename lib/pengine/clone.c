@@ -596,7 +596,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -700,7 +700,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
         }
     }
 
@@ -893,7 +893,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
         }
     }
 
