@@ -1,5 +1,5 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2019 Free Software Foundation, Inc.
+# Copyright (C) 2002-2020 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@ AC_DEFUN([gl_INIT],
   gl_COMMON
   gl_source_base='lib/gnu'
   gl_BYTESWAP
+  AC_REQUIRE([AC_C_RESTRICT])
   gl_MD5
   AC_REQUIRE([gl_EXTERN_INLINE])
   gl_STDALIGN_H
@@ -219,4 +220,5 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/gnulib-common.m4
   m4/md5.m4
   m4/stdalign.m4
+  m4/zzgnulib.m4
 ])
