@@ -37,7 +37,7 @@ static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              GListPtr op_list);
 static int print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               pe_node_t *node, xmlNode *node_state, gboolean operations,
-                              unsigned int mon_ops);
+                              unsigned int mon_ops, GListPtr only_show);
 static gboolean add_extra_info(pcmk__output_t *out, pe_node_t * node, GListPtr rsc_list,
                                const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
@@ -328,7 +328,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
 static int
 print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                    pe_node_t *node, xmlNode *node_state, gboolean operations,
-                   unsigned int mon_ops)
+                   unsigned int mon_ops, GListPtr only_show)
 {
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
@@ -356,7 +356,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                     rc = pcmk_rc_ok;
                     out->message(out, "node", node, get_resource_display_options(mon_ops),
                                  FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                                 is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                                 is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                                 only_show);
                 }
 
                 out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -369,7 +370,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                 rc = pcmk_rc_ok;
                 out->message(out, "node", node, get_resource_display_options(mon_ops),
                              FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                             is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                             is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                             only_show);
             }
 
             if (op_list != NULL) {
@@ -529,7 +531,8 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
             rc = pcmk_rc_ok;
         }
 
-        print_node_history(out, data_set, node, node_state, operations, mon_ops);
+        print_node_history(out, data_set, node, node_state, operations, mon_ops,
+                           only_show);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -684,7 +687,8 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
 
             out->message(out, "node", data.node, get_resource_display_options(mon_ops),
                          FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                         only_show);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             out->end_list(out);
@@ -878,7 +882,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
             /* If we get here, node is in bad state, or we're grouping by node */
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          node_mode, is_set(mon_ops, mon_op_print_clone_detail),
-                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                         unames);
             free(node_name);
         }
 
@@ -1060,7 +1065,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                         only_show);
         }
         out->end_list(out);
     }
@@ -1156,7 +1162,8 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
             out->message(out, "node", node, get_resource_display_options(mon_ops), TRUE,
                          NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node));
+                         is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                         only_show);
         }
 
         if (printed_header == TRUE) {
