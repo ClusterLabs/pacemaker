@@ -1229,6 +1229,203 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
 }
 
 int
+pe__node_list_html(pcmk__output_t *out, va_list args) {
+    GListPtr nodes = va_arg(args, GListPtr);
+    GListPtr only_show = va_arg(args, GListPtr);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    gboolean printed_header = FALSE;
+
+    for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+
+        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+            continue;
+        }
+
+        if (printed_header == FALSE) {
+            printed_header = TRUE;
+            out->begin_list(out, NULL, NULL, "Node List");
+        }
+
+        out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
+                     print_brief, group_by_node, only_show);
+    }
+
+    if (printed_header == TRUE) {
+        out->end_list(out);
+    }
+
+    return pcmk_rc_ok;
+}
+
+int
+pe__node_list_text(pcmk__output_t *out, va_list args) {
+    GListPtr nodes = va_arg(args, GListPtr);
+    GListPtr only_show = va_arg(args, GListPtr);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    /* space-separated lists of node names */
+    char *online_nodes = NULL;
+    char *online_remote_nodes = NULL;
+    char *online_guest_nodes = NULL;
+    char *offline_nodes = NULL;
+    char *offline_remote_nodes = NULL;
+
+    int rc = pcmk_rc_no_output;
+    gboolean printed_header = FALSE;
+
+    for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+        const char *node_mode = NULL;
+        char *node_name = pe__node_display_name(node, print_clone_detail);
+
+        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+            free(node_name);
+            continue;
+        }
+
+        if (printed_header == FALSE) {
+            out->begin_list(out, NULL, NULL, "Node List");
+            rc = pcmk_rc_ok;
+            printed_header = TRUE;
+        }
+
+        /* Get node mode */
+        if (node->details->unclean) {
+            if (node->details->online) {
+                node_mode = "UNCLEAN (online)";
+
+            } else if (node->details->pending) {
+                node_mode = "UNCLEAN (pending)";
+
+            } else {
+                node_mode = "UNCLEAN (offline)";
+            }
+
+        } else if (node->details->pending) {
+            node_mode = "pending";
+
+        } else if (node->details->standby_onfail && node->details->online) {
+            node_mode = "standby (on-fail)";
+
+        } else if (node->details->standby) {
+            if (node->details->online) {
+                if (node->details->running_rsc) {
+                    node_mode = "standby (with active resources)";
+                } else {
+                    node_mode = "standby";
+                }
+            } else {
+                node_mode = "OFFLINE (standby)";
+            }
+
+        } else if (node->details->maintenance) {
+            if (node->details->online) {
+                node_mode = "maintenance";
+            } else {
+                node_mode = "OFFLINE (maintenance)";
+            }
+
+        } else if (node->details->online) {
+            node_mode = "online";
+            if (group_by_node == FALSE) {
+                if (pe__is_guest_node(node)) {
+                    online_guest_nodes = pcmk__add_word(online_guest_nodes,
+                                                       node_name);
+                } else if (pe__is_remote_node(node)) {
+                    online_remote_nodes = pcmk__add_word(online_remote_nodes,
+                                                         node_name);
+                } else {
+                    online_nodes = pcmk__add_word(online_nodes, node_name);
+                }
+                free(node_name);
+                continue;
+            }
+
+        } else {
+            node_mode = "OFFLINE";
+            if (group_by_node == FALSE) {
+                if (pe__is_remote_node(node)) {
+                    offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
+                                                          node_name);
+                } else if (pe__is_guest_node(node)) {
+                    /* ignore offline guest nodes */
+                } else {
+                    offline_nodes = pcmk__add_word(offline_nodes, node_name);
+                }
+                free(node_name);
+                continue;
+            }
+        }
+
+        /* If we get here, node is in bad state, or we're grouping by node */
+        out->message(out, "node", node, print_opts, TRUE, node_mode, print_clone_detail,
+                     print_brief, group_by_node, only_show);
+        free(node_name);
+    }
+
+    /* If we're not grouping by node, summarize nodes by status */
+    if (online_nodes) {
+        out->list_item(out, "Online", "[%s ]", online_nodes);
+        free(online_nodes);
+    }
+    if (offline_nodes) {
+        out->list_item(out, "OFFLINE", "[%s ]", offline_nodes);
+        free(offline_nodes);
+    }
+    if (online_remote_nodes) {
+        out->list_item(out, "RemoteOnline", "[%s ]", online_remote_nodes);
+        free(online_remote_nodes);
+    }
+    if (offline_remote_nodes) {
+        out->list_item(out, "RemoteOFFLINE", "[%s ]", offline_remote_nodes);
+        free(offline_remote_nodes);
+    }
+    if (online_guest_nodes) {
+        out->list_item(out, "GuestOnline", "[%s ]", online_guest_nodes);
+        free(online_guest_nodes);
+    }
+
+    if (printed_header == TRUE) {
+        out->end_list(out);
+    }
+
+    return rc;
+}
+
+int
+pe__node_list_xml(pcmk__output_t *out, va_list args) {
+    GListPtr nodes = va_arg(args, GListPtr);
+    GListPtr only_show = va_arg(args, GListPtr);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+
+    out->begin_list(out, NULL, NULL, "nodes");
+    for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+
+        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+            continue;
+        }
+
+        out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
+                     print_brief, group_by_node, only_show);
+    }
+    out->end_list(out);
+
+    return pcmk_rc_ok;
+}
+
+int
 pe__op_history_text(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = va_arg(args, xmlNode *);
     const char *task = va_arg(args, const char *);
@@ -1485,6 +1682,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node", "log", pe__node_text },
     { "node", "text", pe__node_text },
     { "node", "xml", pe__node_xml },
+    { "node-list", "html", pe__node_list_html },
+    { "node-list", "log", pe__node_list_text },
+    { "node-list", "text", pe__node_list_text },
+    { "node-list", "xml", pe__node_list_xml },
     { "node-attribute", "html", pe__node_attribute_html },
     { "node-attribute", "log", pe__node_attribute_text },
     { "node-attribute", "text", pe__node_attribute_text },
