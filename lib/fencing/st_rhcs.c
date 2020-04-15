@@ -177,7 +177,8 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     }
     freeXpathObject(xpathObj);
 
-    // Fudge metadata so port isn't required in config (pacemaker adds it)
+    // Fudge metadata so parameters are not required in config (pacemaker adds them)
+    stonith_rhcs_parameter_not_required(xml, "action");
     stonith_rhcs_parameter_not_required(xml, "port");
 
     buffer = dump_xml_formatted_with_text(xml);
