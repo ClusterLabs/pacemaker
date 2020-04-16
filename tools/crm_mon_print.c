@@ -788,8 +788,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
             out->info(out, "%s", "");
         }
 
-        x = out->message(out, "node-list", data_set->nodes, unames, mon_ops,
-                         print_opts, is_set(mon_ops, mon_op_print_clone_detail),
+        x = out->message(out, "node-list", data_set->nodes, unames, print_opts,
+                         is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief),
                          is_set(mon_ops, mon_op_group_by_node));
 
@@ -937,8 +937,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /*** NODES ***/
     if (is_set(show, mon_show_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, mon_ops,
-                     print_opts, is_set(mon_ops, mon_op_print_clone_detail),
+        out->message(out, "node-list", data_set->nodes, unames, print_opts,
+                     is_set(mon_ops, mon_op_print_clone_detail),
                      is_set(mon_ops, mon_op_print_brief),
                      is_set(mon_ops, mon_op_group_by_node));
     }
@@ -1016,8 +1016,8 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /*** NODE LIST ***/
     if (is_set(show, mon_show_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, mon_ops,
-                     print_opts, is_set(mon_ops, mon_op_print_clone_detail),
+        out->message(out, "node-list", data_set->nodes, unames, print_opts,
+                     is_set(mon_ops, mon_op_print_clone_detail),
                      is_set(mon_ops, mon_op_print_brief),
                      is_set(mon_ops, mon_op_group_by_node));
     }
