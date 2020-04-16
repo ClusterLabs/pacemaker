@@ -179,6 +179,7 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
 
     // Fudge metadata so parameters are not required in config (pacemaker adds them)
     stonith_rhcs_parameter_not_required(xml, "action");
+    stonith_rhcs_parameter_not_required(xml, "plug");
     stonith_rhcs_parameter_not_required(xml, "port");
 
     buffer = dump_xml_formatted_with_text(xml);
