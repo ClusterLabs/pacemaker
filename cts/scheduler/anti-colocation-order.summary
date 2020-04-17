@@ -4,11 +4,11 @@ Node node1: standby
 Online: [ node2 ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	Started node1
-     rsc2	(ocf::pacemaker:Dummy):	Started node1
+     rsc1	(ocf::pacemaker:Dummy):	 Started node1
+     rsc2	(ocf::pacemaker:Dummy):	 Started node1
  Resource Group: group2
-     rsc3	(ocf::pacemaker:Dummy):	Started node2
-     rsc4	(ocf::pacemaker:Dummy):	Started node2
+     rsc3	(ocf::pacemaker:Dummy):	 Started node2
+     rsc4	(ocf::pacemaker:Dummy):	 Started node2
 
 Transition Summary:
  * Move       rsc1    ( node1 -> node2 )  
@@ -35,9 +35,9 @@ Node node1: standby
 Online: [ node2 ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	Started node2
-     rsc2	(ocf::pacemaker:Dummy):	Started node2
+     rsc1	(ocf::pacemaker:Dummy):	 Started node2
+     rsc2	(ocf::pacemaker:Dummy):	 Started node2
  Resource Group: group2
-     rsc3	(ocf::pacemaker:Dummy):	Stopped
-     rsc4	(ocf::pacemaker:Dummy):	Stopped
+     rsc3	(ocf::pacemaker:Dummy):	 Stopped
+     rsc4	(ocf::pacemaker:Dummy):	 Stopped
 

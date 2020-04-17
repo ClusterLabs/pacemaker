@@ -6,44 +6,44 @@ Online: [ controller-0 controller-1 controller-2 ]
 RemoteOnline: [ database-1 messaging-0 messaging-1 messaging-2 ]
 GuestOnline: [ galera-bundle-1:galera-bundle-docker-1 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-0:redis-bundle-docker-0 redis-bundle-2:redis-bundle-docker-2 ]
 
- database-0	(ocf::pacemaker:remote):	Stopped
- database-1	(ocf::pacemaker:remote):	Started controller-2
- database-2	(ocf::pacemaker:remote):	Stopped
- messaging-0	(ocf::pacemaker:remote):	Started controller-2
- messaging-1	(ocf::pacemaker:remote):	Started controller-2
- messaging-2	(ocf::pacemaker:remote):	Started controller-2
+ database-0	(ocf::pacemaker:remote):	 Stopped
+ database-1	(ocf::pacemaker:remote):	 Started controller-2
+ database-2	(ocf::pacemaker:remote):	 Stopped
+ messaging-0	(ocf::pacemaker:remote):	 Started controller-2
+ messaging-1	(ocf::pacemaker:remote):	 Started controller-2
+ messaging-2	(ocf::pacemaker:remote):	 Started controller-2
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-2
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-2
  Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	FAILED Master database-0 (UNCLEAN)
-   galera-bundle-1	(ocf::heartbeat:galera):	Master database-1
-   galera-bundle-2	(ocf::heartbeat:galera):	FAILED Master database-2 (UNCLEAN)
+   galera-bundle-0	(ocf::heartbeat:galera):	 FAILED Master database-0 (UNCLEAN)
+   galera-bundle-1	(ocf::heartbeat:galera):	 Master database-1
+   galera-bundle-2	(ocf::heartbeat:galera):	 FAILED Master database-2 (UNCLEAN)
  Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	Slave controller-0
-   redis-bundle-1	(ocf::heartbeat:redis):	Stopped
-   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
- ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	Stopped
- ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	Stopped
- ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
- ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Stopped
- ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	Stopped
- ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+   redis-bundle-0	(ocf::heartbeat:redis):	 Slave controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	 Stopped
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+ ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	 Started controller-2
  Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Stopped
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
- openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped
- stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	Stopped
- stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	Started controller-0
- stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	Stopped
- stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	Stopped
- stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	Stopped
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started controller-0
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Started controller-2
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	 Stopped
+ stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	 Stopped
+ stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	 Started controller-0
+ stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	 Stopped
+ stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	 Stopped
+ stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	 Stopped
 
 Transition Summary:
  * Fence (reboot) galera-bundle-2 (resource: galera-bundle-docker-2) 'guest is unclean'
@@ -181,42 +181,42 @@ Online: [ controller-0 controller-1 controller-2 ]
 RemoteOnline: [ database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
 GuestOnline: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bundle-docker-1 galera-bundle-2:galera-bundle-docker-2 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
 
- database-0	(ocf::pacemaker:remote):	Started controller-0
- database-1	(ocf::pacemaker:remote):	Started controller-2
- database-2	(ocf::pacemaker:remote):	Started controller-1
- messaging-0	(ocf::pacemaker:remote):	Started controller-2
- messaging-1	(ocf::pacemaker:remote):	Started controller-2
- messaging-2	(ocf::pacemaker:remote):	Started controller-2
+ database-0	(ocf::pacemaker:remote):	 Started controller-0
+ database-1	(ocf::pacemaker:remote):	 Started controller-2
+ database-2	(ocf::pacemaker:remote):	 Started controller-1
+ messaging-0	(ocf::pacemaker:remote):	 Started controller-2
+ messaging-1	(ocf::pacemaker:remote):	 Started controller-2
+ messaging-2	(ocf::pacemaker:remote):	 Started controller-2
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-2
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-2
  Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	Master database-0
-   galera-bundle-1	(ocf::heartbeat:galera):	Master database-1
-   galera-bundle-2	(ocf::heartbeat:galera):	Master database-2
+   galera-bundle-0	(ocf::heartbeat:galera):	 Master database-0
+   galera-bundle-1	(ocf::heartbeat:galera):	 Master database-1
+   galera-bundle-2	(ocf::heartbeat:galera):	 Master database-2
  Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	Master controller-0
-   redis-bundle-1	(ocf::heartbeat:redis):	Slave controller-1
-   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
- ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	Started controller-0
- ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	Started controller-1
- ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
- ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Started controller-0
- ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	Started controller-1
- ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+ ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	 Started controller-0
+ ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	 Started controller-2
  Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-1
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
- openstack-cinder-volume	(systemd:openstack-cinder-volume):	Started controller-0
- stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	Started controller-1
- stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	Started controller-0
- stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	Started controller-1
- stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	Started controller-0
- stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	Started controller-2
- stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	Started controller-1
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started controller-0
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Started controller-1
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Started controller-2
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	 Started controller-0
+ stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	 Started controller-1
+ stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	 Started controller-0
+ stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	 Started controller-1
+ stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	 Started controller-0
+ stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	 Started controller-1
 

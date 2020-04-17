@@ -3,28 +3,28 @@ Current cluster status:
 Online: [ srv01 srv02 srv03 srv04 ]
 
  Resource Group: UMgroup01
-     UmVIPcheck	(ocf::pacemaker:Dummy):	Started srv01
-     UmIPaddr	(ocf::pacemaker:Dummy):	Started srv01
-     UmDummy01	(ocf::pacemaker:Dummy):	Started srv01
-     UmDummy02	(ocf::pacemaker:Dummy):	Started srv01
+     UmVIPcheck	(ocf::pacemaker:Dummy):	 Started srv01
+     UmIPaddr	(ocf::pacemaker:Dummy):	 Started srv01
+     UmDummy01	(ocf::pacemaker:Dummy):	 Started srv01
+     UmDummy02	(ocf::pacemaker:Dummy):	 Started srv01
  Resource Group: OVDBgroup02-1
-     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started srv01
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started srv01
  Resource Group: OVDBgroup02-2
-     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started srv02
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started srv02
  Resource Group: OVDBgroup02-3
-     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started srv03
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started srv03
  Resource Group: grpStonith1
-     prmStonithN1	(stonith:external/ssh):	Started srv04
+     prmStonithN1	(stonith:external/ssh):	 Started srv04
  Resource Group: grpStonith2
-     prmStonithN2	(stonith:external/ssh):	Started srv01
+     prmStonithN2	(stonith:external/ssh):	 Started srv01
  Resource Group: grpStonith3
-     prmStonithN3	(stonith:external/ssh):	Started srv02
+     prmStonithN3	(stonith:external/ssh):	 Started srv02
  Resource Group: grpStonith4
-     prmStonithN4	(stonith:external/ssh):	Started srv03
+     prmStonithN4	(stonith:external/ssh):	 Started srv03
  Clone Set: clnUMgroup01 [clnUmResource]
      Resource Group: clnUmResource:0
-         clnUMdummy01	(ocf::pacemaker:Dummy):	FAILED srv04
-         clnUMdummy02	(ocf::pacemaker:Dummy):	Started srv04
+         clnUMdummy01	(ocf::pacemaker:Dummy):	 FAILED srv04
+         clnUMdummy02	(ocf::pacemaker:Dummy):	 Started srv04
      Started: [ srv01 ]
      Stopped: [ srv02 srv03 ]
  Clone Set: clnPingd [clnPrmPingd]
@@ -85,24 +85,24 @@ Revised cluster status:
 Online: [ srv01 srv02 srv03 srv04 ]
 
  Resource Group: UMgroup01
-     UmVIPcheck	(ocf::pacemaker:Dummy):	Started srv04
-     UmIPaddr	(ocf::pacemaker:Dummy):	Started srv04
-     UmDummy01	(ocf::pacemaker:Dummy):	Started srv04
-     UmDummy02	(ocf::pacemaker:Dummy):	Started srv04
+     UmVIPcheck	(ocf::pacemaker:Dummy):	 Started srv04
+     UmIPaddr	(ocf::pacemaker:Dummy):	 Started srv04
+     UmDummy01	(ocf::pacemaker:Dummy):	 Started srv04
+     UmDummy02	(ocf::pacemaker:Dummy):	 Started srv04
  Resource Group: OVDBgroup02-1
-     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started srv01
+     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started srv01
  Resource Group: OVDBgroup02-2
-     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started srv02
+     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started srv02
  Resource Group: OVDBgroup02-3
-     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started srv03
+     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started srv03
  Resource Group: grpStonith1
-     prmStonithN1	(stonith:external/ssh):	Started srv04
+     prmStonithN1	(stonith:external/ssh):	 Started srv04
  Resource Group: grpStonith2
-     prmStonithN2	(stonith:external/ssh):	Started srv01
+     prmStonithN2	(stonith:external/ssh):	 Started srv01
  Resource Group: grpStonith3
-     prmStonithN3	(stonith:external/ssh):	Started srv02
+     prmStonithN3	(stonith:external/ssh):	 Started srv02
  Resource Group: grpStonith4
-     prmStonithN4	(stonith:external/ssh):	Started srv03
+     prmStonithN4	(stonith:external/ssh):	 Started srv03
  Clone Set: clnUMgroup01 [clnUmResource]
      Started: [ srv04 ]
      Stopped: [ srv01 srv02 srv03 ]

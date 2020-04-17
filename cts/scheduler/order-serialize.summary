@@ -3,16 +3,16 @@ Current cluster status:
 Node xen-a (445a93d5-655e-430b-b45d-47d79a2f78c7): standby
 Online: [ xen-b ]
 
- xen-a-fencing	(stonith:external/ipmi):	Started xen-b
- xen-b-fencing	(stonith:external/ipmi):	Started xen-a
- db	(ocf::heartbeat:Xen):	Started xen-a
- dbreplica	(ocf::heartbeat:Xen):	Started xen-b
- core-101	(ocf::heartbeat:Xen):	Started xen-a
- core-200	(ocf::heartbeat:Xen):	Started xen-a
- sysadmin	(ocf::heartbeat:Xen):	Started xen-b
- edge	(ocf::heartbeat:Xen):	Started xen-a
- base	(ocf::heartbeat:Xen):	Started xen-a
- Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
+ xen-a-fencing	(stonith:external/ipmi):	 Started xen-b
+ xen-b-fencing	(stonith:external/ipmi):	 Started xen-a
+ db	(ocf::heartbeat:Xen):	 Started xen-a
+ dbreplica	(ocf::heartbeat:Xen):	 Started xen-b
+ core-101	(ocf::heartbeat:Xen):	 Started xen-a
+ core-200	(ocf::heartbeat:Xen):	 Started xen-a
+ sysadmin	(ocf::heartbeat:Xen):	 Started xen-b
+ edge	(ocf::heartbeat:Xen):	 Started xen-a
+ base	(ocf::heartbeat:Xen):	 Started xen-a
+ Email_Alerting	(ocf::heartbeat:MailTo):	 Started xen-b
 
 Transition Summary:
  * Restart    xen-a-fencing     (          xen-b )   due to resource definition change
@@ -58,14 +58,14 @@ Revised cluster status:
 Node xen-a (445a93d5-655e-430b-b45d-47d79a2f78c7): standby
 Online: [ xen-b ]
 
- xen-a-fencing	(stonith:external/ipmi):	Started xen-b
- xen-b-fencing	(stonith:external/ipmi):	Stopped
- db	(ocf::heartbeat:Xen):	Started xen-b
- dbreplica	(ocf::heartbeat:Xen):	Started xen-b
- core-101	(ocf::heartbeat:Xen):	Started xen-b
- core-200	(ocf::heartbeat:Xen):	Started xen-b
- sysadmin	(ocf::heartbeat:Xen):	Started xen-b
- edge	(ocf::heartbeat:Xen):	Started xen-b
- base	(ocf::heartbeat:Xen):	Started xen-b
- Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
+ xen-a-fencing	(stonith:external/ipmi):	 Started xen-b
+ xen-b-fencing	(stonith:external/ipmi):	 Stopped
+ db	(ocf::heartbeat:Xen):	 Started xen-b
+ dbreplica	(ocf::heartbeat:Xen):	 Started xen-b
+ core-101	(ocf::heartbeat:Xen):	 Started xen-b
+ core-200	(ocf::heartbeat:Xen):	 Started xen-b
+ sysadmin	(ocf::heartbeat:Xen):	 Started xen-b
+ edge	(ocf::heartbeat:Xen):	 Started xen-b
+ base	(ocf::heartbeat:Xen):	 Started xen-b
+ Email_Alerting	(ocf::heartbeat:MailTo):	 Started xen-b
 

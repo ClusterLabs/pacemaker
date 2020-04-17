@@ -3,16 +3,16 @@ Current cluster status:
 Node c001n02 (e9bdfde9-01b0-421f-acd8-8a65a53e775f): UNCLEAN (offline)
 Online: [ c001n01 c001n03 c001n08 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n08
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02 (UNCLEAN)
- rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
- rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started c001n08
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	 Started c001n08
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	 Started c001n02 (UNCLEAN)
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	 Started c001n03
+ rsc_c001n01	(ocf::heartbeat:IPaddr):	 Started c001n01
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Started c001n02 (UNCLEAN)
-     child_DoFencing:1	(stonith:ssh):	Started c001n03
-     child_DoFencing:2	(stonith:ssh):	Started c001n01
-     child_DoFencing:3	(stonith:ssh):	Started c001n08
+     child_DoFencing:0	(stonith:ssh):	 Started c001n02 (UNCLEAN)
+     child_DoFencing:1	(stonith:ssh):	 Started c001n03
+     child_DoFencing:2	(stonith:ssh):	 Started c001n01
+     child_DoFencing:3	(stonith:ssh):	 Started c001n08
 
 Transition Summary:
  * Fence (reboot) c001n02 'peer is no longer part of the cluster'
@@ -49,14 +49,14 @@ Revised cluster status:
 Online: [ c001n01 c001n03 c001n08 ]
 OFFLINE: [ c001n02 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n08
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n01
- rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
- rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started c001n08
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	 Started c001n08
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	 Started c001n01
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	 Started c001n03
+ rsc_c001n01	(ocf::heartbeat:IPaddr):	 Started c001n01
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Stopped
-     child_DoFencing:1	(stonith:ssh):	Started c001n03
-     child_DoFencing:2	(stonith:ssh):	Started c001n01
-     child_DoFencing:3	(stonith:ssh):	Started c001n08
+     child_DoFencing:0	(stonith:ssh):	 Stopped
+     child_DoFencing:1	(stonith:ssh):	 Started c001n03
+     child_DoFencing:2	(stonith:ssh):	 Started c001n01
+     child_DoFencing:3	(stonith:ssh):	 Started c001n08
 

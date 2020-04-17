@@ -6,9 +6,9 @@ Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
      Masters: [ arc-tkincaidlx.wsicorp.com ]
      Slaves: [ arc-dknightlx ]
  Resource Group: grp_pgsql_mirror
-     fs_mirror	(ocf::heartbeat:Filesystem):	Started arc-tkincaidlx.wsicorp.com
-     pgsql_5555	(ocf::heartbeat:pgsql):	Started arc-tkincaidlx.wsicorp.com
-     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	Started arc-tkincaidlx.wsicorp.com
+     fs_mirror	(ocf::heartbeat:Filesystem):	 Started arc-tkincaidlx.wsicorp.com
+     pgsql_5555	(ocf::heartbeat:pgsql):	 Started arc-tkincaidlx.wsicorp.com
+     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	 Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
  * Shutdown arc-dknightlx
@@ -54,7 +54,7 @@ Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
      Slaves: [ arc-tkincaidlx.wsicorp.com ]
      Stopped: [ arc-dknightlx ]
  Resource Group: grp_pgsql_mirror
-     fs_mirror	(ocf::heartbeat:Filesystem):	Stopped
-     pgsql_5555	(ocf::heartbeat:pgsql):	Stopped
-     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	Stopped
+     fs_mirror	(ocf::heartbeat:Filesystem):	 Stopped
+     pgsql_5555	(ocf::heartbeat:pgsql):	 Stopped
+     IPaddr_147_81_84_133	(ocf::heartbeat:IPaddr):	 Stopped
 

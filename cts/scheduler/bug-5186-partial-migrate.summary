@@ -3,25 +3,25 @@ Current cluster status:
 Node bl460g1n7 (3232261593): UNCLEAN (offline)
 Online: [ bl460g1n6 bl460g1n8 ]
 
- prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n7 (UNCLEAN)
- prmVM2	(ocf::heartbeat:VirtualDomain):	Migrating bl460g1n7 (UNCLEAN)
+ prmDummy	(ocf::pacemaker:Dummy):	 Started bl460g1n7 (UNCLEAN)
+ prmVM2	(ocf::heartbeat:VirtualDomain):	 Migrating bl460g1n7 (UNCLEAN)
  Resource Group: grpStonith6
-     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8
-     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8
+     prmStonith6-1	(stonith:external/stonith-helper):	 Started bl460g1n8
+     prmStonith6-2	(stonith:external/ipmi):	 Started bl460g1n8
  Resource Group: grpStonith7
-     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6
-     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6
+     prmStonith7-1	(stonith:external/stonith-helper):	 Started bl460g1n6
+     prmStonith7-2	(stonith:external/ipmi):	 Started bl460g1n6
  Resource Group: grpStonith8
-     prmStonith8-1	(stonith:external/stonith-helper):	Started bl460g1n7 (UNCLEAN)
-     prmStonith8-2	(stonith:external/ipmi):	Started bl460g1n7 (UNCLEAN)
+     prmStonith8-1	(stonith:external/stonith-helper):	 Started bl460g1n7 (UNCLEAN)
+     prmStonith8-2	(stonith:external/ipmi):	 Started bl460g1n7 (UNCLEAN)
  Clone Set: clnDiskd1 [prmDiskd1]
-     prmDiskd1	(ocf::pacemaker:diskd):	Started bl460g1n7 (UNCLEAN)
+     prmDiskd1	(ocf::pacemaker:diskd):	 Started bl460g1n7 (UNCLEAN)
      Started: [ bl460g1n6 bl460g1n8 ]
  Clone Set: clnDiskd2 [prmDiskd2]
-     prmDiskd2	(ocf::pacemaker:diskd):	Started bl460g1n7 (UNCLEAN)
+     prmDiskd2	(ocf::pacemaker:diskd):	 Started bl460g1n7 (UNCLEAN)
      Started: [ bl460g1n6 bl460g1n8 ]
  Clone Set: clnPing [prmPing]
-     prmPing	(ocf::pacemaker:ping):	Started bl460g1n7 (UNCLEAN)
+     prmPing	(ocf::pacemaker:ping):	 Started bl460g1n7 (UNCLEAN)
      Started: [ bl460g1n6 bl460g1n8 ]
 
 Transition Summary:
@@ -66,17 +66,17 @@ Revised cluster status:
 Online: [ bl460g1n6 bl460g1n8 ]
 OFFLINE: [ bl460g1n7 ]
 
- prmDummy	(ocf::pacemaker:Dummy):	Started bl460g1n6
- prmVM2	(ocf::heartbeat:VirtualDomain):	Started bl460g1n8
+ prmDummy	(ocf::pacemaker:Dummy):	 Started bl460g1n6
+ prmVM2	(ocf::heartbeat:VirtualDomain):	 Started bl460g1n8
  Resource Group: grpStonith6
-     prmStonith6-1	(stonith:external/stonith-helper):	Started bl460g1n8
-     prmStonith6-2	(stonith:external/ipmi):	Started bl460g1n8
+     prmStonith6-1	(stonith:external/stonith-helper):	 Started bl460g1n8
+     prmStonith6-2	(stonith:external/ipmi):	 Started bl460g1n8
  Resource Group: grpStonith7
-     prmStonith7-1	(stonith:external/stonith-helper):	Started bl460g1n6
-     prmStonith7-2	(stonith:external/ipmi):	Started bl460g1n6
+     prmStonith7-1	(stonith:external/stonith-helper):	 Started bl460g1n6
+     prmStonith7-2	(stonith:external/ipmi):	 Started bl460g1n6
  Resource Group: grpStonith8
-     prmStonith8-1	(stonith:external/stonith-helper):	Started bl460g1n6
-     prmStonith8-2	(stonith:external/ipmi):	Started bl460g1n6
+     prmStonith8-1	(stonith:external/stonith-helper):	 Started bl460g1n6
+     prmStonith8-2	(stonith:external/ipmi):	 Started bl460g1n6
  Clone Set: clnDiskd1 [prmDiskd1]
      Started: [ bl460g1n6 bl460g1n8 ]
      Stopped: [ bl460g1n7 ]

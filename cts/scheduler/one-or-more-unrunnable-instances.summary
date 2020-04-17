@@ -3,25 +3,25 @@ Current cluster status:
 Online: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
 RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
 
- fence1	(stonith:fence_xvm):	Started rdo7-node2
- fence2	(stonith:fence_xvm):	Started rdo7-node1
- fence3	(stonith:fence_xvm):	Started rdo7-node3
+ fence1	(stonith:fence_xvm):	 Started rdo7-node2
+ fence2	(stonith:fence_xvm):	 Started rdo7-node1
+ fence3	(stonith:fence_xvm):	 Started rdo7-node3
  Clone Set: lb-haproxy-clone [lb-haproxy]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- vip-db	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-rabbitmq	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-keystone	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-glance	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-cinder	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-swift	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-neutron	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-nova	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-horizon	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-heat	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-qpid	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-node	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
+ vip-db	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-rabbitmq	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-keystone	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-glance	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-cinder	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-swift	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-neutron	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-nova	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-horizon	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-heat	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-ceilometer	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-qpid	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-node	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
  Clone Set: galera-master [galera] (promotable)
      Masters: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -47,7 +47,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: cinder-scheduler-clone [cinder-scheduler]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
- cinder-volume	(systemd:openstack-cinder-volume):	Stopped
+ cinder-volume	(systemd:openstack-cinder-volume):	 Stopped
  Clone Set: swift-fs-clone [swift-fs]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -59,13 +59,13 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: swift-proxy-clone [swift-proxy]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
- swift-object-expirer	(systemd:openstack-swift-object-expirer):	Stopped
+ swift-object-expirer	(systemd:openstack-swift-object-expirer):	 Stopped
  Clone Set: neutron-server-clone [neutron-server]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: neutron-scale-clone [neutron-scale] (unique)
-     neutron-scale:0	(ocf::neutron:NeutronScale):	Stopped
-     neutron-scale:1	(ocf::neutron:NeutronScale):	Stopped
-     neutron-scale:2	(ocf::neutron:NeutronScale):	Stopped
+     neutron-scale:0	(ocf::neutron:NeutronScale):	 Stopped
+     neutron-scale:1	(ocf::neutron:NeutronScale):	 Stopped
+     neutron-scale:2	(ocf::neutron:NeutronScale):	 Stopped
  Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: neutron-netns-cleanup-clone [neutron-netns-cleanup]
@@ -92,7 +92,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Masters: [ rdo7-node1 ]
      Slaves: [ rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- vip-redis	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
+ vip-redis	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
  Clone Set: ceilometer-central-clone [ceilometer-central]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: ceilometer-collector-clone [ceilometer-collector]
@@ -126,11 +126,11 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: nova-compute-clone [nova-compute]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
- fence-nova	(stonith:fence_compute):	Stopped
- fence-compute	(stonith:fence_apc_snmp):	Started rdo7-node3
- mrg-07	(ocf::pacemaker:remote):	Started rdo7-node1
- mrg-08	(ocf::pacemaker:remote):	Started rdo7-node2
- mrg-09	(ocf::pacemaker:remote):	Started rdo7-node3
+ fence-nova	(stonith:fence_compute):	 Stopped
+ fence-compute	(stonith:fence_apc_snmp):	 Started rdo7-node3
+ mrg-07	(ocf::pacemaker:remote):	 Started rdo7-node1
+ mrg-08	(ocf::pacemaker:remote):	 Started rdo7-node2
+ mrg-09	(ocf::pacemaker:remote):	 Started rdo7-node3
 
 Transition Summary:
  * Start      keystone:0                              ( rdo7-node2 )  
@@ -567,25 +567,25 @@ Revised cluster status:
 Online: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
 RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
 
- fence1	(stonith:fence_xvm):	Started rdo7-node2
- fence2	(stonith:fence_xvm):	Started rdo7-node1
- fence3	(stonith:fence_xvm):	Started rdo7-node3
+ fence1	(stonith:fence_xvm):	 Started rdo7-node2
+ fence2	(stonith:fence_xvm):	 Started rdo7-node1
+ fence3	(stonith:fence_xvm):	 Started rdo7-node3
  Clone Set: lb-haproxy-clone [lb-haproxy]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- vip-db	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-rabbitmq	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-keystone	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-glance	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-cinder	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-swift	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-neutron	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-nova	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-horizon	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-heat	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
- vip-qpid	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
- vip-node	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
+ vip-db	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-rabbitmq	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-keystone	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-glance	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-cinder	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-swift	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-neutron	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-nova	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-horizon	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-heat	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
+ vip-ceilometer	(ocf::heartbeat:IPaddr2):	 Started rdo7-node2
+ vip-qpid	(ocf::heartbeat:IPaddr2):	 Started rdo7-node3
+ vip-node	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
  Clone Set: galera-master [galera] (promotable)
      Masters: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -616,7 +616,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: cinder-scheduler-clone [cinder-scheduler]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- cinder-volume	(systemd:openstack-cinder-volume):	Started rdo7-node2
+ cinder-volume	(systemd:openstack-cinder-volume):	 Started rdo7-node2
  Clone Set: swift-fs-clone [swift-fs]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -632,14 +632,14 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: swift-proxy-clone [swift-proxy]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- swift-object-expirer	(systemd:openstack-swift-object-expirer):	Started rdo7-node3
+ swift-object-expirer	(systemd:openstack-swift-object-expirer):	 Started rdo7-node3
  Clone Set: neutron-server-clone [neutron-server]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: neutron-scale-clone [neutron-scale] (unique)
-     neutron-scale:0	(ocf::neutron:NeutronScale):	Started rdo7-node1
-     neutron-scale:1	(ocf::neutron:NeutronScale):	Started rdo7-node2
-     neutron-scale:2	(ocf::neutron:NeutronScale):	Started rdo7-node3
+     neutron-scale:0	(ocf::neutron:NeutronScale):	 Started rdo7-node1
+     neutron-scale:1	(ocf::neutron:NeutronScale):	 Started rdo7-node2
+     neutron-scale:2	(ocf::neutron:NeutronScale):	 Started rdo7-node3
  Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -677,7 +677,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Masters: [ rdo7-node1 ]
      Slaves: [ rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- vip-redis	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
+ vip-redis	(ocf::heartbeat:IPaddr2):	 Started rdo7-node1
  Clone Set: ceilometer-central-clone [ceilometer-central]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -726,9 +726,9 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: nova-compute-clone [nova-compute]
      Started: [ mrg-07 mrg-08 mrg-09 ]
      Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
- fence-nova	(stonith:fence_compute):	Started rdo7-node2
- fence-compute	(stonith:fence_apc_snmp):	Started rdo7-node3
- mrg-07	(ocf::pacemaker:remote):	Started rdo7-node1
- mrg-08	(ocf::pacemaker:remote):	Started rdo7-node2
- mrg-09	(ocf::pacemaker:remote):	Started rdo7-node3
+ fence-nova	(stonith:fence_compute):	 Started rdo7-node2
+ fence-compute	(stonith:fence_apc_snmp):	 Started rdo7-node3
+ mrg-07	(ocf::pacemaker:remote):	 Started rdo7-node1
+ mrg-08	(ocf::pacemaker:remote):	 Started rdo7-node2
+ mrg-09	(ocf::pacemaker:remote):	 Started rdo7-node3
 

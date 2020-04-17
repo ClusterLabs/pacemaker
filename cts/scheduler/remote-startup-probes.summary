@@ -3,12 +3,12 @@ Current cluster status:
 Online: [ 18builder 18node1 18node2 ]
 RemoteOFFLINE: [ remote1 ]
 
- shooter	(stonith:fence_xvm):	Started 18node1
- remote1	(ocf::pacemaker:remote):	Stopped
- FAKE1	(ocf::heartbeat:Dummy):	Started 18builder
- FAKE2	(ocf::heartbeat:Dummy):	Started 18node2
- FAKE3	(ocf::heartbeat:Dummy):	Started 18builder
- FAKE4	(ocf::heartbeat:Dummy):	Started 18node1
+ shooter	(stonith:fence_xvm):	 Started 18node1
+ remote1	(ocf::pacemaker:remote):	 Stopped
+ FAKE1	(ocf::heartbeat:Dummy):	 Started 18builder
+ FAKE2	(ocf::heartbeat:Dummy):	 Started 18node2
+ FAKE3	(ocf::heartbeat:Dummy):	 Started 18builder
+ FAKE4	(ocf::heartbeat:Dummy):	 Started 18node1
 
 Transition Summary:
  * Start      remote1     (            18builder )  
@@ -33,10 +33,10 @@ Revised cluster status:
 Online: [ 18builder 18node1 18node2 ]
 RemoteOnline: [ remote1 ]
 
- shooter	(stonith:fence_xvm):	Started 18node1
- remote1	(ocf::pacemaker:remote):	Started 18builder
- FAKE1	(ocf::heartbeat:Dummy):	Started 18node2
- FAKE2	(ocf::heartbeat:Dummy):	Started remote1
- FAKE3	(ocf::heartbeat:Dummy):	Started 18builder
- FAKE4	(ocf::heartbeat:Dummy):	Started 18node1
+ shooter	(stonith:fence_xvm):	 Started 18node1
+ remote1	(ocf::pacemaker:remote):	 Started 18builder
+ FAKE1	(ocf::heartbeat:Dummy):	 Started 18node2
+ FAKE2	(ocf::heartbeat:Dummy):	 Started remote1
+ FAKE3	(ocf::heartbeat:Dummy):	 Started 18builder
+ FAKE4	(ocf::heartbeat:Dummy):	 Started 18node1
 

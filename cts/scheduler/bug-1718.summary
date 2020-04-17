@@ -5,12 +5,12 @@ Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
 OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group
-     Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
-     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped (disabled)
-     resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped
+     Apache_IP	(ocf::heartbeat:IPaddr):	 Started heartbeat.ds9
+     resource_IP2	(ocf::heartbeat:IPaddr):	 Stopped (disabled)
+     resource_dummyweb	(ocf::heartbeat:Dummy):	 Stopped
  Resource Group: group_fUN
-     resource_IP3	(ocf::heartbeat:IPaddr):	Started ops.ds9
-     resource_dummy	(ocf::heartbeat:Dummy):	Started ops.ds9
+     resource_IP3	(ocf::heartbeat:IPaddr):	 Started ops.ds9
+     resource_dummy	(ocf::heartbeat:Dummy):	 Started ops.ds9
 
 Transition Summary:
  * Stop       resource_IP3     ( ops.ds9 )   due to unrunnable Web_Group running
@@ -32,10 +32,10 @@ Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
 OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
  Resource Group: Web_Group
-     Apache_IP	(ocf::heartbeat:IPaddr):	Started heartbeat.ds9
-     resource_IP2	(ocf::heartbeat:IPaddr):	Stopped (disabled)
-     resource_dummyweb	(ocf::heartbeat:Dummy):	Stopped
+     Apache_IP	(ocf::heartbeat:IPaddr):	 Started heartbeat.ds9
+     resource_IP2	(ocf::heartbeat:IPaddr):	 Stopped (disabled)
+     resource_dummyweb	(ocf::heartbeat:Dummy):	 Stopped
  Resource Group: group_fUN
-     resource_IP3	(ocf::heartbeat:IPaddr):	Stopped
-     resource_dummy	(ocf::heartbeat:Dummy):	Stopped
+     resource_IP3	(ocf::heartbeat:IPaddr):	 Stopped
+     resource_dummy	(ocf::heartbeat:Dummy):	 Stopped
 

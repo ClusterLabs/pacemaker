@@ -4,9 +4,9 @@ Current cluster status:
 Online: [ node1 node3 node4 node5 ]
 OFFLINE: [ node2 ]
 
- Fencing	(stonith:fence_xvm):	Started node1
- rsc1	(ocf::pacemaker:Dummy):	Started node1
- rsc2	(ocf::pacemaker:Dummy):	Stopped node2 (LOCKED)
+ Fencing	(stonith:fence_xvm):	 Started node1
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
+ rsc2	(ocf::pacemaker:Dummy):	 Stopped node2 (LOCKED)
 
 Transition Summary:
  * Shutdown node1
@@ -25,7 +25,7 @@ Revised cluster status:
 Online: [ node1 node3 node4 node5 ]
 OFFLINE: [ node2 ]
 
- Fencing	(stonith:fence_xvm):	Started node3
- rsc1	(ocf::pacemaker:Dummy):	Stopped
- rsc2	(ocf::pacemaker:Dummy):	Stopped node2 (LOCKED)
+ Fencing	(stonith:fence_xvm):	 Started node3
+ rsc1	(ocf::pacemaker:Dummy):	 Stopped
+ rsc2	(ocf::pacemaker:Dummy):	 Stopped node2 (LOCKED)
 

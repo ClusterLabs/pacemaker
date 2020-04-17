@@ -4,7 +4,7 @@ Online: [ srv1 srv2 ]
 
  Clone Set: pgsql-ha [pgsqld] (promotable)
      Stopped: [ srv1 srv2 ]
- pgsql-master-ip	(ocf::heartbeat:IPaddr2):	Stopped
+ pgsql-master-ip	(ocf::heartbeat:IPaddr2):	 Stopped
 
 Transition Summary:
  * Promote    pgsqld:0            ( Stopped -> Master srv1 )  
@@ -48,5 +48,5 @@ Online: [ srv1 srv2 ]
  Clone Set: pgsql-ha [pgsqld] (promotable)
      Masters: [ srv1 ]
      Slaves: [ srv2 ]
- pgsql-master-ip	(ocf::heartbeat:IPaddr2):	Started srv1
+ pgsql-master-ip	(ocf::heartbeat:IPaddr2):	 Started srv1
 

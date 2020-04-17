@@ -3,10 +3,10 @@ Current cluster status:
 Node c20.chepkov.lan: standby
 Online: [ c19.chepkov.lan c21.chepkov.lan ]
 
- dummy1	(ocf::pacemaker:Dummy):	Started c19.chepkov.lan
- dummy2	(ocf::pacemaker:Dummy):	Started c20.chepkov.lan
- dummy4	(ocf::pacemaker:Dummy):	Stopped
- dummy3	(ocf::pacemaker:Dummy):	Started c21.chepkov.lan
+ dummy1	(ocf::pacemaker:Dummy):	 Started c19.chepkov.lan
+ dummy2	(ocf::pacemaker:Dummy):	 Started c20.chepkov.lan
+ dummy4	(ocf::pacemaker:Dummy):	 Stopped
+ dummy3	(ocf::pacemaker:Dummy):	 Started c21.chepkov.lan
 
 Transition Summary:
  * Move       dummy2     ( c20.chepkov.lan -> c21.chepkov.lan )  
@@ -24,8 +24,8 @@ Revised cluster status:
 Node c20.chepkov.lan: standby
 Online: [ c19.chepkov.lan c21.chepkov.lan ]
 
- dummy1	(ocf::pacemaker:Dummy):	Started c19.chepkov.lan
- dummy2	(ocf::pacemaker:Dummy):	Started c21.chepkov.lan
- dummy4	(ocf::pacemaker:Dummy):	Stopped
- dummy3	(ocf::pacemaker:Dummy):	Stopped
+ dummy1	(ocf::pacemaker:Dummy):	 Started c19.chepkov.lan
+ dummy2	(ocf::pacemaker:Dummy):	 Started c21.chepkov.lan
+ dummy4	(ocf::pacemaker:Dummy):	 Stopped
+ dummy3	(ocf::pacemaker:Dummy):	 Stopped
 

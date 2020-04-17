@@ -5,9 +5,9 @@ Node rhel7-alt2 (2): standby
 RemoteNode rhel7-alt4: UNCLEAN (offline)
 OFFLINE: [ rhel7-alt3 ]
 
- shooter	(stonith:fence_xvm):	Stopped
- rhel7-alt4	(ocf::pacemaker:remote):	Stopped
- fake	(ocf::heartbeat:Dummy):	Started rhel7-alt4 (UNCLEAN)
+ shooter	(stonith:fence_xvm):	 Stopped
+ rhel7-alt4	(ocf::pacemaker:remote):	 Stopped
+ fake	(ocf::heartbeat:Dummy):	 Started rhel7-alt4 (UNCLEAN)
 
 Transition Summary:
  * Fence (reboot) rhel7-alt4 'fake is active there (fencing will be revoked if remote connection can be re-established elsewhere)'
@@ -23,7 +23,7 @@ Node rhel7-alt2 (2): standby
 OFFLINE: [ rhel7-alt3 ]
 RemoteOFFLINE: [ rhel7-alt4 ]
 
- shooter	(stonith:fence_xvm):	Stopped
- rhel7-alt4	(ocf::pacemaker:remote):	Stopped
- fake	(ocf::heartbeat:Dummy):	Stopped
+ shooter	(stonith:fence_xvm):	 Stopped
+ rhel7-alt4	(ocf::pacemaker:remote):	 Stopped
+ fake	(ocf::heartbeat:Dummy):	 Stopped
 

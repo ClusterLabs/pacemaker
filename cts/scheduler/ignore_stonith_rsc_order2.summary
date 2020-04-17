@@ -2,10 +2,10 @@
 Current cluster status:
 Online: [ fc16-builder ]
 
- S_A	(stonith:fence_xvm):	Stopped
+ S_A	(stonith:fence_xvm):	 Stopped
  Resource Group: MIXED_GROUP
-     A	(ocf::pacemaker:Dummy):	Stopped
-     S_B	(stonith:fence_xvm):	Stopped
+     A	(ocf::pacemaker:Dummy):	 Stopped
+     S_B	(stonith:fence_xvm):	 Stopped
 
 Transition Summary:
  * Start      S_A     ( fc16-builder )  
@@ -25,8 +25,8 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ fc16-builder ]
 
- S_A	(stonith:fence_xvm):	Started fc16-builder
+ S_A	(stonith:fence_xvm):	 Started fc16-builder
  Resource Group: MIXED_GROUP
-     A	(ocf::pacemaker:Dummy):	Started fc16-builder
-     S_B	(stonith:fence_xvm):	Started fc16-builder
+     A	(ocf::pacemaker:Dummy):	 Started fc16-builder
+     S_B	(stonith:fence_xvm):	 Started fc16-builder
 

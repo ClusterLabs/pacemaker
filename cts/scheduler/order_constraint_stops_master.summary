@@ -5,7 +5,7 @@ Online: [ fc16-builder fc16-builder2 ]
 
  Clone Set: MASTER_RSC_A [NATIVE_RSC_A] (promotable)
      Masters: [ fc16-builder ]
- NATIVE_RSC_B	(ocf::pacemaker:Dummy):	Started fc16-builder2 (disabled)
+ NATIVE_RSC_B	(ocf::pacemaker:Dummy):	 Started fc16-builder2 (disabled)
 
 Transition Summary:
  * Stop       NATIVE_RSC_A:0     ( Master fc16-builder )   due to required NATIVE_RSC_B start
@@ -37,5 +37,5 @@ Online: [ fc16-builder fc16-builder2 ]
 
  Clone Set: MASTER_RSC_A [NATIVE_RSC_A] (promotable)
      Stopped: [ fc16-builder fc16-builder2 ]
- NATIVE_RSC_B	(ocf::pacemaker:Dummy):	Stopped (disabled)
+ NATIVE_RSC_B	(ocf::pacemaker:Dummy):	 Stopped (disabled)
 

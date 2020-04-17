@@ -4,21 +4,21 @@ Online: [ undercloud ]
 GuestOnline: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 redis-bundle-0:redis-bundle-docker-0 ]
 
  Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started undercloud
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started undercloud
  Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	Master undercloud
+   galera-bundle-0	(ocf::heartbeat:galera):	 Master undercloud
  Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	Master undercloud
- ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Started undercloud
- ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Started undercloud
- ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Started undercloud
- ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Started undercloud
- ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Started undercloud
- ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Started undercloud
+   redis-bundle-0	(ocf::heartbeat:redis):	 Master undercloud
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	 Started undercloud
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	 Started undercloud
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	 Started undercloud
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	 Started undercloud
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	 Started undercloud
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	 Started undercloud
  Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started undercloud
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started undercloud
  Container bundle: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
-   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Started undercloud
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	 Started undercloud
 
 Transition Summary:
  * Shutdown undercloud
@@ -108,19 +108,19 @@ Revised cluster status:
 Online: [ undercloud ]
 
  Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Stopped
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Stopped
  Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	Stopped
+   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped
  Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	Stopped
- ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	Stopped
- ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	Stopped
- ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	Stopped
- ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	Stopped
- ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	Stopped
- ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	Stopped
+   redis-bundle-0	(ocf::heartbeat:redis):	 Stopped
+ ip-192.168.122.254	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-192.168.122.250	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-192.168.122.249	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-192.168.122.253	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-192.168.122.247	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-192.168.122.248	(ocf::heartbeat:IPaddr2):	 Stopped
  Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Stopped
  Container bundle: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]
-   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	Stopped
+   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	 Stopped
 

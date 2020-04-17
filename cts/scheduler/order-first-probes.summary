@@ -5,8 +5,8 @@ Node rh72-01 (3232238257): standby
 Online: [ rh72-02 ]
 
  Resource Group: grpDummy
-     prmDummy1	(ocf::pacemaker:Dummy1):	Started rh72-01
-     prmDummy2	(ocf::pacemaker:Dummy2):	Stopped
+     prmDummy1	(ocf::pacemaker:Dummy1):	 Started rh72-01
+     prmDummy2	(ocf::pacemaker:Dummy2):	 Stopped
 
 Transition Summary:
  * Move       prmDummy1     ( rh72-01 -> rh72-02 )  
@@ -30,6 +30,6 @@ Node rh72-01 (3232238257): standby
 Online: [ rh72-02 ]
 
  Resource Group: grpDummy
-     prmDummy1	(ocf::pacemaker:Dummy1):	Started rh72-02
-     prmDummy2	(ocf::pacemaker:Dummy2):	Started rh72-02
+     prmDummy1	(ocf::pacemaker:Dummy1):	 Started rh72-02
+     prmDummy2	(ocf::pacemaker:Dummy2):	 Started rh72-02
 

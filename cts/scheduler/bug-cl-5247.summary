@@ -4,15 +4,15 @@ Current cluster status:
 Online: [ bl460g8n3 bl460g8n4 ]
 GuestOnline: [ pgsr01:prmDB1 ]
 
- prmDB1	(ocf::heartbeat:VirtualDomain):	Started bl460g8n3
- prmDB2	(ocf::heartbeat:VirtualDomain):	FAILED bl460g8n4
+ prmDB1	(ocf::heartbeat:VirtualDomain):	 Started bl460g8n3
+ prmDB2	(ocf::heartbeat:VirtualDomain):	 FAILED bl460g8n4
  Resource Group: grpStonith1
-     prmStonith1-2	(stonith:external/ipmi):	Started bl460g8n4
+     prmStonith1-2	(stonith:external/ipmi):	 Started bl460g8n4
  Resource Group: grpStonith2
-     prmStonith2-2	(stonith:external/ipmi):	Started bl460g8n3
+     prmStonith2-2	(stonith:external/ipmi):	 Started bl460g8n3
  Resource Group: master-group
-     vip-master	(ocf::heartbeat:Dummy):	FAILED pgsr02
-     vip-rep	(ocf::heartbeat:Dummy):	FAILED pgsr02
+     vip-master	(ocf::heartbeat:Dummy):	 FAILED pgsr02
+     vip-rep	(ocf::heartbeat:Dummy):	 FAILED pgsr02
  Clone Set: msPostgresql [pgsql] (promotable)
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
@@ -86,15 +86,15 @@ Revised cluster status:
 Online: [ bl460g8n3 bl460g8n4 ]
 GuestOnline: [ pgsr01:prmDB1 ]
 
- prmDB1	(ocf::heartbeat:VirtualDomain):	Started bl460g8n3
- prmDB2	(ocf::heartbeat:VirtualDomain):	FAILED
+ prmDB1	(ocf::heartbeat:VirtualDomain):	 Started bl460g8n3
+ prmDB2	(ocf::heartbeat:VirtualDomain):	 FAILED
  Resource Group: grpStonith1
-     prmStonith1-2	(stonith:external/ipmi):	Started bl460g8n4
+     prmStonith1-2	(stonith:external/ipmi):	 Started bl460g8n4
  Resource Group: grpStonith2
-     prmStonith2-2	(stonith:external/ipmi):	Started bl460g8n3
+     prmStonith2-2	(stonith:external/ipmi):	 Started bl460g8n3
  Resource Group: master-group
-     vip-master	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
-     vip-rep	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
+     vip-master	(ocf::heartbeat:Dummy):	 FAILED[ pgsr01 pgsr02 ]
+     vip-rep	(ocf::heartbeat:Dummy):	 FAILED[ pgsr01 pgsr02 ]
  Clone Set: msPostgresql [pgsql] (promotable)
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]

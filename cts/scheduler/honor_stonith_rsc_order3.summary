@@ -6,7 +6,7 @@ Online: [ fc16-builder ]
      Stopped: [ fc16-builder ]
  Clone Set: S_CLONE2 [S_GROUP]
      Stopped: [ fc16-builder ]
- A	(ocf::pacemaker:Dummy):	Stopped
+ A	(ocf::pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      S_A:0   ( fc16-builder )  
@@ -40,5 +40,5 @@ Online: [ fc16-builder ]
      Started: [ fc16-builder ]
  Clone Set: S_CLONE2 [S_GROUP]
      Started: [ fc16-builder ]
- A	(ocf::pacemaker:Dummy):	Started fc16-builder
+ A	(ocf::pacemaker:Dummy):	 Started fc16-builder
 

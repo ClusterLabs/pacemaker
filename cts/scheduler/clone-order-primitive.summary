@@ -4,7 +4,7 @@ Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709
 
  Clone Set: cups_clone [cups_lsb]
      Stopped: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
- smb_lsb	(lsb:smb):	Stopped
+ smb_lsb	(lsb:smb):	 Stopped
 
 Transition Summary:
  * Start      cups_lsb:0     ( pcw2058.see.ed.ac.uk )  
@@ -23,5 +23,5 @@ Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709
 
  Clone Set: cups_clone [cups_lsb]
      Started: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk ]
- smb_lsb	(lsb:smb):	Started pcw2688.see.ed.ac.uk
+ smb_lsb	(lsb:smb):	 Started pcw2688.see.ed.ac.uk
 

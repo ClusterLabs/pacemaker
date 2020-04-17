@@ -2,16 +2,16 @@
 Current cluster status:
 Online: [ ibm1 sgi2 test02 test03 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started test03 (Monitoring)
- rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped
- rsc_ibm1	(ocf::heartbeat:IPaddr):	Started test03 (Monitoring)
- rsc_test02	(ocf::heartbeat:IPaddr):	Stopped
- rsc_test03	(ocf::heartbeat:IPaddr):	Started test03 (Monitoring)
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started test03 (Monitoring)
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	 Stopped
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	 Started test03 (Monitoring)
+ rsc_test02	(ocf::heartbeat:IPaddr):	 Stopped
+ rsc_test03	(ocf::heartbeat:IPaddr):	 Started test03 (Monitoring)
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Starting test02
-     child_DoFencing:1	(stonith:ssh):	Starting test03
-     child_DoFencing:2	(stonith:ssh):	Stopped
-     child_DoFencing:3	(stonith:ssh):	Stopped
+     child_DoFencing:0	(stonith:ssh):	 Starting test02
+     child_DoFencing:1	(stonith:ssh):	 Starting test03
+     child_DoFencing:2	(stonith:ssh):	 Stopped
+     child_DoFencing:3	(stonith:ssh):	 Stopped
 
 Transition Summary:
  * Start      rsc_sgi2              (           sgi2 )  
@@ -74,14 +74,14 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ ibm1 sgi2 test02 test03 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started test03
- rsc_sgi2	(ocf::heartbeat:IPaddr):	Started sgi2
- rsc_ibm1	(ocf::heartbeat:IPaddr):	Started ibm1
- rsc_test02	(ocf::heartbeat:IPaddr):	Started test02
- rsc_test03	(ocf::heartbeat:IPaddr):	Started test03
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started test03
+ rsc_sgi2	(ocf::heartbeat:IPaddr):	 Started sgi2
+ rsc_ibm1	(ocf::heartbeat:IPaddr):	 Started ibm1
+ rsc_test02	(ocf::heartbeat:IPaddr):	 Started test02
+ rsc_test03	(ocf::heartbeat:IPaddr):	 Started test03
  Clone Set: DoFencing [child_DoFencing] (unique)
-     child_DoFencing:0	(stonith:ssh):	Started test02
-     child_DoFencing:1	(stonith:ssh):	Started test03
-     child_DoFencing:2	(stonith:ssh):	Started ibm1
-     child_DoFencing:3	(stonith:ssh):	Started sgi2
+     child_DoFencing:0	(stonith:ssh):	 Started test02
+     child_DoFencing:1	(stonith:ssh):	 Started test03
+     child_DoFencing:2	(stonith:ssh):	 Started ibm1
+     child_DoFencing:3	(stonith:ssh):	 Started sgi2
 

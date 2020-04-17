@@ -4,7 +4,7 @@ Node hadev1 (6125a0df-456a-4395-829a-418e9a380d36): UNCLEAN (offline)
 Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
 Online: [ hadev2 ]
 
- child_DoFencing	(stonith:ssh):	Stopped
+ child_DoFencing	(stonith:ssh):	 Stopped
 
 Transition Summary:
  * Start      child_DoFencing     ( hadev2 )  
@@ -19,5 +19,5 @@ Node hadev1 (6125a0df-456a-4395-829a-418e9a380d36): UNCLEAN (offline)
 Node hadev3 (879e65f8-4b38-4c56-9552-4752ad436669): UNCLEAN (offline)
 Online: [ hadev2 ]
 
- child_DoFencing	(stonith:ssh):	Started hadev2
+ child_DoFencing	(stonith:ssh):	 Started hadev2
 

@@ -5,8 +5,8 @@ Online: [ node-0 node-2 ]
  Clone Set: clone-node-app-rsc [node-app-rsc]
      Started: [ node-0 node-2 ]
  Resource Group: group-dc
-     failover-ip	(ocf::heartbeat:IPaddr2):	Started node-0
-     master-app-rsc	(lsb:cluster-master):	Started node-0
+     failover-ip	(ocf::heartbeat:IPaddr2):	 Started node-0
+     master-app-rsc	(lsb:cluster-master):	 Started node-0
 
 Transition Summary:
 
@@ -18,6 +18,6 @@ Online: [ node-0 node-2 ]
  Clone Set: clone-node-app-rsc [node-app-rsc]
      Started: [ node-0 node-2 ]
  Resource Group: group-dc
-     failover-ip	(ocf::heartbeat:IPaddr2):	Started node-0
-     master-app-rsc	(lsb:cluster-master):	Started node-0
+     failover-ip	(ocf::heartbeat:IPaddr2):	 Started node-0
+     master-app-rsc	(lsb:cluster-master):	 Started node-0
 

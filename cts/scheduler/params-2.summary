@@ -2,9 +2,9 @@
 Current cluster status:
 Online: [ node1 node2 node3 ]
 
- rsc1	(lsb:apache):	Started node1
- rsc2	(lsb:apache):	Started node2
- rsc3	(lsb:apache):	Stopped
+ rsc1	(lsb:apache):	 Started node1
+ rsc2	(lsb:apache):	 Started node2
+ rsc3	(lsb:apache):	 Stopped
 
 Transition Summary:
  * Shutdown node1
@@ -30,7 +30,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- rsc1	(lsb:apache):	Stopped
- rsc2	(lsb:apache):	Started node2
- rsc3	(lsb:apache):	Started node3
+ rsc1	(lsb:apache):	 Stopped
+ rsc2	(lsb:apache):	 Started node2
+ rsc3	(lsb:apache):	 Started node3
 

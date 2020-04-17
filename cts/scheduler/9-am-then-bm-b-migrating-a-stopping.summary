@@ -3,8 +3,8 @@
 Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
- A	(ocf::heartbeat:Dummy):	Started 18node1 (disabled)
- B	(ocf::heartbeat:Dummy):	Started 18node2
+ A	(ocf::heartbeat:Dummy):	 Started 18node1 (disabled)
+ B	(ocf::heartbeat:Dummy):	 Started 18node2
 
 Transition Summary:
  * Stop       A       ( 18node1 )   due to node availability
@@ -17,6 +17,6 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]
 
- A	(ocf::heartbeat:Dummy):	Stopped (disabled)
- B	(ocf::heartbeat:Dummy):	Stopped
+ A	(ocf::heartbeat:Dummy):	 Stopped (disabled)
+ B	(ocf::heartbeat:Dummy):	 Stopped
 
