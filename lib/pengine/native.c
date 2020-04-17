@@ -1038,6 +1038,7 @@ native_print(pe_resource_t * rsc, const char *pre_text, long options, void *prin
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
@@ -1106,6 +1107,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
@@ -1124,6 +1126,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
 }
 
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "struct pe_resource_t *", "GListPtr")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {

@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
 #include <stdarg.h>
 
 #include <crm/stonith-ng.h>
@@ -28,6 +29,7 @@ time_t_string(time_t when) {
     return buf;
 }
 
+PCMK__OUTPUT_ARGS("failed-fencing-history", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -66,6 +68,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("fencing-history", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -106,6 +109,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__full_history(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
@@ -142,6 +146,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
  
+PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -183,6 +188,7 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
 int
 stonith__last_fenced_html(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
@@ -198,6 +204,7 @@ stonith__last_fenced_html(pcmk__output_t *out, va_list args) {
     }
 }
 
+PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
 int
 stonith__last_fenced_text(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
@@ -212,6 +219,7 @@ stonith__last_fenced_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
 int
 stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
@@ -231,6 +239,7 @@ stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     }
 }
 
+PCMK__OUTPUT_ARGS("pending-fencing-actions", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -270,6 +279,7 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -317,6 +327,7 @@ stonith__event_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -354,6 +365,7 @@ stonith__event_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");
@@ -399,6 +411,7 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
 int
 stonith__validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
@@ -423,6 +436,7 @@ stonith__validate_agent_html(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
 int
 stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
@@ -450,6 +464,7 @@ stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
 int
 stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "validate");

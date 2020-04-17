@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
@@ -308,6 +309,7 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_end(ap);
 }
 
+PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
 static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -350,6 +352,7 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("maint-mode")
 static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     printw("\n              *** Resource management is DISABLED ***");
