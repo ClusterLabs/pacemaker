@@ -30,4 +30,8 @@ bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml,
 
 bool pcmk_acl_required(const char *user);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif // PCMK__COMMON_ACL__H
