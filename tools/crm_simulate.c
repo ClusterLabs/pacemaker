@@ -924,8 +924,6 @@ main(int argc, char **argv)
         /* Redirect stderr to stdout so we can grep the output */
         close(STDERR_FILENO);
         dup2(STDOUT_FILENO, STDERR_FILENO);
-
-        crm_bump_log_level(argc, argv);
         action_numbers = TRUE;
     }
 
