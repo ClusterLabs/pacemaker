@@ -149,6 +149,32 @@ static pcmk__cli_option_t long_options[] = {
     { 0, 0, 0, 0 }
 };
 
+// \return Standard Pacemaker return code
+static int
+list_nodes()
+{
+    cib_t *the_cib = cib_new();
+    xmlNode *output = NULL;
+    int rc;
+
+    if (the_cib == NULL) {
+        return ENOMEM;
+    }
+    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        return pcmk_legacy2rc(rc);
+    }
+
+    rc = the_cib->cmds->query(the_cib, NULL, &output,
+                              cib_scope_local | cib_sync_call);
+    if (rc == pcmk_ok) {
+        do_find_node_list(output);
+        free_xml(output);
+    }
+    the_cib->cmds->signoff(the_cib);
+    return pcmk_legacy2rc(rc);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -304,26 +330,7 @@ do_work(void)
         crmd_operation = CRM_OP_PING;
 
     } else if (DO_NODE_LIST) {
-
-        cib_t *the_cib = cib_new();
-        xmlNode *output = NULL;
-
-        int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
-
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not connect to CIB: %s\n",
-                    pcmk_strerror(rc));
-            return -1;
-        }
-
-        rc = the_cib->cmds->query(the_cib, NULL, &output, cib_scope_local | cib_sync_call);
-        if(rc == pcmk_ok) {
-            do_find_node_list(output);
-
-            free_xml(output);
-        }
-        the_cib->cmds->signoff(the_cib);
-        crm_exit(crm_errno2exit(rc));
+        crm_exit(pcmk_rc2exitc(list_nodes()));
 
     } else if (DO_RESET) {
         /* tell dest_node to initiate the shutdown procedure
