@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <glib.h>               // gboolean, GMainLoop, etc.
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -28,9 +29,10 @@
 
 #include <crm/cib.h>
 
-static int message_timer_id = -1;
-static int message_timeout_ms = 30 * 1000;
+#define DEFAULT_MESSAGE_TIMEOUT_MS 30000
 
+static guint message_timer_id = 0;
+static guint message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
 static GMainLoop *mainloop = NULL;
 static crm_ipc_t *crmd_channel = NULL;
 static char *admin_uuid = NULL;
@@ -172,9 +174,9 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 't':
-                message_timeout_ms = atoi(optarg);
+                message_timeout_ms = (guint) atoi(optarg);
                 if (message_timeout_ms < 1) {
-                    message_timeout_ms = 30 * 1000;
+                    message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
                 }
                 break;
 
