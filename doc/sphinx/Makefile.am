@@ -11,7 +11,8 @@ include $(top_srcdir)/mk/common.mk
 # Things you might want to override on the command line
 
 # Books to generate
-BOOKS		?= Pacemaker_Development
+BOOKS		?= Pacemaker_Development \
+			   Pacemaker_Remote
 
 # Output formats to generate. Possible values:
 #  html       (multiple HTML files)

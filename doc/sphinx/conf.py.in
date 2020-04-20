@@ -28,6 +28,8 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 #
 # where occurrences of |<abbr>| in the rST will be substituted with <Full text>
 rst_prolog="""
+.. |REMOTE_DISTRO| replace:: CentOS
+.. |REMOTE_DISTRO_VER| replace:: 7.4
 """
 
 # If extensions (or modules to document with autodoc) are in another directory,
