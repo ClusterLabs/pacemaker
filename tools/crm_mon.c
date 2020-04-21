@@ -112,6 +112,7 @@ struct {
     char *external_recipient;
     char *neg_location_prefix;
     char *only_node;
+    char *only_rsc;
     unsigned int mon_ops;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
@@ -567,6 +568,11 @@ static GOptionEntry display_entries[] = {
       "When displaying information about nodes, show only what's related to the given\n"
       INDENT "node, or to all nodes tagged with the given tag",
       "NODE" },
+
+    { "resource", 0, 0, G_OPTION_ARG_STRING, &options.only_rsc,
+      "When displaying information about resources, show only what's related to the given\n"
+      INDENT "resource, or to all resources tagged with the given tag",
+      "RSC" },
 
     { "group-by-node", 'n', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, group_by_node_cb,
       "Group resources by node",
@@ -1976,7 +1982,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
-                                  options.only_node) != 0) {
+                                  options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
@@ -1987,7 +1993,8 @@ mon_refresh_display(gpointer user_data)
         case mon_output_xml:
             print_xml_status(out, mon_data_set, crm_errno2exit(history_rc),
                              stonith_history, options.mon_ops, show,
-                             options.neg_location_prefix, options.only_node);
+                             options.neg_location_prefix, options.only_node,
+                             options.only_rsc);
             break;
 
         case mon_output_monitor:
@@ -2005,14 +2012,14 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node);
+                         options.neg_location_prefix, options.only_node, options.only_rsc);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node);
+                         options.neg_location_prefix, options.only_node, options.only_rsc);
             break;
 
         case mon_output_unset:

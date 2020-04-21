@@ -43,7 +43,7 @@ static gboolean add_extra_info(pcmk__output_t *out, pe_node_t * node, GListPtr r
 static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                               gboolean operations, unsigned int mon_ops,
-                              GListPtr only_snow, gboolean print_spacer);
+                              GListPtr only_node, gboolean print_spacer);
 static int print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
                                  gboolean print_spacer);
 static int print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
@@ -698,7 +698,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
 void
 print_status(pcmk__output_t *out, pe_working_set_t *data_set,
              stonith_history_t *stonith_history, unsigned int mon_ops,
-             unsigned int show, char *prefix, char *only_node)
+             unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
 
@@ -810,7 +810,7 @@ void
 print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  crm_exit_t history_rc, stonith_history_t *stonith_history,
                  unsigned int mon_ops, unsigned int show, char *prefix,
-                 char *only_node)
+                 char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
@@ -889,7 +889,8 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 int
 print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_node)
+                  unsigned int show, char *prefix, char *only_node,
+                  char *only_rsc)
 {
     GListPtr unames = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
