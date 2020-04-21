@@ -64,7 +64,7 @@ enum crm_proc_flag {
  * \return Process flag if detectable, otherwise 0
  */
 static inline uint32_t
-crm_get_cluster_proc()
+crm_get_cluster_proc(void)
 {
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:

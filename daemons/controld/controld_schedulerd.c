@@ -143,7 +143,7 @@ pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
  * \return TRUE on success, FALSE otherwise
  */
 static bool
-pe_subsystem_new()
+pe_subsystem_new(void)
 {
     struct ipc_client_callbacks pe_callbacks = {
         .dispatch = pe_ipc_dispatch,
@@ -247,7 +247,7 @@ controld_sched_timeout(gpointer user_data)
 }
 
 void
-controld_stop_sched_timer()
+controld_stop_sched_timer(void)
 {
     if (controld_sched_timer && fsa_pe_ref) {
         crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
@@ -289,7 +289,7 @@ controld_expect_sched_reply(xmlNode *msg)
  * \brief Free the scheduler reply timer
  */
 void
-controld_free_sched_timer()
+controld_free_sched_timer(void)
 {
     if (controld_sched_timer != NULL) {
         mainloop_timer_del(controld_sched_timer);

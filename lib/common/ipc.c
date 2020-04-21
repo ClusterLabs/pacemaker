@@ -447,7 +447,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 }
 
 static struct iovec *
-pcmk__new_ipc_event()
+pcmk__new_ipc_event(void)
 {
     struct iovec *iov = calloc(2, sizeof(struct iovec));
 

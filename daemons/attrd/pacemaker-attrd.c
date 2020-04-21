@@ -143,7 +143,7 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
  *       attrd_peer_update().
  */
 static void
-attrd_erase_attrs()
+attrd_erase_attrs(void)
 {
     int call_id;
     char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
@@ -221,7 +221,7 @@ attrd_cib_connect(int max_retry)
  * \brief Prepare the CIB after cluster is connected
  */
 static void
-attrd_cib_init()
+attrd_cib_init(void)
 {
     // We have no attribute values in memory, wipe the CIB to match
     attrd_erase_attrs();
@@ -306,7 +306,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 }
 
 void
-attrd_ipc_fini()
+attrd_ipc_fini(void)
 {
     if (ipcs != NULL) {
         pcmk__drop_all_clients(ipcs);
@@ -316,7 +316,7 @@ attrd_ipc_fini()
 }
 
 static int
-attrd_cluster_connect()
+attrd_cluster_connect(void)
 {
     attrd_cluster = calloc(1, sizeof(crm_cluster_t));
 

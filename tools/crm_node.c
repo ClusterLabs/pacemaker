@@ -188,7 +188,7 @@ new_mainloop_for_ipc(const char *system, ipc_dispatch_fn dispatch)
 }
 
 static void
-run_mainloop_and_exit()
+run_mainloop_and_exit(void)
 {
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
@@ -332,7 +332,7 @@ run_controller_mainloop(uint32_t nodeid)
 }
 
 static void
-print_node_name()
+print_node_name(void)
 {
     // Check environment first (i.e. when called by resource agent)
     const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
@@ -549,7 +549,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 }
 
 static void
-run_pacemakerd_mainloop()
+run_pacemakerd_mainloop(void)
 {
     crm_ipc_t *ipc = NULL;
     xmlNode *poke = NULL;

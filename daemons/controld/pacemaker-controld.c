@@ -132,7 +132,7 @@ main(int argc, char **argv)
 }
 
 static void
-log_deprecation_warnings()
+log_deprecation_warnings(void)
 {
     // Add deprecations here as needed
 }
