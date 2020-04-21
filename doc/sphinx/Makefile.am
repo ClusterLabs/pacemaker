@@ -109,4 +109,4 @@ if BUILD_SPHINX_DOCS
 endif
 
 clean-local:
-	$(AM_V_at)-rm -rf $(BOOKS:%="$(builddir)/%/_build")
+	$(AM_V_at)-rm -rf $(BOOKS:%="$(builddir)/%/_build") $(BOOKS:%="$(builddir)/%/conf.py")
