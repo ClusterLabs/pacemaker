@@ -82,6 +82,19 @@
         </revdescription>
       </revision>
 
+      <revision>
+        <revnumber>2-1</revnumber>
+        <date>Sun Dec 22 2019</date>
+        <author>
+          <firstname>Ferenc</firstname><surname>Wagner</surname>
+          <email>wferi@debian.org</email>
+        </author>
+        <revdescription>
+          <simplelist>
+            <member>Update log example to how it would look with current changes</member>
+          </simplelist>
+        </revdescription>
+      </revision>
     </revhistory>
   </simpara>
 </appendix>
