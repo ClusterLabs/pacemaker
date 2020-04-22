@@ -381,6 +381,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "maint-mode", "console", cluster_maint_mode_console },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },
+    { "node-list", "console", pe__node_list_text },
     { "op-history", "console", pe__op_history_text },
     { "pending-fencing-actions", "console", stonith__pending_actions },
     { "primitive", "console", pe__resource_text },
