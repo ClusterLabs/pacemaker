@@ -1386,9 +1386,9 @@ main(int argc, char **argv)
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nError: cluster is not available on this node");
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
             } else {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "\nConnection to cluster failed: %s", pcmk_strerror(rc));
+                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
         return clean_up(crm_errno2exit(rc));
@@ -2165,7 +2165,7 @@ clean_up(crm_exit_t exit_code)
      */
     if (error != NULL) {
         if (out != NULL) {
-            out->err(out, "%s: %s\n", g_get_prgname(), error->message);
+            out->err(out, "%s: %s", g_get_prgname(), error->message);
             out->finish(out, exit_code, true, NULL);
             pcmk__output_free(out);
         } else {
