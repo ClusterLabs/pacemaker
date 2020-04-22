@@ -133,6 +133,10 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  * of all the command line arguments.  It is up to the caller to free this memory
  * after use.
  *
+ * \note This function calls g_set_prgname assuming it wasn't previously set and
+ *       assuming argv is not NULL.  It is not safe to call g_set_prgname more
+ *       than once so clients should not do so after calling this function.
+ *
  * \param[in] argv    The command line arguments.
  * \param[in] special Single-letter command line arguments that take a value.
  *                    These letters will all have pre-processing applied.

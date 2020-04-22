@@ -153,6 +153,10 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
         return retval;
     }
 
+    if (g_get_prgname() == NULL && argv && *argv) {
+        g_set_prgname(g_path_get_basename(*argv));
+    }
+
     arr = g_ptr_array_new();
 
     for (int i = 0; argv[i] != NULL; i++) {
