@@ -683,7 +683,7 @@ getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u %{hacluster_id} -
 exit 0
 
 %if %{defined ldconfig_scriptlets}
-%ldconfig_scriptlets libs
+%ldconfig_scriptlets -n %{pkgname_pcmk_libs}
 %ldconfig_scriptlets cluster-libs
 %else
 %post -n %{pkgname_pcmk_libs} -p /sbin/ldconfig
