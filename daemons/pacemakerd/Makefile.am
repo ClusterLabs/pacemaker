@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,8 +8,6 @@
 #
 
 include $(top_srcdir)/mk/common.mk
-
-if BUILD_CS_SUPPORT
 
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker
@@ -30,8 +28,9 @@ pacemakerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la
 pacemakerd_LDADD	+= $(CLUSTERLIBS)
-pacemakerd_SOURCES	= pacemakerd.c pcmkd_corosync.c
-
+pacemakerd_SOURCES	= pacemakerd.c
+if BUILD_CS_SUPPORT
+pacemakerd_SOURCES	+= pcmkd_corosync.c
 endif
 
 CLEANFILES = $(man8_MANS)

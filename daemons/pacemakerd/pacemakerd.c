@@ -1084,9 +1084,11 @@ main(int argc, char **argv)
     crm_ipc_close(old_instance);
     crm_ipc_destroy(old_instance);
 
+#ifdef SUPPORT_COROSYNC
     if (mcp_read_config() == FALSE) {
         crm_exit(CRM_EX_UNAVAILABLE);
     }
+#endif
 
     // OCF shell functions and cluster-glue need facility under different name
     {
@@ -1143,10 +1145,12 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_OSERR);
     }
 
+#ifdef SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
         crm_exit(CRM_EX_PROTOCOL);
     }
+#endif
 
     if(pcmk_locate_sbd() > 0) {
         setenv("PCMK_watchdog", "true", 1);
@@ -1178,6 +1182,8 @@ main(int argc, char **argv)
     }
 
     g_main_loop_unref(mainloop);
+#ifdef SUPPORT_COROSYNC
     cluster_disconnect_cfg();
+#endif
     crm_exit(CRM_EX_OK);
 }
