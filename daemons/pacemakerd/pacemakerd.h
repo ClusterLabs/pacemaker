@@ -24,5 +24,6 @@ gboolean mcp_read_config(void);
 
 gboolean cluster_connect_cfg(void);
 gboolean cluster_disconnect_cfg(void);
+void pcmkd_shutdown_corosync(void);
 
 void pcmk_shutdown(int nsig);

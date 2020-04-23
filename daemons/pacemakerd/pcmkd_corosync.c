@@ -28,7 +28,7 @@
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
-static corosync_cfg_handle_t cfg_handle;
+static corosync_cfg_handle_t cfg_handle = 0;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -150,6 +150,28 @@ cluster_connect_cfg(void)
     corosync_cfg_finalize(cfg_handle);
     return FALSE;
 }
+
+void
+pcmkd_shutdown_corosync(void)
+{
+    cs_error_t rc;
+
+    if (cfg_handle == 0) {
+        crm_warn("Unable to shut down Corosync: No connection");
+        return;
+    }
+    crm_info("Asking Corosync to shut down");
+    rc = corosync_cfg_try_shutdown(cfg_handle,
+                                    COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
+    if (rc == CS_OK) {
+        corosync_cfg_finalize(cfg_handle);
+        cfg_handle = 0;
+    } else {
+        crm_warn("Corosync shutdown failed: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
+    }
+}
+
 
 /* =::=::=::= Configuration =::=::=::= */
 static int
