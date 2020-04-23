@@ -706,6 +706,11 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
     }
 
+    if (is_set(options, pe_print_clone_details)) {
+        out->end_list(out);
+        return pcmk_rc_ok;
+    }
+
     /* Masters */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
@@ -898,6 +903,11 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         if (print_full) {
             out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
         }
+    }
+
+    if (is_set(options, pe_print_clone_details)) {
+        out->end_list(out);
+        return pcmk_rc_ok;
     }
 
     /* Masters */
