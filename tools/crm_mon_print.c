@@ -87,6 +87,33 @@ build_uname_list(pe_working_set_t *data_set, const char *s) {
     return unames;
 }
 
+static G_GNUC_UNUSED GListPtr
+build_rsc_list(pe_working_set_t *data_set, const char *s) {
+    GListPtr resources = NULL;
+
+    if (s == NULL || strcmp(s, "*") == 0) {
+        resources = g_list_prepend(resources, strdup("*"));
+    } else {
+        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
+                                                         pe_find_renamed|pe_find_any);
+
+        if (rsc) {
+            /* The given string was a valid resource name.  Return a
+             * singleton list containing just that.
+             */
+            resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
+        } else {
+            /* The given string was not a valid resource name.  It's either
+             * a tag or it's a typo or something.  See build_uname_list for
+             * more detail.
+             */
+            resources = pe__rscs_with_tag(data_set, s);
+        }
+    }
+
+    return resources;
+}
+
 /*!
  * \internal
  * \brief Print resources section heading appropriate to options
