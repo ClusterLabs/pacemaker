@@ -120,6 +120,28 @@ set_ping_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     data->data.ping.result = crm_element_value(msg_data, XML_PING_ATTR_STATUS);
 }
 
+static void
+set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
+{
+    pcmk_controld_api_node_t *node_info;
+
+    data->reply_type = pcmk_controld_reply_nodes;
+    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
+         node != NULL; node = crm_next_same_xml(node)) {
+
+        long long id_ll = 0;
+
+        node_info = calloc(1, sizeof(pcmk_controld_api_node_t));
+        crm_element_value_ll(node, XML_ATTR_ID, &id_ll);
+        if (id_ll > 0) {
+            node_info->id = id_ll;
+        }
+        node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
+        node_info->state = crm_element_value(node, XML_NODE_IN_CLUSTER);
+        data->data.nodes = g_list_prepend(data->data.nodes, node_info);
+    }
+}
+
 static bool
 reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
 {
@@ -201,6 +223,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         } else if (!strcmp(value, CRM_OP_PING)) {
             set_ping_data(&reply_data, msg_data);
 
+        } else if (!strcmp(value, PCMK__CONTROLD_CMD_NODES)) {
+            set_nodes_data(&reply_data, msg_data);
+
         } else {
             crm_debug("Unrecognizable controller message: unknown command '%s'",
                       value);
@@ -210,6 +235,11 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
+
+    // Free any reply data that was allocated
+    if (safe_str_eq(value, PCMK__CONTROLD_CMD_NODES)) {
+        g_list_free_full(reply_data.data.nodes, free);
+    }
 }
 
 pcmk__ipc_methods_t *
@@ -372,6 +402,29 @@ pcmk_controld_api_ping(pcmk_ipc_api_t *api, const char *node_name)
     }
     rc = send_controller_request(api, request, true);
     free_xml(request);
+    return rc;
+}
+
+/*!
+ * \brief Ask the controller for cluster information
+ *
+ * \param[in] api          Controller connection
+ *
+ * \return Standard Pacemaker return code
+ * \note Event callback will get a reply of type pcmk_controld_reply_nodes.
+ */
+int
+pcmk_controld_api_list_nodes(pcmk_ipc_api_t *api)
+{
+    xmlNode *request;
+    int rc = EINVAL;
+
+    request = create_controller_request(api, PCMK__CONTROLD_CMD_NODES, NULL,
+                                        NULL);
+    if (request != NULL) {
+        rc = send_controller_request(api, request, true);
+        free_xml(request);
+    }
     return rc;
 }
 

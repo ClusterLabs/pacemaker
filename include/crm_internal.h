@@ -122,6 +122,7 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 
+#define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 
 /*
  * Environment variables used by Pacemaker

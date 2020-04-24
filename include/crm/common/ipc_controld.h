@@ -22,6 +22,7 @@ extern "C" {
  */
 
 #include <stdbool.h>                    // bool
+#include <glib.h>                       // GList
 #include <libxml/tree.h>                // xmlNode
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t
 
@@ -32,7 +33,15 @@ enum pcmk_controld_api_reply {
     pcmk_controld_reply_info,
     pcmk_controld_reply_resource,
     pcmk_controld_reply_ping,
+    pcmk_controld_reply_nodes,
 };
+
+// Node information passed with pcmk_controld_reply_nodes
+typedef struct {
+    uint32_t id;
+    const char *uname;
+    const char *state;
+} pcmk_controld_api_node_t;
 
 /*!
  * Controller reply passed to event callback
@@ -72,6 +81,9 @@ typedef struct {
             const char *fsa_state;
             const char *result;
         } ping;
+
+        // pcmk_controld_reply_nodes
+        GList *nodes; // list of pcmk_controld_api_node_t *
     } data;
 } pcmk_controld_api_reply_t;
 
@@ -88,6 +100,7 @@ int pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
                               const char *provider, const char *type,
                               bool cib_only);
 int pcmk_controld_api_ping(pcmk_ipc_api_t *api, const char *node_name);
+int pcmk_controld_api_list_nodes(pcmk_ipc_api_t *api);
 int pcmk_controld_api_shutdown(pcmk_ipc_api_t *api, const char *node_name);
 int pcmk_controld_api_start_election(pcmk_ipc_api_t *api);
 unsigned int pcmk_controld_api_replies_expected(pcmk_ipc_api_t *api);
