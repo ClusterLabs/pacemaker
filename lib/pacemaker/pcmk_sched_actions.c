@@ -704,7 +704,6 @@ static void
 handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
 {
     enum rsc_role_e then_rsc_role = RSC_ROLE_UNKNOWN;
-    GList *then_on = NULL;
 
     if (then->rsc == NULL) {
         // Asymmetric orderings only matter if there's a resource involved
@@ -712,7 +711,6 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
     }
 
     then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
-    then_on = then->rsc->running_on;
 
     if ((then_rsc_role == RSC_ROLE_STOPPED)
         && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
@@ -724,10 +722,8 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
 
     if ((then_rsc_role >= RSC_ROLE_STARTED)
         && pcmk_is_set(then->flags, pe_action_optional)
-        && (then->node != NULL)
-        && pcmk__list_of_1(then_on)
-        && (then->node->details == ((pe_node_t *) then_on->data)->details)
-        && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
+        && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)
+        && pe__rsc_running_on_only(then->rsc, then->node)) {
         /* Nothing needs to be done for asymmetric ordering if 'then' is
          * supposed to be started after 'first' but is already started --
          * unless the start is mandatory, which indicates the resource is

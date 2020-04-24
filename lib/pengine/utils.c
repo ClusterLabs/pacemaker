@@ -764,6 +764,22 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource is running only on given node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p rsc is running only on \p node, otherwise false
+ */
+bool
+pe__rsc_running_on_only(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
+            && pe__same_node((const pe_node_t *) rsc->running_on->data, node);
+}
+
 bool
 pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list)
 {
