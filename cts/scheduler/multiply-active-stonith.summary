@@ -4,8 +4,8 @@ Current cluster status:
 Node node2 (2): UNCLEAN (online)
 Online: [ node1 node3 ]
 
- fencer	(stonith:fence_ipmilan):	Started[ node2 node3 ]
- rsc1	(lsb:rsc1):	FAILED node2
+ fencer	(stonith:fence_ipmilan):	 Started[ node2 node3 ]
+ rsc1	(lsb:rsc1):	 FAILED node2
 
 Transition Summary:
  * Fence (reboot) node2 'rsc1 failed there'
@@ -21,6 +21,6 @@ Revised cluster status:
 Online: [ node1 node3 ]
 OFFLINE: [ node2 ]
 
- fencer	(stonith:fence_ipmilan):	Started node3
- rsc1	(lsb:rsc1):	Stopped
+ fencer	(stonith:fence_ipmilan):	 Started node3
+ rsc1	(lsb:rsc1):	 Stopped
 

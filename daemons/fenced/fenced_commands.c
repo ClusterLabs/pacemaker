@@ -561,7 +561,7 @@ free_device(gpointer data)
     free(device);
 }
 
-void free_device_list()
+void free_device_list(void)
 {
     if (device_list != NULL) {
         g_hash_table_destroy(device_list);
@@ -570,7 +570,7 @@ void free_device_list()
 }
 
 void
-init_device_list()
+init_device_list(void)
 {
     if (device_list == NULL) {
         device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
@@ -648,7 +648,7 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
 GHashTable *metadata_cache = NULL;
 
 void
-free_metadata_cache() {
+free_metadata_cache(void) {
     if (metadata_cache != NULL) {
         g_hash_table_destroy(metadata_cache);
         metadata_cache = NULL;
@@ -656,7 +656,7 @@ free_metadata_cache() {
 }
 
 static void
-init_metadata_cache() {
+init_metadata_cache(void) {
     if (metadata_cache == NULL) {
         metadata_cache = crm_str_table_new();
     }
@@ -1251,7 +1251,7 @@ free_topology_entry(gpointer data)
 }
 
 void
-free_topology_list()
+free_topology_list(void)
 {
     if (topology != NULL) {
         g_hash_table_destroy(topology);
@@ -1260,7 +1260,7 @@ free_topology_list()
 }
 
 void
-init_topology_list()
+init_topology_list(void)
 {
     if (topology == NULL) {
         topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,

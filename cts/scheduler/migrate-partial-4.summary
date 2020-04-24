@@ -2,26 +2,26 @@
 Current cluster status:
 Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
- drbd-local	(ocf::vds-ok:Ticketer):	Started lustre01-left
- drbd-stacked	(ocf::vds-ok:Ticketer):	Stopped
- drbd-testfs-local	(ocf::vds-ok:Ticketer):	Stopped
- drbd-testfs-stacked	(ocf::vds-ok:Ticketer):	Stopped
- ip-testfs-mdt0000-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0000-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0001-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0002-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0003-left	(ocf::heartbeat:IPaddr2):	Stopped
- lustre	(ocf::vds-ok:Ticketer):	Started lustre03-left
- mgs	(ocf::vds-ok:lustre-server):	Stopped
- testfs	(ocf::vds-ok:Ticketer):	Started lustre02-left
- testfs-mdt0000	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0000	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0001	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0002	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0003	(ocf::vds-ok:lustre-server):	Stopped
+ drbd-local	(ocf::vds-ok:Ticketer):	 Started lustre01-left
+ drbd-stacked	(ocf::vds-ok:Ticketer):	 Stopped
+ drbd-testfs-local	(ocf::vds-ok:Ticketer):	 Stopped
+ drbd-testfs-stacked	(ocf::vds-ok:Ticketer):	 Stopped
+ ip-testfs-mdt0000-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0000-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0001-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0002-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0003-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ lustre	(ocf::vds-ok:Ticketer):	 Started lustre03-left
+ mgs	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs	(ocf::vds-ok:Ticketer):	 Started lustre02-left
+ testfs-mdt0000	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0000	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0001	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0002	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0003	(ocf::vds-ok:lustre-server):	 Stopped
  Resource Group: booth
-     ip-booth	(ocf::heartbeat:IPaddr2):	Started lustre02-left
-     boothd	(ocf::pacemaker:booth-site):	Started lustre02-left
+     ip-booth	(ocf::heartbeat:IPaddr2):	 Started lustre02-left
+     boothd	(ocf::pacemaker:booth-site):	 Started lustre02-left
  Clone Set: ms-drbd-mgs [drbd-mgs] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
  Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable)
@@ -79,26 +79,26 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
- drbd-local	(ocf::vds-ok:Ticketer):	Started lustre01-left
- drbd-stacked	(ocf::vds-ok:Ticketer):	Started lustre02-left
- drbd-testfs-local	(ocf::vds-ok:Ticketer):	Started lustre03-left
- drbd-testfs-stacked	(ocf::vds-ok:Ticketer):	Stopped
- ip-testfs-mdt0000-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0000-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0001-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0002-left	(ocf::heartbeat:IPaddr2):	Stopped
- ip-testfs-ost0003-left	(ocf::heartbeat:IPaddr2):	Stopped
- lustre	(ocf::vds-ok:Ticketer):	Started lustre04-left
- mgs	(ocf::vds-ok:lustre-server):	Stopped
- testfs	(ocf::vds-ok:Ticketer):	Started lustre03-left
- testfs-mdt0000	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0000	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0001	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0002	(ocf::vds-ok:lustre-server):	Stopped
- testfs-ost0003	(ocf::vds-ok:lustre-server):	Stopped
+ drbd-local	(ocf::vds-ok:Ticketer):	 Started lustre01-left
+ drbd-stacked	(ocf::vds-ok:Ticketer):	 Started lustre02-left
+ drbd-testfs-local	(ocf::vds-ok:Ticketer):	 Started lustre03-left
+ drbd-testfs-stacked	(ocf::vds-ok:Ticketer):	 Stopped
+ ip-testfs-mdt0000-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0000-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0001-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0002-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip-testfs-ost0003-left	(ocf::heartbeat:IPaddr2):	 Stopped
+ lustre	(ocf::vds-ok:Ticketer):	 Started lustre04-left
+ mgs	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs	(ocf::vds-ok:Ticketer):	 Started lustre03-left
+ testfs-mdt0000	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0000	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0001	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0002	(ocf::vds-ok:lustre-server):	 Stopped
+ testfs-ost0003	(ocf::vds-ok:lustre-server):	 Stopped
  Resource Group: booth
-     ip-booth	(ocf::heartbeat:IPaddr2):	Started lustre02-left
-     boothd	(ocf::pacemaker:booth-site):	Started lustre02-left
+     ip-booth	(ocf::heartbeat:IPaddr2):	 Started lustre02-left
+     boothd	(ocf::pacemaker:booth-site):	 Started lustre02-left
  Clone Set: ms-drbd-mgs [drbd-mgs] (promotable)
      Slaves: [ lustre01-left lustre02-left ]
  Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable)

@@ -4,8 +4,8 @@ Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
  Clone Set: ima_cloneid [ima_rscid] (unique)
-     ima_rscid:0	(ocf::heartbeat:Dummy):	Started hb1
-     ima_rscid:1	(ocf::heartbeat:Dummy):	Started hb2
+     ima_rscid:0	(ocf::heartbeat:Dummy):	 Started hb1
+     ima_rscid:1	(ocf::heartbeat:Dummy):	 Started hb2
 
 Transition Summary:
  * Stop       ima_rscid:0     (   hb1 )   due to node availability
@@ -20,6 +20,6 @@ Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
  Clone Set: ima_cloneid [ima_rscid] (unique)
-     ima_rscid:0	(ocf::heartbeat:Dummy):	Stopped
-     ima_rscid:1	(ocf::heartbeat:Dummy):	Started hb2
+     ima_rscid:0	(ocf::heartbeat:Dummy):	 Stopped
+     ima_rscid:1	(ocf::heartbeat:Dummy):	 Started hb2
 

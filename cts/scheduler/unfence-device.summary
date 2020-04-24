@@ -3,7 +3,7 @@ Using the original execution date of: 2017-11-30 10:44:29Z
 Current cluster status:
 Online: [ virt-008 virt-009 virt-013 ]
 
- fence_scsi	(stonith:fence_scsi):	Stopped
+ fence_scsi	(stonith:fence_scsi):	 Stopped
 
 Transition Summary:
  * Fence (on) virt-013 'required by fence_scsi monitor'
@@ -25,5 +25,5 @@ Using the original execution date of: 2017-11-30 10:44:29Z
 Revised cluster status:
 Online: [ virt-008 virt-009 virt-013 ]
 
- fence_scsi	(stonith:fence_scsi):	Started virt-008
+ fence_scsi	(stonith:fence_scsi):	 Started virt-008
 

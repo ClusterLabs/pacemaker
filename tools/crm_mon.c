@@ -984,7 +984,7 @@ refresh:
 
 // Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
 static void
-avoid_zombies()
+avoid_zombies(void)
 {
     struct sigaction sa;
 
@@ -1058,7 +1058,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
  * command line.
  */
 static void
-add_output_args() {
+add_output_args(void) {
     GError *err = NULL;
 
     if (output_format == mon_output_plain) {

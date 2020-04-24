@@ -3,12 +3,12 @@ Current cluster status:
 Online: [ rh44-1 rh44-2 ]
 
  Resource Group: test
-     resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
+     resource_1	(ocf::heartbeat:IPaddr):	 Started rh44-1
  Clone Set: ms-sf [grp_ms_sf] (promotable) (unique)
      Resource Group: grp_ms_sf:0
-         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Slave rh44-2
+         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	 Slave rh44-2
      Resource Group: grp_ms_sf:1
-         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	Slave rh44-1
+         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	 Slave rh44-1
 
 Transition Summary:
  * Promote    master_slave_Stateful:1     ( Slave -> Master rh44-1 )  
@@ -26,10 +26,10 @@ Revised cluster status:
 Online: [ rh44-1 rh44-2 ]
 
  Resource Group: test
-     resource_1	(ocf::heartbeat:IPaddr):	Started rh44-1
+     resource_1	(ocf::heartbeat:IPaddr):	 Started rh44-1
  Clone Set: ms-sf [grp_ms_sf] (promotable) (unique)
      Resource Group: grp_ms_sf:0
-         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	Slave rh44-2
+         master_slave_Stateful:0	(ocf::heartbeat:Stateful):	 Slave rh44-2
      Resource Group: grp_ms_sf:1
-         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	Master rh44-1
+         master_slave_Stateful:1	(ocf::heartbeat:Stateful):	 Master rh44-1
 

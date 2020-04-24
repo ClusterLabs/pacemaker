@@ -523,7 +523,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
 */
 
 static void
-fencing_topology_init()
+fencing_topology_init(void)
 {
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;

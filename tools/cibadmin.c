@@ -381,7 +381,7 @@ print_xml_output(xmlNode * xml)
 
 // Upgrade requested but already at latest schema
 static void
-report_schema_unchanged()
+report_schema_unchanged(void)
 {
     const char *err = pcmk_strerror(pcmk_err_schema_unchanged);
 

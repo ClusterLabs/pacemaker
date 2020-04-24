@@ -2,24 +2,24 @@
 Current cluster status:
 Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
- rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
- rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
- rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n05
- rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
- rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started c001n09
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	 Started c001n09
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	 Started c001n02
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	 Started c001n03
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	 Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	 Started c001n05
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	 Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	 Started c001n07
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	 Started c001n08
  Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
-     child_DoFencing:0	(stonith:ssh):	Started c001n02 (unmanaged)
-     child_DoFencing:1	(stonith:ssh):	Started c001n03 (unmanaged)
-     child_DoFencing:2	(stonith:ssh):	Started c001n04 (unmanaged)
-     child_DoFencing:3	(stonith:ssh):	Started c001n05 (unmanaged)
-     child_DoFencing:4	(stonith:ssh):	Started c001n06 (unmanaged)
-     child_DoFencing:5	(stonith:ssh):	Started c001n07 (unmanaged)
-     child_DoFencing:6	(stonith:ssh):	Started c001n08 (unmanaged)
-     child_DoFencing:7	(stonith:ssh):	Started c001n09 (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	 Started c001n02 (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	 Started c001n03 (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	 Started c001n04 (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	 Started c001n05 (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	 Started c001n06 (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	 Started c001n07 (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	 Started c001n08 (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	 Started c001n09 (unmanaged)
 
 Transition Summary:
 
@@ -109,22 +109,22 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 c001n09 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n09	(ocf::heartbeat:IPaddr):	Started c001n09
- rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
- rsc_c001n03	(ocf::heartbeat:IPaddr):	Started c001n03
- rsc_c001n04	(ocf::heartbeat:IPaddr):	Started c001n04
- rsc_c001n05	(ocf::heartbeat:IPaddr):	Started c001n05
- rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
- rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
- rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
+ DcIPaddr	(ocf::heartbeat:IPaddr):	 Started c001n09
+ rsc_c001n09	(ocf::heartbeat:IPaddr):	 Started c001n09
+ rsc_c001n02	(ocf::heartbeat:IPaddr):	 Started c001n02
+ rsc_c001n03	(ocf::heartbeat:IPaddr):	 Started c001n03
+ rsc_c001n04	(ocf::heartbeat:IPaddr):	 Started c001n04
+ rsc_c001n05	(ocf::heartbeat:IPaddr):	 Started c001n05
+ rsc_c001n06	(ocf::heartbeat:IPaddr):	 Started c001n06
+ rsc_c001n07	(ocf::heartbeat:IPaddr):	 Started c001n07
+ rsc_c001n08	(ocf::heartbeat:IPaddr):	 Started c001n08
  Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged)
-     child_DoFencing:0	(stonith:ssh):	Started c001n02 (unmanaged)
-     child_DoFencing:1	(stonith:ssh):	Started c001n03 (unmanaged)
-     child_DoFencing:2	(stonith:ssh):	Started c001n04 (unmanaged)
-     child_DoFencing:3	(stonith:ssh):	Started c001n05 (unmanaged)
-     child_DoFencing:4	(stonith:ssh):	Started c001n06 (unmanaged)
-     child_DoFencing:5	(stonith:ssh):	Started c001n07 (unmanaged)
-     child_DoFencing:6	(stonith:ssh):	Started c001n08 (unmanaged)
-     child_DoFencing:7	(stonith:ssh):	Started c001n09 (unmanaged)
+     child_DoFencing:0	(stonith:ssh):	 Started c001n02 (unmanaged)
+     child_DoFencing:1	(stonith:ssh):	 Started c001n03 (unmanaged)
+     child_DoFencing:2	(stonith:ssh):	 Started c001n04 (unmanaged)
+     child_DoFencing:3	(stonith:ssh):	 Started c001n05 (unmanaged)
+     child_DoFencing:4	(stonith:ssh):	 Started c001n06 (unmanaged)
+     child_DoFencing:5	(stonith:ssh):	 Started c001n07 (unmanaged)
+     child_DoFencing:6	(stonith:ssh):	 Started c001n08 (unmanaged)
+     child_DoFencing:7	(stonith:ssh):	 Started c001n09 (unmanaged)
 

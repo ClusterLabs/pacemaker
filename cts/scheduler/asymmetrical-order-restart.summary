@@ -4,9 +4,9 @@ Using the original execution date of: 2018-08-09 18:55:41Z
 Current cluster status:
 Online: [ cesr105-p16 cesr109-p16 ]
 
- cesr104ipmi	(stonith:fence_ipmilan):	Started cesr105-p16
- sleep_a	(ocf::classe:anything):	Stopped (disabled)
- sleep_b	(ocf::classe:anything):	FAILED cesr109-p16
+ cesr104ipmi	(stonith:fence_ipmilan):	 Started cesr105-p16
+ sleep_a	(ocf::classe:anything):	 Stopped (disabled)
+ sleep_b	(ocf::classe:anything):	 FAILED cesr109-p16
 
 Transition Summary:
  * Restart    cesr104ipmi     ( cesr105-p16 )   due to resource definition change
@@ -22,7 +22,7 @@ Using the original execution date of: 2018-08-09 18:55:41Z
 Revised cluster status:
 Online: [ cesr105-p16 cesr109-p16 ]
 
- cesr104ipmi	(stonith:fence_ipmilan):	Started cesr105-p16
- sleep_a	(ocf::classe:anything):	Stopped (disabled)
- sleep_b	(ocf::classe:anything):	Stopped
+ cesr104ipmi	(stonith:fence_ipmilan):	 Started cesr105-p16
+ sleep_a	(ocf::classe:anything):	 Stopped (disabled)
+ sleep_b	(ocf::classe:anything):	 Stopped
 

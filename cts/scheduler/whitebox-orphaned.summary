@@ -3,15 +3,15 @@ Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
 GuestOnline: [ lxc1:container1 lxc2:container2 ]
 
- container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
- shoot1	(stonith:fence_xvm):	Started 18node3
+ container2	(ocf::heartbeat:VirtualDomain):	 Started 18node2
+ shoot1	(stonith:fence_xvm):	 Started 18node3
  Clone Set: M-clone [M]
      M	(ocf::pacemaker:Dummy):	 ORPHANED Started lxc1
      Started: [ 18node1 18node2 18node3 lxc2 ]
- A	(ocf::pacemaker:Dummy):	Started 18node1
- B	(ocf::pacemaker:Dummy):	Started lxc1
- C	(ocf::pacemaker:Dummy):	Started lxc2
- D	(ocf::pacemaker:Dummy):	Started 18node1
+ A	(ocf::pacemaker:Dummy):	 Started 18node1
+ B	(ocf::pacemaker:Dummy):	 Started lxc1
+ C	(ocf::pacemaker:Dummy):	 Started lxc2
+ D	(ocf::pacemaker:Dummy):	 Started 18node1
  container1	(ocf::heartbeat:VirtualDomain):	 ORPHANED Started 18node2
  lxc1	(ocf::pacemaker:remote):	 ORPHANED Started 18node2
 
@@ -46,12 +46,12 @@ Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]
 GuestOnline: [ lxc2:container2 ]
 
- container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
- shoot1	(stonith:fence_xvm):	Started 18node3
+ container2	(ocf::heartbeat:VirtualDomain):	 Started 18node2
+ shoot1	(stonith:fence_xvm):	 Started 18node3
  Clone Set: M-clone [M]
      Started: [ 18node1 18node2 18node3 lxc2 ]
- A	(ocf::pacemaker:Dummy):	Started 18node1
- B	(ocf::pacemaker:Dummy):	Started lxc2
- C	(ocf::pacemaker:Dummy):	Started lxc2
- D	(ocf::pacemaker:Dummy):	Started 18node1
+ A	(ocf::pacemaker:Dummy):	 Started 18node1
+ B	(ocf::pacemaker:Dummy):	 Started lxc2
+ C	(ocf::pacemaker:Dummy):	 Started lxc2
+ D	(ocf::pacemaker:Dummy):	 Started 18node1
 

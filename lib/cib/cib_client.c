@@ -198,7 +198,7 @@ cib_destroy_op_callback(gpointer data)
 }
 
 static void
-destroy_op_callback_table()
+destroy_op_callback_table(void)
 {
     if (cib_op_callback_table != NULL) {
         g_hash_table_destroy(cib_op_callback_table);

@@ -3,10 +3,10 @@ Using the original execution date of: 2017-11-30 12:37:50Z
 Current cluster status:
 Online: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 
- fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	Started fastvm-rhel-7-4-96
- fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	Started fastvm-rhel-7-4-95
+ fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	 Started fastvm-rhel-7-4-96
+ fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	 Started fastvm-rhel-7-4-95
  Clone Set: DB2_HADR-master [DB2_HADR] (promotable)
-     DB2_HADR	(ocf::heartbeat:db2):	FAILED fastvm-rhel-7-4-96
+     DB2_HADR	(ocf::heartbeat:db2):	 FAILED fastvm-rhel-7-4-96
      Slaves: [ fastvm-rhel-7-4-95 ]
 
 Transition Summary:
@@ -39,8 +39,8 @@ Using the original execution date of: 2017-11-30 12:37:50Z
 Revised cluster status:
 Online: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 
- fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	Started fastvm-rhel-7-4-96
- fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	Started fastvm-rhel-7-4-95
+ fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	 Started fastvm-rhel-7-4-96
+ fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	 Started fastvm-rhel-7-4-95
  Clone Set: DB2_HADR-master [DB2_HADR] (promotable)
      Slaves: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 

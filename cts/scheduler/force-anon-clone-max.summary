@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 node3 ]
 
- Fencing	(stonith:fence_imaginary):	Stopped
+ Fencing	(stonith:fence_imaginary):	 Stopped
  Clone Set: clone1 [lsb1]
      Stopped: [ node1 node2 node3 ]
  Clone Set: clone2 [lsb2]
@@ -62,7 +62,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- Fencing	(stonith:fence_imaginary):	Started node1
+ Fencing	(stonith:fence_imaginary):	 Started node1
  Clone Set: clone1 [lsb1]
      Started: [ node2 node3 ]
  Clone Set: clone2 [lsb2]

@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 RemoteOFFLINE: [ rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1
- rhel7-auto4	(ocf::pacemaker:remote):	FAILED rhel7-auto2
+ shooter	(stonith:fence_xvm):	 Started rhel7-auto1
+ rhel7-auto4	(ocf::pacemaker:remote):	 FAILED rhel7-auto2
 
 Transition Summary:
  * Recover    rhel7-auto4     ( rhel7-auto2 -> rhel7-auto3 )  
@@ -18,6 +18,6 @@ Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 RemoteOnline: [ rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1
- rhel7-auto4	(ocf::pacemaker:remote):	Started rhel7-auto3
+ shooter	(stonith:fence_xvm):	 Started rhel7-auto1
+ rhel7-auto4	(ocf::pacemaker:remote):	 Started rhel7-auto3
 

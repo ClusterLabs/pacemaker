@@ -3,7 +3,7 @@ Current cluster status:
 Node virt-4 (4): UNCLEAN (offline)
 Online: [ virt-1 virt-2 virt-3 ]
 
- fencing	(stonith:fence_scsi):	Started virt-1
+ fencing	(stonith:fence_scsi):	 Started virt-1
  Clone Set: dlm-clone [dlm]
      Started: [ virt-1 virt-2 ]
      Stopped: [ virt-3 virt-4 ]
@@ -37,7 +37,7 @@ Revised cluster status:
 Online: [ virt-1 virt-2 virt-3 ]
 OFFLINE: [ virt-4 ]
 
- fencing	(stonith:fence_scsi):	Started virt-1
+ fencing	(stonith:fence_scsi):	 Started virt-1
  Clone Set: dlm-clone [dlm]
      Started: [ virt-1 virt-2 virt-3 ]
      Stopped: [ virt-4 ]

@@ -4,9 +4,9 @@ Current cluster status:
 Online: [ centos1 centos2 centos3 ]
 
  Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged)
-   galera-bundle-0	(ocf::heartbeat:galera):	Stopped (unmanaged)
-   galera-bundle-1	(ocf::heartbeat:galera):	Stopped (unmanaged)
-   galera-bundle-2	(ocf::heartbeat:galera):	Stopped (unmanaged)
+   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped (unmanaged)
+   galera-bundle-1	(ocf::heartbeat:galera):	 Stopped (unmanaged)
+   galera-bundle-2	(ocf::heartbeat:galera):	 Stopped (unmanaged)
 
 Transition Summary:
 
@@ -26,7 +26,7 @@ Revised cluster status:
 Online: [ centos1 centos2 centos3 ]
 
  Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged)
-   galera-bundle-0	(ocf::heartbeat:galera):	Stopped (unmanaged)
-   galera-bundle-1	(ocf::heartbeat:galera):	Stopped (unmanaged)
-   galera-bundle-2	(ocf::heartbeat:galera):	Stopped (unmanaged)
+   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped (unmanaged)
+   galera-bundle-1	(ocf::heartbeat:galera):	 Stopped (unmanaged)
+   galera-bundle-2	(ocf::heartbeat:galera):	 Stopped (unmanaged)
 

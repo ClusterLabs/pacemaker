@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 fc16-builder3 ]
 
- virt-fencing	(stonith:fence_xvm):	Started fc16-builder
- A	(ocf::pacemaker:Dummy):	Started fc16-builder
+ virt-fencing	(stonith:fence_xvm):	 Started fc16-builder
+ A	(ocf::pacemaker:Dummy):	 Started fc16-builder
 
 Transition Summary:
  * Reload     A       ( fc16-builder )  
@@ -18,6 +18,6 @@ Revised cluster status:
 Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 fc16-builder3 ]
 
- virt-fencing	(stonith:fence_xvm):	Started fc16-builder
- A	(ocf::pacemaker:Dummy):	Started fc16-builder
+ virt-fencing	(stonith:fence_xvm):	 Started fc16-builder
+ A	(ocf::pacemaker:Dummy):	 Started fc16-builder
 

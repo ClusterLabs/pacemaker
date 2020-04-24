@@ -85,7 +85,7 @@ int pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout);
  *
  * \param[in,out] xml       The destination for the result, as an XML tree.
  * \param[in]     target    The node that was fenced.
- * \param[in]     as_nodeid 
+ * \param[in]     as_nodeid
  *
  * \return Standard Pacemaker return code
  */

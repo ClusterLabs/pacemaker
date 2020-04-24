@@ -91,7 +91,7 @@ crm_ttoa(time_t epoch_time)
  *       g_hash_table_destroy().
  */
 static inline GHashTable *
-crm_str_table_new()
+crm_str_table_new(void)
 {
     return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
 }
@@ -104,7 +104,7 @@ crm_str_table_new()
  *       g_hash_table_destroy().
  */
 static inline GHashTable *
-crm_strcase_table_new()
+crm_strcase_table_new(void)
 {
     return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
 }

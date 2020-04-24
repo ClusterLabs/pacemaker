@@ -5,7 +5,7 @@ Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
 Online: [ dl380g5d ]
 
  Clone Set: stateful [dummy] (promotable)
-     dummy	(ocf::pacemaker:Stateful):	FAILED Master dl380g5c (blocked)
+     dummy	(ocf::pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
      Slaves: [ dl380g5d ]
 
 Transition Summary:
@@ -18,6 +18,6 @@ Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
 Online: [ dl380g5d ]
 
  Clone Set: stateful [dummy] (promotable)
-     dummy	(ocf::pacemaker:Stateful):	FAILED Master dl380g5c (blocked)
+     dummy	(ocf::pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
      Slaves: [ dl380g5d ]
 

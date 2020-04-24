@@ -43,7 +43,7 @@ remove_inflight_alert(int call_id)
 }
 
 static int
-max_inflight_timeout()
+max_inflight_timeout(void)
 {
     GHashTableIter iter;
     gpointer timeout;

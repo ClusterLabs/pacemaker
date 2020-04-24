@@ -2,10 +2,10 @@
 Current cluster status:
 Online: [ hpn07 hpn08 ]
 
- p_dummy1	(ocf::pacemaker:Dummy):	Started hpn07
- p_dummy2	(ocf::pacemaker:Dummy):	Stopped
- p_dummy4	(ocf::pacemaker:Dummy):	Stopped
- p_dummy3	(ocf::pacemaker:Dummy):	Stopped
+ p_dummy1	(ocf::pacemaker:Dummy):	 Started hpn07
+ p_dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ p_dummy4	(ocf::pacemaker:Dummy):	 Stopped
+ p_dummy3	(ocf::pacemaker:Dummy):	 Stopped
  Clone Set: ms_stateful1 [p_stateful1] (promotable)
      Masters: [ hpn07 ]
      Slaves: [ hpn08 ]
@@ -54,10 +54,10 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ hpn07 hpn08 ]
 
- p_dummy1	(ocf::pacemaker:Dummy):	Started hpn07
- p_dummy2	(ocf::pacemaker:Dummy):	Started hpn08
- p_dummy4	(ocf::pacemaker:Dummy):	Started hpn07
- p_dummy3	(ocf::pacemaker:Dummy):	Started hpn08
+ p_dummy1	(ocf::pacemaker:Dummy):	 Started hpn07
+ p_dummy2	(ocf::pacemaker:Dummy):	 Started hpn08
+ p_dummy4	(ocf::pacemaker:Dummy):	 Started hpn07
+ p_dummy3	(ocf::pacemaker:Dummy):	 Started hpn08
  Clone Set: ms_stateful1 [p_stateful1] (promotable)
      Masters: [ hpn07 ]
      Slaves: [ hpn08 ]

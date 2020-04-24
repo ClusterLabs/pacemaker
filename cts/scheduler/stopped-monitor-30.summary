@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 node3 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
 
 Transition Summary:
 
@@ -13,5 +13,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
 

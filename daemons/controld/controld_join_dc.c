@@ -68,7 +68,7 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
 }
 
 static void
-start_join_round()
+start_join_round(void)
 {
     GHashTableIter iter;
     crm_node_t *peer = NULL;

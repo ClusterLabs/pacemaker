@@ -4,8 +4,8 @@ Online: [ CSE-1 ]
 OFFLINE: [ CSE-2 ]
 
  Resource Group: svc-cse
-     ip_19	(ocf::heartbeat:IPaddr2):	Stopped
-     ip_11	(ocf::heartbeat:IPaddr2):	Stopped
+     ip_19	(ocf::heartbeat:IPaddr2):	 Stopped
+     ip_11	(ocf::heartbeat:IPaddr2):	 Stopped
  Clone Set: cl_tomcat [d_tomcat]
      Started: [ CSE-1 ]
      Stopped: [ CSE-2 ]
@@ -23,8 +23,8 @@ Online: [ CSE-1 ]
 OFFLINE: [ CSE-2 ]
 
  Resource Group: svc-cse
-     ip_19	(ocf::heartbeat:IPaddr2):	Stopped
-     ip_11	(ocf::heartbeat:IPaddr2):	Stopped
+     ip_19	(ocf::heartbeat:IPaddr2):	 Stopped
+     ip_11	(ocf::heartbeat:IPaddr2):	 Stopped
  Clone Set: cl_tomcat [d_tomcat]
      Stopped: [ CSE-1 CSE-2 ]
 

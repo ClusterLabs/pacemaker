@@ -5,18 +5,18 @@ Node srv02 (3232238290): UNCLEAN (offline)
 Online: [ srv03 ]
 
  Resource Group: grpStonith1
-     prmStonith1-1	(stonith:external/ssh):	Started srv02 (UNCLEAN)
+     prmStonith1-1	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
  Resource Group: grpStonith2
-     prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
+     prmStonith2-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
-     prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
+     prmStonith3-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
  Clone Set: msPostgresql [pgsql] (promotable)
-     pgsql	(ocf::pacemaker:Stateful):	Slave srv02 (UNCLEAN)
-     pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	 Slave srv02 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	 Master srv01 (UNCLEAN)
      Slaves: [ srv03 ]
  Clone Set: clnPingd [prmPingd]
-     prmPingd	(ocf::pacemaker:ping):	Started srv02 (UNCLEAN)
-     prmPingd	(ocf::pacemaker:ping):	Started srv01 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	 Started srv02 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	 Started srv01 (UNCLEAN)
      Started: [ srv03 ]
 
 Transition Summary:
@@ -51,17 +51,17 @@ Node srv02 (3232238290): UNCLEAN (offline)
 Online: [ srv03 ]
 
  Resource Group: grpStonith1
-     prmStonith1-1	(stonith:external/ssh):	Started srv02 (UNCLEAN)
+     prmStonith1-1	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
  Resource Group: grpStonith2
-     prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
+     prmStonith2-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
-     prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
+     prmStonith3-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
  Clone Set: msPostgresql [pgsql] (promotable)
-     pgsql	(ocf::pacemaker:Stateful):	Slave srv02 (UNCLEAN)
-     pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	 Slave srv02 (UNCLEAN)
+     pgsql	(ocf::pacemaker:Stateful):	 Master srv01 (UNCLEAN)
      Slaves: [ srv03 ]
  Clone Set: clnPingd [prmPingd]
-     prmPingd	(ocf::pacemaker:ping):	Started srv02 (UNCLEAN)
-     prmPingd	(ocf::pacemaker:ping):	Started srv01 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	 Started srv02 (UNCLEAN)
+     prmPingd	(ocf::pacemaker:ping):	 Started srv01 (UNCLEAN)
      Started: [ srv03 ]
 

@@ -35,7 +35,7 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
 }
 
 static lrmd_t *
-attrd_lrmd_connect()
+attrd_lrmd_connect(void)
 {
     if (the_lrmd == NULL) {
         the_lrmd = lrmd_api_new();
@@ -69,7 +69,7 @@ attrd_lrmd_connect()
 }
 
 void
-attrd_lrmd_disconnect() {
+attrd_lrmd_disconnect(void) {
     if (the_lrmd) {
         lrmd_t *conn = the_lrmd;
 

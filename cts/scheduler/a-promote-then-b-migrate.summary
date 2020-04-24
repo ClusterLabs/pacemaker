@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
- rsc2	(ocf::pacemaker:Dummy):	Started node1
+ rsc2	(ocf::pacemaker:Dummy):	 Started node1
 
 Transition Summary:
  * Promote    rsc1:1     ( Slave -> Master node2 )  
@@ -36,5 +36,5 @@ Online: [ node1 node2 ]
 
  Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 node2 ]
- rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
 

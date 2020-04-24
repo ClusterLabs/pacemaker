@@ -90,7 +90,7 @@ int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeo
  *
  * \param[in,out] out       The output functions structure.
  * \param[in]     target    The node that was fenced.
- * \param[in]     as_nodeid 
+ * \param[in]     as_nodeid
  *
  * \return Standard Pacemaker return code
  */
