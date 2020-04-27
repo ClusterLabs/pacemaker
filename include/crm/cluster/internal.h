@@ -453,7 +453,7 @@ crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born,
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
                                  uint32_t flag, const char *status);
 crm_node_t *crm_update_peer_state(const char *source, crm_node_t * node,
-                                  const char *state, int membership);
+                                  const char *state, uint64_t membership);
 
 void crm_update_peer_uname(crm_node_t *node, const char *uname);
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
