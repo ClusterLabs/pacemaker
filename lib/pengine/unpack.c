@@ -73,9 +73,11 @@ is_dangling_container_remote_node(node_t *node)
  * \param[in,out] data_set  Current working set of cluster
  * \param[in,out] node      Node to fence
  * \param[in]     reason    Text description of why fencing is needed
+ * \param[in]     priority_delay  Whether to consider `priority-fencing-delay`
  */
 void
-pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
+pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
+              const char *reason, bool priority_delay)
 {
     CRM_CHECK(node, return);
 
@@ -125,7 +127,8 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                      reason);
         }
         node->details->unclean = TRUE;
-        pe_fence_op(node, NULL, TRUE, reason, data_set);
+        // No need to apply `priority-fencing-delay` for remote nodes
+        pe_fence_op(node, NULL, TRUE, reason, FALSE, data_set);
 
     } else if (node->details->unclean) {
         crm_trace("Cluster node %s %s because %s",
@@ -139,7 +142,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                  pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
                  reason);
         node->details->unclean = TRUE;
-        pe_fence_op(node, NULL, TRUE, reason, data_set);
+        pe_fence_op(node, NULL, TRUE, reason, priority_delay, data_set);
     }
 }
 
@@ -222,6 +225,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
     crm_debug("Concurrent fencing is %s",
               is_set(data_set->flags, pe_flag_concurrent_fencing) ? "enabled" : "disabled");
+
+    value = pe_pref(data_set->config_hash,
+                    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+    if (value) {
+        data_set->priority_fencing_delay = crm_get_msec(value) / 1000;
+        crm_trace("Priority fencing delay is %ds", data_set->priority_fencing_delay);
+    }
 
     set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
     crm_debug("Stop all active resources: %s",
@@ -1278,7 +1288,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 /* Everything else should flow from this automatically
                  * At least until the PE becomes able to migrate off healthy resources
                  */
-                pe_fence_node(data_set, this_node, "cluster does not have quorum");
+                pe_fence_node(data_set, this_node, "cluster does not have quorum", FALSE);
             }
         }
     }
@@ -1350,7 +1360,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
     } else {
         /* mark it unclean */
-        pe_fence_node(data_set, this_node, "peer is unexpectedly down");
+        pe_fence_node(data_set, this_node, "peer is unexpectedly down", FALSE);
         crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
     }
@@ -1407,10 +1417,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         online = crm_is_true(is_peer);
 
     } else if (in_cluster == NULL) {
-        pe_fence_node(data_set, this_node, "peer has not been seen by the cluster");
+        pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
     } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
-        pe_fence_node(data_set, this_node, "peer failed the pacemaker membership criteria");
+        pe_fence_node(data_set, this_node, "peer failed the pacemaker membership criteria", FALSE);
 
     } else if (do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
@@ -1429,14 +1439,15 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         online = FALSE;
 
     } else if (crm_is_true(in_cluster) == FALSE) {
-        pe_fence_node(data_set, this_node, "peer is no longer part of the cluster");
+        // Consider `priority-fencing-delay` for lost nodes
+        pe_fence_node(data_set, this_node, "peer is no longer part of the cluster", TRUE);
 
     } else if (crm_is_true(is_peer) == FALSE) {
-        pe_fence_node(data_set, this_node, "peer process is no longer available");
+        pe_fence_node(data_set, this_node, "peer process is no longer available", FALSE);
 
         /* Everything is running at this point, now check join state */
     } else if (do_terminate) {
-        pe_fence_node(data_set, this_node, "termination was requested");
+        pe_fence_node(data_set, this_node, "termination was requested", FALSE);
 
     } else if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
         crm_info("Node %s is active", this_node->details->uname);
@@ -1448,7 +1459,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         this_node->details->pending = TRUE;
 
     } else {
-        pe_fence_node(data_set, this_node, "peer was in an unknown state");
+        pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
         crm_warn("%s: in-cluster=%s, is-peer=%s, join=%s, expected=%s, term=%d, shutdown=%d",
                  this_node->details->uname, crm_str(in_cluster), crm_str(is_peer),
                  crm_str(join), crm_str(exp_state), do_terminate, this_node->details->shutdown);
@@ -2012,7 +2023,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             if (reason == NULL) {
                reason = crm_strdup_printf("%s is thought to be active there", rsc->id);
             }
-            pe_fence_node(data_set, node, reason);
+            pe_fence_node(data_set, node, reason, FALSE);
         }
         free(reason);
     }
@@ -2034,7 +2045,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
              * but also mark the node as unclean
              */
             reason = crm_strdup_printf("%s failed there", rsc->id);
-            pe_fence_node(data_set, node, reason);
+            pe_fence_node(data_set, node, reason, FALSE);
             free(reason);
             break;
 
@@ -2101,7 +2112,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                     /* connection resource to baremetal resource failed in a way that
                      * should result in fencing the remote-node. */
                     pe_fence_node(data_set, tmpnode,
-                                  "remote connection is unrecoverable");
+                                  "remote connection is unrecoverable", FALSE);
                 }
             }
 
@@ -3155,7 +3166,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
             && remote_node
             && remote_node->details->unclean) {
 
-            action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL, data_set);
+            pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL, FALSE, data_set);
             crm_notice("Waiting for %s to complete before clearing %s failure for remote node %s", fence?fence->uuid:"nil", task, rsc->id);
 
             order_actions(fence, clear_op, pe_order_implies_then);

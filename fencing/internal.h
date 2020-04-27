@@ -98,6 +98,10 @@ typedef struct remote_fencing_op_s {
      * values associated with the devices this fencing operation may call */
     gint total_timeout;
 
+    /*! Requested fencing delay.
+     * Value -1 means disable any static/random fencing delays. */
+    int delay;
+
     /*! Delegate is the node being asked to perform a fencing action
      * on behalf of the node that owns the remote operation. Some operations
      * will involve multiple delegates. This value represents the final delegate

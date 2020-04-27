@@ -176,6 +176,12 @@ static struct crm_option long_options[] = {
         "Operation timeout in seconds (default 120;\n"
         "\t\t\tused with most commands)."
     },
+    {   "delay", required_argument, NULL, 'y',
+        "Apply a fencing delay in seconds. Any static/random delays from\n"
+        "\t\t\tpcmk_delay_base/max will be added, otherwise all\n"
+        "\t\t\tdisabled with the value -1\n"
+        "\t\t\t(default 0; with --fence, --reboot, --unfence)."
+    },
     {   "as-node-id", no_argument, NULL, 'n',
         "(Advanced) The supplied node is the corosync node ID\n"
         "\t\t\t(with --last)."
@@ -201,6 +207,7 @@ struct {
     char *name;
     int timeout;
     int tolerance;
+    int delay;
     int rc;
 } async_fence_data;
 
@@ -265,11 +272,13 @@ async_fence_helper(gpointer user_data)
 
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, notify_callback);
 
-    call_id = st->cmds->fence(st,
-                              st_opt_allow_suicide,
-                              async_fence_data.target,
-                              async_fence_data.action,
-                              async_fence_data.timeout, async_fence_data.tolerance);
+    call_id = st->cmds->fence_with_delay(st,
+                                         st_opt_allow_suicide,
+                                         async_fence_data.target,
+                                         async_fence_data.action,
+                                         async_fence_data.timeout,
+                                         async_fence_data.tolerance,
+                                         async_fence_data.delay);
 
     if (call_id < 0) {
         g_main_loop_quit(mainloop);
@@ -285,7 +294,8 @@ async_fence_helper(gpointer user_data)
 }
 
 static int
-mainloop_fencing(stonith_t * st, const char *target, const char *action, int timeout, int tolerance)
+mainloop_fencing(stonith_t * st, const char *target, const char *action,
+                 int timeout, int tolerance, int delay)
 {
     crm_trigger_t *trig;
 
@@ -294,6 +304,7 @@ mainloop_fencing(stonith_t * st, const char *target, const char *action, int tim
     async_fence_data.action = action;
     async_fence_data.timeout = timeout;
     async_fence_data.tolerance = tolerance;
+    async_fence_data.delay = delay;
     async_fence_data.rc = -1;
 
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
@@ -492,6 +503,7 @@ main(int argc, char **argv)
     int verbose = 0;
     int argerr = 0;
     int timeout = 120;
+    int delay = 0;
     int option_index = 0;
     int fence_level = 0;
     int no_connect = 0;
@@ -573,6 +585,9 @@ main(int argc, char **argv)
                 break;
             case 't':
                 timeout = crm_atoi(optarg, NULL);
+                break;
+            case 'y':
+                delay = crm_atoi(optarg, NULL);
                 break;
             case 'B':
             case 'F':
@@ -760,13 +775,13 @@ main(int argc, char **argv)
             rc = st->cmds->confirm(st, st_opts, target);
             break;
         case 'B':
-            rc = mainloop_fencing(st, target, "reboot", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "reboot", timeout, tolerance, delay);
             break;
         case 'F':
-            rc = mainloop_fencing(st, target, "off", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "off", timeout, tolerance, delay);
             break;
         case 'U':
-            rc = mainloop_fencing(st, target, "on", timeout, tolerance);
+            rc = mainloop_fencing(st, target, "on", timeout, tolerance, delay);
             break;
         case 'h':
             show_last_fenced(as_nodeid, target);
