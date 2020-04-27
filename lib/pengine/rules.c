@@ -463,7 +463,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
                 name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
             }
 
-            crm_trace("Setting attribute: %s", name);
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
             if (value == NULL) {
                 value = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_VALUE);
@@ -471,7 +470,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
 
             if (name == NULL || value == NULL) {
                 continue;
-
             }
 
             old_value = g_hash_table_lookup(hash, name);
@@ -484,6 +482,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
                 continue;
 
             } else if (old_value == NULL) {
+                crm_trace("Setting attribute: %s = %s", name, value);
                 g_hash_table_insert(hash, strdup(name), strdup(value));
 
             } else if (overwrite) {
