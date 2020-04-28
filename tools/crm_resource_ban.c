@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,7 +69,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
     if(host == NULL) {
         GListPtr n = allnodes;
         for(; n && rc == pcmk_ok; n = n->next) {
-            node_t *target = n->data;
+            pe_node_t *target = n->data;
 
             rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn);
         }
@@ -296,7 +296,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
          * On the first error, abort.
          */
         for(; n; n = n->next) {
-            node_t *target = n->data;
+            pe_node_t *target = n->data;
 
             rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn, clear_ban_constraints);
             if (rc != pcmk_ok) {
@@ -317,11 +317,11 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
     char *rsc_role_substr = NULL;
     char *date_substr = NULL;
 
-    if (crm_starts_with(ID(constraint_node), "cli-ban-")) {
+    if (pcmk__starts_with(ID(constraint_node), "cli-ban-")) {
         date_substr = crm_strdup_printf("//date_expression[@id='%s-lifetime']",
                                         ID(constraint_node));
 
-    } else if (crm_starts_with(ID(constraint_node), "cli-prefer-")) {
+    } else if (pcmk__starts_with(ID(constraint_node), "cli-prefer-")) {
         date_substr = crm_strdup_printf("//date_expression[@id='cli-prefer-lifetime-end-%s']",
                                         crm_element_value(constraint_node, "rsc"));
     } else {

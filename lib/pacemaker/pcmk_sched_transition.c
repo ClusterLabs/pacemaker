@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,11 +89,11 @@ update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
         char *name = NULL;
         char *now = crm_ttoa(time(NULL));
 
-        name = crm_failcount_name(resource, task, interval_ms);
+        name = pcmk__failcount_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, "value++");
         free(name);
 
-        name = crm_lastfailure_name(resource, task, interval_ms);
+        name = pcmk__lastfailure_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, now);
         free(name);
         free(now);
@@ -131,12 +131,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-
-    op->rsc_id = strdup(ID(cib_resource));
-    op->interval_ms = interval_ms;
-    op->op_type = strdup(task);
-
+    op = lrmd_new_event(ID(cib_resource), task, interval_ms);
     op->rc = outcome;
     op->op_status = 0;
     op->params = NULL;          /* TODO: Fill me in */
@@ -550,7 +545,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         const char *rclass = NULL;
         const char *rprovider = NULL;
 
-        resource_t *rsc = NULL;
+        pe_resource_t *rsc = NULL;
 
         quiet_log(" + Injecting %s into the configuration\n", spec);
 
@@ -706,7 +701,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         const char *match_name = NULL;
 
         // Allow user to specify anonymous clone with or without instance number
-        key = crm_strdup_printf(CRM_OP_FMT "@%s=", resource, op->op_type,
+        key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
                                 op->interval_ms, node);
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             match_name = resource;
@@ -714,7 +709,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         free(key);
 
         if ((match_name == NULL) && strcmp(resource, lrm_name)) {
-            key = crm_strdup_printf(CRM_OP_FMT "@%s=", lrm_name, op->op_type,
+            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", lrm_name, op->op_type,
                                     op->interval_ms, node);
             if (strncasecmp(key, spec, strlen(key)) == 0) {
                 match_name = lrm_name;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/cib.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules_internal.h>
@@ -18,36 +19,61 @@
 
 #include <sys/stat.h>
 
+#define SUMMARY "evaluate rules from the Pacemaker configuration"
+
 enum crm_rule_mode {
     crm_rule_mode_none,
     crm_rule_mode_check
-} rule_mode = crm_rule_mode_none;
+};
+
+struct {
+    char *date;
+    char *input_xml;
+    enum crm_rule_mode mode;
+    char *rule;
+} options = {
+    .mode = crm_rule_mode_none
+};
 
 static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date);
 
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",       no_argument,       NULL, '?', "\tThis text"},
-    {"version",    no_argument,       NULL, '$', "\tVersion information"  },
-    {"verbose",    no_argument,       NULL, 'V', "\tIncrease debug output"},
+static gboolean mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
-    {"-spacer-",   required_argument, NULL, '-', "\nModes (mutually exclusive):" },
-    {"check",      no_argument,       NULL, 'c', "\tCheck whether a rule is in effect" },
+static GOptionEntry mode_entries[] = {
+    { "check", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
+      "Check whether a rule is in effect",
+      NULL },
 
-    {"-spacer-",   required_argument, NULL, '-', "\nAdditional options:" },
-    {"date",       required_argument, NULL, 'd', "Whether the rule is in effect on a given date" },
-    {"rule",       required_argument, NULL, 'r', "The ID of the rule to check" },
-
-    {"-spacer-",   no_argument,       NULL, '-', "\nData:"},
-    {"xml-text",   required_argument, NULL, 'X', "Use argument for XML (or stdin if '-')"},
-
-    {"-spacer-",   required_argument, NULL, '-', "\n\nThis tool is currently experimental.",
-     pcmk_option_paragraph},
-    {"-spacer-",   required_argument, NULL, '-', "The interface, behavior, and output may "
-                                                 "change with any version of pacemaker.", pcmk_option_paragraph},
-
-    {0, 0, 0, 0}
+    { NULL }
 };
+
+static GOptionEntry data_entries[] = {
+    { "xml-text", 'X', 0, G_OPTION_ARG_STRING, &options.input_xml,
+      "Use argument for XML (or stdin if '-')",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "date", 'd', 0, G_OPTION_ARG_STRING, &options.date,
+      "Whether the rule is in effect on a given date",
+      NULL },
+    { "rule", 'r', 0, G_OPTION_ARG_STRING, &options.rule,
+      "The ID of the rule to check",
+      NULL },
+
+    { NULL }
+};
+
+static gboolean
+mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (strcmp(option_name, "c")) {
+        options.mode = crm_rule_mode_check;
+    }
+
+    return TRUE;
+}
 
 static int
 crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date)
@@ -55,30 +81,71 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     xmlNode *cib_constraints = NULL;
     xmlNode *match = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    pe_eval_date_result_t result;
     char *xpath = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     int max = 0;
 
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
-    /* Get all rules matching the given ID, which also have only a single date_expression
-     * child whose operation is not 'date_spec'.  This is fairly limited, but it's hard
-     * to check expressions more complicated than that.
+    /* Get all rules matching the given ID which are also simple enough for us to check.
+     * For the moment, these rules must only have a single date_expression child and:
+     * - Do not have a date_spec operation, or
+     * - Have a date_spec operation that contains years= but does not contain moon=.
+     *
+     * We do this in steps to provide better error messages.  First, check that there's
+     * any rule with the given ID.
      */
-    xpath = crm_strdup_printf("//rule[@id='%s']/date_expression[@operation!='date_spec']", rule_id);
+    xpath = crm_strdup_printf("//rule[@id='%s']", rule_id);
     xpathObj = xpath_search(cib_constraints, xpath);
-
     max = numXpathResults(xpathObj);
+
     if (max == 0) {
-        CMD_ERR("No rule found with ID=%s containing a date_expression", rule_id);
-        rc = -ENXIO;
+        CMD_ERR("No rule found with ID=%s", rule_id);
+        rc = ENXIO;
         goto bail;
     } else if (max > 1) {
-        CMD_ERR("More than one date_expression in %s is not supported", rule_id);
-        rc = -EOPNOTSUPP;
+        CMD_ERR("More than one rule with ID=%s found", rule_id);
+        rc = ENXIO;
         goto bail;
+    }
+
+    free(xpath);
+    freeXpathObject(xpathObj);
+
+    /* Next, make sure it has exactly one date_expression. */
+    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression", rule_id);
+    xpathObj = xpath_search(cib_constraints, xpath);
+    max = numXpathResults(xpathObj);
+
+    if (max != 1) {
+        CMD_ERR("Can't check rule %s because it does not have exactly one date_expression", rule_id);
+        rc = EOPNOTSUPP;
+        goto bail;
+    }
+
+    free(xpath);
+    freeXpathObject(xpathObj);
+
+    /* Then, check that it's something we actually support. */
+    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression[@operation!='date_spec']", rule_id);
+    xpathObj = xpath_search(cib_constraints, xpath);
+    max = numXpathResults(xpathObj);
+
+    if (max == 0) {
+        free(xpath);
+        freeXpathObject(xpathObj);
+
+        xpath = crm_strdup_printf("//rule[@id='%s']//date_expression[@operation='date_spec' and date_spec/@years and not(date_spec/@moon)]",
+                                  rule_id);
+        xpathObj = xpath_search(cib_constraints, xpath);
+        max = numXpathResults(xpathObj);
+
+        if (max == 0) {
+            CMD_ERR("Rule either must not use date_spec, or use date_spec with years= but not moon=");
+            rc = ENXIO;
+            goto bail;
+        }
     }
 
     match = getXpathResult(xpathObj, 0);
@@ -89,20 +156,21 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    result = pe_eval_date_expression(match, effective_date, NULL);
+    rc = pe_eval_date_expression(match, effective_date, NULL);
 
-    if (result == pe_date_within_range) {
+    if (rc == pcmk_rc_within_range) {
         printf("Rule %s is still in effect\n", rule_id);
-        rc = 0;
-    } else if (result == pe_date_after_range) {
+        rc = pcmk_rc_ok;
+    } else if (rc == pcmk_rc_ok) {
+        printf("Rule %s satisfies conditions\n", rule_id);
+    } else if (rc == pcmk_rc_after_range) {
         printf("Rule %s is expired\n", rule_id);
-        rc = 1;
-    } else if (result == pe_date_before_range) {
+    } else if (rc == pcmk_rc_before_range) {
         printf("Rule %s has not yet taken effect\n", rule_id);
-        rc = 2;
+    } else if (rc == pcmk_rc_op_unsatisfied) {
+        printf("Rule %s does not satisfy conditions\n", rule_id);
     } else {
         printf("Could not determine whether rule %s is expired\n", rule_id);
-        rc = 3;
     }
 
 bail:
@@ -111,110 +179,127 @@ bail:
     return rc;
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    const char *description = "This tool is currently experimental.\n"
+                              "The interface, behavior, and output may change with any version of pacemaker.";
+
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "modes", "Modes (mutually exclusive):",
+                        "Show modes of operation", mode_entries);
+    pcmk__add_arg_group(context, "data", "Data:",
+                        "Show data options", data_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
     cib_t *cib_conn = NULL;
     pe_working_set_t *data_set = NULL;
 
-    int flag = 0;
-    int option_index = 0;
-
-    char *rule_id = NULL;
     crm_time_t *rule_date = NULL;
-
     xmlNode *input = NULL;
-    char *input_xml = NULL;
 
     int rc = pcmk_ok;
     crm_exit_t exit_code = CRM_EX_OK;
 
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
+
     crm_log_cli_init("crm_rule");
-    crm_set_options(NULL, "[options]", long_options,
-                    "Tool for querying the state of rules");
 
-    while (flag >= 0) {
-        flag = crm_get_option(argc, argv, &option_index);
-        switch (flag) {
-            case -1:
-                break;
+    processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
+        exit_code = CRM_EX_USAGE;
+        goto bail;
+    }
 
-            case '$':
-            case '?':
-                crm_help(flag, CRM_EX_OK);
-                break;
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
+    }
 
-            case 'c':
-                rule_mode = crm_rule_mode_check;
-                break;
+    if (args->version) {
+        /* FIXME:  When crm_rule is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+    }
 
-            case 'd':
-                rule_date = crm_time_new(optarg);
-                if (rule_date == NULL) {
-                    exit_code = CRM_EX_DATAERR;
-                    goto bail;
-                }
+    if (optind > argc) {
+        char *help = g_option_context_get_help(context, TRUE, NULL);
 
-                break;
-
-            case 'X':
-                input_xml = optarg;
-                break;
-
-            case 'r':
-                rule_id = strdup(optarg);
-                break;
-
-            default:
-                crm_help(flag, CRM_EX_OK);
-                break;
-        }
+        CMD_ERR("%s", help);
+        g_free(help);
+        exit_code = CRM_EX_USAGE;
+        goto bail;
     }
 
     /* Check command line arguments before opening a connection to
      * the CIB manager or doing anything else important.
      */
-    if (rule_mode == crm_rule_mode_check) {
-        if (rule_id == NULL) {
-            CMD_ERR("--check requires use of --rule=\n");
-            crm_help(flag, CRM_EX_USAGE);
-        }
+    switch(options.mode) {
+        case crm_rule_mode_check:
+            if (options.rule == NULL) {
+                CMD_ERR("--check requires use of --rule=");
+                exit_code = CRM_EX_USAGE;
+                goto bail;
+            }
+
+            break;
+
+        default:
+            CMD_ERR("No mode operation given");
+            exit_code = CRM_EX_USAGE;
+            goto bail;
+            break;
     }
 
     /* Set up some defaults. */
+    rule_date = crm_time_new(options.date);
     if (rule_date == NULL) {
-        rule_date = crm_time_new(NULL);
+        CMD_ERR("No --date given and can't determine current date");
+        exit_code = CRM_EX_DATAERR;
+        goto bail;
     }
 
     /* Where does the XML come from?  If one of various command line options were
      * given, use those.  Otherwise, connect to the CIB and use that.
      */
-    if (safe_str_eq(input_xml, "-")) {
+    if (safe_str_eq(options.input_xml, "-")) {
         input = stdin2xml();
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input from STDIN\n");
+            CMD_ERR("Couldn't parse input from STDIN\n");
             exit_code = CRM_EX_DATAERR;
             goto bail;
         }
-    } else if (input_xml != NULL) {
-        input = string2xml(input_xml);
+    } else if (options.input_xml != NULL) {
+        input = string2xml(options.input_xml);
 
         if (input == NULL) {
-            fprintf(stderr, "Couldn't parse input string: %s\n", input_xml);
+            CMD_ERR("Couldn't parse input string: %s\n", options.input_xml);
+
             exit_code = CRM_EX_DATAERR;
             goto bail;
         }
     } else {
-        /* Establish a connection to the CIB manager */
+        // Establish a connection to the CIB
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
-            CMD_ERR("Error connecting to the CIB manager: %s", pcmk_strerror(rc));
+            CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
             goto bail;
         }
@@ -236,6 +321,7 @@ main(int argc, char **argv)
         goto bail;
     }
     set_bit(data_set->flags, pe_flag_no_counts);
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     data_set->input = input;
     data_set->now = rule_date;
@@ -247,23 +333,15 @@ main(int argc, char **argv)
      * moment so this looks a little silly, but I expect there will be more
      * modes in the future.
      */
-    switch(rule_mode) {
+    switch(options.mode) {
         case crm_rule_mode_check:
-            rc = crm_rule_check(data_set, rule_id, rule_date);
+            rc = crm_rule_check(data_set, options.rule, rule_date);
 
-            if (rc < 0) {
-                CMD_ERR("Error checking rule: %s", pcmk_strerror(rc));
-                exit_code = crm_errno2exit(rc);
-            } else if (rc == 1) {
-                exit_code = CRM_EX_EXPIRED;
-            } else if (rc == 2) {
-                exit_code = CRM_EX_NOT_YET_IN_EFFECT;
-            } else if (rc == 3) {
-                exit_code = CRM_EX_INDETERMINATE;
-            } else {
-                exit_code = rc;
+            if (rc > 0) {
+                CMD_ERR("Error checking rule: %s", pcmk_rc_str(rc));
             }
 
+            exit_code = pcmk_rc2exitc(rc);
             break;
 
         default:
@@ -276,6 +354,9 @@ bail:
         cib_delete(cib_conn);
     }
 
+    g_strfreev(processed_args);
+    g_clear_error(&error);
+    pcmk__free_arg_context(context);
     pe_free_working_set(data_set);
     crm_exit(exit_code);
 }

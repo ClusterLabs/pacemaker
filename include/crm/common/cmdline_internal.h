@@ -58,10 +58,12 @@ pcmk__new_common_args(const char *summary);
  * \param[in]     fmts         The help string for which formats are supported.
  * \param[in,out] output_group A ::GOptionGroup that formatted output related
  *                             command line arguments should be added to.
+ * \param[in]     param_string A string describing any remaining command line
+ *                             arguments.
  */
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
-                        GOptionGroup **output_group);
+                        GOptionGroup **output_group, const char *param_string);
 
 /*!
  * \internal
@@ -131,13 +133,16 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  * of all the command line arguments.  It is up to the caller to free this memory
  * after use.
  *
- * \param[in] argc    The length of argv.
+ * \note This function calls g_set_prgname assuming it wasn't previously set and
+ *       assuming argv is not NULL.  It is not safe to call g_set_prgname more
+ *       than once so clients should not do so after calling this function.
+ *
  * \param[in] argv    The command line arguments.
  * \param[in] special Single-letter command line arguments that take a value.
  *                    These letters will all have pre-processing applied.
  */
-char **
-pcmk__cmdline_preproc(int argc, char **argv, const char *special);
+gchar **
+pcmk__cmdline_preproc(char **argv, const char *special);
 
 /*!
  * \internal

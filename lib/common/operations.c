@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 #include <crm/common/util.h>
 
 /*!
- * \brief Generate an operation key
+ * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
  *
  * \param[in] rsc_id       ID of resource being operated on
  * \param[in] op_type      Operation name
@@ -33,14 +33,15 @@
  *
  * \return Newly allocated memory containing operation key as string
  *
- * \note It is the caller's responsibility to free() the result.
+ * \note This function asserts on errors, so it will never return NULL.
+ *       The caller is responsible for freeing the result with free().
  */
 char *
-generate_op_key(const char *rsc_id, const char *op_type, guint interval_ms)
+pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
     CRM_ASSERT(rsc_id != NULL);
     CRM_ASSERT(op_type != NULL);
-    return crm_strdup_printf(CRM_OP_FMT, rsc_id, op_type, interval_ms);
+    return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
 gboolean
@@ -125,7 +126,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 }
 
 char *
-generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type)
+pcmk__notify_key(const char *rsc_id, const char *notify_type,
+                 const char *op_type)
 {
     CRM_CHECK(rsc_id != NULL, return NULL);
     CRM_CHECK(op_type != NULL, return NULL);
@@ -191,7 +193,8 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 }
 
 char *
-generate_transition_key(int transition_id, int action_id, int target_rc, const char *node)
+pcmk__transition_key(int transition_id, int action_id, int target_rc,
+                     const char *node)
 {
     CRM_CHECK(node != NULL, return NULL);
     return crm_strdup_printf("%d:%d:%d:%-*s",
@@ -259,12 +262,18 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Remove XML attributes not needed for operation digest
+ *
+ * \param[in,out] param_set  XML with operation parameters
+ */
 void
-filter_action_parameters(xmlNode * param_set, const char *version)
+pcmk__filter_op_for_digest(xmlNode *param_set)
 {
     char *key = NULL;
     char *timeout = NULL;
-    char *interval_ms_s = NULL;
+    guint interval_ms = 0;
 
     const char *attr_filter[] = {
         XML_ATTR_ID,
@@ -275,55 +284,43 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         "pcmk_external_ip"
     };
 
-    gboolean do_delete = FALSE;
-    int lpc = 0;
-    static int meta_len = 0;
-
-    if (meta_len == 0) {
-        meta_len = strlen(CRM_META);
-    }
+    const int meta_len = strlen(CRM_META);
 
     if (param_set == NULL) {
         return;
     }
 
-    for (lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
+    // Remove the specific attributes listed in attr_filter
+    for (int lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
         xml_remove_prop(param_set, attr_filter[lpc]);
     }
 
     key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms_s = crm_element_value_copy(param_set, key);
+    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
+        interval_ms = 0;
+    }
     free(key);
 
     key = crm_meta_name(XML_ATTR_TIMEOUT);
     timeout = crm_element_value_copy(param_set, key);
 
-    if (param_set) {
-        xmlAttrPtr xIter = param_set->properties;
+    // Remove all CRM_meta_* attributes
+    for (xmlAttrPtr xIter = param_set->properties; xIter != NULL; ) {
+        const char *prop_name = (const char *) (xIter->name);
 
-        while (xIter) {
-            const char *prop_name = (const char *)xIter->name;
+        xIter = xIter->next;
 
-            xIter = xIter->next;
-            do_delete = FALSE;
-            if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
-                do_delete = TRUE;
-            }
-
-            if (do_delete) {
-                xml_remove_prop(param_set, prop_name);
-            }
+        // @TODO Why is this case-insensitive?
+        if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
+            xml_remove_prop(param_set, prop_name);
         }
     }
 
-    if (interval_ms_s && strcmp(interval_ms_s, "0")) {
-        /* Re-instate the operation's timeout value */
-        if (timeout != NULL) {
-            crm_xml_add(param_set, key, timeout);
-        }
+    if ((interval_ms != 0) && (timeout != NULL)) {
+        // Add the timeout back, it's useful for recurring operation digests
+        crm_xml_add(param_set, key, timeout);
     }
 
-    free(interval_ms_s);
     free(timeout);
     free(key);
 }

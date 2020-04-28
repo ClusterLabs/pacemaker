@@ -1,5 +1,7 @@
 /*
- * Copyright 2016-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2016-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,7 +14,7 @@
 #include <crm/crm.h>
 #include <crm/services.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 
@@ -41,7 +43,7 @@ remove_inflight_alert(int call_id)
 }
 
 static int
-max_inflight_timeout()
+max_inflight_timeout(void)
 {
     GHashTableIter iter;
     gpointer timeout;
@@ -78,7 +80,7 @@ alert_complete(svc_action_t *action)
 }
 
 int
-process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
+process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
@@ -103,8 +105,8 @@ process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request)
     crm_info("Executing alert %s for %s", alert_id, client->id);
 
     params = xml2list(alert_xml);
-    crm_insert_alert_key_int(params, CRM_alert_node_sequence,
-                             ++alert_sequence_no);
+    pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,
+                            ++alert_sequence_no);
 
     cb_data = calloc(1, sizeof(struct alert_cb_s));
     CRM_CHECK(cb_data != NULL,

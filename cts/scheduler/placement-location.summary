@@ -3,8 +3,8 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node1
- rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
 
 Transition Summary:
  * Stop       rsc1    ( node1 )   due to node availability
@@ -18,6 +18,6 @@ Revised cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Stopped
- rsc2	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	 Stopped
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
 

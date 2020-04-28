@@ -6,7 +6,7 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 

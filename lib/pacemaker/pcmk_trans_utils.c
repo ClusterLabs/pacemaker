@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
         char *fail_s = getenv("PE_fail");
 
         if (fail_s) {
-            fail = crm_int_helper(fail_s, NULL);
+            fail = (int) crm_parse_ll(fail_s, NULL);
         } else {
             fail = 0;
         }
@@ -156,14 +156,14 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
         crm_action_t *input = (crm_action_t *) lpc->data;
 
         if (input->failed) {
-            pending = add_list_element(pending, ID(input->xml));
+            pending = pcmk__add_word(pending, ID(input->xml));
 
         } else if (input->confirmed) {
             // Confirmed successful inputs are not pending
 
         } else if (find_action(graph, input->id) != NULL) {
             // In-flight or pending
-            pending = add_list_element(pending, ID(input->xml));
+            pending = pcmk__add_word(pending, ID(input->xml));
         }
     }
     if (pending == NULL) {
@@ -238,7 +238,7 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
     GListPtr lpc = NULL;
 
     if (graph == NULL || graph->num_actions == 0) {
-        if (log_level > LOG_DEBUG) {
+        if (log_level == LOG_TRACE) {
             crm_debug("Empty transition graph");
         }
         return;

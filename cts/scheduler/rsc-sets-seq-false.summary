@@ -3,12 +3,12 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node1
- rsc2	(ocf::pacemaker:Dummy):	Started node1
- rsc3	(ocf::pacemaker:Dummy):	Started node1
- rsc4	(ocf::pacemaker:Dummy):	Started node1
- rsc5	(ocf::pacemaker:Dummy):	Started node1
- rsc6	(ocf::pacemaker:Dummy):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
+ rsc2	(ocf::pacemaker:Dummy):	 Started node1
+ rsc3	(ocf::pacemaker:Dummy):	 Started node1
+ rsc4	(ocf::pacemaker:Dummy):	 Started node1
+ rsc5	(ocf::pacemaker:Dummy):	 Started node1
+ rsc6	(ocf::pacemaker:Dummy):	 Started node1
 
 Transition Summary:
  * Move       rsc1    ( node1 -> node2 )  
@@ -36,10 +36,10 @@ Revised cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node2
- rsc2	(ocf::pacemaker:Dummy):	Started node2
- rsc3	(ocf::pacemaker:Dummy):	Started node2
- rsc4	(ocf::pacemaker:Dummy):	Started node2
- rsc5	(ocf::pacemaker:Dummy):	Started node2
- rsc6	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	 Started node2
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
+ rsc3	(ocf::pacemaker:Dummy):	 Started node2
+ rsc4	(ocf::pacemaker:Dummy):	 Started node2
+ rsc5	(ocf::pacemaker:Dummy):	 Started node2
+ rsc6	(ocf::pacemaker:Dummy):	 Started node2
 

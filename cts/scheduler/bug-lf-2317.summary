@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ ibm1.isg.si ibm2.isg.si ]
 
- HostingIsg	(ocf::heartbeat:Xen):	Started ibm2.isg.si
+ HostingIsg	(ocf::heartbeat:Xen):	 Started ibm2.isg.si
  Clone Set: ms_drbd_r0 [drbd_r0] (promotable)
      Masters: [ ibm2.isg.si ]
      Slaves: [ ibm1.isg.si ]
@@ -28,7 +28,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ ibm1.isg.si ibm2.isg.si ]
 
- HostingIsg	(ocf::heartbeat:Xen):	Started ibm2.isg.si
+ HostingIsg	(ocf::heartbeat:Xen):	 Started ibm2.isg.si
  Clone Set: ms_drbd_r0 [drbd_r0] (promotable)
      Masters: [ ibm1.isg.si ibm2.isg.si ]
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,6 @@ enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
 extern uint num_join_invites;
-extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
@@ -169,7 +168,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(fsa_actions, "Initial");
 
     do_fsa_stall = FALSE;
-    if (is_message() == FALSE && fsa_actions != A_NOTHING) {
+    if ((fsa_message_queue == NULL) && (fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
         fsa_data = calloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
@@ -179,7 +178,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
         fsa_data = NULL;
     }
-    while (is_message() && do_fsa_stall == FALSE) {
+    while ((fsa_message_queue != NULL) && !do_fsa_stall) {
         crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
 
         fsa_data = get_message();
@@ -247,7 +246,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = NULL;
     }
 
-    if (g_list_length(fsa_message_queue) > 0 || fsa_actions != A_NOTHING || do_fsa_stall) {
+    if ((fsa_message_queue != NULL) || (fsa_actions != A_NOTHING)
+        || do_fsa_stall) {
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
                   g_list_length(fsa_message_queue), fsa_actions, do_fsa_stall ? "true" : "false");
     } else {
@@ -397,7 +397,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             /*
              * Low(er) priority actions
              * Make sure the CIB is always updated before invoking the
-             * PE, and the PE before the TE
+             * scheduler, and the scheduler before the transition engine.
              */
         } else if (fsa_actions & A_TE_HALT) {
             do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);
@@ -460,12 +460,53 @@ log_fsa_input(fsa_data_t * stored_msg)
     }
 }
 
+static void
+check_join_counts(fsa_data_t *msg_data)
+{
+    int count;
+    guint npeers;
+
+    count = crmd_join_phase_count(crm_join_finalized);
+    if (count > 0) {
+        crm_err("%d cluster node%s failed to confirm join",
+                count, pcmk__plural_s(count));
+        crmd_join_phase_log(LOG_NOTICE);
+        return;
+    }
+
+    npeers = crm_active_peers();
+    count = crmd_join_phase_count(crm_join_confirmed);
+    if (count == npeers) {
+        if (npeers == 1) {
+            crm_debug("Sole active cluster node is fully joined");
+        } else {
+            crm_debug("All %d active cluster nodes are fully joined", count);
+        }
+
+    } else if (count > npeers) {
+        crm_err("New election needed because more nodes confirmed join "
+                "than are in membership (%d > %u)", count, npeers);
+        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+
+    } else if (saved_ccm_membership_id != crm_peer_seq) {
+        crm_info("New join needed because membership changed (%llu -> %llu)",
+                 saved_ccm_membership_id, crm_peer_seq);
+        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+
+    } else {
+        crm_warn("Only %d of %u active cluster nodes fully joined "
+                 "(%d did not respond to offer)",
+                 count, npeers, crmd_join_phase_count(crm_join_welcomed));
+    }
+}
+
 long long
 do_state_transition(long long actions,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_state next_state, fsa_data_t * msg_data)
 {
     int level = LOG_INFO;
+    int count = 0;
     long long tmp = actions;
     gboolean clear_recovery_bit = TRUE;
 
@@ -563,13 +604,14 @@ do_state_transition(long long actions,
                 crm_warn("Progressed to state %s after %s",
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
-            if (crmd_join_phase_count(crm_join_welcomed) > 0) {
-                crm_warn("%u cluster nodes failed to respond"
-                         " to the join offer.", crmd_join_phase_count(crm_join_welcomed));
+            count = crmd_join_phase_count(crm_join_welcomed);
+            if (count > 0) {
+                crm_warn("%d cluster node%s failed to respond to join offer",
+                         count, pcmk__plural_s(count));
                 crmd_join_phase_log(LOG_NOTICE);
 
             } else {
-                crm_debug("All %d cluster nodes responded to the join offer.",
+                crm_debug("All cluster nodes (%d) responded to join offer",
                           crmd_join_phase_count(crm_join_integrated));
             }
             break;
@@ -581,34 +623,7 @@ do_state_transition(long long actions,
                 crm_info("Progressed to state %s after %s",
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
-
-            if (crmd_join_phase_count(crm_join_finalized) > 0) {
-                crm_err("%u cluster nodes failed to confirm their join.",
-                        crmd_join_phase_count(crm_join_finalized));
-                crmd_join_phase_log(LOG_NOTICE);
-
-            } else if (crmd_join_phase_count(crm_join_confirmed)
-                       == crm_active_peers()) {
-                crm_debug("All %u cluster nodes are"
-                          " eligible to run resources.", crm_active_peers());
-
-            } else if (crmd_join_phase_count(crm_join_confirmed) > crm_active_peers()) {
-                crm_err("We have more confirmed nodes than our membership does: %d vs. %d",
-                        crmd_join_phase_count(crm_join_confirmed), crm_active_peers());
-                register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-
-            } else if (saved_ccm_membership_id != crm_peer_seq) {
-                crm_info("Membership changed: %llu -> %llu - join restart",
-                         saved_ccm_membership_id, crm_peer_seq);
-                register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
-
-            } else {
-                crm_warn("Only %u of %u cluster "
-                         "nodes are eligible to run resources - continue %d",
-                         crmd_join_phase_count(crm_join_confirmed),
-                         crm_active_peers(), crmd_join_phase_count(crm_join_welcomed));
-            }
-/* 			initialize_join(FALSE); */
+            check_join_counts(msg_data);
             break;
 
         case S_STOPPING:

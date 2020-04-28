@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the Pacemaker project contributors
+ * Copyright 2008-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -51,13 +51,13 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
     }
 
     lrm_op_id = ID(lrm_op_xml);
-    last_failure_key = generate_op_key(rsc_id, "last_failure", 0);
+    last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
     if (safe_str_eq(last_failure_key, lrm_op_id)) {
         matched = TRUE;
 
     } else {
-        char *expected_op_key = generate_op_key(rsc_id, conf_op_name,
+        char *expected_op_key = pcmk__op_key(rsc_id, conf_op_name,
                                                 conf_op_interval_ms);
 
         if (safe_str_eq(expected_op_key, lrm_op_id)) {
@@ -77,7 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
+block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     char *xml_name = clone_strip(rsc->id);
@@ -174,7 +174,7 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(resource_t *rsc)
+rsc_fail_name(pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -231,24 +231,24 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \note The caller is responsible for freeing the expressions with regfree().
  */
 static void
-generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
+generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
-    generate_fail_regex(CRM_FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+    generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
                         is_set(rsc->flags, pe_rsc_unique), failcount_re);
 
-    generate_fail_regex(CRM_LAST_FAILURE_PREFIX, rsc_name, is_legacy,
+    generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
                         is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
 
     free(rsc_name);
 }
 
 int
-pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
                  uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
@@ -264,9 +264,9 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
     g_hash_table_iter_init(&iter, node->details->attrs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
-            failcount = merge_weights(failcount, char2score(value));
+            failcount = pe__add_scores(failcount, char2score(value));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
-            last = QB_MAX(last, crm_int_helper(value, NULL));
+            last = QB_MAX(last, (time_t) crm_parse_ll(value, NULL));
         }
     }
 
@@ -315,7 +315,7 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         GListPtr gIter = NULL;
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
+            pe_resource_t *filler = (pe_resource_t *) gIter->data;
             time_t filler_last_failure = 0;
 
             failcount += pe_get_failcount(node, filler, &filler_last_failure,
@@ -361,11 +361,11 @@ pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;
-    action_t *clear = NULL;
+    pe_action_t *clear = NULL;
 
     CRM_CHECK(rsc && node && reason && data_set, return NULL);
 
-    key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+    key = pcmk__op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE,
                           data_set);
     add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);

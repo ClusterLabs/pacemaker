@@ -138,7 +138,6 @@ publican.cfg
 /doc/HTML
 /doc/abi_dumps
 /doc/abi-check
-/doc/acls.html
 /doc/api/*
 /doc/compat_reports
 /doc/crm_fencing.html
@@ -146,6 +145,8 @@ publican.cfg
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
+/doc/sphinx/*/_build
+/doc/sphinx/*/conf.py
 /lib/common/md5.c
 /maint/testcc
 /maint/mocked/based
@@ -196,6 +197,12 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /xml/assets/diffview.js
 /xml/assets/xmlcatalog
 
+# Test results
+*.log
+*.trs
+/lib/common/tests/strings/pcmk__parse_ll_range
+/lib/pengine/tests/rules/pe_cron_range_satisfied
+
 # Release maintenance detritus
 /maint/gnulib
 
@@ -213,6 +220,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /cts/HBDummy
 /doc/Clusters_from_Scratch.txt
 /doc/Pacemaker_Explained.txt
+/doc/acls.html
 /fencing
 /lrmd
 /mcp

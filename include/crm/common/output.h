@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,7 @@ extern "C" {
 #  include <glib.h>
 #  include <crm/common/results.h>
 
-#  define PCMK__API_VERSION "2.0"
+#  define PCMK__API_VERSION "2.2"
 
 typedef struct pcmk__output_s pcmk__output_t;
 
@@ -125,16 +125,19 @@ typedef struct pcmk__supported_format_s {
  */
 
 extern GOptionEntry pcmk__html_output_entries[];
+extern GOptionEntry pcmk__log_output_entries[];
 extern GOptionEntry pcmk__none_output_entries[];
 extern GOptionEntry pcmk__text_output_entries[];
 extern GOptionEntry pcmk__xml_output_entries[];
 
 pcmk__output_t *pcmk__mk_html_output(char **argv);
+pcmk__output_t *pcmk__mk_log_output(char **argv);
 pcmk__output_t *pcmk__mk_none_output(char **argv);
 pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
+#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, pcmk__log_output_entries }
 #define PCMK__SUPPORTED_FORMAT_NONE { "none", pcmk__mk_none_output, pcmk__none_output_entries }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
 #define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
@@ -159,7 +162,7 @@ struct pcmk__output_s {
      * In the case of command line usage, this would be the command line
      * arguments.  For other use cases, it could be different.
      */
-    char *request;
+    gchar *request;
 
     /*!
      * \brief Does this formatter support a special quiet mode?
@@ -300,10 +303,10 @@ struct pcmk__output_s {
      *                           previous call to register_message.
      * \param[in] ...            Arguments to be passed to the registered function.
      *
-     * \return 0 if a function was registered for the message, that function was
-     *         called, and returned successfully.  A negative value is returned if
-     *         no function was registered.  A positive value is returned if the
-     *         function was called but encountered an error.
+     * \return A standard Pacemaker return code.  Generally: 0 if a function was
+     *         registered for the message, that function was called, and returned
+     *         successfully; EINVAL if no function was registered; or pcmk_rc_no_output
+     *         if a function was called but produced no output.
      */
     int (*message) (pcmk__output_t *out, const char *message_id, ...);
 
@@ -470,7 +473,7 @@ void pcmk__output_free(pcmk__output_t *out);
  *                         output, pass a filename of "/dev/null".
  * \param[in]     argv     The list of command line arguments.
  *
- * \return 0 on success or an error code on error.
+ * \return Standard Pacemaker return code
  */
 int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
                      const char *filename, char **argv);
@@ -508,6 +511,14 @@ pcmk__register_format(GOptionGroup *group, const char *name,
  */
 void
 pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *table);
+
+/*!
+ * \internal
+ * \brief Unregister a previously registered table of custom formatting
+ *        functions and destroy the internal data structures associated with them.
+ */
+void
+pcmk__unregister_formats(void);
 
 /*!
  * \internal

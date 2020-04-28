@@ -129,6 +129,14 @@ ALL_OPT = {
         "default" : "0",
         "order" : 3
         },
+    "plug" : {
+        "getopt" : "n:",
+        "longopt" : "plug",
+        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required" : "1",
+        "shortdesc" : "Ignored",
+        "order" : 4
+        },
     "port" : {
         "getopt" : "n:",
         "longopt" : "plug",

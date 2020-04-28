@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     for (i = 0; i < file_num; i++) {
         struct stat prop;
 
-        if (crm_starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
+        if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
 #if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
             snprintf(buffer, sizeof(buffer), "%s/%s", RH_STONITH_DIR,
                      namelist[i]->d_name);
@@ -83,6 +83,28 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     }
 #endif
     return count;
+}
+
+static void
+stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
+{
+    char *xpath = NULL;
+    xmlXPathObject *xpathObj = NULL;
+
+    CRM_CHECK(metadata != NULL, return);
+    CRM_CHECK(parameter != NULL, return);
+
+    xpath = crm_strdup_printf("//parameter[@name='%s']", parameter);
+    /* Fudge metadata so that the parameter isn't required in config
+     * Pacemaker handles and adds it */
+    xpathObj = xpath_search(metadata, xpath);
+    if (numXpathResults(xpathObj) > 0) {
+        xmlNode *tmp = getXpathResult(xpathObj, 0);
+
+        crm_xml_add(tmp, "required", "0");
+    }
+    freeXpathObject(xpathObj);
+    free(xpath);
 }
 
 /*!
@@ -155,14 +177,10 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     }
     freeXpathObject(xpathObj);
 
-    // Fudge metadata so port isn't required in config (pacemaker adds it)
-    xpathObj = xpath_search(xml, "//parameter[@name='port']");
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *tmp = getXpathResult(xpathObj, 0);
-
-        crm_xml_add(tmp, "required", "0");
-    }
-    freeXpathObject(xpathObj);
+    // Fudge metadata so parameters are not required in config (pacemaker adds them)
+    stonith_rhcs_parameter_not_required(xml, "action");
+    stonith_rhcs_parameter_not_required(xml, "plug");
+    stonith_rhcs_parameter_not_required(xml, "port");
 
     buffer = dump_xml_formatted_with_text(xml);
     free_xml(xml);

@@ -1,5 +1,7 @@
 /*
- * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -31,7 +33,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failures of all resources */
 #define ATTRD_RE_CLEAR_ALL \
-    "^(" CRM_FAIL_COUNT_PREFIX "|" CRM_LAST_FAILURE_PREFIX ")-"
+    "^(" PCMK__FAIL_COUNT_PREFIX "|" PCMK__LAST_FAILURE_PREFIX ")-"
 
 /* regular expression to clear failure of all operations for one resource
  * (format takes resource name)
@@ -106,11 +108,11 @@ typedef struct attribute_value_s {
         gboolean seen;
 } attribute_value_t;
 
-crm_cluster_t *attrd_cluster;
-GHashTable *attributes;
+extern crm_cluster_t *attrd_cluster;
+extern GHashTable *attributes;
 
 #define attrd_send_ack(client, id, flags) \
-    crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
+    pcmk__ipc_send_ack((client), (id), (flags), "ack")
 
 #define CIB_OP_TIMEOUT_S 120
 
@@ -121,7 +123,8 @@ void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);
-void attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query);
+void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                        xmlNode *query);
 
 void free_attribute(gpointer data);
 

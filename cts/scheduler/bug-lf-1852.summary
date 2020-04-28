@@ -6,9 +6,9 @@ Online: [ mysql-01 mysql-02 ]
      Masters: [ mysql-02 ]
      Stopped: [ mysql-01 ]
  Resource Group: fs_mysql_ip
-     fs0	(ocf::heartbeat:Filesystem):	Started mysql-02
-     mysqlid	(lsb:mysql):	Started mysql-02
-     ip_resource	(ocf::heartbeat:IPaddr2):	Started mysql-02
+     fs0	(ocf::heartbeat:Filesystem):	 Started mysql-02
+     mysqlid	(lsb:mysql):	 Started mysql-02
+     ip_resource	(ocf::heartbeat:IPaddr2):	 Started mysql-02
 
 Transition Summary:
  * Start      drbd0:1     ( mysql-01 )  
@@ -32,7 +32,7 @@ Online: [ mysql-01 mysql-02 ]
      Masters: [ mysql-02 ]
      Slaves: [ mysql-01 ]
  Resource Group: fs_mysql_ip
-     fs0	(ocf::heartbeat:Filesystem):	Started mysql-02
-     mysqlid	(lsb:mysql):	Started mysql-02
-     ip_resource	(ocf::heartbeat:IPaddr2):	Started mysql-02
+     fs0	(ocf::heartbeat:Filesystem):	 Started mysql-02
+     mysqlid	(lsb:mysql):	 Started mysql-02
+     ip_resource	(ocf::heartbeat:IPaddr2):	 Started mysql-02
 

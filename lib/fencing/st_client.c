@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,10 +29,6 @@
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>
-
-#if SUPPORT_CIBSECRETS
-#  include <crm/common/cib_secrets.h>
-#endif
 
 CRM_TRACE_INIT_DATA(stonith);
 
@@ -557,6 +553,17 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             param = "port";
             value = g_hash_table_lookup(device_args, param);
 
+            if (value == NULL || safe_str_eq(value, "dynamic")) {
+                crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
+                          alias);
+                append_arg(param, alias, &arg_list);
+
+                /* The `port` parameter is massively deprecated in favor of `plug`
+                 * Add `plug` as well */
+                param = "plug";
+                value = g_hash_table_lookup(device_args, param);
+            }
+
         } else if (safe_str_eq(param, "none")) {
             value = param;      /* Nothing more to do */
 
@@ -1073,8 +1080,8 @@ stonith_api_status(stonith_t * stonith, int call_options, const char *id, const 
 }
 
 static int
-stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const char *action,
-                  int timeout, int tolerance)
+stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *node,
+                             const char *action, int timeout, int tolerance, int delay)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -1084,11 +1091,20 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
+    crm_xml_add_int(data, F_STONITH_DELAY, delay);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
 
     return rc;
+}
+
+static int
+stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const char *action,
+                  int timeout, int tolerance)
+{
+    return stonith_api_fence_with_delay(stonith, call_options, node, action,
+                                        timeout, tolerance, 0);
 }
 
 static int
@@ -1119,11 +1135,12 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (rc == 0) {
         xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_TRACE);
+        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output,
+                                          LOG_NEVER);
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
-            int completed;
+            long long completed;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1131,7 +1148,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
             kvp->client = crm_element_value_copy(op, F_STONITH_CLIENTNAME);
-            crm_element_value_int(op, F_STONITH_DATE, &completed);
+            crm_element_value_ll(op, F_STONITH_DATE, &completed);
             kvp->completed = (time_t) completed;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
 
@@ -1160,15 +1177,6 @@ void stonith_history_free(stonith_history_t *history)
         free(hp->delegate);
         free(hp->client);
     }
-}
-
-/*!
- * \brief Deprecated (use stonith_get_namespace() instead)
- */
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
 static gint
@@ -1461,7 +1469,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     stonith_private_t *native = NULL;
     const char *display_name = name? name : "client";
 
-    static struct ipc_client_callbacks st_callbacks = {
+    struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
         .destroy = stonith_connection_destroy
     };
@@ -1875,6 +1883,14 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
+    if (data) {
+        const char *delay_s = crm_element_value(data, F_STONITH_DELAY);
+
+        if (delay_s) {
+            crm_xml_add(op_msg, F_STONITH_DELAY, delay_s);
+        }
+    }
+
     {
         enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
@@ -2035,7 +2051,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     for (; params; params = params->next) {
 
         // Strip out Pacemaker-implemented parameters
-        if (!crm_starts_with(params->key, "pcmk_")
+        if (!pcmk__starts_with(params->key, "pcmk_")
                 && strcmp(params->key, "provides")
                 && strcmp(params->key, "stonith-timeout")) {
             g_hash_table_insert(params_table, strdup(params->key),
@@ -2044,10 +2060,11 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     }
 
 #if SUPPORT_CIBSECRETS
-    rc = replace_secret_params(rsc_id, params_table);
-    if (rc < 0) {
+    rc = pcmk__substitute_secrets(rsc_id, params_table);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
-                 agent, pcmk_strerror(rc));
+                 agent, pcmk_rc_str(rc));
+        rc = pcmk_rc2legacy(rc);
     }
 #endif
 
@@ -2128,6 +2145,7 @@ stonith_api_new(void)
     new_stonith->cmds->monitor    = stonith_api_monitor;
     new_stonith->cmds->status     = stonith_api_status;
     new_stonith->cmds->fence      = stonith_api_fence;
+    new_stonith->cmds->fence_with_delay = stonith_api_fence_with_delay;
     new_stonith->cmds->confirm    = stonith_api_confirm;
     new_stonith->cmds->history    = stonith_api_history;
 
@@ -2594,4 +2612,16 @@ stonith__sort_history(stonith_history_t *history)
         new = pending;
     }
     return new;
+}
+
+// Deprecated functions kept only for backward API compatibility
+const char *get_stonith_provider(const char *agent, const char *provider);
+
+/*!
+ * \brief Deprecated (use stonith_get_namespace() instead)
+ */
+const char *
+get_stonith_provider(const char *agent, const char *provider)
+{
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }

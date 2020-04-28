@@ -6,13 +6,13 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_mon.h crm_resource.h
+noinst_HEADERS		= crm_mon.h crm_resource.h crm_resource_controller.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -23,9 +23,14 @@ sbin_SCRIPTS		+= cibsecret
 endif
 noinst_SCRIPTS		= pcmk_simtimes
 
-EXTRA_DIST		= crm_mon.sysconfig		\
+EXTRA_DIST		= crm_diff.8.inc \
+				  crm_error.8.inc \
+			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
+			  crm_rule.8.inc \
+			  crm_simulate.8.inc \
+			  fix-manpages \
 			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
@@ -56,7 +61,7 @@ endif
 
 # A few tools are just thin wrappers around crm_attribute.
 # This makes their help get updated when crm_attribute changes
-# (see Makefile.common).
+# (see mk/common.mk).
 MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
@@ -89,7 +94,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_output.c crm_mon_print.c crm_mon_runtime.c crm_mon_xml.c
+crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_print.c crm_mon_runtime.c crm_mon_xml.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
@@ -108,7 +113,11 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_resource_SOURCES	= crm_resource.c crm_resource_ban.c crm_resource_runtime.c crm_resource_print.c
+crm_resource_SOURCES	= crm_resource.c		\
+			  crm_resource_ban.c		\
+			  crm_resource_controller.c	\
+			  crm_resource_print.c		\
+			  crm_resource_runtime.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la 		\
@@ -138,10 +147,11 @@ crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 stonith_admin_SOURCES	= stonith_admin.c
-stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+stonith_admin_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
-			  $(top_builddir)/lib/fencing/libstonithd.la
+			  $(top_builddir)/lib/fencing/libstonithd.la \
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c

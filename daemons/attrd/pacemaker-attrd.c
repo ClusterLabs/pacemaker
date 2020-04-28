@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,11 +25,11 @@
 #include <crm/pengine/rules.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include "pacemaker-attrd.h"
 
 lrmd_t *the_lrmd = NULL;
@@ -143,7 +143,7 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
  *       attrd_peer_update().
  */
 static void
-attrd_erase_attrs()
+attrd_erase_attrs(void)
 {
     int call_id;
     char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
@@ -221,7 +221,7 @@ attrd_cib_connect(int max_retry)
  * \brief Prepare the CIB after cluster is connected
  */
 static void
-attrd_cib_init()
+attrd_cib_init(void)
 {
     // We have no attribute values in memory, wipe the CIB to match
     attrd_erase_attrs();
@@ -240,54 +240,59 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
-    xmlNode *xml = crm_ipcs_recv(client, data, size, &id, &flags);
+    pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *xml = NULL;
     const char *op;
 
-    if (xml == NULL) {
-        crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK((c != NULL) && (client != NULL), return 0);
+    if (data == NULL) {
+        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
+    xml = pcmk__client_data2xml(client, data, &id, &flags);
+    if (xml == NULL) {
+        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
+
 #if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
-    crm_acl_get_set_user(xml, F_ATTRD_USER, client->user);
+    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 #endif
 
-    crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
-    crm_log_xml_trace(xml, __FUNCTION__);
-
-    op = crm_element_value(xml, F_ATTRD_TASK);
+    op = crm_element_value(xml, PCMK__XA_TASK);
 
     if (client->name == NULL) {
         const char *value = crm_element_value(xml, F_ORIG);
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (safe_str_eq(op, ATTRD_OP_PEER_REMOVE)) {
+    if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_CLEAR_FAILURE)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_clear_failure(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
-  
-    } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
+
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_REFRESH)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
-    } else if (safe_str_eq(op, ATTRD_OP_QUERY)) {
+    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_QUERY)) {
         /* queries will get reply, so no ack is necessary */
         attrd_client_query(client, id, flags, xml);
 
@@ -301,17 +306,17 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 }
 
 void
-attrd_ipc_fini()
+attrd_ipc_fini(void)
 {
     if (ipcs != NULL) {
-        crm_client_disconnect_all(ipcs);
+        pcmk__drop_all_clients(ipcs);
         qb_ipcs_destroy(ipcs);
         ipcs = NULL;
     }
 }
 
 static int
-attrd_cluster_connect()
+attrd_cluster_connect(void)
 {
     attrd_cluster = calloc(1, sizeof(crm_cluster_t));
 
@@ -328,15 +333,18 @@ attrd_cluster_connect()
     return pcmk_ok;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help",     no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose",  no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -348,13 +356,13 @@ main(int argc, char **argv)
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Daemon for aggregating and atomically storing node attribute updates into the CIB");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for managing Pacemaker node attributes");
 
     mainloop_add_signal(SIGTERM, attrd_shutdown);
 
      while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -363,7 +371,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -376,7 +384,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);

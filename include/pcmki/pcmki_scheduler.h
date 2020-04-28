@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the Pacemaker project contributors
+ * Copyright 2014-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,8 +40,8 @@ enum pe_weights {
 struct rsc_colocation_s {
     const char *id;
     const char *node_attribute;
-    resource_t *rsc_lh;
-    resource_t *rsc_rh;
+    pe_resource_t *rsc_lh;
+    pe_resource_t *rsc_rh;
 
     int role_lh;
     int role_rh;
@@ -58,8 +58,8 @@ enum loss_ticket_policy_e {
 
 struct rsc_ticket_s {
     const char *id;
-    resource_t *rsc_lh;
-    ticket_t *ticket;
+    pe_resource_t *rsc_lh;
+    pe_ticket_t *ticket;
     enum loss_ticket_policy_e loss_policy;
 
     int role_lh;
@@ -79,18 +79,17 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
-extern gboolean shutdown_constraints(node_t * node, action_t * shutdown_op,
+extern gboolean shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
-extern gboolean stonith_constraints(node_t * node, action_t * stonith_op,
-                                    pe_working_set_t * data_set);
+void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
-extern int custom_action_order(resource_t * lh_rsc, char *lh_task, action_t * lh_action,
-                               resource_t * rh_rsc, char *rh_task, action_t * rh_action,
+extern int custom_action_order(pe_resource_t * lh_rsc, char *lh_task, pe_action_t * lh_action,
+                               pe_resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
                                enum pe_ordering type, pe_working_set_t * data_set);
 
-extern int new_rsc_order(resource_t * lh_rsc, const char *lh_task,
-                         resource_t * rh_rsc, const char *rh_task,
+extern int new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
+                         pe_resource_t * rh_rsc, const char *rh_task,
                          enum pe_ordering type, pe_working_set_t * data_set);
 
 #  define order_start_start(rsc1,rsc2, type)				\
@@ -98,16 +97,14 @@ extern int new_rsc_order(resource_t * lh_rsc, const char *lh_task,
 #  define order_stop_stop(rsc1, rsc2, type)				\
     new_rsc_order(rsc1, CRMD_ACTION_STOP, rsc2, CRMD_ACTION_STOP, type, data_set)
 
-extern void graph_element_from_action(action_t * action, pe_working_set_t * data_set);
+extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                 crm_time_t *now);
 bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern gboolean show_scores;
-extern int scores_log_level;
 extern gboolean show_utilization;
-extern int utilization_log_level;
 extern const char *transition_idle_timeout;
 
 #endif

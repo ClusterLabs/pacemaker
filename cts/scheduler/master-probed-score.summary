@@ -5,26 +5,26 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
 
  Clone Set: AdminClone [AdminDrbd] (promotable)
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
- CronAmbientTemperature	(ocf::heartbeat:symlink):	Stopped
- StonithHypatia	(stonith:fence_nut):	Stopped
- StonithOrestes	(stonith:fence_nut):	Stopped
+ CronAmbientTemperature	(ocf::heartbeat:symlink):	 Stopped
+ StonithHypatia	(stonith:fence_nut):	 Stopped
+ StonithOrestes	(stonith:fence_nut):	 Stopped
  Resource Group: DhcpGroup
-     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Stopped
-     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Stopped
-     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Stopped
-     Dhcpd	(lsb:dhcpd):	Stopped (disabled)
-     DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped
+     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	 Stopped
+     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	 Stopped
+     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	 Stopped
+     Dhcpd	(lsb:dhcpd):	 Stopped (disabled)
+     DhcpIP	(ocf::heartbeat:IPaddr2):	 Stopped
  Clone Set: CupsClone [CupsGroup]
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: IPClone [IPGroup] (unique)
      Resource Group: IPGroup:0
-         ClusterIP:0	(ocf::heartbeat:IPaddr2):	Stopped
-         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	Stopped
-         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	Stopped
+         ClusterIP:0	(ocf::heartbeat:IPaddr2):	 Stopped
+         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	 Stopped
+         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	 Stopped
      Resource Group: IPGroup:1
-         ClusterIP:1	(ocf::heartbeat:IPaddr2):	Stopped
-         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	Stopped
-         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	Stopped
+         ClusterIP:1	(ocf::heartbeat:IPaddr2):	 Stopped
+         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	 Stopped
+         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	 Stopped
  Clone Set: LibvirtdClone [LibvirtdGroup]
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: TftpClone [TftpGroup]
@@ -33,8 +33,8 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: FilesystemClone [FilesystemGroup]
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
- KVM-guest	(ocf::heartbeat:VirtualDomain):	Stopped
- Proxy	(ocf::heartbeat:VirtualDomain):	Stopped
+ KVM-guest	(ocf::heartbeat:VirtualDomain):	 Stopped
+ Proxy	(ocf::heartbeat:VirtualDomain):	 Stopped
 
 Transition Summary:
  * Promote    AdminDrbd:0                ( Stopped -> Master hypatia-corosync.nevis.columbia.edu )  
@@ -293,26 +293,26 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
 
  Clone Set: AdminClone [AdminDrbd] (promotable)
      Masters: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
- CronAmbientTemperature	(ocf::heartbeat:symlink):	Started hypatia-corosync.nevis.columbia.edu
- StonithHypatia	(stonith:fence_nut):	Started orestes-corosync.nevis.columbia.edu
- StonithOrestes	(stonith:fence_nut):	Started hypatia-corosync.nevis.columbia.edu
+ CronAmbientTemperature	(ocf::heartbeat:symlink):	 Started hypatia-corosync.nevis.columbia.edu
+ StonithHypatia	(stonith:fence_nut):	 Started orestes-corosync.nevis.columbia.edu
+ StonithOrestes	(stonith:fence_nut):	 Started hypatia-corosync.nevis.columbia.edu
  Resource Group: DhcpGroup
-     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
-     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
-     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	Started orestes-corosync.nevis.columbia.edu
-     Dhcpd	(lsb:dhcpd):	Stopped (disabled)
-     DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped
+     SymlinkDhcpdConf	(ocf::heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu
+     SymlinkSysconfigDhcpd	(ocf::heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu
+     SymlinkDhcpdLeases	(ocf::heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu
+     Dhcpd	(lsb:dhcpd):	 Stopped (disabled)
+     DhcpIP	(ocf::heartbeat:IPaddr2):	 Stopped
  Clone Set: CupsClone [CupsGroup]
      Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: IPClone [IPGroup] (unique)
      Resource Group: IPGroup:0
-         ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
-         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
-         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	Started hypatia-corosync.nevis.columbia.edu
+         ClusterIP:0	(ocf::heartbeat:IPaddr2):	 Started hypatia-corosync.nevis.columbia.edu
+         ClusterIPLocal:0	(ocf::heartbeat:IPaddr2):	 Started hypatia-corosync.nevis.columbia.edu
+         ClusterIPSandbox:0	(ocf::heartbeat:IPaddr2):	 Started hypatia-corosync.nevis.columbia.edu
      Resource Group: IPGroup:1
-         ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
-         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
-         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	Started orestes-corosync.nevis.columbia.edu
+         ClusterIP:1	(ocf::heartbeat:IPaddr2):	 Started orestes-corosync.nevis.columbia.edu
+         ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	 Started orestes-corosync.nevis.columbia.edu
+         ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	 Started orestes-corosync.nevis.columbia.edu
  Clone Set: LibvirtdClone [LibvirtdGroup]
      Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: TftpClone [TftpGroup]
@@ -321,6 +321,6 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
      Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: FilesystemClone [FilesystemGroup]
      Started: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
- KVM-guest	(ocf::heartbeat:VirtualDomain):	Started hypatia-corosync.nevis.columbia.edu
- Proxy	(ocf::heartbeat:VirtualDomain):	Started orestes-corosync.nevis.columbia.edu
+ KVM-guest	(ocf::heartbeat:VirtualDomain):	 Started hypatia-corosync.nevis.columbia.edu
+ Proxy	(ocf::heartbeat:VirtualDomain):	 Started orestes-corosync.nevis.columbia.edu
 

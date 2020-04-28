@@ -1,12 +1,12 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu -DPCMK_SCHEMAS_EMERGENCY_XSLT=0
 
@@ -23,6 +23,8 @@ lib_LTLIBRARIES	= libcrmcommon.la
 # s390-suse-linux/bin/ld: .libs/ipc.o: relocation R_390_PC32DBL against `__stack_chk_fail@@GLIBC_2.4' can not be used when making a shared object; recompile with -fPIC
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
+
+SUBDIRS = tests
 
 noinst_HEADERS		= crmcommon_private.h
 
@@ -43,7 +45,6 @@ if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
 libcrmcommon_la_SOURCES	+= cmdline.c
-libcrmcommon_la_SOURCES	+= compat.c
 libcrmcommon_la_SOURCES	+= digest.c
 libcrmcommon_la_SOURCES	+= io.c
 libcrmcommon_la_SOURCES	+= ipc.c
@@ -52,8 +53,10 @@ libcrmcommon_la_SOURCES	+= logging.c
 libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= nvpair.c
 libcrmcommon_la_SOURCES	+= operations.c
+libcrmcommon_la_SOURCES	+= options.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c
+libcrmcommon_la_SOURCES	+= output_log.c
 libcrmcommon_la_SOURCES	+= output_none.c
 libcrmcommon_la_SOURCES	+= output_text.c
 libcrmcommon_la_SOURCES	+= output_xml.c

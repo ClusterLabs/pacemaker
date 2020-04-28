@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -70,6 +70,14 @@ enum st_remap_phase {
     st_phase_max = 3
 };
 
+/* These values provide additional information for STONITH's asynchronous reply response.
+ * The st_reply_opt_merged value indicates an operation that has been merged and completed without being executed.
+ */
+enum st_replay_option {
+    st_reply_opt_none            = 0x00000000,
+    st_reply_opt_merged          = 0x00000001,
+};
+
 typedef struct remote_fencing_op_s {
     /* The unique id associated with this operation */
     char *id;
@@ -104,6 +112,10 @@ typedef struct remote_fencing_op_s {
      * expiring. This is calculated by adding together all the timeout
      * values associated with the devices this fencing operation may call */
     gint total_timeout;
+
+    /*! Requested fencing delay.
+     * Value -1 means disable any static/random fencing delays. */
+    int delay;
 
     /*! Delegate is the node being asked to perform a fencing action
      * on behalf of the node that owns the remote operation. Some operations
@@ -155,7 +167,7 @@ typedef struct remote_fencing_op_s {
  * \param op, Operation whose result should be broadcast
  * \param rc, Result of the operation
  */
-void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc);
+void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged);
 
 enum st_callback_flags {
     st_callback_unknown               = 0x0000,
@@ -204,8 +216,8 @@ void free_metadata_cache(void);
 
 long long get_stonith_flag(const char *name);
 
-void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
-                            xmlNode * op_request, const char *remote_peer);
+void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                            xmlNode *op_request, const char *remote_peer);
 
 int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
@@ -232,8 +244,9 @@ void do_stonith_notify(int options, const char *type, int result, xmlNode * data
 void do_stonith_notify_device(int options, const char *op, int rc, const char *desc);
 void do_stonith_notify_level(int options, const char *op, int rc, const char *desc);
 
-remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t * client, xmlNode * request,
-                                                       gboolean manual_ack);
+remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
+                                                xmlNode *request,
+                                                gboolean manual_ack);
 
 int process_remote_stonith_exec(xmlNode * msg);
 

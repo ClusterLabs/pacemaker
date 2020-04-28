@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ int cib_retries = 0;
 static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
-    if (crm_patchset_contains_alert(msg, TRUE)) {
+    if (pcmk__alert_in_patchset(msg, TRUE)) {
         mainloop_set_trigger(config_read);
     }
 }
@@ -167,4 +167,170 @@ controld_action_is_recordable(const char *action)
         return FALSE;
     }
     return TRUE;
+}
+
+static void
+cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                    void *user_data)
+{
+    char *desc = user_data;
+
+    if (rc == 0) {
+        crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
+    } else {
+        crm_warn("Deletion of %s (via CIB call %d) failed: %s " CRM_XS " rc=%d",
+                 desc, call_id, pcmk_strerror(rc), rc);
+    }
+}
+
+// Searches for various portions of node_state to delete
+
+// Match a particular node's node_state (takes node name 1x)
+#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+
+// Node's lrm section (name 1x)
+#define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
+
+// Node's lrm_rsc_op entries and lrm_resource entries without lock (name 2x)
+#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
+                                "|" XPATH_NODE_STATE                        \
+                                "//" XML_LRM_TAG_RESOURCE                   \
+                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ")]"
+
+// Node's transient_attributes section (name 1x)
+#define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
+
+// Everything under node_state (name 1x)
+#define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
+
+// Unlocked history + transient attributes (name 3x)
+#define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
+
+/*!
+ * \internal
+ * \brief Delete subsection of a node's CIB node_state
+ *
+ * \param[in] uname    Desired node
+ * \param[in] section  Subsection of node_state to delete
+ * \param[in] options  CIB call options to use
+ */
+void
+controld_delete_node_state(const char *uname, enum controld_section_e section,
+                           int options)
+{
+    char *xpath = NULL;
+    char *desc = NULL;
+
+    CRM_CHECK(uname != NULL, return);
+    switch (section) {
+        case controld_section_lrm:
+            xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            desc = crm_strdup_printf("resource history for node %s", uname);
+            break;
+        case controld_section_lrm_unlocked:
+            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED, uname, uname);
+            desc = crm_strdup_printf("resource history (other than shutdown "
+                                     "locks) for node %s", uname);
+            break;
+        case controld_section_attrs:
+            xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            desc = crm_strdup_printf("transient attributes for node %s", uname);
+            break;
+        case controld_section_all:
+            xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            desc = crm_strdup_printf("all state for node %s", uname);
+            break;
+        case controld_section_all_unlocked:
+            xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
+                                      uname, uname, uname);
+            desc = crm_strdup_printf("all state (other than shutdown locks) "
+                                     "for node %s", uname);
+            break;
+    }
+
+    if (fsa_cib_conn == NULL) {
+        crm_warn("Unable to delete %s: no CIB connection", desc);
+        free(desc);
+    } else {
+        int call_id;
+
+        options |= cib_quorum_override|cib_xpath|cib_multiple;
+        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
+        crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+                 desc, call_id, xpath);
+        fsa_register_cib_callback(call_id, FALSE, desc, cib_delete_callback);
+        // CIB library handles freeing desc
+    }
+    free(xpath);
+}
+
+// Takes node name and resource ID
+#define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
+                               "[@" XML_ATTR_UNAME "='%s']/"                \
+                               XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
+                               "/" XML_LRM_TAG_RESOURCE                     \
+                               "[@" XML_ATTR_ID "='%s']"
+// @TODO could add "and @XML_CONFIG_ATTR_SHUTDOWN_LOCK" to limit to locks
+
+/*!
+ * \internal
+ * \brief Clear resource history from CIB for a given resource and node
+ *
+ * \param[in]  rsc_id        ID of resource to be cleared
+ * \param[in]  node          Node whose resource history should be cleared
+ * \param[in]  user_name     ACL user name to use
+ * \param[in]  call_options  CIB call options
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+controld_delete_resource_history(const char *rsc_id, const char *node,
+                                 const char *user_name, int call_options)
+{
+    char *desc = NULL;
+    char *xpath = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((rsc_id != NULL) && (node != NULL), return EINVAL);
+
+    desc = crm_strdup_printf("resource history for %s on %s", rsc_id, node);
+    if (fsa_cib_conn == NULL) {
+        crm_err("Unable to clear %s: no CIB connection", desc);
+        free(desc);
+        return ENOTCONN;
+    }
+
+    // Ask CIB to delete the entry
+    xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
+    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, xpath, NULL,
+                         NULL, call_options|cib_xpath, user_name);
+
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
+        crm_err("Could not delete resource status of %s on %s%s%s: %s "
+                CRM_XS " rc=%d", rsc_id, node,
+                (user_name? " for user " : ""), (user_name? user_name : ""),
+                pcmk_rc_str(rc), rc);
+        free(desc);
+        free(xpath);
+        return rc;
+    }
+
+    if (is_set(call_options, cib_sync_call)) {
+        if (is_set(call_options, cib_dryrun)) {
+            crm_debug("Deletion of %s would succeed", desc);
+        } else {
+            crm_debug("Deletion of %s succeeded", desc);
+        }
+        free(desc);
+
+    } else {
+        crm_info("Clearing %s (via CIB call %d) " CRM_XS " xpath=%s",
+                 desc, rc, xpath);
+        fsa_register_cib_callback(rc, FALSE, desc, cib_delete_callback);
+        // CIB library handles freeing desc
+    }
+
+    free(xpath);
+    return pcmk_rc_ok;
 }

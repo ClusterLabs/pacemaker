@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 
 #include <crm_internal.h>
 #if 0
-#include "crm/common/ipcs.h"  /* crm_client_t */
+#include "crm/common/ipcs_internal.h"  /* pcmk__client_t */
 #include "crm/common/xml.h"  /* crm_xml_add */
 #endif
 #include "crm/msg_xml.h"  /* F_SUBTYPE */
@@ -44,10 +44,11 @@ static int32_t
 mock_based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     int32_t ret = 0;
-    crm_client_t *cib_client;
+    pcmk__client_t *cib_client;
 
     crm_trace("Connection %p", c);
-    if ((cib_client = crm_client_new(c, uid, gid)) == NULL) {
+    cib_client = pcmk__new_client(c, uid, gid);
+    if (cib_client == NULL) {
         ret = -EIO;
     }
 
@@ -56,22 +57,15 @@ mock_based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     return ret;
 }
 
-/* see based/based_callbacks.c:cib_ipc_created */
-static void
-mock_based_ipc_created(qb_ipcs_connection_t *c)
-{
-    crm_trace("Connection %p", c);
-}
-
 /* see based/based_callbacks.c:cib_ipc_closed */
 static int32_t
 mock_based_ipc_closed(qb_ipcs_connection_t *c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client != NULL) {
         crm_trace("Connection %p", c);
-        crm_client_destroy(client);
+        pcmk__free_client(client);
     }
 
     return 0;
@@ -87,7 +81,7 @@ mock_based_ipc_destroy(qb_ipcs_connection_t *c)
 
 /* see based/based_callbacks.c:cib_process_command (and more) */
 static void
-mock_based_handle_query(crm_client_t *cib_client, uint32_t flags,
+mock_based_handle_query(pcmk__client_t *cib_client, uint32_t flags,
                         const xmlNode *op_request)
 {
     xmlNode *reply, *cib;
@@ -123,9 +117,9 @@ mock_based_handle_query(crm_client_t *cib_client, uint32_t flags,
         add_message_xml(reply, F_CIB_CALLDATA, cib);
     }
 
-    crm_ipcs_send(cib_client, cib_client->request_id, reply,
-                  (flags & cib_sync_call) ? crm_ipc_flags_none
-                                          : crm_ipc_server_event);
+    pcmk__ipc_send_xml(cib_client, cib_client->request_id, reply,
+                       ((flags & cib_sync_call)? crm_ipc_flags_none
+                        : crm_ipc_server_event));
 
     free_xml(reply);
     free_xml(cib);
@@ -134,7 +128,8 @@ mock_based_handle_query(crm_client_t *cib_client, uint32_t flags,
 /* see based/based_callbacks.c:cib_common_callback_worker */
 static void
 mock_based_common_callback_worker(uint32_t id, uint32_t flags,
-                                  xmlNode *op_request, crm_client_t *cib_client)
+                                  xmlNode *op_request,
+                                  pcmk__client_t *cib_client)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
     mock_based_context_t *ctxt;
@@ -144,7 +139,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
             xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
-            crm_ipcs_send(cib_client, id, ack, flags);
+            pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             free_xml(ack);
         }
@@ -169,7 +164,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
         }
 
         if (flags & crm_ipc_client_response) {
-            crm_ipcs_send_ack(cib_client, id, flags, "ack", __FUNCTION__, __LINE__);
+            pcmk__ipc_send_ack(cib_client, id, flags, "ack");
         }
 
     } else if (!strcmp(op, CIB_OP_QUERY)) {
@@ -186,8 +181,8 @@ mock_based_dispatch_command(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     uint32_t id = 0, flags = 0;
     int call_options = 0;
-    crm_client_t *cib_client = crm_client_get(c);
-    xmlNode *op_request = crm_ipcs_recv(cib_client, data, size, &id, &flags);
+    pcmk__client_t *cib_client = pcmk__find_client(c);
+    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     crm_notice("Got connection %p", c);
     assert(op_request != NULL);
@@ -195,7 +190,7 @@ mock_based_dispatch_command(qb_ipcs_connection_t *c, void *data, size_t size)
     if (cib_client == NULL || op_request == NULL) {
         if (op_request == NULL) {
             crm_trace("Invalid message from %p", c);
-            crm_ipcs_send_ack(cib_client, id, flags, "nack", __FUNCTION__, __LINE__);
+            pcmk__ipc_send_ack(cib_client, id, flags, "nack");
         }
         return 0;
     }
@@ -310,7 +305,7 @@ int main(int argc, char *argv[])
     if (mock_based_options(ctxt, false, argc, (const char **) argv) > 0) {
         struct qb_ipcs_service_handlers cib_ipc_callbacks = {
             .connection_accept = mock_based_ipc_accept,
-            .connection_created = mock_based_ipc_created,
+            .connection_created = NULL,
             .msg_process = mock_based_dispatch_command,
             .connection_closed = mock_based_ipc_closed,
             .connection_destroyed = mock_based_ipc_destroy,
@@ -318,7 +313,7 @@ int main(int argc, char *argv[])
         crm_log_preinit(NULL, argc, argv);
         crm_log_init(NULL, LOG_DEBUG, false, true, argc, argv, false);
         qb_ipcs_service_t *ipcs_command =
-            mainloop_add_ipc_server(CIB_CHANNEL_RW, QB_IPC_NATIVE,
+            mainloop_add_ipc_server(PCMK__SERVER_BASED_RW, QB_IPC_NATIVE,
                                     &cib_ipc_callbacks);
         g_main_loop_run(g_main_loop_new(NULL, false));
         qb_ipcs_destroy(ipcs_command);

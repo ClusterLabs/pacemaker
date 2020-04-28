@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ c001n11 c001n12 ]
 
- fencing	(stonith:external/ssh):	Started c001n11
+ fencing	(stonith:external/ssh):	 Started c001n11
  Clone Set: dlm-clone [dlm]
      dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n12
      dlm	(ocf::pacemaker:controld):	 ORPHANED Started c001n11
@@ -38,7 +38,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ c001n11 c001n12 ]
 
- fencing	(stonith:external/ssh):	Started c001n11
+ fencing	(stonith:external/ssh):	 Started c001n11
  Clone Set: dlm-clone [dlm]
  Clone Set: o2cb-clone [o2cb]
      Stopped: [ c001n11 c001n12 ]

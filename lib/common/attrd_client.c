@@ -1,10 +1,11 @@
 /*
- * Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2011-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -16,7 +17,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 /*!
  * \internal
@@ -34,7 +35,7 @@ create_attrd_op(const char *user_name)
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
 #if ENABLE_ACL
-    crm_xml_add(attrd_op, F_ATTRD_USER, user_name);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
 #endif
 
     return attrd_op;
@@ -44,15 +45,15 @@ create_attrd_op(const char *user_name)
  * \internal
  * \brief Send an operation to pacemaker-attrd via IPC
  *
- * \param[in] ipc       Connection to pacemaker-attrd (or NULL to use a local connection)
+ * \param[in] ipc       Connection to pacemaker-attrd (or create one if NULL)
  * \param[in] attrd_op  XML of pacemaker-attrd operation to send
  *
- * \return pcmk_ok on success, -errno otherwise
+ * \return Standard Pacemaker return code
  */
 static int
 send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
 {
-    int rc = -ENOTCONN;
+    int rc = -ENOTCONN; // initially handled as legacy return code
     int max = 5;
 
     static gboolean connected = TRUE;
@@ -102,10 +103,11 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
     if (rc > 0) {
         rc = pcmk_ok;
     }
-    return rc;
+    return pcmk_legacy2rc(rc);
 }
 
 /*!
+ * \internal
  * \brief Send a request to pacemaker-attrd
  *
  * \param[in] ipc      Connection to pacemaker-attrd (or NULL to use a local connection)
@@ -125,19 +127,17 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
  * \param[in] set      ID of attribute set to use (or NULL to choose first)
  * \param[in] dampen   Attribute dampening to use with B/Y, and U/v if creating
  * \param[in] user_name ACL user to pass to pacemaker-attrd
- * \param[in] options  Bitmask that may include:
- *                     attrd_opt_remote: host is a Pacemaker Remote node
- *                     attrd_opt_private: attribute is private (not kept in CIB)
+ * \param[in] options  Bitmask of pcmk__node_attr_opts
  *
- * \return pcmk_ok if request was successfully submitted to pacemaker-attrd, else -errno
+ * \return Standard Pacemaker return code
  */
 int
-attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
-                      const char *name, const char *value, const char *section,
-                      const char *set, const char *dampen,
-                      const char *user_name, int options)
+pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
+                        const char *name, const char *value,
+                        const char *section, const char *set,
+                        const char *dampen, const char *user_name, int options)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const char *task = NULL;
     const char *name_as = NULL;
     const char *display_host = (host ? host : "localhost");
@@ -158,53 +158,55 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
 
     switch (command) {
         case 'u':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_REGEX;
+            task = PCMK__ATTRD_CMD_UPDATE;
+            name_as = PCMK__XA_ATTR_PATTERN;
             break;
         case 'D':
         case 'U':
         case 'v':
-            task = ATTRD_OP_UPDATE;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'R':
-            task = ATTRD_OP_REFRESH;
+            task = PCMK__ATTRD_CMD_REFRESH;
             display_command = "refresh";
             break;
         case 'B':
-            task = ATTRD_OP_UPDATE_BOTH;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE_BOTH;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'Y':
-            task = ATTRD_OP_UPDATE_DELAY;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_UPDATE_DELAY;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'Q':
-            task = ATTRD_OP_QUERY;
-            name_as = F_ATTRD_ATTRIBUTE;
+            task = PCMK__ATTRD_CMD_QUERY;
+            name_as = PCMK__XA_ATTR_NAME;
             break;
         case 'C':
-            task = ATTRD_OP_PEER_REMOVE;
+            task = PCMK__ATTRD_CMD_PEER_REMOVE;
             display_command = "purge";
             break;
     }
 
     if (name_as != NULL) {
         if (name == NULL) {
-            rc = -EINVAL;
+            rc = EINVAL;
             goto done;
         }
         crm_xml_add(update, name_as, name);
     }
 
-    crm_xml_add(update, F_ATTRD_TASK, task);
-    crm_xml_add(update, F_ATTRD_VALUE, value);
-    crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
-    crm_xml_add(update, F_ATTRD_SECTION, section);
-    crm_xml_add(update, F_ATTRD_HOST, host);
-    crm_xml_add(update, F_ATTRD_SET, set);
-    crm_xml_add_int(update, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
-    crm_xml_add_int(update, F_ATTRD_IS_PRIVATE, is_set(options, attrd_opt_private));
+    crm_xml_add(update, PCMK__XA_TASK, task);
+    crm_xml_add(update, PCMK__XA_ATTR_VALUE, value);
+    crm_xml_add(update, PCMK__XA_ATTR_DAMPENING, dampen);
+    crm_xml_add(update, PCMK__XA_ATTR_SECTION, section);
+    crm_xml_add(update, PCMK__XA_ATTR_NODE_NAME, host);
+    crm_xml_add(update, PCMK__XA_ATTR_SET, set);
+    crm_xml_add_int(update, PCMK__XA_ATTR_IS_REMOTE,
+                    is_set(options, pcmk__node_attr_remote));
+    crm_xml_add_int(update, PCMK__XA_ATTR_IS_PRIVATE,
+                    is_set(options, pcmk__node_attr_private));
 
     rc = send_attrd_op(ipc, update);
 
@@ -213,15 +215,16 @@ done:
 
     if (display_command) {
         crm_debug("Asked pacemaker-attrd to %s %s: %s (%d)",
-                  display_command, display_host, pcmk_strerror(rc), rc);
+                  display_command, display_host, pcmk_rc_str(rc), rc);
     } else {
         crm_debug("Asked pacemaker-attrd to update %s=%s for %s: %s (%d)",
-                  name, value, display_host, pcmk_strerror(rc), rc);
+                  name, value, display_host, pcmk_rc_str(rc), rc);
     }
     return rc;
 }
 
 /*!
+ * \internal
  * \brief Send a request to pacemaker-attrd to clear resource failure
  *
  * \param[in] ipc           Connection to pacemaker-attrd (NULL to use local connection)
@@ -230,26 +233,28 @@ done:
  * \param[in] operation     Name of operation to clear (or NULL for all)
  * \param[in] interval_spec If operation is not NULL, its interval
  * \param[in] user_name     ACL user to pass to pacemaker-attrd
- * \param[in] options       attrd_opt_remote if host is a Pacemaker Remote node
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
  *
  * \return pcmk_ok if request was successfully submitted to pacemaker-attrd, else -errno
  */
 int
-attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
-                     const char *operation, const char *interval_spec,
-                     const char *user_name, int options)
+pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
+                              const char *resource, const char *operation,
+                              const char *interval_spec, const char *user_name,
+                              int options)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *clear_op = create_attrd_op(user_name);
     const char *interval_desc = NULL;
     const char *op_desc = NULL;
 
-    crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
-    crm_xml_add(clear_op, F_ATTRD_HOST, host);
-    crm_xml_add(clear_op, F_ATTRD_RESOURCE, resource);
-    crm_xml_add(clear_op, F_ATTRD_OPERATION, operation);
-    crm_xml_add(clear_op, F_ATTRD_INTERVAL, interval_spec);
-    crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
+    crm_xml_add(clear_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_NODE_NAME, host);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_RESOURCE, resource);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_OPERATION, operation);
+    crm_xml_add(clear_op, PCMK__XA_ATTR_INTERVAL, interval_spec);
+    crm_xml_add_int(clear_op, PCMK__XA_ATTR_IS_REMOTE,
+                    is_set(options, pcmk__node_attr_remote));
 
     rc = send_attrd_op(ipc, clear_op);
     free_xml(clear_op);
@@ -263,14 +268,17 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
     }
     crm_debug("Asked pacemaker-attrd to clear failure of %s %s for %s on %s: %s (%d)",
               interval_desc, op_desc, (resource? resource : "all resources"),
-              (host? host : "all nodes"), pcmk_strerror(rc), rc);
+              (host? host : "all nodes"), pcmk_rc_str(rc), rc);
     return rc;
 }
 
 #define LRM_TARGET_ENV "OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET
 
+/*!
+ * \internal
+ */
 const char *
-attrd_get_target(const char *name)
+pcmk__node_attr_target(const char *name)
 {
     if(safe_str_eq(name, "auto") || safe_str_eq(name, "localhost")) {
         name = NULL;
@@ -281,7 +289,7 @@ attrd_get_target(const char *name)
 
     } else {
         char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
-        char *phys_var = crm_meta_name(PCMK_ENV_PHYSICAL_HOST);
+        char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
         const char *target = getenv(target_var);
         const char *host_physical = getenv(phys_var);
 

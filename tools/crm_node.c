@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 #define SUMMARY "crm_node - Tool for displaying low-level node information"
 
@@ -188,7 +188,7 @@ new_mainloop_for_ipc(const char *system, ipc_dispatch_fn dispatch)
 }
 
 static void
-run_mainloop_and_exit()
+run_mainloop_and_exit(void)
 {
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
@@ -202,7 +202,7 @@ send_controller_hello(crm_ipc_t *controller)
     xmlNode *hello = NULL;
     int rc;
 
-    pid_s = crm_getpid_s();
+    pid_s = pcmk__getpid_s();
     hello = create_hello_message(pid_s, crm_system_name, "1", "0");
     rc = crm_ipc_send(controller, hello, 0, 0, NULL);
     free_xml(hello);
@@ -332,7 +332,7 @@ run_controller_mainloop(uint32_t nodeid)
 }
 
 static void
-print_node_name()
+print_node_name(void)
 {
     // Check environment first (i.e. when called by resource agent)
     const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
@@ -426,11 +426,11 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
         crm_xml_add(cmd, F_TYPE, T_ATTRD);
         crm_xml_add(cmd, F_ORIG, crm_system_name);
 
-        crm_xml_add(cmd, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
-        crm_xml_add(cmd, F_ATTRD_HOST, node_name);
+        crm_xml_add(cmd, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+        crm_xml_add(cmd, PCMK__XA_ATTR_NODE_NAME, node_name);
 
         if (nodeid > 0) {
-            crm_xml_add_int(cmd, F_ATTRD_HOST_ID, (int) nodeid);
+            crm_xml_add_int(cmd, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
         }
 
     } else {
@@ -549,7 +549,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 }
 
 static void
-run_pacemakerd_mainloop()
+run_pacemakerd_mainloop(void)
 {
     crm_ipc_t *ipc = NULL;
     xmlNode *poke = NULL;
@@ -577,7 +577,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL, &group);
+    context = pcmk__build_arg_context(args, NULL, &group, NULL);
 
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.
@@ -605,7 +605,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_node");
 
-    processed_args = pcmk__cmdline_preproc(argc, argv, "NR");
+    processed_args = pcmk__cmdline_preproc(argv, "NR");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
@@ -619,11 +619,14 @@ main(int argc, char **argv)
 
     if (args->version) {
         /* FIXME:  When crm_node is converted to use formatted output, this can go. */
-        crm_help('v', CRM_EX_USAGE);
+        pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
     if (optind > argc || options.command == 0) {
-        fprintf(stderr, "%s", g_option_context_get_help(context, TRUE, NULL));
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        fprintf(stderr, "%s", help);
+        g_free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -658,6 +661,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
+    g_clear_error(&error);
     pcmk__free_arg_context(context);
     crm_node_exit(exit_code);
     return exit_code;

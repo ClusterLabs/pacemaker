@@ -3,7 +3,7 @@ Using the original execution date of: 2016-12-12 20:28:26Z
 Current cluster status:
 Online: [ node1 node2 ]
 
- Fencing	(stonith:fence_xvm):	Stopped
+ Fencing	(stonith:fence_xvm):	 Stopped
  Clone Set: cl-rsc1 [rsc1]
      Stopped: [ node1 node2 ]
  Clone Set: cl-rsc2 [rsc2]
@@ -45,7 +45,7 @@ Using the original execution date of: 2016-12-12 20:28:26Z
 Revised cluster status:
 Online: [ node1 node2 ]
 
- Fencing	(stonith:fence_xvm):	Started node1
+ Fencing	(stonith:fence_xvm):	 Started node1
  Clone Set: cl-rsc1 [rsc1]
      Started: [ node1 node2 ]
  Clone Set: cl-rsc2 [rsc2]

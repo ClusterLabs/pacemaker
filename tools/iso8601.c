@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2019 the Pacemaker project contributors
+ * Copyright 2005-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,52 +15,93 @@
 
 char command = 0;
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"  },
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {"-spacer-",    0, 0, '-', "\nCommands:"},
-    {"now",      0, 0, 'n', "\tDisplay the current date/time"},
-    { "date",     1, 0, 'd',
-      "Parse an ISO 8601 date/time (for example, '2019-09-24 00:30:00 +01:00' or '2019-040')"},
-    { "period",   1, 0, 'p',
-      "Parse an ISO 8601 period (interval) with start time (for example, '2005-040/2005-043')"
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
     },
-    { "duration", 1, 0, 'D',
-      "Parse an ISO 8601 duration (for example, 'P1M')"
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
     },
-    { "expected", 1, 0, 'E',
-      "Exit with error status if result does not match this text. Requires: -n or -d"
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
     },
-    {"-spacer-",0, 0, '-', "\nOutput Modifiers:"},
-    {"seconds", 0, 0, 's', "\tShow result as a seconds since 0000-001 00:00:00Z"},
-    {"epoch", 0, 0, 'S', "\tShow result as a seconds since EPOCH (1970-001 00:00:00Z)"},
-    {"local",   0, 0, 'L', "\tShow result as a 'local' date/time"},
-    {"ordinal", 0, 0, 'O', "\tShow result as an 'ordinal' date/time"},
-    {"week",    0, 0, 'W', "\tShow result as an 'calendar week' date/time"},
-    { "-spacer-",0, 0, '-',
-      "\nFor more information on the ISO 8601 standard, see https://en.wikipedia.org/wiki/ISO_8601"
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nCommands:", pcmk__option_default
     },
-
-    {0, 0, 0, 0}
+    {
+        "now", no_argument, NULL, 'n',
+        "\tDisplay the current date/time", pcmk__option_default
+    },
+    {
+        "date", required_argument, NULL, 'd',
+        "Parse an ISO 8601 date/time (for example, "
+            "'2019-09-24 00:30:00 +01:00' or '2019-040')",
+        pcmk__option_default
+    },
+    {
+        "period", required_argument, NULL, 'p',
+        "Parse an ISO 8601 period (interval) with start time (for example, "
+            "'2005-040/2005-043')",
+        pcmk__option_default
+    },
+    {
+        "duration", required_argument, NULL, 'D',
+        "Parse an ISO 8601 duration (for example, 'P1M')", pcmk__option_default
+    },
+    {
+        "expected", required_argument, NULL, 'E',
+        "Exit with error status if result does not match this text. "
+            "Requires: -n or -d",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nOutput Modifiers:", pcmk__option_default
+    },
+    {
+        "seconds", no_argument, NULL, 's',
+        "\tShow result as a seconds since 0000-001 00:00:00Z",
+        pcmk__option_default
+    },
+    {
+        "epoch", no_argument, NULL, 'S',
+        "\tShow result as a seconds since EPOCH (1970-001 00:00:00Z)",
+        pcmk__option_default
+    },
+    {
+        "local", no_argument, NULL, 'L',
+        "\tShow result as a 'local' date/time", pcmk__option_default
+    },
+    {
+        "ordinal", no_argument, NULL, 'O',
+        "\tShow result as an 'ordinal' date/time", pcmk__option_default
+    },
+    {
+        "week", no_argument, NULL, 'W',
+        "\tShow result as an 'calendar week' date/time", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nFor more information on the ISO 8601 standard, see "
+            "https://en.wikipedia.org/wiki/ISO_8601",
+        pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static void
 log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
     char *start = crm_time_as_string(dtp->start, flags);
     char *end = crm_time_as_string(dtp->end, flags);
-    CRM_ASSERT(start != NULL && end != NULL);
 
-    if (log_level < LOG_CRIT) {
-        printf("Period: %s to %s\n", start, end);
-    } else {
-        do_crm_log(log_level, "Period: %s to %s", start, end);
-    }
+    CRM_ASSERT(start != NULL && end != NULL);
+    do_crm_log(log_level, "Period: %s to %s", start, end);
     free(start);
     free(end);
 }
@@ -82,15 +123,15 @@ main(int argc, char **argv)
     const char *expected_s = NULL;
 
     crm_log_cli_init("iso8601");
-    crm_set_options(NULL, "command [output modifier] ", long_options,
-                    "Display and parse ISO 8601 dates and times");
+    pcmk__set_cli_options(NULL, "<command> [options] ", long_options,
+                          "display and parse ISO 8601 dates and times");
 
     if (argc < 2) {
         argerr++;
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -100,7 +141,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 date_time_s = "now";
@@ -145,7 +186,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Current date/time", date_time,
+        crm_time_log(LOG_STDOUT, "Current date/time", date_time,
                      print_options | crm_time_log_date | crm_time_log_timeofday);
 
     } else if (date_time_s) {
@@ -157,7 +198,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Date", date_time,
+        crm_time_log(LOG_STDOUT, "Date", date_time,
                      print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
@@ -169,7 +210,8 @@ main(int argc, char **argv)
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
-        crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
+        crm_time_log(LOG_STDOUT, "Duration", duration,
+                     print_options | crm_time_log_duration);
     }
 
     if (period_s) {
@@ -181,7 +223,7 @@ main(int argc, char **argv)
         }
         log_time_period(LOG_TRACE, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
-        log_time_period(-1, period,
+        log_time_period(LOG_STDOUT, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
         crm_time_free_period(period);
     }
@@ -196,7 +238,7 @@ main(int argc, char **argv)
         }
         crm_time_log(LOG_TRACE, "Duration ends at", later,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Duration ends at", later,
+        crm_time_log(LOG_STDOUT, "Duration ends at", later,
                      print_options | crm_time_log_date | crm_time_log_timeofday |
                      crm_time_log_with_timezone);
         if (expected_s) {

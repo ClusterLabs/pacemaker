@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2019 the Pacemaker project contributors
+ * Later changes copyright 2008-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -609,48 +609,48 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-static pe_cluster_option cib_opts[] = {
-    /*
-     * name, legacy name,
-     * type, allowed values, default, validator,
+static pcmk__cluster_option_t cib_opts[] = {
+    /* name, legacy name, type, allowed values,
+     * default value, validator,
      * short description,
      * long description
      */
     {
-        "enable-acl", NULL,
-        "boolean", NULL, "false", &check_boolean,
-        "Enable CIB ACL",
+        "enable-acl", NULL, "boolean", NULL,
+        "false", pcmk__valid_boolean,
+        "Enable Access Control Lists (ACLs) for the CIB",
         NULL
     },
     {
-        "cluster-ipc-limit", NULL,
-        "integer", NULL, "500", &check_positive_number,
+        "cluster-ipc-limit", NULL, "integer", NULL,
+        "500", pcmk__valid_positive_number,
         "Maximum IPC message backlog before disconnecting a cluster daemon",
         "Raise this if log has \"Evicting client\" messages for cluster daemon"
             " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes)"
+            " multiplied by the number of nodes)."
     },
 };
 
 void
 cib_metadata(void)
 {
-    config_metadata("Cluster Information Base", "1.0",
-                    "Cluster Information Base Options",
-                    "This is a fake resource that details the options that can be configured for the Cluster Information Base.",
-                    cib_opts, DIMOF(cib_opts));
+    pcmk__print_option_metadata("pacemaker-based", "1.0",
+                                "Cluster Information Base manager options",
+                                "Cluster options used by Pacemaker's "
+                                    "Cluster Information Base manager",
+                                cib_opts, DIMOF(cib_opts));
 }
 
 void
 verify_cib_options(GHashTable * options)
 {
-    verify_all_options(options, cib_opts, DIMOF(cib_opts));
+    pcmk__validate_cluster_options(options, cib_opts, DIMOF(cib_opts));
 }
 
 const char *
 cib_pref(GHashTable * options, const char *name)
 {
-    return get_cluster_pref(options, cib_opts, DIMOF(cib_opts), name);
+    return pcmk__cluster_option(options, cib_opts, DIMOF(cib_opts), name);
 }
 
 gboolean

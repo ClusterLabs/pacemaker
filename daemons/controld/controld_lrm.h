@@ -1,11 +1,13 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+#ifndef CONTROLD_LRM__H
+#  define CONTROLD_LRM__H
 
 #include <controld_messages.h>
 #include <controld_metadata.h>
@@ -33,19 +35,24 @@ typedef struct resource_history_s {
 
 void history_free(gpointer data);
 
-/* TODO - Replace this with lrmd_event_data_t */
-struct recurring_op_s {
+enum active_op_e {
+    active_op_remove    = (1 << 0),
+    active_op_cancelled = (1 << 1),
+};
+
+// In-flight action (recurring or pending)
+typedef struct active_op_s {
     guint interval_ms;
     int call_id;
-    gboolean remove;
-    gboolean cancelled;
+    uint32_t flags; // bitmask of active_op_e
     time_t start_time;
+    time_t lock_time;
     char *rsc_id;
     char *op_type;
     char *op_key;
     char *user_data;
     GHashTable *params;
-};
+} active_op_t;
 
 typedef struct lrm_state_s {
     const char *node_name;
@@ -164,4 +171,11 @@ void remote_ra_process_maintenance_nodes(xmlNode *xml);
 gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
 
 void process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                       struct recurring_op_s *pending, xmlNode *action_xml);
+                       active_op_t *pending, xmlNode *action_xml);
+void controld_ack_event_directly(const char *to_host, const char *to_sys,
+                                 lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
+                                 const char *rsc_id);
+void controld_rc2event(lrmd_event_data_t *event, int rc);
+void controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id);
+
+#endif

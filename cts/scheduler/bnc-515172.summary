@@ -5,7 +5,7 @@ Online: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Clone Set: Stinith_Clone_Resource [Stonith_Resource]
      Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Resource Group: GRP_Web_Server
-     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	Stopped
+     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	 Stopped
  Clone Set: pingd_Gateway [Res_Pingd_Gateway]
      Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Clone Set: Pingd_Public [Res_Pingd_Public]
@@ -26,7 +26,7 @@ Online: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Clone Set: Stinith_Clone_Resource [Stonith_Resource]
      Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Resource Group: GRP_Web_Server
-     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	Started sles11-ha2
+     PRIM_Web_IP1	(ocf::heartbeat:IPaddr):	 Started sles11-ha2
  Clone Set: pingd_Gateway [Res_Pingd_Gateway]
      Started: [ sles11-ha1 sles11-ha2 sles11-ha3 ]
  Clone Set: Pingd_Public [Res_Pingd_Public]

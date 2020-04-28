@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2018 the Pacemaker project contributors
+ * Later changes copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -65,15 +65,27 @@ event2status(struct sl_event * event)
     return status;
 }
 
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help", 0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"},
-    {"-spacer-", 0, 0, '-', "\nUsage: notifyServicelogEvent event_id"},
-    {"-spacer-", 0, 0, '-',
-     "\nWhere event_id is unique unsigned event identifier which is then passed into servicelog"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nUsage: notifyServicelogEvent event_id", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Where event_id is a unique unsigned event identifier which is "
+            "then passed into servicelog",
+        pcmk__option_paragraph
+    },
+    { 0, 0, 0, 0 }
 };
 
 int
@@ -88,22 +100,22 @@ main(int argc, char *argv[])
     uint64_t event_id = 0;
 
     crm_log_cli_init("notifyServicelogEvent");
-    crm_set_options(NULL, "event_id ", long_options,
-                    "Gets called upon events written to servicelog database");
+    pcmk__set_cli_options(NULL, "<event_id>", long_options,
+                          "handle events written to servicelog database");
 
     if (argc < 2) {
         argerr++;
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
         switch (flag) {
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -116,7 +128,7 @@ main(int argc, char *argv[])
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);
@@ -161,14 +173,15 @@ main(int argc, char *argv[])
         health_status = status2char(status);
 
         if (health_status) {
-            gboolean rc;
+            int attrd_rc;
 
-            /* @TODO pass attrd_opt_remote when appropriate */
-            rc = (attrd_update_delegate(NULL, 'v', NULL, health_component,
-                                        health_status, NULL, NULL, NULL, NULL,
-                                        attrd_opt_none) > 0);
+            // @TODO pass pcmk__node_attr_remote when appropriate
+            attrd_rc = pcmk__node_attr_request(NULL, 'v', NULL,
+                                               health_component, health_status,
+                                               NULL, NULL, NULL, NULL,
+                                               pcmk__node_attr_none);
             crm_debug("Updating attribute ('%s', '%s') = %d",
-                      health_component, health_status, rc);
+                      health_component, health_status, attrd_rc);
         } else {
             crm_err("Error: status2char failed, status = %d", status);
             rc = 1;

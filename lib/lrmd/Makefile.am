@@ -6,7 +6,7 @@
 # This source code is licensed under the GNU Lesser General Public License
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 lib_LTLIBRARIES		= liblrmd.la
 

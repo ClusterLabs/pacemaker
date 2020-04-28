@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,6 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
-
-#include <unpack.h>
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
@@ -94,8 +92,8 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
-                    node_t * node, pe_working_set_t * data_set)
+get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
+                    pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -128,8 +126,8 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
 }
 
 void
-get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
-                   node_t * node, pe_working_set_t * data_set)
+get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
+                   pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -153,8 +151,8 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
 
 #if ENABLE_VERSIONED_ATTRS
 void
-pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc,
-                            node_t * node, pe_working_set_t * data_set)
+pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
+                            pe_node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
 
@@ -189,7 +187,7 @@ template_op_key(xmlNode * op)
         role = RSC_ROLE_UNKNOWN_S;
     }
 
-    key = crm_concat(name, role, '-');
+    key = crm_strdup_printf("%s-%s", name, role);
     return key;
 }
 
@@ -343,7 +341,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static bool
-detect_promotable(resource_t *rsc)
+detect_promotable(pe_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
                                                  XML_RSC_ATTR_PROMOTABLE);
@@ -365,8 +363,8 @@ detect_promotable(resource_t *rsc)
 }
 
 gboolean
-common_unpack(xmlNode * xml_obj, resource_t ** rsc,
-              resource_t * parent, pe_working_set_t * data_set)
+common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
+              pe_resource_t * parent, pe_working_set_t * data_set)
 {
     bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
@@ -394,7 +392,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         return FALSE;
     }
 
-    *rsc = calloc(1, sizeof(resource_t));
+    *rsc = calloc(1, sizeof(pe_resource_t));
     (*rsc)->cluster = data_set;
 
     if (expanded_xml) {
@@ -437,7 +435,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
     if (value) {
-        (*rsc)->id = crm_concat(id, value, ':');
+        (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
         add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
 
     } else {
@@ -510,27 +508,19 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && safe_str_neq("default", value)) {
-        gboolean bool_value = TRUE;
-
-        crm_str_to_boolean(value, &bool_value);
-        if (bool_value == FALSE) {
-            clear_bit((*rsc)->flags, pe_rsc_managed);
-        } else {
+        if (crm_is_true(value)) {
             set_bit((*rsc)->flags, pe_rsc_managed);
+        } else {
+            clear_bit((*rsc)->flags, pe_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
-    if (value != NULL && safe_str_neq("default", value)) {
-        gboolean bool_value = FALSE;
-
-        crm_str_to_boolean(value, &bool_value);
-        if (bool_value == TRUE) {
-            clear_bit((*rsc)->flags, pe_rsc_managed);
-            set_bit((*rsc)->flags, pe_rsc_maintenance);
-        }
-
-    } else if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (crm_is_true(value)) {
+        clear_bit((*rsc)->flags, pe_rsc_managed);
+        set_bit((*rsc)->flags, pe_rsc_maintenance);
+    }
+    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         clear_bit((*rsc)->flags, pe_rsc_managed);
         set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
@@ -610,13 +600,17 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     } else if (safe_str_eq(value, "unfencing")) {
         if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            crm_config_warn("%s is a fencing device but requires (un)fencing", (*rsc)->id);
+            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                              "to 'quorum' because fencing devices cannot "
+                              "require unfencing", (*rsc)->id);
             value = "quorum";
             isdefault = TRUE;
             goto handle_requires_pref;
 
         } else if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_config_warn("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
+            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                              "to 'quorum' because fencing is disabled",
+                              (*rsc)->id);
             value = "quorum";
             isdefault = TRUE;
             goto handle_requires_pref;
@@ -629,15 +623,12 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_config_warn("%s requires fencing but fencing is disabled", (*rsc)->id);
+            pcmk__config_warn("%s requires fencing but fencing is disabled",
+                              (*rsc)->id);
         }
 
     } else {
-        if (value) {
-            crm_config_err("Invalid value for %s->requires: %s%s",
-                           (*rsc)->id, value,
-                           is_set(data_set->flags, pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
-        }
+        const char *orig_value = value;
 
         isdefault = TRUE;
         if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
@@ -663,6 +654,13 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         } else {
             value = "quorum";
         }
+
+        if (orig_value != NULL) {
+            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                             "to '%s' because '%s' is not valid",
+                              (*rsc)->id, value, orig_value);
+        }
+
         goto handle_requires_pref;
     }
 
@@ -722,21 +720,21 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 }
 
 void
-common_update_score(resource_t * rsc, const char *id, int score)
+common_update_score(pe_resource_t * rsc, const char *id, int score)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {
         pe_rsc_trace(rsc, "Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
-        node->weight = merge_weights(node->weight, score);
+        node->weight = pe__add_scores(node->weight, score);
     }
 
     if (rsc->children) {
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             common_update_score(child_rsc, id, score);
         }
@@ -744,9 +742,9 @@ common_update_score(resource_t * rsc, const char *id, int score)
 }
 
 gboolean
-is_parent(resource_t *child, resource_t *rsc)
+is_parent(pe_resource_t *child, pe_resource_t *rsc)
 {
-    resource_t *parent = child;
+    pe_resource_t *parent = child;
 
     if (parent == NULL || rsc == NULL) {
         return FALSE;
@@ -760,10 +758,10 @@ is_parent(resource_t *child, resource_t *rsc)
     return FALSE;
 }
 
-resource_t *
-uber_parent(resource_t * rsc)
+pe_resource_t *
+uber_parent(pe_resource_t * rsc)
 {
-    resource_t *parent = rsc;
+    pe_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -775,7 +773,7 @@ uber_parent(resource_t * rsc)
 }
 
 void
-common_free(resource_t * rsc)
+common_free(pe_resource_t * rsc)
 {
     if (rsc == NULL) {
         return;

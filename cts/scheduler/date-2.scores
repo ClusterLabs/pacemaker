@@ -1,11 +1,11 @@
 Allocation scores:
-group_color: test allocation score on router1: 100
-group_color: test allocation score on router2: 0
-group_color: test_ip allocation score on router1: 100
-group_color: test_ip allocation score on router2: 0
-group_color: test_mailto allocation score on router1: 0
-group_color: test_mailto allocation score on router2: 0
-native_color: test_ip allocation score on router1: 100
-native_color: test_ip allocation score on router2: 0
-native_color: test_mailto allocation score on router1: -INFINITY
-native_color: test_mailto allocation score on router2: -INFINITY
+pcmk__group_allocate: test allocation score on router1: 100
+pcmk__group_allocate: test allocation score on router2: 0
+pcmk__group_allocate: test_ip allocation score on router1: 100
+pcmk__group_allocate: test_ip allocation score on router2: 0
+pcmk__group_allocate: test_mailto allocation score on router1: 0
+pcmk__group_allocate: test_mailto allocation score on router2: 0
+pcmk__native_allocate: test_ip allocation score on router1: 100
+pcmk__native_allocate: test_ip allocation score on router2: 0
+pcmk__native_allocate: test_mailto allocation score on router1: -INFINITY
+pcmk__native_allocate: test_mailto allocation score on router2: -INFINITY

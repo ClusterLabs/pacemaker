@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,7 +332,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         goto badmsg;
 
     } else if (safe_str_eq("identify", data)) {
-        char *pid_s = crm_getpid_s();
+        char *pid_s = pcmk__getpid_s();
 
         send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
         free(pid_s);
@@ -729,7 +729,8 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         unsigned int new_size = 0;
         char *uncompressed = strdup(data);
 
-        if (crm_compress_string(uncompressed, msg->size, 0, &compressed, &new_size)) {
+        if (pcmk__compress(uncompressed, (unsigned int) msg->size, 0,
+                           &compressed, &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
             msg = realloc_safe(msg, msg->header.size);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,18 +51,16 @@ debug_log(int level, const char *str)
  * \brief Read (more) TLS handshake data from client
  */
 static int
-remoted__read_handshake_data(crm_client_t *client)
+remoted__read_handshake_data(pcmk__client_t *client)
 {
     int rc = pcmk__read_handshake_data(client);
 
-    if (rc == 0) {
+    if (rc == EAGAIN) {
         /* No more data is available at the moment. Just return for now;
          * we'll get invoked again once the client sends more.
          */
         return 0;
-    } else if (rc < 0) {
-        crm_err("TLS handshake with remote client failed: %s "
-                CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+    } else if (rc != pcmk_rc_ok) {
         return -1;
     }
 
@@ -83,27 +81,27 @@ static int
 lrmd_remote_client_msg(gpointer data)
 {
     int id = 0;
-    int rc = 0;
-    int disconnected = 0;
+    int rc;
     xmlNode *request = NULL;
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
 
     if (client->remote->tls_handshake_complete == FALSE) {
         return remoted__read_handshake_data(client);
     }
 
-    rc = crm_remote_ready(client->remote, 0);
-    if (rc == 0) {
-        /* no msg to read */
-        return 0;
-    } else if (rc < 0) {
-        crm_info("Remote client disconnected while polling it");
-        return -1;
+    switch (pcmk__remote_ready(client->remote, 0)) {
+        case pcmk_rc_ok:
+            break;
+        case ETIME: // No message available to read
+            return 0;
+        default:    // Error
+            crm_info("Remote client disconnected while polling it");
+            return -1;
     }
 
-    crm_remote_recv(client->remote, -1, &disconnected);
+    rc = pcmk__read_remote_message(client->remote, -1);
 
-    request = crm_remote_parse_buffer(client->remote);
+    request = pcmk__remote_message_xml(client->remote);
     while (request) {
         crm_element_value_int(request, F_LRMD_REMOTE_MSG_ID, &id);
         crm_trace("Processing remote client request %d", id);
@@ -128,10 +126,10 @@ lrmd_remote_client_msg(gpointer data)
         free_xml(request);
 
         /* process all the messages in the current buffer */
-        request = crm_remote_parse_buffer(client->remote);
+        request = pcmk__remote_message_xml(client->remote);
     }
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         crm_info("Remote client disconnected while reading from it");
         return -1;
     }
@@ -142,7 +140,7 @@ lrmd_remote_client_msg(gpointer data)
 static void
 lrmd_remote_client_destroy(gpointer user_data)
 {
-    crm_client_t *client = user_data;
+    pcmk__client_t *client = user_data;
 
     if (client == NULL) {
         return;
@@ -156,7 +154,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 
     /* if this is the last remote connection, stop recurring
      * operations */
-    if (crm_hash_table_size(client_connections) == 1) {
+    if (pcmk__ipc_client_count() == 1) {
         client_disconnect_cleanup(NULL);
     }
 
@@ -180,7 +178,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 static gboolean
 lrmd_auth_timeout_cb(gpointer data)
 {
-    crm_client_t *client = data;
+    pcmk__client_t *client = data;
 
     client->remote->auth_timeout = 0;
 
@@ -199,9 +197,9 @@ lrmd_auth_timeout_cb(gpointer data)
 static int
 lrmd_remote_listen(gpointer data)
 {
-    int csock = 0;
+    int csock = -1;
     gnutls_session_t *session = NULL;
-    crm_client_t *new_client = NULL;
+    pcmk__client_t *new_client = NULL;
 
     // For client socket
     static struct mainloop_fd_callbacks lrmd_remote_fd_cb = {
@@ -211,8 +209,7 @@ lrmd_remote_listen(gpointer data)
 
     CRM_CHECK(ssock >= 0, return TRUE);
 
-    csock = crm_remote_accept(ssock);
-    if (csock < 0) {
+    if (pcmk__accept_remote_connection(ssock, &csock) != pcmk_rc_ok) {
         return TRUE;
     }
 
@@ -223,9 +220,9 @@ lrmd_remote_listen(gpointer data)
         return TRUE;
     }
 
-    new_client = crm_client_alloc(NULL);
-    new_client->remote = calloc(1, sizeof(crm_remote_t));
-    new_client->kind = CRM_CLIENT_TLS;
+    new_client = pcmk__new_unauth_client(NULL);
+    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->kind = PCMK__CLIENT_TLS;
     new_client->remote->tls_session = session;
 
     // Require the client to authenticate within this time
@@ -262,7 +259,7 @@ bind_and_listen(struct addrinfo *addr)
     int rc;
     char buffer[INET6_ADDRSTRLEN] = { 0, };
 
-    crm_sockaddr2str(addr->ai_addr, buffer);
+    pcmk__sockaddr2str(addr->ai_addr, buffer);
     crm_trace("Attempting to bind to address %s", buffer);
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
@@ -348,7 +345,7 @@ lrmd_init_remote_tls_server()
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
-    if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+    if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
         return -1;
     }
     gnutls_psk_allocate_server_credentials(&psk_cred_s);

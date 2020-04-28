@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,17 +25,13 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
-
-#if SUPPORT_CIBSECRETS
-#  include <crm/common/cib_secrets.h>
-#endif
 
 #include <pacemaker-fenced.h>
 
@@ -82,7 +78,7 @@ typedef struct async_command_s {
     int default_timeout; /* seconds */
     int timeout; /* seconds */
 
-    int start_delay; /* milliseconds */
+    int start_delay; /* seconds */
     int delay_id;
 
     char *op;
@@ -125,7 +121,7 @@ static int
 get_action_delay_max(stonith_device_t * device, const char * action)
 {
     const char *value = NULL;
-    int delay_max_ms = 0;
+    int delay_max = 0;
 
     if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
         return 0;
@@ -133,17 +129,17 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_MAX);
     if (value) {
-       delay_max_ms = crm_get_msec(value);
+       delay_max = crm_parse_interval_spec(value) / 1000;
     }
 
-    return delay_max_ms;
+    return delay_max;
 }
 
 static int
 get_action_delay_base(stonith_device_t * device, const char * action)
 {
     const char *value = NULL;
-    int delay_base_ms = 0;
+    int delay_base = 0;
 
     if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
         return 0;
@@ -151,10 +147,10 @@ get_action_delay_base(stonith_device_t * device, const char * action)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_BASE);
     if (value) {
-       delay_base_ms = crm_get_msec(value);
+       delay_base = crm_parse_interval_spec(value) / 1000;
     }
 
-    return delay_base_ms;
+    return delay_base;
 }
 
 /*!
@@ -245,6 +241,8 @@ create_async_command(xmlNode * msg)
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
+    // Value -1 means disable any static/random fencing delays
+    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
@@ -351,7 +349,7 @@ stonith_device_execute(stonith_device_t * device)
 
         if (pending_op && pending_op->delay_id) {
             crm_trace
-                ("Operation '%s'%s%s on %s was asked to run too early, waiting for start_delay timeout of %dms",
+                ("Operation '%s'%s%s on %s was asked to run too early, waiting for start_delay timeout of %ds",
                  pending_op->action, pending_op->victim ? " targeting " : "",
                  pending_op->victim ? pending_op->victim : "",
                  device->id, pending_op->start_delay);
@@ -387,7 +385,7 @@ stonith_device_execute(stonith_device_t * device)
     }
 
 #if SUPPORT_CIBSECRETS
-    if (replace_secret_params(device->id, device->params) < 0) {
+    if (pcmk__substitute_secrets(device->id, device->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
         if (safe_str_eq(cmd->action,"stop")) {
             /* don't fail on stop! */
@@ -466,6 +464,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 {
     int delay_max = 0;
     int delay_base = 0;
+    int requested_delay = cmd->start_delay;
 
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
@@ -498,30 +497,38 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     device->pending_ops = g_list_append(device->pending_ops, cmd);
     mainloop_set_trigger(device->work);
 
+    // Value -1 means disable any static/random fencing delays
+    if (requested_delay < 0) {
+        return;
+    }
+
     delay_max = get_action_delay_max(device, cmd->action);
     delay_base = get_action_delay_base(device, cmd->action);
     if (delay_max == 0) {
         delay_max = delay_base;
     }
     if (delay_max < delay_base) {
-        crm_warn("Base-delay (%dms) is larger than max-delay (%dms) "
+        crm_warn("Base-delay (%ds) is larger than max-delay (%ds) "
                  "for %s on %s - limiting to max-delay",
                  delay_base, delay_max, cmd->action, device->id);
         delay_base = delay_max;
     }
     if (delay_max > 0) {
         // coverity[dont_call] We're not using rand() for security
-        cmd->start_delay =
+        cmd->start_delay +=
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
-        crm_notice("Delaying '%s' action%s%s on %s for %dms (timeout=%ds, base=%dms, "
-                   "max=%dms)",
-                    cmd->action,
-                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
-                    device->id, cmd->start_delay, cmd->timeout,
-                    delay_base, delay_max);
+    }
+
+    if (cmd->start_delay > 0) {
+        crm_notice("Delaying '%s' action%s%s on %s for %ds (timeout=%ds, "
+                   "requested_delay=%ds, base=%ds, max=%ds)",
+                   cmd->action,
+                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                   device->id, cmd->start_delay, cmd->timeout,
+                   requested_delay, delay_base, delay_max);
         cmd->delay_id =
-            g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+            g_timeout_add_seconds(cmd->start_delay, start_delay_helper, cmd);
     }
 }
 
@@ -554,7 +561,7 @@ free_device(gpointer data)
     free(device);
 }
 
-void free_device_list()
+void free_device_list(void)
 {
     if (device_list != NULL) {
         g_hash_table_destroy(device_list);
@@ -563,7 +570,7 @@ void free_device_list()
 }
 
 void
-init_device_list()
+init_device_list(void)
 {
     if (device_list == NULL) {
         device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
@@ -641,7 +648,7 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
 GHashTable *metadata_cache = NULL;
 
 void
-free_metadata_cache() {
+free_metadata_cache(void) {
     if (metadata_cache != NULL) {
         g_hash_table_destroy(metadata_cache);
         metadata_cache = NULL;
@@ -649,7 +656,7 @@ free_metadata_cache() {
 }
 
 static void
-init_metadata_cache() {
+init_metadata_cache(void) {
     if (metadata_cache == NULL) {
         metadata_cache = crm_str_table_new();
     }
@@ -1244,7 +1251,7 @@ free_topology_entry(gpointer data)
 }
 
 void
-free_topology_list()
+free_topology_list(void)
 {
     if (topology != NULL) {
         g_hash_table_destroy(topology);
@@ -1253,7 +1260,7 @@ free_topology_list()
 }
 
 void
-init_topology_list()
+init_topology_list(void)
 {
     if (topology == NULL) {
         topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
@@ -1962,7 +1969,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     const char *action = NULL;
     const char *target = NULL;
     int timeout = 0;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_NEVER);
 
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &timeout);
     if (dev) {
@@ -1993,7 +2000,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
 
 #define ST_LOG_OUTPUT_MAX 512
 static void
-log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output)
+log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output, gboolean op_merged)
 {
     if (rc == 0) {
         next = NULL;
@@ -2001,14 +2008,17 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 
     if (cmd->victim != NULL) {
         do_crm_log(rc == 0 ? LOG_NOTICE : LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned: %d (%s)%s%s",
+                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned%s: %d (%s)%s%s",
                    cmd->action, pid, cmd->id, cmd->client_name, cmd->victim,
-                   cmd->device, rc, pcmk_strerror(rc),
+                   cmd->device, (op_merged? " (merged)" : ""),
+                   rc, pcmk_strerror(rc),
                    (next? ", retrying with " : ""), (next ? next : ""));
     } else {
         do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                            "Operation '%s' [%d] for device '%s' returned: %d (%s)%s%s",
-                            cmd->action, pid, cmd->device, rc, pcmk_strerror(rc),
+                            "Operation '%s' [%d] for device '%s' returned%s: %d (%s)%s%s",
+                            cmd->action, pid, cmd->device,
+                            (op_merged? " (merged)" : ""),
+                            rc, pcmk_strerror(rc),
                             (next? ", retrying with " : ""), (next ? next : ""));
     }
 
@@ -2022,7 +2032,7 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 }
 
 static void
-stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid pid)
+stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid pid, int options)
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
@@ -2044,8 +2054,12 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         bcast = TRUE;
     }
 
-    log_operation(cmd, rc, pid, NULL, output);
+    log_operation(cmd, rc, pid, NULL, output, (options & st_reply_opt_merged ? TRUE : FALSE));
     crm_log_xml_trace(reply, "Reply");
+
+    if (options & st_reply_opt_merged) {
+        crm_xml_add(reply, F_STONITH_MERGED, "true");
+    }
 
     if (bcast) {
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
@@ -2151,7 +2165,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, next_device->id, output);
+        log_operation(cmd, rc, pid, next_device->id, output, FALSE);
 
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */
@@ -2159,7 +2173,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         goto done;
     }
 
-    stonith_send_async_reply(cmd, output, rc, pid);
+    stonith_send_async_reply(cmd, output, rc, pid, st_reply_opt_none);
 
     if (rc != 0) {
         goto done;
@@ -2206,7 +2220,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 
-        stonith_send_async_reply(cmd_other, output, rc, pid);
+        stonith_send_async_reply(cmd_other, output, rc, pid, st_reply_opt_merged);
         cancel_stonith_command(cmd_other);
 
         free_async_command(cmd_other);
@@ -2239,7 +2253,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
     crm_info("Found %d matching devices for '%s'", g_list_length(devices), cmd->victim);
 
-    if (g_list_length(devices) > 0) {
+    if (devices != NULL) {
         /* Order based on priority */
         devices = g_list_sort(devices, sort_device_priority);
         device = g_hash_table_lookup(device_list, devices->data);
@@ -2259,7 +2273,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 
     /* no device found! */
-    stonith_send_async_reply(cmd, NULL, -ENODEV, 0);
+    stonith_send_async_reply(cmd, NULL, -ENODEV, 0, st_reply_opt_none);
 
     free_async_command(cmd);
     g_list_free_full(devices, free);
@@ -2442,8 +2456,8 @@ stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
 }
 
 static int
-handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * request,
-               const char *remote_peer)
+handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
+               xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
@@ -2467,7 +2481,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID, client->id);
-        crm_ipcs_send(client, id, reply, flags);
+        pcmk__ipc_send_xml(client, id, reply, flags);
         client->request_id = 0;
         free_xml(reply);
         return 0;
@@ -2508,7 +2522,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         }
 
         if (flags & crm_ipc_client_response) {
-            crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
+            pcmk__ipc_send_ack(client, id, flags, "ack");
         }
         return 0;
 
@@ -2638,8 +2652,8 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         return pcmk_ok;
 
     } else {
-        crm_err("Unknown %s from %s", op, client ? client->name : remote_peer);
-        crm_log_xml_warn(request, "UnknownOp");
+        crm_err("Unknown IPC request %s from %s",
+                op, (client? client->name : remote_peer));
     }
 
   done:
@@ -2667,7 +2681,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 }
 
 static void
-handle_reply(crm_client_t * client, xmlNode * request, const char *remote_peer)
+handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
 
@@ -2685,8 +2699,8 @@ handle_reply(crm_client_t * client, xmlNode * request, const char *remote_peer)
 }
 
 void
-stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * request,
-                const char *remote_peer)
+stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
+                xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = 0;
@@ -2703,7 +2717,7 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
      */
     char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
-    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_TRACE)) {
+    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_NEVER)) {
         is_reply = TRUE;
     }
 

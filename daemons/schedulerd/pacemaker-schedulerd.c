@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,7 @@
 
 #include <libxml/parser.h>
 
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
@@ -51,7 +51,7 @@ series_t series[] = {
 void pengine_shutdown(int nsig);
 
 static gboolean
-process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
     static char *last_digest = NULL;
     static char *filename = NULL;
@@ -76,7 +76,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         return FALSE;
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
-        int seq = -1;
+        unsigned int seq;
         int series_id = 0;
         int series_wrap = 0;
         char *digest = NULL;
@@ -97,6 +97,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
             sched_data_set = pe_new_working_set();
             CRM_ASSERT(sched_data_set != NULL);
             set_bit(sched_data_set->flags, pe_flag_no_counts);
+            set_bit(sched_data_set->flags, pe_flag_no_compat);
         }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
@@ -127,18 +128,22 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         value = pe_pref(sched_data_set->config_hash, series[series_id].param);
 
         if (value != NULL) {
-            series_wrap = crm_int_helper(value, NULL);
+            series_wrap = (int) crm_parse_ll(value, NULL);
             if (errno != 0) {
                 series_wrap = series[series_id].wrap;
             }
 
         } else {
-            crm_config_warn("No value specified for cluster"
-                            " preference: %s", series[series_id].param);
+            pcmk__config_warn("No value specified for cluster preference: %s",
+                              series[series_id].param);
         }
 
-        seq = get_last_sequence(PE_STATE_DIR, series[series_id].name);
-        crm_trace("Series %s: wrap=%d, seq=%d, pref=%s",
+        if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                       &seq) != pcmk_rc_ok) {
+            // @TODO maybe handle errors better ...
+            seq = 0;
+        }
+        crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
                   series[series_id].name, series_wrap, seq, value);
 
         sched_data_set->input = NULL;
@@ -147,9 +152,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
         if (is_repoke == FALSE) {
             free(filename);
-            filename = generate_series_filename(PE_STATE_DIR,
-                                                series[series_id].name, seq,
-                                                TRUE);
+            filename = pcmk__series_filename(PE_STATE_DIR,
+                                             series[series_id].name, seq, true);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -158,7 +162,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         crm_xml_add_int(reply, "config-errors", crm_config_error);
         crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
-        if (crm_ipcs_send(sender, 0, reply, crm_ipc_server_event) == FALSE) {
+        if (pcmk__ipc_send_xml(sender, 0, reply,
+                               crm_ipc_server_event) != pcmk_rc_ok) {
             int graph_file_fd = 0;
             char *graph_file = NULL;
             umask(S_IWGRP | S_IWOTH | S_IROTH);
@@ -175,7 +180,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 
             free(graph_file);
             free_xml(first_named_child(reply, F_CRM_DATA));
-            CRM_ASSERT(crm_ipcs_send(sender, 0, reply, crm_ipc_server_event));
+            CRM_ASSERT(pcmk__ipc_send_xml(sender, 0, reply,
+                                          crm_ipc_server_event) == pcmk_rc_ok);
         }
 
         free_xml(reply);
@@ -186,7 +192,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
             unlink(filename);
             crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
             write_xml_file(xml_data, filename, TRUE);
-            write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
+            pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                        ++seq, series_wrap);
         } else {
             crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
         }
@@ -201,29 +208,24 @@ static int32_t
 pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
-static void
-pe_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-}
-
-gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender);
+gboolean process_pe_message(xmlNode *msg, xmlNode *xml_data,
+                            pcmk__client_t *sender);
 
 static int32_t
 pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *c = crm_client_get(qbc);
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
+    pcmk__client_t *c = pcmk__find_client(qbc);
+    xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
 
-    crm_ipcs_send_ack(c, id, flags, "ack", __FUNCTION__, __LINE__);
+    pcmk__ipc_send_ack(c, id, flags, "ack");
     if (msg != NULL) {
         xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
 
@@ -237,13 +239,13 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 static int32_t
 pe_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
     }
     crm_trace("Connection %p", c);
-    crm_client_destroy(client);
+    pcmk__free_client(client);
     return 0;
 }
 
@@ -256,21 +258,24 @@ pe_ipc_destroy(qb_ipcs_connection_t * c)
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = pe_ipc_accept,
-    .connection_created = pe_ipc_created,
+    .connection_created = NULL,
     .msg_process = pe_ipc_dispatch,
     .connection_closed = pe_ipc_closed,
     .connection_destroyed = pe_ipc_destroy
 };
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -280,13 +285,14 @@ main(int argc, char **argv)
     int argerr = 0;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]",
-                    long_options, "Daemon for calculating the cluster's response to events");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for calculating a Pacemaker cluster's "
+                          "response to events");
 
     mainloop_add_signal(SIGTERM, pengine_shutdown);
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -295,7 +301,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help('?', CRM_EX_OK);
+                pcmk__cli_help('?', CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -313,7 +319,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -339,6 +345,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     pe_free_working_set(sched_data_set);
+    pcmk__unregister_formats();
     crm_info("Exiting %s", crm_system_name);
     crm_exit(CRM_EX_OK);
 }

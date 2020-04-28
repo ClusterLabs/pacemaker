@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 EXTRA_DIST	= cib.pam
 

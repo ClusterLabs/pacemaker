@@ -4,8 +4,8 @@ Current cluster status:
 Online: [ bl460g6a bl460g6b ]
 
  Resource Group: dummy-g
-     dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a
-     dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a (blocked)
+     dummy01	(ocf::heartbeat:Dummy):	 Started bl460g6a
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
 
 Transition Summary:
  * Shutdown bl460g6a
@@ -19,6 +19,6 @@ Revised cluster status:
 Online: [ bl460g6a bl460g6b ]
 
  Resource Group: dummy-g
-     dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a
-     dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a (blocked)
+     dummy01	(ocf::heartbeat:Dummy):	 Started bl460g6a
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
 

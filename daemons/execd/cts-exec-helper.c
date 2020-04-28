@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,35 +20,105 @@
 #include <crm/cib.h>
 #include <crm/lrmd.h>
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    {"help",             0, 0, '?'},
-    {"verbose",          0, 0, 'V', "\t\tPrint out logs and events to screen"},
-    {"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
-    {"tls",              0, 0, 'S', "\t\tUse tls backend for local connection"},
-    {"listen",           1, 0, 'l', "\tListen for a specific event string"},
-    {"api-call",         1, 0, 'c', "\tDirectly relates to executor API functions"},
-    {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
-    {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
-    {"notify-orig",      0, 0, 'n', "\tOnly notify this client the results of an api action."},
-    {"notify-changes",   0, 0, 'o', "\tOnly notify client changes to recurring operations."},
-    {"-spacer-",         1, 0, '-', "\nParameters for api-call option"},
-    {"action",           1, 0, 'a'},
-    {"rsc-id",           1, 0, 'r'},
-    {"cancel-call-id",   1, 0, 'x'},
-    {"provider",         1, 0, 'P'},
-    {"class",            1, 0, 'C'},
-    {"type",             1, 0, 'T'},
-    {"interval",         1, 0, 'i'},
-    {"timeout",          1, 0, 't'},
-    {"start-delay",      1, 0, 's'},
-    {"param-key",        1, 0, 'k'},
-    {"param-val",        1, 0, 'v'},
-    
-    {"-spacer-",         1, 0, '-'},
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        NULL, pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\t\tPrint out logs and events to screen", pcmk__option_default
+    },
+    {
+        "quiet", no_argument, NULL, 'Q',
+        "\t\tSuppress all output to screen", pcmk__option_default
+    },
+    {
+        "tls", no_argument, NULL, 'S',
+        "\t\tUse TLS backend for local connection", pcmk__option_default
+    },
+    {
+        "listen", required_argument, NULL, 'l',
+        "\tListen for a specific event string", pcmk__option_default
+    },
+    {
+        "api-call", required_argument, NULL, 'c',
+        "\tDirectly relates to executor API functions", pcmk__option_default
+    },
+    {
+        "no-wait", no_argument, NULL, 'w',
+        "\tMake api call and do not wait for result", pcmk__option_default
+    },
+    {
+        "is-running", no_argument, NULL, 'R',
+        "\tDetermine if a resource is registered and running",
+        pcmk__option_default
+    },
+    {
+        "notify-orig", no_argument, NULL, 'n',
+        "\tOnly notify this client the results of an API action",
+        pcmk__option_default
+    },
+    {
+        "notify-changes", no_argument, NULL, 'o',
+        "\tOnly notify client changes to recurring operations",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nParameters for api-call option", pcmk__option_default
+    },
+    {
+        "action", required_argument, NULL, 'a',
+        NULL, pcmk__option_default
+    },
+    {
+        "rsc-id", required_argument, NULL, 'r',
+        NULL, pcmk__option_default
+    },
+    {
+        "cancel-call-id", required_argument, NULL, 'x',
+        NULL, pcmk__option_default
+    },
+    {
+        "provider", required_argument, NULL, 'P',
+        NULL, pcmk__option_default
+    },
+    {
+        "class", required_argument, NULL, 'C',
+        NULL, pcmk__option_default
+    },
+    {
+        "type", required_argument, NULL, 'T',
+        NULL, pcmk__option_default
+    },
+    {
+        "interval", required_argument, NULL, 'i',
+        NULL, pcmk__option_default
+    },
+    {
+        "timeout", required_argument, NULL, 't',
+        NULL, pcmk__option_default
+    },
+    {
+        "start-delay", required_argument, NULL, 's',
+        NULL, pcmk__option_default
+    },
+    {
+        "param-key", required_argument, NULL, 'k',
+        NULL, pcmk__option_default
+    },
+    {
+        "param-val", required_argument, NULL, 'v',
+        NULL, pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        NULL, pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
@@ -355,7 +425,7 @@ generate_params(void)
     int rc = 0;
     pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTableIter iter;
@@ -370,6 +440,7 @@ generate_params(void)
         return -ENOMEM;
     }
     set_bit(data_set->flags, pe_flag_no_counts);
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
@@ -459,17 +530,18 @@ main(int argc, char **argv)
     crm_trigger_t *trig;
 
     crm_log_cli_init("cts-exec-helper");
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Inject commands into the executor, and watch for events\n");
+    pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
+                          "inject commands into the Pacemaker executor, "
+                          "and watch for events");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1)
             break;
 
         switch (flag) {
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'V':
                 ++options.verbose;
@@ -556,7 +628,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
     if (optind > argc) {
         ++argerr;

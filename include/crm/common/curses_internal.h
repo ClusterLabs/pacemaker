@@ -40,29 +40,4 @@
 #    define CURSES_ENABLED 0
 #  endif
 
-#  if CURSES_ENABLED
-#    define status_printw(fmt, args...) printw(fmt, ##args)
-#  else
-#    define status_printw(fmt, args...) \
-	crm_err("printw support requires ncurses to be available during configure"); \
-	do_crm_log(LOG_WARNING, fmt, ##args);
-#  endif
-
-#  define status_print(fmt, args...)			\
-	if(options & pe_print_html) {			\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_ncurses) {		\
-		status_printw(fmt, ##args);		\
-	} else if(options & pe_print_printf) {		\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_xml) {		\
-		FILE *stream = print_data;		\
-		fprintf(stream, fmt, ##args);		\
-	} else if(options & pe_print_log) {		\
-		int log_level = *(int*)print_data;	\
-		do_crm_log(log_level, fmt, ##args);	\
-	}
-
 #endif

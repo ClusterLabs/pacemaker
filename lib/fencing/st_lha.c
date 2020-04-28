@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <glib.h>
+#include <dlfcn.h>
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -45,6 +46,27 @@ static const char META_TEMPLATE[] =
     "  <special tag=\"heartbeat\">\n"
     "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
 
+static void *
+find_library_function(void **handle, const char *lib, const char *fn)
+{
+    void *a_function;
+
+    if (*handle == NULL) {
+        *handle = dlopen(lib, RTLD_LAZY);
+        if ((*handle) == NULL) {
+            crm_err("Could not open %s: %s", lib, dlerror());
+            return NULL;
+        }
+    }
+
+    a_function = dlsym(*handle, fn);
+    if (a_function == NULL) {
+        crm_err("Could not find %s in %s: %s", fn, lib, dlerror());
+    }
+
+    return a_function;
+}
+
 /*!
  * \brief Determine namespace of a fence agent
  *
@@ -65,9 +87,9 @@ stonith__agent_is_lha(const char *agent)
     if (need_init) {
         need_init = FALSE;
         st_new_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                          "stonith_new", FALSE);
+                                          "stonith_new");
         st_del_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                          "stonith_delete", FALSE);
+                                          "stonith_delete");
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn) {
@@ -93,11 +115,12 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
 
     if (need_init) {
         need_init = FALSE;
-        type_list_fn =
-            find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_types", FALSE);
-        type_free_fn =
-            find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_free_hostlist",
-                                  FALSE);
+        type_list_fn = find_library_function(&lha_agents_lib,
+                                             LHA_STONITH_LIBRARY,
+                                             "stonith_types");
+        type_free_fn = find_library_function(&lha_agents_lib,
+                                             LHA_STONITH_LIBRARY,
+                                             "stonith_free_hostlist");
     }
 
     if (type_list_fn) {
@@ -166,13 +189,13 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
     if (need_init) {
         need_init = FALSE;
         st_new_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                          "stonith_new", FALSE);
+                                          "stonith_new");
         st_del_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                          "stonith_delete", FALSE);
+                                          "stonith_delete");
         st_log_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                          "stonith_set_log", FALSE);
+                                          "stonith_set_log");
         st_info_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
-                                           "stonith_get_info", FALSE);
+                                           "stonith_get_info");
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {

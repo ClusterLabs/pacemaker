@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,31 +31,76 @@ gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 extern gboolean stage0(pe_working_set_t * data_set);
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",           0, 0, '?', "\tThis text"},
-    {"version",        0, 0, '$', "\tVersion information"  },
-    {"verbose",        0, 0, 'V', "\tSpecify multiple times to increase debug output\n"},
-    
-    {"-spacer-",	1, 0, '-', "\nData sources:"},
-    {"live-check",  0, 0, 'L', "Check the configuration used by the running cluster\n"},
-    {"xml-file",    1, 0, 'x', "Check the configuration in the named file"},
-    {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
-    {"xml-pipe",    0, 0, 'p', "Check the configuration piped in via stdin"},
-
-    {"-spacer-",    1, 0, '-', "\nAdditional Options:"},
-    {"save-xml",    1, 0, 'S', "Save the verified XML to the named file.  Most useful with -L"},
-
-    {"-spacer-",    1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in the running cluster:", pcmk_option_paragraph},
-    {"-spacer-",    1, 0, '-', " crm_verify --live-check", pcmk_option_example},
-    {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in a given file and produce verbose output:", pcmk_option_paragraph},
-    {"-spacer-",    1, 0, '-', " crm_verify --xml-file file.xml --verbose", pcmk_option_example},
-  
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tSpecify multiple times to increase debug output\n",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nData sources:", pcmk__option_default
+    },
+    {
+        "live-check", no_argument, NULL, 'L',
+        "Check the configuration used by the running cluster\n",
+        pcmk__option_default
+    },
+    {
+        "xml-file", required_argument, NULL, 'x',
+        "Check the configuration in the named file", pcmk__option_default
+    },
+    {
+        "xml-text", required_argument, NULL, 'X',
+        "Check the configuration in the supplied string", pcmk__option_default
+    },
+    {
+        "xml-pipe", no_argument, NULL, 'p',
+        "Check the configuration piped in via stdin", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
+    {
+        "save-xml", required_argument, 0, 'S',
+        "Save verified XML to named file (most useful with -L)",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nExamples:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Check the consistency of the configuration in the running cluster:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_verify --live-check", pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Check the consistency of the configuration in a given file and "
+            "produce verbose output:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_verify --xml-file file.xml --verbose", pcmk__option_example
+    },
     {0, 0, 0, 0}
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -77,16 +122,18 @@ main(int argc, char **argv)
     const char *xml_string = NULL;
 
     crm_log_cli_init("crm_verify");
-    crm_set_options(NULL, "[modifiers] data_source", long_options,
-                    "check a Pacemaker configuration for errors"
-                    "\n\nCheck the well-formedness of a complete Pacemaker XML configuration,"
-                    "\n\nits conformance to the configured schema, and the presence of common"
-                    "\n\nmisconfigurations. Problems reported as errors must be fixed before the"
-                    "\n\ncluster will work properly. It is left to the administrator to decide"
-                    "\n\nwhether to fix problems reported as warnings.");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "check a Pacemaker configuration for errors\n\n"
+                          "Check the well-formedness of a complete Pacemaker "
+                          "XML configuration,\nits conformance to the "
+                          "configured schema, and the presence of common\n"
+                          "misconfigurations. Problems reported as errors "
+                          "must be fixed before the\ncluster will work "
+                          "properly. It is left to the administrator to decide"
+                          "\nwhether to fix problems reported as warnings.");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1)
             break;
 
@@ -114,7 +161,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 fprintf(stderr, "Option -%c is not yet supported\n", flag);
@@ -137,7 +184,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_err("%d errors in option parsing", argerr);
-        crm_help(flag, CRM_EX_USAGE);
+        pcmk__cli_help(flag, CRM_EX_USAGE);
     }
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
@@ -213,7 +260,7 @@ main(int argc, char **argv)
     }
 
     if (validate_xml(cib_object, NULL, FALSE) == FALSE) {
-        crm_config_err("CIB did not pass schema validation");
+        pcmk__config_err("CIB did not pass schema validation");
         free_xml(cib_object);
         cib_object = NULL;
 
@@ -233,6 +280,7 @@ main(int argc, char **argv)
         goto done;
     }
     set_bit(data_set->flags, pe_flag_no_counts);
+    set_bit(data_set->flags, pe_flag_no_compat);
 
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {

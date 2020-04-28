@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/lrmd_internal.h>
 
@@ -86,7 +86,7 @@ static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -95,7 +95,7 @@ lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static void
 lrmd_ipc_created(qb_ipcs_connection_t * c)
 {
-    crm_client_t *new_client = crm_client_get(c);
+    pcmk__client_t *new_client = pcmk__find_client(c);
 
     crm_trace("Connection %p", c);
     CRM_ASSERT(new_client != NULL);
@@ -110,8 +110,8 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
-    xmlNode *request = crm_ipcs_recv(client, data, size, &id, &flags);
+    pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *request = pcmk__client_data2xml(client, data, &id, &flags);
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);
@@ -129,7 +129,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = crm_itoa(crm_ipcs_client_pid(c));
+            client->name = crm_itoa(pcmk__client_pid(c));
         } else {
             client->name = strdup(value);
         }
@@ -157,9 +157,9 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
  * \param[in] client  Client connection to free
  */
 void
-lrmd_client_destroy(crm_client_t *client)
+lrmd_client_destroy(pcmk__client_t *client)
 {
-    crm_client_destroy(client);
+    pcmk__free_client(client);
 
 #ifdef ENABLE_PCMK_REMOTE
     /* If we were waiting to shut down, we can now safely do so
@@ -174,7 +174,7 @@ lrmd_client_destroy(crm_client_t *client)
 static int32_t
 lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
@@ -204,48 +204,50 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
     .connection_destroyed = lrmd_ipc_destroy
 };
 
+// \return Standard Pacemaker return code
 int
-lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
+lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
-
     crm_trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (client->kind) {
-        case CRM_CLIENT_IPC:
-            return crm_ipcs_send(client, id, reply, FALSE);
+        case PCMK__CLIENT_IPC:
+            return pcmk__ipc_send_xml(client, id, reply, FALSE);
 #ifdef ENABLE_PCMK_REMOTE
-        case CRM_CLIENT_TLS:
+        case PCMK__CLIENT_TLS:
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
             crm_err("Could not send reply: unknown client type %d",
                     client->kind);
     }
-    return -ENOTCONN;
+    return ENOTCONN;
 }
 
+// \return Standard Pacemaker return code
 int
-lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
+lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
     crm_trace("Sending notification to client (%s)", client->id);
     switch (client->kind) {
-        case CRM_CLIENT_IPC:
+        case PCMK__CLIENT_IPC:
             if (client->ipcs == NULL) {
                 crm_trace("Could not notify local client: disconnected");
-                return -ENOTCONN;
+                return ENOTCONN;
             }
-            return crm_ipcs_send(client, 0, msg, crm_ipc_server_event);
+            return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef ENABLE_PCMK_REMOTE
-        case CRM_CLIENT_TLS:
+        case PCMK__CLIENT_TLS:
             if (client->remote == NULL) {
                 crm_trace("Could not notify remote client: disconnected");
-                return -ENOTCONN;
+                return ENOTCONN;
+            } else {
+                return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
             }
-            return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
 #endif
         default:
             crm_err("Could not notify client: unknown type %d", client->kind);
     }
-    return -ENOTCONN;
+    return ENOTCONN;
 }
 
 /*!
@@ -260,9 +262,7 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 static gboolean
 lrmd_exit(gpointer data)
 {
-    crm_info("Terminating with %d clients",
-             crm_hash_table_size(client_connections));
-
+    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
     if (stonith_api) {
         stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
         stonith_api->cmds->disconnect(stonith_api);
@@ -277,7 +277,7 @@ lrmd_exit(gpointer data)
     ipc_proxy_cleanup();
 #endif
 
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     g_hash_table_destroy(rsc_list);
 
     if (mainloop) {
@@ -298,7 +298,7 @@ static void
 lrmd_shutdown(int nsig)
 {
 #ifdef ENABLE_PCMK_REMOTE
-    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
+    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
     /* If there are active proxied IPC providers, then we may be running
      * resources, so notify the cluster that we wish to shut down.
@@ -380,26 +380,41 @@ void handle_shutdown_nack()
     crm_debug("Ignoring unexpected shutdown nack");
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0,    '?', "\tThis text"},
-    {"version", 0, 0,    '$', "\tVersion information"  },
-    {"verbose", 0, 0,    'V', "\tIncrease debug output"},
-
-    {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "logfile", required_argument, NULL, 'l',
+        "\tSend logs to the additional named logfile", pcmk__option_default
+    },
 #ifdef ENABLE_PCMK_REMOTE
-    {"port", 1, 0,       'p', "\tPort to listen on"},
+    {
+        "port", required_argument, NULL, 'p',
+        "\tPort to listen on", pcmk__option_default
+    },
 #endif
-
-    {0, 0, 0, 0}
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 #ifdef ENABLE_PCMK_REMOTE
 #  define EXECD_TYPE "remote"
+#  define EXECD_NAME "pacemaker-remoted"
+#  define EXECD_DESC "resource agent executor daemon for Pacemaker Remote nodes"
 #else
 #  define EXECD_TYPE "local"
+#  define EXECD_NAME "pacemaker-execd"
+#  define EXECD_DESC "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
 int
@@ -410,21 +425,16 @@ main(int argc, char **argv, char **envp)
     int bump_log_num = 0;
     const char *option = NULL;
 
-#ifndef ENABLE_PCMK_REMOTE
-    crm_log_preinit("pacemaker-execd", argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Resource agent executor daemon for cluster nodes");
-#else
+#ifdef ENABLE_PCMK_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
     remoted_spawn_pidone(argc, argv, envp);
-
-    crm_log_preinit("pacemaker-remoted", argc, argv);
-    crm_set_options(NULL, "[options]", long_options,
-                    "Resource agent executor daemon for Pacemaker Remote nodes");
 #endif
 
+    crm_log_preinit(EXECD_NAME, argc, argv);
+    pcmk__set_cli_options(NULL, "[options]", long_options, EXECD_DESC);
+
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1) {
             break;
         }
@@ -441,10 +451,10 @@ main(int argc, char **argv, char **envp)
                 break;
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
-                crm_help('?', CRM_EX_USAGE);
+                pcmk__cli_help('?', CRM_EX_USAGE);
                 break;
         }
     }
@@ -456,17 +466,17 @@ main(int argc, char **argv, char **envp)
         bump_log_num--;
     }
 
-    option = daemon_option("logfacility");
+    option = pcmk__env_option("logfacility");
     if (option && safe_str_neq(option, "none")
         && safe_str_neq(option, "/dev/null")) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
-    option = daemon_option("logfile");
+    option = pcmk__env_option("logfile");
     if(option && safe_str_neq(option, "none")) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
-        if (daemon_option_enabled(crm_system_name, "debug")) {
+        if (pcmk__env_option_enabled(crm_system_name, "debug")) {
             setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
         }
     }

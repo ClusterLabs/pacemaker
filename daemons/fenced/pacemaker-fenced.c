@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -54,7 +54,6 @@ static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 
 static cib_t *cib_api = NULL;
-static void *cib_library = NULL;
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -63,20 +62,15 @@ static int32_t
 st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     if (stonith_shutdown_flag) {
-        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
+        crm_info("Ignoring new client [%d] during shutdown",
+                 pcmk__client_pid(c));
         return -EPERM;
     }
 
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
-}
-
-static void
-st_ipc_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection created for %p", c);
 }
 
 /* Exit code means? */
@@ -87,7 +81,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t flags = 0;
     int call_options = 0;
     xmlNode *request = NULL;
-    crm_client_t *c = crm_client_get(qbc);
+    pcmk__client_t *c = pcmk__find_client(qbc);
     const char *op = NULL;
 
     if (c == NULL) {
@@ -95,9 +89,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    request = crm_ipcs_recv(c, data, size, &id, &flags);
+    request = pcmk__client_data2xml(c, data, &id, &flags);
     if (request == NULL) {
-        crm_ipcs_send_ack(c, id, flags, "nack", __FUNCTION__, __LINE__);
+        pcmk__ipc_send_ack(c, id, flags, "nack");
         return 0;
     }
 
@@ -107,7 +101,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, F_TYPE, T_STONITH_NG);
         crm_xml_add(request, F_STONITH_OPERATION, op);
         crm_xml_add(request, F_STONITH_CLIENTID, c->id);
-        crm_xml_add(request, F_STONITH_CLIENTNAME, crm_client_name(c));
+        crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
         send_cluster_message(NULL, crm_msg_stonith_ng, request, FALSE);
@@ -126,7 +120,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
     crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
-              flags, call_options, id, crm_client_name(c));
+              flags, call_options, id, pcmk__client_name(c));
 
     if (is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
@@ -135,10 +129,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     crm_xml_add(request, F_STONITH_CLIENTID, c->id);
-    crm_xml_add(request, F_STONITH_CLIENTNAME, crm_client_name(c));
+    crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
-    crm_log_xml_trace(request, "Client[inbound]");
     stonith_command(c, id, flags, request, NULL);
 
     free_xml(request);
@@ -149,14 +142,14 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 static int32_t
 st_ipc_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         return 0;
     }
 
     crm_trace("Connection %p closed", c);
-    crm_client_destroy(client);
+    pcmk__free_client(client);
 
     /* 0 means: yes, go ahead and destroy the connection */
     return 0;
@@ -226,15 +219,15 @@ void
 do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
 {
     /* send callback to originating child */
-    crm_client_t *client_obj = NULL;
-    int local_rc = pcmk_ok;
+    pcmk__client_t *client_obj = NULL;
+    int local_rc = pcmk_rc_ok;
 
     crm_trace("Sending response");
-    client_obj = crm_client_get_by_id(client_id);
+    client_obj = pcmk__find_client_by_id(client_id);
 
     crm_trace("Sending callback to request originator");
     if (client_obj == NULL) {
-        local_rc = -1;
+        local_rc = EPROTO;
         crm_trace("No client to sent the response to.  F_STONITH_CLIENTID not set.");
 
     } else {
@@ -254,13 +247,16 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                       client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
-        local_rc = crm_ipcs_send(client_obj, rid, notify_src, sync_reply?crm_ipc_flags_none:crm_ipc_server_event);
+        local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
+                                      (sync_reply? crm_ipc_flags_none
+                                       : crm_ipc_server_event));
     }
 
-    if (local_rc < pcmk_ok && client_obj != NULL) {
-        crm_warn("%sSync reply to %s failed: %s",
-                 sync_reply ? "" : "A-",
-                 client_obj ? client_obj->name : "<unknown>", pcmk_strerror(local_rc));
+    if ((local_rc != pcmk_rc_ok) && (client_obj != NULL)) {
+        crm_warn("%s reply to %s failed: %s",
+                 (sync_reply? "Synchronous" : "Asynchronous"),
+                 (client_obj? client_obj->name : "unknown client"),
+                 pcmk_rc_str(local_rc));
     }
 }
 
@@ -291,7 +287,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
     xmlNode *update_msg = user_data;
-    crm_client_t *client = value;
+    pcmk__client_t *client = value;
     const char *type = NULL;
 
     CRM_CHECK(client != NULL, return);
@@ -306,14 +302,16 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (client->options & get_stonith_flag(type)) {
-        int rc = crm_ipcs_send(client, 0, update_msg, crm_ipc_server_event | crm_ipc_server_error);
+        int rc = pcmk__ipc_send_xml(client, 0, update_msg,
+                                    crm_ipc_server_event|crm_ipc_server_error);
 
-        if (rc <= 0) {
-            crm_warn("%s notification of client %s.%.6s failed: %s (%d)",
-                     type, crm_client_name(client), client->id, pcmk_strerror(rc), rc);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("%s notification of client %s failed: %s "
+                     CRM_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
+                     pcmk_rc_str(rc), client->id, rc);
         } else {
-            crm_trace("Sent %s notification to client %s.%.6s", type, crm_client_name(client),
-                      client->id);
+            crm_trace("Sent %s notification to client %s.%.6s", type,
+                      pcmk__client_name(client), client->id);
         }
     }
 }
@@ -321,14 +319,14 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 void
 do_stonith_async_timeout_update(const char *client_id, const char *call_id, int timeout)
 {
-    crm_client_t *client = NULL;
+    pcmk__client_t *client = NULL;
     xmlNode *notify_data = NULL;
 
     if (!timeout || !call_id || !client_id) {
         return;
     }
 
-    client = crm_client_get_by_id(client_id);
+    client = pcmk__find_client_by_id(client_id);
     if (!client) {
         return;
     }
@@ -341,7 +339,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
 
     if (client) {
-        crm_ipcs_send(client, 0, notify_data, crm_ipc_server_event);
+        pcmk__ipc_send_xml(client, 0, notify_data, crm_ipc_server_event);
     }
 
     free_xml(notify_data);
@@ -365,7 +363,7 @@ do_stonith_notify(int options, const char *type, int result, xmlNode * data)
     }
 
     crm_trace("Notifying clients");
-    g_hash_table_foreach(client_connections, stonith_notify_client, update_msg);
+    pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
     free_xml(update_msg);
     crm_trace("Notify complete");
 }
@@ -525,7 +523,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
 */
 
 static void
-fencing_topology_init()
+fencing_topology_init(void)
 {
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;
@@ -551,11 +549,11 @@ fencing_topology_init()
  *
  * \return Pointer to node object if found, NULL otherwise
  */
-static node_t *
-our_node_allowed_for(resource_t *rsc)
+static pe_node_t *
+our_node_allowed_for(pe_resource_t *rsc)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (rsc && stonith_our_uname) {
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -577,12 +575,12 @@ our_node_allowed_for(resource_t *rsc)
  * \param[in] rsc       Resource to check
  * \param[in] data_set  Cluster working set with device information
  */
-static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
+static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     const char *value = NULL;
     const char *rclass = NULL;
-    node_t *parent = NULL;
+    pe_node_t *parent = NULL;
     gboolean remove = TRUE;
 
     /* If this is a complex resource, check children rather than this resource itself.
@@ -885,7 +883,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                  "/" XML_CIB_TAG_NODE "[@uname='%s']/" XML_TAG_ATTR_SETS
                  "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
                  node, name, value);
-    match = get_xpath_object(xpath, local_cib, LOG_TRACE);
+    match = get_xpath_object(xpath, local_cib, LOG_NEVER);
 
     CRM_CHECK(n < XPATH_MAX, return FALSE);
     return (match != NULL);
@@ -1051,7 +1049,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 
     crm_peer_caches_refresh(local_cib);
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']", local_cib, LOG_TRACE);
+    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
+                                           local_cib, LOG_NEVER);
     if (stonith_enabled_xml) {
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
@@ -1060,7 +1059,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         long timeout_ms = 0;
         const char *value = NULL;
 
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
+        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
+                                                local_cib, LOG_NEVER);
         if (stonith_watchdog_xml) {
             value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
         }
@@ -1069,7 +1069,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             timeout_ms = crm_get_msec(value);
         }
         if (timeout_ms < 0) {
-            timeout_ms = crm_auto_watchdog_timeout();
+            timeout_ms = pcmk__auto_watchdog_timeout();
         }
 
         if(timeout_ms != stonith_watchdog_timeout_ms) {
@@ -1114,9 +1114,8 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 stonith_shutdown(int nsig)
 {
+    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
     stonith_shutdown_flag = TRUE;
-    crm_info("Terminating with %d clients",
-             crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
     } else {
@@ -1152,7 +1151,7 @@ stonith_cleanup(void)
     }
 
     crm_peer_destroy();
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();
     free_device_list();
@@ -1165,33 +1164,41 @@ stonith_cleanup(void)
     local_cib = NULL;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    {"stand-alone",         0, 0, 's'},
-    {"stand-alone-w-cpg",   0, 0, 'c'},
-    {"logfile",             1, 0, 'l'},
-    {"verbose",     0, 0, 'V'},
-    {"version",     0, 0, '$'},
-    {"help",        0, 0, '?'},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "stand-alone", no_argument, 0, 's',
+        NULL, pcmk__option_default
+    },
+    {
+        "stand-alone-w-cpg", no_argument, 0, 'c',
+        NULL, pcmk__option_default
+    },
+    {
+        "logfile", required_argument, 0, 'l',
+        NULL, pcmk__option_default
+    },
+    {
+        "verbose", no_argument, 0, 'V',
+        NULL, pcmk__option_default
+    },
+    {
+        "version", no_argument, 0, '$',
+        NULL, pcmk__option_default
+    },
+    {
+        "help", no_argument, 0, '?',
+        NULL, pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static void
 setup_cib(void)
 {
     int rc, retries = 0;
-    static cib_t *(*cib_new_fn) (void) = NULL;
 
-    if (cib_new_fn == NULL) {
-        cib_new_fn = find_library_function(&cib_library, CIB_LIBRARY, "cib_new", TRUE);
-    }
-
-    if (cib_new_fn != NULL) {
-        cib_api = (*cib_new_fn) ();
-    }
-
+    cib_api = cib_new();
     if (cib_api == NULL) {
         crm_err("No connection to the CIB manager");
         return;
@@ -1220,7 +1227,7 @@ setup_cib(void)
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = st_ipc_accept,
-    .connection_created = st_ipc_created,
+    .connection_created = NULL,
     .msg_process = st_ipc_dispatch,
     .connection_closed = st_ipc_closed,
     .connection_destroyed = st_ipc_destroy
@@ -1267,12 +1274,12 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Provides a summary of cluster's current state."
-                    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for executing fencing devices in a "
+                          "Pacemaker cluster");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1) {
             break;
         }
@@ -1293,7 +1300,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -1431,7 +1438,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -1458,6 +1465,7 @@ main(int argc, char **argv)
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
     set_bit(fenced_data_set->flags, pe_flag_no_counts);
+    set_bit(fenced_data_set->flags, pe_flag_no_compat);
 
     if (stand_alone == FALSE) {
 
@@ -1508,7 +1516,7 @@ main(int argc, char **argv)
         }
     }
 
-    stonith_ipc_server_init(&ipcs, &ipc_callbacks);
+    pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);

@@ -6,28 +6,31 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
-# Deprecated plaintext documents (also dynamically converted to HTML)
-ascii		= acls.txt			\
-		  crm_fencing.txt
-generated_docs	=
+# Deprecated plaintext documents (dynamically converted to HTML)
+DEPRECATED_ORIGINAL	= crm_fencing.txt
+DEPRECATED_GENERATED	=
 if BUILD_ASCIIDOC
-generated_docs	+= $(ascii:%.txt=%.html)
+DEPRECATED_GENERATED	+= $(DEPRECATED_ORIGINAL:%.txt=%.html)
 endif
+DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) $(DEPRECATED_GENERATED)
 
-# Current Publican/docbook-based documentation
-docbook		= Clusters_from_Scratch		\
+# Current documentation based on asciidoc, DocBook, and pandoc
+BOOKS		= Clusters_from_Scratch		\
 		  Pacemaker_Administration	\
 		  Pacemaker_Development		\
 		  Pacemaker_Explained		\
 		  Pacemaker_Remote
-docbook_build = $(docbook:%=%.build)
 
-doc_DATA		= $(ascii) $(generated_docs)
+doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
 
-EXTRA_DIST	= $(ascii) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
+# The sphinx docs are not yet built by default, but we still want to distribute
+# them so configure can build the Makefile in a distribution.
+DIST_SUBDIRS	= sphinx
+
+EXTRA_DIST	= $(DEPRECATED_ORIGINAL) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
 EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
 EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
@@ -43,7 +46,9 @@ RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 RSYNC_OPTS      = -rlptvzxS --progress
 
 LAST_RELEASE	?= Pacemaker-$(VERSION)
-TAG		?= $(shell git log --pretty=format:%H -n 1 HEAD)
+TAG		?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]	\
+		           && ( git tag --points-at HEAD | head -1 )		\
+			   || git log --pretty=format:%H -n 1 HEAD)
 
 # What formats to build by default: pdf,html,html-single,html-desktop,epub
 DOCBOOK_FORMATS := html-desktop
@@ -84,14 +89,19 @@ PNGS = $(PNGS_ORIGINAL) $(PNGS_GENERATED)
 
 graphics: $(PNGS)
 
+
+# two-phased attempts for Inkscape pre-1.0 and 1.0+ (upcoming) discrepancy
 %.png: %.svg
-	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@ $(PCMK_quiet)
+	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=90 -C --export-png=$@ $< \
+	  || $(INKSCAPE) --export-dpi=90 -C --export-file=$@ $<; } $(PCMK_quiet)
 
 %-small.png: %.svg
-	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@ $(PCMK_quiet)
+	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=45 -C --export-png=$@ $< \
+	  || $(INKSCAPE) --export-dpi=45 -C --export-file=$@ $<; } $(PCMK_quiet)
 
 %-large.png: %.svg
-	$(AM_V_GEN)$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@ $(PCMK_quiet)
+	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=180 -C --export-png=$@ $< \
+	  || $(INKSCAPE) --export-dpi=180 -C --export-file=$@ $<; } $(PCMK_quiet)
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
@@ -128,6 +138,24 @@ endif
 	  $@-t  # We just want the appendix tag (asciidoctor adds non-empty book-level title)
 	$(AM_V_at)sed -i 's/book>/chapter>/g' $@-t   # Rename to chapter (won't trigger if previous sed did)
 	$(AM_V_GEN)mv $@-t $@
+
+# For Makefile debugging
+.PHONY: vars
+vars:
+	@echo DEPRECATED_ORIGINAL=\'$(DEPRECATED_ORIGINAL)\'
+	@echo DEPRECATED_GENERATED=\'$(DEPRECATED_GENERATED)\'
+	@echo BOOKS=\'$(BOOKS)\'
+	@echo LAST_RELEASE=\'$(LAST_RELEASE)\'
+	@echo TAG=\'$(TAG)\'
+
+
+.PHONY: deprecated-upload
+deprecated-upload: $(DEPRECATED_ALL)
+	rsync $(RSYNC_OPTS) $(DEPRECATED_ALL) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
+
+.PHONY: deprecated-clean
+deprecated-clean:
+	-rm -f $(DEPRECATED_GENERATED)
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based
@@ -183,14 +211,14 @@ CFS_DEPS	= $(PNGS) $(CFS_SHARED_XML) $(CFS_XML_ONLY) $(CFS_XML_GEN)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Clusters_from_Scratch.build: $(CFS_DEPS) $(PUBLICAN_INTREE_DEPS)
-	@echo Building $(@:%.build=%) because of $?
-	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
+	@echo "Building $(@:%.build=%) because of $?"
+	rm -rf "$(@:%.build=%)/publish"/* "$(@:%.build=%)/tmp"
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
 	  $(PUBLICAN) build --src_dir="$(srcdir)" --publish 			\
 	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
 	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
-	rm -rf $(@:%.build=%)/tmp
-	touch $@
+	rm -rf "$(@:%.build=%)/tmp"
+	touch "$@"
 
 
 # Pacemaker Administration
@@ -213,7 +241,7 @@ Pacemaker_Administration.build: $(PA_DEPS) $(PUBLICAN_INTREE_DEPS)
 	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
 	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
-	touch $@
+	touch "$@"
 
 
 # Pacemaker Development
@@ -235,7 +263,7 @@ Pacemaker_Development.build: $(PD_DEPS) $(PUBLICAN_INTREE_DEPS)
 	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
 	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
-	touch $@
+	touch "$@"
 
 
 # Pacemaker Explained
@@ -260,7 +288,7 @@ Pacemaker_Explained.build: $(PE_DEPS) $(PUBLICAN_INTREE_DEPS)
 	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
 	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
-	touch $@
+	touch "$@"
 
 
 # Pacemaker Remote
@@ -270,11 +298,11 @@ PR_XML_GEN	= $(PR_TXT:%.txt=%.xml)
 PR_XML_ONLY	= $(addprefix $(srcdir)/Pacemaker_Remote/en-US/,$(COMMON_XML) \
 		  Pacemaker_Remote.ent \
 		  Pacemaker_Remote.xml)
-PR_DEPS		= $(PR_XML_ONLY) $(PR_XML_GEN)
+PR_DEPS		= $(PNGS) $(PR_XML_ONLY) $(PR_XML_GEN)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
-Pacemaker_Remote.build: $(PNGS) $(PR_DEPS) $(PUBLICAN_INTREE_DEPS)
+Pacemaker_Remote.build: $(PR_DEPS) $(PUBLICAN_INTREE_DEPS)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN_INTREE_ENV)	\
@@ -282,31 +310,53 @@ Pacemaker_Remote.build: $(PNGS) $(PR_DEPS) $(PUBLICAN_INTREE_DEPS)
 	    --langs="$(DOCBOOK_LANGS)" --formats="$(DOCBOOK_FORMATS)"		\
 	    $(PUBLICAN_INTREE_OPT) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
-	touch $@
+	touch "$@"
 
 
-# Update the translation template
-pot:
-	@for book in $(docbook); do					\
-		echo "Updating translation templates in: $$book";	\
-		( cd $$book && RPM_BUILD_DIR=""				\
-		  $(PUBLICAN) --src_dir="$(srcdir)" update_pot );	\
+# Build all books for upload to ClusterLabs
+.PHONY: books
+books: books-clean
+if BUILD_DOCBOOK
+	for book in $(BOOKS); do 							\
+		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
+	$(MAKE) $(AM_MAKEFLAGS) DOCBOOK_FORMATS="pdf,html,html-single,epub"		\
+		DOCBOOK_LANGS="$(DOCBOOK_LANGS)" all-local
+endif
 
-# Update the actual translations
-po: pot
-	@for book in $(docbook); do					\
-		echo "Updating translations in: $$book";		\
-		( cd $$book && RPM_BUILD_DIR=""				\
-		  $(PUBLICAN) --src_dir="$(srcdir)" update_po		\
-		  --langs=all );					\
+.PHONY: books-upload
+books-upload: books
+if BUILD_DOCBOOK
+	@echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
+	@for book in $(BOOKS); do 									\
+		echo Uploading $$book...;								\
+		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)"	\
+			>> $$book/publish/build-$(PACKAGE_SERIES).txt;					\
+		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";			\
 	done
+endif
+
+.PHONY: books-clean
+books-clean:
+	-for book in $(BOOKS); do			\
+		rm -rf $$book/tmp $$book/publish;	\
+	done
+	-rm -f  $(PNGS_GENERATED)		\
+		$(SHARED_XML)			\
+		$(CFS_XML_GEN)			\
+		$(PA_XML_GEN)			\
+		$(PD_XML_GEN)			\
+		$(PE_XML_GEN)			\
+		$(PR_XML_GEN)			\
+		publican-catalog-fallback	\
+		publican-catalog
+
 
 if BUILD_DOCBOOK
-all-local: $(docbook_build) */publican.cfg
+all-local: $(BOOKS:%=%.build) */publican.cfg
 
 install-data-local: all-local
-	for book in $(docbook); do 							\
+	for book in $(BOOKS); do 							\
 	    filelist=`find $$book/publish/* -print`;					\
 	    for f in $$filelist; do							\
 		p=`echo $$f | sed s:publish/:: | sed s:Pacemaker/::`;			\
@@ -401,39 +451,8 @@ abi-clean:
 
 
 # All HTML documentation (except ABI compatibility, which is run separately)
+.PHONY: www
+www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload books-upload
 
-www: clean-local $(doc_DATA) manhtml-upload global-upload doxygen-upload
-if BUILD_DOCBOOK
-	for book in $(docbook); do 							\
-		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
-	done
-endif
-	$(MAKE) $(AM_MAKEFLAGS) DOCBOOK_FORMATS="pdf,html,html-single,epub"		\
-		DOCBOOK_LANGS="$(DOCBOOK_LANGS)" all-local
-	@echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
-if BUILD_DOCBOOK
-	@for book in $(docbook); do 									\
-		echo Uploading $$book...;								\
-		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES).txt;	\
-		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";			\
-	done
-endif
-	rsync $(RSYNC_OPTS) $(doc_DATA) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
-ALL_GEN	= $(generated_docs)		\
-	  $(docbook_build)		\
-	  $(PNGS_GENERATED)		\
-	  $(SHARED_XML)			\
-	  $(CFS_XML_GEN)		\
-	  $(PA_XML_GEN)			\
-	  $(PD_XML_GEN)			\
-	  $(PE_XML_GEN)			\
-	  $(PR_XML_GEN)			\
-	  publican-catalog-fallback	\
-	  publican-catalog
-
-clean-local: brand-rpm-clean global-clean manhtml-clean doxygen-clean abi-clean
-	-rm -f $(ALL_GEN)
-	-for book in $(docbook); do			\
-		rm -rf $$book/tmp $$book/publish;	\
-	done
+clean-local: brand-rpm-clean global-clean manhtml-clean doxygen-clean abi-clean books-clean deprecated-clean

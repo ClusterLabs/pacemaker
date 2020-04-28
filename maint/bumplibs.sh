@@ -65,7 +65,7 @@ find_sources() {
         prompt_to_continue
     fi
 
-    SOURCES=$(grep "lib${LIB}_la_SOURCES" "$AMFILE" \
+    SOURCES=$(grep "^lib${LIB}_la_SOURCES" "$AMFILE" \
         | sed -e 's/.*=//' -e 's/\\//' -e 's:\.\./gnu/:lib/gnu/:')
 
     for SOURCE in $SOURCES; do
@@ -95,6 +95,8 @@ process_lib() {
     local LAST_RELEASE="$2"
     local AMFILE
     local SOURCES
+    local HEADERS_EXP
+    local HEADERS_GONE
     local CHANGE
     local CHANGES
 
@@ -102,6 +104,14 @@ process_lib() {
         echo "Can't check lib$LIB until this script is updated with its headers"
         prompt_to_continue
     fi
+
+    for HEADER in $(ls ${HEADERS[$LIB]} 2>&1|sed -e 's/.* include/include/' -e 's/:.*//'); do
+      if [ -f "$HEADER" ]; then
+        HEADERS_EXP+=" $HEADER"
+      else
+        HEADERS_GONE+=" $HEADER"
+      fi
+    done
 
     AMFILE="$(find_makefile "$LIB")"
 
@@ -119,22 +129,41 @@ process_lib() {
 
     # Check whether there were any changes to headers or sources
     SOURCES="$(find_sources "$LIB" "$AMFILE")"
-    CHANGES=$(git diff -w $LAST_RELEASE..HEAD ${HEADERS[$LIB]} $SOURCES | wc -l)
+    CHANGES=$(git diff -w $LAST_RELEASE..HEAD $HEADERS_EXP $SOURCES | wc -l)
     if [ $CHANGES -eq 0 ]; then
-        echo "No changes to $LIB interface"
-        prompt_to_continue
-        echo ""
-        return
+        if [ -z "$HEADERS_GONE" ]; then
+          echo "No changes to $LIB interface"
+          prompt_to_continue
+          echo ""
+          return
+        fi
     fi
 
     # Show all header changes since last release
-    git diff -w $LAST_RELEASE..HEAD ${HEADERS[$LIB]}
+    echo "- Changes in Headers ($HEADERS_EXP) since $LAST_RELEASE:"
+    if [ ! -z "$HEADERS_GONE" ]; then
+      for HEADER in $HEADERS_GONE; do
+        echo "$HEADER not found in current release!"
+      done
+    fi
+    git --no-pager diff --color -w $LAST_RELEASE..HEAD ${HEADERS_EXP}
+
+    # Show commits touching lib since last release
+    echo ""
+    echo "- Commits (without Refactor & Build) touching lib$LIB since $LAST_RELEASE:"
+    git log --color Pacemaker-2.0.3..HEAD -z ${HEADERS_EXP} $SOURCES $AMFILE|grep -vzE "Refactor:|Build:|Merge pull request"
+
+    # Show merged PRs since last release touching this lib
+    echo ""
+    echo "- PRs merged touching lib$LIB since $LAST_RELEASE:"
+    git log Pacemaker-2.0.3..HEAD -z ${HEADERS_EXP} $SOURCES $AMFILE|grep -z "Merge pull request"|sed -zr "s/.*#([0-9]+).*/#\1 /"
+    echo ""
 
     # Show summary of source changes since last release
     echo ""
-    echo "- Headers: ${HEADERS[$LIB]}"
+    echo "- Headers: ${HEADERS_EXP}"
     echo "- Changed sources since $LAST_RELEASE:"
-    git diff -w $LAST_RELEASE..HEAD --stat $SOURCES
+    git --no-pager diff --color -w $LAST_RELEASE..HEAD --stat $SOURCES
     echo ""
 
     # Ask for human guidance
@@ -164,7 +193,7 @@ process_lib() {
 
             # Some headers define constants for shared library names,
             # update them if the name changed
-            for H in ${HEADERS[$LIB]}; do
+            for H in $HEADERS_EXP; do
                 sed -i -e "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/" $H
             done
             ;;
@@ -219,4 +248,4 @@ for LIB in $(find_libs); do
 done
 
 # Show all proposed changes
-git diff -w
+git --no-pager diff --color -w

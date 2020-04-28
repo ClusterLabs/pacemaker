@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -50,7 +50,6 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
     callback_rc = 0; \
 
 
-/* *INDENT-OFF* */
 enum test_modes {
     test_standard = 0,  // test using a specific developer environment
     test_passive,       // watch notifications only
@@ -58,17 +57,34 @@ enum test_modes {
     test_api_mainloop,  // sanity-test mainloop code with async responses
 };
 
-static struct crm_option long_options[] = {
-    {"verbose",     0, 0, 'V'},
-    {"version",     0, 0, '$'},
-    {"help",        0, 0, '?'},
-    {"passive",     0, 0, 'p'},
-    {"api_test",    0, 0, 't'},
-    {"mainloop_api_test",    0, 0, 'm'},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "verbose", no_argument, NULL, 'V',
+        NULL, pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        NULL, pcmk__option_default
+    },
+    {
+        "help", no_argument, NULL, '?',
+        NULL, pcmk__option_default
+    },
+    {
+        "passive", no_argument, NULL, 'p',
+        NULL, pcmk__option_default
+    },
+    {
+        "api_test", no_argument, NULL, 't',
+        NULL, pcmk__option_default
+    },
+    {
+        "mainloop_api_test", no_argument, NULL, 'm',
+        NULL, pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 static stonith_t *st = NULL;
 static struct pollfd pollfd;
@@ -587,12 +603,12 @@ main(int argc, char **argv)
     enum test_modes mode = test_standard;
 
     crm_log_cli_init("cts-fence-helper");
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Provides a summary of cluster's current state."
-                    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+    pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
+                          "inject commands into the Pacemaker fencer, "
+                          "and watch for events");
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1) {
             break;
         }
@@ -603,7 +619,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'p':
                 mode = test_passive;
@@ -628,7 +644,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     st = stonith_api_new();

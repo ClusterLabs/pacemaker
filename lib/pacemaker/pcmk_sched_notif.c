@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -10,8 +12,8 @@
 #include <pacemaker-internal.h>
 
 typedef struct notify_entry_s {
-    resource_t *rsc;
-    node_t *node;
+    pe_resource_t *rsc;
+    pe_node_t *node;
 } notify_entry_t;
 
 static gint
@@ -88,7 +90,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         int len = 0;
         int existing_len = 0;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->uname == NULL) {
             continue;
@@ -230,12 +232,12 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
     }
 }
 
-static action_t *
-pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
+static pe_action_t *
+pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t * confirm,
           notify_data_t * n_data, pe_working_set_t * data_set)
 {
     char *key = NULL;
-    action_t *trigger = NULL;
+    pe_action_t *trigger = NULL;
     const char *value = NULL;
     const char *task = NULL;
 
@@ -260,7 +262,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
 
     pe_rsc_trace(rsc, "Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
 
-    key = generate_notify_key(rsc->id, value, task);
+    key = pcmk__notify_key(rsc->id, value, task);
     trigger = custom_action(rsc, key, op->task, node,
                             is_set(op->flags, pe_action_optional), TRUE, data_set);
     g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
@@ -276,9 +278,9 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
 }
 
 static void
-pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
+pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
 {
-    action_t *notify = NULL;
+    pe_action_t *notify = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
@@ -296,7 +298,7 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
         GListPtr gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *mon = (action_t *) gIter->data;
+            pe_action_t *mon = (pe_action_t *) gIter->data;
             const char *interval_ms_s = g_hash_table_lookup(mon->meta,
                                                             XML_LRM_ATTR_INTERVAL_MS);
 
@@ -314,8 +316,8 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
 }
 
 notify_data_t *
-create_notification_boundaries(resource_t * rsc, const char *action, action_t * start,
-                               action_t * end, pe_working_set_t * data_set)
+create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_action_t * start,
+                               pe_action_t * end, pe_working_set_t * data_set)
 {
     /* Create the pseudo ops that precede and follow the actual notifications */
 
@@ -338,7 +340,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     if (start) {
         /* create pre-event notification wrappers */
-        key = generate_notify_key(rsc->id, "pre", start->task);
+        key = pcmk__notify_key(rsc->id, "pre", start->task);
         n_data->pre =
             custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
@@ -353,7 +355,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         add_hash_param(n_data->pre->meta, "notify_key_operation", start->task);
 
         /* create pre_notify_complete */
-        key = generate_notify_key(rsc->id, "confirmed-pre", start->task);
+        key = pcmk__notify_key(rsc->id, "confirmed-pre", start->task);
         n_data->pre_done =
             custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
@@ -373,7 +375,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     if (end) {
         /* create post-event notification wrappers */
-        key = generate_notify_key(rsc->id, "post", end->task);
+        key = pcmk__notify_key(rsc->id, "post", end->task);
         n_data->post =
             custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(end->flags, pe_action_optional), TRUE,
                           data_set);
@@ -393,7 +395,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
         add_hash_param(n_data->post->meta, "notify_key_operation", end->task);
 
         /* create post_notify_complete */
-        key = generate_notify_key(rsc->id, "confirmed-post", end->task);
+        key = pcmk__notify_key(rsc->id, "confirmed-post", end->task);
         n_data->post_done =
             custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(end->flags, pe_action_optional),
                           TRUE, data_set);
@@ -423,7 +425,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 }
 
 void
-collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
+collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity,
                           notify_data_t * n_data)
 {
 
@@ -435,7 +437,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             collect_notification_data(child, state, activity, n_data);
         }
@@ -485,7 +487,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
         GListPtr gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
 
             if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
                 task = text2task(op->task);
@@ -532,7 +534,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
     } while (0)
 
 gboolean
-expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     /* Expand the notification entries into a key=value hashtable
      * This hashtable is later used in action2xml()
@@ -670,17 +672,17 @@ find_remote_start(pe_action_t *action)
 }
 
 void
-create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    action_t *stop = NULL;
-    action_t *start = NULL;
+    pe_action_t *stop = NULL;
+    pe_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
 
     if (rsc->children) {
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             create_notifications(child, n_data, data_set);
         }
@@ -690,7 +692,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
     /* Copy notification details into standard ops */
 
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *op = (action_t *) gIter->data;
+        pe_action_t *op = (pe_action_t *) gIter->data;
 
         if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
             enum action_tasks t = text2task(op->task);
@@ -710,21 +712,21 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
 
     switch (task) {
         case start_rsc:
-            if(g_list_length(n_data->start) == 0) {
+            if (n_data->start == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;
             }
             break;
         case action_promote:
-            if(g_list_length(n_data->promote) == 0) {
+            if (n_data->promote == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;
             }
             break;
         case action_demote:
-            if(g_list_length(n_data->demote) == 0) {
+            if (n_data->demote == NULL) {
                 pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
                              n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
                 return;
@@ -748,7 +750,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
         if (task == stop_rsc || task == action_demote) {
             gIter = rsc->running_on;
             for (; gIter != NULL; gIter = gIter->next) {
-                node_t *current_node = (node_t *) gIter->data;
+                pe_node_t *current_node = (pe_node_t *) gIter->data;
 
                 /* if this stop action is a pseudo action as a result of the current
                  * node being fenced, this stop action is implied by the fencing 
@@ -818,7 +820,7 @@ free_notification_data(notify_data_t * n_data)
 }
 
 void
-create_secondary_notification(pe_action_t *action, resource_t *rsc,
+create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
                               pe_action_t *stonith_op,
                               pe_working_set_t *data_set)
 {

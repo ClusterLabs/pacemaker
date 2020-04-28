@@ -72,7 +72,7 @@ text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 text_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out->priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     text_free_priv(out);
     text_init(out);
@@ -243,7 +243,7 @@ pcmk__mk_text_output(char **argv) {
     }
 
     retval->fmt_name = "text";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
     retval->init = text_init;

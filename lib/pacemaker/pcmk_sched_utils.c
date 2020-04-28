@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -45,7 +47,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         }
 
         if (foo_node != NULL) {
-            node_t *copy = node_copy(foo_node);
+            pe_node_t *copy = pe__copy_node(foo_node);
 
             copy->weight = node_weight;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -59,7 +61,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
 }
 
 gboolean
-can_run_resources(const node_t * node)
+can_run_resources(const pe_node_t * node)
 {
     if (node == NULL) {
         return FALSE;
@@ -81,6 +83,62 @@ can_run_resources(const node_t * node)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Copy a hash table of node objects
+ *
+ * \param[in] nodes  Hash table to copy
+ *
+ * \return New copy of nodes (or NULL if nodes is NULL)
+ */
+GHashTable *
+pcmk__copy_node_table(GHashTable *nodes)
+{
+    GHashTable *new_table = NULL;
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+
+    if (nodes == NULL) {
+        return NULL;
+    }
+    new_table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    g_hash_table_iter_init(&iter, nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        pe_node_t *new_node = pe__copy_node(node);
+
+        g_hash_table_insert(new_table, (gpointer) new_node->details->id,
+                            new_node);
+    }
+    return new_table;
+}
+
+/*!
+ * \internal
+ * \brief Copy a list of node objects
+ *
+ * \param[in] list   List to copy
+ * \param[in] reset  Set copies' scores to 0
+ *
+ * \return New list of shallow copies of nodes in original list
+ */
+GList *
+pcmk__copy_node_list(const GList *list, bool reset)
+{
+    GList *result = NULL;
+
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = NULL;
+        pe_node_t *this_node = (pe_node_t *) gIter->data;
+
+        new_node = pe__copy_node(this_node);
+        if (reset) {
+            new_node->weight = 0;
+        }
+        result = g_list_prepend(result, new_node);
+    }
+    return result;
+}
+
 struct node_weight_s {
     pe_node_t *active;
     pe_working_set_t *data_set;
@@ -93,8 +151,8 @@ struct node_weight_s {
 static gint
 sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const node_t *node1 = (const node_t *)a;
-    const node_t *node2 = (const node_t *)b;
+    const pe_node_t *node1 = (const pe_node_t *)a;
+    const pe_node_t *node2 = (const pe_node_t *)b;
     struct node_weight_s *nw = data;
 
     int node1_weight = 0;
@@ -191,10 +249,10 @@ sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
 }
 
 void
-native_deallocate(resource_t * rsc)
+native_deallocate(pe_resource_t * rsc)
 {
     if (rsc->allocated_to) {
-        node_t *old = rsc->allocated_to;
+        pe_node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
         set_bit(rsc->flags, pe_rsc_provisional);
@@ -209,7 +267,7 @@ native_deallocate(resource_t * rsc)
 }
 
 gboolean
-native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -248,7 +306,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
         rsc->next_role = RSC_ROLE_STOPPED;
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-            action_t *op = (action_t *) gIter->data;
+            pe_action_t *op = (pe_action_t *) gIter->data;
             const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
@@ -275,19 +333,20 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
     }
 
     crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-    rsc->allocated_to = node_copy(chosen);
+    rsc->allocated_to = pe__copy_node(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
     chosen->details->num_resources++;
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
-    dump_rsc_utilization(show_utilization ? 0 : utilization_log_level, __FUNCTION__, rsc, chosen);
+    dump_rsc_utilization((show_utilization? LOG_STDOUT : LOG_TRACE),
+                         __FUNCTION__, rsc, chosen);
 
     return TRUE;
 }
 
 void
-log_action(unsigned int log_level, const char *pre_text, action_t * action, gboolean details)
+log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, gboolean details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
@@ -351,7 +410,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
 
         gIter = action->actions_before;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
@@ -360,7 +419,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
 
         gIter = action->actions_after;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_wrapper_t *other = (action_wrapper_t *) gIter->data;
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
@@ -377,7 +436,7 @@ gboolean
 can_run_any(GHashTable * nodes)
 {
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     if (nodes == NULL) {
         return FALSE;
@@ -394,9 +453,10 @@ can_run_any(GHashTable * nodes)
 }
 
 pe_action_t *
-create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
+create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set)
 {
-    pe_action_t *action = custom_action(rsc, generate_op_key(rsc->id, task, 0), task, NULL, optional, TRUE, data_set);
+    pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
+                                        task, NULL, optional, TRUE, data_set);
     update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
     update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
     if(runnable) {
@@ -425,7 +485,7 @@ pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
     char *interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
     // @TODO dangerous if possible to schedule another action with this key
-    char *key = generate_op_key(rsc->id, task, interval_ms);
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
     cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
                               data_set);
@@ -491,7 +551,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
 
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
-    filter_action_parameters(args_xml, version);
+    pcmk__filter_op_for_digest(args_xml);
     digest = calculate_operation_digest(args_xml, version);
 
 #if 0
@@ -561,14 +621,14 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    key = generate_op_key(op->rsc_id, task, op->interval_ms);
+    key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
     if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
         CRM_LOG_ASSERT(n_type != NULL);
         CRM_LOG_ASSERT(n_task != NULL);
-        op_id = generate_notify_key(op->rsc_id, n_type, n_task);
+        op_id = pcmk__notify_key(op->rsc_id, n_type, n_task);
 
         if (op->op_status != PCMK_LRM_OP_PENDING) {
             /* Ignore notify errors.
@@ -581,10 +641,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
-        op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+        op_id = pcmk__op_key(op->rsc_id, "last_failure", 0);
         if (op->interval_ms == 0) {
             // Ensure 'last' gets updated, in case record-pending is true
-            op_id_additional = generate_op_key(op->rsc_id, "last", 0);
+            op_id_additional = pcmk__op_key(op->rsc_id, "last", 0);
         }
         exit_reason = op->exit_reason;
 
@@ -592,7 +652,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         op_id = strdup(key);
 
     } else {
-        op_id = generate_op_key(op->rsc_id, "last", 0);
+        op_id = pcmk__op_key(op->rsc_id, "last", 0);
     }
 
   again:
@@ -602,10 +662,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for: " CRM_OP_FMT " %d from %s",
-                  op->rsc_id, op->op_type, op->interval_ms,
+        crm_debug("Generating fake transition key for: " PCMK__OP_FMT
+                  " %d from %s", op->rsc_id, op->op_type, op->interval_ms,
                   op->call_id, origin);
-        local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
+        local_user_data = pcmk__transition_key(-1, op->call_id, target_rc,
+                                               FAKE_TE_ID);
         op->user_data = local_user_data;
     }
 
@@ -630,7 +691,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (" CRM_OP_FMT "): last=%u change=%u exec=%u queue=%u",
+            crm_trace("Timing data (" PCMK__OP_FMT
+                      "): last=%u change=%u exec=%u queue=%u",
                       op->rsc_id, op->op_type, op->interval_ms,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 

@@ -11,7 +11,7 @@ MAINTAINERCLEANFILES	= Makefile.in
 
 headerdir=$(pkgincludedir)/crm
 
-header_HEADERS		= attrd.h cib.h cluster.h compatibility.h crm.h \
+header_HEADERS		= cib.h cluster.h compatibility.h crm.h \
 			  lrmd.h msg_xml.h services.h stonith-ng.h
 
 noinst_HEADERS		= lrmd_internal.h

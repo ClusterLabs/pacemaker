@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ puma1 puma2 puma3 puma4 ]
 
- Dummy	(ocf::heartbeat:Dummy):	Stopped
+ Dummy	(ocf::heartbeat:Dummy):	 Stopped
 
 Transition Summary:
  * Start      Dummy   ( puma1 )  
@@ -17,5 +17,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ puma1 puma2 puma3 puma4 ]
 
- Dummy	(ocf::heartbeat:Dummy):	Started puma1
+ Dummy	(ocf::heartbeat:Dummy):	 Started puma1
 

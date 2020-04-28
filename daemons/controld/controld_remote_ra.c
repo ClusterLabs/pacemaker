@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,17 +177,21 @@ remote_node_up(const char *node_name)
     int call_opt, call_id = 0;
     xmlNode *update, *state;
     crm_node_t *node;
+    enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing pacemaker_remote node %s", node_name);
 
-    /* Clear node's operation history. The node's transient attributes should
-     * and normally will be cleared when the node leaves, but since remote node
-     * state has a number of corner cases, clear them here as well, to be sure.
+    /* Clear node's entire state (resource history and transient attributes)
+     * other than shutdown locks. The transient attributes should and normally
+     * will be cleared when the node leaves, but since remote node state has a
+     * number of corner cases, clear them here as well, to be sure.
      */
     call_opt = crmd_cib_smart_opt();
-    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
-    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+    if (controld_shutdown_lock_enabled) {
+        section = controld_section_all_unlocked;
+    }
+    controld_delete_node_state(node_name, section, call_opt);
 
     /* Clear node's probed attribute */
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
@@ -252,15 +256,15 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Purge node from attrd's memory */
     update_attrd_remote_node_removed(node_name, NULL);
 
-    /* Purge node's transient attributes */
-    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
-
-    /* Normally, the LRM operation history should be kept until the node comes
-     * back up. However, after a successful fence, we want to clear it, so we
-     * don't think resources are still running on the node.
+    /* Normally, only node attributes should be erased, and the resource history
+     * should be kept until the node comes back up. However, after a successful
+     * fence, we want to clear the history as well, so we don't think resources
+     * are still running on the node.
      */
     if (opts == DOWN_ERASE_LRM) {
-        erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+        controld_delete_node_state(node_name, controld_section_all, call_opt);
+    } else {
+        controld_delete_node_state(node_name, controld_section_attrs, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */
@@ -1050,7 +1054,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 
 handle_dup:
 
-    crm_trace("merging duplicate monitor cmd " CRM_OP_FMT,
+    crm_trace("merging duplicate monitor cmd " PCMK__OP_FMT,
               cmd->rsc_id, "monitor", interval_ms);
 
     /* update the userdata */

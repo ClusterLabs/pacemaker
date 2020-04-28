@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,7 +44,7 @@ free_deletion_op(gpointer value)
 static void
 free_recurring_op(gpointer value)
 {
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
     free(op->user_data);
     free(op->rsc_id);
@@ -61,9 +61,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 {
     lrmd_event_data_t event = { 0, };
     lrm_state_t *lrm_state = user_data;
-    struct recurring_op_s *op = (struct recurring_op_s *)value;
+    active_op_t *op = value;
 
-    crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
+    crm_trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval_ms,
               lrm_state->node_name, (char*)key, op->user_data);
 
@@ -400,7 +400,7 @@ lrm_state_ipc_connect(lrm_state_t * lrm_state)
 static remote_proxy_t *
 crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id, const char *channel)
 {
-    static struct ipc_client_callbacks proxy_callbacks = {
+    struct ipc_client_callbacks proxy_callbacks = {
         .dispatch = remote_proxy_dispatch,
         .destroy = remote_proxy_disconnected
     };
@@ -435,14 +435,12 @@ crmd_proxy_send(const char *session, xmlNode *msg)
 static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
-
-    crm_log_xml_trace(msg, "controller-proxy[inbound]");
-
+    crm_trace("Processing proxied IPC message from session %s", session);
+    crm_log_xml_trace(msg, "controller[inbound]");
     crm_xml_add(msg, F_CRM_SYS_FROM, session);
-    if (crmd_authorize_message(msg, NULL, session)) {
+    if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
-
     trigger_fsa(fsa_source);
 }
 
@@ -532,7 +530,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 #if ENABLE_ACL
         CRM_CHECK(lrm_state->node_name, return);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
-        crm_acl_get_set_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
+        pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 #endif
 
         /* Pacemaker Remote nodes don't know their own names (as known to the

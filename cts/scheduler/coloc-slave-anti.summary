@@ -8,11 +8,11 @@ Online: [ pollux sirius ]
      Masters: [ pollux ]
      Slaves: [ sirius ]
  Resource Group: group-1
-     fs-1	(ocf::heartbeat:Filesystem):	Stopped
-     ip-198	(ocf::heartbeat:IPaddr2):	Stopped
-     apache	(ocf::custom:apache2):	Stopped
- pollux-fencing	(stonith:external/ipmi-soft):	Started sirius
- sirius-fencing	(stonith:external/ipmi-soft):	Started pollux
+     fs-1	(ocf::heartbeat:Filesystem):	 Stopped
+     ip-198	(ocf::heartbeat:IPaddr2):	 Stopped
+     apache	(ocf::custom:apache2):	 Stopped
+ pollux-fencing	(stonith:external/ipmi-soft):	 Started sirius
+ sirius-fencing	(stonith:external/ipmi-soft):	 Started pollux
 
 Transition Summary:
  * Start      fs-1       ( pollux )  
@@ -38,9 +38,9 @@ Online: [ pollux sirius ]
      Masters: [ pollux ]
      Slaves: [ sirius ]
  Resource Group: group-1
-     fs-1	(ocf::heartbeat:Filesystem):	Started pollux
-     ip-198	(ocf::heartbeat:IPaddr2):	Started pollux
-     apache	(ocf::custom:apache2):	Started pollux
- pollux-fencing	(stonith:external/ipmi-soft):	Started sirius
- sirius-fencing	(stonith:external/ipmi-soft):	Started pollux
+     fs-1	(ocf::heartbeat:Filesystem):	 Started pollux
+     ip-198	(ocf::heartbeat:IPaddr2):	 Started pollux
+     apache	(ocf::custom:apache2):	 Started pollux
+ pollux-fencing	(stonith:external/ipmi-soft):	 Started sirius
+ sirius-fencing	(stonith:external/ipmi-soft):	 Started pollux
 

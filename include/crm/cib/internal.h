@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"
@@ -65,10 +65,6 @@
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
-
-#  define CIB_CHANNEL_RO		"cib_ro"
-#  define CIB_CHANNEL_RW		"cib_rw"
-#  define CIB_CHANNEL_SHM		"cib_shm"
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,14 +20,12 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
-#include <unpack.h>
-
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                       pe_working_set_t * data_set);
-static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
+static xmlNode *find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
 #if ENABLE_VERSIONED_ATTRS
@@ -128,17 +126,24 @@ pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
     return false;
 }
 
-node_t *
-node_copy(const node_t *this_node)
+/*!
+ * \internal
+ * \brief Copy a node object
+ *
+ * \param[in] this_node  Node object to copy
+ *
+ * \return Newly allocated shallow copy of this_node
+ * \note This function asserts on errors and is guaranteed to return non-NULL.
+ */
+pe_node_t *
+pe__copy_node(const pe_node_t *this_node)
 {
-    node_t *new_node = NULL;
+    pe_node_t *new_node = NULL;
 
-    CRM_CHECK(this_node != NULL, return NULL);
+    CRM_ASSERT(this_node != NULL);
 
-    new_node = calloc(1, sizeof(node_t));
+    new_node = calloc(1, sizeof(pe_node_t));
     CRM_ASSERT(new_node != NULL);
-
-    crm_trace("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
@@ -153,11 +158,11 @@ void
 node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
 {
     GHashTable *result = hash;
-    node_t *other_node = NULL;
+    pe_node_t *other_node = NULL;
     GListPtr gIter = list;
 
     GHashTableIter iter;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
 
     g_hash_table_iter_init(&iter, hash);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
@@ -166,17 +171,17 @@ node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
         if (other_node == NULL) {
             node->weight = -INFINITY;
         } else if (merge_scores) {
-            node->weight = merge_weights(node->weight, other_node->weight);
+            node->weight = pe__add_scores(node->weight, other_node->weight);
         }
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         other_node = pe_hash_table_lookup(result, node->details->id);
 
         if (other_node == NULL) {
-            node_t *new_node = node_copy(node);
+            pe_node_t *new_node = pe__copy_node(node);
 
             new_node->weight = -INFINITY;
             g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
@@ -184,54 +189,33 @@ node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a node hash table from a node list
+ *
+ * \param[in] list  Node list
+ *
+ * \return Hash table equivalent of node list
+ */
 GHashTable *
-node_hash_from_list(GListPtr list)
+pe__node_list2table(GList *list)
 {
-    GListPtr gIter = list;
-    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                               free);
+    GHashTable *result = NULL;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
-        node_t *n = node_copy(node);
+    result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
 
-        g_hash_table_insert(result, (gpointer) n->details->id, n);
+        g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
-
-    return result;
-}
-
-GListPtr
-node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
-{
-    GListPtr result = NULL;
-    GListPtr gIter = list1;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        node_t *new_node = NULL;
-        node_t *this_node = (node_t *) gIter->data;
-
-        if (filter && this_node->weight < 0) {
-            continue;
-        }
-
-        new_node = node_copy(this_node);
-        if (reset) {
-            new_node->weight = 0;
-        }
-        if (new_node != NULL) {
-            result = g_list_prepend(result, new_node);
-        }
-    }
-
     return result;
 }
 
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    const char *name_a = ((const node_t *) a)->details->uname;
-    const char *name_b = ((const node_t *) b)->details->uname;
+    const char *name_a = ((const pe_node_t *) a)->details->uname;
+    const char *name_b = ((const pe_node_t *) b)->details->uname;
 
     while (*name_a && *name_b) {
         if (isdigit(*name_a) && isdigit(*name_b)) {
@@ -279,75 +263,119 @@ sort_node_uname(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-void
-dump_node_scores_worker(int level, const char *file, const char *function, int line,
-                        resource_t * rsc, const char *comment, GHashTable * nodes)
+/*!
+ * \internal
+ * \brief Output node weights to stdout
+ *
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+static void
+pe__output_node_weights(pe_resource_t *rsc, const char *comment,
+                        GHashTable *nodes)
 {
-    GHashTable *hash = nodes;
-    GHashTableIter iter;
-    node_t *node = NULL;
+    char score[128]; // Stack-allocated since this is called frequently
 
-    if (rsc) {
-        hash = rsc->allowed_nodes;
+    // Sort the nodes so the output is consistent for regression tests
+    GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
+
+    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+
+        score2char_stack(node->weight, score, sizeof(score));
+        if (rsc) {
+            printf("%s: %s allocation score on %s: %s\n",
+                   comment, rsc->id, node->details->uname, score);
+        } else {
+            printf("%s: %s = %s\n", comment, node->details->uname, score);
+        }
     }
+    g_list_free(list);
+}
 
-    if (rsc && is_set(rsc->flags, pe_rsc_orphan)) {
-        /* Don't show the allocation scores for orphans */
+/*!
+ * \internal
+ * \brief Log node weights at trace level
+ *
+ * \param[in] file      Caller's filename
+ * \param[in] function  Caller's function name
+ * \param[in] line      Caller's line number
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+static void
+pe__log_node_weights(const char *file, const char *function, int line,
+                     pe_resource_t *rsc, const char *comment, GHashTable *nodes)
+{
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+    char score[128]; // Stack-allocated since this is called frequently
+
+    // Don't waste time if we're not tracing at this point
+    pcmk__log_else(LOG_TRACE, return);
+
+    g_hash_table_iter_init(&iter, nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        score2char_stack(node->weight, score, sizeof(score));
+        if (rsc) {
+            qb_log_from_external_source(function, file,
+                                        "%s: %s allocation score on %s: %s",
+                                        LOG_TRACE, line, 0,
+                                        comment, rsc->id,
+                                        node->details->uname, score);
+        } else {
+            qb_log_from_external_source(function, file, "%s: %s = %s",
+                                        LOG_TRACE, line, 0,
+                                        comment, node->details->uname,
+                                        score);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Log or output node weights
+ *
+ * \param[in] file      Caller's filename
+ * \param[in] function  Caller's function name
+ * \param[in] line      Caller's line number
+ * \param[in] to_log    Log if true, otherwise output
+ * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] comment   Text description to prefix lines with
+ * \param[in] nodes     If rsc is not specified, use these nodes
+ */
+void
+pe__show_node_weights_as(const char *file, const char *function, int line,
+                         bool to_log, pe_resource_t *rsc, const char *comment,
+                         GHashTable *nodes)
+{
+    if (rsc != NULL) {
+        if (is_set(rsc->flags, pe_rsc_orphan)) {
+            // Don't show allocation scores for orphans
+            return;
+        }
+        nodes = rsc->allowed_nodes;
+    }
+    if (nodes == NULL) {
+        // Nothing to show
         return;
     }
 
-    if (level == 0) {
-        char score[128];
-        int len = sizeof(score);
-        /* For now we want this in sorted order to keep the regression tests happy */
-        GListPtr gIter = NULL;
-        GListPtr list = g_hash_table_get_values(hash);
-
-        list = g_list_sort(list, sort_node_uname);
-
-        gIter = list;
-        for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-            /* This function is called a whole lot, use stack allocated score */
-            score2char_stack(node->weight, score, len);
-
-            if (rsc) {
-                printf("%s: %s allocation score on %s: %s\n",
-                       comment, rsc->id, node->details->uname, score);
-            } else {
-                printf("%s: %s = %s\n", comment, node->details->uname, score);
-            }
-        }
-
-        g_list_free(list);
-
-    } else if (hash) {
-        char score[128];
-        int len = sizeof(score);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            /* This function is called a whole lot, use stack allocated score */
-            score2char_stack(node->weight, score, len);
-
-            if (rsc) {
-                do_crm_log_alias(LOG_TRACE, file, function, line,
-                                 "%s: %s allocation score on %s: %s", comment, rsc->id,
-                                 node->details->uname, score);
-            } else {
-                do_crm_log_alias(LOG_TRACE, file, function, line + 1, "%s: %s = %s", comment,
-                                 node->details->uname, score);
-            }
-        }
+    if (to_log) {
+        pe__log_node_weights(file, function, line, rsc, comment, nodes);
+    } else {
+        pe__output_node_weights(rsc, comment, nodes);
     }
 
+    // If this resource has children, repeat recursively for each
     if (rsc && rsc->children) {
-        GListPtr gIter = NULL;
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            dump_node_scores_worker(level, file, function, line, child, comment, nodes);
+            pe__show_node_weights_as(file, function, line, to_log, child,
+                                     comment, nodes);
         }
     }
 }
@@ -364,14 +392,14 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-dump_node_capacity(int level, const char *comment, node_t * node)
+dump_node_capacity(int level, const char *comment, pe_node_t * node)
 {
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
                                         comment, node->details->uname);
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
 
-    if (level == 0) {
+    if (level == LOG_STDOUT) {
         fprintf(stdout, "%s\n", dump_text);
     } else {
         crm_trace("%s", dump_text);
@@ -381,27 +409,29 @@ dump_node_capacity(int level, const char *comment, node_t * node)
 }
 
 void
-dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node)
+dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, pe_node_t * node)
 {
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         comment, rsc->id, node->details->uname);
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
-
-    if (level == 0) {
-        fprintf(stdout, "%s\n", dump_text);
-    } else {
-        crm_trace("%s", dump_text);
+    switch (level) {
+        case LOG_STDOUT:
+            fprintf(stdout, "%s\n", dump_text);
+            break;
+        case LOG_NEVER:
+            break;
+        default:
+            crm_trace("%s", dump_text);
     }
-
     free(dump_text);
 }
 
 gint
 sort_rsc_index(gconstpointer a, gconstpointer b)
 {
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -427,8 +457,8 @@ sort_rsc_index(gconstpointer a, gconstpointer b)
 gint
 sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
+    const pe_resource_t *resource1 = (const pe_resource_t *)a;
+    const pe_resource_t *resource2 = (const pe_resource_t *)b;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -451,12 +481,12 @@ sort_rsc_priority(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-action_t *
-custom_action(resource_t * rsc, char *key, const char *task,
-              node_t * on_node, gboolean optional, gboolean save_action,
+pe_action_t *
+custom_action(pe_resource_t * rsc, char *key, const char *task,
+              pe_node_t * on_node, gboolean optional, gboolean save_action,
               pe_working_set_t * data_set)
 {
-    action_t *action = NULL;
+    pe_action_t *action = NULL;
     GListPtr possible_matches = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
@@ -478,7 +508,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
     }
 
     if (possible_matches != NULL) {
-        if (g_list_length(possible_matches) > 1) {
+        if (pcmk__list_of_multiple(possible_matches)) {
             pe_warn("Action %s for %s on %s exists %d times",
                     task, rsc ? rsc->id : "<NULL>",
                     on_node ? on_node->details->uname : "<NULL>", g_list_length(possible_matches));
@@ -495,13 +525,13 @@ custom_action(resource_t * rsc, char *key, const char *task,
     if (action == NULL) {
         if (save_action) {
             pe_rsc_trace(rsc, "Creating %s action %d: %s for %s (%s) on %s",
-                         (optional? "optional" : " mandatory"),
+                         (optional? "optional" : "mandatory"),
                          data_set->action_id, key,
                          (rsc? rsc->id : "no resource"), task,
                          (on_node? on_node->details->uname : "no node"));
         }
 
-        action = calloc(1, sizeof(action_t));
+        action = calloc(1, sizeof(pe_action_t));
         if (save_action) {
             action->id = data_set->action_id++;
         } else {
@@ -511,9 +541,14 @@ custom_action(resource_t * rsc, char *key, const char *task,
         CRM_ASSERT(task != NULL);
         action->task = strdup(task);
         if (on_node) {
-            action->node = node_copy(on_node);
+            action->node = pe__copy_node(on_node);
         }
         action->uuid = strdup(key);
+
+        if (safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+            // Resource history deletion for a node can be done on the DC
+            pe_set_action_bit(action, pe_action_dc);
+        }
 
         pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
@@ -583,7 +618,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             pe_set_action_bit(action, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
-        } else if (action->node->details->online == FALSE
+        } else if (is_not_set(action->flags, pe_action_dc)
+                   && !(action->node->details->online)
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
             pe_clear_action_bit(action, pe_action_runnable);
@@ -592,10 +628,11 @@ custom_action(resource_t * rsc, char *key, const char *task,
             if (is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc
                 && action->node->details->unclean == FALSE) {
-                pe_fence_node(data_set, action->node, "resource actions are unrunnable");
+                pe_fence_node(data_set, action->node, "resource actions are unrunnable", FALSE);
             }
 
-        } else if (action->node->details->pending) {
+        } else if (is_not_set(action->flags, pe_action_dc)
+                   && action->node->details->pending) {
             pe_clear_action_bit(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
                        action->uuid, action->node->details->uname);
@@ -667,13 +704,15 @@ custom_action(resource_t * rsc, char *key, const char *task,
 }
 
 static const char *
-unpack_operation_on_fail(action_t * action)
+unpack_operation_on_fail(pe_action_t * action)
 {
 
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
     if (safe_str_eq(action->task, CRMD_ACTION_STOP) && safe_str_eq(value, "standby")) {
-        crm_config_err("on-fail=standby is not allowed for stop actions: %s", action->rsc->id);
+        pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
+                         "action to default value because 'standby' is not "
+                         "allowed for stop", action->rsc->id);
         return NULL;
     } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
         /* demote on_fail defaults to master monitor value if present */
@@ -709,13 +748,15 @@ unpack_operation_on_fail(action_t * action)
 
             value = on_fail;
         }
+    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+        value = "ignore";
     }
 
     return value;
 }
 
 static xmlNode *
-find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
+find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 {
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
@@ -789,9 +830,9 @@ unpack_interval_origin(const char *value, xmlNode *xml_obj, guint interval_ms,
     // Parse interval origin from text
     origin = crm_time_new(value);
     if (origin == NULL) {
-        crm_config_err("Operation '%s' contains invalid " XML_OP_ATTR_ORIGIN
-                       " '%s'",
-                       (ID(xml_obj)? ID(xml_obj) : "(unspecified)"), value);
+        pcmk__config_err("Ignoring '" XML_OP_ATTR_ORIGIN "' for operation "
+                         "'%s' because '%s' is not valid",
+                         (ID(xml_obj)? ID(xml_obj) : "(missing ID)"), value);
         return false;
     }
 
@@ -826,7 +867,7 @@ unpack_timeout(const char *value)
 }
 
 int
-pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t *data_set)
+pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
 {
     xmlNode *child = NULL;
     const char *timeout = NULL;
@@ -910,7 +951,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * \param[in]     data_set   Cluster state
  */
 void
-unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                  pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
@@ -1050,7 +1091,9 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         value = "node fencing";
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-            crm_config_err("Specifying on_fail=fence and" " stonith-enabled=false makes no sense");
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+                             "operation '%s' to 'stop' because 'fence' is not "
+                             "valid when fencing is disabled", action->uuid);
             action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
             value = "stop resource";
@@ -1192,7 +1235,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled)
+find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_disabled)
 {
     guint interval_ms = 0;
     gboolean do_retry = TRUE;
@@ -1216,14 +1259,14 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
             }
 
             interval_ms = crm_parse_interval_spec(interval_spec);
-            match_key = generate_op_key(rsc->id, name, interval_ms);
+            match_key = pcmk__op_key(rsc->id, name, interval_ms);
             if (safe_str_eq(key, match_key)) {
                 op = operation;
             }
             free(match_key);
 
             if (rsc->clone_name) {
-                match_key = generate_op_key(rsc->clone_name, name, interval_ms);
+                match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
                 if (safe_str_eq(key, match_key)) {
                     op = operation;
                 }
@@ -1244,12 +1287,12 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 
     do_retry = FALSE;
     if (strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
-        local_key = generate_op_key(rsc->id, "migrate", 0);
+        local_key = pcmk__op_key(rsc->id, "migrate", 0);
         key = local_key;
         goto retry;
 
     } else if (strstr(key, "_notify_")) {
-        local_key = generate_op_key(rsc->id, "notify", 0);
+        local_key = pcmk__op_key(rsc->id, "notify", 0);
         key = local_key;
         goto retry;
     }
@@ -1258,13 +1301,13 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 }
 
 xmlNode *
-find_rsc_op_entry(resource_t * rsc, const char *key)
+find_rsc_op_entry(pe_resource_t * rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
 
 void
-print_node(const char *pre_text, node_t * node, gboolean details)
+print_node(const char *pre_text, pe_node_t * node, gboolean details)
 {
     if (node == NULL) {
         crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
@@ -1311,13 +1354,13 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-pe_free_action(action_t * action)
+pe_free_action(pe_action_t * action)
 {
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* action_wrapper_t* */
-    g_list_free_full(action->actions_after, free);      /* action_wrapper_t* */
+    g_list_free_full(action->actions_before, free);     /* pe_action_wrapper_t* */
+    g_list_free_full(action->actions_after, free);      /* pe_action_wrapper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
@@ -1338,7 +1381,7 @@ pe_free_action(action_t * action)
 }
 
 GListPtr
-find_recurring_actions(GListPtr input, node_t * not_on_node)
+find_recurring_actions(GListPtr input, pe_node_t * not_on_node)
 {
     const char *value = NULL;
     GListPtr result = NULL;
@@ -1347,7 +1390,7 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
     CRM_CHECK(input != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL_MS);
         if (value == NULL) {
@@ -1372,7 +1415,7 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
 }
 
 enum action_tasks
-get_complex_task(resource_t * rsc, const char *name, gboolean allow_non_atomic)
+get_complex_task(pe_resource_t * rsc, const char *name, gboolean allow_non_atomic)
 {
     enum action_tasks task = text2task(name);
 
@@ -1395,15 +1438,15 @@ get_complex_task(resource_t * rsc, const char *name, gboolean allow_non_atomic)
     return task;
 }
 
-action_t *
-find_first_action(GListPtr input, const char *uuid, const char *task, node_t * on_node)
+pe_action_t *
+find_first_action(GListPtr input, const char *uuid, const char *task, pe_node_t * on_node)
 {
     GListPtr gIter = NULL;
 
     CRM_CHECK(uuid || task, return NULL);
 
     for (gIter = input; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (uuid != NULL && safe_str_neq(uuid, action->uuid)) {
             continue;
@@ -1426,7 +1469,7 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t * o
 }
 
 GListPtr
-find_actions(GListPtr input, const char *key, const node_t *on_node)
+find_actions(GListPtr input, const char *key, const pe_node_t *on_node)
 {
     GListPtr gIter = input;
     GListPtr result = NULL;
@@ -1434,7 +1477,7 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (safe_str_neq(key, action->uuid)) {
             crm_trace("%s does not match action %s", key, action->uuid);
@@ -1448,7 +1491,7 @@ find_actions(GListPtr input, const char *key, const node_t *on_node)
             crm_trace("Action %s matches (unallocated, assigning to %s)",
                       key, on_node->details->uname);
 
-            action->node = node_copy(on_node);
+            action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
         } else if (on_node->details == action->node->details) {
@@ -1519,7 +1562,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
-    char *key = generate_op_key(rsc->id, task, 0);
+    char *key = pcmk__op_key(rsc->id, task, 0);
 
     if (require_node) {
         result = find_actions_exact(rsc->actions, key, node);
@@ -1531,9 +1574,9 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
 }
 
 static void
-resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
+resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag)
 {
-    node_t *match = NULL;
+    pe_node_t *match = NULL;
 
     if ((rsc->exclusive_discover || (node->rsc_discover_mode == pe_discover_never))
         && safe_str_eq(tag, "symmetric_default")) {
@@ -1547,7 +1590,7 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             resource_node_score(child_rsc, node, score, tag);
         }
@@ -1556,14 +1599,14 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
     pe_rsc_trace(rsc, "Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
-        match = node_copy(node);
+        match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
-    match->weight = merge_weights(match->weight, score);
+    match->weight = pe__add_scores(match->weight, score);
 }
 
 void
-resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
+resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
                   pe_working_set_t * data_set)
 {
     if (node != NULL) {
@@ -1573,14 +1616,14 @@ resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
         GListPtr gIter = data_set->nodes;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node_iter = (node_t *) gIter->data;
+            pe_node_t *node_iter = (pe_node_t *) gIter->data;
 
             resource_node_score(rsc, node_iter, score, tag);
         }
 
     } else {
         GHashTableIter iter;
-        node_t *node_iter = NULL;
+        pe_node_t *node_iter = NULL;
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
@@ -1739,7 +1782,7 @@ get_effective_time(pe_working_set_t * data_set)
 }
 
 gboolean
-get_target_role(resource_t * rsc, enum rsc_role_e * role)
+get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
 {
     enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -1753,7 +1796,8 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
 
     local_role = text2role(value);
     if (local_role == RSC_ROLE_UNKNOWN) {
-        crm_config_err("%s: Unknown value for %s: %s", rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+        pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+                         "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
@@ -1764,8 +1808,9 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
             }
 
         } else {
-            crm_config_err("%s is not part of a promotable clone resource, a %s of '%s' makes no sense",
-                           rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+            pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+                             "because '%s' only makes sense for promotable "
+                             "clones", rsc->id, value);
             return FALSE;
         }
     }
@@ -1775,10 +1820,10 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
 }
 
 gboolean
-order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order)
+order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
 {
     GListPtr gIter = NULL;
-    action_wrapper_t *wrapper = NULL;
+    pe_action_wrapper_t *wrapper = NULL;
     GListPtr list = NULL;
 
     if (order == pe_order_none) {
@@ -1797,14 +1842,14 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *after = (action_wrapper_t *) gIter->data;
+        pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
 
         if (after->action == rh_action && (after->type & order)) {
             return FALSE;
         }
     }
 
-    wrapper = calloc(1, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
     wrapper->type = order;
 
@@ -1817,7 +1862,7 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 /* 	order |= pe_order_implies_then; */
 /* 	order ^= pe_order_implies_then; */
 
-    wrapper = calloc(1, sizeof(action_wrapper_t));
+    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
     wrapper->type = order;
     list = rh_action->actions_before;
@@ -1826,10 +1871,10 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
     return TRUE;
 }
 
-action_t *
+pe_action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
-    action_t *op = NULL;
+    pe_action_t *op = NULL;
 
     if(data_set->singletons) {
         op = g_hash_table_lookup(data_set->singletons, name);
@@ -1846,7 +1891,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 void
 destroy_ticket(gpointer data)
 {
-    ticket_t *ticket = data;
+    pe_ticket_t *ticket = data;
 
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
@@ -1855,10 +1900,10 @@ destroy_ticket(gpointer data)
     free(ticket);
 }
 
-ticket_t *
+pe_ticket_t *
 ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 {
-    ticket_t *ticket = NULL;
+    pe_ticket_t *ticket = NULL;
 
     if (ticket_id == NULL || strlen(ticket_id) == 0) {
         return NULL;
@@ -1873,7 +1918,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
 
-        ticket = calloc(1, sizeof(ticket_t));
+        ticket = calloc(1, sizeof(pe_ticket_t));
         if (ticket == NULL) {
             crm_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
@@ -1962,7 +2007,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
         GHashTable *local_rsc_params = crm_str_table_new();
-        action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+        pe_action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
 #if ENABLE_VERSIONED_ATTRS
         xmlNode *local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
         const char *ra_version = NULL;
@@ -2017,7 +2062,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         }
 #endif
 
-        filter_action_parameters(data->params_all, op_version);
+        pcmk__filter_op_for_digest(data->params_all);
 
         g_hash_table_destroy(local_rsc_params);
         pe_free_action(action);
@@ -2047,7 +2092,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 }
 
 op_digest_cache_t *
-rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
+rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                       pe_working_set_t * data_set)
 {
     op_digest_cache_t *data = NULL;
@@ -2057,8 +2102,6 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *interval_ms_s = crm_element_value(xml_op,
-                                                  XML_LRM_ATTR_INTERVAL_MS);
     const char *digest_all;
     const char *digest_restart;
 
@@ -2068,8 +2111,8 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    interval_ms = crm_parse_ms(interval_ms_s);
-    key = generate_op_key(rsc->id, task, interval_ms);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    key = pcmk__op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op,
                              is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
@@ -2184,7 +2227,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
-    char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
+    char *key = pcmk__op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key,
                                                 node, NULL, TRUE, data_set);
 
@@ -2230,7 +2273,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     return data;
 }
 
-const char *rsc_printable_id(resource_t *rsc)
+const char *rsc_printable_id(pe_resource_t *rsc)
 {
     if (is_not_set(rsc->flags, pe_rsc_unique)) {
         return ID(rsc->xml);
@@ -2239,26 +2282,26 @@ const char *rsc_printable_id(resource_t *rsc)
 }
 
 void
-clear_bit_recursive(resource_t * rsc, unsigned long long flag)
+clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
 
     clear_bit(rsc->flags, flag);
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         clear_bit_recursive(child_rsc, flag);
     }
 }
 
 void
-set_bit_recursive(resource_t * rsc, unsigned long long flag)
+set_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;
 
     set_bit(rsc->flags, flag);
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         set_bit_recursive(child_rsc, flag);
     }
@@ -2268,7 +2311,7 @@ static GListPtr
 find_unfencing_devices(GListPtr candidates, GListPtr matches) 
 {
     for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        resource_t *candidate = gIter->data;
+        pe_resource_t *candidate = gIter->data;
         const char *provides = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_PROVIDES);
         const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
@@ -2284,12 +2327,79 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
     return matches;
 }
 
+static int
+node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
+{
+    int member_count = 0;
+    int online_count = 0;
+    int top_priority = 0;
+    int lowest_priority = 0;
+    GListPtr gIter = NULL;
 
-action_t *
-pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set)
+    // `priority-fencing-delay` is disabled
+    if (data_set->priority_fencing_delay <= 0) {
+        return 0;
+    }
+
+    /* No need to request a delay if the fencing target is not a normal cluster
+     * member, for example if it's a remote node or a guest node. */
+    if (node->details->type != node_member) {
+        return 0;
+    }
+
+    // No need to request a delay if the fencing target is in our partition
+    if (node->details->online) {
+        return 0;
+    }
+
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *n =  gIter->data;
+
+        if (n->details->type != node_member) {
+            continue;
+        }
+
+        member_count ++;
+
+        if (n->details->online) {
+            online_count++;
+        }
+
+        if (member_count == 1
+            || n->details->priority > top_priority) {
+            top_priority = n->details->priority;
+        }
+
+        if (member_count == 1
+            || n->details->priority < lowest_priority) {
+            lowest_priority = n->details->priority;
+        }
+    }
+
+    // No need to delay if we have more than half of the cluster members
+    if (online_count > member_count / 2) {
+        return 0;
+    }
+
+    /* All the nodes have equal priority.
+     * Any configured corresponding `pcmk_delay_base/max` will be applied. */
+    if (lowest_priority == top_priority) {
+        return 0;
+    }
+
+    if (node->details->priority < top_priority) {
+        return 0;
+    }
+
+    return data_set->priority_fencing_delay;
+}
+
+pe_action_t *
+pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
+            bool priority_delay, pe_working_set_t * data_set)
 {
     char *op_key = NULL;
-    action_t *stonith_op = NULL;
+    pe_action_t *stonith_op = NULL;
 
     if(op == NULL) {
         op = data_set->stonith_action;
@@ -2324,7 +2434,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
             GListPtr matches = find_unfencing_devices(data_set->resources, NULL);
 
             for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
-                resource_t *match = gIter->data;
+                pe_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
@@ -2358,6 +2468,29 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
         free(op_key);
     }
 
+    if (data_set->priority_fencing_delay > 0
+
+            /* It's a suitable case where `priority-fencing-delay` applies.
+             * At least add `priority-fencing-delay` field as an indicator. */
+        && (priority_delay
+
+            /* Re-calculate priority delay for the suitable case when
+             * pe_fence_op() is called again by stage6() after node priority has
+             * been actually calculated with native_add_running() */
+            || g_hash_table_lookup(stonith_op->meta,
+                                   XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
+
+            /* Add `priority-fencing-delay` to the fencing op even if it's 0 for
+             * the targeting node. So that it takes precedence over any possible
+             * `pcmk_delay_base/max`.
+             */
+            char *delay_s = crm_itoa(node_priority_fencing_delay(node, data_set));
+
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
+                                delay_s);
+    }
+
     if(optional == FALSE && pe_can_fence(data_set, node)) {
         pe_action_required(stonith_op, NULL, reason);
     } else if(reason && stonith_op->reason == NULL) {
@@ -2369,7 +2502,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
 
 void
 trigger_unfencing(
-    resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set) 
+    pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
 {
     if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */
@@ -2383,7 +2516,7 @@ trigger_unfencing(
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        action_t *unfence = pe_fence_op(node, "on", FALSE, reason, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", FALSE, reason, FALSE, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pe_order_optional);
@@ -2404,7 +2537,7 @@ trigger_unfencing(
 gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
-    tag_t *tag = NULL;
+    pe_tag_t *tag = NULL;
     GListPtr gIter = NULL;
     gboolean is_existing = FALSE;
 
@@ -2412,7 +2545,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 
     tag = g_hash_table_lookup(tags, tag_name);
     if (tag == NULL) {
-        tag = calloc(1, sizeof(tag_t));
+        tag = calloc(1, sizeof(pe_tag_t));
         if (tag == NULL) {
             return FALSE;
         }
@@ -2498,18 +2631,22 @@ void pe_action_set_flag_reason(const char *function, long line,
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {
-    if(action->reason && overwrite) {
-        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'", action->uuid, action->reason, reason);
+    if (action->reason != NULL && overwrite) {
+        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
+                     action->uuid, action->reason, crm_str(reason));
         free(action->reason);
-        action->reason = NULL;
+    } else if (action->reason == NULL) {
+        pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
+                     action->uuid, crm_str(reason));
+    } else {
+        // crm_assert(action->reason != NULL && !overwrite);
+        return;
     }
-    if(action->reason == NULL) {
-        if(reason) {
-            pe_rsc_trace(action->rsc, "Set %s reason to '%s'", action->uuid, reason);
-            action->reason = strdup(reason);
-        } else {
-            action->reason = NULL;
-        }
+
+    if (reason != NULL) {
+        action->reason = strdup(reason);
+    } else {
+        action->reason = NULL;
     }
 }
 
@@ -2588,5 +2725,39 @@ pe__resource_is_disabled(pe_resource_t *rsc)
             return true;
         }
     }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Create an action to clear a resource's history from CIB
+ *
+ * \param[in] rsc   Resource to clear
+ * \param[in] node  Node to clear history on
+ *
+ * \return New action to clear resource history
+ */
+pe_action_t *
+pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+                           pe_working_set_t *data_set)
+{
+    char *key = NULL;
+
+    CRM_ASSERT(rsc && node);
+    key = pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
+    return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
+                         data_set);
+}
+
+bool
+pe__rsc_running_on_any_node_in_list(GListPtr rsc_nodes, GListPtr node_list)
+{
+    for (GListPtr ele = rsc_nodes; ele; ele = ele->next) {
+        pe_node_t *node = (pe_node_t *) ele->data;
+        if (pcmk__str_in_list(node_list, node->details->uname)) {
+            return true;
+        }
+    }
+
     return false;
 }

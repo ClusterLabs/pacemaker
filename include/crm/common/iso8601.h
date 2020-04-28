@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2019 the Pacemaker project contributors
+ * Copyright 2005-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -94,6 +94,7 @@ void crm_time_set(crm_time_t * target, crm_time_t * source);
 void crm_time_set_timet(crm_time_t * target, time_t * source);
 
 /* Returns a new time object */
+crm_time_t *pcmk_copy_time(crm_time_t *source);
 crm_time_t *crm_time_add(crm_time_t * dt, crm_time_t * value);
 crm_time_t *crm_time_subtract(crm_time_t * dt, crm_time_t * value);
 

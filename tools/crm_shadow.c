@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,49 +92,153 @@ shadow_teardown(char *name)
     free(our_prompt);
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\t\tThis text"},
-    {"version", 0, 0, '$', "\t\tVersion information"  },
-    {"verbose", 0, 0, 'V', "\t\tIncrease debug output"},
-
-    {"-spacer-",	1, 0, '-', "\nQueries:"},
-    {"which",   no_argument,       NULL, 'w', "\t\tIndicate the active shadow copy"},
-    {"display", no_argument,       NULL, 'p', "\t\tDisplay the contents of the active shadow copy"},
-    {"edit",    no_argument,       NULL, 'E', "\t\tEdit the contents of the active shadow copy with your favorite $EDITOR"},
-    {"diff",    no_argument,       NULL, 'd', "\t\tDisplay the changes in the active shadow copy\n"},
-    {"file",    no_argument,       NULL, 'F', "\t\tDisplay the location of the active shadow copy file\n"},
-
-    {"-spacer-",	1, 0, '-', "\nCommands:"},
-    {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
-    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration. Optional: --validate-with"},
-    {"commit",  required_argument, NULL, 'C', "\tUpload the contents of the named shadow copy to the cluster"},
-    {"delete",  required_argument, NULL, 'D', "\tDelete the contents of the named shadow copy"},
-    {"reset",   required_argument, NULL, 'r', "\tRecreate the named shadow copy from the active cluster configuration"},
-    {"switch",  required_argument, NULL, 's', "\t(Advanced) Switch to the named shadow copy"},
-
-    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
-    {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
-    {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
-    {"all",     no_argument, NULL, 'a', "\t\t(Advanced) Upload the entire CIB, including status, with --commit" },
-    {"validate-with",     required_argument, NULL, 'v', "(Advanced) Create an older configuration version" },
-
-    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', "Create a blank shadow configuration:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --create-empty myShadow", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Create a shadow configuration from the running cluster:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --create myShadow", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Display the current shadow configuration:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --display", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Discard the current shadow configuration (named myShadow):", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --delete myShadow --force", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Upload the current shadow configuration (named myShadow) to the running cluster:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --commit myShadow", pcmk_option_example},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\t\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\t\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\t\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nQueries:", pcmk__option_default
+    },
+    {
+        "which", no_argument, NULL, 'w',
+        "\t\tIndicate the active shadow copy", pcmk__option_default
+    },
+    {
+        "display", no_argument, NULL, 'p',
+        "\t\tDisplay the contents of the active shadow copy",
+        pcmk__option_default
+    },
+    {
+        "edit", no_argument, NULL, 'E',
+        "\t\tEdit the contents of the active shadow copy with your "
+            "favorite $EDITOR",
+        pcmk__option_default
+    },
+    {
+        "diff", no_argument, NULL, 'd',
+        "\t\tDisplay the changes in the active shadow copy\n",
+        pcmk__option_default
+    },
+    {
+        "file", no_argument, NULL, 'F',
+        "\t\tDisplay the location of the active shadow copy file\n",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nCommands:", pcmk__option_default
+    },
+    {
+        "create", required_argument, NULL, 'c',
+        "\tCreate the named shadow copy of the active cluster configuration",
+        pcmk__option_default
+    },
+    {
+        "create-empty", required_argument, NULL, 'e',
+        "Create the named shadow copy with an empty cluster configuration. "
+            "Optional: --validate-with",
+        pcmk__option_default
+    },
+    {
+        "commit", required_argument, NULL, 'C',
+        "\tUpload the contents of the named shadow copy to the cluster",
+        pcmk__option_default
+    },
+    {
+        "delete", required_argument, NULL, 'D',
+        "\tDelete the contents of the named shadow copy", pcmk__option_default
+    },
+    {
+        "reset", required_argument, NULL, 'r',
+        "\tRecreate named shadow copy from the active cluster configuration",
+        pcmk__option_default
+    },
+    {
+        "switch", required_argument, NULL, 's',
+        "\t(Advanced) Switch to the named shadow copy", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
+    {
+        "force", no_argument, NULL, 'f',
+        "\t\t(Advanced) Force the action to be performed", pcmk__option_default
+    },
+    {
+        "batch", no_argument, NULL, 'b',
+        "\t\t(Advanced) Don't spawn a new shell", pcmk__option_default
+    },
+    {
+        "all", no_argument, NULL, 'a',
+        "\t\t(Advanced) Upload entire CIB, including status, with --commit",
+        pcmk__option_default
+    },
+    {
+        "validate-with", required_argument, NULL, 'v',
+        "(Advanced) Create an older configuration version", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nExamples:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Create a blank shadow configuration:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_shadow --create-empty myShadow", pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Create a shadow configuration from the running cluster:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_shadow --create myShadow", pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Display the current shadow configuration:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_shadow --display", pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Discard the current shadow configuration (named myShadow):",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_shadow --delete myShadow --force", pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Upload current shadow configuration (named myShadow) "
+            "to running cluster:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_shadow --commit myShadow", pcmk__option_example
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -153,18 +257,20 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_cli_init("crm_shadow");
-    crm_set_options(NULL, "(query|command) [modifiers]", long_options,
-                    "Perform configuration changes in a sandbox before updating the live cluster."
-                    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
-                    " offline instead of against a live cluster, allowing changes to be previewed and tested"
-                    " for side-effects.\n");
+    pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
+                          "perform Pacemaker configuration changes in a sandbox"
+                          "\n\nThis command sets up an environment in which "
+                          "configuration tools (cibadmin,\ncrm_resource, "
+                          "etc.) work offline instead of against a live "
+                          "cluster, allowing\nchanges to be previewed and "
+                          "tested for side-effects.\n");
 
     if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1 || flag == 0)
             break;
 
@@ -214,7 +320,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'f':
                 command_options |= cib_quorum_override;
@@ -235,7 +341,7 @@ main(int argc, char **argv)
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     if (optind > argc) {
@@ -243,7 +349,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'w') {
@@ -308,7 +414,8 @@ main(int argc, char **argv)
         real_cib = cib_new_no_shadow();
         rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
+            fprintf(stderr, "Could not connect to CIB: %s\n",
+                    pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
             goto done;
         }
@@ -417,7 +524,7 @@ main(int argc, char **argv)
         xml_accept_changes(new_config);
 
         if (diff != NULL) {
-            xml_log_patchset(0, "  ", diff);
+            xml_log_patchset(LOG_STDOUT, "  ", diff);
             exit_code = CRM_EX_ERROR;
         }
         goto done;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,6 +41,7 @@ fsa_cib_anon_update(const char *section, xmlNode *data) {
 }
 
 extern gboolean fsa_has_quorum;
+extern bool controld_shutdown_lock_enabled;
 extern int last_peer_update;
 extern int last_resource_update;
 
@@ -70,7 +71,6 @@ xmlNode *create_node_state_update(crm_node_t *node, int flags,
                                   xmlNode *parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
-void erase_status_tag(const char *uname, const char *tag, int options);
 void controld_close_attrd_ipc(void);
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
 void update_attrd_remote_node_removed(const char *host, const char *user_name);
@@ -86,6 +86,20 @@ unsigned int cib_op_timeout(void);
 
 bool feature_set_compatible(const char *dc_version, const char *join_version);
 bool controld_action_is_recordable(const char *action);
+
+// Subsections of node_state
+enum controld_section_e {
+    controld_section_lrm,
+    controld_section_lrm_unlocked,
+    controld_section_attrs,
+    controld_section_all,
+    controld_section_all_unlocked
+};
+
+void controld_delete_node_state(const char *uname,
+                                enum controld_section_e section, int options);
+int controld_delete_resource_history(const char *rsc_id, const char *node,
+                                     const char *user_name, int call_options);
 
 const char *get_node_id(xmlNode *lrm_rsc_op);
 

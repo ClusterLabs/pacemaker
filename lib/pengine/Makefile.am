@@ -6,13 +6,15 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
+
+SUBDIRS = tests
 
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 
 ## SOURCES
-noinst_HEADERS		= unpack.h variant.h pe_status_private.h
+noinst_HEADERS		= variant.h pe_status_private.h
 
 libpe_rules_la_LDFLAGS	= -version-info 27:0:1
 
@@ -40,6 +42,7 @@ libpe_status_la_SOURCES	+= native.c
 libpe_status_la_SOURCES	+= remote.c
 libpe_status_la_SOURCES	+= rules.c
 libpe_status_la_SOURCES	+= status.c
+libpe_status_la_SOURCES	+= tags.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
 libpe_status_la_SOURCES	+= pe_output.c

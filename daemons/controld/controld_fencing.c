@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,13 +33,14 @@ static bool fence_reaction_panic = FALSE;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
+// crmd_opts defines default for stonith-max-attempts, so value is never NULL
 void
 update_stonith_max_attempts(const char *value)
 {
     if (safe_str_eq(value, CRM_INFINITY_S)) {
        stonith_max_attempts = CRM_SCORE_INFINITY;
     } else {
-       stonith_max_attempts = crm_int_helper(value, NULL);
+       stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
     }
 }
 
@@ -229,9 +230,8 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
     /* Make sure it sticks */
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
 
-    erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-
+    controld_delete_node_state(peer->uname, controld_section_all,
+                               cib_scope_local);
     free_xml(node_state);
     return;
 }
@@ -530,7 +530,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
              * Unfortunately, the controller doesn't have a simple, reliable way
              * to map hosts to guests. It might be possible to track this in the
              * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
-             * on the PE creating fence pseudo-events for the guests.
+             * on the scheduler creating fence pseudo-events for the guests.
              */
 
             if (st_event->client_origin
@@ -547,9 +547,8 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
         } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
                    && is_not_set(peer->flags, crm_remote_node)) {
 
-            crm_notice("Target %s our leader %s (recorded: %s)",
-                       fsa_our_dc ? "was" : "may have been", st_event->target,
-                       fsa_our_dc ? fsa_our_dc : "<unset>");
+            crm_notice("Fencing target %s %s our leader",
+                       st_event->target, (fsa_our_dc? "was" : "may have been"));
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
@@ -613,8 +612,8 @@ te_connect_stonith(gpointer user_data)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
         if (rc != pcmk_ok) {
             if (is_set(fsa_input_register, R_ST_REQUIRED)) {
-                crm_err("Fencer connection failed (will retry): %s "
-                        CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                crm_notice("Fencer connection failed (will retry): %s "
+                           CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);
             } else {
                 crm_info("Fencer connection failed (ignoring because no longer required): %s "
@@ -814,6 +813,8 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     const char *uuid = NULL;
     const char *target = NULL;
     const char *type = NULL;
+    char *transition_key = NULL;
+    const char *priority_delay = NULL;
     gboolean invalid_action = FALSE;
     enum stonith_call_options options = st_opt_none;
 
@@ -832,9 +833,11 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
         return FALSE;
     }
 
+    priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+
     crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%u",
-               type, target, id, transition_graph->stonith_timeout);
+               CRM_XS " action=%s timeout=%u priority_delay=%s",
+               type, target, id, transition_graph->stonith_timeout, priority_delay);
 
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
@@ -843,15 +846,15 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
         options |= st_opt_allow_suicide;
     }
 
-    rc = stonith_api->cmds->fence(stonith_api, options, target, type,
-                                  (int) (transition_graph->stonith_timeout / 1000),
-                                  0);
+    rc = stonith_api->cmds->fence_with_delay(stonith_api, options, target, type,
+                                             (int) (transition_graph->stonith_timeout / 1000),
+                                             0, crm_atoi(priority_delay, "0"));
 
+    transition_key = pcmk__transition_key(transition_graph->id, action->id, 0,
+                                          te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,
                                          (int) (transition_graph->stonith_timeout / 1000),
-                                         st_opt_timeout_updates,
-                                         generate_transition_key(transition_graph->id, action->id,
-                                                                 0, te_uuid),
+                                         st_opt_timeout_updates, transition_key,
                                          "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;

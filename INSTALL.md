@@ -46,6 +46,8 @@ Also: GNU make, and Python 2.7 or Python 3.2 or later
 | documentation                                   |                | publican                |                         | publican                |
 | documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
+| documentation                                   |                | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx |
+| documentation (PDF)                             |                | texlive, texlive-titlesec, texlive-framed, texlive-threeparttable texlive-wrapfig texlive-multirow | texlive, texlive-latex  | texlive, texlive-latex-extra |
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)

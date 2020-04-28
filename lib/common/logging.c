@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,69 +108,6 @@ crm_trigger_blackbox(int nsig)
         crm_enable_blackbox(nsig);
     }
     crm_write_blackbox(nsig, NULL);
-}
-
-const char *
-daemon_option(const char *option)
-{
-    char env_name[NAME_MAX];
-    const char *value = NULL;
-
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
-    }
-
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
-    }
-
-    crm_trace("Nothing found for %s", option);
-    return NULL;
-}
-
-void
-set_daemon_option(const char *option, const char *value)
-{
-    char env_name[NAME_MAX];
-
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
-    }
-
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
-    }
-}
-
-gboolean
-daemon_option_enabled(const char *daemon, const char *option)
-{
-    const char *value = daemon_option(option);
-
-    if (value != NULL && crm_is_true(value)) {
-        return TRUE;
-
-    } else if (value != NULL && strstr(value, daemon)) {
-        return TRUE;
-    }
-
-    return FALSE;
 }
 
 void
@@ -292,7 +229,7 @@ crm_add_logfile(const char *filename)
             return FALSE;
         }
 
-        if(crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) == 0) {
+        if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) == 0) {
             if (st.st_gid != pcmk_gid) {
                 /* Wrong group */
                 fix = TRUE;
@@ -335,8 +272,8 @@ crm_add_logfile(const char *filename)
         default_fd = fd;
 
         // Some resource agents will log only if environment variable is set
-        if (daemon_option("logfile") == NULL) {
-            set_daemon_option("logfile", filename);
+        if (pcmk__env_option("logfile") == NULL) {
+            pcmk__set_env_option("logfile", filename);
         }
 
     } else if(default_fd >= 0) {
@@ -349,8 +286,8 @@ crm_add_logfile(const char *filename)
     /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
 
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
-        // Longer than default, for logging long XML lines
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 800);
+    // Longer than default, for logging long XML lines
+    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
 #endif
 
     /* Enable callsites */
@@ -667,7 +604,7 @@ crm_update_callsites(void)
 static gboolean
 crm_tracing_enabled(void)
 {
-    if (crm_log_level >= LOG_TRACE) {
+    if (crm_log_level == LOG_TRACE) {
         return TRUE;
     } else if (getenv("PCMK_trace_files") || getenv("PCMK_trace_functions")
                || getenv("PCMK_trace_formats") || getenv("PCMK_trace_tags")) {
@@ -796,13 +733,16 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
              int argc, char **argv, gboolean quiet)
 {
     const char *syslog_priority = NULL;
-    const char *logfile = daemon_option("logfile");
-    const char *facility = daemon_option("logfacility");
+    const char *logfile = pcmk__env_option("logfile");
+    const char *facility = pcmk__env_option("logfacility");
     const char *f_copy = facility;
 
     crm_is_daemon = daemon;
     crm_log_preinit(entity, argc, argv);
 
+    if (level > LOG_TRACE) {
+        level = LOG_TRACE;
+    }
     if(level > crm_log_level) {
         crm_log_level = level;
     }
@@ -814,7 +754,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else {
             facility = "none";
         }
-        set_daemon_option("logfacility", facility);
+        pcmk__set_env_option("logfacility", facility);
     }
 
     if (safe_str_eq(facility, "none")) {
@@ -825,13 +765,13 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(facility));
     }
 
-    if (daemon_option_enabled(crm_system_name, "debug")) {
+    if (pcmk__env_option_enabled(crm_system_name, "debug")) {
         /* Override the default setting */
         crm_log_level = LOG_DEBUG;
     }
 
     /* What lower threshold do we have for sending to syslog */
-    syslog_priority = daemon_option("logpriority");
+    syslog_priority = pcmk__env_option("logpriority");
     if(syslog_priority) {
         int priority = crm_priority2int(syslog_priority);
         crm_log_priority = priority;
@@ -846,7 +786,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     /* Should we log to stderr */ 
-    if (daemon_option_enabled(crm_system_name, "stderr")) {
+    if (pcmk__env_option_enabled(crm_system_name, "stderr")) {
         /* Override the default setting */
         to_stderr = TRUE;
     }
@@ -862,14 +802,14 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         crm_add_logfile(logfile);
     }
 
-    if (crm_is_daemon && daemon_option_enabled(crm_system_name, "blackbox")) {
+    if (crm_is_daemon && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
         crm_enable_blackbox(0);
     }
 
     /* Summary */
     crm_trace("Quiet: %d, facility %s", quiet, f_copy);
-    daemon_option("logfile");
-    daemon_option("logfacility");
+    pcmk__env_option("logfile");
+    pcmk__env_option("logfacility");
 
     crm_update_callsites();
 
@@ -939,6 +879,9 @@ set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
 
+    if (level > LOG_TRACE) {
+        level = LOG_TRACE;
+    }
     crm_log_level = level;
     crm_update_callsites();
     crm_trace("New log level: %d", level);
@@ -1021,8 +964,14 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
     const char *next = NULL;
     const char *offset = NULL;
 
+    if (level == LOG_NEVER) {
+        return;
+    }
+
     if (output == NULL) {
-        level = LOG_TRACE;
+        if (level != LOG_STDOUT) {
+            level = LOG_TRACE;
+        }
         output = "-- empty --";
     }
 

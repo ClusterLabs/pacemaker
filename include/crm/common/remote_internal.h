@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2018 the Pacemaker project contributors
+ * Copyright 2008-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,20 +12,17 @@
 
 // internal functions from remote.c
 
-typedef struct crm_remote_s crm_remote_t;
+typedef struct pcmk__remote_s pcmk__remote_t;
 
-int crm_remote_send(crm_remote_t *remote, xmlNode *msg);
-int crm_remote_ready(crm_remote_t *remote, int total_timeout /*ms */ );
-gboolean crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */,
-                         int *disconnected);
-xmlNode *crm_remote_parse_buffer(crm_remote_t *remote);
-int crm_remote_tcp_connect(const char *host, int port);
-int crm_remote_tcp_connect_async(const char *host, int port,
-                                 int timeout /*ms */,
-                                 int *timer_id, void *userdata,
-                                 void (*callback) (void *userdata, int sock));
-int crm_remote_accept(int ssock);
-void crm_sockaddr2str(void *sa, char *s);
+int pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg);
+int pcmk__remote_ready(pcmk__remote_t *remote, int timeout_ms);
+int pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms);
+xmlNode *pcmk__remote_message_xml(pcmk__remote_t *remote);
+int pcmk__connect_remote(const char *host, int port, int timeout_ms,
+                         int *timer_id, int *sock_fd, void *userdata,
+                         void (*callback) (void *userdata, int rc, int sock));
+int pcmk__accept_remote_connection(int ssock, int *csock);
+void pcmk__sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    include <gnutls/gnutls.h>
@@ -34,17 +31,18 @@ gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
                                         gnutls_credentials_type_t cred_type,
                                         void *credentials);
 int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
-int pcmk__read_handshake_data(crm_client_t *client);
+int pcmk__read_handshake_data(pcmk__client_t *client);
 
 /*!
  * \internal
- * \brief Initiate the client handshake after establishing the tcp socket
+ * \brief Perform client TLS handshake after establishing TCP socket
  *
- * \return 0 on success, negative number on failure
- * \note This function will block until the entire handshake is complete or
- *        until the timeout period is reached.
+ * \param[in] remote      Newly established remote connection
+ * \param[in] timeout_ms  Abort if entire handshake is not complete within this
+ *
+ * \return Standard Pacemaker return code
  */
-int crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms);
+int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__REMOTE__H

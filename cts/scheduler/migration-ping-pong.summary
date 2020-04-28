@@ -4,10 +4,10 @@ Current cluster status:
 Node ha-idg-2 (1084777492): standby
 Online: [ ha-idg-1 ]
 
- fence_ilo_ha-idg-2	(stonith:fence_ilo2):	Started ha-idg-1
- fence_ilo_ha-idg-1	(stonith:fence_ilo4):	Stopped
- vm_idcc_devel	(ocf::heartbeat:VirtualDomain):	Started ha-idg-1
- vm_severin	(ocf::heartbeat:VirtualDomain):	Started ha-idg-1
+ fence_ilo_ha-idg-2	(stonith:fence_ilo2):	 Started ha-idg-1
+ fence_ilo_ha-idg-1	(stonith:fence_ilo4):	 Stopped
+ vm_idcc_devel	(ocf::heartbeat:VirtualDomain):	 Started ha-idg-1
+ vm_severin	(ocf::heartbeat:VirtualDomain):	 Started ha-idg-1
 
 Transition Summary:
 
@@ -18,8 +18,8 @@ Revised cluster status:
 Node ha-idg-2 (1084777492): standby
 Online: [ ha-idg-1 ]
 
- fence_ilo_ha-idg-2	(stonith:fence_ilo2):	Started ha-idg-1
- fence_ilo_ha-idg-1	(stonith:fence_ilo4):	Stopped
- vm_idcc_devel	(ocf::heartbeat:VirtualDomain):	Started ha-idg-1
- vm_severin	(ocf::heartbeat:VirtualDomain):	Started ha-idg-1
+ fence_ilo_ha-idg-2	(stonith:fence_ilo2):	 Started ha-idg-1
+ fence_ilo_ha-idg-1	(stonith:fence_ilo4):	 Stopped
+ vm_idcc_devel	(ocf::heartbeat:VirtualDomain):	 Started ha-idg-1
+ vm_severin	(ocf::heartbeat:VirtualDomain):	 Started ha-idg-1
 

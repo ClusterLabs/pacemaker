@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,16 +11,12 @@
 
 #include <glib.h>
 
+// Check whether we have a high-resolution monotonic clock
 #undef PCMK__TIME_USE_CGT
 #if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC) \
     && !defined(PCMK_TIME_EMERGENCY_CGT)
-#define PCMK__TIME_USE_CGT
-#endif
-
-#ifdef PCMK__TIME_USE_CGT
+#  define PCMK__TIME_USE_CGT
 #  include <time.h>  /* clock_gettime */
-#elif defined(HAVE_SYS_TIMEB_H)
-#  include <sys/timeb.h>
 #endif
 
 #include <unistd.h>
@@ -29,7 +25,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/msg_xml.h>
 
 #include "pacemaker-execd.h"
@@ -66,23 +62,34 @@ typedef struct lrmd_cmd_s {
     char *output;
     char *userdata_str;
 
+    /* We can track operation queue time and run time, to be saved with the CIB
+     * resource history (and displayed in cluster status). We need
+     * high-resolution monotonic time for this purpose, so we use
+     * clock_gettime(CLOCK_MONOTONIC, ...) (if available, otherwise this feature
+     * is disabled).
+     *
+     * However, we also need epoch timestamps for recording the time the command
+     * last ran and the time its return value last changed, for use in time
+     * displays (as opposed to interval calculations). We keep time_t values for
+     * this purpose.
+     *
+     * The last run time is used for both purposes, so we keep redundant
+     * monotonic and epoch values for this. Technically the two could represent
+     * different times, but since time_t has only second resolution and the
+     * values are used for distinct purposes, that is not significant.
+     */
+#ifdef PCMK__TIME_USE_CGT
     /* Recurring and systemd operations may involve more than one executor
      * command per operation, so they need info about the original and the most
      * recent.
      */
-#ifdef PCMK__TIME_USE_CGT
-    struct timespec t_first_run;   /* Timestamp of when op first ran */
-    struct timespec t_run;         /* Timestamp of when op most recently ran */
-    struct timespec t_first_queue; /* Timestamp of when op first was queued */
-    struct timespec t_queue;       /* Timestamp of when op most recently was queued */
-    struct timespec t_rcchange;    /* Timestamp of last rc change */
-#elif defined(HAVE_SYS_TIMEB_H)
-    struct timeb t_first_run;   /* Timestamp of when op first ran */
-    struct timeb t_run;         /* Timestamp of when op most recently ran */
-    struct timeb t_first_queue; /* Timestamp of when op first was queued */
-    struct timeb t_queue;       /* Timestamp of when op most recently was queued */
-    struct timeb t_rcchange;    /* Timestamp of last rc change */
+    struct timespec t_first_run;    // When op first ran
+    struct timespec t_run;          // When op most recently ran
+    struct timespec t_first_queue;  // When op was first queued
+    struct timespec t_queue;        // When op was most recently queued
 #endif
+    time_t epoch_last_run;          // Epoch timestamp of when op last ran
+    time_t epoch_rcchange;          // Epoch timestamp of when rc last changed
 
     int first_notify_sent;
     int last_notify_rc;
@@ -95,6 +102,97 @@ typedef struct lrmd_cmd_s {
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean lrmd_rsc_dispatch(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
+
+#ifdef PCMK__TIME_USE_CGT
+
+/*!
+ * \internal
+ * \brief Check whether a struct timespec has been set
+ *
+ * \param[in] timespec  Time to check
+ *
+ * \return true if timespec has been set (i.e. is nonzero), false otherwise
+ */
+static inline bool
+time_is_set(struct timespec *timespec)
+{
+    return (timespec != NULL) &&
+           ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
+}
+
+/*
+ * \internal
+ * \brief Set a timespec (and its original if unset) to the current time
+ *
+ * \param[out] t_current  Where to store current time
+ * \param[out] t_orig     Where to copy t_current if unset
+ */
+static void
+get_current_time(struct timespec *t_current, struct timespec *t_orig)
+{
+    clock_gettime(CLOCK_MONOTONIC, t_current);
+    if ((t_orig != NULL) && !time_is_set(t_orig)) {
+        *t_orig = *t_current;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return difference between two times in milliseconds
+ *
+ * \param[in] now  More recent time (or NULL to use current time)
+ * \param[in] old  Earlier time
+ *
+ * \return milliseconds difference (or 0 if old is NULL or unset)
+ *
+ * \note Can overflow on 32bit machines when the differences is around
+ *       24 days or more.
+ */
+static int
+time_diff_ms(struct timespec *now, struct timespec *old)
+{
+    int diff_ms = 0;
+
+    if (time_is_set(old)) {
+        struct timespec local_now = { 0, };
+
+        if (now == NULL) {
+            clock_gettime(CLOCK_MONOTONIC, &local_now);
+            now = &local_now;
+        }
+        diff_ms = (now->tv_sec - old->tv_sec) * 1000
+                  + (now->tv_nsec - old->tv_nsec) / 1000000;
+    }
+    return diff_ms;
+}
+
+/*!
+ * \internal
+ * \brief Reset a command's operation times to their original values.
+ *
+ * Reset a command's run and queued timestamps to the timestamps of the original
+ * command, so we report the entire time since then and not just the time since
+ * the most recent command (for recurring and systemd operations).
+ *
+ * \param[in] cmd  Executor command object to reset
+ *
+ * \note It's not obvious what the queued time should be for a systemd
+ *       start/stop operation, which might go like this:
+ *         initial command queued 5ms, runs 3s
+ *         monitor command queued 10ms, runs 10s
+ *         monitor command queued 10ms, runs 10s
+ *       Is the queued time for that operation 5ms, 10ms or 25ms? The current
+ *       implementation will report 5ms. If it's 25ms, then we need to
+ *       subtract 20ms from the total exec time so as not to count it twice.
+ *       We can implement that later if it matters to anyone ...
+ */
+static void
+cmd_original_times(lrmd_cmd_t * cmd)
+{
+    cmd->t_run = cmd->t_first_run;
+    cmd->t_queue = cmd->t_first_queue;
+}
+#endif
 
 static void
 log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
@@ -109,15 +207,16 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
     }
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-    do_crm_log(log_level,
-               "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d exec-time:%dms queue-time:%dms",
-               cmd->rsc_id, cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str,
-               cmd->exec_rc, exec_time, queue_time);
+#ifdef PCMK__TIME_USE_CGT
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
+               " (execution time %dms, queue time %dms)",
+               cmd->rsc_id, cmd->action, cmd->call_id,
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc,
+               exec_time, queue_time);
 #else
-    do_crm_log(log_level, "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d",
-               cmd->rsc_id,
-               cmd->action, cmd->call_id, cmd->last_pid ? "pid:" : "", pid_str, cmd->exec_rc);
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
+               cmd->rsc_id, cmd->action, cmd->call_id,
+               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc);
 #endif
 }
 
@@ -164,7 +263,7 @@ build_rsc_from_xml(xmlNode * msg)
 }
 
 static lrmd_cmd_t *
-create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
+create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 {
     int call_options = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, msg, LOG_ERR);
@@ -190,7 +289,8 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     cmd->params = xml2list(rsc_xml);
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
-        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for " CRM_OP_FMT,
+        crm_debug("Setting flag to leave pid group on timeout and "
+                  "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
     }
@@ -249,15 +349,7 @@ stonith_recurring_op_helper(gpointer data)
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
-    if (cmd->t_first_queue.tv_sec == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
-#elif defined(HAVE_SYS_TIMEB_H)
-    ftime(&cmd->t_queue);
-    if (cmd->t_first_queue.time == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -327,10 +419,10 @@ merge_dup:
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" CRM_OP_FMT "), merging with previous op entry",
-            rsc->rsc_id,
-            normalize_action_name(rsc, dup->action),
-            dup->interval_ms);
+    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
+             "), merging with previous op entry",
+             rsc->rsc_id, normalize_action_name(rsc, dup->action),
+             dup->interval_ms);
 
     /* merge */
     dup->first_notify_sent = 0;
@@ -381,15 +473,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef PCMK__TIME_USE_CGT
-    clock_gettime(CLOCK_MONOTONIC, &cmd->t_queue);
-    if (cmd->t_first_queue.tv_sec == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
-#elif defined(HAVE_SYS_TIMEB_H)
-    ftime(&cmd->t_queue);
-    if (cmd->t_first_queue.time == 0) {
-        cmd->t_first_queue = cmd->t_queue;
-    }
+    get_current_time(&(cmd->t_queue), &(cmd->t_first_queue));
 #endif
     mainloop_set_trigger(rsc->work);
 
@@ -413,7 +497,7 @@ static void
 send_client_notify(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNode *update_msg = user_data;
-    crm_client_t *client = value;
+    pcmk__client_t *client = value;
     int rc;
     int log_level = LOG_WARNING;
     const char *msg = NULL;
@@ -425,23 +509,19 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
     }
 
     rc = lrmd_server_send_notify(client, update_msg);
-    if (rc > 0) {
-        return; // success
+    if (rc == pcmk_rc_ok) {
+        return;
     }
 
     switch (rc) {
-        case 0:
-            msg = "no data sent";
-            break;
-
-        case -ENOTCONN:
-        case -EPIPE: // Client exited without waiting for notification
+        case ENOTCONN:
+        case EPIPE: // Client exited without waiting for notification
             log_level = LOG_INFO;
             msg = "Disconnected";
             break;
 
         default:
-            msg = pcmk_strerror(rc);
+            msg = pcmk_rc_str(rc);
             break;
     }
     do_crm_log(log_level,
@@ -449,95 +529,19 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
                client->name, client->id, msg, rc);
 }
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-/*!
- * \internal
- * \brief Return difference between two times in milliseconds
- *
- * \param[in] now  More recent time (or NULL to use current time)
- * \param[in] old  Earlier time
- *
- * \return milliseconds difference (or 0 if old is NULL or has tv_sec/time zero)
- *
- * \note Can overflow on 32bit machines when the differences is around
- *       24 days or more.
- */
-static int
-#ifdef PCMK__TIME_USE_CGT
-time_diff_ms(struct timespec *now, struct timespec *old)
-{
-    struct timespec local_now = { 0, };
-#else
-time_diff_ms(struct timeb *now, struct timeb *old)
-{
-    struct timeb local_now = { 0, };
-#endif
-
-    if (now == NULL) {
-#ifdef PCMK__TIME_USE_CGT
-        clock_gettime(CLOCK_MONOTONIC, &local_now);
-#else
-        ftime(&local_now);
-#endif
-        now = &local_now;
-    }
-    if ((old == NULL)
-#ifdef PCMK__TIME_USE_CGT
-            || (old->tv_sec == 0)) {
-#else
-            || (old->time == 0)) {
-#endif
-        return 0;
-    }
-#ifdef PCMK__TIME_USE_CGT
-    return (now->tv_sec - old->tv_sec) * 1000
-            + (now->tv_nsec - old->tv_nsec) / 1000;
-#else
-    return (now->time - old->time) * 1000 + now->millitm - old->millitm;
-#endif
-}
-
-/*!
- * \internal
- * \brief Reset a command's operation times to their original values.
- *
- * Reset a command's run and queued timestamps to the timestamps of the original
- * command, so we report the entire time since then and not just the time since
- * the most recent command (for recurring and systemd operations).
- *
- * /param[in] cmd  Executor command object to reset
- *
- * /note It's not obvious what the queued time should be for a systemd
- * start/stop operation, which might go like this:
- *   initial command queued 5ms, runs 3s
- *   monitor command queued 10ms, runs 10s
- *   monitor command queued 10ms, runs 10s
- * Is the queued time for that operation 5ms, 10ms or 25ms? The current
- * implementation will report 5ms. If it's 25ms, then we need to
- * subtract 20ms from the total exec time so as not to count it twice.
- * We can implement that later if it matters to anyone ...
- */
-static void
-cmd_original_times(lrmd_cmd_t * cmd)
-{
-    cmd->t_run = cmd->t_first_run;
-    cmd->t_queue = cmd->t_first_queue;
-}
-#endif
-
 static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
-    int exec_time = 0;
-    int queue_time = 0;
     xmlNode *notify = NULL;
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-    exec_time = time_diff_ms(NULL, &cmd->t_run);
-    queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
-#endif
+#ifdef PCMK__TIME_USE_CGT
+    int exec_time = time_diff_ms(NULL, &(cmd->t_run));
+    int queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
 
     log_finished(cmd, exec_time, queue_time);
+#else
+    log_finished(cmd, 0, 0);
+#endif
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
@@ -567,14 +571,11 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME,
+                   (long long) cmd->epoch_last_run);
+    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME,
+                   (long long) cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
-    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.tv_sec);
-    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.tv_sec);
-#else
-    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME, (long long) cmd->t_run.time);
-    crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME, (long long) cmd->t_rcchange.time);
-#endif
     crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
@@ -603,13 +604,13 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         }
     }
     if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
-        crm_client_t *client = crm_client_get_by_id(cmd->client_id);
+        pcmk__client_t *client = pcmk__find_client_by_id(cmd->client_id);
 
         if (client) {
             send_client_notify(client->id, client, notify);
         }
-    } else if (client_connections != NULL) {
-        g_hash_table_foreach(client_connections, send_client_notify, notify);
+    } else {
+        pcmk__foreach_ipc_client(send_client_notify, notify);
     }
 
     free_xml(notify);
@@ -618,7 +619,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 static void
 send_generic_notify(int rc, xmlNode * request)
 {
-    if (client_connections != NULL) {
+    if (pcmk__ipc_client_count() != 0) {
         int call_id = 0;
         xmlNode *notify = NULL;
         xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
@@ -634,7 +635,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_xml_add(notify, F_LRMD_OPERATION, op);
         crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
-        g_hash_table_foreach(client_connections, send_client_notify, notify);
+        pcmk__foreach_ipc_client(send_client_notify, notify);
 
         free_xml(notify);
     }
@@ -645,15 +646,15 @@ cmd_reset(lrmd_cmd_t * cmd)
 {
     cmd->lrmd_op_status = 0;
     cmd->last_pid = 0;
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     memset(&cmd->t_run, 0, sizeof(cmd->t_run));
     memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
 #endif
+    cmd->epoch_last_run = 0;
     free(cmd->exit_reason);
     cmd->exit_reason = NULL;
     free(cmd->output);
     cmd->output = NULL;
-
 }
 
 static void
@@ -794,28 +795,33 @@ action_get_uniform_rc(svc_action_t * action)
     return get_uniform_rc(action->standard, cmd->action, action->rc);
 }
 
-void
-notify_of_new_client(crm_client_t *new_client)
+struct notify_new_client_data {
+    xmlNode *notify;
+    pcmk__client_t *new_client;
+};
+
+static void
+notify_one_client(gpointer key, gpointer value, gpointer user_data)
 {
-    crm_client_t *client = NULL;
-    GHashTableIter iter;
-    xmlNode *notify = NULL;
-    char *key = NULL;
+    pcmk__client_t *client = value;
+    struct notify_new_client_data *data = user_data;
 
-    notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-    crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
-    crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
-
-    g_hash_table_iter_init(&iter, client_connections);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & client)) {
-
-        if (safe_str_eq(client->id, new_client->id)) {
-            continue;
-        }
-
-        send_client_notify((gpointer) key, (gpointer) client, (gpointer) notify);
+    if (safe_str_neq(client->id, data->new_client->id)) {
+        send_client_notify(key, (gpointer) client, (gpointer) data->notify);
     }
-    free_xml(notify);
+}
+
+void
+notify_of_new_client(pcmk__client_t *new_client)
+{
+    struct notify_new_client_data data;
+
+    data.new_client = new_client;
+    data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+    crm_xml_add(data.notify, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(data.notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
+    pcmk__foreach_ipc_client(notify_one_client, &data);
+    free_xml(data.notify);
 }
 
 static char *
@@ -877,7 +883,7 @@ action_complete(svc_action_t * action)
     lrmd_cmd_t *cmd = action->cb_data;
     const char *rclass = NULL;
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
     bool goagain = false;
 #endif
 
@@ -889,11 +895,7 @@ action_complete(svc_action_t * action)
 
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->exec_rc != action->rc) {
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_rcchange);
-    }
-#elif defined(HAVE_SYS_TIMEB_H)
-    if (cmd->exec_rc != action->rc) {
-        ftime(&cmd->t_rcchange);
+        cmd->epoch_rcchange = time(NULL);
     }
 #endif
 
@@ -908,50 +910,40 @@ action_complete(svc_action_t * action)
         rclass = rsc->class;
     }
 
+#ifdef PCMK__TIME_USE_CGT
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
-        if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
-            /* systemd I curse thee!
-             *
-             * systemd returns from start actions after the start _begins_
-             * not after it completes.
-             *
-             * So we have to jump through a few hoops so that we don't
-             * report 'complete' to the rest of pacemaker until, you know,
-             * it's actually done.
+        if ((cmd->exec_rc == PCMK_OCF_OK)
+            && (safe_str_eq(cmd->action, "start")
+                || safe_str_eq(cmd->action, "stop"))) {
+            /* systemd returns from start and stop actions after the action
+             * begins, not after it completes. We have to jump through a few
+             * hoops so that we don't report 'complete' to the rest of pacemaker
+             * until it's actually done.
              */
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
             goagain = true;
-#endif
             cmd->real_action = cmd->action;
             cmd->action = strdup("monitor");
 
-        } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "stop")) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-            goagain = true;
-#endif
-            cmd->real_action = cmd->action;
-            cmd->action = strdup("monitor");
+        } else if (cmd->real_action != NULL) {
+            // This is follow-up monitor to check whether start/stop completed
+            if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
+                && (cmd->exec_rc == PCMK_OCF_PENDING)) {
+                goagain = true;
 
-        } else if(cmd->real_action) {
-            /* Ok, so this is the follow up monitor action to check if start actually completed */
-            if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+            } else if ((cmd->exec_rc == PCMK_OCF_OK)
+                       && safe_str_eq(cmd->real_action, "stop")) {
                 goagain = true;
-#endif
-            } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->real_action, "stop")) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-                goagain = true;
-#endif
 
             } else {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-                int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+                int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
                 int timeout_left = cmd->timeout_orig - time_sum;
 
-                crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+                crm_debug("%s systemd %s is now complete (elapsed=%dms, "
+                          "remaining=%dms): %s (%d)",
+                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                          services_ocf_exitcode_str(cmd->exec_rc),
+                          cmd->exec_rc);
                 cmd_original_times(cmd);
-#endif
 
                 // Monitors may return "not running", but start/stop shouldn't
                 if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
@@ -966,6 +958,7 @@ action_complete(svc_action_t * action)
             }
         }
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
@@ -975,25 +968,16 @@ action_complete(svc_action_t * action)
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
         } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_OCF_OK) {
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
+#ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
         }
     }
 #endif
 
-#if defined(PCMK__TIME_USE_CGT) || defined(HAVE_SYS_TIMEB_H)
-    /* Wrapping this section in ifdef implies that systemd resources... */
 #ifdef PCMK__TIME_USE_CGT
-    /* .... are not fully supported on platforms without CLOCK_MONOTONIC,
-       which is most likely contradiction, but for completeness... */
-#elif defined(HAVE_SYS_TIMEB_H)
-    /* ... are not fully supported on platforms without sys/timeb.h.
-       Since timeb is obsolete, we should eventually prefer a clock_gettime()
-       implementation (wrapped in its own ifdef) with timeb as a fallback. */
-#endif
     if (goagain) {
-        int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
+        int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
         int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
 
@@ -1419,16 +1403,9 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
         g_list_free_1(first);
 
 #ifdef PCMK__TIME_USE_CGT
-        if (cmd->t_first_run.tv_sec == 0) {
-            clock_gettime(CLOCK_MONOTONIC, &cmd->t_first_run);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &cmd->t_run);
-#elif defined(HAVE_SYS_TIMEB_H)
-        if (cmd->t_first_run.time == 0) {
-            ftime(&cmd->t_first_run);
-        }
-        ftime(&cmd->t_run);
+        get_current_time(&(cmd->t_run), &(cmd->t_first_run));
 #endif
+        cmd->epoch_last_run = time(NULL);
     }
 
     if (!cmd) {
@@ -1518,7 +1495,7 @@ free_rsc(gpointer data)
 }
 
 static xmlNode *
-process_lrmd_signon(crm_client_t *client, xmlNode *request, int call_id)
+process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
 {
     xmlNode *reply = NULL;
     int rc = pcmk_ok;
@@ -1546,7 +1523,7 @@ process_lrmd_signon(crm_client_t *client, xmlNode *request, int call_id)
 }
 
 static int
-process_lrmd_rsc_register(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
@@ -1596,7 +1573,8 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
 }
 
 static int
-process_lrmd_rsc_unregister(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
+                            xmlNode *request)
 {
     int rc = pcmk_ok;
     lrmd_rsc_t *rsc = NULL;
@@ -1627,7 +1605,7 @@ process_lrmd_rsc_unregister(crm_client_t * client, uint32_t id, xmlNode * reques
 }
 
 static int
-process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
@@ -1756,7 +1734,7 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
 }
 
 static int
-process_lrmd_rsc_cancel(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
@@ -1836,7 +1814,7 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
 }
 
 void
-process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     int rc = pcmk_ok;
     int call_id = 0;
@@ -1883,7 +1861,7 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
         const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
         CRM_LOG_ASSERT(data != NULL);
-        check_sbd_timeout(timeout);
+        pcmk__valid_sbd_timeout(timeout);
     } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
         rc = process_lrmd_alert_exec(client, id, request);
         do_reply = 1;
@@ -1893,24 +1871,23 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
-        crm_err("Unknown %s from %s", op, client->name);
-        crm_log_xml_warn(request, "UnknownOp");
+        crm_err("Unknown IPC request '%s' from %s", op, client->name);
     }
 
     crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
               op, client->id, rc, do_reply, do_notify);
 
     if (do_reply) {
-        int send_rc = pcmk_ok;
+        int send_rc = pcmk_rc_ok;
 
         if (reply == NULL) {
             reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
         }
         send_rc = lrmd_server_send_reply(client, id, reply);
         free_xml(reply);
-        if (send_rc < 0) {
+        if (send_rc != pcmk_rc_ok) {
             crm_warn("Reply to client %s failed: %s " CRM_XS " %d",
-                     client->name, pcmk_strerror(send_rc), send_rc);
+                     client->name, pcmk_rc_str(send_rc), send_rc);
         }
     }
 

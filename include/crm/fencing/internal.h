@@ -68,6 +68,7 @@ stonith_history_t *stonith__sort_history(stonith_history_t *history);
 /*! Timeout period per a device execution */
 #  define F_STONITH_TIMEOUT       "st_timeout"
 #  define F_STONITH_TOLERANCE     "st_tolerance"
+#  define F_STONITH_DELAY         "st_delay"
 /*! Action specific timeout period returned in query of fencing devices. */
 #  define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
 /*! Host in query result is not allowed to run this action */
@@ -103,6 +104,7 @@ stonith_history_t *stonith__sort_history(stonith_history_t *history);
 #  define F_STONITH_DEVICE        "st_device_id"
 #  define F_STONITH_ACTION        "st_device_action"
 #  define F_STONITH_MODE          "st_mode"
+#  define F_STONITH_MERGED        "st_op_merged"
 
 #  define T_STONITH_NG        "stonith-ng"
 #  define T_STONITH_REPLY     "st-reply"
@@ -152,5 +154,20 @@ bool stonith__agent_is_rhcs(const char *agent);
 int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
                            const char *agent, GHashTable *params,
                            int timeout, char **output, char **error_output);
+
+int stonith__failed_history(pcmk__output_t *out, va_list args);
+int stonith__history(pcmk__output_t *out, va_list args);
+int stonith__full_history(pcmk__output_t *out, va_list args);
+int stonith__full_history_xml(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_html(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_text(pcmk__output_t *out, va_list args);
+int stonith__last_fenced_xml(pcmk__output_t *out, va_list args);
+int stonith__pending_actions(pcmk__output_t *out, va_list args);
+int stonith__event_html(pcmk__output_t *out, va_list args);
+int stonith__event_text(pcmk__output_t *out, va_list args);
+int stonith__event_xml(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_html(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_text(pcmk__output_t *out, va_list args);
+int stonith__validate_agent_xml(pcmk__output_t *out, va_list args);
 
 #endif

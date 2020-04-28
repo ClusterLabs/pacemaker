@@ -28,13 +28,15 @@ EXTRA_CLEAN_TARGETS	= ancillary-clean
 abs_srcdir	?= $(shell pwd)
 abs_builddir	?= $(shell pwd)
 
+GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
+
 PACKAGE		?= pacemaker
 
 
 # Definitions that specify what various targets will apply to
 
 COMMIT  ?= HEAD
-TAG     ?= $(shell T=$$(git describe --all '$(COMMIT)' 2>/dev/null | sed -n 's|tags/\(.*\)|\1|p'); \
+TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
 	     test -n "$${T}" && echo "$${T}" \
 	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
@@ -181,6 +183,7 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	else 										\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
 	fi | sed									\
+	    -e "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" \
 	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
 	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
 	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
@@ -390,7 +393,10 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=25 -q replace lib daemons tools
+	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=30	\
+		--library=posix --library=gnu --library=gtk	\
+		$(GLIB_CFLAGS) -D__GNUC__			\
+		--inline-suppr -q replace lib daemons tools
 
 clang:
 	test -e $(CLANG_analyzer)

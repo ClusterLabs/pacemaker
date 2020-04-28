@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@
 #include <crm/cluster.h>
 
 #include <crm/cib.h>
-#include <crm/attrd.h>
+#include <crm/common/attrd_internal.h>
 #include <sys/utsname.h>
 
 gboolean BE_QUIET = FALSE;
@@ -46,61 +46,200 @@ const char *attr_value = NULL;
 const char *attr_default = NULL;
 const char *set_type = NULL;
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"  },
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-    {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
-
-    {"name",    1, 0, 'n', "Name of the attribute/option to operate on"},
-    {"pattern", 1, 0, 'P', "Pattern matching names of attributes (only with -v/-D and -l reboot)"},
-
-    {"-spacer-",    0, 0, '-', "\nCommands:"},
-    {"query",       0, 0, 'G', "\tQuery the current value of the attribute/option"},
-    {"update",      1, 0, 'v', "Update the value of the attribute/option"},
-    {"delete",      0, 0, 'D', "\tDelete the attribute/option"},
-
-    {"-spacer-",    0, 0, '-', "\nAdditional Options:"},
-    {"node",        1, 0, 'N', "Set an attribute for the named node (instead of a cluster option).  See also: -l"},
-    {"type",        1, 0, 't', "Which part of the configuration to update/delete/query the option in"},
-    {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults, tickets"},
-    {"lifetime",    1, 0, 'l', "Lifetime of the node attribute"},
-    {"-spacer-",    0, 0, '-', "\t\t\tValid values: reboot, forever"},
-    {"utilization", 0, 0, 'z', "Set an utilization attribute for the node."},
-    {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
-    {"id",	    1, 0, 'i', "\t(Advanced) The ID used to identify the attribute"},
-    {"default",     1, 0, 'd', "(Advanced) The default value to display if none is found in the configuration"},
-
-    {"inhibit-policy-engine", 0, 0, '!', NULL, 1},
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "quiet", no_argument, NULL, 'q',
+        "\tPrint only the value on stdout\n", pcmk__option_default
+    },
+    {
+        "name", required_argument, NULL, 'n',
+        "Name of the attribute/option to operate on", pcmk__option_default
+    },
+    {
+        "pattern", required_argument, NULL, 'P',
+        "Pattern matching names of attributes (only with -v/-D and -l reboot)",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nCommands:", pcmk__option_default
+    },
+    {
+        "query", no_argument, NULL, 'G',
+        "\tQuery the current value of the attribute/option",
+        pcmk__option_default
+    },
+    {
+        "update", required_argument, NULL, 'v',
+        "Update the value of the attribute/option", pcmk__option_default
+    },
+    {
+        "delete", no_argument, NULL, 'D',
+        "\tDelete the attribute/option", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
+    {
+        "node", required_argument, NULL, 'N',
+        "Set a node attribute for named node (instead of a cluster option). "
+            "See also: -l",
+        pcmk__option_default
+    },
+    {
+        "type", required_argument, NULL, 't',
+        "Which part of the configuration to update/delete/query the option in",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\t\tValid values: crm_config, rsc_defaults, op_defaults, tickets",
+        pcmk__option_default
+    },
+    {
+        "lifetime", required_argument, NULL, 'l',
+        "Lifetime of the node attribute", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\t\t\tValid values: reboot, forever", pcmk__option_default
+    },
+    {
+        "utilization", no_argument, NULL, 'z',
+        "Set an utilization attribute for the node.", pcmk__option_default
+    },
+    {
+        "set-name", required_argument, NULL, 's',
+        "(Advanced) The attribute set in which to place the value",
+        pcmk__option_default
+    },
+    {
+        "id", required_argument, NULL, 'i',
+        "\t(Advanced) The ID used to identify the attribute",
+        pcmk__option_default
+    },
+    {
+        "default", required_argument, NULL, 'd',
+        "(Advanced) Default value to display if none is found in configuration",
+        pcmk__option_default
+    },
+    {
+        "inhibit-policy-engine", no_argument, NULL, '!',
+        NULL, pcmk__option_hidden
+    },
 
     /* legacy */
-    {"quiet",       0, 0, 'Q', NULL, 1},
-    {"node-uname",  1, 0, 'U', NULL, 1},
-    {"get-value",   0, 0, 'G', NULL, 1},
-    {"delete-attr", 0, 0, 'D', NULL, 1},
-    {"attr-value",  1, 0, 'v', NULL, 1},
-    {"attr-name",   1, 0, 'n', NULL, 1},
-    {"attr-id",     1, 0, 'i', NULL, 1},
+    {
+        "quiet", no_argument, NULL, 'Q',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "node-uname", required_argument, NULL, 'U',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "get-value", no_argument, NULL, 'G',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "delete-attr", no_argument, NULL, 'D',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "attr-value", required_argument, NULL, 'v',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "attr-name", required_argument, NULL, 'n',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "attr-id", required_argument, NULL, 'i',
+        NULL, pcmk__option_hidden
+    },
 
-    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', "Add a new node attribute called 'location' with the value of 'office' for host 'myhost':", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update office", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Query the value of the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --query", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Change the value of the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update backoffice", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Delete the 'location' node attribute for host 'myhost':", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --delete", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option. Only print the value:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query --quiet", pcmk_option_example},
-
-    {0, 0, 0, 0}
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nExamples:", pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Add new node attribute called 'location' with the value of 'office' "
+            "for host 'myhost':",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --node myhost --name location --update office",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Query the value of the 'location' node attribute for host 'myhost':",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --node myhost --name location --query",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Change the value of the 'location' node attribute for host 'myhost':",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --node myhost --name location --update backoffice",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Delete the 'location' node attribute for host 'myhost':",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --node myhost --name location --delete",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Query the value of the cluster-delay cluster option:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --type crm_config --name cluster-delay --query",
+        pcmk__option_example
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Query value of the \"cluster-delay\" cluster option and print only "
+            "the value:",
+        pcmk__option_paragraph
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " crm_attribute --type crm_config --name cluster-delay --query --quiet",
+        pcmk__option_example
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -116,18 +255,20 @@ main(int argc, char **argv)
     int is_remote_node = 0;
 
     bool try_attrd = true;
+    int attrd_opts = pcmk__node_attr_none;
 
     crm_log_cli_init("crm_attribute");
-    crm_set_options(NULL, "<command> -n <attribute> [options]", long_options,
-                    "Manage node's attributes and cluster options."
-                    "\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
+    pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
+                          long_options,
+                          "query and update Pacemaker cluster options "
+                          "and node attributes");
 
     if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1)
             break;
 
@@ -137,7 +278,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'G':
                 command = flag;
@@ -206,14 +347,14 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Error connecting to the CIB manager: %s\n",
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
         crm_exit(crm_errno2exit(rc));
     }
@@ -239,7 +380,7 @@ main(int argc, char **argv)
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
          */
-        dest_uname = attrd_get_target(dest_uname);
+        dest_uname = pcmk__node_attr_target(dest_uname);
         if (dest_uname == NULL) {
             dest_uname = get_local_node_name();
         }
@@ -278,10 +419,13 @@ main(int argc, char **argv)
         try_attrd = FALSE;
     }
 
+    if (is_remote_node) {
+        attrd_opts = pcmk__node_attr_remote;
+    }
     if (((command == 'v') || (command == 'D') || (command == 'u')) && try_attrd
-        && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name,
-                                            attr_value, type, set_name, NULL, NULL,
-                                            is_remote_node?attrd_opt_remote:attrd_opt_none)) {
+        && (pcmk__node_attr_request(NULL, command, dest_uname, attr_name,
+                                    attr_value, type, set_name, NULL, NULL,
+                                    attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  attr_name, ((command == 'D')? "<none>" : attr_value));
 

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ ssgtest1a ssgtest1b ]
 
  Resource Group: ClusterAlias
-     VIP	(ocf::testing:VIP-RIP.sh):	Started ssgtest1a
+     VIP	(ocf::testing:VIP-RIP.sh):	 Started ssgtest1a
  Clone Set: dolly [dollies]
      Started: [ ssgtest1a ]
 
@@ -22,7 +22,7 @@ Revised cluster status:
 Online: [ ssgtest1a ssgtest1b ]
 
  Resource Group: ClusterAlias
-     VIP	(ocf::testing:VIP-RIP.sh):	Started ssgtest1a
+     VIP	(ocf::testing:VIP-RIP.sh):	 Started ssgtest1a
  Clone Set: dolly [dollies]
      Started: [ ssgtest1b ]
 

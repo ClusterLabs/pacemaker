@@ -1,10 +1,10 @@
 Allocation scores:
-group_color: Filesystem_2 allocation score on paul: 0
-group_color: IPaddr_5 allocation score on paul: 0
-group_color: datadisk_1 allocation score on paul: 0
-group_color: group_1 allocation score on paul: 0
-group_color: postfix_9 allocation score on paul: 0
-native_color: Filesystem_2 allocation score on paul: 0
-native_color: IPaddr_5 allocation score on paul: 0
-native_color: datadisk_1 allocation score on paul: 0
-native_color: postfix_9 allocation score on paul: 0
+pcmk__group_allocate: Filesystem_2 allocation score on paul: 0
+pcmk__group_allocate: IPaddr_5 allocation score on paul: 0
+pcmk__group_allocate: datadisk_1 allocation score on paul: 0
+pcmk__group_allocate: group_1 allocation score on paul: 0
+pcmk__group_allocate: postfix_9 allocation score on paul: 0
+pcmk__native_allocate: Filesystem_2 allocation score on paul: 0
+pcmk__native_allocate: IPaddr_5 allocation score on paul: 0
+pcmk__native_allocate: datadisk_1 allocation score on paul: 0
+pcmk__native_allocate: postfix_9 allocation score on paul: 0

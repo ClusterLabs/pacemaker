@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,19 +59,30 @@ cib_enable_writes(int nsig)
     cib_writes_enabled = TRUE;
 }
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-
-    {"stand-alone",    0, 0, 's', "\tAdvanced use only"},
-    {"disk-writes",    0, 0, 'w', "\tAdvanced use only"},
-    {"cib-root",       1, 0, 'r', "\tAdvanced use only"},
-
-    {0, 0, 0, 0}
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
+    {
+        "help", no_argument, 0, '?',
+        "\tThis text", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "stand-alone", no_argument, NULL, 's',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    {
+        "disk-writes", no_argument, NULL, 'w',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    {
+        "cib-root", required_argument, NULL, 'r',
+        "\tAdvanced use only", pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -84,8 +95,9 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
 
     crm_log_preinit(NULL, argc, argv);
-    crm_set_options(NULL, "[options]",
-                    long_options, "Daemon for storing and replicating the cluster configuration");
+    pcmk__set_cli_options(NULL, "[options]", long_options,
+                          "daemon for managing the configuration "
+                          "of a Pacemaker cluster");
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
@@ -93,7 +105,7 @@ main(int argc, char **argv)
     cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
     while (1) {
-        flag = crm_get_option(argc, argv, &index);
+        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
         if (flag == -1)
             break;
 
@@ -130,7 +142,7 @@ main(int argc, char **argv)
                 }
                 break;
             case '?':          /* Help message */
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'w':
                 cib_writes_enabled = TRUE;
@@ -156,14 +168,14 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     crm_notice("Starting Pacemaker CIB manager");
 
-    old_instance = crm_ipc_new(CIB_CHANNEL_RO, 0);
+    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
@@ -204,7 +216,7 @@ main(int argc, char **argv)
      * terminate_cib() was called with fast=-1.
      */
     crm_cluster_disconnect(&crm_cluster);
-    cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
+    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
     return CRM_EX_OK;
 }
 
@@ -215,7 +227,7 @@ cib_cleanup(void)
     if (local_notify_queue) {
         g_hash_table_destroy(local_notify_queue);
     }
-    crm_client_cleanup();
+    pcmk__client_cleanup();
     g_hash_table_destroy(config_hash);
     free(cib_our_uname);
 }
@@ -283,7 +295,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         case crm_status_uname:
         case crm_status_nstate:
             if (cib_shutdown_flag && (crm_active_peers() < 2)
-                && crm_hash_table_size(client_connections) == 0) {
+                && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
                 terminate_cib(__FUNCTION__, -1);
@@ -325,11 +337,8 @@ cib_init(void)
         cib_our_uname = strdup("localhost");
     }
 
-    cib_ipc_servers_init(&ipcs_ro,
-                         &ipcs_rw,
-                         &ipcs_shm,
-                         &ipc_ro_callbacks,
-                         &ipc_rw_callbacks);
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
+                          &ipc_rw_callbacks);
 
     if (stand_alone) {
         cib_is_master = TRUE;

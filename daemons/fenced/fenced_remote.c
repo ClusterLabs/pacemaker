@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -373,7 +373,7 @@ create_op_done_notify(remote_fencing_op_t * op, int rc)
 }
 
 void
-stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
+stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
@@ -385,6 +385,11 @@ stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc)
     crm_xml_add(bcast, F_SUBTYPE, "broadcast");
     crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
     crm_xml_add_int(bcast, "count", count);
+
+    if (op_merged) {
+        crm_xml_add(bcast, F_STONITH_MERGED, "true");
+    }
+
     add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
     free_xml(notify_data);
@@ -480,6 +485,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     int level = LOG_ERR;
     const char *subt = NULL;
     xmlNode *local_data = NULL;
+    gboolean op_merged = FALSE;
 
     op->completed = time(NULL);
     clear_remote_op_timers(op);
@@ -496,7 +502,8 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     }
 
     if (!op->delegate && data && rc != -ENODEV && rc != -EHOSTUNREACH) {
-        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data, LOG_TRACE);
+        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data,
+                                          LOG_NEVER);
         if(ndata) {
             op->delegate = crm_element_value_copy(ndata, F_STONITH_DELEGATE);
         } else { 
@@ -509,13 +516,19 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         local_data = data;
     }
 
+    if(dup) {
+        op_merged = TRUE;
+    } else if (crm_element_value(data, F_STONITH_MERGED)) {
+        op_merged = TRUE;
+    } 
+
     /* Tell everyone the operation is done, we will continue
      * with doing the local notifications once we receive
      * the broadcast back. */
     subt = crm_element_value(data, F_SUBTYPE);
     if (dup == FALSE && safe_str_neq(subt, "broadcast")) {
         /* Defer notification until the bcast message arrives */
-        stonith_bcast_result_to_peers(op, rc);
+        stonith_bcast_result_to_peers(op, rc, (op_merged? TRUE: FALSE));
         goto remote_op_done_cleanup;
     }
 
@@ -525,11 +538,12 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         level = LOG_NOTICE;
     }
 
-    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s: %s",
+    do_crm_log(level, "Operation '%s'%s%s on %s for %s@%s.%.8s%s: %s",
                op->action, (op->target? " targeting " : ""),
                (op->target? op->target : ""),
                (op->delegate? op->delegate : "<no-one>"),
-               op->client_name, op->originator, op->id, pcmk_strerror(rc));
+               op->client_name, op->originator, op->id,
+               (op_merged? " (merged)" : ""), pcmk_strerror(rc));
 
     handle_local_reply_and_notify(op, data, rc);
 
@@ -828,6 +842,11 @@ stonith_topology_next(remote_fencing_op_t * op)
                   op->client_name, op->originator, op->id);
         set_op_device_list(op, tp->levels[op->level]);
 
+        // The requested delay has been applied for the first fencing level
+        if (op->level > 1 && op->delay > 0) {
+            op->delay = 0;
+        }
+
         if (g_list_next(op->devices_list) && safe_str_eq(op->action, "reboot")) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
@@ -963,7 +982,7 @@ void *
 create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_NEVER);
     int call_options = 0;
 
     init_stonith_remote_op_hash_table(&stonith_remote_op_list);
@@ -985,6 +1004,8 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op = calloc(1, sizeof(remote_fencing_op_t));
 
     crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
+    // Value -1 means disable any static/random fencing delays
+    crm_element_value_int(request, F_STONITH_DELAY, &(op->delay));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
@@ -1057,7 +1078,8 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 }
 
 remote_fencing_op_t *
-initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean manual_ack)
+initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
+                           gboolean manual_ack)
 {
     int query_timeout = 0;
     xmlNode *query = NULL;
@@ -1433,6 +1455,12 @@ advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next targeting %s on behalf of %s@%s (rc was %d)",
                   op->target, op->originator, op->client_name, rc);
+
+        // The requested delay has been applied for the first device
+        if (op->delay > 0) {
+            op->delay = 0;
+        }
+
         call_remote_stonith(op, NULL);
     } else {
         /* We're done with all devices and phases, so finalize operation */
@@ -1487,6 +1515,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
+        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
 
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *

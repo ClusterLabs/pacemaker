@@ -1,22 +1,12 @@
-/* 
- * Copyright 2004-2018 the Pacemaker project contributors
+/*
+ * Copyright 2004-2019 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PE_COMMON__H
 #  define PE_COMMON__H
 
@@ -104,7 +94,7 @@ enum pe_print_options {
     pe_print_html           = 0x0002,
     pe_print_ncurses        = 0x0004,
     pe_print_printf         = 0x0008,
-    pe_print_dev            = 0x0010,
+    pe_print_dev            = 0x0010, // Debugging (@COMPAT probably not useful)
     pe_print_details        = 0x0020,
     pe_print_max_details    = 0x0040,
     pe_print_rsconly        = 0x0080,

@@ -1,5 +1,7 @@
 /*
- * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -21,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
 
@@ -57,8 +59,8 @@ typedef struct cib_remote_opaque_s {
     char *user;
     char *passwd;
     gboolean encrypted;
-    crm_remote_t command;
-    crm_remote_t callback;
+    pcmk__remote_t command;
+    pcmk__remote_t callback;
 
 } cib_remote_opaque_t;
 
@@ -96,7 +98,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
     crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-    crm_remote_send(&private->callback, notify_msg);
+    pcmk__remote_send_xml(&private->callback, notify_msg);
     free_xml(notify_msg);
     return pcmk_ok;
 }
@@ -188,13 +190,17 @@ cib_tls_close(cib_t * cib)
     return 0;
 }
 
-static int
-cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
+static inline int
+cib__tls_client_handshake(pcmk__remote_t *remote)
 {
-    int sock;
+    return pcmk__tls_client_handshake(remote, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT);
+}
+
+static int
+cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
+{
     cib_remote_opaque_t *private = cib->variant_opaque;
-    int rc = 0;
-    int disconnected = 0;
+    int rc;
 
     xmlNode *answer = NULL;
     xmlNode *login = NULL;
@@ -205,18 +211,17 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
-    connection->tcp_socket = 0;
+    connection->tcp_socket = -1;
 #ifdef HAVE_GNUTLS_GNUTLS_H
     connection->tls_session = NULL;
 #endif
-    sock = crm_remote_tcp_connect(private->server, private->port);
-    if (sock < 0) {
-        crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server,
-                   private->port);
+    rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
+                              &(connection->tcp_socket), NULL, NULL);
+    if (rc != pcmk_rc_ok) {
+        crm_info("Remote connection to %s:%d failed: %s " CRM_XS " rc=%d",
+                 private->server, private->port, pcmk_rc_str(rc), rc);
         return -ENOTCONN;
     }
-
-    connection->tcp_socket = sock;
 
     if (private->encrypted) {
         /* initialize GnuTls lib */
@@ -228,7 +233,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         }
 
         /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(sock, GNUTLS_CLIENT,
+        connection->tls_session = pcmk__new_tls_session(connection->tcp_socket,
+                                                        GNUTLS_CLIENT,
                                                         GNUTLS_CRD_ANON,
                                                         anon_cred_c);
         if (connection->tls_session == NULL) {
@@ -236,7 +242,7 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
             return -1;
         }
 
-        if (crm_initiate_client_tls_handshake(connection, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
+        if (cib__tls_client_handshake(connection) != pcmk_rc_ok) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 
             gnutls_deinit(*connection->tls_session);
@@ -257,16 +263,15 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
     crm_xml_add(login, "password", private->passwd);
     crm_xml_add(login, "hidden", "password");
 
-    crm_remote_send(connection, login);
+    pcmk__remote_send_xml(connection, login);
     free_xml(login);
 
-    crm_remote_recv(connection, -1, &disconnected);
-
-    if (disconnected) {
+    rc = pcmk_ok;
+    if (pcmk__read_remote_message(connection, -1) == ENOTCONN) {
         rc = -ENOTCONN;
     }
 
-    answer = crm_remote_parse_buffer(connection);
+    answer = pcmk__remote_message_xml(connection);
 
     crm_log_xml_trace(answer, "Reply");
     if (answer == NULL) {
@@ -297,9 +302,9 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
     }
 
     crm_trace("remote client connection established");
-    connection->source =
-        mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, sock, cib,
-                        &cib_fd_callbacks);
+    connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
+                                         connection->tcp_socket, cib,
+                                         &cib_fd_callbacks);
     return rc;
 }
 
@@ -316,17 +321,17 @@ cib_remote_connection_destroy(gpointer user_data)
 int
 cib_remote_command_dispatch(gpointer user_data)
 {
-    int disconnected = 0;
+    int rc;
     cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_remote_recv(&private->command, -1, &disconnected);
+    rc = pcmk__read_remote_message(&private->command, -1);
 
     free(private->command.buffer);
     private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         return -1;
     }
     return 0;
@@ -335,17 +340,17 @@ cib_remote_command_dispatch(gpointer user_data)
 int
 cib_remote_callback_dispatch(gpointer user_data)
 {
+    int rc;
     cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     xmlNode *msg = NULL;
-    int disconnected = 0;
 
     crm_info("Message on callback channel");
 
-    crm_remote_recv(&private->callback, -1, &disconnected);
+    rc = pcmk__read_remote_message(&private->callback, -1);
 
-    msg = crm_remote_parse_buffer(&private->callback);
+    msg = pcmk__remote_message_xml(&private->callback);
     while (msg) {
         const char *type = crm_element_value(msg, F_TYPE);
 
@@ -362,10 +367,10 @@ cib_remote_callback_dispatch(gpointer user_data)
         }
 
         free_xml(msg);
-        msg = crm_remote_parse_buffer(&private->callback);
+        msg = pcmk__remote_message_xml(&private->callback);
     }
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         return -1;
     }
 
@@ -394,7 +399,6 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
             fprintf(stderr, "\n");
         }
 
-        /* fprintf(stderr, "entered: '%s'\n", buffer); */
         if (rc < 1) {
             private->passwd = NULL;
         }
@@ -419,18 +423,19 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         xmlNode *hello =
             cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        crm_remote_send(&private->command, hello);
+        pcmk__remote_send_xml(&private->command, hello);
         free_xml(hello);
     }
 
     if (rc == pcmk_ok) {
-        crm_notice("%s: Opened connection to %s:%d", name, private->server, private->port);
+        crm_info("Opened connection to %s:%d for %s",
+                 private->server, private->port, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        fprintf(stderr, "%s: Connection to %s:%d failed: %s\n",
-                name, private->server, private->port, pcmk_strerror(rc));
+        crm_info("Connection to %s:%d for %s failed: %s\n",
+                 private->server, private->port, name, pcmk_strerror(rc));
     }
 
     return rc;
@@ -481,8 +486,7 @@ int
 cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
                       xmlNode * data, xmlNode ** output_data, int call_options, const char *name)
 {
-    int rc = pcmk_ok;
-    int disconnected = 0;
+    int rc;
     int remaining_time = 0;
     time_t start_time;
 
@@ -522,9 +526,9 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
 
     crm_trace("Sending %s message to the CIB manager", op);
     if (!(call_options & cib_sync_call)) {
-        crm_remote_send(&private->callback, op_msg);
+        pcmk__remote_send_xml(&private->callback, op_msg);
     } else {
-        crm_remote_send(&private->command, op_msg);
+        pcmk__remote_send_xml(&private->command, op_msg);
     }
     free_xml(op_msg);
 
@@ -541,12 +545,14 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     start_time = time(NULL);
     remaining_time = cib->call_timeout ? cib->call_timeout : 60;
 
-    while (remaining_time > 0 && !disconnected) {
+    rc = pcmk_rc_ok;
+    while (remaining_time > 0 && (rc != ENOTCONN)) {
         int reply_id = -1;
         int msg_id = cib->call_id;
 
-        crm_remote_recv(&private->command, remaining_time * 1000, &disconnected);
-        op_reply = crm_remote_parse_buffer(&private->command);
+        rc = pcmk__read_remote_message(&private->command,
+                                       remaining_time * 1000);
+        op_reply = pcmk__remote_message_xml(&private->command);
 
         if (!op_reply) {
             break;
@@ -582,7 +588,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     /*      cib->state = cib_disconnected; */
     /* } */
 
-    if (disconnected) {
+    if (rc == ENOTCONN) {
         crm_err("Disconnected while waiting for reply.");
         return -ENOTCONN;
     } else if (op_reply == NULL) {

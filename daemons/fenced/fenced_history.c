@@ -1,5 +1,7 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -14,7 +16,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -225,7 +227,8 @@ stonith_xml_history_to_list(xmlNode *history)
          xml_op = __xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
-        int completed, state;
+        int state;
+        long long completed;
 
         if (!id) {
             crm_warn("History to convert to hashtable has no id in entry");
@@ -242,7 +245,7 @@ stonith_xml_history_to_list(xmlNode *history)
         op->originator = crm_element_value_copy(xml_op, F_STONITH_ORIGIN);
         op->delegate = crm_element_value_copy(xml_op, F_STONITH_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op, F_STONITH_CLIENTNAME);
-        crm_element_value_int(xml_op, F_STONITH_DATE, &completed);
+        crm_element_value_ll(xml_op, F_STONITH_DATE, &completed);
         op->completed = (time_t) completed;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
@@ -304,7 +307,7 @@ stonith_local_history_diff(GHashTable *remote_history,
                 crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
                 crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
                 crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
-                crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+                crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
             }
     }
@@ -359,7 +362,7 @@ stonith_merge_in_history_list(GHashTable *history)
                trigger unexpected results at other places and to prevent
                remote_op_done from setting the delegate if not present
              */
-            stonith_bcast_result_to_peers(op, -EHOSTUNREACH);
+            stonith_bcast_result_to_peers(op, -EHOSTUNREACH, FALSE);
         }
 
         g_hash_table_insert(stonith_remote_op_list, op->id, op);
@@ -398,7 +401,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
 {
     int rc = 0;
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
@@ -439,8 +442,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         NULL);
         } else if (remote_peer &&
                    !safe_str_eq(remote_peer, stonith_our_uname)) {
-            xmlNode *history =
-                get_xpath_object("//" F_STONITH_HISTORY_LIST, msg, LOG_TRACE);
+            xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
+                                                msg, LOG_NEVER);
             GHashTable *received_history =
                 history?stonith_xml_history_to_list(history):NULL;
 

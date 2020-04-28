@@ -25,6 +25,7 @@
  * \defgroup lrmd Executor API
  * \defgroup pengine Scheduler API
  * \defgroup fencing Fencing API
+ * \defgroup pacemaker Pacemaker High Level API
  */
 
 /**
@@ -42,6 +43,7 @@
  *  - \ref lrmd
  *  - \ref pengine
  *  - \ref fencing
+ *  - \ref pacemaker
  *
  * Contributing to the Pacemaker Project:
  * - <a href="https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Development/">Pacemaker Development</a>

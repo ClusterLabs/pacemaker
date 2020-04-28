@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,11 +21,11 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-CRM_TRACE_INIT_DATA(pe_allocate);
+CRM_TRACE_INIT_DATA(pacemaker);
 
 void set_alloc_actions(pe_working_set_t * data_set);
-extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
-extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
+extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
+extern gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
 static void apply_remote_node_ordering(pe_working_set_t *data_set);
 static enum remote_connection_state get_remote_node_state(pe_node_t *node);
 
@@ -58,8 +58,8 @@ state2text(enum remote_connection_state state)
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
-     native_merge_weights,
-     native_color,
+     pcmk__native_merge_weights,
+     pcmk__native_allocate,
      native_create_actions,
      native_create_probe,
      native_internal_constraints,
@@ -72,8 +72,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      native_append_meta,
      },
     {
-     group_merge_weights,
-     group_color,
+     pcmk__group_merge_weights,
+     pcmk__group_allocate,
      group_create_actions,
      native_create_probe,
      group_internal_constraints,
@@ -86,8 +86,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_append_meta,
      },
     {
-     clone_merge_weights,
-     clone_color,
+     pcmk__native_merge_weights,
+     pcmk__clone_allocate,
      clone_create_actions,
      clone_create_probe,
      clone_internal_constraints,
@@ -100,8 +100,8 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_append_meta,
      },
     {
-     pcmk__bundle_merge_weights,
-     pcmk__bundle_color,
+     pcmk__native_merge_weights,
+     pcmk__bundle_allocate,
      pcmk__bundle_create_actions,
      pcmk__bundle_create_probe,
      pcmk__bundle_internal_constraints,
@@ -116,7 +116,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 gboolean
-update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line)
+update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char *source, int line)
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
@@ -144,7 +144,7 @@ update_action_flags(action_t * action, enum pe_action_flags flags, const char *s
 }
 
 static gboolean
-check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
+check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
                      gboolean active_here, pe_working_set_t * data_set)
 {
     int attr_lpc = 0;
@@ -191,26 +191,23 @@ check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
 }
 
 static void
-CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
+CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
             const char *reason, pe_working_set_t * data_set)
 {
     guint interval_ms = 0;
-    action_t *cancel = NULL;
+    pe_action_t *cancel = NULL;
 
     const char *task = NULL;
     const char *call_id = NULL;
-    const char *interval_ms_s = NULL;
 
     CRM_CHECK(xml_op != NULL, return);
     CRM_CHECK(active_node != NULL, return);
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
-    interval_ms = crm_parse_ms(interval_ms_s);
-
-    crm_info("Action " CRM_OP_FMT " on %s will be stopped: %s",
+    crm_info("Action " PCMK__OP_FMT " on %s will be stopped: %s",
              rsc->id, task, interval_ms,
              active_node->details->uname, (reason? reason : "unknown"));
 
@@ -220,12 +217,11 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 }
 
 static gboolean
-check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op,
+check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
 {
     char *key = NULL;
     guint interval_ms = 0;
-    const char *interval_ms_s = NULL;
     const op_digest_cache_t *digest_data = NULL;
     gboolean did_change = FALSE;
 
@@ -234,14 +230,12 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     CRM_CHECK(active_node != NULL, return FALSE);
 
-    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms = crm_parse_ms(interval_ms_s);
-
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if (interval_ms > 0) {
         xmlNode *op_match = NULL;
 
         /* we need to reconstruct the key because of the way we used to construct resource IDs */
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
 
         pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
@@ -260,7 +254,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
-    crm_trace("Testing " CRM_OP_FMT " on %s",
+    crm_trace("Testing " PCMK__OP_FMT " on %s",
               rsc->id, task, interval_ms, active_node->details->uname);
     if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
@@ -285,7 +279,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
         if (is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to " CRM_OP_FMT " on %s changed: %s\n",
+            printf("Only 'private' parameters to " PCMK__OP_FMT
+                   " on %s changed: %s\n",
                    rsc->id, task, interval_ms, active_node->details->uname,
                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
@@ -295,7 +290,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         pe_action_t *required = NULL;
 
         did_change = TRUE;
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
         required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
         pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
@@ -310,10 +305,10 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         did_change = TRUE;
         trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
-        key = generate_op_key(rsc->id, task, interval_ms);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
 
         if (interval_ms > 0) {
-            action_t *op = NULL;
+            pe_action_t *op = NULL;
 
 #if 0
             /* Always reload/restart the entire resource */
@@ -392,16 +387,14 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 }
 
 static void
-check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     int offset = -1;
-    guint interval_ms = 0;
     int stop_index = 0;
     int start_index = 0;
 
     const char *task = NULL;
-    const char *interval_ms_s = NULL;
 
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
@@ -410,7 +403,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     CRM_CHECK(node != NULL, return);
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {
-        resource_t *parent = uber_parent(rsc);
+        pe_resource_t *parent = uber_parent(rsc);
         if(parent == NULL
            || pe_rsc_is_clone(parent) == FALSE
            || is_set(parent->flags, pe_rsc_unique)) {
@@ -449,6 +442,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
+        guint interval_ms = 0;
 
         offset++;
 
@@ -461,9 +455,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         }
 
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-
-        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_ms(interval_ms_s);
+        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
         if ((interval_ms > 0) &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
@@ -503,7 +495,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 }
 
 static GListPtr
-find_rsc_list(GListPtr result, resource_t * rsc, const char *id, gboolean renamed_clones,
+find_rsc_list(GListPtr result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
               gboolean partial, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
@@ -550,7 +542,7 @@ find_rsc_list(GListPtr result, resource_t * rsc, const char *id, gboolean rename
     if (rsc->children) {
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
         }
@@ -563,7 +555,7 @@ static void
 check_actions(pe_working_set_t * data_set)
 {
     const char *id = NULL;
-    node_t *node = NULL;
+    pe_node_t *node = NULL;
     xmlNode *lrm_rscs = NULL;
     xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
@@ -607,7 +599,7 @@ check_actions(pe_working_set_t * data_set)
 
                             result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
                             for (gIter = result; gIter != NULL; gIter = gIter->next) {
-                                resource_t *rsc = (resource_t *) gIter->data;
+                                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
                                 if (rsc->variant != pe_native) {
                                     continue;
@@ -623,25 +615,19 @@ check_actions(pe_working_set_t * data_set)
     }
 }
 
-static gboolean
+static void
 apply_placement_constraints(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
-
-    crm_trace("Applying constraints...");
-
-    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->placement_constraints;
+         gIter != NULL; gIter = gIter->next) {
         pe__location_t *cons = gIter->data;
 
         cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
-
-    return TRUE;
-
 }
 
 static gboolean
-failcount_clear_action_exists(node_t * node, resource_t * rsc)
+failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
 {
     gboolean rc = FALSE;
     GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
@@ -662,11 +648,11 @@ failcount_clear_action_exists(node_t * node, resource_t * rsc)
  * \param[in,out] data_set  Cluster working set to update
  */
 static void
-check_migration_threshold(resource_t *rsc, node_t *node,
+check_migration_threshold(pe_resource_t *rsc, pe_node_t *node,
                           pe_working_set_t *data_set)
 {
     int fail_count, countdown;
-    resource_t *failed;
+    pe_resource_t *failed;
 
     /* Migration threshold of 0 means never force away */
     if (rsc->migration_threshold == 0) {
@@ -707,13 +693,13 @@ check_migration_threshold(resource_t *rsc, node_t *node,
 }
 
 static void
-common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     if (rsc->children) {
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             common_apply_stickiness(child_rsc, node, data_set);
         }
@@ -721,14 +707,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     }
 
     if (is_set(rsc->flags, pe_rsc_managed)
-        && rsc->stickiness != 0 && g_list_length(rsc->running_on) == 1) {
-        node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-        node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
+        pe_node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
+        pe_node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
         if (current == NULL) {
 
         } else if (match != NULL || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-            resource_t *sticky_rsc = rsc;
+            pe_resource_t *sticky_rsc = rsc;
 
             resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
             pe_rsc_debug(sticky_rsc, "Resource %s: preferring current location"
@@ -736,7 +722,7 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
                          node->details->uname, rsc->stickiness);
         } else {
             GHashTableIter iter;
-            node_t *nIter = NULL;
+            pe_node_t *nIter = NULL;
 
             pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
                          " and node %s is not explicitly allowed", rsc->id, node->details->uname);
@@ -764,14 +750,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
 }
 
 void
-complex_set_cmds(resource_t * rsc)
+complex_set_cmds(pe_resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
 
     rsc->cmds = &resource_class_alloc_functions[rsc->variant];
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         complex_set_cmds(child_rsc);
     }
@@ -784,7 +770,7 @@ set_alloc_actions(pe_working_set_t * data_set)
     GListPtr gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         complex_set_cmds(rsc);
     }
@@ -801,14 +787,14 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
         return;
     }
 
-    if (crm_starts_with(key, "#health")) {
+    if (pcmk__starts_with(key, "#health")) {
         int score;
 
         /* Convert the value into an integer */
         score = char2score(value);
 
         /* Add it to the running total */
-        *system_health = merge_weights(score, *system_health);
+        *system_health = pe__add_scores(score, *system_health);
     }
 }
 
@@ -821,9 +807,9 @@ apply_system_health(pe_working_set_t * data_set)
 
     if (health_strategy == NULL || safe_str_eq(health_strategy, "none")) {
         /* Prevent any accidental health -> score translation */
-        node_score_red = 0;
-        node_score_yellow = 0;
-        node_score_green = 0;
+        pcmk__score_red = 0;
+        pcmk__score_yellow = 0;
+        pcmk__score_green = 0;
         return TRUE;
 
     } else if (safe_str_eq(health_strategy, "migrate-on-red")) {
@@ -831,18 +817,18 @@ apply_system_health(pe_working_set_t * data_set)
         /* Resources on nodes which have health values of red are
          * weighted away from that node.
          */
-        node_score_red = -INFINITY;
-        node_score_yellow = 0;
-        node_score_green = 0;
+        pcmk__score_red = -INFINITY;
+        pcmk__score_yellow = 0;
+        pcmk__score_green = 0;
 
     } else if (safe_str_eq(health_strategy, "only-green")) {
 
         /* Resources on nodes which have health values of red or yellow
          * are forced away from that node.
          */
-        node_score_red = -INFINITY;
-        node_score_yellow = -INFINITY;
-        node_score_green = 0;
+        pcmk__score_red = -INFINITY;
+        pcmk__score_yellow = -INFINITY;
+        pcmk__score_green = 0;
 
     } else if (safe_str_eq(health_strategy, "progressive")) {
         /* Same as the above, but use the r/y/g scores provided by the user
@@ -868,7 +854,7 @@ apply_system_health(pe_working_set_t * data_set)
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         int system_health = base_health;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         /* Search through the node hash table for system health entries. */
         g_hash_table_foreach(node->details->attrs, calculate_system_health, &system_health);
@@ -884,7 +870,7 @@ apply_system_health(pe_working_set_t * data_set)
             GListPtr gIter2 = data_set->resources;
 
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
-                resource_t *rsc = (resource_t *) gIter2->data;
+                pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
                 rsc2node_new(health_strategy, rsc, system_health, NULL, node, data_set);
             }
@@ -921,10 +907,10 @@ stage0(pe_working_set_t * data_set)
 gboolean
 probe_resources(pe_working_set_t * data_set)
 {
-    action_t *probe_node_complete = NULL;
+    pe_action_t *probe_node_complete = NULL;
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
         if (node->details->online == FALSE) {
@@ -932,7 +918,7 @@ probe_resources(pe_working_set_t * data_set)
             if (pe__is_remote_node(node) && node->details->remote_rsc
                 && (get_remote_node_state(node) == remote_state_failed)) {
 
-                pe_fence_node(data_set, node, "the connection is unrecoverable");
+                pe_fence_node(data_set, node, "the connection is unrecoverable", FALSE);
             }
             continue;
 
@@ -945,15 +931,15 @@ probe_resources(pe_working_set_t * data_set)
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
-                                               CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
+            pe_action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
+                                                  CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
 
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
             continue;
         }
 
         for (GListPtr gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
-            resource_t *rsc = (resource_t *) gIter2->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
             rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
         }
@@ -962,18 +948,18 @@ probe_resources(pe_working_set_t * data_set)
 }
 
 static void
-rsc_discover_filter(resource_t *rsc, node_t *node)
+rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
     GListPtr gIter = rsc->children;
-    resource_t *top = uber_parent(rsc);
-    node_t *match;
+    pe_resource_t *top = uber_parent(rsc);
+    pe_node_t *match;
 
     if (rsc->exclusive_discover == FALSE && top->exclusive_discover == FALSE) {
         return;
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         rsc_discover_filter(child_rsc, node);
     }
 
@@ -983,42 +969,144 @@ rsc_discover_filter(resource_t *rsc, node_t *node)
     }
 }
 
+static time_t
+shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
+{
+    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    time_t result = 0;
+
+    if (shutdown) {
+        errno = 0;
+        result = (time_t) crm_parse_ll(shutdown, NULL);
+        if (errno != 0) {
+            result = 0;
+        }
+    }
+    return result? result : get_effective_time(data_set);
+}
+
+static void
+apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    const char *class;
+
+    // Only primitives and (uncloned) groups may be locked
+    if (rsc->variant == pe_group) {
+        for (GList *item = rsc->children; item != NULL;
+             item = item->next) {
+            apply_shutdown_lock((pe_resource_t *) item->data, data_set);
+        }
+    } else if (rsc->variant != pe_native) {
+        return;
+    }
+
+    // Fence devices and remote connections can't be locked
+    class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    if ((class == NULL) || !strcmp(class, PCMK_RESOURCE_CLASS_STONITH)
+        || pe__resource_is_remote_conn(rsc, data_set)) {
+        return;
+    }
+
+    if (rsc->lock_node != NULL) {
+        // The lock was obtained from resource history
+
+        if (rsc->running_on != NULL) {
+            /* The resource was started elsewhere even though it is now
+             * considered locked. This shouldn't be possible, but as a
+             * failsafe, we don't want to disturb the resource now.
+             */
+            pe_rsc_info(rsc,
+                        "Cancelling shutdown lock because %s is already active",
+                        rsc->id);
+            pe__clear_resource_history(rsc, rsc->lock_node, data_set);
+            rsc->lock_node = NULL;
+            rsc->lock_time = 0;
+        }
+
+    // Only a resource active on exactly one node can be locked
+    } else if (pcmk__list_of_1(rsc->running_on)) {
+        pe_node_t *node = rsc->running_on->data;
+
+        if (node->details->shutdown) {
+            if (node->details->unclean) {
+                pe_rsc_debug(rsc, "Not locking %s to unclean %s for shutdown",
+                             rsc->id, node->details->uname);
+            } else {
+                rsc->lock_node = node;
+                rsc->lock_time = shutdown_time(node, data_set);
+            }
+        }
+    }
+
+    if (rsc->lock_node == NULL) {
+        // No lock needed
+        return;
+    }
+
+    if (data_set->shutdown_lock > 0) {
+        time_t lock_expiration = rsc->lock_time + data_set->shutdown_lock;
+
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
+                    rsc->id, rsc->lock_node->details->uname,
+                    (long long) lock_expiration);
+        pe__update_recheck_time(++lock_expiration, data_set);
+    } else {
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown",
+                    rsc->id, rsc->lock_node->details->uname);
+    }
+
+    // If resource is locked to one node, ban it from all other nodes
+    for (GList *item = data_set->nodes; item != NULL; item = item->next) {
+        pe_node_t *node = item->data;
+
+        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
+            resource_location(rsc, node, -CRM_SCORE_INFINITY,
+                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, data_set);
+        }
+    }
+}
+
 /*
- * Count how many valid nodes we have (so we know the maximum number of
- *  colors we can resolve).
+ * \internal
+ * \brief Stage 2 of cluster status: apply node-specific criteria
  *
- * Apply node constraints (i.e. filter the "allowed_nodes" part of resources)
+ * Count known nodes, and apply location constraints, stickiness, and exclusive
+ * resource discovery.
  */
 gboolean
 stage2(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    crm_trace("Applying placement constraints");
-
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
-
-        if (node == NULL) {
-            /* error */
-
-        } else if (node->weight >= 0.0  /* global weight */
-                   && node->details->online && node->details->type != node_ping) {
-            data_set->max_valid_nodes++;
+    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            apply_shutdown_lock((pe_resource_t *) gIter->data, data_set);
         }
     }
 
+    if (is_not_set(data_set->flags, pe_flag_no_compat)) {
+        // @COMPAT API backward compatibility
+        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            pe_node_t *node = (pe_node_t *) gIter->data;
+
+            if (node && (node->weight >= 0) && node->details->online
+                && (node->details->type != node_ping)) {
+                data_set->max_valid_nodes++;
+            }
+        }
+    }
+
+    crm_trace("Applying placement constraints");
     apply_placement_constraints(data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
         GListPtr gIter2 = NULL;
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         gIter2 = data_set->resources;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            resource_t *rsc = (resource_t *) gIter2->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
             common_apply_stickiness(rsc, node, data_set);
             rsc_discover_filter(rsc, node);
@@ -1038,7 +1126,7 @@ stage3(pe_working_set_t * data_set)
     GListPtr gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         rsc->cmds->internal_constraints(rsc, data_set);
     }
@@ -1073,24 +1161,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     const char *reason = "existence";
 
     const GListPtr nodes = (GListPtr) data;
-    const resource_t *resource1 = a;
-    const resource_t *resource2 = b;
+    const pe_resource_t *resource1 = a;
+    const pe_resource_t *resource2 = b;
 
-    node_t *r1_node = NULL;
-    node_t *r2_node = NULL;
+    pe_node_t *r1_node = NULL;
+    pe_node_t *r2_node = NULL;
     GListPtr gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
-
-    if (a == NULL && b == NULL) {
-        goto done;
-    }
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
 
     reason = "priority";
     r1_weight = resource1->priority;
@@ -1111,15 +1189,15 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    r1_nodes = rsc_merge_weights(convert_const_pointer(resource1),
-                                 resource1->id, NULL, NULL, 1,
-                                 pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
+    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
+                                          resource1->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes);
 
-    r2_nodes = rsc_merge_weights(convert_const_pointer(resource2),
-                                 resource2->id, NULL, NULL, 1,
-                                 pe_weights_forward | pe_weights_init);
-    dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
+    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
+                                          resource2->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes);
 
     /* Current location score */
     reason = "current location";
@@ -1153,7 +1231,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 
     reason = "score";
     for (gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         r1_node = NULL;
         r2_node = NULL;
@@ -1207,29 +1285,29 @@ allocate_resources(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
-        /* Force remote connection resources to be allocated first. This
-         * also forces any colocation dependencies to be allocated as well */
+        /* Allocate remote connection resources first (which will also allocate
+         * any colocation dependencies). If the connection is migrating, always
+         * prefer the partial migration target.
+         */
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
+            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
             if (rsc->is_remote_node == FALSE) {
                 continue;
             }
-            pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            /* For remote node connection resources, always prefer the partial
-             * migration target during resource allocation, if the rsc is in the
-             * middle of a migration.
-             */
+            pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                         rsc->id);
             rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
 
     /* now do the rest of the resources */
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
         if (rsc->is_remote_node == TRUE) {
             continue;
         }
-        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
+        pe_rsc_trace(rsc, "Allocating %s resource '%s'",
+                     crm_element_name(rsc->xml), rsc->id);
         rsc->cmds->allocate(rsc, NULL, data_set);
     }
 }
@@ -1243,7 +1321,7 @@ allocate_resources(pe_working_set_t * data_set)
  */
 
 static inline void
-order_start_then_action(resource_t *lh_rsc, action_t *rh_action,
+order_start_then_action(pe_resource_t *lh_rsc, pe_action_t *rh_action,
                         enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_rsc && rh_action && data_set) {
@@ -1255,7 +1333,7 @@ order_start_then_action(resource_t *lh_rsc, action_t *rh_action,
 }
 
 static inline void
-order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
+order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
                        enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_action && rh_rsc && data_set) {
@@ -1267,12 +1345,12 @@ order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
 
 // Clear fail counts for orphaned rsc on all online nodes
 static void
-cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
+cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->online
             && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
@@ -1297,6 +1375,7 @@ gboolean
 stage5(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
+    int log_prio = show_utilization? LOG_STDOUT : LOG_TRACE;
 
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GListPtr nodes = g_list_copy(data_set->nodes);
@@ -1310,9 +1389,9 @@ stage5(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Original", node);
+        dump_node_capacity(log_prio, "Original", node);
     }
 
     crm_trace("Allocating services");
@@ -1322,9 +1401,9 @@ stage5(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Remaining", node);
+        dump_node_capacity(log_prio, "Remaining", node);
     }
 
     // Process deferred action checks
@@ -1387,7 +1466,7 @@ stage5(pe_working_set_t * data_set)
     crm_trace("Creating actions");
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         rsc->cmds->create_actions(rsc, data_set);
     }
@@ -1397,7 +1476,7 @@ stage5(pe_working_set_t * data_set)
 }
 
 static gboolean
-is_managed(const resource_t * rsc)
+is_managed(const pe_resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
 
@@ -1406,7 +1485,7 @@ is_managed(const resource_t * rsc)
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         if (is_managed(child_rsc)) {
             return TRUE;
@@ -1423,7 +1502,7 @@ any_managed_resources(pe_working_set_t * data_set)
     GListPtr gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         if (is_managed(rsc)) {
             return TRUE;
@@ -1442,7 +1521,7 @@ any_managed_resources(pe_working_set_t * data_set)
 static void
 fence_guest(pe_node_t *node, pe_working_set_t *data_set)
 {
-    resource_t *container = node->details->remote_rsc->container;
+    pe_resource_t *container = node->details->remote_rsc->container;
     pe_action_t *stop = NULL;
     pe_action_t *stonith_op = NULL;
 
@@ -1468,7 +1547,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     /* Create a fence pseudo-event, so we have an event to order actions
      * against, and the controller can always detect it.
      */
-    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", data_set);
+    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", FALSE, data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
                         __FUNCTION__, __LINE__);
 
@@ -1477,7 +1556,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      * (even though start might be closer to what is done for a real reboot).
      */
     if(stop && is_set(stop->flags, pe_action_pseudo)) {
-        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, data_set);
+        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, FALSE, data_set);
         crm_info("Implying guest node %s is down (action %d) after %s fencing",
                  node->details->uname, stonith_op->id, stop->node->details->uname);
         order_actions(parent_stonith_op, stonith_op,
@@ -1516,7 +1595,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     }
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
-    stonith_constraints(node, stonith_op, data_set);
+    pcmk__order_vs_fence(stonith_op, data_set);
 }
 
 /*
@@ -1525,8 +1604,8 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
 gboolean
 stage6(pe_working_set_t * data_set)
 {
-    action_t *dc_down = NULL;
-    action_t *stonith_op = NULL;
+    pe_action_t *dc_down = NULL;
+    pe_action_t *stonith_op = NULL;
     gboolean integrity_lost = FALSE;
     gboolean need_stonith = TRUE;
     GListPtr gIter;
@@ -1550,7 +1629,7 @@ stage6(pe_working_set_t * data_set)
 
     /* Check each node for stonith/shutdown */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
@@ -1568,10 +1647,10 @@ stage6(pe_working_set_t * data_set)
         if (node->details->unclean
             && need_stonith && pe_can_fence(data_set, node)) {
 
-            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", data_set);
+            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", FALSE, data_set);
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_constraints(node, stonith_op, data_set);
+            pcmk__order_vs_fence(stonith_op, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being fenced
@@ -1600,7 +1679,7 @@ stage6(pe_working_set_t * data_set)
                  * if we can come up with a good use for this in the future, we will. */
                     pe__is_guest_or_remote_node(node) == FALSE) {
 
-            action_t *down_op = sched_shutdown_op(node, data_set);
+            pe_action_t *down_op = sched_shutdown_op(node, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being shut down
@@ -1638,7 +1717,7 @@ stage6(pe_working_set_t * data_set)
          */
         if (safe_str_eq(dc_down->task, CRM_OP_SHUTDOWN)) {
             for (gIter = shutdown_ops; gIter != NULL; gIter = gIter->next) {
-                action_t *node_stop = (action_t *) gIter->data;
+                pe_action_t *node_stop = (pe_action_t *) gIter->data;
 
                 crm_debug("Ordering shutdown on %s before %s on DC %s",
                           node_stop->node->details->uname,
@@ -1681,7 +1760,7 @@ stage6(pe_working_set_t * data_set)
  *
  */
 static GListPtr
-find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_key)
+find_actions_by_task(GListPtr actions, pe_resource_t * rsc, const char *original_key)
 {
     GListPtr list = NULL;
 
@@ -1693,7 +1772,7 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
         guint interval_ms = 0;
 
         if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
-            key = generate_op_key(rsc->id, task, interval_ms);
+            key = pcmk__op_key(rsc->id, task, interval_ms);
             list = find_actions(actions, key, NULL);
 
         } else {
@@ -1713,7 +1792,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 {
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
-    action_t *rh_action = NULL;
+    pe_action_t *rh_action = NULL;
     enum pe_ordering type;
 
     CRM_CHECK(rsc != NULL, return);
@@ -1747,7 +1826,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 
     gIter = rh_actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *rh_action_iter = (action_t *) gIter->data;
+        pe_action_t *rh_action_iter = (pe_action_t *) gIter->data;
 
         if (lh_action) {
             order_actions(lh_action, rh_action_iter, type);
@@ -1769,8 +1848,8 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
 {
     GListPtr gIter = NULL;
     GListPtr lh_actions = NULL;
-    action_t *lh_action = order->lh_action;
-    resource_t *rh_rsc = order->rh_rsc;
+    pe_action_t *lh_action = order->lh_action;
+    pe_resource_t *rh_rsc = order->rh_rsc;
 
     crm_trace("Processing LH of ordering constraint %d", order->id);
     CRM_ASSERT(lh_rsc != NULL);
@@ -1788,7 +1867,7 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
         guint interval_ms = 0;
 
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
-        key = generate_op_key(lh_rsc->id, op_type, interval_ms);
+        key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
             free(key);
@@ -1812,7 +1891,7 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
 
     gIter = lh_actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *lh_action_iter = (action_t *) gIter->data;
+        pe_action_t *lh_action_iter = (pe_action_t *) gIter->data;
 
         if (rh_rsc == NULL && order->rh_action) {
             rh_rsc = order->rh_action->rsc;
@@ -1832,17 +1911,20 @@ extern void update_colo_start_chain(pe_action_t *action,
                                     pe_working_set_t *data_set);
 
 static int
-is_recurring_action(action_t *action) 
+is_recurring_action(pe_action_t *action)
 {
-    const char *interval_ms_s = g_hash_table_lookup(action->meta,
-                                                    XML_LRM_ATTR_INTERVAL_MS);
-    guint interval_ms = crm_parse_ms(interval_ms_s);
+    guint interval_ms;
 
+    if (pcmk__guint_from_hash(action->meta,
+                              XML_LRM_ATTR_INTERVAL_MS, 0,
+                              &interval_ms) != pcmk_rc_ok) {
+        return 0;
+    }
     return (interval_ms > 0);
 }
 
 static void
-apply_container_ordering(action_t *action, pe_working_set_t *data_set)
+apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 {
     /* VMs are also classified as containers for these purposes... in
      * that they both involve a 'thing' running on a real or remote
@@ -1851,8 +1933,8 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
      * This allows us to be smarter about the type and extent of
      * recovery actions required in various scenarios
      */
-    resource_t *remote_rsc = NULL;
-    resource_t *container = NULL;
+    pe_resource_t *remote_rsc = NULL;
+    pe_resource_t *container = NULL;
     enum action_tasks task = text2task(action->task);
 
     CRM_ASSERT(action->rsc);
@@ -1866,7 +1948,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     CRM_ASSERT(container);
 
     if(is_set(container->flags, pe_rsc_failed)) {
-        pe_fence_node(data_set, action->node, "container failed");
+        pe_fence_node(data_set, action->node, "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
@@ -1941,8 +2023,8 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
 static enum remote_connection_state
 get_remote_node_state(pe_node_t *node) 
 {
-    resource_t *remote_rsc = NULL;
-    node_t *cluster_node = NULL;
+    pe_resource_t *remote_rsc = NULL;
+    pe_node_t *cluster_node = NULL;
 
     CRM_ASSERT(node);
 
@@ -1998,7 +2080,7 @@ get_remote_node_state(pe_node_t *node)
         /* Connection is running on a dead node, see if we can recover it first */
         return remote_state_resting;
 
-    } else if (g_list_length(remote_rsc->running_on) > 1
+    } else if (pcmk__list_of_multiple(remote_rsc->running_on)
                && remote_rsc->partial_migration_source
                && remote_rsc->partial_migration_target) {
         /* We're in the middle of migrating a connection resource,
@@ -2016,9 +2098,9 @@ get_remote_node_state(pe_node_t *node)
  * \brief Order actions on remote node relative to actions for the connection
  */
 static void
-apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
+apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 {
-    resource_t *remote_rsc = NULL;
+    pe_resource_t *remote_rsc = NULL;
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
@@ -2073,7 +2155,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
+                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable", FALSE);
 
             } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
                 /* State must be remote_state_unknown or remote_state_stopped.
@@ -2113,7 +2195,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                         pe_order_implies_then, data_set);
 
             } else {
-                node_t *cluster_node = pe__current_node(remote_rsc);
+                pe_node_t *cluster_node = pe__current_node(remote_rsc);
 
                 if(task == monitor_rsc && state == remote_state_failed) {
                     /* We would only be here if we do not know the
@@ -2121,7 +2203,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                      * Since we have no way to find out, it is
                      * necessary to fence the node.
                      */
-                    pe_fence_node(data_set, action->node, "resources are in an unknown state and the connection is unrecoverable");
+                    pe_fence_node(data_set, action->node, "resources are in an unknown state and the connection is unrecoverable", FALSE);
                 }
 
                 if(cluster_node && state == remote_state_stopped) {
@@ -2152,8 +2234,8 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
     }
 
     for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
-        resource_t *remote = NULL;
+        pe_action_t *action = (pe_action_t *) gIter->data;
+        pe_resource_t *remote = NULL;
 
         // We are only interested in resource actions
         if (action->rsc == NULL) {
@@ -2171,7 +2253,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 NULL,
                 action,
                 action->rsc,
-                generate_op_key(action->rsc->id, RSC_START, 0),
+                pcmk__op_key(action->rsc->id, RSC_START, 0),
                 NULL,
                 pe_order_optional,
                 data_set);
@@ -2315,7 +2397,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         } else if (lh_action == NULL
                    && lh_action_task
-                   && crm_ends_with(lh_action_task, "_" RSC_STOP "_0") == FALSE) {
+                   && !pcmk__ends_with(lh_action_task, "_" RSC_STOP "_0")) {
             continue;
         }
 
@@ -2328,7 +2410,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
                 continue;
 
             } else if (rh_action == NULL && rh_action_task
-                       && crm_ends_with(rh_action_task,"_" RSC_STOP "_0")) {
+                       && pcmk__ends_with(rh_action_task,"_" RSC_STOP "_0")) {
                 continue;
             }
         }
@@ -2593,7 +2675,7 @@ order_then_probes(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         /* Given "A then B", we would prefer to wait for A to be
          * started before probing B.
@@ -2637,7 +2719,7 @@ order_then_probes(pe_working_set_t * data_set)
          * with the ever narrowing usecase suggests that this code
          * should remain disabled until someone gets smarter.
          */
-        action_t *start = NULL;
+        pe_action_t *start = NULL;
         GListPtr actions = NULL;
         GListPtr probes = NULL;
 
@@ -2656,16 +2738,16 @@ order_then_probes(pe_working_set_t * data_set)
         probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
         for (actions = start->actions_before; actions != NULL; actions = actions->next) {
-            action_wrapper_t *before = (action_wrapper_t *) actions->data;
+            pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
             GListPtr pIter = NULL;
-            action_t *first = before->action;
-            resource_t *first_rsc = first->rsc;
+            pe_action_t *first = before->action;
+            pe_resource_t *first_rsc = first->rsc;
 
             if(first->required_runnable_before) {
                 GListPtr clone_actions = NULL;
                 for (clone_actions = first->actions_before; clone_actions != NULL; clone_actions = clone_actions->next) {
-                    before = (action_wrapper_t *) clone_actions->data;
+                    before = (pe_action_wrapper_t *) clone_actions->data;
 
                     crm_trace("Testing %s -> %s (%p) for %s", first->uuid, before->action->uuid, before->action->rsc, start->uuid);
 
@@ -2693,7 +2775,7 @@ order_then_probes(pe_working_set_t * data_set)
             crm_err("Applying %s before %s %d", first->uuid, start->uuid, uber_parent(first_rsc)->variant);
 
             for (pIter = probes; pIter != NULL; pIter = pIter->next) {
-                action_t *probe = (action_t *) pIter->data;
+                pe_action_t *probe = (pe_action_t *) pIter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pe_order_optional);
@@ -2727,7 +2809,7 @@ stage7(pe_working_set_t * data_set)
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
         pe__ordering_t *order = gIter->data;
-        resource_t *rsc = order->lh_rsc;
+        pe_resource_t *rsc = order->lh_rsc;
 
         crm_trace("Applying ordering constraint: %d", order->id);
 
@@ -2749,7 +2831,7 @@ stage7(pe_working_set_t * data_set)
     }
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         update_colo_start_chain(action, data_set);
     }
@@ -2759,7 +2841,7 @@ stage7(pe_working_set_t * data_set)
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         update_action(action, data_set);
     }
@@ -2781,7 +2863,7 @@ stage7(pe_working_set_t * data_set)
 
     LogNodeActions(data_set, FALSE);
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         LogActions(rsc, data_set, FALSE);
     }
@@ -2851,7 +2933,7 @@ stage8(pe_working_set_t * data_set)
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
     value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_int_helper(value, NULL) > 0) {
+    if (crm_parse_ll(value, NULL) > 0) {
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 
@@ -2865,7 +2947,7 @@ stage8(pe_working_set_t * data_set)
     }
 
 /* errors...
-   slist_iter(action, action_t, action_list, lpc,
+   slist_iter(action, pe_action_t, action_list, lpc,
    if(action->optional == FALSE && action->runnable == FALSE) {
    print_action("Ignoring", action, TRUE);
    }
@@ -2879,7 +2961,7 @@ stage8(pe_working_set_t * data_set)
 
     gIter = data_set->resources;
     for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "processing actions for rsc=%s", rsc->id);
         rsc->cmds->expand(rsc, data_set);
@@ -2895,7 +2977,7 @@ stage8(pe_working_set_t * data_set)
 
     gIter = data_set->actions;
     for (; gIter != NULL; gIter = gIter->next) {
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (action->rsc
             && action->node
@@ -2937,7 +3019,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         char *node_name = NULL;
         char *task = NULL;
-        action_t *action = (action_t *) gIter->data;
+        pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (action->rsc != NULL) {
             continue;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ pcmk__output_free(pcmk__output_t *out) {
         g_hash_table_destroy(out->messages);
     }
 
-    free(out->request);
+    g_free(out->request);
     free(out);
 }
 
@@ -46,7 +46,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     }
 
     if (create == NULL) {
-        return pcmk_err_unknown_format;
+        return pcmk_rc_unknown_format;
     }
 
     *out = create(argv);
@@ -70,7 +70,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         return ENOMEM;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -81,7 +81,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     if (formatters == NULL) {
-        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
     }
 
     if (options != NULL && group != NULL) {
@@ -105,15 +105,22 @@ pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *formats) {
     }
 }
 
+void
+pcmk__unregister_formats() {
+    if (formatters != NULL) {
+        g_hash_table_destroy(formatters);
+    }
+}
+
 int
 pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
     va_list args;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
     pcmk__message_fn_t fn;
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     va_start(args, message_id);

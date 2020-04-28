@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -368,10 +368,10 @@ bool xml_document_dirty(xmlNode *xml)
   <change operation="delete" xpath="/cib/configuration/nodes/node[@id='node3'] /">
   <change operation="update" xpath="/cib/configuration/resources/group[@id='g1']">
     <change-list>
-      <change-attr operation="set" name="description" value="some grabage here"/>
+      <change-attr operation="set" name="description" value="some garbage here"/>
     </change-list>
     <change-result>
-      <group id="g1" description="some grabage here"/><!-- NOTE: not recursive -->
+      <group id="g1" description="some garbage here"/><!-- NOTE: not recursive -->
     </change-result>
   </change>
   <change operation="update" xpath="/cib/status/node_state[@id='node2]/lrm[@id='node2']/lrm_resources/lrm_resource[@id='Fence']">
@@ -838,6 +838,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
 
     static struct qb_log_callsite *patchset_cs = NULL;
 
+    if (log_level == LOG_NEVER) {
+        return;
+    }
     if (patchset_cs == NULL) {
         patchset_cs = qb_log_callsite_get(function, __FILE__, "xml-patchset", log_level, __LINE__, 0);
     }
@@ -846,9 +849,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         crm_trace("Empty patch");
         return;
 
-    } else if (log_level == 0) {
-        /* Log to stdout */
-    } else if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
+    } else if ((log_level != LOG_STDOUT)
+               && !crm_is_callsite_active(patchset_cs, log_level, 0)) {
         return;
     }
 
@@ -980,6 +982,10 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
 {
     GListPtr gIter = NULL;
     xml_private_t *doc = NULL;
+
+    if (log_level == LOG_NEVER) {
+        return;
+    }
 
     CRM_ASSERT(xml);
     CRM_ASSERT(xml->doc);
@@ -2361,7 +2367,7 @@ filename2xml(const char *filename)
     xmlSetGenericErrorFunc(ctxt, crm_xml_err);
 
     if (filename) {
-        uncompressed = !crm_ends_with_ext(filename, ".bz2");
+        uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
     }
 
     if (filename == NULL) {
@@ -2417,7 +2423,8 @@ filename2xml(const char *filename)
 const char *
 crm_xml_add_last_written(xmlNode *xml_node)
 {
-    const char *now_str = crm_now_string(NULL);
+    const char *now_str = pcmk__epoch2str(NULL);
+
     return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN,
                        now_str ? now_str : "Could not determine current time");
 }
@@ -2760,7 +2767,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
 
-    if(data == NULL) {
+    if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
     }
 
@@ -2852,7 +2859,7 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
 
-    if(data == NULL) {
+    if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
     }
 
@@ -2946,6 +2953,10 @@ log_data_element(int log_level, const char *file, const char *function, int line
     xmlNode *a_child = NULL;
 
     char *prefix_m = NULL;
+
+    if (log_level == LOG_NEVER) {
+        return;
+    }
 
     if (prefix == NULL) {
         prefix = "";
@@ -3363,7 +3374,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = crm_strdup_printf("%s/%s", crm_get_tmpdir(), uuid);
+        f = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), uuid);
         filename = f;
         free(uuid);
     }
@@ -4501,7 +4512,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
     if (base == NULL) {
         base = getenv("PCMK_schema_directory");
     }
-    if (base == NULL || base[0] == '\0') {
+    if (pcmk__str_empty(base)) {
         base = CRM_SCHEMA_DIRECTORY;
     }
 

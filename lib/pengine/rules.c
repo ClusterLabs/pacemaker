@@ -60,29 +60,6 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
 }
 
 gboolean
-test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
-{
-    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
-}
-
-gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
-}
-
-gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
@@ -125,30 +102,6 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 
     crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
     return passed;
-}
-
-gboolean
-pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-                  crm_time_t *now, pe_match_data_t *match_data)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
-}
-
-gboolean
-test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
 }
 
 /*!
@@ -222,14 +175,6 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     crm_trace("Expression %s %s on %s",
               ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
     return accept;
-}
-
-gboolean
-pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                        enum rsc_role_e role, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
 }
 
 enum expression_type
@@ -498,96 +443,104 @@ phase_of_the_moon(crm_time_t * now)
     return ((((((diy + epact) * 6) + 11) % 177) / 22) & 7);
 }
 
-static gboolean
-decodeNVpair(const char *srcstring, char separator, char **name, char **value)
-{
-    const char *seploc = NULL;
+static int
+check_one(xmlNode *cron_spec, const char *xml_field, uint32_t time_field) {
+    int rc = pcmk_rc_undetermined;
+    const char *value = crm_element_value(cron_spec, xml_field);
+    long long low, high;
 
-    CRM_ASSERT(name != NULL && value != NULL);
-    *name = NULL;
-    *value = NULL;
-
-    crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring != NULL) {
-        seploc = strchr(srcstring, separator);
-        if (seploc) {
-            *name = strndup(srcstring, seploc - srcstring);
-            if (*(seploc + 1)) {
-                *value = strdup(seploc + 1);
-            }
-            return TRUE;
-        }
+    if (value == NULL) {
+        /* Return pe_date_result_undetermined if the field is missing. */
+        goto bail;
     }
-    return FALSE;
+
+    if (pcmk__parse_ll_range(value, &low, &high) == pcmk_rc_unknown_format) {
+       goto bail;
+    } else if (low == high) {
+        /* A single number was given, not a range. */
+        if (time_field < low) {
+            rc = pcmk_rc_before_range;
+        } else if (time_field > high) {
+            rc = pcmk_rc_after_range;
+        } else {
+            rc = pcmk_rc_within_range;
+        }
+    } else if (low != -1 && high != -1) {
+        /* This is a range with both bounds. */
+        if (time_field < low) {
+            rc = pcmk_rc_before_range;
+        } else if (time_field > high) {
+            rc = pcmk_rc_after_range;
+        } else {
+            rc = pcmk_rc_within_range;
+        }
+    } else if (low == -1) {
+       /* This is a range with no starting value. */
+        rc = time_field <= high ? pcmk_rc_within_range : pcmk_rc_after_range;
+    } else if (high == -1) {
+        /* This is a range with no ending value. */
+        rc = time_field >= low ? pcmk_rc_within_range : pcmk_rc_before_range;
+    }
+
+bail:
+    if (rc == pcmk_rc_within_range) {
+        crm_debug("Condition '%s' in %s: passed", value, xml_field);
+    } else {
+        crm_debug("Condition '%s' in %s: failed", value, xml_field);
+    }
+
+    return rc;
 }
 
-#define cron_check(xml_field, time_field)				\
-    value = crm_element_value(cron_spec, xml_field);			\
-    if(value != NULL) {							\
-	gboolean pass = TRUE;						\
-	decodeNVpair(value, '-', &value_low, &value_high);		\
-	if(value_low == NULL) {						\
-	    value_low = strdup(value);				\
-	}								\
-	value_low_i = crm_parse_int(value_low, "0");			\
-	value_high_i = crm_parse_int(value_high, "-1");			\
-	if(value_high_i < 0) {						\
-	    if(value_low_i != time_field) {				\
-		pass = FALSE;						\
-	    }								\
-	} else if(value_low_i > time_field) {				\
-	    pass = FALSE;						\
-	} else if(value_high_i < time_field) {				\
-	    pass = FALSE;						\
-	}								\
-	free(value_low);						\
-	free(value_high);						\
-	if(pass == FALSE) {						\
-	    crm_debug("Condition '%s' in %s: failed", value, xml_field); \
-	    return pass;						\
-	}								\
-	crm_debug("Condition '%s' in %s: passed", value, xml_field);	\
-    }
+static gboolean
+check_passes(int rc) {
+    /* _within_range is obvious.  _undetermined is a pass because
+     * this is the return value if a field is not given.  In this
+     * case, we just want to ignore it and check other fields to
+     * see if they place some restriction on what can pass.
+     */
+    return rc == pcmk_rc_within_range || rc == pcmk_rc_undetermined;
+}
 
-gboolean
+#define CHECK_ONE(spec, name, var) do { \
+    int subpart_rc = check_one(spec, name, var); \
+    if (check_passes(subpart_rc) == FALSE) { \
+        return subpart_rc; \
+    } \
+} while (0)
+
+int
 pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 {
-    const char *value = NULL;
-    char *value_low = NULL;
-    char *value_high = NULL;
-
-    int value_low_i = 0;
-    int value_high_i = 0;
-
     uint32_t h, m, s, y, d, w;
 
-    CRM_CHECK(now != NULL, return FALSE);
-
-    crm_time_get_timeofday(now, &h, &m, &s);
-
-    cron_check("seconds", s);
-    cron_check("minutes", m);
-    cron_check("hours", h);
+    CRM_CHECK(now != NULL, return pcmk_rc_op_unsatisfied);
 
     crm_time_get_gregorian(now, &y, &m, &d);
+    CHECK_ONE(cron_spec, "years", y);
+    CHECK_ONE(cron_spec, "months", m);
+    CHECK_ONE(cron_spec, "monthdays", d);
 
-    cron_check("monthdays", d);
-    cron_check("months", m);
-    cron_check("years", y);
+    crm_time_get_timeofday(now, &h, &m, &s);
+    CHECK_ONE(cron_spec, "hours", h);
+    CHECK_ONE(cron_spec, "minutes", m);
+    CHECK_ONE(cron_spec, "seconds", s);
 
     crm_time_get_ordinal(now, &y, &d);
-
-    cron_check("yeardays", d);
+    CHECK_ONE(cron_spec, "yeardays", d);
 
     crm_time_get_isoweek(now, &y, &w, &d);
+    CHECK_ONE(cron_spec, "weekyears", y);
+    CHECK_ONE(cron_spec, "weeks", w);
+    CHECK_ONE(cron_spec, "weekdays", d);
 
-    cron_check("weekyears", y);
-    cron_check("weeks", w);
-    cron_check("weekdays", d);
+    CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
 
-    cron_check("moon", phase_of_the_moon(now));
-
-    return TRUE;
+    /* If we get here, either no fields were specified (which is success), or all
+     * the fields that were specified had their conditions met (which is also a
+     * success).  Thus, the result is success.
+     */
+    return pcmk_rc_ok;
 }
 
 #define update_field(xml_field, time_fn)			\
@@ -632,8 +585,8 @@ pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
                         crm_time_t *next_change)
 {
     switch (pe_eval_date_expression(time_expr, now, next_change)) {
-        case pe_date_within_range:
-        case pe_date_op_satisfied:
+        case pcmk_rc_within_range:
+        case pcmk_rc_ok:
             return TRUE;
 
         default:
@@ -661,9 +614,9 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
  * \param[in]  now          Time for which to evaluate expression
  * \param[out] next_change  If not NULL, set to when evaluation will change
  *
- * \return Evaluation result
+ * \return Standard Pacemaker return code
  */
-pe_eval_date_result_t
+int
 pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
                         crm_time_t *next_change)
 {
@@ -676,7 +629,7 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
     xmlNode *date_spec = NULL;
 
     // "undetermined" will also be returned for parsing errors
-    pe_eval_date_result_t rc = pe_date_result_undetermined;
+    int rc = pcmk_rc_undetermined;
 
     crm_trace("Testing expression: %s", ID(time_expr));
 
@@ -700,12 +653,12 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         if ((start == NULL) && (end == NULL)) {
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
             crm_time_set_if_earlier(next_change, start);
         } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         } else {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
             if (end && next_change) {
                 // Evaluation doesn't change until second after end
                 crm_time_add_seconds(end, 1);
@@ -714,17 +667,16 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         }
 
     } else if (safe_str_eq(op, "date_spec")) {
-        rc = pe_cron_range_satisfied(now, date_spec) ? pe_date_op_satisfied
-                                                     : pe_date_op_unsatisfied;
+        rc = pe_cron_range_satisfied(now, date_spec);
         // @TODO set next_change appropriately
 
     } else if (safe_str_eq(op, "gt")) {
         if (start == NULL) {
             // gt requires start
         } else if (crm_time_compare(now, start) > 0) {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
         } else {
-            rc = pe_date_before_range;
+            rc = pcmk_rc_before_range;
 
             // Evaluation doesn't change until second after start
             crm_time_add_seconds(start, 1);
@@ -735,10 +687,10 @@ pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
         if (end == NULL) {
             // lt requires end
         } else if (crm_time_compare(now, end) < 0) {
-            rc = pe_date_within_range;
+            rc = pcmk_rc_within_range;
             crm_time_set_if_earlier(next_change, end);
         } else {
-            rc = pe_date_after_range;
+            rc = pcmk_rc_after_range;
         }
     }
 
@@ -1059,16 +1011,6 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                          overwrite, now, next_change, unpack_attr_set);
 }
 
-void
-unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                           GHashTable *node_hash, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           crm_time_t *now)
-{
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, NULL, unpack_attr_set);
-}
-
 #if ENABLE_VERSIONED_ATTRS
 void
 pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
@@ -1089,7 +1031,7 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     const char *p, *last_match_index;
     char *p_dst, *result = NULL;
 
-    if (!string || string[0] == '\0' || !match_data) {
+    if (pcmk__str_empty(string) || !match_data) {
         return NULL;
     }
 
@@ -1162,3 +1104,91 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
     return hash;
 }
 #endif
+
+// Deprecated functions kept only for backward API compatibility
+gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
+gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now);
+gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now,
+                         pe_re_match_data_t *re_match_data);
+gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
+                           enum rsc_role_e role, crm_time_t *now,
+                           pe_match_data_t *match_data);
+gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
+                         enum rsc_role_e role, crm_time_t *now);
+gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
+                               enum rsc_role_e role, crm_time_t *now,
+                               pe_re_match_data_t *re_match_data);
+gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                                 enum rsc_role_e role, crm_time_t *now,
+                                 pe_match_data_t *match_data);
+void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
+                                const char *set_name, GHashTable *node_hash,
+                                GHashTable *hash, const char *always_first,
+                                gboolean overwrite, crm_time_t *now);
+
+gboolean
+test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
+{
+    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
+}
+
+gboolean
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
+}
+
+gboolean
+pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
+}
+
+gboolean
+pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
+                  crm_time_t *now, pe_match_data_t *match_data)
+{
+    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
+test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
+}
+
+gboolean
+pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
+{
+    pe_match_data_t match_data = {
+                                    .re = re_match_data,
+                                    .params = NULL,
+                                    .meta = NULL,
+                                 };
+    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
+}
+
+gboolean
+pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
+                        enum rsc_role_e role, crm_time_t *now,
+                        pe_match_data_t *match_data)
+{
+    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
+}
+
+void
+unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                           GHashTable *node_hash, GHashTable *hash,
+                           const char *always_first, gboolean overwrite,
+                           crm_time_t *now)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
+                         overwrite, now, NULL, unpack_attr_set);
+}

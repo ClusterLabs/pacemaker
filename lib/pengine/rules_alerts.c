@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <crm/pengine/rules_internal.h>
 
 static void
-get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
+get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
                         guint *max_timeout)
 {
     GHashTable *config_hash = crm_str_table_new();
@@ -32,12 +32,12 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
         if (entry->timeout <= 0) {
             if (entry->timeout == 0) {
                 crm_trace("Alert %s uses default timeout of %dmsec",
-                          entry->id, CRM_ALERT_DEFAULT_TIMEOUT_MS);
+                          entry->id, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             } else {
                 crm_warn("Alert %s has invalid timeout value '%s', using default %dmsec",
-                         entry->id, (char*)value, CRM_ALERT_DEFAULT_TIMEOUT_MS);
+                         entry->id, (char*)value, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             }
-            entry->timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
+            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
         } else {
             crm_trace("Alert %s uses timeout of %dmsec",
                       entry->id, entry->timeout);
@@ -60,7 +60,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
 }
 
 static void
-get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry)
+get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
 {
     xmlNode *child;
 
@@ -93,11 +93,11 @@ get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry)
 }
 
 static void
-unpack_alert_filter(xmlNode *basenode, crm_alert_entry_t *entry)
+unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
 {
     xmlNode *select = first_named_child(basenode, XML_CIB_TAG_ALERT_SELECT);
     xmlNode *event_type = NULL;
-    uint32_t flags = crm_alert_none;
+    uint32_t flags = pcmk__alert_none;
 
     for (event_type = __xml_first_child_element(select); event_type != NULL;
          event_type = __xml_next_element(event_type)) {
@@ -108,20 +108,20 @@ unpack_alert_filter(xmlNode *basenode, crm_alert_entry_t *entry)
             continue;
 
         } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_FENCING)) {
-            flags |= crm_alert_fencing;
+            flags |= pcmk__alert_fencing;
 
         } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_NODES)) {
-            flags |= crm_alert_node;
+            flags |= pcmk__alert_node;
 
         } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_RESOURCES)) {
-            flags |= crm_alert_resource;
+            flags |= pcmk__alert_resource;
 
         } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
             xmlNode *attr;
             const char *attr_name;
             int nattrs = 0;
 
-            flags |= crm_alert_attribute;
+            flags |= pcmk__alert_attribute;
             for (attr = first_named_child(event_type, XML_CIB_TAG_ALERT_ATTR);
                  attr != NULL;
                  attr = crm_next_same_xml(attr)) {
@@ -142,20 +142,20 @@ unpack_alert_filter(xmlNode *basenode, crm_alert_entry_t *entry)
         }
     }
 
-    if (flags != crm_alert_none) {
+    if (flags != pcmk__alert_none) {
         entry->flags = flags;
-        crm_debug("Alert %s receives events: attributes:%s, fencing:%s, nodes:%s, resources:%s",
+        crm_debug("Alert %s receives events: attributes:%s%s%s%s",
                   entry->id,
-                  (flags & crm_alert_attribute)?
-                    (entry->select_attribute_name? "some" : "all") : "no",
-                  (flags & crm_alert_fencing)? "yes" : "no",
-                  (flags & crm_alert_node)? "yes" : "no",
-                  (flags & crm_alert_resource)? "yes" : "no");
+                  (is_set(flags, pcmk__alert_attribute)?
+                   (entry->select_attribute_name? "some" : "all") : "none"),
+                  (is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
+                  (is_set(flags, pcmk__alert_node)? " nodes" : ""),
+                  (is_set(flags, pcmk__alert_resource)? " resources" : ""));
     }
 }
 
 static void
-unpack_alert(xmlNode *alert, crm_alert_entry_t *entry, guint *max_timeout)
+unpack_alert(xmlNode *alert, pcmk__alert_t *entry, guint *max_timeout)
 {
     get_envvars_from_cib(alert, entry);
     get_meta_attrs_from_cib(alert, entry, max_timeout);
@@ -177,7 +177,7 @@ GListPtr
 pe_unpack_alerts(xmlNode *alerts)
 {
     xmlNode *alert;
-    crm_alert_entry_t *entry;
+    pcmk__alert_t *entry;
     guint max_timeout = 0;
     GListPtr alert_list = NULL;
 
@@ -199,12 +199,12 @@ pe_unpack_alerts(xmlNode *alerts)
             continue;
         }
 
-        entry = crm_alert_entry_new(alert_id, alert_path);
+        entry = pcmk__alert_new(alert_id, alert_path);
 
         unpack_alert(alert, entry, &max_timeout);
 
         if (entry->tstamp_format == NULL) {
-            entry->tstamp_format = strdup(CRM_ALERT_DEFAULT_TSTAMP_FORMAT);
+            entry->tstamp_format = strdup(PCMK__ALERT_DEFAULT_TSTAMP_FORMAT);
         }
 
         crm_debug("Alert %s: path=%s timeout=%dms tstamp-format='%s' %u vars",
@@ -214,7 +214,7 @@ pe_unpack_alerts(xmlNode *alerts)
         for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);
              recipient != NULL; recipient = crm_next_same_xml(recipient)) {
 
-            crm_alert_entry_t *recipient_entry = crm_dup_alert_entry(entry);
+            pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 
             recipients++;
             recipient_entry->recipient = strdup(crm_element_value(recipient,
@@ -230,7 +230,7 @@ pe_unpack_alerts(xmlNode *alerts)
         if (recipients == 0) {
             alert_list = g_list_prepend(alert_list, entry);
         } else {
-            crm_free_alert_entry(entry);
+            pcmk__free_alert(entry);
         }
     }
     return alert_list;
@@ -246,6 +246,6 @@ void
 pe_free_alert_list(GListPtr alert_list)
 {
     if (alert_list) {
-        g_list_free_full(alert_list, (GDestroyNotify) crm_free_alert_entry);
+        g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
     }
 }

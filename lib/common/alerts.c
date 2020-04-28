@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -12,31 +14,69 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/cib/internal.h> /* for F_CIB_UPDATE_RESULT */
 
-/*		
- * to allow script compatibility we can have more than one		
- * set of environment variables		
+/*
+ * to allow script compatibility we can have more than one
+ * set of environment variables
  */
-const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =		
-{		
-    [CRM_alert_recipient]     = {"CRM_notify_recipient",     "CRM_alert_recipient",     NULL},		
-    [CRM_alert_node]          = {"CRM_notify_node",          "CRM_alert_node",          NULL},		
-    [CRM_alert_nodeid]        = {"CRM_notify_nodeid",        "CRM_alert_nodeid",        NULL},		
-    [CRM_alert_rsc]           = {"CRM_notify_rsc",           "CRM_alert_rsc",           NULL},		
-    [CRM_alert_task]          = {"CRM_notify_task",          "CRM_alert_task",          NULL},		
-    [CRM_alert_interval]      = {"CRM_notify_interval",      "CRM_alert_interval",      NULL},		
-    [CRM_alert_desc]          = {"CRM_notify_desc",          "CRM_alert_desc",          NULL},		
-    [CRM_alert_status]        = {"CRM_notify_status",        "CRM_alert_status",        NULL},		
-    [CRM_alert_target_rc]     = {"CRM_notify_target_rc",     "CRM_alert_target_rc",     NULL},		
-    [CRM_alert_rc]            = {"CRM_notify_rc",            "CRM_alert_rc",            NULL},		
-    [CRM_alert_kind]          = {"CRM_notify_kind",          "CRM_alert_kind",          NULL},		
-    [CRM_alert_version]       = {"CRM_notify_version",       "CRM_alert_version",       NULL},		
-    [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", CRM_ALERT_NODE_SEQUENCE, NULL},		
-    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL},
-    [CRM_alert_attribute_name]     = {"CRM_notify_attribute_name",     "CRM_alert_attribute_name",     NULL},
-    [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL},
-    [CRM_alert_timestamp_epoch]     = {"CRM_notify_timestamp_epoch",     "CRM_alert_timestamp_epoch",     NULL},
-    [CRM_alert_timestamp_usec]     = {"CRM_notify_timestamp_usec",     "CRM_alert_timestamp_usec",     NULL},
-    [CRM_alert_exec_time]     = {"CRM_notify_exec_time",     "CRM_alert_exec_time",     NULL}
+const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3] =
+{
+    [PCMK__alert_key_recipient] = {
+        "CRM_notify_recipient",         "CRM_alert_recipient",          NULL
+    },
+    [PCMK__alert_key_node] = {
+        "CRM_notify_node",              "CRM_alert_node",               NULL
+    },
+    [PCMK__alert_key_nodeid] = {
+        "CRM_notify_nodeid",            "CRM_alert_nodeid",             NULL
+    },
+    [PCMK__alert_key_rsc] = {
+        "CRM_notify_rsc",               "CRM_alert_rsc",                NULL
+    },
+    [PCMK__alert_key_task] = {
+        "CRM_notify_task",              "CRM_alert_task",               NULL
+    },
+    [PCMK__alert_key_interval] = {
+        "CRM_notify_interval",          "CRM_alert_interval",           NULL
+    },
+    [PCMK__alert_key_desc] = {
+        "CRM_notify_desc",              "CRM_alert_desc",               NULL
+    },
+    [PCMK__alert_key_status] = {
+        "CRM_notify_status",            "CRM_alert_status",             NULL
+    },
+    [PCMK__alert_key_target_rc] = {
+        "CRM_notify_target_rc",         "CRM_alert_target_rc",          NULL
+    },
+    [PCMK__alert_key_rc] = {
+        "CRM_notify_rc",                "CRM_alert_rc",                 NULL
+    },
+    [PCMK__alert_key_kind] = {
+        "CRM_notify_kind",              "CRM_alert_kind",               NULL
+    },
+    [PCMK__alert_key_version] = {
+        "CRM_notify_version",           "CRM_alert_version",            NULL
+    },
+    [PCMK__alert_key_node_sequence] = {
+        "CRM_notify_node_sequence",     PCMK__ALERT_NODE_SEQUENCE,      NULL
+    },
+    [PCMK__alert_key_timestamp] = {
+        "CRM_notify_timestamp",         "CRM_alert_timestamp",          NULL
+    },
+    [PCMK__alert_key_attribute_name] = {
+        "CRM_notify_attribute_name",    "CRM_alert_attribute_name",     NULL
+    },
+    [PCMK__alert_key_attribute_value] = {
+        "CRM_notify_attribute_value",   "CRM_alert_attribute_value",    NULL
+    },
+    [PCMK__alert_key_timestamp_epoch] = {
+        "CRM_notify_timestamp_epoch",   "CRM_alert_timestamp_epoch",    NULL
+    },
+    [PCMK__alert_key_timestamp_usec] = {
+        "CRM_notify_timestamp_usec",    "CRM_alert_timestamp_usec",     NULL
+    },
+    [PCMK__alert_key_exec_time] = {
+        "CRM_notify_exec_time",         "CRM_alert_exec_time",          NULL
+    }
 };
 
 /*!
@@ -48,24 +88,24 @@ const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =
  * \return Pointer to newly allocated alert entry
  * \note Non-string fields will be filled in with defaults.
  *       It is the caller's responsibility to free the result,
- *       using crm_free_alert_entry().
+ *       using pcmk__free_alert().
  */
-crm_alert_entry_t *
-crm_alert_entry_new(const char *id, const char *path)
+pcmk__alert_t *
+pcmk__alert_new(const char *id, const char *path)
 {
-    crm_alert_entry_t *entry = calloc(1, sizeof(crm_alert_entry_t));
+    pcmk__alert_t *entry = calloc(1, sizeof(pcmk__alert_t));
 
     CRM_ASSERT(entry && id && path);
     entry->id = strdup(id);
     entry->path = strdup(path);
-    entry->timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
-    entry->flags = crm_alert_default;
+    entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+    entry->flags = pcmk__alert_default;
     return entry;
 }
 
 void
-crm_free_alert_entry(crm_alert_entry_t *entry)
-{		
+pcmk__free_alert(pcmk__alert_t *entry)
+{
     if (entry) {
         free(entry->id);
         free(entry->path);
@@ -78,7 +118,7 @@ crm_free_alert_entry(crm_alert_entry_t *entry)
         }
         free(entry);
     }
-}		
+}
 
 /*!
  * \internal
@@ -88,10 +128,10 @@ crm_free_alert_entry(crm_alert_entry_t *entry)
  *
  * \return Duplicate of alert entry
  */
-crm_alert_entry_t *
-crm_dup_alert_entry(crm_alert_entry_t *entry)
+pcmk__alert_t *
+pcmk__dup_alert(pcmk__alert_t *entry)
 {
-    crm_alert_entry_t *new_entry = crm_alert_entry_new(entry->id, entry->path);
+    pcmk__alert_t *new_entry = pcmk__alert_new(entry->id, entry->path);
 
     new_entry->timeout = entry->timeout;
     new_entry->flags = entry->flags;
@@ -109,24 +149,10 @@ crm_dup_alert_entry(crm_alert_entry_t *entry)
 }
 
 void
-crm_unset_alert_keys()
+pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
+                    const char *value)
 {
-    const char **key;
-    enum crm_alert_keys_e name;
-
-    for(name = 0; name < DIMOF(crm_alert_keys); name++) {
-        for(key = crm_alert_keys[name]; *key; key++) {
-            crm_trace("Unsetting alert key %s", *key);
-            unsetenv(*key);
-        }
-    }
-}
-
-void
-crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
-                     const char *value)
-{
-    for (const char **key = crm_alert_keys[name]; *key; key++) {
+    for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = '%s'", *key, value);
         if (value) {
             g_hash_table_insert(table, strdup(*key), strdup(value));
@@ -137,46 +163,12 @@ crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
 }
 
 void
-crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
-                         int value)
+pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
+                        int value)
 {
-    for (const char **key = crm_alert_keys[name]; *key; key++) {
+    for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = %d", *key, value);
         g_hash_table_insert(table, strdup(*key), crm_itoa(value));
-    }
-}
-
-static void
-set_envvar(gpointer key, gpointer value, gpointer user_data)
-{
-    gboolean always_unset = GPOINTER_TO_INT(user_data);
-
-    crm_trace("%s environment variable %s='%s'",
-              (value? "Setting" : "Unsetting"),
-              (char*)key, (value? (char*)value : ""));
-    if (value && !always_unset) {
-        setenv(key, value, 1);
-    } else {
-        unsetenv(key);
-    }
-}
-
-void
-crm_set_envvar_list(crm_alert_entry_t *entry)
-{
-    if (entry->envvars) {
-        g_hash_table_foreach(entry->envvars, set_envvar, GINT_TO_POINTER(FALSE));
-    }
-}
-
-/*
- * \note We have no way of restoring a previous value if one was set.
- */
-void
-crm_unset_envvar_list(crm_alert_entry_t *entry)
-{
-    if (entry->envvars) {
-        g_hash_table_foreach(entry->envvars, set_envvar, GINT_TO_POINTER(TRUE));
     }
 }
 
@@ -203,7 +195,7 @@ crm_unset_envvar_list(crm_alert_entry_t *entry)
  * \return TRUE if update affects alerts, FALSE otherwise
  */
 bool
-crm_patchset_contains_alert(xmlNode *msg, bool config)
+pcmk__alert_in_patchset(xmlNode *msg, bool config)
 {
     int rc = -1;
     int format= 1;

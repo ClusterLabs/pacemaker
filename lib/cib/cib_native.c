@@ -1,5 +1,8 @@
 /*
  * Copyright 2004 International Business Machines
+ * Later changes copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -179,7 +182,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    static struct ipc_client_callbacks cib_callbacks = {
+    struct ipc_client_callbacks cib_callbacks = {
         .dispatch = cib_native_dispatch_internal,
         .destroy = cib_native_destroy
     };
@@ -188,15 +191,15 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
 
     if (type == cib_command) {
         cib->state = cib_connected_command;
-        channel = CIB_CHANNEL_RW;
+        channel = PCMK__SERVER_BASED_RW;
 
     } else if (type == cib_command_nonblocking) {
         cib->state = cib_connected_command;
-        channel = CIB_CHANNEL_SHM;
+        channel = PCMK__SERVER_BASED_SHM;
 
     } else if (type == cib_query) {
         cib->state = cib_connected_query;
-        channel = CIB_CHANNEL_RO;
+        channel = PCMK__SERVER_BASED_RO;
 
     } else {
         return -ENOTCONN;
@@ -211,7 +214,6 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
             *async_fd = crm_ipc_get_fd(native->ipc);
 
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to cluster information base failed");
             rc = -ENOTCONN;
         }
 
@@ -223,7 +225,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     }
 
     if (rc != pcmk_ok || native->ipc == NULL || crm_ipc_connected(native->ipc) == FALSE) {
-        crm_debug("Connection unsuccessful (%d %p)", rc, native->ipc);
+        crm_info("Could not connect to CIB manager for %s", name);
         rc = -ENOTCONN;
     }
 
@@ -243,7 +245,8 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
             crm_log_xml_trace(reply, "reg-reply");
 
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
-                crm_err("Invalid registration message: %s", msg_type);
+                crm_info("Reply to CIB registration message has "
+                         "unknown type '%s'", msg_type);
                 rc = -EPROTO;
 
             } else {
@@ -262,11 +265,12 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("Connection to CIB manager successful");
+        crm_info("Successfully connected to CIB manager for %s", name);
         return pcmk_ok;
     }
 
-    crm_debug("Connection to CIB manager failed: %s", pcmk_strerror(rc));
+    crm_info("Connection to CIB manager for %s failed: %s",
+             name, pcmk_strerror(rc));
     cib_native_signoff(cib);
     return rc;
 }

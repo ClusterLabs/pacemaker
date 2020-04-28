@@ -2,29 +2,29 @@
 Current cluster status:
 Online: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
 
- Fencing	(stonith:fence_imaginary):	Started node1
+ Fencing	(stonith:fence_imaginary):	 Started node1
  Clone Set: clone1 [clone1rsc] (promotable)
-     clone1rsc	(ocf::pacemaker:Stateful):	Starting node4
+     clone1rsc	(ocf::pacemaker:Stateful):	 Starting node4
      Masters: [ node3 ]
      Slaves: [ node1 node2 ]
      Stopped: [ node5 node6 node7 node8 node9 node10 node11 ]
  Clone Set: clone2 [clone2rsc]
-     clone2rsc	(ocf::pacemaker:Dummy):	Starting node4
+     clone2rsc	(ocf::pacemaker:Dummy):	 Starting node4
      Started: [ node2 ]
      Stopped: [ node1 node3 node5 node6 node7 node8 node9 node10 node11 ]
  Clone Set: clone3 [clone3rsc]
      Started: [ node3 ]
      Stopped: [ node1 node2 node4 node5 node6 node7 node8 node9 node10 node11 ]
  Clone Set: clone4 [clone4rsc]
-     clone4rsc	(ocf::pacemaker:Dummy):	Stopping node8
+     clone4rsc	(ocf::pacemaker:Dummy):	 Stopping node8
      clone4rsc	(ocf::pacemaker:Dummy):	 ORPHANED Started node9
      Started: [ node1 node5 node6 node7 ]
      Stopped: [ node2 node3 node4 node10 node11 ]
  Clone Set: clone5 [clone5group]
      Resource Group: clone5group:2
-         clone5rsc1	(ocf::pacemaker:Dummy):	Started node3
-         clone5rsc2	(ocf::pacemaker:Dummy):	Starting node3
-         clone5rsc3	(ocf::pacemaker:Dummy):	Stopped
+         clone5rsc1	(ocf::pacemaker:Dummy):	 Started node3
+         clone5rsc2	(ocf::pacemaker:Dummy):	 Starting node3
+         clone5rsc3	(ocf::pacemaker:Dummy):	 Stopped
      Started: [ node1 node2 ]
      Stopped: [ node4 node5 node6 node7 node8 node9 node10 node11 ]
 
@@ -207,7 +207,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
 
- Fencing	(stonith:fence_imaginary):	Started node1
+ Fencing	(stonith:fence_imaginary):	 Started node1
  Clone Set: clone1 [clone1rsc] (promotable)
      Masters: [ node3 ]
      Slaves: [ node1 node2 node4 node5 node6 node7 node8 node9 node10 node11 ]

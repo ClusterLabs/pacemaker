@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define PACEMAKER_EXECD__H
 
 #  include <glib.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 
@@ -20,7 +20,7 @@
 #    include <gnutls/gnutls.h>
 #  endif
 
-GHashTable *rsc_list;
+extern GHashTable *rsc_list;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
@@ -53,13 +53,14 @@ int lrmd_init_remote_tls_server(void);
 void lrmd_tls_server_destroy(void);
 #  endif
 
-int lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply);
+int lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply);
 
-int lrmd_server_send_notify(crm_client_t * client, xmlNode * msg);
+int lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg);
 
-void notify_of_new_client(crm_client_t *new_client);
+void notify_of_new_client(pcmk__client_t *new_client);
 
-void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request);
+void process_lrmd_message(pcmk__client_t *client, uint32_t id,
+                          xmlNode *request);
 
 void free_rsc(gpointer data);
 
@@ -67,7 +68,7 @@ void handle_shutdown_ack(void);
 
 void handle_shutdown_nack(void);
 
-void lrmd_client_destroy(crm_client_t *client);
+void lrmd_client_destroy(pcmk__client_t *client);
 
 void client_disconnect_cleanup(const char *client_id);
 
@@ -87,15 +88,16 @@ void stonith_connection_failed(void);
 #ifdef SUPPORT_REMOTE
 void ipc_proxy_init(void);
 void ipc_proxy_cleanup(void);
-void ipc_proxy_add_provider(crm_client_t *client);
-void ipc_proxy_remove_provider(crm_client_t *client);
-void ipc_proxy_forward_client(crm_client_t *client, xmlNode *xml);
-crm_client_t *ipc_proxy_get_provider(void);
-int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
+void ipc_proxy_add_provider(pcmk__client_t *client);
+void ipc_proxy_remove_provider(pcmk__client_t *client);
+void ipc_proxy_forward_client(pcmk__client_t *client, xmlNode *xml);
+pcmk__client_t *ipc_proxy_get_provider(void);
+int ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy);
 void remoted_spawn_pidone(int argc, char **argv, char **envp);
 #endif
 
-int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
+int process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id,
+                            xmlNode *request);
 void lrmd_drain_alerts(GMainLoop *mloop);
 
 #endif // PACEMAKER_EXECD__H

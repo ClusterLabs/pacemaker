@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/Makefile.common
+include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
@@ -28,6 +28,8 @@ libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 # Use += rather than backlashed continuation lines for parsing by bumplibs.sh
 libpacemaker_la_SOURCES	=
+libpacemaker_la_SOURCES += pcmk_fence.c
+libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
 libpacemaker_la_SOURCES += pcmk_sched_bundle.c
 libpacemaker_la_SOURCES += pcmk_sched_clone.c

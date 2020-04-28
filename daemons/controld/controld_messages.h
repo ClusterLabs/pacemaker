@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -9,7 +11,7 @@
 #  define XML_CRM_MESSAGES__H
 
 #  include <crm/crm.h>
-#  include <crm/common/ipcs.h>
+#  include <crm/common/ipcs_internal.h>
 #  include <crm/common/xml.h>
 #  include <crm/cluster/internal.h>
 #  include <controld_fsa.h>
@@ -70,20 +72,17 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 void delete_fsa_input(fsa_data_t * fsa_data);
 
 fsa_data_t *get_message(void);
-gboolean is_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
-
-extern gboolean send_msg_via_ipc(xmlNode * msg, const char *sys);
 
 gboolean crmd_is_proxy_session(const char *session);
 void crmd_proxy_send(const char *session, xmlNode *msg);
 
-extern gboolean crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client, const char *proxy_session);
+bool controld_authorize_ipc_message(xmlNode *client_msg,
+                                    pcmk__client_t *curr_client,
+                                    const char *proxy_session);
 
 extern gboolean send_request(xmlNode * msg, char **msg_reference);
-
-extern enum crmd_fsa_input handle_message(xmlNode * stored_msg, enum crmd_fsa_cause cause);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 

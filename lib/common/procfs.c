@@ -1,5 +1,7 @@
 /*
- * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -27,16 +29,15 @@
  * \param[out] name     If not NULL, a char[16] to hold the process name
  * \param[out] pid      If not NULL, will be set to process ID of entry
  *
- * \return 0 on success, -1 if entry is not for a process or info not found
- *
+ * \return Standard Pacemaker return code
  * \note This should be called only on Linux systems, as not all systems that
  *       support /proc store process names and IDs in the same way. The kernel
  *       limits the process name to the first 15 characters (plus terminator).
  *       It would be nice if there were a public kernel API constant for that
  *       limit, but there isn't.
  */
-int
-crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
+static int
+pcmk__procfs_process_info(struct dirent *entry, char *name, pid_t *pid)
 {
     int fd, local_pid;
     FILE *file;
@@ -53,7 +54,7 @@ crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
         return -1;
     }
     if (pid) {
-        *pid = local_pid;
+        *pid = (pid_t) local_pid;
     }
 
     /* Get this entry's file information */
@@ -106,12 +107,12 @@ crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
  * \note This will return 0 if the process is being run via valgrind.
  *       This should be called only on Linux systems.
  */
-int
-crm_procfs_pid_of(const char *name)
+pid_t
+pcmk__procfs_pid_of(const char *name)
 {
     DIR *dp;
     struct dirent *entry;
-    int pid = 0;
+    pid_t pid = 0;
     char entry_name[64] = { 0 };
 
     dp = opendir("/proc");
@@ -121,11 +122,11 @@ crm_procfs_pid_of(const char *name)
     }
 
     while ((entry = readdir(dp)) != NULL) {
-        if ((crm_procfs_process_info(entry, entry_name, &pid) == 0)
+        if ((pcmk__procfs_process_info(entry, entry_name, &pid) == pcmk_rc_ok)
             && safe_str_eq(entry_name, name)
-            && (crm_pid_active(pid, NULL) == 1)) {
+            && (pcmk__pid_active(pid, NULL) == pcmk_rc_ok)) {
 
-            crm_info("Found %s active as process %d", name, pid);
+            crm_info("Found %s active as process %lld", name, (long long) pid);
             break;
         }
         pid = 0;
@@ -141,7 +142,7 @@ crm_procfs_pid_of(const char *name)
  * \return Number of cores (or 1 if unable to determine)
  */
 unsigned int
-crm_procfs_num_cores(void)
+pcmk__procfs_num_cores(void)
 {
     int cores = 0;
     FILE *stream = NULL;
@@ -154,7 +155,7 @@ crm_procfs_num_cores(void)
         char buffer[2048];
 
         while (fgets(buffer, sizeof(buffer), stream)) {
-            if (crm_starts_with(buffer, "cpu") && isdigit(buffer[3])) {
+            if (pcmk__starts_with(buffer, "cpu") && isdigit(buffer[3])) {
                 ++cores;
             }
         }

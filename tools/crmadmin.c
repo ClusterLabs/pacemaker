@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,38 +58,94 @@ static char *dest_node = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 static const char *sys_to = NULL;
 
-/* *INDENT-OFF* */
-static struct crm_option long_options[] = {
-    /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"  },
-    {"quiet",   0, 0, 'q', "\tDisplay only the essential query information"},
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-    
-    {"-spacer-",	1, 0, '-', "\nCommands:"},
-    /* daemon options */
-    {"status",    1, 0, 'S', "Display the status of the specified node." },
-    {"-spacer-",  1, 0, '-', "\n\tResult is the node's internal FSM state which can be useful for debugging\n"},
-    {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster."},
-    {"-spacer-",  1, 0, '-', "\n\tThis is an internal detail and is rarely useful to administrators except when deciding on which node to examine the logs.\n"},
-    {"nodes",     0, 0, 'N', "\tDisplay the uname of all member nodes"},
-    {"election",  0, 0, 'E', "(Advanced) Start an election for the cluster co-ordinator"},
+static pcmk__cli_option_t long_options[] = {
+    // long option, argument type, storage, short option, description, flags
     {
-        "kill",      1, 0, 'K',
-        "(Advanced) Stop the controller (not the rest of the cluster stack) on specified node"
+        "help", no_argument, NULL, '?',
+        "\tThis text", pcmk__option_default
     },
-    {"health",    0, 0, 'H', NULL, 1},
-    
-    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
-    {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
-    {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
-
-    {"-spacer-",  1, 0, '-', "Notes:"},
-    {"-spacer-",  1, 0, '-', " The -K and -E commands are rarely used and may be removed in future versions."},
-
-    {0, 0, 0, 0}
+    {
+        "version", no_argument, NULL, '$',
+        "\tVersion information", pcmk__option_default
+    },
+    {
+        "quiet", no_argument, NULL, 'q',
+        "\tDisplay only the essential query information", pcmk__option_default
+    },
+    {
+        "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nCommands:", pcmk__option_default
+    },
+    /* daemon options */
+    {
+        "status", required_argument, NULL, 'S',
+        "Display the status of the specified node.", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\n\tResult is state of node's internal finite state machine, which "
+            "can be useful for debugging\n",
+        pcmk__option_default
+    },
+    {
+        "dc_lookup", no_argument, NULL, 'D',
+        "Display the uname of the node co-ordinating the cluster.",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\n\tThis is an internal detail rarely useful to administrators "
+            "except when deciding on which node to examine the logs.\n",
+        pcmk__option_default
+    },
+    {
+        "nodes", no_argument, NULL, 'N',
+        "\tDisplay the uname of all member nodes", pcmk__option_default
+    },
+    {
+        "election", no_argument, NULL, 'E',
+        "(Advanced) Start an election for the cluster co-ordinator",
+        pcmk__option_default
+    },
+    {
+        "kill", required_argument, NULL, 'K',
+        "(Advanced) Stop controller (not rest of cluster stack) on "
+            "specified node", pcmk__option_default
+    },
+    {
+        "health", no_argument, NULL, 'H',
+        NULL, pcmk__option_hidden
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nAdditional Options:", pcmk__option_default
+    },
+    {
+        XML_ATTR_TIMEOUT, required_argument, NULL, 't',
+        "Time (in milliseconds) to wait before declaring the operation failed",
+        pcmk__option_default
+    },
+    {
+        "bash-export", no_argument, NULL, 'B',
+        "Create Bash export entries of the form 'export uname=uuid'\n",
+        pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "Notes:", pcmk__option_default
+    },
+    {
+        "-spacer-", no_argument, NULL, '-',
+        " The -K and -E commands are rarely used and may be removed in "
+            "future versions.",
+        pcmk__option_default
+    },
+    { 0, 0, 0, 0 }
 };
-/* *INDENT-ON* */
 
 int
 main(int argc, char **argv)
@@ -99,15 +155,14 @@ main(int argc, char **argv)
     int flag;
 
     crm_log_cli_init("crmadmin");
-    crm_set_options(NULL, "command [options]", long_options,
-                    "Development tool for performing some controller-specific commands."
-                    "\n  Likely to be replaced by crm_node in the future");
+    pcmk__set_cli_options(NULL, "<command> [options]", long_options,
+                          "query and manage the Pacemaker controller");
     if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
-        flag = crm_get_option(argc, argv, &option_index);
+        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
         if (flag == -1)
             break;
 
@@ -125,7 +180,7 @@ main(int argc, char **argv)
 
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'D':
                 DO_WHOIS_DC = TRUE;
@@ -175,7 +230,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
     if (do_init()) {
@@ -254,6 +309,8 @@ do_work(void)
         int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
         if (rc != pcmk_ok) {
+            fprintf(stderr, "Could not connect to CIB: %s\n",
+                    pcmk_strerror(rc));
             return -1;
         }
 
@@ -332,7 +389,7 @@ do_init(void)
     mainloop_io_t *source =
         mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
 
-    admin_uuid = crm_getpid_s();
+    admin_uuid = pcmk__getpid_s();
 
     crmd_channel = mainloop_get_ipc_client(source);
 

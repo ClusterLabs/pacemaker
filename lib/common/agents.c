@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -46,7 +48,7 @@ pcmk_get_ra_caps(const char *standard)
          * @TODO Remove pcmk_ra_cap_unique at the next major schema version
          * bump, with a transform to remove globally-unique from the config.
          */
-        return pcmk_ra_cap_params | pcmk_ra_cap_unique;
+        return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
@@ -76,20 +78,6 @@ crm_generate_ra_key(const char *standard, const char *provider,
                              (standard? standard : ""),
                              (provider? ":" : ""), (provider? provider : ""),
                              (type? type : ""));
-}
-
-/*!
- * \deprecated
- * \brief Check whether a resource standard requires a provider to be specified
- *
- * \param[in] standard  Standard name
- *
- * \return TRUE if standard requires a provider, FALSE otherwise
- */
-bool
-crm_provider_required(const char *standard)
-{
-    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }
 
 /*!
@@ -143,4 +131,21 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
 
     *type = strdup(spec);
     return pcmk_ok;
+}
+
+// Deprecated functions kept only for backward API compatibility
+bool crm_provider_required(const char *standard);
+
+/*!
+ * \deprecated
+ * \brief Check whether a resource standard requires a provider to be specified
+ *
+ * \param[in] standard  Standard name
+ *
+ * \return TRUE if standard requires a provider, FALSE otherwise
+ */
+bool
+crm_provider_required(const char *standard)
+{
+    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }

@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -196,7 +198,7 @@ cib_destroy_op_callback(gpointer data)
 }
 
 static void
-destroy_op_callback_table()
+destroy_op_callback_table(void)
 {
     if (cib_op_callback_table != NULL) {
         g_hash_table_destroy(cib_op_callback_table);
@@ -209,7 +211,7 @@ get_shadow_file(const char *suffix)
 {
     char *cib_home = NULL;
     char *fullname = NULL;
-    char *name = crm_concat("shadow", suffix, '.');
+    char *name = crm_strdup_printf("shadow.%s", suffix);
     const char *dir = getenv("CIB_shadow_dir");
 
     if (dir == NULL) {
@@ -238,11 +240,11 @@ get_shadow_file(const char *suffix)
                 }
             }
 
-            dir = crm_get_tmpdir();
+            dir = pcmk__get_tmpdir();
             if (home && home[0] == '/') {
                 int rc = 0;
 
-                cib_home = crm_concat(home, ".cib", '/');
+                cib_home = crm_strdup_printf("%s/.cib", home);
 
                 rc = mkdir(cib_home, 0700);
                 if (rc < 0 && errno != EEXIST) {
@@ -257,7 +259,7 @@ get_shadow_file(const char *suffix)
         }
     }
 
-    fullname = crm_concat(dir, name, '/');
+    fullname = crm_strdup_printf("%s/%s", dir, name);
     free(cib_home);
     free(name);
 

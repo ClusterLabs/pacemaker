@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -234,8 +234,8 @@ mcp_read_config(void)
 
     /* =::=::= Should we be here =::=::= */
     if (stack == pcmk_cluster_corosync) {
-        set_daemon_option("cluster_type", "corosync");
-        set_daemon_option("quorum_type", "corosync");
+        pcmk__set_env_option("cluster_type", "corosync");
+        pcmk__set_env_option("quorum_type", "corosync");
 
     } else {
         crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
@@ -243,7 +243,7 @@ mcp_read_config(void)
     }
 
     /* =::=::= Logging =::=::= */
-    if (daemon_option("debug")) {
+    if (pcmk__env_option("debug")) {
         /* Syslog logging is already setup by crm_log_init() */
 
     } else {
@@ -253,13 +253,13 @@ mcp_read_config(void)
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
 
         if (crm_is_true(debug_enabled)) {
-            set_daemon_option("debug", "1");
+            pcmk__set_env_option("debug", "1");
             if (get_crm_log_level() < LOG_DEBUG) {
                 set_crm_log_level(LOG_DEBUG);
             }
 
         } else {
-            set_daemon_option("debug", "0");
+            pcmk__set_env_option("debug", "0");
         }
 
         free(debug_enabled);
@@ -267,7 +267,7 @@ mcp_read_config(void)
 
     if(local_handle){
         gid_t gid = 0;
-        if (crm_user_lookup(CRM_DAEMON_USER, NULL, &gid) < 0) {
+        if (pcmk_daemon_user(NULL, &gid) < 0) {
             crm_warn("Could not authorize group with corosync " CRM_XS
                      " No group found for user %s", CRM_DAEMON_USER);
 

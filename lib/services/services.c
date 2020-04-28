@@ -1,5 +1,7 @@
 /*
- * Copyright 2010-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -32,6 +34,10 @@
 
 #if SUPPORT_SYSTEMD
 #  include <systemd.h>
+#endif
+
+#if SUPPORT_NAGIOS
+#  include <services_nagios.h>
 #endif
 
 /* TODO: Develop a rollover strategy */
@@ -169,28 +175,28 @@ resources_action_create(const char *name, const char *standard,
      * build the svc_action_t instance.
      */
 
-    if (crm_strlen_zero(name)) {
+    if (pcmk__str_empty(name)) {
         crm_err("Cannot create operation without resource name");
         goto return_error;
     }
 
-    if (crm_strlen_zero(standard)) {
+    if (pcmk__str_empty(standard)) {
         crm_err("Cannot create operation for %s without resource class", name);
         goto return_error;
     }
     ra_caps = pcmk_get_ra_caps(standard);
 
-    if (is_set(ra_caps, pcmk_ra_cap_provider) && crm_strlen_zero(provider)) {
+    if (is_set(ra_caps, pcmk_ra_cap_provider) && pcmk__str_empty(provider)) {
         crm_err("Cannot create operation for %s without provider", name);
         goto return_error;
     }
 
-    if (crm_strlen_zero(agent)) {
+    if (pcmk__str_empty(agent)) {
         crm_err("Cannot create operation for %s without agent name", name);
         goto return_error;
     }
 
-    if (crm_strlen_zero(action)) {
+    if (pcmk__str_empty(action)) {
         crm_err("Cannot create operation for %s without operation name", name);
         goto return_error;
     }
@@ -208,7 +214,7 @@ resources_action_create(const char *name, const char *standard,
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
-    op->id = generate_op_key(name, action, interval_ms);
+    op->id = pcmk__op_key(name, action, interval_ms);
 
     if (is_set(ra_caps, pcmk_ra_cap_status) && safe_str_eq(action, "monitor")) {
         op->action = strdup("status");
@@ -541,7 +547,7 @@ gboolean
 services_action_cancel(const char *name, const char *action, guint interval_ms)
 {
     gboolean cancelled = FALSE;
-    char *id = generate_op_key(name, action, interval_ms);
+    char *id = pcmk__op_key(name, action, interval_ms);
     svc_action_t *op = NULL;
 
     /* We can only cancel a recurring action */
@@ -564,11 +570,11 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      * goes away.
      */
     if (op->pid != 0) {
-        crm_info("Terminating in-flight op %s (pid %d) early because it was cancelled",
+        crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
                  id, op->pid);
         cancelled = mainloop_child_kill(op->pid);
         if (cancelled == FALSE) {
-            crm_err("Termination of %s (pid %d) failed", id, op->pid);
+            crm_err("Termination of %s[%d] failed", id, op->pid);
         }
         goto done;
     }
@@ -608,7 +614,7 @@ gboolean
 services_action_kick(const char *name, const char *action, guint interval_ms)
 {
     svc_action_t * op = NULL;
-    char *id = generate_op_key(name, action, interval_ms);
+    char *id = pcmk__op_key(name, action, interval_ms);
 
     init_recurring_actions();
     op = g_hash_table_lookup(recurring_actions, id);
@@ -825,57 +831,6 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
-#if SUPPORT_NAGIOS
-static int
-nagios_get_metadata(const char *type, char **output)
-{
-    int rc = pcmk_ok;
-    FILE *file_strm = NULL;
-    int start = 0, length = 0, read_len = 0;
-    char *metadata_file = crm_strdup_printf("%s/%s.xml",
-                                            NAGIOS_METADATA_DIR, type);
-
-    file_strm = fopen(metadata_file, "r");
-    if (file_strm == NULL) {
-        crm_err("Metadata file %s does not exist", metadata_file);
-        free(metadata_file);
-        return -EIO;
-    }
-
-    /* see how big the file is */
-    start = ftell(file_strm);
-    fseek(file_strm, 0L, SEEK_END);
-    length = ftell(file_strm);
-    fseek(file_strm, 0L, start);
-
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(file_strm));
-
-    if (length <= 0) {
-        crm_info("%s was not valid", metadata_file);
-        free(*output);
-        *output = NULL;
-        rc = -EIO;
-
-    } else {
-        crm_trace("Reading %d bytes from file", length);
-        *output = calloc(1, (length + 1));
-        read_len = fread(*output, 1, length, file_strm);
-        if (read_len != length) {
-            crm_err("Calculated and read bytes differ: %d vs. %d",
-                    length, read_len);
-            free(*output);
-            *output = NULL;
-            rc = -EIO;
-        }
-    }
-
-    fclose(file_strm);
-    free(metadata_file);
-    return rc;
-}
-#endif
-
 static gboolean
 action_get_metadata(svc_action_t *op)
 {
@@ -908,7 +863,7 @@ action_get_metadata(svc_action_t *op)
 
 #if SUPPORT_NAGIOS
     if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
-        return (nagios_get_metadata(op->agent, &op->stdout_data) >= 0);
+        return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
     }
 #endif
 
@@ -939,7 +894,7 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = action_exec_helper(op);
     }
-    crm_trace(" > " CRM_OP_FMT ": %s = %d",
+    crm_trace(" > " PCMK__OP_FMT ": %s = %d",
               op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);
@@ -985,7 +940,7 @@ resources_list_standards(void)
 #endif
 
 #if SUPPORT_NAGIOS
-    agents = resources_os_list_nagios_agents();
+    agents = services__list_nagios_agents();
     if (agents) {
         standards = g_list_append(standards,
                                   strdup(PCMK_RESOURCE_CLASS_NAGIOS));
@@ -1055,7 +1010,7 @@ resources_list_agents(const char *standard, const char *provider)
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        return resources_os_list_nagios_agents();
+        return services__list_nagios_agents();
 #endif
     }
 

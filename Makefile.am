@@ -7,11 +7,13 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# m4/glibtests.m4 is copied from https://gitlab.gnome.org/GNOME/glib/blob/master/m4macros/glibtests.m4.
 EXTRA_DIST		= CONTRIBUTING.md	\
 			  GNUmakefile		\
 			  INSTALL.md		\
 			  README.markdown	\
 			  autogen.sh		\
+			  m4/glibtests.m4 \
 			  m4/gnulib-cache.m4	\
 			  m4/gnulib-tool.m4	\
 			  rpm/rpmlintrc		\
@@ -57,7 +59,7 @@ CORE_INSTALL	= replace include lib daemons tools xml
 # Only these will get built with a plain "make" or "make clean"
 CORE		= $(CORE_INSTALL) cts
 
-SUBDIRS	= $(CORE) doc extra maint
+SUBDIRS	= $(CORE) doc extra maint tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 

@@ -3,9 +3,9 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node1
- rsc2	(ocf::pacemaker:Dummy):	Started node2
- rsc3	(ocf::pacemaker:Dummy):	Started node1
+ rsc1	(ocf::pacemaker:Dummy):	 Started node1
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
+ rsc3	(ocf::pacemaker:Dummy):	 Started node1
  Clone Set: clone-rsc [rsc]
      Started: [ node1 node2 ]
 
@@ -27,9 +27,9 @@ Revised cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started node2
- rsc2	(ocf::pacemaker:Dummy):	Started node2
- rsc3	(ocf::pacemaker:Dummy):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	 Started node2
+ rsc2	(ocf::pacemaker:Dummy):	 Started node2
+ rsc3	(ocf::pacemaker:Dummy):	 Started node2
  Clone Set: clone-rsc [rsc]
      Started: [ node2 ]
      Stopped: [ node1 ]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 
 #include "pacemaker-attrd.h"
@@ -106,26 +106,14 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     crm_trace("New client connection %p", c);
     if (shutting_down) {
         crm_info("Ignoring new connection from pid %d during shutdown",
-                 crm_ipcs_client_pid(c));
+                 pcmk__client_pid(c));
         return -EPERM;
     }
 
-    if (crm_client_new(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid, gid) == NULL) {
         return -EIO;
     }
     return pcmk_ok;
-}
-
-/*!
- * \internal
- * \brief Callback for successful client connection
- *
- * \param[in] c  New connection
- */
-static void
-attrd_ipc_created(qb_ipcs_connection_t *c)
-{
-    crm_trace("Client connection %p accepted", c);
 }
 
 /*!
@@ -139,13 +127,13 @@ attrd_ipc_created(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t *c)
 {
-    crm_client_t *client = crm_client_get(c);
+    pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
         crm_trace("Ignoring request to clean up unknown connection %p", c);
     } else {
         crm_trace("Cleaning up closed client connection %p", c);
-        crm_client_destroy(client);
+        pcmk__free_client(client);
     }
     return FALSE;
 }
@@ -179,14 +167,14 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 
     static struct qb_ipcs_service_handlers ipc_callbacks = {
         .connection_accept = attrd_ipc_accept,
-        .connection_created = attrd_ipc_created,
+        .connection_created = NULL,
         .msg_process = NULL,
         .connection_closed = attrd_ipc_closed,
         .connection_destroyed = attrd_ipc_destroy
     };
 
     ipc_callbacks.msg_process = dispatch_fn;
-    attrd_ipc_server_init(ipcs, &ipc_callbacks);
+    pcmk__serve_attrd_ipc(ipcs, &ipc_callbacks);
 }
 
 void

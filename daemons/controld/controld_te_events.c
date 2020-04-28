@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -156,7 +156,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     /* Fail count will be either incremented or set to infinity */
-    if (value == NULL || safe_str_neq(value, CRM_INFINITY_S)) {
+    if (!pcmk_str_is_infinity(value)) {
         value = XML_NVPAIR_ATTR_VALUE "++";
     }
 
@@ -175,7 +175,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = crm_failcount_name(rsc_id, task, interval_ms);
+            attr_name = pcmk__failcount_name(rsc_id, task, interval_ms);
             update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
             free(attr_name);
         }
@@ -183,7 +183,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = crm_lastfailure_name(rsc_id, task, interval_ms);
+        attr_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
         update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
 

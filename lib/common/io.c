@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,11 +24,48 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <errno.h>
+#include <limits.h>
 #include <pwd.h>
 #include <grp.h>
 
 #include <crm/crm.h>
 #include <crm/common/util.h>
+
+/*!
+ * \internal
+ * \brief Create a directory, including any parent directories needed
+ *
+ * \param[in] path_c Pathname of the directory to create
+ * \param[in] mode Permissions to be used (with current umask) when creating
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__build_path(const char *path_c, mode_t mode)
+{
+    int offset = 1, len = 0;
+    int rc = pcmk_rc_ok;
+    char *path = strdup(path_c);
+
+    CRM_CHECK(path != NULL, return -ENOMEM);
+    for (len = strlen(path); offset < len; offset++) {
+        if (path[offset] == '/') {
+            path[offset] = 0;
+            if ((mkdir(path, mode) < 0) && (errno != EEXIST)) {
+                rc = errno;
+                goto done;
+            }
+            path[offset] = '/';
+        }
+    }
+    if ((mkdir(path, mode) < 0) && (errno != EEXIST)) {
+        rc = errno;
+    }
+done:
+    free(path);
+    return rc;
+}
 
 /*!
  * \brief Create a directory, including any parent directories needed
@@ -41,130 +78,131 @@
 void
 crm_build_path(const char *path_c, mode_t mode)
 {
-    int offset = 1, len = 0;
-    char *path = strdup(path_c);
+    int rc = pcmk__build_path(path_c, mode);
 
-    CRM_CHECK(path != NULL, return);
-    for (len = strlen(path); offset < len; offset++) {
-        if (path[offset] == '/') {
-            path[offset] = 0;
-            if (mkdir(path, mode) < 0 && errno != EEXIST) {
-                crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-                break;
-            }
-            path[offset] = '/';
-        }
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not create directory '%s': %s",
+                path_c, pcmk_rc_str(rc));
     }
-    if (mkdir(path, mode) < 0 && errno != EEXIST) {
-        crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-    }
-
-    free(path);
 }
 
 /*!
  * \internal
- * \brief Allocate and create a file path using a sequence number
+ * \brief Return canonicalized form of a path name
  *
- * \param[in] directory Directory that contains the file series
- * \param[in] series Start of file name
- * \param[in] sequence Sequence number (MUST be less than 33 digits)
- * \param[in] bzip Whether to use ".bz2" instead of ".raw" as extension
+ * \param[in]  path           Pathname to canonicalize
+ * \param[out] resolved_path  Where to store canonicalized pathname
  *
- * \return Newly allocated file path, or NULL on error
- * \note Caller is responsible for freeing the returned memory
- */
-char *
-generate_series_filename(const char *directory, const char *series, int sequence, gboolean bzip)
-{
-    const char *ext = "raw";
-
-    CRM_CHECK(directory != NULL, return NULL);
-    CRM_CHECK(series != NULL, return NULL);
-
-    if (bzip) {
-        ext = "bz2";
-    }
-    return crm_strdup_printf("%s/%s-%d.%s", directory, series, sequence, ext);
-}
-
-/*!
- * \internal
- * \brief Read and return sequence number stored in a file series' .last file
- *
- * \param[in] directory Directory that contains the file series
- * \param[in] series Start of file name
- *
- * \return The last sequence number, or 0 on error
+ * \return Standard Pacemaker return code
+ * \note The caller is responsible for freeing \p resolved_path on success.
+ * \note This function exists because not all C library versions of
+ *       realpath(path, resolved_path) support a NULL resolved_path.
  */
 int
-get_last_sequence(const char *directory, const char *series)
+pcmk__real_path(const char *path, char **resolved_path)
 {
-    FILE *file_strm = NULL;
-    int start = 0, length = 0, read_len = 0;
-    char *series_file = NULL;
-    char *buffer = NULL;
-    int seq = 0;
+    CRM_CHECK((path != NULL) && (resolved_path != NULL), return EINVAL);
 
-    CRM_CHECK(directory != NULL, return 0);
-    CRM_CHECK(series != NULL, return 0);
+#if _POSIX_VERSION >= 200809L
+    /* Recent C libraries can dynamically allocate memory as needed */
+    *resolved_path = realpath(path, NULL);
+    return (*resolved_path == NULL)? errno : pcmk_rc_ok;
+
+#elif defined(PATH_MAX)
+    /* Older implementations require pre-allocated memory */
+    /* (this is less desirable because PATH_MAX may be huge or not defined) */
+    *resolved_path = malloc(PATH_MAX);
+    if ((*resolved_path == NULL) || (realpath(path, *resolved_path) == NULL)) {
+        return errno;
+    }
+    return pcmk_rc_ok;
+#else
+    *resolved_path = NULL;
+    return ENOTSUP;
+#endif
+}
+
+/*!
+ * \internal
+ * \brief Create a file name using a sequence number
+ *
+ * \param[in] directory  Directory that contains the file series
+ * \param[in] series     Start of file name
+ * \param[in] sequence   Sequence number
+ * \param[in] bzip       Whether to use ".bz2" instead of ".raw" as extension
+ *
+ * \return Newly allocated file path (asserts on error, so always non-NULL)
+ * \note The caller is responsible for freeing the return value.
+ */
+char *
+pcmk__series_filename(const char *directory, const char *series, int sequence,
+                      bool bzip)
+{
+    CRM_ASSERT((directory != NULL) && (series != NULL));
+    return crm_strdup_printf("%s/%s-%d.%s", directory, series, sequence,
+                             (bzip? "bz2" : "raw"));
+}
+
+/*!
+ * \internal
+ * \brief Read sequence number stored in a file series' .last file
+ *
+ * \param[in]  directory  Directory that contains the file series
+ * \param[in]  series     Start of file name
+ * \param[out] seq        Where to store the sequence number
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__read_series_sequence(const char *directory, const char *series,
+                           unsigned int *seq)
+{
+    int rc;
+    FILE *fp = NULL;
+    char *series_file = NULL;
+
+    if ((directory == NULL) || (series == NULL) || (seq == NULL)) {
+        return EINVAL;
+    }
 
     series_file = crm_strdup_printf("%s/%s.last", directory, series);
-    file_strm = fopen(series_file, "r");
-    if (file_strm == NULL) {
-        crm_debug("Series file %s does not exist", series_file);
+    fp = fopen(series_file, "r");
+    if (fp == NULL) {
+        rc = errno;
+        crm_debug("Could not open series file %s: %s",
+                  series_file, strerror(rc));
         free(series_file);
-        return 0;
+        return rc;
     }
-
-    /* see how big the file is */
-    start = ftell(file_strm);
-    fseek(file_strm, 0L, SEEK_END);
-    length = ftell(file_strm);
-    fseek(file_strm, 0L, start);
-
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(file_strm));
-
-    if (length <= 0) {
-        crm_info("%s was not valid", series_file);
-        free(buffer);
-        buffer = NULL;
-
-    } else {
-        crm_trace("Reading %d bytes from file", length);
-        buffer = calloc(1, (length + 1));
-        read_len = fread(buffer, 1, length, file_strm);
-        if (read_len != length) {
-            crm_err("Calculated and read bytes differ: %d vs. %d", length, read_len);
-            free(buffer);
-            buffer = NULL;
-        }
+    errno = 0;
+    if (fscanf(fp, "%u", seq) != 1) {
+        rc = (errno == 0)? pcmk_rc_unknown_format : errno;
+        crm_debug("Could not read sequence number from series file %s: %s",
+                  series_file, pcmk_rc_str(rc));
+        fclose(fp);
+        return rc;
     }
-
-    seq = crm_parse_int(buffer, "0");
-    fclose(file_strm);
-
-    crm_trace("Found %d in %s", seq, series_file);
-
+    fclose(fp);
+    crm_trace("Found last sequence number %u in series file %s",
+              *seq, series_file);
     free(series_file);
-    free(buffer);
-    return seq;
+    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
  * \brief Write sequence number to a file series' .last file
  *
- * \param[in] directory Directory that contains the file series
- * \param[in] series Start of file name
- * \param[in] sequence Sequence number to write
- * \param[in] max Maximum sequence value, after which sequence is reset to 0
+ * \param[in] directory  Directory that contains the file series
+ * \param[in] series     Start of file name
+ * \param[in] sequence   Sequence number to write
+ * \param[in] max        Maximum sequence value, after which it is reset to 0
  *
  * \note This function logs some errors but does not return any to the caller
  */
 void
-write_last_sequence(const char *directory, const char *series, int sequence, int max)
+pcmk__write_series_sequence(const char *directory, const char *series,
+                            unsigned int sequence, int max)
 {
     int rc = 0;
     FILE *file_strm = NULL;
@@ -183,7 +221,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
     series_file = crm_strdup_printf("%s/%s.last", directory, series);
     file_strm = fopen(series_file, "w");
     if (file_strm != NULL) {
-        rc = fprintf(file_strm, "%d", sequence);
+        rc = fprintf(file_strm, "%u", sequence);
         if (rc < 0) {
             crm_perror(LOG_ERR, "Cannot write to series file %s", series_file);
         }
@@ -205,25 +243,27 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
  * \internal
  * \brief Change the owner and group of a file series' .last file
  *
- * \param[in] dir Directory that contains series
- * \param[in] uid Uid of desired file owner
- * \param[in] gid Gid of desired file group
+ * \param[in] dir  Directory that contains series
+ * \param[in] uid  User ID of desired file owner
+ * \param[in] gid  Group ID of desired file group
  *
- * \return 0 on success, -1 on error (in which case errno will be set)
+ * \return Standard Pacemaker return code
  * \note The caller must have the appropriate privileges.
  */
 int
-crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gid_t gid)
+pcmk__chown_series_sequence(const char *directory, const char *series,
+                            uid_t uid, gid_t gid)
 {
     char *series_file = NULL;
-    int rc;
+    int rc = pcmk_rc_ok;
 
-    CRM_CHECK((directory != NULL) && (series != NULL), errno = EINVAL; return -1);
-
+    if ((directory == NULL) || (series == NULL)) {
+        return EINVAL;
+    }
     series_file = crm_strdup_printf("%s/%s.last", directory, series);
-    CRM_CHECK(series_file != NULL, return -1);
-
-    rc = chown(series_file, uid, gid);
+    if (chown(series_file, uid, gid) < 0) {
+        rc = errno;
+    }
     free(series_file);
     return rc;
 }
@@ -290,7 +330,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
  * \internal
  * \brief Check whether a directory or file is writable by the cluster daemon
  *
- * Return TRUE if either the cluster daemon user or cluster daemon group has
+ * Return true if either the cluster daemon user or cluster daemon group has
  * write permission on a specified file or directory.
  *
  * \param[in] dir      Directory to check (this argument must be specified, and
@@ -298,7 +338,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
  * \param[in] file     File to check (only the directory will be checked if this
  *                     argument is not specified or the file does not exist)
  *
- * \return TRUE if target is writable by cluster daemon, FALSE otherwise
+ * \return true if target is writable by cluster daemon, false otherwise
  */
 bool
 pcmk__daemon_can_write(const char *dir, const char *file)
@@ -313,7 +353,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
     // If file is given, check whether it exists as a regular file
     if (file != NULL) {
-        full_file = crm_concat(dir, file, '/');
+        full_file = crm_strdup_printf("%s/%s", dir, file);
         target = full_file;
 
         s_res = stat(full_file, &buf);
@@ -327,7 +367,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             crm_err("%s must be a regular file " CRM_XS " st_mode=0%lo",
                     target, (unsigned long) buf.st_mode);
             free(full_file);
-            return FALSE;
+            return false;
         }
     }
 
@@ -337,12 +377,12 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         s_res = stat(dir, &buf);
         if (s_res < 0) {
             crm_err("%s not found: %s", dir, pcmk_strerror(errno));
-            return FALSE;
+            return false;
 
         } else if (S_ISDIR(buf.st_mode) == FALSE) {
             crm_err("%s must be a directory " CRM_XS " st_mode=0%lo",
                     dir, (unsigned long) buf.st_mode);
-            return FALSE;
+            return false;
         }
     }
 
@@ -354,11 +394,11 @@ pcmk__daemon_can_write(const char *dir, const char *file)
                 target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
                 (unsigned long) buf.st_mode);
         free(full_file);
-        return FALSE;
+        return false;
     }
 
     free(full_file);
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -369,7 +409,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
  * \note This function logs errors but does not return them to the caller
  */
 void
-crm_sync_directory(const char *name)
+pcmk__sync_directory(const char *name)
 {
     int fd;
     DIR *directory;
@@ -396,78 +436,87 @@ crm_sync_directory(const char *name)
 
 /*!
  * \internal
- * \brief Allocate, read and return the contents of a file
+ * \brief Read the contents of a file
  *
- * \param[in] filename Name of file to read
+ * \param[in]  filename  Name of file to read
+ * \param[out] contents  Where to store file contents
  *
- * \return Newly allocated memory with contents of file, or NULL on error
- * \note On success, the caller is responsible for freeing the returned memory;
- *       on error, errno will be 0 (indicating file was nonexistent or empty)
- *       or one of the errno values set by fopen, ftell, or calloc
+ * \return Standard Pacemaker return code
+ * \note On success, the caller is responsible for freeing contents.
  */
-char *
-crm_read_contents(const char *filename)
+int
+pcmk__file_contents(const char *filename, char **contents)
 {
-    char *contents = NULL;
     FILE *fp;
     int length, read_len;
+    int rc = pcmk_rc_ok;
 
-    errno = 0; /* enable caller to distinguish error from empty file */
+    if ((filename == NULL) || (contents == NULL)) {
+        return EINVAL;
+    }
 
     fp = fopen(filename, "r");
-    if (fp == NULL) {
-        return NULL;
+    if ((fp == NULL) || (fseek(fp, 0L, SEEK_END) < 0)) {
+        rc = errno;
+        goto bail;
     }
 
-    fseek(fp, 0L, SEEK_END);
     length = ftell(fp);
+    if (length < 0) {
+        rc = errno;
+        goto bail;
+    }
 
-    if (length > 0) {
-        contents = calloc(length + 1, sizeof(char));
-        if (contents == NULL) {
-            fclose(fp);
-            return NULL;
+    if (length == 0) {
+        *contents = NULL;
+    } else {
+        *contents = calloc(length + 1, sizeof(char));
+        if (*contents == NULL) {
+            rc = errno;
+            goto bail;
         }
-
-        crm_trace("Reading %d bytes from %s", length, filename);
         rewind(fp);
-        read_len = fread(contents, 1, length, fp);   /* Coverity: False positive */
+        read_len = fread(*contents, 1, length, fp); /* Coverity: False positive */
         if (read_len != length) {
-            free(contents);
-            contents = NULL;
+            free(*contents);
+            *contents = NULL;
+            rc = EIO;
         }
     }
 
-    fclose(fp);
-    return contents;
+bail:
+    if (fp != NULL) {
+        fclose(fp);
+    }
+    return rc;
 }
 
 /*!
  * \internal
  * \brief Write text to a file, flush and sync it to disk, then close the file
  *
- * \param[in] fd File descriptor opened for writing
- * \param[in] contents String to write to file
+ * \param[in] fd        File descriptor opened for writing
+ * \param[in] contents  String to write to file
  *
- * \return 0 on success, -1 on error (in which case errno will be set)
+ * \return Standard Pacemaker return code
  */
 int
-crm_write_sync(int fd, const char *contents)
+pcmk__write_sync(int fd, const char *contents)
 {
     int rc = 0;
     FILE *fp = fdopen(fd, "w");
 
     if (fp == NULL) {
-        return -1;
+        return errno;
     }
     if ((contents != NULL) && (fprintf(fp, "%s", contents) < 0)) {
-        rc = -1;
+        rc = EIO;
     }
     if (fflush(fp) != 0) {
-        rc = -1;
+        rc = errno;
     }
     if (fsync(fileno(fp)) < 0) {
-        rc = -1;
+        rc = errno;
     }
     fclose(fp);
     return rc;
@@ -479,24 +528,33 @@ crm_write_sync(int fd, const char *contents)
  *
  * \param[in] fd  File descriptor to use
  *
- * \return pcmk_ok on success, -errno on error
+ * \return Standard Pacemaker return code
  */
 int
-crm_set_nonblocking(int fd)
+pcmk__set_nonblocking(int fd)
 {
     int flag = fcntl(fd, F_GETFL);
 
     if (flag < 0) {
-        return -errno;
+        return errno;
     }
     if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-        return -errno;
+        return errno;
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Get directory name for temporary files
+ *
+ * Return the value of the TMPDIR environment variable if it is set to a
+ * full path, otherwise return "/tmp".
+ *
+ * \return Name of directory to be used for temporary files
+ */
 const char *
-crm_get_tmpdir()
+pcmk__get_tmpdir()
 {
     const char *dir = getenv("TMPDIR");
 

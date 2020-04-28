@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,6 +86,8 @@ enum pe_find {
     pe_find_any      = 0x020, //!< match base name of any clone instance
 };
 
+// @TODO Make these an enum
+
 #  define pe_flag_have_quorum           0x00000001ULL
 #  define pe_flag_symmetric_cluster     0x00000002ULL
 #  define pe_flag_maintenance_mode      0x00000008ULL
@@ -102,6 +104,7 @@ enum pe_find {
 #  define pe_flag_start_failure_fatal   0x00001000ULL
 #  define pe_flag_remove_after_stop     0x00002000ULL
 #  define pe_flag_startup_fencing       0x00004000ULL
+#  define pe_flag_shutdown_lock         0x00008000ULL
 
 #  define pe_flag_startup_probes        0x00010000ULL
 #  define pe_flag_have_status           0x00020000ULL
@@ -113,6 +116,11 @@ enum pe_find {
 
 //! Don't count total, disabled and blocked resource instances
 #  define pe_flag_no_counts             0x00800000ULL
+
+/*! Skip deprecated code that is kept solely for backward API compatibility.
+ * (Internal code should always set this.)
+ */
+#  define pe_flag_no_compat             0x01000000ULL
 
 struct pe_working_set_s {
     xmlNode *input;
@@ -149,7 +157,7 @@ struct pe_working_set_s {
 
     /* stats */
     int num_synapse;
-    int max_valid_nodes;
+    int max_valid_nodes;    //! Deprecated (will be removed in a future release)
     int order_id;
     int action_id;
 
@@ -167,6 +175,8 @@ struct pe_working_set_s {
     GList *stop_needed; // Containers that need stop actions
     time_t recheck_by;  // Hint to controller to re-run scheduler by this time
     int ninstances;     // Total number of resource instances
+    guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
+    int priority_fencing_delay; // Priority fencing delay
 };
 
 enum pe_check_parameters {
@@ -211,6 +221,7 @@ struct pe_node_shared_s {
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
+    int priority; // calculated based on the priority of resources running on the node
 };
 
 struct pe_node_s {
@@ -285,6 +296,8 @@ enum pe_action_flags {
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
+
+    pe_action_dc = 0x10000,         //! Action may run on DC instead of target
 };
 /* *INDENT-ON* */
 
@@ -352,6 +365,8 @@ struct pe_resource_s {
     GListPtr fillers;
 
     pe_node_t *pending_node;    // Node on which pending_task is happening
+    pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+    time_t lock_time;           // When shutdown lock started
 
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
@@ -492,14 +507,27 @@ typedef struct pe_action_wrapper_s {
     pe_action_t *action;
 } pe_action_wrapper_t;
 
-// Deprecated type aliases
-typedef struct pe_action_s action_t;                 //!< \deprecated Use pe_action_t instead
-typedef struct pe_action_wrapper_s action_wrapper_t; //!< \deprecated Use pe_action_wrapper_t instead
-typedef struct pe_node_s node_t;                     //!< \deprecated Use pe_node_t instead
-typedef struct pe_resource_s resource_t;             //!< \deprecated Use pe_resource_t instead
-typedef struct pe_tag_s tag_t;                       //!< \deprecated Use pe_tag_t instead
-typedef struct pe_ticket_s ticket_t;                 //!< \deprecated Use pe_ticket_t instead
-typedef enum pe_quorum_policy no_quorum_policy_t;    //!< \deprecated Use enum pe_quorum_policy instead
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
+//!< \deprecated Use pe_action_t instead
+typedef struct pe_action_s action_t;
+//!< \deprecated Use pe_action_wrapper_t instead
+typedef struct pe_action_wrapper_s action_wrapper_t;
+//!< \deprecated Use pe_node_t instead
+typedef struct pe_node_s node_t;
+//!< \deprecated Use enum pe_quorum_policy instead
+typedef enum pe_quorum_policy no_quorum_policy_t;
+//!< \deprecated use pe_resource_t instead
+typedef struct pe_resource_s resource_t;
+//!< \deprecated Use pe_tag_t instead
+typedef struct pe_tag_s tag_t;
+//!< \deprecated Use pe_ticket_t instead
+typedef struct pe_ticket_s ticket_t;
+
+#endif
 
 #ifdef __cplusplus
 }

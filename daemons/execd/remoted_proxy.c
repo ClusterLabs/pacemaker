@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/cib/internal.h>
 #include <crm/fencing/internal.h>
 
@@ -45,10 +45,10 @@ static GHashTable *ipc_clients = NULL;
  *       if we haven't yet timed out an old, failed connection, we don't try to
  *       use it.
  */
-crm_client_t *
+pcmk__client_t *
 ipc_proxy_get_provider()
 {
-    return ipc_providers? (crm_client_t*) (ipc_providers->data) : NULL;
+    return ipc_providers? (pcmk__client_t *) (ipc_providers->data) : NULL;
 }
 
 /*!
@@ -65,8 +65,8 @@ ipc_proxy_get_provider()
 static int32_t
 ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc_channel)
 {
-    crm_client_t *client;
-    crm_client_t *ipc_proxy = ipc_proxy_get_provider();
+    pcmk__client_t *client;
+    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
     xmlNode *msg;
 
     if (ipc_proxy == NULL) {
@@ -78,7 +78,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     /* This new client is a local IPC client on a Pacemaker Remote controlled
      * node, needing to access cluster node IPC services.
      */
-    client = crm_client_new(c, uid, gid);
+    client = pcmk__new_client(c, uid, gid);
     if (client == NULL) {
         return -EREMOTEIO;
     }
@@ -123,29 +123,23 @@ stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 cib_proxy_accept_rw(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RW);
+    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RW);
 }
 
 static int32_t
 cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RO);
-}
-
-static void
-ipc_proxy_created(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
+    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RO);
 }
 
 void
-ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
+ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
     const char *session = crm_element_value(xml, F_LRMD_IPC_SESSION);
     const char *msg_type = crm_element_value(xml, F_LRMD_IPC_OP);
     xmlNode *msg = get_message_xml(xml, F_LRMD_IPC_MSG);
-    crm_client_t *ipc_client;
-    int rc = 0;
+    pcmk__client_t *ipc_client;
+    int rc = pcmk_rc_ok;
 
     /* If the IPC provider is acknowledging our shutdown request,
      * defuse the short exit timer to give the cluster time to
@@ -161,7 +155,7 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
         return;
     }
 
-    ipc_client = crm_client_get_by_id(session);
+    ipc_client = pcmk__find_client_by_id(session);
     if (ipc_client == NULL) {
         xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
         crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
@@ -187,14 +181,14 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
 
     if (safe_str_eq(msg_type, LRMD_IPC_OP_EVENT)) {
         crm_trace("Sending event to %s", ipc_client->id);
-        rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
+        rc = pcmk__ipc_send_xml(ipc_client, 0, msg, crm_ipc_server_event);
 
     } else if (safe_str_eq(msg_type, LRMD_IPC_OP_RESPONSE)) {
         int msg_id = 0;
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
         crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
-        rc = crm_ipcs_send(ipc_client, msg_id, msg, FALSE);
+        rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, FALSE);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
@@ -206,8 +200,9 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
         crm_err("Unknown ipc proxy msg type %s" , msg_type);
     }
 
-    if (rc < 0) {
-        crm_warn("IPC Proxy send to ipc client %s failed, rc = %d", ipc_client->id, rc);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Could not proxy IPC to client %s: %s " CRM_XS " rc=%d",
+                 ipc_client->id, pcmk_rc_str(rc), rc);
     }
 }
 
@@ -216,8 +211,8 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crm_client_t *client = crm_client_get(c);
-    crm_client_t *ipc_proxy = crm_client_get_by_id(client->userdata);
+    pcmk__client_t *client = pcmk__find_client(c);
+    pcmk__client_t *ipc_proxy = pcmk__find_client_by_id(client->userdata);
     xmlNode *request = NULL;
     xmlNode *msg = NULL;
 
@@ -239,7 +234,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      * This function is receiving a request from connection
      * 1 and forwarding it to connection 2.
      */
-    request = crm_ipcs_recv(client, data, size, &id, &flags);
+    request = pcmk__client_data2xml(client, data, &id, &flags);
 
     if (!request) {
         return 0;
@@ -259,7 +254,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
-    crm_xml_add(msg, F_LRMD_IPC_CLIENT, crm_client_name(client));
+    crm_xml_add(msg, F_LRMD_IPC_CLIENT, pcmk__client_name(client));
     crm_xml_add(msg, F_LRMD_IPC_USER, client->user);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_ID, id);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_FLAGS, flags);
@@ -278,7 +273,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
  * \return 0 on success, -1 on error
  */
 int
-ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
+ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
 {
     xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     int rc;
@@ -290,7 +285,7 @@ ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
      */
     crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
 
-    rc = (lrmd_server_send_notify(ipc_proxy, msg) < 0)? -1 : 0;
+    rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
     free_xml(msg);
     return rc;
 }
@@ -298,14 +293,14 @@ ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
 static int32_t
 ipc_proxy_closed(qb_ipcs_connection_t * c)
 {
-    crm_client_t *client = crm_client_get(c);
-    crm_client_t *ipc_proxy;
+    pcmk__client_t *client = pcmk__find_client(c);
+    pcmk__client_t *ipc_proxy;
 
     if (client == NULL) {
         return 0;
     }
 
-    ipc_proxy = crm_client_get_by_id(client->userdata);
+    ipc_proxy = pcmk__find_client_by_id(client->userdata);
 
     crm_trace("Connection %p", c);
 
@@ -321,7 +316,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 
     free(client->userdata);
     client->userdata = NULL;
-    crm_client_destroy(client);
+    pcmk__free_client(client);
     return 0;
 }
 
@@ -334,7 +329,7 @@ ipc_proxy_destroy(qb_ipcs_connection_t * c)
 
 static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {
     .connection_accept = crmd_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -342,7 +337,7 @@ static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
     .connection_accept = attrd_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -350,7 +345,7 @@ static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
     .connection_accept = stonith_proxy_accept,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -358,7 +353,7 @@ static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
 
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
     .connection_accept = cib_proxy_accept_ro,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
@@ -366,24 +361,24 @@ static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
 
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_rw = {
     .connection_accept = cib_proxy_accept_rw,
-    .connection_created = ipc_proxy_created,
+    .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
     .connection_destroyed = ipc_proxy_destroy
 };
 
 void
-ipc_proxy_add_provider(crm_client_t *ipc_proxy)
+ipc_proxy_add_provider(pcmk__client_t *ipc_proxy)
 {
     // Prepending ensures the most recent connection is always first
     ipc_providers = g_list_prepend(ipc_providers, ipc_proxy);
 }
 
 void
-ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
+ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
 {
     GHashTableIter iter;
-    crm_client_t *ipc_client = NULL;
+    pcmk__client_t *ipc_client = NULL;
     char *key = NULL;
     GList *remove_these = NULL;
     GListPtr gIter = NULL;
@@ -418,15 +413,11 @@ ipc_proxy_init(void)
 {
     ipc_clients = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
 
-    cib_ipc_servers_init(&cib_ro,
-                         &cib_rw,
-                         &cib_shm,
-                         &cib_proxy_callbacks_ro,
-                         &cib_proxy_callbacks_rw);
-
-    attrd_ipc_server_init(&attrd_ipcs, &attrd_proxy_callbacks);
-    stonith_ipc_server_init(&stonith_ipcs, &stonith_proxy_callbacks);
-    crmd_ipcs = crmd_ipc_server_init(&crmd_proxy_callbacks);
+    pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
+                          &cib_proxy_callbacks_rw);
+    pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
+    pcmk__serve_fenced_ipc(&stonith_ipcs, &stonith_proxy_callbacks);
+    crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
         crm_err("Failed to create controller: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
@@ -445,7 +436,7 @@ ipc_proxy_cleanup(void)
         g_hash_table_destroy(ipc_clients);
         ipc_clients = NULL;
     }
-    cib_ipc_servers_destroy(cib_ro, cib_rw, cib_shm);
+    pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
     qb_ipcs_destroy(stonith_ipcs);
     qb_ipcs_destroy(crmd_ipcs);

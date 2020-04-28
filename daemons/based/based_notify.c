@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -45,7 +47,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     const char *type = NULL;
     gboolean do_send = FALSE;
 
-    crm_client_t *client = value;
+    pcmk__client_t *client = value;
     struct cib_notification_s *update = user_data;
 
     CRM_CHECK(client != NULL, return TRUE);
@@ -79,17 +81,18 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 
     if (do_send) {
         switch (client->kind) {
-            case CRM_CLIENT_IPC:
-                if (crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
+            case PCMK__CLIENT_IPC:
+                if (pcmk__ipc_send_iov(client, update->iov,
+                                       crm_ipc_server_event) != pcmk_rc_ok) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-            case CRM_CLIENT_TLS:
+            case PCMK__CLIENT_TLS:
 #endif
-            case CRM_CLIENT_TCP:
+            case PCMK__CLIENT_TCP:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-                crm_remote_send(client->remote, update->msg);
+                pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
                 crm_err("Unknown transport %d for %s", client->kind, client->name);
@@ -104,18 +107,19 @@ cib_notify_send(xmlNode * xml)
     struct iovec *iov;
     struct cib_notification_s update;
 
-    ssize_t rc = crm_ipc_prepare(0, xml, &iov, 0);
+    ssize_t bytes = 0;
+    int rc = pcmk__ipc_prepare_iov(0, xml, 0, &iov, &bytes);
 
     crm_trace("Notifying clients");
-    if (rc > 0) {
+    if (rc == pcmk_rc_ok) {
         update.msg = xml;
         update.iov = iov;
-        update.iov_size = rc;
-        g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
+        update.iov_size = bytes;
+        pcmk__foreach_ipc_client_remove(cib_notify_send_one, &update);
 
     } else {
-        crm_notice("Could not notify clients: %s " CRM_XS " rc=%lld",
-                   pcmk_strerror(rc), (long long) rc);
+        crm_notice("Could not notify clients: %s " CRM_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
     }
     pcmk_free_ipc_event(iov);
     crm_trace("Notify complete");

@@ -33,6 +33,7 @@ none_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 none_reset(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     none_free_priv(out);
     none_init(out);
 }
@@ -97,7 +98,7 @@ pcmk__mk_none_output(char **argv) {
     }
 
     retval->fmt_name = "none";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
     retval->init = none_init;

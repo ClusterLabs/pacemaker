@@ -484,7 +484,7 @@ pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
 }
 
 static void
-pcmk_dbus_connections_dispatch()
+pcmk_dbus_connections_dispatch(void)
 {
     GList *gIter = NULL;
 

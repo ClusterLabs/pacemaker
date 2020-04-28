@@ -1,5 +1,6 @@
 /*
- * Copyright 2004-2018 International Business Machines
+ * Original copyright 2004 International Business Machines
+ * Later changes copyright 2008-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -75,22 +76,25 @@ static gboolean
 cib_file_verify_digest(xmlNode *root, const char *sigfile)
 {
     gboolean passed = FALSE;
-    char *expected = crm_read_contents(sigfile);
+    char *expected;
+    int rc = pcmk__file_contents(sigfile, &expected);
 
-    if (expected == NULL) {
-        switch (errno) {
-            case 0:
+    switch (rc) {
+        case pcmk_rc_ok:
+            if (expected == NULL) {
                 crm_err("On-disk digest at %s is empty", sigfile);
                 return FALSE;
-            case ENOENT:
-                crm_warn("No on-disk digest present at %s", sigfile);
-                return TRUE;
-            default:
-                crm_perror(LOG_ERR, "Could not read on-disk digest from %s", sigfile);
-                return FALSE;
-        }
+            }
+            break;
+        case ENOENT:
+            crm_warn("No on-disk digest present at %s", sigfile);
+            return TRUE;
+        default:
+            crm_err("Could not read on-disk digest from %s: %s",
+                    sigfile, pcmk_rc_str(rc));
+            return FALSE;
     }
-    passed = crm_digest_verify(root, expected);
+    passed = pcmk__verify_digest(root, expected);
     free(expected);
     return passed;
 }
@@ -142,7 +146,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
 
     /* If sigfile is not specified, use original file name plus .sig */
     if (sigfile == NULL) {
-        sigfile = local_sigfile = crm_concat(filename, "sig", '.');
+        sigfile = local_sigfile = crm_strdup_printf("%s.sig", filename);
     }
 
     /* Verify that digests match */
@@ -184,16 +188,16 @@ cib_file_is_live(const char *filename)
 
     if (filename != NULL) {
         // Canonicalize file names for true comparison
-        char *real_filename = crm_compat_realpath(filename);
+        char *real_filename = NULL;
 
-        if (real_filename != NULL) {
-            char *real_livename;
+        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
+            char *real_livename = NULL;
 
-            real_livename = crm_compat_realpath(CRM_CONFIG_DIR "/" CIB_LIVE_NAME);
-            if (real_livename && !strcmp(real_filename, real_livename)) {
-                same = TRUE;
+            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
+                                &real_livename) == pcmk_rc_ok) {
+                same = !strcmp(real_filename, real_livename);
+                free(real_livename);
             }
-            free(real_livename);
             free(real_filename);
         }
     }
@@ -221,17 +225,21 @@ static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
-    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
-    char *cib_digest = crm_concat(cib_path, "sig", '.');
+    unsigned int seq;
+    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
+    char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
+    char *backup_path;
+    char *backup_digest;
 
-    /* Figure out what backup file sequence number to use */
-    int seq = get_last_sequence(cib_dirname, CIB_SERIES);
-    char *backup_path = generate_series_filename(cib_dirname, CIB_SERIES, seq,
-                                                 CIB_SERIES_BZIP);
-    char *backup_digest = crm_concat(backup_path, "sig", '.');
-
-    CRM_ASSERT((cib_path != NULL) && (cib_digest != NULL)
-               && (backup_path != NULL) && (backup_digest != NULL));
+    // Determine backup and digest file names
+    if (pcmk__read_series_sequence(cib_dirname, CIB_SERIES,
+                                   &seq) != pcmk_rc_ok) {
+        // @TODO maybe handle errors better ...
+        seq = 0;
+    }
+    backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
+                                        CIB_SERIES_BZIP);
+    backup_digest = crm_strdup_printf("%s.sig", backup_path);
 
     /* Remove the old backups if they exist */
     unlink(backup_path);
@@ -251,8 +259,11 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 
     /* Update the last counter and ensure everything is sync'd to media */
     } else {
-        write_last_sequence(cib_dirname, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
+        pcmk__write_series_sequence(cib_dirname, CIB_SERIES, ++seq,
+                                    CIB_SERIES_MAX);
         if (cib_do_chown) {
+            int rc2;
+
             if ((chown(backup_path, cib_file_owner, cib_file_group) < 0)
                     && (errno != ENOENT)) {
                 crm_perror(LOG_ERR, "Could not set owner of %s", backup_path);
@@ -263,15 +274,15 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
                 crm_perror(LOG_ERR, "Could not set owner of %s", backup_digest);
                 rc = -1;
             }
-            if (crm_chown_last_sequence(cib_dirname, CIB_SERIES, cib_file_owner,
-                                        cib_file_group) < 0) {
-                crm_perror(LOG_ERR,
-                           "Could not set owner of %s last sequence file",
-                           cib_dirname);
+            rc2 = pcmk__chown_series_sequence(cib_dirname, CIB_SERIES,
+                                              cib_file_owner, cib_file_group);
+            if (rc2 != pcmk_rc_ok) {
+                crm_err("Could not set owner of sequence file in %s: %s",
+                        cib_dirname, pcmk_rc_str(rc2));
                 rc = -1;
             }
         }
-        crm_sync_directory(cib_dirname);
+        pcmk__sync_directory(cib_dirname);
         crm_info("Archived previous version as %s", backup_path);
     }
 
@@ -338,8 +349,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                                 XML_ATTR_GENERATION_ADMIN);
 
     /* Determine full CIB and signature pathnames */
-    char *cib_path = crm_concat(cib_dirname, cib_filename, '/');
-    char *digest_path = crm_concat(cib_path, "sig", '.');
+    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
+    char *digest_path = crm_strdup_printf("%s.sig", cib_path);
 
     /* Create temporary file name patterns for writing out CIB and signature */
     char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
@@ -418,8 +429,10 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
         close(fd);
         goto cleanup;
     }
-    if (crm_write_sync(fd, digest) < 0) {
-        crm_perror(LOG_ERR, "Could not write digest to file %s", tmp_digest);
+    rc = pcmk__write_sync(fd, digest);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not write digest to %s: %s",
+                tmp_digest, pcmk_rc_str(rc));
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
@@ -444,7 +457,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                    digest_path);
         exit_rc = pcmk_err_cib_save;
     }
-    crm_sync_directory(cib_dirname);
+    pcmk__sync_directory(cib_dirname);
 
   cleanup:
     free(cib_path);
@@ -555,15 +568,15 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
+        crm_debug("Opened connection to local file '%s' for %s",
+                  private->filename, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
-                name, private->filename, pcmk_strerror(rc));
+        crm_info("Connection to local file '%s' for %s failed: %s\n",
+                 private->filename, name, pcmk_strerror(rc));
     }
-
     return rc;
 }
 
@@ -678,7 +691,7 @@ cib_file_signoff(cib_t * cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            gboolean do_bzip = crm_ends_with_ext(private->filename, ".bz2");
+            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
 
             if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
                 rc = pcmk_err_generic;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,12 +20,52 @@
 
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 
 gboolean show_scores = FALSE;
-int scores_log_level = LOG_TRACE;
 gboolean show_utilization = FALSE;
-int utilization_log_level = LOG_TRACE;
+
+static void
+log_resource_details(pe_working_set_t *data_set)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__output_t *out = NULL;
+    const char* argv[] = { "", NULL };
+    GListPtr unames = NULL;
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
+
+    /* We need a list of nodes that we are allowed to output information for.
+     * This is necessary because out->message for all the resource-related
+     * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
+     * we just make it a list of all the nodes.
+     */
+    unames = g_list_append(unames, strdup("*"));
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        return;
+    }
+    pe__register_messages(out);
+
+    for (GList *item = data_set->resources; item != NULL; item = item->next) {
+        pe_resource_t *rsc = (pe_resource_t *) item->data;
+
+        // Log all resources except inactive orphans
+        if (is_not_set(rsc->flags, pe_rsc_orphan)
+            || (rsc->role != RSC_ROLE_STOPPED)) {
+            out->message(out, crm_map_element_name(rsc->xml), 0, rsc, unames);
+        }
+    }
+
+    pcmk__output_free(out);
+    g_list_free_full(unames, free);
+}
 
 /*!
  * \internal
@@ -40,7 +80,6 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                        crm_time_t *now)
 {
     GListPtr gIter = NULL;
-    int rsc_log_level = LOG_INFO;
 
 /*	pe_debug_on(); */
 
@@ -61,17 +100,8 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
-
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
-        gIter = data_set->resources;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *rsc = (resource_t *) gIter->data;
-
-            if (is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
-                continue;
-            }
-            rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
-        }
+    if (is_not_set(data_set->flags, pe_flag_quick_location)) {
+        log_resource_details(data_set);
     }
 
     crm_trace("Applying placement constraints");
@@ -101,10 +131,10 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("=#=#=#=#= Summary =#=#=#=#=");
     crm_trace("\t========= Set %d (Un-runnable) =========", -1);
-    if (get_crm_log_level() >= LOG_TRACE) {
+    if (get_crm_log_level() == LOG_TRACE) {
         gIter = data_set->actions;
         for (; gIter != NULL; gIter = gIter->next) {
-            action_t *action = (action_t *) gIter->data;
+            pe_action_t *action = (pe_action_t *) gIter->data;
 
             if (is_set(action->flags, pe_action_optional) == FALSE
                 && is_set(action->flags, pe_action_runnable) == FALSE

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,8 +16,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
-
-CRM_TRACE_INIT_DATA(transitioner);
 
 static crm_action_t *
 unpack_action(synapse_t * parent, xmlNode * xml_action)
@@ -66,9 +64,10 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         action->timeout += crm_parse_int(value, NULL);
     }
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_interval");
-    if (value != NULL) {
-        action->interval_ms = crm_parse_ms(value);
+    if (pcmk__guint_from_hash(action->params,
+                              CRM_META "_" XML_LRM_ATTR_INTERVAL, 0,
+                              &(action->interval_ms)) != pcmk_rc_ok) {
+        action->interval_ms = 0;
     }
 
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
@@ -250,14 +249,14 @@ destroy_action(crm_action_t * action)
 static void
 destroy_synapse(synapse_t * synapse)
 {
-    while (g_list_length(synapse->actions) > 0) {
+    while (synapse->actions != NULL) {
         crm_action_t *action = g_list_nth_data(synapse->actions, 0);
 
         synapse->actions = g_list_remove(synapse->actions, action);
         destroy_action(action);
     }
 
-    while (g_list_length(synapse->inputs) > 0) {
+    while (synapse->inputs != NULL) {
         crm_action_t *action = g_list_nth_data(synapse->inputs, 0);
 
         synapse->inputs = g_list_remove(synapse->inputs, action);
@@ -272,7 +271,7 @@ destroy_graph(crm_graph_t * graph)
     if (graph == NULL) {
         return;
     }
-    while (g_list_length(graph->synapses) > 0) {
+    while (graph->synapses != NULL) {
         synapse_t *synapse = g_list_nth_data(graph->synapses, 0);
 
         graph->synapses = g_list_remove(graph->synapses, synapse);
@@ -300,12 +299,9 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad");
               return NULL);
 
-    op = calloc(1, sizeof(lrmd_event_data_t));
-
-    op->rsc_id = strdup(ID(action_resource));
-    op->interval_ms = action->interval_ms;
-    op->op_type = strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
-
+    op = lrmd_new_event(ID(action_resource),
+                        crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+                        action->interval_ms);
     op->rc = rc;
     op->op_status = status;
     op->t_run = time(NULL);

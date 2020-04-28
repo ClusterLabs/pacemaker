@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -134,7 +134,7 @@ schema_filter(const struct dirent *a)
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if (!crm_ends_with_ext(a->d_name, ".rng")) {
+    } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if (!version_from_filename(a->d_name, &version)) {
@@ -240,7 +240,8 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
 /*!
  * \internal
  * \brief Add version-specified schema + auxiliary data to internal bookkeeping.
- * \return \c -ENOENT when no upgrade schema associated, \c pcmk_ok otherwise.
+ * \return Standard Pacemaker return value (the only possible values are
+ * \c ENOENT when no upgrade schema is associated, or \c pcmk_rc_ok otherwise.
  *
  * \note There's no reliance on the particular order of schemas entering here.
  *
@@ -269,7 +270,7 @@ add_schema_by_version(const schema_version_t *version, int next,
                       bool transform_expected)
 {
     bool transform_onleave = FALSE;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     struct stat s;
     char *xslt = NULL,
          *transform_upgrade = NULL,
@@ -323,7 +324,7 @@ add_schema_by_version(const schema_version_t *version, int next,
         free(transform_upgrade);
         transform_upgrade = NULL;
         next = -1;
-        rc = -ENOENT;
+        rc = ENOENT;
     }
 
     add_schema(schema_validator_rng, version, NULL,
@@ -335,7 +336,7 @@ add_schema_by_version(const schema_version_t *version, int next,
     return rc;
 }
 
-static int
+static void
 wrap_libxslt(bool finalize)
 {
     static xsltSecurityPrefsPtr secprefs;
@@ -354,7 +355,7 @@ wrap_libxslt(bool finalize)
               | xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_NETWORK,
                                      xsltSecurityForbid);
         if (ret != 0) {
-            return -1;
+            return;
         }
     } else {
         xsltFreeSecurityPrefs(secprefs);
@@ -365,8 +366,6 @@ wrap_libxslt(bool finalize)
     if (finalize) {
         xsltCleanupGlobals();
     }
-
-    return ret;
 }
 
 /*!
@@ -416,7 +415,7 @@ crm_schema_init(void)
                 next = -1;
             }
             if (add_schema_by_version(&version, next, transform_expected)
-                    == -ENOENT) {
+                    == ENOENT) {
                 break;
             }
         }
@@ -678,7 +677,7 @@ validate_xml_verbose(xmlNode *xml_blob)
     gboolean rc = FALSE;
     char *filename = NULL;
 
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", crm_get_tmpdir());
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
@@ -1205,6 +1204,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
+        // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
 
         converted = copy_xml(*xml);
@@ -1212,32 +1212,46 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
+            // Updated configuration schema is still not acceptable
+
             if (version < orig_version || orig_version == -1) {
+                // We couldn't validate any schema at all
                 if (to_logs) {
-                    crm_config_err("Your current configuration %s could not"
-                                   " validate with any schema in range [%s, %s],"
-                                   " cannot upgrade to %s.",
-                                   orig_value,
-                                   get_schema_name(orig_version),
-                                   xml_latest_schema(),
-                                   get_schema_name(min_version));
+                    pcmk__config_err("Cannot upgrade configuration (claiming "
+                                     "schema %s) to at least %s because it "
+                                     "does not validate with any schema from "
+                                     "%s to %s",
+                                     orig_value,
+                                     get_schema_name(min_version),
+                                     get_schema_name(orig_version),
+                                     xml_latest_schema());
                 } else {
-                    fprintf(stderr, "Your current configuration %s could not"
-                                    " validate with any schema in range [%s, %s],"
-                                    " cannot upgrade to %s.\n",
+                    fprintf(stderr, "Cannot upgrade configuration (claiming "
+                                    "schema %s) to at least %s because it "
+                                    "does not validate with any schema from "
+                                    "%s to %s\n",
                                     orig_value,
+                                    get_schema_name(min_version),
                                     get_schema_name(orig_version),
-                                    xml_latest_schema(),
-                                    get_schema_name(min_version));
+                                    xml_latest_schema());
                 }
-            } else if (to_logs) {
-                crm_config_err("Your current configuration could only be upgraded to %s... "
-                               "the minimum requirement is %s.", crm_str(value),
-                               get_schema_name(min_version));
             } else {
-                fprintf(stderr, "Your current configuration could only be upgraded to %s... "
-                        "the minimum requirement is %s.\n",
-                        crm_str(value), get_schema_name(min_version));
+                // We updated configuration successfully, but still too low
+                if (to_logs) {
+                    pcmk__config_err("Cannot upgrade configuration (claiming "
+                                     "schema %s) to at least %s because it "
+                                     "would not upgrade past %s",
+                                     orig_value,
+                                     get_schema_name(min_version),
+                                     crm_str(value));
+                } else {
+                    fprintf(stderr, "Cannot upgrade configuration (claiming "
+                                    "schema %s) to at least %s because it "
+                                    "would not upgrade past %s\n",
+                                    orig_value,
+                                    get_schema_name(min_version),
+                                    crm_str(value));
+                }
             }
 
             free_xml(converted);
@@ -1245,28 +1259,37 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             rc = FALSE;
 
         } else {
+            // Updated configuration schema is acceptable
             free_xml(*xml);
             *xml = converted;
 
             if (version < xml_latest_schema_index()) {
-                crm_config_warn("Your configuration was internally updated to %s... "
-                                "which is acceptable but not the most recent",
-                                get_schema_name(version));
-
-            } else if (to_logs) {
-                crm_info("Your configuration was internally updated to the latest version (%s)",
-                         get_schema_name(version));
+                if (to_logs) {
+                    pcmk__config_warn("Configuration with schema %s was "
+                                      "internally upgraded to acceptable (but "
+                                      "not most recent) %s",
+                                      orig_value, get_schema_name(version));
+                }
+            } else {
+                if (to_logs) {
+                    crm_info("Configuration with schema %s was internally "
+                             "upgraded to latest version %s",
+                             orig_value, get_schema_name(version));
+                }
             }
         }
 
     } else if (version >= get_schema_version("none")) {
+        // Schema validation is disabled
         if (to_logs) {
-            crm_config_warn("Configuration validation is currently disabled."
-                            " It is highly encouraged and prevents many common cluster issues.");
+            pcmk__config_warn("Schema validation of configuration is disabled "
+                              "(enabling is encouraged and prevents common "
+                              "misconfigurations)");
 
         } else {
-            fprintf(stderr, "Configuration validation is currently disabled."
-                    " It is highly encouraged and prevents many common cluster issues.\n");
+            fprintf(stderr, "Schema validation of configuration is disabled "
+                            "(enabling is encouraged and prevents common "
+                            "misconfigurations)\n");
         }
     }
 

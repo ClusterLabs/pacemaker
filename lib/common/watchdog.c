@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 #  include <sys/mman.h>
 #endif
 
-static int sbd_pid = 0;
+static pid_t sbd_pid = 0;
 
 enum pcmk_panic_flags
 {
@@ -68,7 +68,7 @@ pcmk_panic_local(void)
          *
          * Of these, only the controller is likely to be initiating resets.
          */
-        do_crm_log_always(LOG_EMERG, "Signaling parent %d to panic", ppid);
+        crm_emerg("Signaling parent %lld to panic", (long long) ppid);
         crm_exit(CRM_EX_PANIC);
         return;
 
@@ -81,11 +81,12 @@ pcmk_panic_local(void)
         union sigval signal_value;
 
         memset(&signal_value, 0, sizeof(signal_value));
-        ppid = crm_procfs_pid_of("pacemakerd");
-        do_crm_log_always(LOG_EMERG, "Signaling pacemakerd(%d) to panic", ppid);
+        ppid = pcmk__procfs_pid_of("pacemakerd");
+        crm_emerg("Signaling pacemakerd[%lld] to panic", (long long) ppid);
 
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-            crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
+            crm_perror(LOG_EMERG, "Cannot signal pacemakerd[%lld] to panic",
+                       (long long) ppid);
         }
 #endif // SUPPORT_PROCFS
 
@@ -105,7 +106,8 @@ pcmk_panic_local(void)
     reboot(RB_AUTOBOOT);
     rc = errno;
 
-    do_crm_log_always(LOG_EMERG, "Reboot failed, escalating to %d: %s (%d)", ppid, pcmk_strerror(rc), rc);
+    crm_emerg("Reboot failed, escalating to parent %lld: %s " CRM_XS " rc=%d",
+              (long long) ppid, pcmk_rc_str(rc), rc);
 
     if(ppid > 1) {
         /* child daemon */
@@ -122,12 +124,13 @@ pcmk_panic_sbd(void)
     union sigval signal_value;
     pid_t ppid = getppid();
 
-    do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic", sbd_pid);
+    crm_emerg("Signaling sbd[%lld] to panic", (long long) sbd_pid);
 
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_perror(LOG_EMERG, "Cannot signal SBD(%d) to terminate", sbd_pid);
+        crm_perror(LOG_EMERG, "Cannot signal sbd[%lld] to terminate",
+                   (long long) sbd_pid);
         pcmk_panic_local();
     }
 
@@ -154,19 +157,20 @@ pcmk_panic(const char *origin)
 
     if (panic_cs && panic_cs->targets) {
         /* getppid() == 1 means our original parent no longer exists */
-        do_crm_log_always(LOG_EMERG,
-                          "Shutting down instead of panicking the node: origin=%s, sbd=%d, parent=%d",
-                          origin, sbd_pid, getppid());
+        crm_emerg("Shutting down instead of panicking the node "
+                  CRM_XS " origin=%s sbd=%lld parent=%d",
+                  origin, (long long) sbd_pid, getppid());
         crm_exit(CRM_EX_FATAL);
         return;
     }
 
     if(sbd_pid > 1) {
-        do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic the system: %s", sbd_pid, origin);
+        crm_emerg("Signaling sbd[%lld] to panic the system: %s",
+                  (long long) sbd_pid, origin);
         pcmk_panic_sbd();
 
     } else {
-        do_crm_log_always(LOG_EMERG, "Panicking the system directly: %s", origin);
+        crm_emerg("Panicking the system directly: %s", origin);
         pcmk_panic_local();
     }
 }
@@ -176,6 +180,7 @@ pcmk_locate_sbd(void)
 {
     char *pidfile = NULL;
     char *sbd_path = NULL;
+    int rc;
 
     if(sbd_pid > 1) {
         return sbd_pid;
@@ -186,17 +191,17 @@ pcmk_locate_sbd(void)
     sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */
-    CRM_ASSERT(pidfile);
-
-    sbd_pid = crm_pidfile_inuse(pidfile, 0, sbd_path);
-    if(sbd_pid > 0) {
-        crm_trace("SBD detected at pid=%d (file)", sbd_pid);
+    rc = pcmk__pidfile_matches(pidfile, 0, sbd_path, &sbd_pid);
+    if (rc == pcmk_rc_ok) {
+        crm_trace("SBD detected at pid %lld (via PID file %s)",
+                  (long long) sbd_pid, pidfile);
 
 #if SUPPORT_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
-        sbd_pid = crm_procfs_pid_of("sbd");
-        crm_trace("SBD detected at pid=%d (proc)", sbd_pid);
+        sbd_pid = pcmk__procfs_pid_of("sbd");
+        crm_trace("SBD detected at pid %lld (via procfs)",
+                  (long long) sbd_pid);
 #endif // SUPPORT_PROCFS
     }
 
@@ -212,7 +217,7 @@ pcmk_locate_sbd(void)
 }
 
 long
-crm_get_sbd_timeout(void)
+pcmk__get_sbd_timeout(void)
 {
     static long sbd_timeout = -2;
 
@@ -223,20 +228,20 @@ crm_get_sbd_timeout(void)
 }
 
 long
-crm_auto_watchdog_timeout()
+pcmk__auto_watchdog_timeout()
 {
-    long sbd_timeout = crm_get_sbd_timeout();
+    long sbd_timeout = pcmk__get_sbd_timeout();
 
     return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
 }
 
-gboolean
-check_sbd_timeout(const char *value)
+bool
+pcmk__valid_sbd_timeout(const char *value)
 {
     long st_timeout = value? crm_get_msec(value) : 0;
 
     if (st_timeout < 0) {
-        st_timeout = crm_auto_watchdog_timeout();
+        st_timeout = pcmk__auto_watchdog_timeout();
         crm_debug("Using calculated value %ld for stonith-watchdog-timeout (%s)",
                   st_timeout, value);
     }
@@ -246,24 +251,22 @@ check_sbd_timeout(const char *value)
                   value? value : "default");
 
     } else if (pcmk_locate_sbd() == 0) {
-        do_crm_log_always(LOG_EMERG,
-                          "Shutting down: stonith-watchdog-timeout configured (%s) but SBD not active",
-                          (value? value : "auto"));
+        crm_emerg("Shutting down: stonith-watchdog-timeout configured (%s) "
+                  "but SBD not active", (value? value : "auto"));
         crm_exit(CRM_EX_FATAL);
-        return FALSE;
+        return false;
 
     } else {
-        long sbd_timeout = crm_get_sbd_timeout();
+        long sbd_timeout = pcmk__get_sbd_timeout();
 
         if (st_timeout < sbd_timeout) {
-            do_crm_log_always(LOG_EMERG,
-                              "Shutting down: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
-                              value, sbd_timeout);
+            crm_emerg("Shutting down: stonith-watchdog-timeout (%s) too short "
+                      "(must be >%ldms)", value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
-            return FALSE;
+            return false;
         }
         crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
                  value, sbd_timeout);
     }
-    return TRUE;
+    return true;
 }

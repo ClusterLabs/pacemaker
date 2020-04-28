@@ -5,9 +5,9 @@ Online: [ ra1 ra2 ra3 ]
 GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
 
  Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
-   redis-bundle-0	(ocf::heartbeat:redis):	Slave ra1
-   redis-bundle-1	(ocf::heartbeat:redis):	Stopped ra2
-   redis-bundle-2	(ocf::heartbeat:redis):	Slave ra3
+   redis-bundle-0	(ocf::heartbeat:redis):	 Slave ra1
+   redis-bundle-1	(ocf::heartbeat:redis):	 Stopped ra2
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave ra3
 
 Transition Summary:
  * Promote    redis:0                   ( Slave -> Master redis-bundle-0 )  
@@ -56,7 +56,7 @@ Online: [ ra1 ra2 ra3 ]
 GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 redis-bundle-2:redis-bundle-docker-2 ]
 
  Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]
-   redis-bundle-0	(ocf::heartbeat:redis):	Master ra1
-   redis-bundle-1	(ocf::heartbeat:redis):	Stopped
-   redis-bundle-2	(ocf::heartbeat:redis):	Slave ra3
+   redis-bundle-0	(ocf::heartbeat:redis):	 Master ra1
+   redis-bundle-1	(ocf::heartbeat:redis):	 Stopped
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave ra3
 

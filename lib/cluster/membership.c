@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -21,8 +23,6 @@
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
-
-#define s_if_plural(i) (((i) == 1)? "" : "s")
 
 /* The peer cache remembers cluster nodes that have been seen.
  * This is managed mostly automatically by libcluster, based on
@@ -336,7 +336,7 @@ reap_crm_member(uint32_t id, const char *name)
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
         crm_notice("Purged %d peer%s with id=%u%s%s from the membership cache",
-                   matches, s_if_plural(matches), search.id,
+                   matches, pcmk__plural_s(matches), search.id,
                    (search.uname? " and/or uname=" : ""),
                    (search.uname? search.uname : ""));
 
@@ -895,7 +895,7 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
  *       within a peer cache iteration if the iterator is supplied.
  */
 static crm_node_t *
-crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, int membership, GHashTableIter *iter)
+crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, uint64_t membership, GHashTableIter *iter)
 {
     gboolean is_member;
 
@@ -962,7 +962,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
  *       otherwise reaping could invalidate the iterator.
  */
 crm_node_t *
-crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
+crm_update_peer_state(const char *source, crm_node_t * node, const char *state, uint64_t membership)
 {
     return crm_update_peer_state_iter(source, node, state, membership, NULL);
 }

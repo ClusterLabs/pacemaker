@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -129,7 +131,7 @@ static int cib_archive_filter(const struct dirent * a)
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
 
-    } else if (crm_ends_with_ext(a->d_name, ".sig")) {
+    } else if (pcmk__ends_with_ext(a->d_name, ".sig")) {
         crm_trace("%s - wrong suffix", a->d_name);
 
     } else {
@@ -182,6 +184,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     int lpc = 0;
     char *sigfile = NULL;
+    char *sigfilepath = NULL;
     char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
@@ -191,20 +194,21 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = crm_concat(file, "sig", '.');
+    sigfile = crm_strdup_printf("%s.sig", file);
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
 
-    filename = crm_concat(dir, file, '/');
-    sigfile = crm_concat(dir, sigfile, '/');
+    filename = crm_strdup_printf("%s/%s", dir, file);
+    sigfilepath = crm_strdup_printf("%s/%s", dir, sigfile);
+    free(sigfile);
 
     cib_status = pcmk_ok;
-    root = retrieveCib(filename, sigfile);
+    root = retrieveCib(filename, sigfilepath);
     free(filename);
-    free(sigfile);
+    free(sigfilepath);
 
     if (root == NULL) {
         crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
@@ -220,7 +224,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         lpc--;
 
         filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
-        sigfile = crm_concat(filename, "sig", '.');
+        sigfile = crm_strdup_printf("%s.sig", filename);
 
         crm_info("Reading cluster configuration file %s (digest: %s)",
                  filename, sigfile);

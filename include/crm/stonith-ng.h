@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -184,8 +184,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Remove a fencing level for a specific node.
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *
      * \retval 0, success
      * \retval negative error code on failure
      */
@@ -195,8 +193,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register a fencing level containing the fencing devices to be used
      *        at that level for a specific node.
-     *
-     * \note This feature is not available when stonith is in standalone mode.
      *
      * \retval 0, success
      * \retval negative error code on failure
@@ -293,8 +289,6 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Retrieve a list of fencing operations that have occurred for a specific node.
      *
-     * \note History is not available in standalone mode.
-     *
      * \retval 0 success
      * \retval negative error code on failure.
      */
@@ -348,8 +342,7 @@ typedef struct stonith_api_operations_s
      *
      * \return 0 on success, negative error code otherwise
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *       The caller should set only one of node, pattern or attr/value.
+     * \note The caller should set only one of node, pattern or attr/value.
      */
     int (*remove_level_full)(stonith_t *st, int options,
                              const char *node, const char *pattern,
@@ -369,8 +362,7 @@ typedef struct stonith_api_operations_s
      *
      * \return 0 on success, negative error code otherwise
      *
-     * \note This feature is not available when stonith is in standalone mode.
-     *       The caller should set only one of node, pattern or attr/value.
+     * \note The caller should set only one of node, pattern or attr/value.
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
@@ -400,6 +392,26 @@ typedef struct stonith_api_operations_s
                     stonith_key_value_t *params, int timeout, char **output,
                     char **error_output);
 
+    /*!
+     * \brief Issue a fencing action against a node with requested fencing delay.
+     *
+     * \note Possible actions are, 'on', 'off', and 'reboot'.
+     *
+     * \param st, stonith connection
+     * \param options, call options
+     * \param node, The target node to fence
+     * \param action, The fencing action to take
+     * \param timeout, The default per device timeout to use with each device
+     *                 capable of fencing the target.
+     * \param delay, Apply a fencing delay. Value -1 means disable also any
+     *               static/random fencing delays from pcmk_delay_base/max
+     *
+     * \retval 0 success
+     * \retval negative error code on failure.
+     */
+    int (*fence_with_delay)(stonith_t *st, int options, const char *node, const char *action,
+                            int timeout, int tolerance, int delay);
+
 } stonith_api_operations_t;
 
 struct stonith_s
@@ -419,9 +431,6 @@ stonith_t *stonith_api_new(void);
 void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
-
-// deprecated (use stonith_get_namespace() instead)
-const char *get_stonith_provider(const char *agent, const char *provider);
 
 bool stonith_dispatch(stonith_t * st);
 
@@ -547,6 +556,16 @@ bool stonith_agent_exists(const char *agent, int timeout);
  * \param action Stonith action
  */
 const char *stonith_action_str(const char *action);
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ */
+
+//! \deprecated Use stonith_get_namespace() instead
+const char *get_stonith_provider(const char *agent, const char *provider);
+
+#endif
 
 #ifdef __cplusplus
 }

@@ -21,7 +21,7 @@
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
-%global pcmkversion 2.0.3
+%global pcmkversion X.Y.Z
 %global specversion 1
 
 ## Upstream commit (or git tag, such as "Pacemaker-" plus the
@@ -513,6 +513,7 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{_smp_mflags} V=1
 
 %check
+make %{_smp_mflags} check
 { cts/cts-scheduler --run load-stopped-loop \
   && cts/cts-cli \
   && touch .CHECKED
@@ -682,7 +683,7 @@ getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u %{hacluster_id} -
 exit 0
 
 %if %{defined ldconfig_scriptlets}
-%ldconfig_scriptlets libs
+%ldconfig_scriptlets -n %{pkgname_pcmk_libs}
 %ldconfig_scriptlets cluster-libs
 %else
 %post -n %{pkgname_pcmk_libs} -p /sbin/ldconfig

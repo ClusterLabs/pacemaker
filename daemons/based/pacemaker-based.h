@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
-#include <crm/common/ipcs.h>
+#include <crm/common/ipcs_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
@@ -79,7 +79,7 @@ extern qb_ipcs_service_t *ipcs_shm;
 
 void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,
-                                xmlNode *op_request, crm_client_t *cib_client,
+                                xmlNode *op_request, pcmk__client_t *cib_client,
                                 gboolean privileged);
 void cib_shutdown(int nsig);
 void initiate_exit(void);

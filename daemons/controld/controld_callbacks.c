@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -200,14 +200,22 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  * transient attributes intact until it rejoins.
                  */
                 if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                    controld_delete_node_state(node->uname,
+                                               controld_section_attrs,
+                                               cib_scope_local);
                 }
 
-            } else if(AM_I_DC) {
+            } else if (AM_I_DC || (fsa_our_dc == NULL)) {
+                /* This only needs to be done once, so normally the DC should do
+                 * it. However if there is no DC, every node must do it, since
+                 * there is no other way to ensure some one node does it.
+                 */
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
                 } else {
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                    controld_delete_node_state(node->uname,
+                                               controld_section_attrs,
+                                               cib_scope_local);
                 }
             }
             break;

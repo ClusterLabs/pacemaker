@@ -7,11 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
 #include <crm/common/output.h>
+#include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
+#include <crm/pengine/internal.h>
 #include <glib.h>
 
 #include "crm_mon.h"
@@ -71,11 +75,14 @@ curses_init(pcmk__output_t *out) {
 
 static void
 curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    echo();
+    nocbreak();
+    endwin();
 }
 
 static void
 curses_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out->priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     curses_free_priv(out);
     curses_init(out);
@@ -111,7 +118,27 @@ curses_ver(pcmk__output_t *out, bool extended) {
 
 G_GNUC_PRINTF(2, 3)
 static void
-curses_err_info(pcmk__output_t *out, const char *format, ...) {
+curses_error(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    /* Informational output does not get indented, to separate it from other
+     * potentially indented list output.
+     */
+    va_start(ap, format);
+    vw_printw(stdscr, format, ap);
+    va_end(ap);
+
+    /* Add a newline. */
+    addch('\n');
+
+    clrtoeol();
+    refresh();
+    sleep(2);
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
+curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
     /* Informational output does not get indented, to separate it from other
@@ -223,7 +250,7 @@ crm_mon_mk_curses_output(char **argv) {
     }
 
     retval->fmt_name = "console";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = true;
 
     retval->init = curses_init;
@@ -236,8 +263,8 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->subprocess_output = curses_subprocess_output;
     retval->version = curses_ver;
-    retval->err = curses_err_info;
-    retval->info = curses_err_info;
+    retval->err = curses_error;
+    retval->info = curses_info;
     retval->output_xml = curses_output_xml;
 
     retval->begin_list = curses_begin_list;
@@ -281,6 +308,95 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     curses_indented_vprintf(out, format, ap);
     va_end(ap);
 }
+
+PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
+static int
+stonith_event_console(pcmk__output_t *out, va_list args) {
+    stonith_history_t *event = va_arg(args, stonith_history_t *);
+    gboolean full_history = va_arg(args, gboolean);
+    gboolean later_succeeded = va_arg(args, gboolean);
+
+    crm_time_t *crm_when = crm_time_new(NULL);
+    char *buf = NULL;
+
+    crm_time_set_timet(crm_when, &(event->completed));
+    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+
+    switch (event->state) {
+        case st_failed:
+            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s'%s\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-failed", buf,
+                                   later_succeeded ? " (a later attempt succeeded)" : "");
+            break;
+
+        case st_done:
+            curses_indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->delegate ? event->delegate : "",
+                                   event->client, event->origin,
+                                   full_history ? "completed" : "last-successful", buf);
+            break;
+
+        default:
+            curses_indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
+                                   stonith_action_str(event->action), event->target,
+                                   event->client, event->origin);
+            break;
+    }
+
+    free(buf);
+    crm_time_free(crm_when);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("maint-mode")
+static int
+cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
+    printw("\n              *** Resource management is DISABLED ***");
+    printw("\n  The cluster will not attempt to start, stop or recover services");
+    printw("\n");
+    clrtoeol();
+    refresh();
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "ban", "console", pe__ban_text },
+    { "bundle", "console", pe__bundle_text },
+    { "clone", "console", pe__clone_text },
+    { "cluster-counts", "console", pe__cluster_counts_text },
+    { "cluster-dc", "console", pe__cluster_dc_text },
+    { "cluster-options", "console", pe__cluster_options_text },
+    { "cluster-stack", "console", pe__cluster_stack_text },
+    { "cluster-summary", "console", pe__cluster_summary },
+    { "cluster-times", "console", pe__cluster_times_text },
+    { "failed-action", "console", pe__failed_action_text },
+    { "failed-fencing-history", "console", stonith__failed_history },
+    { "fencing-history", "console", stonith__history },
+    { "full-fencing-history", "console", stonith__full_history },
+    { "group", "console", pe__group_text },
+    { "maint-mode", "console", cluster_maint_mode_console },
+    { "node", "console", pe__node_text },
+    { "node-attribute", "console", pe__node_attribute_text },
+    { "node-list", "console", pe__node_list_text },
+    { "op-history", "console", pe__op_history_text },
+    { "pending-fencing-actions", "console", stonith__pending_actions },
+    { "primitive", "console", pe__resource_text },
+    { "resource-history", "console", pe__resource_history_text },
+    { "stonith-event", "console", stonith_event_console },
+    { "ticket", "console", pe__ticket_text },
+
+    { NULL, NULL, NULL }
+};
+
+void
+crm_mon_register_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
+}
+
 #else
 
 pcmk__output_t *
@@ -297,7 +413,12 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
 G_GNUC_PRINTF(2, 3)
 void
-curses_indented_printf(pcmk__output_t *out, const char *format, va_list args) {
+curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
+    return;
+}
+
+void
+crm_mon_register_messages(pcmk__output_t *out) {
     return;
 }
 

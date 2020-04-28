@@ -2,8 +2,8 @@
 Current cluster status:
 Online: [ host1 host2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Stopped
- rsc2	(ocf::pacemaker:Dummy):	Stopped
+ rsc1	(ocf::pacemaker:Dummy):	 Stopped
+ rsc2	(ocf::pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      rsc1    ( host1 )  
@@ -22,6 +22,6 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ host1 host2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started host1
- rsc2	(ocf::pacemaker:Dummy):	Started host1
+ rsc1	(ocf::pacemaker:Dummy):	 Started host1
+ rsc2	(ocf::pacemaker:Dummy):	 Started host1
 

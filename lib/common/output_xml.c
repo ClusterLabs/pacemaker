@@ -116,7 +116,18 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         return;
     }
 
-    if (!legacy_xml) {
+    if (legacy_xml) {
+        GSList *node = priv->errors;
+
+        if (exit_status != CRM_EX_OK) {
+            fprintf(stderr, "%s\n", crm_exit_str(exit_status));
+        }
+
+        while (node != NULL) {
+            fprintf(stderr, "%s\n", (char *) node->data);
+            node = node->next;
+        }
+    } else {
         char *rc_as_str = crm_itoa(exit_status);
 
         node = create_xml_node(priv->root, "status");
@@ -145,14 +156,16 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 static void
 xml_reset(pcmk__output_t *out) {
     char *buf = NULL;
-    private_data_t *priv = out->priv;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
-    buf = dump_xml_formatted_with_text(priv->root);
-    fprintf(out->dest, "%s", buf);
+    if (out->priv != NULL) {
+        private_data_t *priv = out->priv;
+        buf = dump_xml_formatted_with_text(priv->root);
+        fprintf(out->dest, "%s", buf);
+        free(buf);
+    }
 
-    free(buf);
     xml_free_priv(out);
     xml_init(out);
 }
@@ -312,7 +325,7 @@ pcmk__mk_xml_output(char **argv) {
     }
 
     retval->fmt_name = "xml";
-    retval->request = g_strjoinv(" ", argv);
+    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
     retval->supports_quiet = false;
 
     retval->init = xml_init;

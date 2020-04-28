@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -16,7 +18,7 @@
 #include <glib.h>
 
 #include <crm/pengine/internal.h>
-#include <unpack.h>
+#include <pe_status_private.h>
 
 /*!
  * \brief Create a new working set
@@ -71,7 +73,8 @@ cluster_status(pe_working_set_t * data_set)
     xmlNode *cib_nodes = get_xpath_object("//"XML_CIB_TAG_NODES, data_set->input, LOG_TRACE);
     xmlNode *cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
     xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
-    xmlNode *cib_tags = get_xpath_object("//"XML_CIB_TAG_TAGS, data_set->input, LOG_TRACE);
+    xmlNode *cib_tags = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
+                                         LOG_NEVER);
     const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
     crm_trace("Beginning unpack");
@@ -97,8 +100,10 @@ cluster_status(pe_working_set_t * data_set)
         set_bit(data_set->flags, pe_flag_have_quorum);
     }
 
-    data_set->op_defaults = get_xpath_object("//"XML_CIB_TAG_OPCONFIG, data_set->input, LOG_TRACE);
-    data_set->rsc_defaults = get_xpath_object("//"XML_CIB_TAG_RSCCONFIG, data_set->input, LOG_TRACE);
+    data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
+                                             data_set->input, LOG_NEVER);
+    data_set->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+                                              data_set->input, LOG_NEVER);
 
     unpack_config(config, data_set);
 
@@ -146,11 +151,11 @@ cluster_status(pe_working_set_t * data_set)
 static void
 pe_free_resources(GListPtr resources)
 {
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
     GListPtr iterator = resources;
 
     while (iterator != NULL) {
-        rsc = (resource_t *) iterator->data;
+        rsc = (pe_resource_t *) iterator->data;
         iterator = iterator->next;
         rsc->fns->free(rsc);
     }
@@ -366,21 +371,21 @@ set_working_set_defaults(pe_working_set_t * data_set)
 #endif
 }
 
-resource_t *
+pe_resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id)
 {
     return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed);
 }
 
-resource_t *
+pe_resource_t *
 pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags)
 {
     GListPtr rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        resource_t *parent = rIter->data;
+        pe_resource_t *parent = rIter->data;
 
-        resource_t *match =
+        pe_resource_t *match =
             parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;
@@ -390,10 +395,10 @@ pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flag
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
 {
-    node_t *match = pe_find_node_id(nodes, id);
+    pe_node_t *match = pe_find_node_id(nodes, id);
 
     if (match) {
         return match;
@@ -402,13 +407,13 @@ pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
     return pe_find_node(nodes, uname);
 }
 
-node_t *
+pe_node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->id, id)) {
             return node;
@@ -418,13 +423,13 @@ pe_find_node_id(GListPtr nodes, const char *id)
     return NULL;
 }
 
-node_t *
+pe_node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
     GListPtr gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        node_t *node = (node_t *) gIter->data;
+        pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node && safe_str_eq(node->details->uname, uname)) {
             return node;

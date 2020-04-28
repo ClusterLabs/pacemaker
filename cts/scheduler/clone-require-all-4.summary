@@ -3,7 +3,7 @@ Current cluster status:
 Node rhel7-auto1 (1): standby
 Online: [ rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto1
+ shooter	(stonith:fence_xvm):	 Started rhel7-auto1
  Clone Set: A-clone [A]
      Started: [ rhel7-auto1 rhel7-auto2 ]
      Stopped: [ rhel7-auto3 rhel7-auto4 ]
@@ -29,7 +29,7 @@ Revised cluster status:
 Node rhel7-auto1 (1): standby
 Online: [ rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
- shooter	(stonith:fence_xvm):	Started rhel7-auto2
+ shooter	(stonith:fence_xvm):	 Started rhel7-auto2
  Clone Set: A-clone [A]
      Started: [ rhel7-auto2 ]
      Stopped: [ rhel7-auto1 rhel7-auto3 rhel7-auto4 ]

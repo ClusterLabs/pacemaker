@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 #include <crm/lrmd.h>
 
 static lrmd_key_value_t *
-alert_key2param(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+alert_key2param(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                 const char *value)
 {
     const char **key;
@@ -33,7 +33,7 @@ alert_key2param(lrmd_key_value_t *head, enum crm_alert_keys_e name,
     if (value == NULL) {
         value = "";
     }
-    for (key = crm_alert_keys[name]; *key; key++) {
+    for (key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Setting alert key %s = '%s'", *key, value);
         head = lrmd_key_value_add(head, *key, value);
     }
@@ -41,7 +41,7 @@ alert_key2param(lrmd_key_value_t *head, enum crm_alert_keys_e name,
 }
 
 static lrmd_key_value_t *
-alert_key2param_int(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+alert_key2param_int(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                     int value)
 {
     char *value_s = crm_itoa(value);
@@ -52,7 +52,7 @@ alert_key2param_int(lrmd_key_value_t *head, enum crm_alert_keys_e name,
 }
 
 static lrmd_key_value_t *
-alert_key2param_ms(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                    guint value)
 {
     char *value_s = crm_strdup_printf("%u", value);
@@ -75,7 +75,7 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
 }
 
 static lrmd_key_value_t *
-alert_envvar2params(lrmd_key_value_t *head, crm_alert_entry_t *entry)
+alert_envvar2params(lrmd_key_value_t *head, pcmk__alert_t *entry)
 {
     if (entry->envvars) {
         g_hash_table_foreach(entry->envvars, set_ev_kv, &head);
@@ -117,7 +117,7 @@ is_target_alert(char **list, const char *value)
  * \param[in]     lrmd        Executor connection to use
  * \param[in]     alert_list  Alerts to execute
  * \param[in]     kind        Type of event that is being alerted for
- * \param[in]     attr_name   If crm_alert_attribute, the attribute name
+ * \param[in]     attr_name   If pcmk__alert_attribute, the attribute name
  * \param[in,out] params      Environment variables to pass to agents
  *
  * \retval pcmk_ok on success
@@ -125,21 +125,21 @@ is_target_alert(char **list, const char *value)
  * \retval -2 if all alerts failed
  */
 static int
-exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
+exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
                 const char *attr_name, lrmd_key_value_t *params)
 {
     bool any_success = FALSE, any_failure = FALSE;
-    const char *kind_s = crm_alert_flag2text(kind);
-    crm_time_hr_t *now = NULL;
+    const char *kind_s = pcmk__alert_flag2text(kind);
+    pcmk__time_hr_t *now = NULL;
     struct timeval tv_now;
     char timestamp_epoch[20];
     char timestamp_usec[7];
 
-    params = alert_key2param(params, CRM_alert_kind, kind_s);
-    params = alert_key2param(params, CRM_alert_version, VERSION);
+    params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
+    params = alert_key2param(params, PCMK__alert_key_version, VERSION);
 
     for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
-        crm_alert_entry_t *entry = (crm_alert_entry_t *)(iter->data);
+        pcmk__alert_t *entry = (pcmk__alert_t *)(iter->data);
         lrmd_key_value_t *copy_params = NULL;
         lrmd_key_value_t *head = NULL;
         int rc;
@@ -150,7 +150,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
             continue;
         }
 
-        if ((kind == crm_alert_attribute)
+        if ((kind == pcmk__alert_attribute)
             && !is_target_alert(entry->select_attribute_name, attr_name)) {
 
             crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
@@ -160,7 +160,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
 
         if (now == NULL) {
             if (gettimeofday(&tv_now, NULL) == 0) {
-                now = crm_time_timeval_hr_convert(NULL, &tv_now);
+                now = pcmk__time_timeval_hr_convert(NULL, &tv_now);
             }
         }
         crm_info("Sending %s alert via %s to %s",
@@ -171,23 +171,28 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
             copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
         }
 
-        copy_params = alert_key2param(copy_params, CRM_alert_recipient,
+        copy_params = alert_key2param(copy_params, PCMK__alert_key_recipient,
                                       entry->recipient);
 
         if (now) {
-            char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
+            char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
 
             if (timestamp) {
-                copy_params = alert_key2param(copy_params, CRM_alert_timestamp,
+                copy_params = alert_key2param(copy_params,
+                                              PCMK__alert_key_timestamp,
                                               timestamp);
                 free(timestamp);
             }
 
             snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
                      (long long) tv_now.tv_sec);
-            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_epoch, timestamp_epoch);
+            copy_params = alert_key2param(copy_params,
+                                          PCMK__alert_key_timestamp_epoch,
+                                          timestamp_epoch);
             snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
-            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_usec, timestamp_usec);
+            copy_params = alert_key2param(copy_params,
+                                          PCMK__alert_key_timestamp_usec,
+                                          timestamp_usec);
         }
 
         copy_params = alert_envvar2params(copy_params, entry);
@@ -240,12 +245,13 @@ lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
         return -2;
     }
 
-    params = alert_key2param(params, CRM_alert_node, node);
-    params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
-    params = alert_key2param(params, CRM_alert_attribute_name, attr_name);
-    params = alert_key2param(params, CRM_alert_attribute_value, attr_value);
+    params = alert_key2param(params, PCMK__alert_key_node, node);
+    params = alert_key2param_int(params, PCMK__alert_key_nodeid, nodeid);
+    params = alert_key2param(params, PCMK__alert_key_attribute_name, attr_name);
+    params = alert_key2param(params, PCMK__alert_key_attribute_value,
+                             attr_value);
 
-    rc = exec_alert_list(lrmd, alert_list, crm_alert_attribute, attr_name,
+    rc = exec_alert_list(lrmd, alert_list, pcmk__alert_attribute, attr_name,
                          params);
     lrmd_key_value_freeall(params);
     return rc;
@@ -276,11 +282,11 @@ lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
         return -2;
     }
 
-    params = alert_key2param(params, CRM_alert_node, node);
-    params = alert_key2param(params, CRM_alert_desc, state);
-    params = alert_key2param_int(params, CRM_alert_nodeid, nodeid);
+    params = alert_key2param(params, PCMK__alert_key_node, node);
+    params = alert_key2param(params, PCMK__alert_key_desc, state);
+    params = alert_key2param_int(params, PCMK__alert_key_nodeid, nodeid);
 
-    rc = exec_alert_list(lrmd, alert_list, crm_alert_node, NULL, params);
+    rc = exec_alert_list(lrmd, alert_list, pcmk__alert_node, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }
@@ -312,12 +318,12 @@ lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
         return -2;
     }
 
-    params = alert_key2param(params, CRM_alert_node, target);
-    params = alert_key2param(params, CRM_alert_task, task);
-    params = alert_key2param(params, CRM_alert_desc, desc);
-    params = alert_key2param_int(params, CRM_alert_rc, op_rc);
+    params = alert_key2param(params, PCMK__alert_key_node, target);
+    params = alert_key2param(params, PCMK__alert_key_task, task);
+    params = alert_key2param(params, PCMK__alert_key_desc, desc);
+    params = alert_key2param_int(params, PCMK__alert_key_rc, op_rc);
 
-    rc = exec_alert_list(lrmd, alert_list, crm_alert_fencing, NULL, params);
+    rc = exec_alert_list(lrmd, alert_list, pcmk__alert_fencing, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }
@@ -359,30 +365,35 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
         return pcmk_ok;
     }
 
-    params = alert_key2param(params, CRM_alert_node, node);
-    params = alert_key2param(params, CRM_alert_rsc, op->rsc_id);
-    params = alert_key2param(params, CRM_alert_task, op->op_type);
-    params = alert_key2param_ms(params, CRM_alert_interval, op->interval_ms);
-    params = alert_key2param_int(params, CRM_alert_target_rc, target_rc);
-    params = alert_key2param_int(params, CRM_alert_status, op->op_status);
-    params = alert_key2param_int(params, CRM_alert_rc, op->rc);
+    params = alert_key2param(params, PCMK__alert_key_node, node);
+    params = alert_key2param(params, PCMK__alert_key_rsc, op->rsc_id);
+    params = alert_key2param(params, PCMK__alert_key_task, op->op_type);
+    params = alert_key2param_ms(params, PCMK__alert_key_interval,
+                                op->interval_ms);
+    params = alert_key2param_int(params, PCMK__alert_key_target_rc, target_rc);
+    params = alert_key2param_int(params, PCMK__alert_key_status, op->op_status);
+    params = alert_key2param_int(params, PCMK__alert_key_rc, op->rc);
 
     /* Reoccurring operations do not set exec_time, so on timeout, set it
      * to the operation timeout since that's closer to the actual value.
      */
     if (op->op_status == PCMK_LRM_OP_TIMEOUT && op->exec_time == 0) {
-        params = alert_key2param_int(params, CRM_alert_exec_time, op->timeout);
+        params = alert_key2param_int(params, PCMK__alert_key_exec_time,
+                                     op->timeout);
     } else {
-        params = alert_key2param_int(params, CRM_alert_exec_time, op->exec_time);
+        params = alert_key2param_int(params, PCMK__alert_key_exec_time,
+                                     op->exec_time);
     }
 
     if (op->op_status == PCMK_LRM_OP_DONE) {
-        params = alert_key2param(params, CRM_alert_desc, services_ocf_exitcode_str(op->rc));
+        params = alert_key2param(params, PCMK__alert_key_desc,
+                                 services_ocf_exitcode_str(op->rc));
     } else {
-        params = alert_key2param(params, CRM_alert_desc, services_lrm_status_str(op->op_status));
+        params = alert_key2param(params, PCMK__alert_key_desc,
+                                 services_lrm_status_str(op->op_status));
     }
 
-    rc = exec_alert_list(lrmd, alert_list, crm_alert_resource, NULL, params);
+    rc = exec_alert_list(lrmd, alert_list, pcmk__alert_resource, NULL, params);
     lrmd_key_value_freeall(params);
     return rc;
 }

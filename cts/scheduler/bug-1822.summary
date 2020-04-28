@@ -4,11 +4,11 @@ Online: [ process1a process2b ]
 
  Clone Set: ms-sf [ms-sf_group] (promotable) (unique)
      Resource Group: ms-sf_group:0
-         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b
-         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	 Slave process2b
+         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	 Stopped
      Resource Group: ms-sf_group:1
-         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Master process1a
-         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	Master process1a
+         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	 Master process1a
+         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	 Master process1a
 
 Transition Summary:
  * Shutdown process1a
@@ -35,9 +35,9 @@ Online: [ process1a process2b ]
 
  Clone Set: ms-sf [ms-sf_group] (promotable) (unique)
      Resource Group: ms-sf_group:0
-         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	Slave process2b
-         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	Stopped
+         master_slave_Stateful:0	(ocf::heartbeat:Dummy-statful):	 Slave process2b
+         master_slave_procdctl:0	(ocf::heartbeat:procdctl):	 Stopped
      Resource Group: ms-sf_group:1
-         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	Stopped
-         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	Stopped
+         master_slave_Stateful:1	(ocf::heartbeat:Dummy-statful):	 Stopped
+         master_slave_procdctl:1	(ocf::heartbeat:procdctl):	 Stopped
 
