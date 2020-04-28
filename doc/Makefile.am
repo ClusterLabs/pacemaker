@@ -93,15 +93,15 @@ graphics: $(PNGS)
 # two-phased attempts for Inkscape pre-1.0 and 1.0+ (upcoming) discrepancy
 %.png: %.svg
 	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=90 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=90 -C --export-file=$@ $<; } $(PCMK_quiet)
+	  || $(INKSCAPE) --export-dpi=90 -C --export-filename=$@ $<; } $(PCMK_quiet)
 
 %-small.png: %.svg
 	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=45 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=45 -C --export-file=$@ $<; } $(PCMK_quiet)
+	  || $(INKSCAPE) --export-dpi=45 -C --export-filename=$@ $<; } $(PCMK_quiet)
 
 %-large.png: %.svg
 	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=180 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=180 -C --export-file=$@ $<; } $(PCMK_quiet)
+	  || $(INKSCAPE) --export-dpi=180 -C --export-filename=$@ $<; } $(PCMK_quiet)
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
