@@ -186,8 +186,10 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
 
     crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%u priority_delay=%s",
-               type, target, id, transition_graph->stonith_timeout, priority_delay);
+               CRM_XS " action=%s timeout=%u%s%s",
+               type, target, id, transition_graph->stonith_timeout,
+               priority_delay ? " priority_delay=" : "",
+               priority_delay ? priority_delay : "");
 
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
