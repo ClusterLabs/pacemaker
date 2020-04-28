@@ -1279,6 +1279,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
             } else if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
                 send_r_notify = TRUE;
+
+            } else if (safe_str_eq(section, XML_CIB_TAG_CONFIGURATION)) {
+                send_r_notify = TRUE;
             }
 
         } else if (crm_str_eq(CIB_OP_ERASE, op, TRUE)) {
