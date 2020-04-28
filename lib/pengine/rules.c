@@ -1123,6 +1123,38 @@ pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *
 }
 
 gboolean
+pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
+    const char *name = crm_element_value(expr, XML_NVPAIR_ATTR_NAME);
+    const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
+    guint interval;
+
+    crm_trace("Testing op_defaults expression: %s", ID(expr));
+
+    if (rule_data->op_data == NULL) {
+        crm_trace("No operations data provided");
+        return FALSE;
+    }
+
+    interval = crm_parse_interval_spec(interval_s);
+    if (interval == 0 && errno != 0) {
+        crm_trace("Could not parse interval: %s", interval_s);
+        return FALSE;
+    }
+
+    if (interval_s != NULL && interval != rule_data->op_data->interval) {
+        crm_trace("Interval doesn't match: %d != %d", interval, rule_data->op_data->interval);
+        return FALSE;
+    }
+
+    if (!crm_str_eq(name, rule_data->op_data->op_name, TRUE)) {
+        crm_trace("Name doesn't match: %s != %s", name, rule_data->op_data->op_name);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
 pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {
     gboolean accept = FALSE;
@@ -1161,6 +1193,42 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         }
     }
     return accept;
+}
+
+gboolean
+pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    const char *class = crm_element_value(expr, XML_AGENT_ATTR_CLASS);
+    const char *provider = crm_element_value(expr, XML_AGENT_ATTR_PROVIDER);
+    const char *type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
+
+    crm_trace("Testing rsc_defaults expression: %s", ID(expr));
+
+    if (rule_data->rsc_data == NULL) {
+        crm_trace("No resource data provided");
+        return FALSE;
+    }
+
+    if (class != NULL &&
+        !crm_str_eq(class, rule_data->rsc_data->standard, TRUE)) {
+        crm_trace("Class doesn't match: %s != %s", class, rule_data->rsc_data->standard);
+        return FALSE;
+    }
+
+    if ((provider == NULL && rule_data->rsc_data->provider != NULL) ||
+        (provider != NULL && rule_data->rsc_data->provider == NULL) ||
+        !crm_str_eq(provider, rule_data->rsc_data->provider, TRUE)) {
+        crm_trace("Provider doesn't match: %s != %s", provider, rule_data->rsc_data->provider);
+        return FALSE;
+    }
+
+    if (type != NULL &&
+        !crm_str_eq(type, rule_data->rsc_data->agent, TRUE)) {
+        crm_trace("Agent doesn't match: %s != %s", type, rule_data->rsc_data->agent);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 // Deprecated functions kept only for backward API compatibility
