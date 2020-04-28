@@ -38,25 +38,16 @@ gboolean
 pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
                   crm_time_t *next_change)
 {
-    // If there are no rules, pass by default
-    gboolean ruleset_default = TRUE;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
-         rule != NULL; rule = crm_next_same_xml(rule)) {
-
-        ruleset_default = FALSE;
-        if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, next_change,
-                         NULL)) {
-            /* Only the deprecated "lifetime" element of location constraints
-             * may contain more than one rule at the top level -- the schema
-             * limits a block of nvpairs to a single top-level rule. So, this
-             * effectively means that a lifetime is active if any rule it
-             * contains is active.
-             */
-            return TRUE;
-        }
-    }
-    return ruleset_default;
+    return pe_eval_rules(ruleset, &rule_data, next_change);
 }
 
 gboolean
@@ -64,44 +55,16 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
 {
-    xmlNode *expr = NULL;
-    gboolean test = TRUE;
-    gboolean empty = TRUE;
-    gboolean passed = TRUE;
-    gboolean do_and = TRUE;
-    const char *value = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = role,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    rule = expand_idref(rule, NULL);
-    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
-    if (safe_str_eq(value, "or")) {
-        do_and = FALSE;
-        passed = FALSE;
-    }
-
-    crm_trace("Testing rule %s", ID(rule));
-    for (expr = __xml_first_child_element(rule); expr != NULL;
-         expr = __xml_next_element(expr)) {
-
-        test = pe_test_expression(expr, node_hash, role, now, next_change,
-                                  match_data);
-        empty = FALSE;
-
-        if (test && do_and == FALSE) {
-            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
-            return TRUE;
-
-        } else if (test == FALSE && do_and) {
-            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
-            return FALSE;
-        }
-    }
-
-    if (empty) {
-        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
-    }
-
-    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
-    return passed;
+    return pe_eval_expr(rule, &rule_data, next_change);
 }
 
 /*!
@@ -125,56 +88,16 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now, crm_time_t *next_change,
                    pe_match_data_t *match_data)
 {
-    gboolean accept = FALSE;
-    const char *uname = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = role,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    switch (find_expression_type(expr)) {
-        case nested_rule:
-            accept = pe_test_rule(expr, node_hash, role, now, next_change,
-                                  match_data);
-            break;
-        case attr_expr:
-        case loc_expr:
-            /* these expressions can never succeed if there is
-             * no node to compare with
-             */
-            if (node_hash != NULL) {
-                accept = pe_test_attr_expression(expr, node_hash, now, match_data);
-            }
-            break;
-
-        case time_expr:
-            accept = pe_test_date_expression(expr, now, next_change);
-            break;
-
-        case role_expr:
-            accept = pe_test_role_expression(expr, role, now);
-            break;
-
-#if ENABLE_VERSIONED_ATTRS
-        case version_expr:
-            if (node_hash && g_hash_table_lookup_extended(node_hash,
-                                                          CRM_ATTR_RA_VERSION,
-                                                          NULL, NULL)) {
-                accept = pe_test_attr_expression(expr, node_hash, now, NULL);
-            } else {
-                // we are going to test it when we have ra-version
-                accept = TRUE;
-            }
-            break;
-#endif
-
-        default:
-            CRM_CHECK(FALSE /* bad type */ , return FALSE);
-            accept = FALSE;
-    }
-    if (node_hash) {
-        uname = g_hash_table_lookup(node_hash, CRM_ATTR_UNAME);
-    }
-
-    crm_trace("Expression %s %s on %s",
-              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
-    return accept;
+    return pe_eval_subexpr(expr, &rule_data, next_change);
 }
 
 enum expression_type
@@ -883,6 +806,134 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
     return hash;
 }
 #endif
+
+gboolean
+pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    // If there are no rules, pass by default
+    gboolean ruleset_default = TRUE;
+
+    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
+         rule != NULL; rule = crm_next_same_xml(rule)) {
+
+        ruleset_default = FALSE;
+        if (pe_eval_expr(rule, rule_data, next_change)) {
+            /* Only the deprecated "lifetime" element of location constraints
+             * may contain more than one rule at the top level -- the schema
+             * limits a block of nvpairs to a single top-level rule. So, this
+             * effectively means that a lifetime is active if any rule it
+             * contains is active.
+             */
+            return TRUE;
+        }
+    }
+
+    return ruleset_default;
+}
+
+gboolean
+pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    xmlNode *expr = NULL;
+    gboolean test = TRUE;
+    gboolean empty = TRUE;
+    gboolean passed = TRUE;
+    gboolean do_and = TRUE;
+    const char *value = NULL;
+
+    rule = expand_idref(rule, NULL);
+    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
+    if (safe_str_eq(value, "or")) {
+        do_and = FALSE;
+        passed = FALSE;
+    }
+
+    crm_trace("Testing rule %s", ID(rule));
+    for (expr = __xml_first_child_element(rule); expr != NULL;
+         expr = __xml_next_element(expr)) {
+
+        test = pe_eval_subexpr(expr, rule_data, next_change);
+        empty = FALSE;
+
+        if (test && do_and == FALSE) {
+            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
+            return TRUE;
+
+        } else if (test == FALSE && do_and) {
+            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
+            return FALSE;
+        }
+    }
+
+    if (empty) {
+        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
+    }
+
+    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
+    return passed;
+}
+
+gboolean
+pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    gboolean accept = FALSE;
+    const char *uname = NULL;
+
+    switch (find_expression_type(expr)) {
+        case nested_rule:
+            accept = pe_eval_expr(expr, rule_data, next_change);
+            break;
+        case attr_expr:
+        case loc_expr:
+            /* these expressions can never succeed if there is
+             * no node to compare with
+             */
+            if (rule_data->node_hash != NULL) {
+                accept = pe__eval_attr_expr(expr, rule_data);
+            }
+            break;
+
+        case time_expr:
+            accept = pe_test_date_expression(expr, rule_data->now, next_change);
+            break;
+
+        case role_expr:
+            accept = pe__eval_role_expr(expr, rule_data);
+            break;
+
+        case rsc_expr:
+            accept = pe__eval_rsc_expr(expr, rule_data);
+            break;
+
+        case op_expr:
+            accept = pe__eval_op_expr(expr, rule_data);
+            break;
+
+#if ENABLE_VERSIONED_ATTRS
+        case version_expr:
+            if (rule_data->node_hash &&
+                g_hash_table_lookup_extended(rule_data->node_hash,
+                                             CRM_ATTR_RA_VERSION, NULL, NULL)) {
+                accept = pe__eval_attr_expr(expr, rule_data);
+            } else {
+                // we are going to test it when we have ra-version
+                accept = TRUE;
+            }
+            break;
+#endif
+
+        default:
+            CRM_CHECK(FALSE /* bad type */ , return FALSE);
+            accept = FALSE;
+    }
+    if (rule_data->node_hash) {
+        uname = g_hash_table_lookup(rule_data->node_hash, CRM_ATTR_UNAME);
+    }
+
+    crm_trace("Expression %s %s on %s",
+              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
+    return accept;
+}
 
 gboolean
 pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)

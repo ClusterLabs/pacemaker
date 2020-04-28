@@ -61,6 +61,13 @@ GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
+gboolean pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data,
+                       crm_time_t *next_change);
+gboolean pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data,
+                      crm_time_t *next_change);
+gboolean pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data,
+                         crm_time_t *next_change);
+
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
  * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
