@@ -11,7 +11,8 @@ include $(top_srcdir)/mk/common.mk
 # Things you might want to override on the command line
 
 # Books to generate
-BOOKS		?= Pacemaker_Administration	\
+BOOKS		?= Clusters_from_Scratch \
+			   Pacemaker_Administration	\
 		   Pacemaker_Development	\
 		   Pacemaker_Remote
 
