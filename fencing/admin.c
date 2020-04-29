@@ -125,13 +125,13 @@ static struct crm_option long_options[] = {
     {   "-spacer-", no_argument, NULL, '-', "\nFencing Commands:" },
 
     {   "fence", required_argument, NULL, 'F',
-        "Fence named host. Optional: --timeout, --tolerance."
+        "Fence named host. Optional: --timeout, --tolerance, --delay."
     },
     {   "unfence", required_argument, NULL, 'U',
-        "Unfence named host. Optional: --timeout, --tolerance."
+        "Unfence named host. Optional: --timeout, --tolerance, --delay."
     },
     {   "reboot", required_argument, NULL, 'B',
-        "Reboot named host. Optional: --timeout, --tolerance."
+        "Reboot named host. Optional: --timeout, --tolerance, --delay."
     },
     {   "confirm", required_argument, NULL, 'C',
         "Tell cluster that named host is now safely down."
