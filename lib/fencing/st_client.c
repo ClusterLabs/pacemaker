@@ -505,8 +505,9 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
 }
 
 static GHashTable *
-make_args(const char *agent, const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args,
-          GHashTable * port_map)
+make_args(const char *agent, const char *action, const char *victim,
+          uint32_t victim_nodeid, GHashTable * device_args,
+          GHashTable * port_map, const char *host_arg)
 {
     char buffer[512];
     GHashTable *arg_list = NULL;
@@ -550,7 +551,14 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             value = agent;
 
         } else if (param == NULL) {
-            param = "port";
+            // By default, `port` is added
+            if (host_arg == NULL) {
+                param = "port";
+
+            } else {
+                param = host_arg;
+            }
+
             value = g_hash_table_lookup(device_args, param);
 
         } else if (safe_str_eq(param, "none")) {
@@ -646,12 +654,14 @@ stonith_action_create(const char *agent,
                       const char *_action,
                       const char *victim,
                       uint32_t victim_nodeid,
-                      int timeout, GHashTable * device_args, GHashTable * port_map)
+                      int timeout, GHashTable * device_args,
+                      GHashTable * port_map, const char *host_arg)
 {
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
-    action->args = make_args(agent, _action, victim, victim_nodeid, device_args, port_map);
+    action->args = make_args(agent, _action, victim, victim_nodeid,
+                             device_args, port_map, host_arg);
     crm_debug("Preparing '%s' action for %s using agent %s",
               _action, (victim? victim : "no target"), agent);
     action->agent = strdup(agent);

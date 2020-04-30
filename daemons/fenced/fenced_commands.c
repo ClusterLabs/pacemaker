@@ -325,6 +325,7 @@ stonith_device_execute(stonith_device_t * device)
 {
     int exec_rc = 0;
     const char *action_str = NULL;
+    const char *host_arg = NULL;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
     int active_cmds = 0;
@@ -407,11 +408,19 @@ stonith_device_execute(stonith_device_t * device)
         action_str = "off";
     }
 
+    if (is_set(device->flags, st_device_supports_parameter_port)) {
+        host_arg = "port";
+
+    } else if (is_set(device->flags, st_device_supports_parameter_plug)) {
+        host_arg = "plug";
+    }
+
     action = stonith_action_create(device->agent,
                                    action_str,
                                    cmd->victim,
                                    cmd->victim_nodeid,
-                                   cmd->timeout, device->params, device->aliases);
+                                   cmd->timeout, device->params,
+                                   device->aliases, host_arg);
 
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
@@ -892,6 +901,7 @@ build_device_from_xml(xmlNode * msg)
 
     device->agent_metadata = get_agent_metadata(device->agent);
     read_action_metadata(device);
+    set_bit(device->flags, stonith__device_parameter_flags(device->agent_metadata));
 
     value = g_hash_table_lookup(device->params, "nodeid");
     if (!value) {
