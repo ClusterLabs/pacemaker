@@ -124,7 +124,7 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
     stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0,
-                                                     5, NULL, NULL);
+                                                     5, NULL, NULL, NULL);
     int rc = stonith__execute(action);
 
     if (rc < 0) {
@@ -213,7 +213,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
     int rc = pcmk_ok;
     stonith_action_t *action = stonith_action_create(agent, "validate-all",
                                                      target, 0, timeout, params,
-                                                     NULL);
+                                                     NULL, NULL);
 
     rc = stonith__execute(action);
     if (rc == pcmk_ok) {
