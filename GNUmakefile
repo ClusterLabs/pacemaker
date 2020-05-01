@@ -36,14 +36,26 @@ PACKAGE		?= pacemaker
 # Definitions that specify what various targets will apply to
 
 COMMIT  ?= HEAD
+
+# TAG defaults to DIST when not in a git checkout (e.g. from a distribution),
+# the tag name if COMMIT is tagged, and the full commit ID otherwise.
 TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
 	     test -n "$${T}" && echo "$${T}" \
 	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
 lparen = (
 rparen = )
-SHORTTAG ?= $(shell case $(TAG) in Pacemaker-*|DIST$(rparen) echo '$(TAG)' | cut -c11-;; \
-	      *$(rparen) git log --pretty=format:%h -n 1 '$(TAG)';; esac)
-SHORTTAG_ABBREV = $(shell printf %s '$(SHORTTAG)' | wc -c)
+
+# SPEC_COMMIT is identical to TAG for DIST and tagged releases, otherwise it is
+# the short commit ID (which must be used in order for "make export" to use the
+# same archive name as "make dist")
+SPEC_COMMIT	?= $(shell						\
+		case $(TAG) in						\
+		    Pacemaker-*|DIST$(rparen)				\
+		        echo '$(TAG)' ;;				\
+		    *$(rparen)						\
+		        git log --pretty=format:%h -n 1 '$(TAG)';;	\
+		esac)
+SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 
 LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
 ifneq ($(origin VERSION), undefined)
@@ -64,8 +76,20 @@ NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".
 #
 # Both types use the TARFILE name for the result, though they generate
 # different contents.
-distdir			= $(PACKAGE)-$(SHORTTAG)
-TARFILE			= $(abs_builddir)/$(PACKAGE)-$(SHORTTAG).tar.gz
+# 
+# The directory is named pacemaker-DIST when not in a git checkout (e.g.
+# from a distribution itself), pacemaker-<version_part_of_tag> for tagged
+# commits, and pacemaker-<short_commit> otherwise.
+distdir		= $(PACKAGE)-$(shell						\
+		  case $(TAG) in						\
+			DIST$(rparen)						\
+				echo DIST;;					\
+			Pacemaker-*$(rparen)					\
+		  		echo '$(TAG)' | cut -c11-;;			\
+		  	*$(rparen)						\
+		  		git log --pretty=format:%h -n 1 '$(TAG)';;	\
+		  esac)
+TARFILE		= $(abs_builddir)/$(distdir).tar.gz
 
 .PHONY: init
 init:
@@ -185,8 +209,8 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	fi | sed									\
 	    -e "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" \
 	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
-	    -e 's/global\ commit\ .*/global\ commit\ $(SHORTTAG)/'			\
-	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SHORTTAG_ABBREV)/' \
+	    -e 's/global\ commit\ .*/global\ commit\ $(SPEC_COMMIT)/'			\
+	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SPEC_ABBREV)/'	\
 	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
 	    -e "s/PACKAGE_VERSION/$$(git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/"	\
 	    > "$@"
