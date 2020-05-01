@@ -7,7 +7,7 @@ Install |CFS_DISTRO| |CFS_DISTRO_VER|
 Boot the Install Image
 ______________________
 
-Download the 4GB `|CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`_.
+Download the 4GB |CFS_DISTRO| |CFS_DISTRO_VER| `DVD ISO <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`_.
 Use the image to boot a virtual machine, or burn it to a DVD or USB drive and
 boot a physical server from that.
 
@@ -15,10 +15,11 @@ After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
 .. figure:: ../../shared/en-US/images/Welcome.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: Welcome to |CFS_DISTRO| |CFS_DISTRO_VER|
+    :alt: Installation Welcome Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Welcome Screen
 
@@ -28,10 +29,11 @@ ____________________
 At this point, you get a chance to tweak the default installation options.
 
 .. figure:: ../../shared/en-US/images/Installer.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Installation Summary
+    :alt: Installation Summary Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Summary Screen
 
@@ -53,10 +55,11 @@ In the **NETWORK & HOSTNAME** section:
 - Flip the switch to turn your network device on, and press **Done**.
 
 .. figure:: ../../shared/en-US/images/Editing-eth0.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Editing eth0
+    :alt: Editing eth0
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Network Interface Screen
 
@@ -87,10 +90,11 @@ the **Size policy:** to **As large as possible**, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
 
 .. figure:: ../../shared/en-US/images/Partitioning.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Partitioning
+    :alt: Manual Partitioning Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Manual Partitioning Screen
 
@@ -116,10 +120,11 @@ any additional users. After the node reboots, you'll see a login prompt on
 the console. Login using **root** and the password you created earlier.
 
 .. figure:: ../../shared/en-US/images/Console.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 768
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Console
+    :alt: Console Prompt
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Console Prompt
 
