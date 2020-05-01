@@ -73,7 +73,7 @@ Full path of a temporary file to store the resource state in
       <content type="string" default="${DEFAULT_STATE_FILE}" />
     </parameter>
 
-    <parameter name="name" unique="1">
+    <parameter name="name" unique="0">
       <longdesc lang="en">
 Name of node attribute to manage
       </longdesc>
