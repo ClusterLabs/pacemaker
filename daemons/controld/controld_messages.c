@@ -685,13 +685,20 @@ handle_lrm_delete(xmlNode *stored_msg)
                                                   crmd_cib_smart_opt());
         }
 
-        // Notify client if not from graph (compare with notify_deleted())
-        if (from_sys && strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
+        //Notify client and tengine.(Only notify tengine if mode = "cib" and CRM_OP_LRM_DELETE.)
+        if (from_sys) {
             lrmd_event_data_t *op = NULL;
             const char *from_host = crm_element_value(stored_msg,
                                                       F_CRM_HOST_FROM);
-            const char *transition = crm_element_value(msg_data,
+            const char *transition;
+
+            if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
+                transition = crm_element_value(msg_data,
                                                        XML_ATTR_TRANSITION_KEY);
+            } else {
+                transition = crm_element_value(stored_msg,
+                                                       XML_ATTR_TRANSITION_KEY);
+            }
 
             crm_info("Notifying %s on %s that %s was%s deleted",
                      from_sys, (from_host? from_host : "local node"), rsc_id,
