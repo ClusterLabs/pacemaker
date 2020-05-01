@@ -5,6 +5,9 @@ The walk-through examples use some of these options, but don't explain exactly
 what they mean or do.  This section is meant to be the go-to resource for all
 the options available for configuring pacemaker_remote-based nodes.
 
+.. index::
+    single: configuration
+
 Resource Meta-Attributes for Guest Nodes
 ########################################
 
