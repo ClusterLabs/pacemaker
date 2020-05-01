@@ -57,7 +57,7 @@ network and how to communicate with it.
 Descriptions of these instance attributes can be retrieved using the following
 ``pcs`` command:
 
-::
+.. code-block:: none
 
     # pcs resource describe remote
     ocf:pacemaker:remote - remote resource agent
@@ -78,13 +78,13 @@ the remote node using the resource name as the hostname.
 
 Example defining a remote node with the hostname **remote1**:
 
-::
+.. code-block:: none
 
     # pcs resource create remote1 remote
 
 Example defining a remote node to connect to a specific IP address and port:
 
-::
+.. code-block:: none
 
     # pcs resource create remote1 remote server=192.168.122.200 port=8938
 
@@ -103,7 +103,7 @@ pacemaker_remote via environment variables. How these variables are set varies
 by OS, but usually they are set in the ``/etc/sysconfig/pacemaker`` or
 ``/etc/default/pacemaker`` file.
 
-::
+.. code-block:: none
 
     #==#==# Pacemaker Remote
     # Use a custom directory for finding the authkey.
@@ -121,7 +121,7 @@ affected node will continue to show up in output as an offline node.
 
 If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
 
-::
+.. code-block:: none
 
     # crm_node --force --remove $NODE_NAME
 
