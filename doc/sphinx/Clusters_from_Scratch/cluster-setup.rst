@@ -144,7 +144,7 @@ On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** us
 
 .. NOTE::
 
-    In Fedora 29 and CentOS 8.0, the command has been changed to `pcs host auth`:
+    In Fedora 29 and CentOS 8.0, the command has been changed to ``pcs host auth``:
 
     ::
 

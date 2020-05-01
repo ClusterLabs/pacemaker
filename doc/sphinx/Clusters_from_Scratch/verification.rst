@@ -155,7 +155,7 @@ Explore the Existing Configuration
 ##################################
 
 For those who are not of afraid of XML, you can see the raw cluster
-configuration and status by using the `pcs cluster cib` command.
+configuration and status by using the ``pcs cluster cib`` command.
 
 .. topic:: The last XML you'll see in this document
 
