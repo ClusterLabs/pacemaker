@@ -333,7 +333,7 @@ We will use the **pcs resource move** command to create a temporary constraint
 with a score of INFINITY. While we could update our existing constraint,
 using **move** allows to easily get rid of the temporary constraint later.
 If desired, we could even give a lifetime for the constraint, so it would
-expire automatically -- but we don't that in this example.
+expire automatically -- but we don't do that in this example.
 
 ::
 
