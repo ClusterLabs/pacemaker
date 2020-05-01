@@ -23,7 +23,7 @@ DRBD's maker `LINBIT <http://www.linbit.com/>`_, but here we'll use the free
 On both nodes, import the ELRepo package signing key, and enable the
 repository:
 
-::
+.. code-block:: none
 
     # rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
     # rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
@@ -34,7 +34,7 @@ repository:
 
 Now, we can install the DRBD kernel module and utilities:
 
-::
+.. code-block:: none
 
     # yum install -y kmod-drbd84 drbd84-utils
 
@@ -43,14 +43,14 @@ If you are familiar with SELinux, you can modify the policies in a more
 fine-grained manner, but here we will simply exempt DRBD processes from SELinux
 control:
 
-::
+.. code-block:: none
 
     # semanage permissive -a drbd_t
 
 We will configure DRBD to use port 7789, so allow that port from each host to
 the other:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
         source address="192.168.122.102" port port="7789" protocol="tcp" accept'
@@ -58,7 +58,7 @@ the other:
     [root@pcmk-1 ~]# firewall-cmd --reload
     success
 
-::
+.. code-block:: none
 
     [root@pcmk-2 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
         source address="192.168.122.101" port port="7789" protocol="tcp" accept'
@@ -81,7 +81,7 @@ a physical disk partition or logical volume, of whatever size
 you need for your data. For this document, we will use a 512MiB logical volume,
 which is more than sufficient for a single HTML file and (later) GFS2 metadata.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# vgdisplay | grep -e Name -e Free
       VG Name               centos_pcmk-1
@@ -96,7 +96,7 @@ which is more than sufficient for a single HTML file and (later) GFS2 metadata.
 
 Repeat for the second node, making sure to use the same size:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ssh pcmk-2 -- lvcreate --name drbd-demo --size 512M centos_pcmk-2
      Logical volume "drbd-demo" created.
@@ -107,7 +107,7 @@ Configure DRBD
 There is no series of commands for building a DRBD configuration, so simply
 run this on both nodes to use this sample configuration:
 
-::
+.. code-block:: none
 
     # cat <<END >/etc/drbd.d/wwwdata.res
     resource wwwdata {
@@ -154,8 +154,7 @@ These commands create the local metadata for the DRBD resource,
 ensure the DRBD kernel module is loaded, and bring up the DRBD resource.
 Run them on one node:
 
-
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# drbdadm create-md wwwdata
 
@@ -211,7 +210,7 @@ Run them on one node:
 
 We can confirm DRBD's status on this node:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# cat /proc/drbd
     version: 8.4.11-1 (api:1/proto:86-101)
@@ -229,7 +228,7 @@ Now, repeat the above commands on the second node, starting with creating
 wwwdata.res. After giving it time to connect, when we check the status, it
 shows:
 
-::
+.. code-block:: none
 
     [root@pcmk-2 ~]# cat /proc/drbd
     version: 8.4.11-1 (api:1/proto:86-101)
@@ -247,7 +246,7 @@ considered to have the correct data. In this case, since we are creating
 a new resource, both have garbage, so we'll just pick pcmk-1
 and run this command on it:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# drbdadm primary --force wwwdata
 
@@ -258,7 +257,7 @@ and run this command on it:
 
 If we check the status immediately, we'll see something like this:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# cat /proc/drbd
     version: 8.4.11-1 (api:1/proto:86-101)
@@ -276,7 +275,7 @@ shows how far along the partner node is in synchronizing the data.
 
 After a while, the sync should finish, and you'll see something like:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# cat /proc/drbd
     version: 8.4.11-1 (api:1/proto:86-101)
@@ -294,7 +293,7 @@ Populate the DRBD Disk
 On the node with the primary role (pcmk-1 in this example),
 create a filesystem on the DRBD device:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# mkfs.xfs /dev/drbd1
     meta-data=/dev/drbd1             isize=512    agcount=4, agsize=32765 blks
@@ -317,7 +316,7 @@ Mount the newly created filesystem, populate it with our web document,
 give it the same SELinux policy as the web document root,
 then unmount it (the cluster will handle mounting and unmounting it later):
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# mount /dev/drbd1 /mnt
     [root@pcmk-1 ~]# cat <<-END >/mnt/index.html
@@ -335,7 +334,7 @@ One handy feature ``pcs`` has is the ability to queue up several changes
 into a file and commit those changes all at once. To do this, start by
 populating the file with the current raw XML config from the CIB.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib drbd_cfg
 
@@ -346,7 +345,7 @@ the ``drbd_cfg`` file is pushed into the live cluster's CIB later.
 Here, we create a cluster resource for the DRBD device, and an additional *clone*
 resource to allow the resource to run on both nodes at the same time.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \
              drbd_resource=wwwdata op monitor interval=60s
@@ -365,7 +364,7 @@ resource to allow the resource to run on both nodes at the same time.
     'promotable clone' resources and the `pcs` command has been changed
     accordingly:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# pcs -f drbd_cfg resource promotable WebData \
                  promoted-max=1 promoted-node-max=1 clone-max=2 clone-node-max=1 \
@@ -384,14 +383,14 @@ resource to allow the resource to run on both nodes at the same time.
 After you are satisfied with all the changes, you can commit
 them all at once by pushing the drbd_cfg file into the live CIB.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib-push drbd_cfg --config
     CIB updated
 
 Let's see what the cluster did with the new configuration:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -428,7 +427,7 @@ primary role) on **pcmk-1** and slave (DRBD's secondary role) on **pcmk-2**.
     module at boot time. For |CFS_DISTRO| |CFS_DISTRO_VER|, you would run this on both
     nodes:
 
-    ::
+    .. code-block:: none
 
         # echo drbd >/etc/modules-load.d/drbd.conf
 
@@ -452,7 +451,7 @@ to specify the exact one we wanted.
 Once again, we will queue our changes to a file and then push the
 new configuration to the cluster as the final step.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib fs_cfg
     [root@pcmk-1 ~]# pcs -f fs_cfg resource create WebFS Filesystem \
@@ -468,7 +467,7 @@ We also need to tell the cluster that Apache needs to run on the same
 machine as the filesystem and that it must be active before Apache can
 start.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add WebSite with WebFS INFINITY
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint order WebFS then WebSite
@@ -476,7 +475,7 @@ start.
 
 Review the updated configuration.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint
     Location Constraints:
@@ -502,7 +501,7 @@ Review the updated configuration.
 After reviewing the new configuration, upload it and watch the
 cluster put it into effect.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib-push fs_cfg --config
     CIB updated
@@ -549,7 +548,7 @@ Put the active node into standby mode, and observe the cluster move all
 the resources to the other node. The node's status will change to indicate that
 it can no longer host resources, and eventually all the resources will move.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster standby pcmk-1
     [root@pcmk-1 ~]# pcs status
@@ -583,7 +582,7 @@ Once we've done everything we needed to on pcmk-1 (in this case nothing,
 we just wanted to see the resources move), we can allow the node to be a
 full cluster member again.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster unstandby pcmk-1
     [root@pcmk-1 ~]# pcs status
