@@ -1,3 +1,67 @@
+* Tue Apr 28 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4
+- Changesets: 442
+- Diff: 269 files changed, 21845 insertions(+), 13363 deletions(-)
+
+- Features added since Pacemaker-2.0.3
+  + build: Add support for glib-based unit tests.
+  + controller: add new feature 'shutdown-locks'
+        Optionally allow a gracefully shutdown node to have the resources
+        locked to it for a configurable time.
+        So that it can be restarted with exactly the same resources
+        running as before.
+  + controller/fencer/scheduler: add new feature 'priority-fencing-delay'
+        Optionally derive the priority of a node from the resource-priorities
+        of the resources it is running.
+        In a fencing-race the node with the highest priority has a certain
+        advantage over the others as fencing requests for that node are
+        executed with an additional delay.
+        controlled via cluster option priority-fencing-delay (default = 0)
+  + stonith_admin: add --delay option (default = 0) to support enforced
+                   fencing delay
+  + tools: Add --include= and --exclude= to crm_mon.
+  + tools: Add --node= to filter crm_mon output for a node (or tag).
+  + tools: Allow more fine grained filtering of fence-history in crm_mon.
+  + tools: Allow crm_rule to check some date_specs.
+
+- Changes since Pacemaker-2.0.3
+  + build: improve checking headers for C++ fitness
+  + build: restore build on latest OpenSUSE
+  + libstonithd: Report an error getting history in output instead of
+                 empty history
+  + libstonithd: Improve parameter handling for RHCS-style fence-agents
+                 - make parameter `action` shown as not required
+  + controller: clear leaving node's transient attributes even if there is no DC
+  + controller: don't ack same request twice
+  + iso8601: Fix crm_time_parse_offset() to parse offset with plus sign.
+  + libcrmcommon, libpe: validate interval specs correctly
+  + libcrmcommon: Add pcmk_str_is_infinity, pcmk_str_is_minus_infinity and
+                  pcmk__unregister_formats.
+  + libcrmcommon: Extend what pcmk__split_range can do.
+  + libfencing: Export formatted output functions.
+  + libpe_status: Add node list arg to output messages preventing weird
+                  behavior + potential segfaults
+  + libpe_status: Update the maint mode message for HTML output.
+  + libstonithd, tools: Fix arguments to stonith-event.
+  + scheduler: don't incorporate dependencies' colocations multiple times
+  + scheduler: ensure attenuated scores still have some effect
+  + scheduler: ignore colocation constraints with 0 score
+  + scheduler: make sure cluster-wide maintenance-mode=true overrides
+               per-resource settings
+  + scheduler: properly detect whether guest node is fenceable
+  + scheduler: do not differentiate case where all the nodes have equal priority
+  + tests: Add tests for pe_cron_range_satisfied.
+  + tests: Add tests for the current behavior of pcmk__split_range.
+  + tools, lib: Use standard pacemaker return codes in crm_rule.
+  + tools: Correct stonith-event arguments in crm_mon.
+  + tools: Fix man pages for crm_mon & crm_diff.
+  + tools: Make crm_mon --interval understand more formats.
+  + tools: Fix --html-title= in crm_mon.
+  + tools: Print errors to stderr for crm_mon's legacy xml.
+  + tools: use return codes consistently in stonith_admin
+  + tools: Use glib for cmdline handling in crm_diff, crm_simulate & crm_error
+  + xml: Add a new version of the tags schema.
+  + based: populate cib_nodes when 'cibadmin -R -scope=configuration'
+
 * Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3
 - Changesets: 601
 - Diff: 227 files changed, 17862 insertions(+), 10471 deletions(-)

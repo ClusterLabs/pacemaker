@@ -148,13 +148,13 @@ static GOptionEntry query_entries[] = {
 
 static GOptionEntry fence_entries[] = {
     { "fence", 'F', 0, G_OPTION_ARG_STRING, &options.fence_host,
-      "Fence named host. Optional: --timeout, --tolerance.",
+      "Fence named host. Optional: --timeout, --tolerance, --delay.",
       "HOST" },
     { "unfence", 'U', 0, G_OPTION_ARG_STRING, &options.unfence_host,
-      "Unfence named host. Optional: --timeout, --tolerance.",
+      "Unfence named host. Optional: --timeout, --tolerance, --delay.",
       "HOST" },
     { "reboot", 'B', 0, G_OPTION_ARG_STRING, &options.reboot_host,
-      "Reboot named host. Optional: --timeout, --tolerance.",
+      "Reboot named host. Optional: --timeout, --tolerance, --delay.",
       "HOST" },
     { "confirm", 'C', 0, G_OPTION_ARG_STRING, &options.confirm_host,
       "Tell cluster that named host is now safely down.",

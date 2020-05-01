@@ -244,6 +244,20 @@
           </simplelist>
         </revdescription>
       </revision>
+      <revision>
+        <revnumber>13-1</revnumber>
+        <date>Wed Apr 1 2020</date>
+        <author>
+          <firstname>Yan</firstname><surname>Gao</surname>
+          <affiliation><orgname>SUSE</orgname></affiliation>
+          <email>ygao@suse.com</email>
+        </author>
+        <revdescription>
+          <simplelist>
+            <member>Document new feature priority-fencing-delay</member>
+          </simplelist>
+        </revdescription>
+      </revision>
     </revhistory>
   </simpara>
 </appendix>
