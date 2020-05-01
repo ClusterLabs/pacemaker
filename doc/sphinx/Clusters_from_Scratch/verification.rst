@@ -163,7 +163,7 @@ configuration and status by using the `pcs cluster cib` command.
 
         [root@pcmk-1 ~]# pcs cluster cib
 
-    .. code:: xml
+    .. code-block:: xml
 
         <cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Mon Sep 10 16:30:53 2018" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
           <configuration>

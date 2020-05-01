@@ -77,7 +77,7 @@ Final Cluster Configuration
 
     [root@pcmk-1 ~]# pcs cluster cib --config
 
-.. code:: xml
+.. code-block:: xml
 
     <configuration>
       <crm_config>
