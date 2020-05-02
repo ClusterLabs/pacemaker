@@ -11,7 +11,7 @@ node than the one you ran the ``pcs cluster auth`` command on earlier, you
 must authenticate on the current node you are logged into before you will
 be allowed to start the cluster.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster start --all
     pcmk-1: Starting Cluster...
@@ -23,14 +23,14 @@ be allowed to start the cluster.
     is to issue either of the below command sequences on each node in the
     cluster separately:
 
-    ::
+    .. code-block:: none
 
         # pcs cluster start
         Starting Cluster...
 
     or
 
-    ::
+    .. code-block:: none
 
         # systemctl start corosync.service
         # systemctl start pacemaker.service
@@ -49,7 +49,7 @@ Verify Corosync Installation
 
 First, use ``corosync-cfgtool`` to check whether cluster communication is happy:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# corosync-cfgtool -s
     Printing ring status.
@@ -67,7 +67,7 @@ the node's network, firewall and SELinux configurations.
 
 Next, check the membership and quorum APIs:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# corosync-cmapctl | grep members 
     runtime.totem.pg.mrp.srp.members.1.config_version (u64) = 0
@@ -96,7 +96,7 @@ Now that we have confirmed that Corosync is functional, we can check
 the rest of the stack. Pacemaker has already been started, so verify
 the necessary processes are running:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ps axf
       PID TTY      STAT   TIME COMMAND
@@ -113,7 +113,7 @@ the necessary processes are running:
 
 If that looks OK, check the ``pcs status`` output:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -140,7 +140,7 @@ Finally, ensure there are no start-up errors from corosync or pacemaker (aside
 from messages relating to not having STONITH configured, which are OK at this
 point):
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# journalctl -b | grep -i error
 
@@ -155,15 +155,15 @@ Explore the Existing Configuration
 ##################################
 
 For those who are not of afraid of XML, you can see the raw cluster
-configuration and status by using the `pcs cluster cib` command.
+configuration and status by using the ``pcs cluster cib`` command.
 
 .. topic:: The last XML you'll see in this document
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# pcs cluster cib
 
-    .. code:: xml
+    .. code-block:: xml
 
         <cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Mon Sep 10 16:30:53 2018" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
           <configuration>
@@ -199,7 +199,7 @@ configuration and status by using the `pcs cluster cib` command.
 Before we make any changes, it's a good idea to check the validity of
 the configuration.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# crm_verify -L -V
        error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined

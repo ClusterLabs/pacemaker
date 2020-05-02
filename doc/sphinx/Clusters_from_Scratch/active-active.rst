@@ -17,7 +17,7 @@ and GFS2 are supported; here, we will use GFS2.
 On both nodes, install the GFS2 command-line utilities and the
 Distributed Lock Manager (DLM) required by cluster filesystems:
 
-::
+.. code-block:: none
 
     # yum install -y gfs2-utils dlm
 
@@ -28,7 +28,7 @@ The DLM control daemon needs to run on both nodes, so we'll start by creating a
 resource for it (using the **ocf:pacemaker:controld** resource script), and clone
 it:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib dlm_cfg
     [root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm \
@@ -46,7 +46,7 @@ it:
 
 Activate our new configuration, and see how the cluster responds:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg --config
     CIB updated
@@ -90,7 +90,7 @@ is unmounted. We do this by telling the cluster to stop the WebFS resource.
 This will ensure that other resources (in our case, Apache) using WebFS
 are not only stopped, but stopped in the correct order.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource disable WebFS
     [root@pcmk-1 ~]# pcs resource
@@ -118,11 +118,11 @@ Now we can create a new GFS2 filesystem on the DRBD device.
     Run the next command on whichever node has the DRBD Primary role.
     Otherwise, you will receive the message:
 
-    ::
+    .. code-block:: none
 
         /dev/drbd1: Read-only file system
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
     It appears to contain an existing filesystem (xfs)
@@ -161,7 +161,7 @@ The ``mkfs.gfs2`` command required a number of additional parameters:
 Now we can (re-)populate the new filesystem with data
 (web pages). We'll create yet another variation on our home page.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# mount /dev/drbd1 /mnt
     [root@pcmk-1 ~]# cat <<-END >/mnt/index.html
@@ -178,7 +178,7 @@ Reconfigure the Cluster for GFS2
 
 With the WebFS resource stopped, let's update the configuration.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
@@ -191,7 +191,7 @@ With the WebFS resource stopped, let's update the configuration.
 
 The fstype option needs to be updated to **gfs2** instead of **xfs**.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
     [root@pcmk-1 ~]# pcs resource show WebFS
@@ -206,7 +206,7 @@ The fstype option needs to be updated to **gfs2** instead of **xfs**.
 GFS2 requires that DLM be running, so we also need to set up new colocation
 and ordering constraints for it:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
     [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
@@ -221,7 +221,7 @@ so both nodes mount the filesystem.
 Clone the filesystem resource in a new configuration.
 Notice how pcs automatically updates the relevant constraints again.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib active_cfg
     [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
@@ -242,14 +242,14 @@ Notice how pcs automatically updates the relevant constraints again.
 Tell the cluster that it is now allowed to promote both instances to be DRBD
 Primary (aka. master).
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2
 
 Finally, load our configuration to the cluster, and re-enable the WebFS resource
 (which we disabled earlier).
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib-push active_cfg --config
     CIB updated
@@ -257,7 +257,7 @@ Finally, load our configuration to the cluster, and re-enable the WebFS resource
 
 After all the processes are started, the status should look similar to this.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
      Master/Slave Set: WebDataClone [WebData]

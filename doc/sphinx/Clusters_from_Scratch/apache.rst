@@ -16,7 +16,7 @@ Before continuing, we need to make sure Apache is installed on both
 hosts. We also need the wget tool in order for the cluster to be able to check
 the status of the Apache server.
 
-::
+.. code-block:: none
 
     # yum install -y httpd wget
     # firewall-cmd --permanent --add-service=http
@@ -40,7 +40,7 @@ there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
 on both nodes:
 
-::
+.. code-block:: none
 
     # cat <<-END >/var/www/html/index.html
      <html>
@@ -58,7 +58,7 @@ In order to monitor the health of your Apache instance, and recover it if
 it fails, the resource agent used by Pacemaker assumes the server-status
 URL is available. On both nodes, enable the URL with:
 
-::
+.. code-block:: none
 
     # cat <<-END >/etc/httpd/conf.d/status.conf
      <Location /server-status>
@@ -86,7 +86,7 @@ The script's only required parameter is the path to the main Apache
 configuration file, and we'll tell the cluster to check once a
 minute that Apache is still running.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource create WebSite ocf:heartbeat:apache  \
           configfile=/etc/httpd/conf/httpd.conf \
@@ -98,7 +98,7 @@ operations is 20 seconds.  In many cases, this timeout period is less than
 a particular resource's advised timeout period.  For the purposes of this
 tutorial, we will adjust the global operation timeout default to 240 seconds.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource op defaults timeout=240s
     Warning: Defaults do not apply to resources which override them with their own defined values
@@ -114,7 +114,7 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 After a short delay, we should see the cluster start Apache.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -147,7 +147,7 @@ IP address!
     failed to start, then you've likely not enabled the status URL correctly.
     You can check whether this is the problem by running:
 
-    ::
+    .. code-block:: none
 
         wget -O - http://localhost/server-status
 
@@ -182,7 +182,7 @@ active anywhere, WebSite will not be permitted to run.
     same machine as **ClusterIP**, which implies that the cluster must know the
     location of **ClusterIP** before choosing a location for **WebSite**.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP INFINITY
     [root@pcmk-1 ~]# pcs constraint
@@ -233,7 +233,7 @@ We do this by adding an ordering constraint.  By default, all order constraints
 are mandatory, which means that the recovery of ClusterIP will also trigger the
 recovery of WebSite.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs constraint order ClusterIP then WebSite
     Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
@@ -262,7 +262,7 @@ In the location constraint below, we are saying the WebSite resource
 prefers the node pcmk-1 with a score of 50.  Here, the score indicates
 how strongly we'd like the resource to run at this location.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-1=50
     [root@pcmk-1 ~]# pcs constraint
@@ -304,7 +304,7 @@ preferred not to have unnecessary downtime).
 
 To see the current placement scores, you can use a tool called crm_simulate.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# crm_simulate -sL
 
@@ -333,9 +333,9 @@ We will use the **pcs resource move** command to create a temporary constraint
 with a score of INFINITY. While we could update our existing constraint,
 using **move** allows to easily get rid of the temporary constraint later.
 If desired, we could even give a lifetime for the constraint, so it would
-expire automatically -- but we don't that in this example.
+expire automatically -- but we don't do that in this example.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource move WebSite pcmk-1
     [root@pcmk-1 ~]# pcs constraint
@@ -379,7 +379,7 @@ pcmk-1.
 We will use the **pcs resource clear** command, which removes all temporary
 constraints previously created by **pcs resource move** or **pcs resource ban**.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource clear WebSite
     [root@pcmk-1 ~]# pcs constraint
@@ -396,7 +396,7 @@ Note that the INFINITY location constraint is now gone. If we check the cluster
 status, we can also see that (as expected) the resources are still active
 on pcmk-1.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster

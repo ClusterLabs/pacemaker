@@ -35,7 +35,7 @@ Install the Cluster Software
 Fire up a shell on both nodes and run the following to install pacemaker, pcs,
 and some other command-line tools that will make our lives easier:
 
-::
+.. code-block:: none
 
     # yum install -y pacemaker pcs psmisc policycoreutils-python
 
@@ -58,7 +58,7 @@ _______________________________________
 
 On each node, allow cluster-related services through the local firewall:
 
-::
+.. code-block:: none
 
     # firewall-cmd --permanent --add-service=high-availability
     success
@@ -79,7 +79,7 @@ On each node, allow cluster-related services through the local firewall:
 
     To disable security measures:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# setenforce 0
         [root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
@@ -96,7 +96,7 @@ to manage synchronizing the corosync configuration across all nodes in the clust
 
 Start and enable the daemon by issuing the following commands on each node:
 
-::
+.. code-block:: none
 
     # systemctl start pcsd.service
     # systemctl enable pcsd.service
@@ -111,7 +111,7 @@ This tutorial will make use of such commands,
 so now we will set a password for the **hacluster** user, using the same password
 on both nodes:
 
-::
+.. code-block:: none
 
     # passwd hacluster
     Changing password for user hacluster.
@@ -125,7 +125,7 @@ on both nodes:
     different machine from the one you're logged into, you can use
     the ``--stdin`` option for ``passwd``:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'
 
@@ -134,7 +134,7 @@ __________________
 
 On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** user:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
     Username: hacluster
@@ -144,9 +144,9 @@ On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** us
 
 .. NOTE::
 
-    In Fedora 29 and CentOS 8.0, the command has been changed to `pcs host auth`:
+    In Fedora 29 and CentOS 8.0, the command has been changed to ``pcs host auth``:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
         Username: hacluster
@@ -157,7 +157,7 @@ On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** us
 Next, use ``pcs cluster setup`` on the same node to generate and synchronize the
 corosync configuration:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster setup --name mycluster pcmk-1 pcmk-2
     Destroying cluster on nodes: pcmk-1, pcmk-2...
@@ -184,7 +184,7 @@ corosync configuration:
     In Fedora 29 and CentOS 8.0, the syntax has been changed and the ``--name`` option
     has been dropped:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
         No addresses specified for host 'pcmk-1', using 'pcmk-1'
@@ -229,7 +229,7 @@ Explore pcs
 
 Start by taking some time to familiarize yourself with what ``pcs`` can do.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs
 
@@ -269,7 +269,7 @@ into categories. To discover the functionality available in each of these
 categories, one can issue the command ``pcs <CATEGORY> help``.  Below is an
 example of all the options available under the status category.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status help
 
@@ -321,7 +321,7 @@ example of all the options available under the status category.
 Additionally, if you are interested in the version and supported cluster stack(s)
 available with your Pacemaker installation, run:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pacemakerd --features
     Pacemaker 1.1.18-11.el7_5.3 (Build: 2b07d5c5a9)

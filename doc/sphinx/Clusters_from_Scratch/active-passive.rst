@@ -15,7 +15,7 @@ and tell the cluster to check whether it is running every 30 seconds.
     The chosen address must not already be in use on the network.
     Do not reuse an IP address one of the nodes already has configured.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
         ip=192.168.122.120 cidr_netmask=24 op monitor interval=30s
@@ -34,7 +34,7 @@ This tells Pacemaker three things about the resource you want to add:
 To obtain a list of the available resource standards (the **ocf** part of
 **ocf:heartbeat:IPaddr2**), run:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource standards
     lsb
@@ -45,7 +45,7 @@ To obtain a list of the available resource standards (the **ocf** part of
 To obtain a list of the available OCF resource providers (the **heartbeat**
 part of **ocf:heartbeat:IPaddr2**), run:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource providers
     heartbeat
@@ -55,7 +55,7 @@ part of **ocf:heartbeat:IPaddr2**), run:
 Finally, if you want to see all the resource agents available for
 a specific OCF provider (the **IPaddr2** part of **ocf:heartbeat:IPaddr2**), run:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource agents ocf:heartbeat
     apache
@@ -75,7 +75,7 @@ a specific OCF provider (the **IPaddr2** part of **ocf:heartbeat:IPaddr2**), run
 Now, verify that the IP resource has been added, and display the cluster's
 status to see that it is now active:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -106,7 +106,7 @@ our new resource before moving on.
 
 First, find the node on which the IP address is running.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -128,7 +128,7 @@ You can see that the status of the **ClusterIP** resource
 is **Started** on a particular node (in this example, **pcmk-1**).
 Shut down Pacemaker and Corosync on that machine to trigger a failover.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster stop pcmk-1
     Stopping Cluster (pacemaker)...
@@ -141,14 +141,14 @@ Shut down Pacemaker and Corosync on that machine to trigger a failover.
 
 Verify that pacemaker and corosync are no longer running:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Error: cluster is not currently running on this node
 
 Go to the other node, and check the cluster status.
 
-::
+.. code-block:: none
 
     [root@pcmk-2 ~]# pcs status
     Cluster name: mycluster
@@ -190,7 +190,7 @@ automatically, and no errors are reported.
     the same partition, or for the mathematically inclined, whenever the following
     equation is true:
 
-    ::
+    .. code-block:: none
 
         total_nodes < 2 * active_nodes
 
@@ -216,7 +216,7 @@ Now, simulate node recovery by restarting the cluster stack on **pcmk-1**, and
 check the cluster's status. (It may take a little while before the cluster
 gets going on the node, but it eventually will look like the below.)
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster start pcmk-1
     pcmk-1: Starting Cluster...
@@ -257,7 +257,7 @@ resources and will do so to achieve "optimal" [#]_ resource placement.
 We can specify a different stickiness for every resource, but it is
 often sufficient to change the default.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource defaults resource-stickiness=100
     Warning: Defaults do not apply to resources which override them with their own defined values

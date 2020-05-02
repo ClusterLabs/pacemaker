@@ -4,7 +4,7 @@ Configuration Recap
 Final Cluster Configuration
 ###########################
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
      Master/Slave Set: WebDataClone [WebData]
@@ -16,17 +16,17 @@ Final Cluster Configuration
          Started: [ pcmk-1 pcmk-2 ]
      WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource op defaults
     timeout: 240s
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith
      impi-fencing	(stonith:fence_ipmilan): Started pcmk-1
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
@@ -42,7 +42,7 @@ Final Cluster Configuration
       WebFS-clone with dlm-clone (score:INFINITY)
     Ticket Constraints:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -73,11 +73,11 @@ Final Cluster Configuration
       pacemaker: active/disabled
       pcsd: active/enabled
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster cib --config
 
-.. code:: xml
+.. code-block:: xml
 
     <configuration>
       <crm_config>
@@ -209,7 +209,7 @@ Final Cluster Configuration
 Node List
 #########
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs status nodes
     Pacemaker Nodes:
@@ -226,7 +226,7 @@ Node List
 Cluster Options
 ###############
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs property
     Cluster Properties:
@@ -255,7 +255,7 @@ Resources
 Default Options
 _______________
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource defaults
     resource-stickiness: 100
@@ -268,7 +268,7 @@ explicitly set the option itself. Above:
 Fencing
 _______
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith show
      ipmi-fencing	(stonith:fence_ipmilan):	Started pcmk-1
@@ -283,7 +283,7 @@ _______________
 Users of the services provided by the cluster require an unchanging
 address with which to access it.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show ClusterIP
     Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
@@ -302,7 +302,7 @@ order to have an active/active setup, allow both instances to be promoted to mas
 at the same time. We also set the notify option so that the
 cluster will tell DRBD agent when its peer changes state.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show WebDataClone
      Master: WebDataClone
@@ -330,7 +330,7 @@ mounted and that we are using GFS2. Again, it is a clone because it is
 intended to be active on both nodes. The additional constraints ensure
 that it can only be started on nodes with active DLM and DRBD instances.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show WebFS-clone
      Clone: WebFS-clone
@@ -356,7 +356,7 @@ Lastly, we have the actual service, Apache. We need only tell the cluster
 where to find its main configuration file and restrict it to running on
 a node that has the required filesystem mounted and the IP address active.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show WebSite
     Resource: WebSite (class=ocf provider=heartbeat type=apache)

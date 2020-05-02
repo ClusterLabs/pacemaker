@@ -7,7 +7,7 @@ Install |CFS_DISTRO| |CFS_DISTRO_VER|
 Boot the Install Image
 ______________________
 
-Download the 4GB `|CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`_.
+Download the 4GB |CFS_DISTRO| |CFS_DISTRO_VER| `DVD ISO <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`_.
 Use the image to boot a virtual machine, or burn it to a DVD or USB drive and
 boot a physical server from that.
 
@@ -15,10 +15,11 @@ After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
 .. figure:: ../../shared/en-US/images/Welcome.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: Welcome to |CFS_DISTRO| |CFS_DISTRO_VER|
+    :alt: Installation Welcome Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Welcome Screen
 
@@ -28,10 +29,11 @@ ____________________
 At this point, you get a chance to tweak the default installation options.
 
 .. figure:: ../../shared/en-US/images/Installer.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Installation Summary
+    :alt: Installation Summary Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Summary Screen
 
@@ -53,10 +55,11 @@ In the **NETWORK & HOSTNAME** section:
 - Flip the switch to turn your network device on, and press **Done**.
 
 .. figure:: ../../shared/en-US/images/Editing-eth0.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Editing eth0
+    :alt: Editing eth0
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Network Interface Screen
 
@@ -87,10 +90,11 @@ the **Size policy:** to **As large as possible**, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
 
 .. figure:: ../../shared/en-US/images/Partitioning.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 800
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Partitioning
+    :alt: Manual Partitioning Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Manual Partitioning Screen
 
@@ -116,10 +120,11 @@ any additional users. After the node reboots, you'll see a login prompt on
 the console. Login using **root** and the password you created earlier.
 
 .. figure:: ../../shared/en-US/images/Console.png
-    :scale: 100%
-    :width: 100%
+    :scale: 80%
+    :width: 1024
+    :height: 768
     :align: center
-    :alt: |CFS_DISTRO| |CFS_DISTRO_VER| Console
+    :alt: Console Prompt
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Console Prompt
 
@@ -135,7 +140,7 @@ _________________
 
 Ensure that the machine has the static IP address you configured earlier.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ip addr
     1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -156,7 +161,7 @@ Ensure that the machine has the static IP address you configured earlier.
     If you ever need to change the node's IP address from the command line, follow
     these instructions, replacing **${device}** with the name of your network device:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# vi /etc/sysconfig/network-scripts/ifcfg-${device} # manually edit as desired
         [root@pcmk-1 ~]# nmcli dev disconnect ${device}
@@ -167,7 +172,7 @@ Ensure that the machine has the static IP address you configured earlier.
 
 Next, ensure that the routes are as expected:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ip route
     default via 192.168.122.1 dev eth0 proto static metric 100 
@@ -186,7 +191,7 @@ changing the IP address.
 Now, check for connectivity to the outside world. Start small by
 testing whether we can reach the gateway we configured.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 1 192.168.122.1
     PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
@@ -198,7 +203,7 @@ testing whether we can reach the gateway we configured.
 
 Now try something external; choose a location you know should be available.
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 1 www.clusterlabs.org
     PING oss-uk-1.clusterlabs.org (109.74.197.241) 56(84) bytes of data.
@@ -217,7 +222,7 @@ use copy and paste, etc.
 
 From another host, check whether we can see the new host at all:
 
-::
+.. code-block:: none
 
     beekhof@f16 ~ # ping -c 1 192.168.122.101
     PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
@@ -229,7 +234,7 @@ From another host, check whether we can see the new host at all:
 
 Next, login as root via SSH.
 
-::
+.. code-block:: none
 
     beekhof@f16 ~ # ssh -l root 192.168.122.101
     The authenticity of host '192.168.122.101 (192.168.122.101)' can't be established.
@@ -245,7 +250,7 @@ _____________
 
 Apply any package updates released since your installation image was created:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# yum update
 
@@ -259,7 +264,7 @@ status output. See for yourself how the machine identifies itself:
 .. index ::
     pair: Nodes; short name
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# uname -n
     pcmk-1.localdomain
@@ -269,7 +274,7 @@ status output. See for yourself how the machine identifies itself:
 
 We can use the `hostnamectl` tool to strip off the domain name:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# hostnamectl set-hostname $(uname -n | sed s/\\..*//)
 
@@ -278,7 +283,7 @@ We can use the `hostnamectl` tool to strip off the domain name:
 
 Now, check that the machine is using the correct name:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# uname -n
     pcmk-1
@@ -302,7 +307,7 @@ ______________________________
 
 Confirm that you can communicate between the two new nodes:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 3 192.168.122.102
     PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
@@ -319,7 +324,7 @@ name. If you have a DNS server, add additional entries for the two
 machines. Otherwise, you'll need to add the machines to ``/etc/hosts``
 on both nodes. Below are the entries for my cluster nodes:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# grep pcmk /etc/hosts
     192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
@@ -327,7 +332,7 @@ on both nodes. Below are the entries for my cluster nodes:
 
 We can now verify the setup by again using ping:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 3 pcmk-2
     PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
@@ -360,7 +365,7 @@ Create a new key and allow anyone with that key to log in:
 
 .Creating and Activating a new SSH Key
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
     Generating public/private dsa key pair.
@@ -387,7 +392,7 @@ Create a new key and allow anyone with that key to log in:
 
 Install the key on the other node:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
     The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
@@ -403,7 +408,7 @@ Install the key on the other node:
 
 Test that you can now run commands remotely, without being prompted:
 
-::
+.. code-block:: none
 
     [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
     pcmk-2
