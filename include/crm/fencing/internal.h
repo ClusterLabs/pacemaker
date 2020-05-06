@@ -11,6 +11,15 @@
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 
+enum st_device_flags
+{
+    st_device_supports_list   = 0x0001,
+    st_device_supports_status = 0x0002,
+    st_device_supports_reboot = 0x0004,
+    st_device_supports_parameter_plug = 0x0008,
+    st_device_supports_parameter_port = 0x0010,
+};
+
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
@@ -43,6 +52,8 @@ xmlNode *create_device_registration_xml(const char *id,
                                         const char *agent,
                                         stonith_key_value_t *params,
                                         const char *rsc_provides);
+
+long long stonith__device_parameter_flags(xmlNode *metadata);
 
 #  define ST_LEVEL_MAX 10
 
