@@ -1346,7 +1346,7 @@ main(int argc, char **argv)
     }
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
-        options.mon_ops |= mon_op_print_timing;
+        options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
     }
 
     crm_info("Starting %s", crm_system_name);
