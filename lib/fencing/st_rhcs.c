@@ -91,12 +91,12 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
  *
  * \param[in]  agent    Agent to execute
  * \param[in]  timeout  Action timeout
- * \param[out] output   Where to store action output (or NULL to ignore)
+ * \param[out] metadata Where to store output xmlNode (or NULL to ignore)
  *
  * \todo timeout is currently ignored; shouldn't we use it?
  */
-int
-stonith__rhcs_metadata(const char *agent, int timeout, char **output)
+static int
+stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
 {
     char *buffer = NULL;
     xmlNode *xml = NULL;
@@ -161,6 +161,38 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     stonith_rhcs_parameter_not_required(xml, "plug");
     stonith_rhcs_parameter_not_required(xml, "port");
 
+    if (metadata) {
+        *metadata = xml;
+
+    } else {
+        free_xml(xml);
+    }
+
+    return pcmk_ok;
+}
+
+/*!
+ * \brief Execute RHCS-compatible agent's meta-data action
+ *
+ * \param[in]  agent    Agent to execute
+ * \param[in]  timeout  Action timeout
+ * \param[out] output   Where to store action output (or NULL to ignore)
+ *
+ * \todo timeout is currently ignored; shouldn't we use it?
+ */
+int
+stonith__rhcs_metadata(const char *agent, int timeout, char **output)
+{
+    char *buffer = NULL;
+    xmlNode *xml = NULL;
+
+    int rc = stonith__rhcs_get_metadata(agent, timeout, &xml);
+
+    if (rc != pcmk_ok) {
+        free_xml(xml);
+        return rc;
+    }
+
     buffer = dump_xml_formatted_with_text(xml);
     free_xml(xml);
     if (buffer == NULL) {
@@ -187,13 +219,43 @@ stonith__agent_is_rhcs(const char *agent)
 
 int
 stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
-                       const char *agent, GHashTable *params, int timeout,
+                       const char *agent, GHashTable *params,
+                       const char * host_arg, int timeout,
                        char **output, char **error_output)
 {
     int rc = pcmk_ok;
-    stonith_action_t *action = stonith_action_create(agent, "validate-all",
-                                                     target, 0, timeout, params,
-                                                     NULL, NULL);
+    int remaining_timeout = timeout;
+    xmlNode *metadata = NULL;
+    stonith_action_t *action = NULL;
+
+    if (host_arg == NULL) {
+        time_t start_time = time(NULL);
+
+        rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
+
+        if (rc == pcmk_ok) {
+            long long device_flags = stonith__device_parameter_flags(metadata);
+
+            if (is_set(device_flags, st_device_supports_parameter_port)) {
+                host_arg = "port";
+
+            } else if (is_set(device_flags, st_device_supports_parameter_plug)) {
+                host_arg = "plug";
+            }
+        }
+
+        free_xml(metadata);
+
+        remaining_timeout -= time(NULL) - start_time;
+
+        if (rc == -ETIME || remaining_timeout <= 0 ) {
+            return -ETIME;
+        }
+    }
+
+    action = stonith_action_create(agent, "validate-all",
+                                   target, 0, remaining_timeout, params,
+                                   NULL, host_arg);
 
     rc = stonith__execute(action);
     if (rc == pcmk_ok) {

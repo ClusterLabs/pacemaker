@@ -2143,11 +2143,15 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
      * that is incorrect, we will need to allow the caller to pass the target).
      */
     const char *target = "node1";
+    const char *host_arg = NULL;
 
     GHashTable *params_table = crm_str_table_new();
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
+        if (safe_str_eq(params->key, STONITH_ATTR_HOSTARG)) {
+            host_arg = params->value;
+        }
 
         // Strip out Pacemaker-implemented parameters
         if (!crm_starts_with(params->key, "pcmk_")
@@ -2176,8 +2180,8 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     switch (stonith_get_namespace(agent, namespace_s)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
-                                        params_table, timeout, output,
-                                        error_output);
+                                        params_table, host_arg, timeout,
+                                        output, error_output);
             break;
 
 #if HAVE_STONITH_STONITH_H
