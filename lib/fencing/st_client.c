@@ -2614,3 +2614,45 @@ get_stonith_provider(const char *agent, const char *provider)
 {
     return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
+
+long long
+stonith__device_parameter_flags(xmlNode *metadata)
+{
+    xmlXPathObjectPtr xpath = NULL;
+    int max = 0;
+    int lpc = 0;
+    long long flags = 0;
+
+    CRM_CHECK(metadata, return 0);
+
+    xpath = xpath_search(metadata, "//parameter");
+    max = numXpathResults(xpath);
+
+    if (max <= 0) {
+        freeXpathObject(xpath);
+        return 0;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        const char *parameter = NULL;
+        xmlNode *match = getXpathResult(xpath, lpc);
+
+        CRM_LOG_ASSERT(match != NULL);
+        if (match == NULL) {
+            continue;
+        }
+
+        parameter = crm_element_value(match, "name");
+
+        if (safe_str_eq(parameter, "plug")) {
+            set_bit(flags, st_device_supports_parameter_plug);
+
+        } else if (safe_str_eq(parameter, "port")) {
+            set_bit(flags, st_device_supports_parameter_port);
+        }
+    }
+
+    freeXpathObject(xpath);
+
+    return flags;
+}
