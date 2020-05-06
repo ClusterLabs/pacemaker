@@ -15,6 +15,15 @@
 #  include <crm/common/output.h>
 #  include <crm/common/xml.h>
 
+enum st_device_flags
+{
+    st_device_supports_list   = 0x0001,
+    st_device_supports_status = 0x0002,
+    st_device_supports_reboot = 0x0004,
+    st_device_supports_parameter_plug = 0x0008,
+    st_device_supports_parameter_port = 0x0010,
+};
+
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
@@ -54,6 +63,8 @@ GList *stonith__parse_targets(const char *hosts);
 
 gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
+
+long long stonith__device_parameter_flags(xmlNode *metadata);
 
 #  define ST_LEVEL_MAX 10
 
