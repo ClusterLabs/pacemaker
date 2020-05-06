@@ -984,6 +984,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_NEVER);
     int call_options = 0;
+    const char *operation = NULL;
 
     init_stonith_remote_op_hash_table(&stonith_remote_op_list);
 
@@ -1034,7 +1035,16 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
         op->client_id = strdup(client);
     }
 
-    op->client_name = crm_element_value_copy(request, F_STONITH_CLIENTNAME);
+
+    /* For a RELAY operation, set fenced on the client. */
+    operation = crm_element_value(request, F_STONITH_OPERATION);
+
+    if (crm_str_eq(operation, STONITH_OP_RELAY, TRUE)) {
+        op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
+                                         (unsigned long) getpid());
+    } else {
+        op->client_name = crm_element_value_copy(request, F_STONITH_CLIENTNAME);
+    }
 
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
@@ -1085,6 +1095,8 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
     xmlNode *query = NULL;
     const char *client_id = NULL;
     remote_fencing_op_t *op = NULL;
+    const char *relay_op_id = NULL;
+    const char *operation = NULL;
 
     if (client) {
         client_id = client->id;
@@ -1135,6 +1147,15 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
+
+    /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
+    operation = crm_element_value(request, F_STONITH_OPERATION);
+    if (crm_str_eq(operation, STONITH_OP_RELAY, TRUE)) {
+        relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
+        if (relay_op_id) {
+            crm_xml_add(query, F_STONITH_REMOTE_OP_ID_RELAY, relay_op_id);
+        }
+    }
 
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
     free_xml(query);
