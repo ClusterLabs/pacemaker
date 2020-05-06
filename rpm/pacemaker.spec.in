@@ -24,8 +24,7 @@
 %global pcmkversion X.Y.Z
 %global specversion 1
 
-## Upstream commit (or git tag, such as "Pacemaker-" plus the
-## {pcmkversion} macro for an official release) to use for this package
+## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
@@ -41,18 +40,24 @@
 %global lparen (
 %global rparen )
 
-## Short version of git commit
-%define shortcommit %(c=%{commit}; case ${c} in
-                      Pacemaker-*%{rparen} echo ${c:10};;
-                      *%{rparen} echo ${c:0:%{commit_abbrev}};; esac)
+## Whether this is a tagged release (final or release candidate)
+%define tag_release %(c=%{commit}; case ${c} in Pacemaker-*%{rparen} echo 1 ;;
+                      *%{rparen} echo 0 ;; esac)
 
-## Whether this is a tagged release
-%define tag_release %([ %{commit} != Pacemaker-%{shortcommit} ]; echo $?)
-
-## Whether this is a release candidate (in case of a tagged release)
-%define pre_release %([ "%{tag_release}" -eq 0 ] || {
-                      case "%{shortcommit}" in *-rc[[:digit:]]*%{rparen} false;;
-                      esac; }; echo $?)
+## Portion of source tarball name after "pacemaker-", and release version
+%if 0%{tag_release}
+%define archive_version %(c=%{commit}; echo ${c:10})
+%define pcmk_release %(c=%{commit}; case $c in *-rc[[:digit:]]*%{rparen}
+                       echo 0.%{specversion}.${c: -3} ;;
+                       *%{rparen} echo %{specversion} ;; esac)
+%else
+%define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
+%if %{with pre_release}
+%define pcmk_release 0.%{specversion}.%{archive_version}.git
+%else
+%define pcmk_release %{specversion}.%{archive_version}.git
+%endif
+%endif
 
 ## Heuristic used to infer bleeding-edge deployments that are
 ## less likely to have working versions of the documentation tools
@@ -212,23 +217,6 @@
 %endif
 
 
-# Define the release version
-# (do not look at externally enforced pre-release flag for tagged releases
-# as only -rc tags, captured with the second condition, implies that then)
-%if (!%{tag_release} && %{with pre_release}) || 0%{pre_release}
-%if 0%{pre_release}
-%define pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
-%else
-%define pcmk_release 0.%{specversion}.%{shortcommit}.git
-%endif
-%else
-%if 0%{tag_release}
-%define pcmk_release %{specversion}
-%else
-%define pcmk_release %{specversion}.%{shortcommit}.git
-%endif
-%endif
-
 Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
 Version:       %{pcmkversion}
@@ -242,9 +230,11 @@ License:       GPLv2+ and LGPLv2+ and BSD
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-# Hint: use "spectool -s 0 pacemaker.spec" (rpmdevtools) to check the final URL:
-# https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
-Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
+# Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
+# will download pacemaker-e91769e.tar.gz
+#
+# You can use "spectool -s 0 pacemaker.spec" (rpmdevtools) to show final URL.
+Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{commit}
 Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
@@ -468,7 +458,7 @@ Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
 %prep
-%setup -q -n %{name}-%{commit}
+%setup -q -n %{name}-%{archive_version}
 
 %build
 
