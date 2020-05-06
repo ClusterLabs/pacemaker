@@ -165,7 +165,7 @@ int stonith__list_rhcs_agents(stonith_key_value_t **devices);
 int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
 bool stonith__agent_is_rhcs(const char *agent);
 int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
-                           const char *agent, GHashTable *params,
+                           const char *agent, GHashTable *params, const char *host_arg,
                            int timeout, char **output, char **error_output);
 
 int stonith__failed_history(pcmk__output_t *out, va_list args);
