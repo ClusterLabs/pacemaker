@@ -580,15 +580,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
     GListPtr gIter = rsc->children;
 
-    int rc = pe__name_and_nvpairs_xml(out, true, "clone", 7
-                 , "id", rsc->id
-                 , "multi_state", BOOL2STR(is_set(rsc->flags, pe_rsc_promotable))
-                 , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
-                 , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
-                 , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
-                 , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
-                 , "target_role", configured_role_str(rsc));
-    CRM_ASSERT(rc == pcmk_rc_ok);
+    int rc = pcmk_rc_no_output;
+    gboolean printed_header = FALSE;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -597,10 +590,27 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             continue;
         }
 
+        if (!printed_header) {
+            printed_header = TRUE;
+
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 7
+                     , "id", rsc->id
+                     , "multi_state", BOOL2STR(is_set(rsc->flags, pe_rsc_promotable))
+                     , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
+                     , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
+                     , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
+                     , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
+                     , "target_role", configured_role_str(rsc));
+            CRM_ASSERT(rc == pcmk_rc_ok);
+        }
+
         out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
     }
 
-    pcmk__output_xml_pop_parent(out);
+    if (printed_header) {
+        pcmk__output_xml_pop_parent(out);
+    }
+
     return rc;
 }
 
