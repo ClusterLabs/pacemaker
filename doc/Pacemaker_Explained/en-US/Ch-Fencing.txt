@@ -230,11 +230,11 @@ indexterm:[Fencing,Property,pcmk_action_limit]
 
 |pcmk_host_argument
 |string
-|port
-|'Advanced use only.' Which parameter should be supplied to the resource agent
-to identify the node to be fenced. Some devices do not support the standard
-+port+ parameter or may provide additional ones. Use this to specify an
-alternate, device-specific parameter. A value of +none+ tells the
+|+port+ otherwise +plug+ if supported according to the metadata of the fence agent
+|'Advanced use only.' Which parameter should be supplied to the fence agent to
+identify the node to be fenced. Some devices support neither the standard +plug+
+nor the deprecated +port+ parameter, or may provide additional ones. Use this to
+specify an alternate, device-specific parameter. A value of +none+ tells the
 cluster not to supply any additional parameters.
  indexterm:[pcmk_host_argument,Fencing]
  indexterm:[Fencing,Property,pcmk_host_argument]
