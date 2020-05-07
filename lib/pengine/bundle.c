@@ -1524,7 +1524,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+        if (!pe__rsc_running_on_any_node_in_list(replica->container, only_show)) {
             continue;
         }
 
@@ -1612,7 +1612,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+        if (!pe__rsc_running_on_any_node_in_list(replica->container, only_show)) {
             continue;
         }
 
@@ -1709,7 +1709,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (!pe__rsc_running_on_any_node_in_list(replica->container->running_on, only_show)) {
+        if (!pe__rsc_running_on_any_node_in_list(replica->container, only_show)) {
             continue;
         }
 
