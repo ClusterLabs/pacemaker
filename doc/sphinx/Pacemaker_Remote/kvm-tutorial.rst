@@ -23,7 +23,7 @@ __________________________
 
 On the physical host, allow cluster-related services through the local firewall:
 
-::
+.. code-block:: none
 
     # firewall-cmd --permanent --add-service=high-availability
     success
@@ -44,7 +44,7 @@ On the physical host, allow cluster-related services through the local firewall:
 
     To disable security measures:
 
-    ::
+    .. code-block:: none
 
         [root@pcmk-1 ~]# setenforce 0
         [root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
@@ -55,7 +55,7 @@ On the physical host, allow cluster-related services through the local firewall:
 Install Cluster Software
 ________________________
 
-::
+.. code-block:: none
 
     # yum install -y pacemaker corosync pcs resource-agents
 
@@ -70,7 +70,7 @@ start.
 To initialize the corosync config file, execute the following ``pcs`` command,
 replacing the cluster name and hostname as desired:
 
-::
+.. code-block:: none
 
     # pcs cluster setup --force --local --name mycluster example-host
 
@@ -84,14 +84,14 @@ _________________________________________________
 
 Create a place to hold an authentication key for use with pacemaker_remote:
 
-::
+.. code-block:: none
 
     # mkdir -p --mode=0750 /etc/pacemaker
     # chgrp haclient /etc/pacemaker
 
 Generate a key:
 
-::
+.. code-block:: none
 
     # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 
@@ -105,13 +105,13 @@ _______________________
 
 Start the cluster
 
-::
+.. code-block:: none
 
     # pcs cluster start
 
 Verify corosync membership
 
-::
+.. code-block:: none
 
     # pcs status corosync
 
@@ -122,7 +122,7 @@ Verify corosync membership
 
 Verify pacemaker status. At first, the output will look like this:
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -147,7 +147,7 @@ Verify pacemaker status. At first, the output will look like this:
 After a short amount of time, you should see your host as a single node in the
 cluster:
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -175,7 +175,7 @@ __________________________
 Now, enable the cluster to work without quorum or stonith.  This is required
 for the sake of getting this tutorial to work with a single cluster node.
 
-::
+.. code-block:: none
 
     # pcs property set stonith-enabled=false
     # pcs property set no-quorum-policy=ignore
@@ -190,7 +190,7 @@ for the sake of getting this tutorial to work with a single cluster node.
 
 Now, the status output should look similar to this:
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -213,14 +213,14 @@ Now, the status output should look similar to this:
 
 Go ahead and stop the cluster for now after verifying everything is in order.
 
-::
+.. code-block:: none
 
     # pcs cluster stop --force
 
 Install Virtualization Software
 _______________________________
 
-::
+.. code-block:: none
 
     # yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
     # systemctl enable libvirtd.service
@@ -264,14 +264,14 @@ Install pacemaker_remote, and enable it to run at start-up. Here, we also
 install the pacemaker package; it is not required, but it contains the dummy
 resource agent that we will use later for testing.
 
-::
+.. code-block:: none
 
     # yum install -y pacemaker pacemaker-remote resource-agents
     # systemctl enable pacemaker_remote.service
 
 Copy the authentication key from a host:
 
-::
+.. code-block:: none
 
     # mkdir -p --mode=0750 /etc/pacemaker
     # chgrp haclient /etc/pacemaker
@@ -279,7 +279,7 @@ Copy the authentication key from a host:
 
 Start pacemaker_remote, and verify the start was successful:
 
-::
+.. code-block:: none
 
     # systemctl start pacemaker_remote
     # systemctl status pacemaker_remote
@@ -307,7 +307,7 @@ First add guest1 to the host machine's +/etc/hosts+ file if you haven't
 already. This is required unless you have DNS setup in a way where guest1's
 address can be discovered.
 
-::
+.. code-block:: none
 
     # cat << END >> /etc/hosts
     192.168.122.10    guest1 
@@ -316,19 +316,19 @@ address can be discovered.
 If running the ssh command on one of the cluster nodes results in this
 output before disconnecting, the connection works:
 
-::
+.. code-block:: none
 
     # ssh -p 3121 guest1
     ssh_exchange_identification: read: Connection reset by peer
 
 If you see one of these, the connection is not working:
 
-::
+.. code-block:: none
 
     # ssh -p 3121 guest1
     ssh: connect to host guest1 port 3121: No route to host
 
-::
+.. code-block:: none
 
     # ssh -p 3121 guest1
     ssh: connect to host guest1 port 3121: Connection refused
@@ -345,7 +345,7 @@ _________________
 
 On the host, start pacemaker.
 
-::
+.. code-block:: none
 
     # pcs cluster start
 
@@ -359,7 +359,7 @@ If you didn't already do this earlier in the verify host to guest connection
 section, add the KVM guest's IP address to the host's ``/etc/hosts`` file so we
 can connect by hostname. For this example:
 
-::
+.. code-block:: none
 
     # cat << END >> /etc/hosts
     192.168.122.10    guest1 
@@ -370,7 +370,7 @@ virtual machine.  This agent requires the virtual machine's XML config to be
 dumped to a file on disk.  To do this, pick out the name of the virtual machine
 you just created from the output of this list.
 
-::
+.. code-block:: none
 
     # virsh list --all
      Id    Name                           State
@@ -379,13 +379,13 @@ you just created from the output of this list.
 
 In my case I named it guest1. Dump the xml to a file somewhere on the host using the following command.
 
-::
+.. code-block:: none
 
     # virsh dumpxml guest1 > /etc/pacemaker/guest1.xml
 
 Now just register the resource with pacemaker and you're set!
 
-::
+.. code-block:: none
 
     # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" \
         config="/etc/pacemaker/guest1.xml" meta remote-node=guest1
@@ -408,7 +408,7 @@ Once the **vm-guest1** resource is started you will see **guest1** appear in the
 ``pcs status`` output as a node.  The final ``pcs status`` output should look
 something like this.
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -444,7 +444,7 @@ to just like an apache server or database would, except their execution just
 means a file was created.  When the resource is stopped, that the file it
 created is removed.
 
-::
+.. code-block:: none
 
     # pcs resource create FAKE1 ocf:pacemaker:Dummy
     # pcs resource create FAKE2 ocf:pacemaker:Dummy
@@ -456,7 +456,7 @@ Now check your ``pcs status`` output. In the resource section, you should see
 something like the following, where some of the resources started on the
 cluster node, and some started on the guest node.
 
-::
+.. code-block:: none
 
     Full list of resources:
 
@@ -472,14 +472,14 @@ example, pick out a resource that is running on your cluster node. For my
 purposes, I am picking FAKE3 from the output above. We can force FAKE3 to run
 on **guest1** in the exact same way we would any other node.
 
-::
+.. code-block:: none
 
     # pcs constraint location FAKE3 prefers guest1
 
 Now, looking at the bottom of the `pcs status` output you'll see FAKE3 is on
 **guest1**.
 
-::
+.. code-block:: none
 
     Full list of resources:
 
@@ -502,14 +502,14 @@ cluster node's corosync membership without properly shutting it down.
 
 ssh into the guest and run this command.
 
-::
+.. code-block:: none
 
     # kill -9 $(pidof pacemaker-remoted)
 
 Within a few seconds, your ``pcs status`` output will show a monitor failure,
 and the **guest1** node will not be shown while it is being recovered.
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -553,7 +553,7 @@ Once recovery of the guest is complete, you'll see it automatically get
 re-integrated into the cluster.  The final ``pcs status`` output should look
 something like this.
 
-::
+.. code-block:: none
 
     Cluster name: mycluster
     Stack: corosync
@@ -591,7 +591,7 @@ created connection resource while the explicit resource is active. If you want
 to clear the failed action from the status output, stop the guest resource before
 clearing it. For example:
 
-::
+.. code-block:: none
 
     # pcs resource disable vm-guest1 --wait
     # pcs resource cleanup guest1

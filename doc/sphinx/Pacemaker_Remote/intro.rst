@@ -22,6 +22,10 @@ Terms
     execute fencing actions, count toward cluster quorum, and serve as the
     cluster's Designated Controller (DC).
 
+    .. index::
+        single: cluster node
+        pair: node; cluster node
+
 **pacemaker_remote**
     A small service daemon that allows a host to be used as a Pacemaker node
     without running the full cluster stack. Nodes running pacemaker_remote
@@ -30,15 +34,26 @@ Terms
     voting or DC eligibility. The pacemaker_remote daemon is an enhanced
     version of Pacemaker's local resource management daemon (LRMD).
 
+    .. index::
+        single: pacemaker_remote
+
 **remote node**
     A physical host running pacemaker_remote. Remote nodes have a special
     resource that manages communication with the cluster. This is sometimes
     referred to as the 'baremetal' case.
 
+    .. index::
+        single: remote node
+        pair: node; remote node
+
 **guest node**
     A virtual host running pacemaker_remote. Guest nodes differ from remote
     nodes mainly in that the guest node is itself a resource that the cluster
     manages.
+
+    .. index::
+        single: guest node
+        pair: node; guest node
 
 .. NOTE::
 
@@ -63,6 +78,10 @@ Terms
 
 Guest Nodes
 ###########
+
+.. index::
+    single: guest node
+    pair: node; guest node
 
 **"I want a Pacemaker cluster to manage virtual machine resources, but I also
 want Pacemaker to be able to manage the resources that live within those
@@ -117,6 +136,10 @@ these lengths and possibly much further depending on the specific scenario.
 
 Remote Nodes
 ############
+
+.. index::
+    single: remote node
+    pair: node; remote node
 
 **"I want my traditional high-availability cluster to scale beyond the limits
 imposed by the corosync messaging layer."**
