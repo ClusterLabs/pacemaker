@@ -251,6 +251,9 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         if (rc == -ETIME || remaining_timeout <= 0 ) {
             return -ETIME;
         }
+
+    } else if (safe_str_eq(host_arg, "none")) {
+        host_arg = NULL;
     }
 
     action = stonith_action_create(agent, "validate-all",
