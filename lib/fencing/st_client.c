@@ -505,8 +505,9 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
 }
 
 static GHashTable *
-make_args(const char *agent, const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args,
-          GHashTable * port_map)
+make_args(const char *agent, const char *action, const char *victim,
+          uint32_t victim_nodeid, GHashTable * device_args,
+          GHashTable * port_map, const char *host_arg)
 {
     char buffer[512];
     GHashTable *arg_list = NULL;
@@ -550,7 +551,14 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             value = agent;
 
         } else if (param == NULL) {
-            param = "port";
+            // By default, `port` is added
+            if (host_arg == NULL) {
+                param = "port";
+
+            } else {
+                param = host_arg;
+            }
+
             value = g_hash_table_lookup(device_args, param);
 
         } else if (safe_str_eq(param, "none")) {
@@ -646,12 +654,14 @@ stonith_action_create(const char *agent,
                       const char *_action,
                       const char *victim,
                       uint32_t victim_nodeid,
-                      int timeout, GHashTable * device_args, GHashTable * port_map)
+                      int timeout, GHashTable * device_args,
+                      GHashTable * port_map, const char *host_arg)
 {
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
-    action->args = make_args(agent, _action, victim, victim_nodeid, device_args, port_map);
+    action->args = make_args(agent, _action, victim, victim_nodeid,
+                             device_args, port_map, host_arg);
     crm_debug("Preparing '%s' action for %s using agent %s",
               _action, (victim? victim : "no target"), agent);
     action->agent = strdup(agent);
@@ -2033,11 +2043,15 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
      * that is incorrect, we will need to allow the caller to pass the target).
      */
     const char *target = "node1";
+    const char *host_arg = NULL;
 
     GHashTable *params_table = crm_str_table_new();
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
+        if (safe_str_eq(params->key, STONITH_ATTR_HOSTARG)) {
+            host_arg = params->value;
+        }
 
         // Strip out Pacemaker-implemented parameters
         if (!pcmk__starts_with(params->key, "pcmk_")
@@ -2067,8 +2081,8 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     switch (stonith_get_namespace(agent, namespace_s)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
-                                        params_table, timeout, output,
-                                        error_output);
+                                        params_table, host_arg, timeout,
+                                        output, error_output);
             break;
 
 #if HAVE_STONITH_STONITH_H
@@ -2613,4 +2627,46 @@ const char *
 get_stonith_provider(const char *agent, const char *provider)
 {
     return stonith_namespace2text(stonith_get_namespace(agent, provider));
+}
+
+long long
+stonith__device_parameter_flags(xmlNode *metadata)
+{
+    xmlXPathObjectPtr xpath = NULL;
+    int max = 0;
+    int lpc = 0;
+    long long flags = 0;
+
+    CRM_CHECK(metadata, return 0);
+
+    xpath = xpath_search(metadata, "//parameter");
+    max = numXpathResults(xpath);
+
+    if (max <= 0) {
+        freeXpathObject(xpath);
+        return 0;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        const char *parameter = NULL;
+        xmlNode *match = getXpathResult(xpath, lpc);
+
+        CRM_LOG_ASSERT(match != NULL);
+        if (match == NULL) {
+            continue;
+        }
+
+        parameter = crm_element_value(match, "name");
+
+        if (safe_str_eq(parameter, "plug")) {
+            set_bit(flags, st_device_supports_parameter_plug);
+
+        } else if (safe_str_eq(parameter, "port")) {
+            set_bit(flags, st_device_supports_parameter_port);
+        }
+    }
+
+    freeXpathObject(xpath);
+
+    return flags;
 }
