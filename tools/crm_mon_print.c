@@ -208,10 +208,8 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
             continue;
         }
 
-        if (is_active || partially_active) {
-            if (!pe__rsc_running_on_any_node_in_list(rsc->running_on, only_show)) {
-                continue;
-            }
+        if (!pe__rsc_running_on_any_node_in_list(rsc, only_show)) {
+            continue;
         }
 
         /* Print this resource */
