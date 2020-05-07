@@ -1562,8 +1562,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_html(pcmk__output_t *out, GListPtr only_show,
-                               pe__bundle_replica_t *replica, long options)
+pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
+                               long options)
 {
     pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
@@ -1587,10 +1587,7 @@ pe__bundle_replica_output_html(pcmk__output_t *out, GListPtr only_show,
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->container);
-    if (pcmk__str_in_list(only_show, node->details->uname)) {
-        pe__common_output_html(out, rsc, buffer, node, options);
-    }
+    pe__common_output_html(out, rsc, buffer, node, options);
 }
 
 PCMK__OUTPUT_ARGS("bundle", "unsigned int", "struct pe_resource_t *", "GListPtr")
@@ -1650,7 +1647,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            pe__bundle_replica_output_html(out, only_show, replica, options);
+            pe__bundle_replica_output_html(out, replica, options);
         }
 
         pcmk__output_xml_pop_parent(out);
@@ -1661,8 +1658,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_text(pcmk__output_t *out, GListPtr only_show,
-                               pe__bundle_replica_t *replica, long options)
+pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
+                               long options)
 {
     pe_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
@@ -1686,10 +1683,7 @@ pe__bundle_replica_output_text(pcmk__output_t *out, GListPtr only_show,
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->container);
-    if (pcmk__str_in_list(only_show, node->details->uname)) {
-        pe__common_output_text(out, rsc, buffer, node, options);
-    }
+    pe__common_output_text(out, rsc, buffer, node, options);
 }
 
 PCMK__OUTPUT_ARGS("bundle", "unsigned int", "struct pe_resource_t *", "GListPtr")
@@ -1745,7 +1739,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            pe__bundle_replica_output_text(out, only_show, replica, options);
+            pe__bundle_replica_output_text(out, replica, options);
         }
     }
 
