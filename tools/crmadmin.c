@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <glib.h>               // gboolean, GMainLoop, etc.
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -28,9 +29,10 @@
 
 #include <crm/cib.h>
 
-static int message_timer_id = -1;
-static int message_timeout_ms = 30 * 1000;
+#define DEFAULT_MESSAGE_TIMEOUT_MS 30000
 
+static guint message_timer_id = 0;
+static guint message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
 static GMainLoop *mainloop = NULL;
 static crm_ipc_t *crmd_channel = NULL;
 static char *admin_uuid = NULL;
@@ -147,6 +149,32 @@ static pcmk__cli_option_t long_options[] = {
     { 0, 0, 0, 0 }
 };
 
+// \return Standard Pacemaker return code
+static int
+list_nodes()
+{
+    cib_t *the_cib = cib_new();
+    xmlNode *output = NULL;
+    int rc;
+
+    if (the_cib == NULL) {
+        return ENOMEM;
+    }
+    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        return pcmk_legacy2rc(rc);
+    }
+
+    rc = the_cib->cmds->query(the_cib, NULL, &output,
+                              cib_scope_local | cib_sync_call);
+    if (rc == pcmk_ok) {
+        do_find_node_list(output);
+        free_xml(output);
+    }
+    the_cib->cmds->signoff(the_cib);
+    return pcmk_legacy2rc(rc);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -172,9 +200,9 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 't':
-                message_timeout_ms = atoi(optarg);
+                message_timeout_ms = (guint) atoi(optarg);
                 if (message_timeout_ms < 1) {
-                    message_timeout_ms = 30 * 1000;
+                    message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
                 }
                 break;
 
@@ -302,26 +330,7 @@ do_work(void)
         crmd_operation = CRM_OP_PING;
 
     } else if (DO_NODE_LIST) {
-
-        cib_t *the_cib = cib_new();
-        xmlNode *output = NULL;
-
-        int rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
-
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not connect to CIB: %s\n",
-                    pcmk_strerror(rc));
-            return -1;
-        }
-
-        rc = the_cib->cmds->query(the_cib, NULL, &output, cib_scope_local | cib_sync_call);
-        if(rc == pcmk_ok) {
-            do_find_node_list(output);
-
-            free_xml(output);
-        }
-        the_cib->cmds->signoff(the_cib);
-        crm_exit(crm_errno2exit(rc));
+        crm_exit(pcmk_rc2exitc(list_nodes()));
 
     } else if (DO_RESET) {
         /* tell dest_node to initiate the shutdown procedure

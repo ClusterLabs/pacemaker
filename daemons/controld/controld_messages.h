@@ -11,7 +11,7 @@
 #  define XML_CRM_MESSAGES__H
 
 #  include <crm/crm.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 #  include <crm/common/xml.h>
 #  include <crm/cluster/internal.h>
 #  include <controld_fsa.h>

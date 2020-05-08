@@ -2613,23 +2613,6 @@ write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
     return write_xml_stream(xml_node, filename, stream, compress);
 }
 
-xmlNode *
-get_message_xml(xmlNode * msg, const char *field)
-{
-    xmlNode *tmp = first_named_child(msg, field);
-
-    return __xml_first_child(tmp);
-}
-
-gboolean
-add_message_xml(xmlNode * msg, const char *field, xmlNode * xml)
-{
-    xmlNode *holder = create_xml_node(msg, field);
-
-    add_node_copy(holder, xml);
-    return TRUE;
-}
-
 static char *
 crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
 {

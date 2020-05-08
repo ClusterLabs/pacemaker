@@ -23,7 +23,7 @@
 
 #include <crm_internal.h>
 #if 0
-#include "crm/common/ipcs_internal.h"  /* pcmk__client_t */
+#include "crm/common/ipc_internal.h"  /* pcmk__client_t */
 #include "crm/common/xml.h"  /* crm_xml_add */
 #endif
 #include "crm/msg_xml.h"  /* F_SUBTYPE */

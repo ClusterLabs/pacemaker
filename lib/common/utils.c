@@ -116,17 +116,6 @@ score2char(int score)
     return crm_itoa(score);
 }
 
-char *
-generate_hash_key(const char *crm_msg_reference, const char *sys)
-{
-    char *hash_key = crm_strdup_printf("%s_%s", (sys? sys : "none"),
-                                       crm_msg_reference);
-
-    crm_trace("created hash key: (%s)", hash_key);
-    return hash_key;
-}
-
-
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {

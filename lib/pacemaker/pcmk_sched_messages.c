@@ -20,7 +20,7 @@
 
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 
 gboolean show_scores = FALSE;
 gboolean show_utilization = FALSE;

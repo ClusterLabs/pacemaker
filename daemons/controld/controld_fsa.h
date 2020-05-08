@@ -16,7 +16,7 @@
 #  include <crm/common/mainloop.h>
 #  include <crm/cluster.h>
 #  include <crm/cluster/election.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 
 /*! States the controller can be in */
 enum crmd_fsa_state {

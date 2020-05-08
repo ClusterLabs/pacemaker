@@ -26,7 +26,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
@@ -67,8 +67,6 @@ crm_set_bit(const char *function, int line, const char *target, long long word, 
 
 #  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, __LINE__, NULL, word, bit)
 #  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, __LINE__, NULL, word, bit)
-
-char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);

@@ -24,7 +24,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <pacemaker-based.h>

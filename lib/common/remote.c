@@ -28,7 +28,7 @@
 #include <glib.h>
 #include <bzlib.h>
 
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>

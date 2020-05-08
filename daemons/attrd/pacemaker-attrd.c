@@ -25,7 +25,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 

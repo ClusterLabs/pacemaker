@@ -187,15 +187,6 @@ new_mainloop_for_ipc(const char *system, ipc_dispatch_fn dispatch)
     return ipc;
 }
 
-static void
-run_mainloop_and_exit(void)
-{
-    g_main_loop_run(mainloop);
-    g_main_loop_unref(mainloop);
-    mainloop = NULL;
-    crm_node_exit(exit_code);
-}
-
 static int
 send_controller_hello(crm_ipc_t *controller)
 {
@@ -328,7 +319,9 @@ run_controller_mainloop(uint32_t nodeid)
     }
 
     // Run main loop to get controller reply via dispatch_controller()
-    run_mainloop_and_exit();
+    g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
+    mainloop = NULL;
 }
 
 static void
@@ -339,7 +332,8 @@ print_node_name(void)
 
     if (name != NULL) {
         printf("%s\n", name);
-        crm_node_exit(CRM_EX_OK);
+        exit_code = CRM_EX_OK;
+        return;
 
     } else {
         // Otherwise ask the controller
@@ -486,11 +480,11 @@ remove_node(const char *target_uname)
         if (tools_remove_node_cache(node_name, nodeid, daemons[d])) {
             crm_err("Failed to connect to %s to remove node '%s'",
                     daemons[d], target_uname);
-            crm_node_exit(CRM_EX_ERROR);
+            exit_code = CRM_EX_ERROR;
             return;
         }
     }
-    crm_node_exit(CRM_EX_OK);
+    exit_code = CRM_EX_OK;
 }
 
 static gint
@@ -513,7 +507,8 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
     if (msg == NULL) {
         fprintf(stderr, "error: Could not understand pacemakerd response\n");
-        crm_node_exit(CRM_EX_PROTOCOL);
+        exit_code = CRM_EX_PROTOCOL;
+        g_main_loop_quit(mainloop);
         return 0;
     }
 
@@ -544,7 +539,8 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     free_xml(msg);
-    crm_node_exit(CRM_EX_OK);
+    exit_code = CRM_EX_OK;
+    g_main_loop_quit(mainloop);
     return 0;
 }
 
@@ -562,7 +558,9 @@ run_pacemakerd_mainloop(void)
     free_xml(poke);
 
     // Handle reply via node_mcp_dispatch()
-    run_mainloop_and_exit();
+    g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
+    mainloop = NULL;
 }
 
 static GOptionContext *

@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 
 #include <qb/qbarray.h>
 
@@ -1342,6 +1342,28 @@ drain_timeout_cb(gpointer user_data)
 
     *timeout_popped = TRUE;
     return FALSE;
+}
+
+/*!
+ * \brief Drain some remaining main loop events then quit it
+ *
+ * \param[in] mloop  Main loop to drain and quit
+ * \param[in] n      Drain up to this many pending events
+ */
+void
+pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n)
+{
+    if ((mloop != NULL) && g_main_loop_is_running(mloop)) {
+        GMainContext *ctx = g_main_loop_get_context(mloop);
+
+        /* Drain up to n events in case some memory clean-up is pending
+         * (helpful to reduce noise in valgrind output).
+         */
+        for (int i = 0; (i < n) && g_main_context_pending(ctx); ++i) {
+            g_main_context_dispatch(ctx);
+        }
+        g_main_loop_quit(mloop);
+    }
 }
 
 /*!
