@@ -727,6 +727,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
+        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+            continue;
+        }
+
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
@@ -742,6 +746,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
+
+        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+            continue;
+        }
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -795,7 +803,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
+                if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
+                    pcmk__str_in_list(only_show, node->details->uname)) {
                     stopped_list = pcmk__add_word(stopped_list,
                                                   node->details->uname);
                 }
@@ -927,6 +936,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
+        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+            continue;
+        }
+
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
     }
@@ -942,6 +955,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
+
+        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+            continue;
+        }
 
         list_text = pcmk__add_word(list_text, host->details->uname);
         active_instances++;
@@ -994,7 +1011,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
+                if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
+                    pcmk__str_in_list(only_show, node->details->uname)) {
                     stopped_list = pcmk__add_word(stopped_list,
                                                   node->details->uname);
                 }
