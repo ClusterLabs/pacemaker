@@ -66,6 +66,7 @@ long long stonith__device_parameter_flags(xmlNode *metadata);
 #  define F_STONITH_OPERATION     "st_op"
 #  define F_STONITH_TARGET        "st_target"
 #  define F_STONITH_REMOTE_OP_ID  "st_remote_op"
+#  define F_STONITH_REMOTE_OP_ID_RELAY  "st_remote_op_relay"
 #  define F_STONITH_RC            "st_rc"
 /*! Timeout period per a device execution */
 #  define F_STONITH_TIMEOUT       "st_timeout"
