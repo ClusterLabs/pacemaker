@@ -621,6 +621,12 @@ pcmk_controld_api_replies_expected(pcmk_ipc_api_t *api)
     return private->replies_expected;
 }
 
+/*!
+ * \brief Create XML for a controller IPC "hello" message
+ *
+ * \deprecated This function is deprecated as part of the public C API.
+ */
+// \todo make this static to this file when breaking API backward compatibility
 xmlNode *
 create_hello_message(const char *uuid, const char *client_name,
                      const char *major_version, const char *minor_version)
