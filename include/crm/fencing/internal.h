@@ -11,6 +11,15 @@
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 
+enum st_device_flags
+{
+    st_device_supports_list   = 0x0001,
+    st_device_supports_status = 0x0002,
+    st_device_supports_reboot = 0x0004,
+    st_device_supports_parameter_plug = 0x0008,
+    st_device_supports_parameter_port = 0x0010,
+};
+
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
@@ -19,7 +28,9 @@ stonith_action_t *stonith_action_create(const char *agent,
                                         const char *victim,
                                         uint32_t victim_nodeid,
                                         int timeout,
-                                        GHashTable * device_args, GHashTable * port_map);
+                                        GHashTable * device_args,
+                                        GHashTable * port_map,
+                                        const char * host_arg);
 void stonith__destroy_action(stonith_action_t *action);
 void stonith__action_result(stonith_action_t *action, int *rc, char **output,
                             char **error_output);
@@ -43,6 +54,8 @@ xmlNode *create_device_registration_xml(const char *id,
                                         const char *agent,
                                         stonith_key_value_t *params,
                                         const char *rsc_provides);
+
+long long stonith__device_parameter_flags(xmlNode *metadata);
 
 #  define ST_LEVEL_MAX 10
 
@@ -147,7 +160,7 @@ int stonith__list_rhcs_agents(stonith_key_value_t **devices);
 int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
 bool stonith__agent_is_rhcs(const char *agent);
 int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
-                           const char *agent, GHashTable *params,
+                           const char *agent, GHashTable *params, const char *host_arg,
                            int timeout, char **output, char **error_output);
 
 #endif
