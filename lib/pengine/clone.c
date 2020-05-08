@@ -717,6 +717,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     if (is_set(options, pe_print_clone_details)) {
+        free(stopped_list);
         out->end_list(out);
         return pcmk_rc_ok;
     }
@@ -916,6 +917,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     if (is_set(options, pe_print_clone_details)) {
+        free(stopped_list);
         out->end_list(out);
         return pcmk_rc_ok;
     }
