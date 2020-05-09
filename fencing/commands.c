@@ -952,8 +952,11 @@ build_device_from_xml(xmlNode * msg)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     device->agent_metadata = get_agent_metadata(device->agent);
-    read_action_metadata(device);
-    set_bit(device->flags, stonith__device_parameter_flags(device->agent_metadata));
+    if (device->agent_metadata) {
+        read_action_metadata(device);
+        set_bit(device->flags,
+                stonith__device_parameter_flags(device->agent_metadata));
+    }
 
     value = g_hash_table_lookup(device->params, "nodeid");
     if (!value) {
