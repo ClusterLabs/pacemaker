@@ -807,21 +807,23 @@ find_topology_for_host(const char *host)
  * \internal
  * \brief Set fencing operation's device list to target's next topology level
  *
- * \param[in,out] op  Remote fencing operation to modify
+ * \param[in,out] op        Remote fencing operation to modify
+ * \param[in]     empty_ok  If true, an operation without a target (i.e.
+ *                          queries) or a target without a topology will get a
+ *                          pcmk_rc_ok return value instead of ENODEV
  *
  * \return Standard Pacemaker return value
  */
 static int
-advance_topology_level(remote_fencing_op_t *op)
+advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
 {
     stonith_topology_t *tp = NULL;
 
     if (op->target) {
-        /* Queries don't have a target set */
         tp = find_topology_for_host(op->target);
     }
     if (topology_is_empty(tp)) {
-        return pcmk_rc_ok;
+        return empty_ok? pcmk_rc_ok : ENODEV;
     }
 
     set_bit(op->call_options, st_opt_topology);
@@ -1114,7 +1116,7 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
 
     CRM_CHECK(op->action, return NULL);
 
-    if (advance_topology_level(op) != pcmk_rc_ok) {
+    if (advance_topology_level(op, true) != pcmk_rc_ok) {
         op->state = st_failed;
     }
 
@@ -1266,7 +1268,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
          */
     } while ((op->phase != st_phase_on)
              && is_set(op->call_options, st_opt_topology)
-             && (advance_topology_level(op) == pcmk_rc_ok));
+             && (advance_topology_level(op, false) == pcmk_rc_ok));
 
     crm_notice("Couldn't find anyone to fence (%s) %s with %s",
                op->action, op->target, (device? device : "any device"));
@@ -2069,7 +2071,7 @@ process_remote_stonith_exec(xmlNode * msg)
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
-            if (advance_topology_level(op) != pcmk_rc_ok) {
+            if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
                 remote_op_done(op, msg, rc, FALSE);
                 return rc;
