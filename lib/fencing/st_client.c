@@ -2437,7 +2437,7 @@ stonith__device_parameter_flags(xmlNode *metadata)
     int lpc = 0;
     long long flags = 0;
 
-    CRM_CHECK(metadata, return 0);
+    CRM_CHECK(metadata != NULL, return 0);
 
     xpath = xpath_search(metadata, "//parameter");
     max = numXpathResults(xpath);
