@@ -537,7 +537,7 @@ main(int argc, char **argv)
             break;
 
         case 's':
-            rc = pcmk__fence_list_targets(out, st, target, options.timeout*1000);
+            rc = pcmk__fence_list_targets(out, st, device, options.timeout*1000);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Couldn't list targets: %s", pcmk_strerror(rc));
             }
