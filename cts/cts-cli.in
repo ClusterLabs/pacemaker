@@ -434,6 +434,7 @@ function test_tools() {
     cmd="crm_resource --clear --expired"
     test_assert $CRM_EX_OK
 
+    unset CIB_shadow
     unset CIB_shadow_dir
     rm -f "$TMPXML" "$TMPORIG"
 
