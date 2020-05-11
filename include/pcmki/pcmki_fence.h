@@ -106,15 +106,15 @@ int pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid);
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out     The output functions structure.
- * \param[in]     st      A connection to the STONITH API.
- * \param[in]     agent   The agent that can do the fencing.
- * \param[in]     timeout How long to wait for the operation to complete (in ms).
+ * \param[in,out] out        The output functions structure
+ * \param[in]     st         A connection to the STONITH API
+ * \param[in]     device_id  Resource ID of fence device to check
+ * \param[in]     timeout    How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
-                             unsigned int timeout);
+int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
+                             const char *device_id, unsigned int timeout);
 
 /*!
  * \brief Get metadata for a resource.
