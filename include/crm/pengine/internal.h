@@ -471,6 +471,6 @@ pe_action_t *pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
 GListPtr pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
 bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
 
-bool pe__rsc_running_on_any_node_in_list(GListPtr rsc_nodes, GListPtr node_list);
+bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list);
 
 #endif

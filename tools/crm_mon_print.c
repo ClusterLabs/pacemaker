@@ -208,10 +208,8 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
             continue;
         }
 
-        if (is_active || partially_active) {
-            if (!pe__rsc_running_on_any_node_in_list(rsc->running_on, only_show)) {
-                continue;
-            }
+        if (!pe__rsc_running_on_any_node_in_list(rsc, only_show)) {
+            continue;
         }
 
         /* Print this resource */
@@ -783,7 +781,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     unames = build_uname_list(data_set, only_show);
 
-    if (is_set(show, mon_show_nodes)) {
+    if (is_set(show, mon_show_nodes) && unames) {
         if (rc == pcmk_rc_ok) {
             out->info(out, "%s", "");
         }
@@ -1015,7 +1013,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     unames = build_uname_list(data_set, only_show);
 
     /*** NODE LIST ***/
-    if (is_set(show, mon_show_nodes)) {
+    if (is_set(show, mon_show_nodes) && unames) {
         out->message(out, "node-list", data_set->nodes, unames, print_opts,
                      is_set(mon_ops, mon_op_print_clone_detail),
                      is_set(mon_ops, mon_op_print_brief),
