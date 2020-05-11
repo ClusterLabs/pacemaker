@@ -319,13 +319,13 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
 #endif
 
 int
-pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
-                         unsigned int timeout) {
+pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
+                         const char *device_id, unsigned int timeout) {
     GList *targets = NULL;
     char *lists = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->list(st, st_opts, agent, &lists, timeout/1000);
+    rc = st->cmds->list(st, st_opts, device_id, &lists, timeout/1000);
     if (rc != pcmk_rc_ok) {
         return pcmk_legacy2rc(rc);
     }
@@ -345,7 +345,7 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st, char *agent,
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
+pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
                         unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -355,7 +355,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, char *agent,
         return rc;
     }
 
-    rc = pcmk__fence_list_targets(out, st, agent, timeout);
+    rc = pcmk__fence_list_targets(out, st, device_id, timeout);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
