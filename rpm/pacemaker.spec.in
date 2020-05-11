@@ -44,7 +44,7 @@
 %define tag_release %(c=%{commit}; case ${c} in Pacemaker-*%{rparen} echo 1 ;;
                       *%{rparen} echo 0 ;; esac)
 
-## Portion of source tarball name after "pacemaker-", and release version
+## Portion of export/dist tarball name after "pacemaker-", and release version
 %if 0%{tag_release}
 %define archive_version %(c=%{commit}; echo ${c:10})
 %define pcmk_release %(c=%{commit}; case $c in *-rc[[:digit:]]*%{rparen}
@@ -233,8 +233,12 @@ Group:         System Environment/Daemons
 # Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
 # will download pacemaker-e91769e.tar.gz
 #
+# The ending part starting with '#' is ignored by github but necessary for
+# rpmbuild to know what the tar archive name is. (The downloaded file will be
+# named correctly only for commit IDs, not tagged releases.)
+#
 # You can use "spectool -s 0 pacemaker.spec" (rpmdevtools) to show final URL.
-Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{commit}
+Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{commit}#/%{name}-%{archive_version}.tar.gz
 Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
