@@ -807,22 +807,23 @@ find_topology_for_host(const char *host)
  * \internal
  * \brief Set fencing operation's device list to target's next topology level
  *
- * \param[in,out] op  Remote fencing operation to modify
+ * \param[in,out] op        Remote fencing operation to modify
+ * \param[in]     empty_ok  If true, an operation without a target (i.e.
+ *                          queries) or a target without a topology will get a
+ *                          pcmk_rc_ok return value instead of ENODEV
  *
- * \return pcmk_ok if successful, target was not specified (i.e. queries) or
- *         target has no topology, or -EINVAL if no more topology levels to try
+ * \return Standard Pacemaker return value
  */
 static int
-stonith_topology_next(remote_fencing_op_t * op)
+advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
 {
     stonith_topology_t *tp = NULL;
 
     if (op->target) {
-        /* Queries don't have a target set */
         tp = find_topology_for_host(op->target);
     }
     if (topology_is_empty(tp)) {
-        return pcmk_ok;
+        return empty_ok? pcmk_rc_ok : ENODEV;
     }
 
     set_bit(op->call_options, st_opt_topology);
@@ -855,12 +856,12 @@ stonith_topology_next(remote_fencing_op_t * op)
              */
             op_phase_off(op);
         }
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     crm_notice("All fencing options targeting %s for client %s@%s.%.8s failed",
                op->target, op->client_name, op->originator, op->id);
-    return -EINVAL;
+    return ENODEV;
 }
 
 /*!
@@ -1115,7 +1116,7 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
 
     CRM_CHECK(op->action, return NULL);
 
-    if (stonith_topology_next(op) != pcmk_ok) {
+    if (advance_topology_level(op, true) != pcmk_rc_ok) {
         op->state = st_failed;
     }
 
@@ -1267,7 +1268,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
          */
     } while ((op->phase != st_phase_on)
              && is_set(op->call_options, st_opt_topology)
-             && stonith_topology_next(op) == pcmk_ok);
+             && (advance_topology_level(op, false) == pcmk_rc_ok));
 
     crm_notice("Couldn't find anyone to fence (%s) %s with %s",
                op->action, op->target, (device? device : "any device"));
@@ -1443,8 +1444,8 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
  * \param[in]     rc      Return code of device's execution
  */
 static void
-advance_op_topology(remote_fencing_op_t *op, const char *device, xmlNode *msg,
-                    int rc)
+advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
+                                 xmlNode *msg, int rc)
 {
     /* Advance to the next device at this topology level, if any */
     if (op->devices) {
@@ -1593,7 +1594,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
          */
         crm_warn("Ignoring %s 'on' failure (no capable peers) targeting %s "
                  "after successful 'off'", device, op->target);
-        advance_op_topology(op, device, NULL, pcmk_ok);
+        advance_topology_device_in_level(op, device, NULL, pcmk_ok);
         return;
 
     } else if (op->owner == FALSE) {
@@ -2065,12 +2066,12 @@ process_remote_stonith_exec(xmlNode * msg)
         if (rc == pcmk_ok) {
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
-            advance_op_topology(op, device, msg, rc);
+            advance_topology_device_in_level(op, device, msg, rc);
             return rc;
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
-            if (stonith_topology_next(op) != pcmk_ok) {
+            if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
                 remote_op_done(op, msg, rc, FALSE);
                 return rc;
