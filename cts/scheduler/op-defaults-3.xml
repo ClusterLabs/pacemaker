@@ -1,0 +1,54 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.4" epoch="130" num_updates="31" admin_epoch="1" cib-last-written="Fri Apr 24 16:08:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.3-1.c40fb040a.git.el7-c40fb040a"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test-cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fencing" type="fence_xvm">
+        <instance_attributes id="fencing-instance_attributes">
+          <nvpair id="fencing-instance_attributes-ip_family" name="ip_family" value="ipv4"/>
+        </instance_attributes>
+        <operations/>
+      </primitive>
+      <primitive class="ocf" id="dummy-rsc" provider="pacemaker" type="Dummy">
+        <instance_attributes id="dummy-rsc-instance_attributes">
+          <nvpair id="dummy-rsc-instance_attributes-op_sleep" name="op_sleep" value="10"/>
+        </instance_attributes>
+        <operations>
+          <op id="dummy-rsc-monitor-interval-10s" interval="10s" name="monitor" on-fail="stop"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <tags/>
+    <op_defaults>
+      <meta_attributes id="op-10s-monitor-defaults">
+        <rule id="op-10s-monitor-default-rule" score="INFINITY">
+          <op_expression id="op-10s-monitor-default-expr" name="monitor" interval="10s"/>
+        </rule>
+        <nvpair id="op-10s-monitor-timeout" name="timeout" value="8s"/>
+      </meta_attributes>
+      <meta_attributes id="op-monitor-defaults">
+        <rule id="op-monitor-default-rule" score="INFINITY">
+          <op_expression id="op-monitor-default-expr" name="monitor"/>
+        </rule>
+        <nvpair id="op-monitor-timeout" name="timeout" value="7s"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member"/>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
+  </status>
+</cib>

@@ -965,6 +965,7 @@ TESTS = [
     [
         [ "op-defaults", "Test op_defaults conditional expressions" ],
         [ "op-defaults-2", "Test op_defaults AND'ed conditional expressions" ],
+        [ "op-defaults-3", "Test op_defaults precedence" ],
         [ "rsc-defaults", "Test rsc_defaults conditional expressions" ],
     ],
     
