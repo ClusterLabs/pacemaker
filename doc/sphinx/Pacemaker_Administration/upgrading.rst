@@ -61,36 +61,36 @@ Upgrading Cluster Software
 There are three approaches to upgrading a cluster, each with advantages and
 disadvantages.
 
-.. table:: Upgrade Methods
+.. table:: **Upgrade Methods**
 
-+---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-| Method                                            | Available| Can be   | Service| Service | Exercises| Allows   |
-|                                                   | between  | used with| outage | recovery| failover | change of|
-|                                                   | all      | Pacemaker| during | during  | logic    | messaging|
-|                                                   | versions | Remote   | upgrade| upgrade |          | layer    |
-|                                                   |          | nodes    |        |         |          | [#]_     |
-+===================================================+==========+==========+========+=========+==========+==========+
-| Complete cluster shutdown                         | yes      | yes      | always | N/A     | no       | yes      |
-|                                                   |          |          |        |         |          |          |
-| .. index::                                        |          |          |        |         |          |          |
-|    pair: cluster; upgrade with shutdown           |          |          |        |         |          |          |
-|    pair: upgrade; upgrade with shutdown           |          |          |        |         |          |          |
-+---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-| Rolling (node by node)                            | no       | yes      | always | yes     | yes      | no       |
-|                                                   |          |          | [#]_   |         |          |          |
-|                                                   |          |          |        |         |          |          |
-| .. index::                                        |          |          |        |         |          |          |
-|    pair: cluster; rolling upgrade                 |          |          |        |         |          |          |
-|    pair: upgrade; rolling upgrade                 |          |          |        |         |          |          |
-+---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-| Detach and reattach                               | yes      | no       | only   | no      | no       | yes      |
-|                                                   |          |          | due to |         |          |          |
-|                                                   |          |          | failure|         |          |          |
-|                                                   |          |          |        |         |          |          |
-| .. index::                                        |          |          |        |         |          |          |
-|    pair: cluster; upgrade with detach and reattach|          |          |        |         |          |          |
-|    pair: upgrade; upgrade with detach and reattach|          |          |        |         |          |          |
-+---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   | Method                                            | Available| Can be   | Service| Service | Exercises| Allows   |
+   |                                                   | between  | used with| outage | recovery| failover | change of|
+   |                                                   | all      | Pacemaker| during | during  | logic    | messaging|
+   |                                                   | versions | Remote   | upgrade| upgrade |          | layer    |
+   |                                                   |          | nodes    |        |         |          | [#]_     |
+   +===================================================+==========+==========+========+=========+==========+==========+
+   | Complete cluster shutdown                         | yes      | yes      | always | N/A     | no       | yes      |
+   |                                                   |          |          |        |         |          |          |
+   | .. index::                                        |          |          |        |         |          |          |
+   |    pair: cluster; upgrade with shutdown           |          |          |        |         |          |          |
+   |    pair: upgrade; upgrade with shutdown           |          |          |        |         |          |          |
+   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   | Rolling (node by node)                            | no       | yes      | always | yes     | yes      | no       |
+   |                                                   |          |          | [#]_   |         |          |          |
+   |                                                   |          |          |        |         |          |          |
+   | .. index::                                        |          |          |        |         |          |          |
+   |    pair: cluster; rolling upgrade                 |          |          |        |         |          |          |
+   |    pair: upgrade; rolling upgrade                 |          |          |        |         |          |          |
+   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   | Detach and reattach                               | yes      | no       | only   | no      | no       | yes      |
+   |                                                   |          |          | due to |         |          |          |
+   |                                                   |          |          | failure|         |          |          |
+   |                                                   |          |          |        |         |          |          |
+   | .. index::                                        |          |          |        |         |          |          |
+   |    pair: cluster; upgrade with detach and reattach|          |          |        |         |          |          |
+   |    pair: upgrade; upgrade with detach and reattach|          |          |        |         |          |          |
+   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
 
 Complete Cluster Shutdown
 _________________________
@@ -169,17 +169,17 @@ To perform a rolling upgrade, on each node in turn:
    rolling upgrade in multiple steps, by upgrading to an intermediate version
    first.
 
-.. table:: Version Compatibility Table
+.. table:: **Version Compatibility Table**
 
-+-------------------------+---------------------------+
-| Version being Installed | Oldest Compatible Version |
-+=========================+===========================+
-| Pacemaker 2.y.z         | Pacemaker 1.1.11 [#]_     |
-+-------------------------+---------------------------+
-| Pacemaker 1.y.z         | Pacemaker 1.0.0           |
-+-------------------------+---------------------------+
-| Pacemaker 0.7.z         | Pacemaker 0.6.z           |
-+-------------------------+---------------------------+
+   +-------------------------+---------------------------+
+   | Version being Installed | Oldest Compatible Version |
+   +=========================+===========================+
+   | Pacemaker 2.y.z         | Pacemaker 1.1.11 [#]_     |
+   +-------------------------+---------------------------+
+   | Pacemaker 1.y.z         | Pacemaker 1.0.0           |
+   +-------------------------+---------------------------+
+   | Pacemaker 0.7.z         | Pacemaker 0.6.z           |
+   +-------------------------+---------------------------+
 
 Detach and Reattach
 ___________________

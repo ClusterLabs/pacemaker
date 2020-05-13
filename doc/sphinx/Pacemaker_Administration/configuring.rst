@@ -182,40 +182,40 @@ cluster even if the machine itself is not in the same cluster. To do this, one
 simply sets up a number of environment variables and runs the same commands as
 when working on a cluster node.
 
-.. table:: Environment Variables Used to Connect to Remote Instances of the CIB
+.. table:: **Environment Variables Used to Connect to Remote Instances of the CIB**
 
-+----------------------+-----------+----------------------------------------------+
-| Environment Variable | Default   | Description                                  |
-+======================+===========+==============================================+
-| CIB_user             | $USER     | The user to connect as. Needs to be          |
-|                      |           | part of the ``haclient`` group on            |
-|                      |           | the target host.                             |
-|                      |           |                                              |
-|                      |           | .. index::                                   |
-|                      |           |    pair: environment variable; CIB_user      |
-+----------------------+-----------+----------------------------------------------+
-| CIB_passwd           |           | The user's password. Read from the           |
-|                      |           | command line if unset.                       |
-|                      |           |                                              |
-|                      |           | .. index::                                   |
-|                      |           |    pair: environment variable; CIB_passwd    |
-+----------------------+-----------+----------------------------------------------+
-| CIB_server           | localhost | The host to contact                          |
-|                      |           |                                              |
-|                      |           | .. index::                                   |
-|                      |           |    pair: environment variable; CIB_server    |
-+----------------------+-----------+----------------------------------------------+
-| CIB_port             |           | The port on which to contact the server;     |
-|                      |           | required.                                    |
-|                      |           |                                              |
-|                      |           | .. index::                                   |
-|                      |           |    pair: environment variable; CIB_port      |
-+----------------------+-----------+----------------------------------------------+
-| CIB_encrypted        | TRUE      | Whether to encrypt network traffic           |
-|                      |           |                                              |
-|                      |           | .. index::                                   |
-|                      |           |    pair: environment variable; CIB_encrypted |
-+----------------------+-----------+----------------------------------------------+
+   +----------------------+-----------+----------------------------------------------+
+   | Environment Variable | Default   | Description                                  |
+   +======================+===========+==============================================+
+   | CIB_user             | $USER     | The user to connect as. Needs to be          |
+   |                      |           | part of the ``haclient`` group on            |
+   |                      |           | the target host.                             |
+   |                      |           |                                              |
+   |                      |           | .. index::                                   |
+   |                      |           |    pair: environment variable; CIB_user      |
+   +----------------------+-----------+----------------------------------------------+
+   | CIB_passwd           |           | The user's password. Read from the           |
+   |                      |           | command line if unset.                       |
+   |                      |           |                                              |
+   |                      |           | .. index::                                   |
+   |                      |           |    pair: environment variable; CIB_passwd    |
+   +----------------------+-----------+----------------------------------------------+
+   | CIB_server           | localhost | The host to contact                          |
+   |                      |           |                                              |
+   |                      |           | .. index::                                   |
+   |                      |           |    pair: environment variable; CIB_server    |
+   +----------------------+-----------+----------------------------------------------+
+   | CIB_port             |           | The port on which to contact the server;     |
+   |                      |           | required.                                    |
+   |                      |           |                                              |
+   |                      |           | .. index::                                   |
+   |                      |           |    pair: environment variable; CIB_port      |
+   +----------------------+-----------+----------------------------------------------+
+   | CIB_encrypted        | TRUE      | Whether to encrypt network traffic           |
+   |                      |           |                                              |
+   |                      |           | .. index::                                   |
+   |                      |           |    pair: environment variable; CIB_encrypted |
+   +----------------------+-----------+----------------------------------------------+
 
 So, if **c001n01** is an active cluster node and is listening on port 1234
 for connections, and **someuser** is a member of the **haclient** group,
@@ -233,23 +233,23 @@ default.  If you wish to allow remote access, you need to set the
 properties (i.e., those kept in the ``cib`` tag, like ``num_updates`` and
 ``epoch``).
 
-.. table:: Extra top-level CIB properties for remote access
+.. table:: **Extra top-level CIB properties for remote access**
 
-+----------------------+-----------+------------------------------------------------------+
-| CIB Property         | Default   | Description                                          |
-+======================+===========+======================================================+
-| remote-tls-port      |           | Listen for encrypted remote connections              |
-|                      |           | on this port.                                        |
-|                      |           |                                                      |
-|                      |           | .. index::                                           |
-|                      |           |    pair: remote connection option; remote-tls-port   |
-+----------------------+-----------+------------------------------------------------------+
-| remote-clear-port    |           | Listen for plaintext remote connections              |
-|                      |           | on this port.                                        |
-|                      |           |                                                      |
-|                      |           | .. index::                                           |
-|                      |           |    pair: remote connection option; remote-clear-port |
-+----------------------+-----------+------------------------------------------------------+
+   +----------------------+-----------+------------------------------------------------------+
+   | CIB Property         | Default   | Description                                          |
+   +======================+===========+======================================================+
+   | remote-tls-port      |           | Listen for encrypted remote connections              |
+   |                      |           | on this port.                                        |
+   |                      |           |                                                      |
+   |                      |           | .. index::                                           |
+   |                      |           |    pair: remote connection option; remote-tls-port   |
+   +----------------------+-----------+------------------------------------------------------+
+   | remote-clear-port    |           | Listen for plaintext remote connections              |
+   |                      |           | on this port.                                        |
+   |                      |           |                                                      |
+   |                      |           | .. index::                                           |
+   |                      |           |    pair: remote connection option; remote-clear-port |
+   +----------------------+-----------+------------------------------------------------------+
 
 .. important::
 

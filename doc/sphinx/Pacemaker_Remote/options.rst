@@ -28,7 +28,7 @@ guest node.
 Below are the metadata options available to enable a resource as a guest node
 and define its connection parameters.
 
-.. table:: Meta-attributes for configuring VM resources as guest nodes
+.. table:: **Meta-attributes for configuring VM resources as guest nodes**
 
   +------------------------+-----------------+-----------------------------------------------------------+
   | Option                 | Default         | Description                                               |
