@@ -963,7 +963,8 @@ TESTS = [
         [ "shutdown-lock-expiration", "Ensure shutdown lock expiration works properly" ],
     ],
     [
-        [ "op-defaults", "Test op_defaults conditional expressions " ],
+        [ "op-defaults", "Test op_defaults conditional expressions" ],
+        [ "rsc-defaults", "Test rsc_defaults conditional expressions" ],
     ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
