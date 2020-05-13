@@ -148,7 +148,7 @@ publican.cfg
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
 /lib/common/md5.c
-/maint/testcc
+/maint/testcc_*_h
 /maint/mocked/based
 scratch
 /tools/attrd_updater
