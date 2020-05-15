@@ -152,11 +152,15 @@ scandir(const char *directory_name,
 
     /* Get initial list space and open directory.  */
 
-    if (directory = opendir(directory_name), directory == NULL)
+    if ((directory = opendir(directory_name)) == NULL) {
         return -1;
+    }
 
-    if ((array = (struct dirent **)malloc(allocated * sizeof(struct dirent *))) == NULL)
+    if ((array = (struct dirent **)malloc(allocated * sizeof(struct dirent *)))
+        == NULL) {
+        closedir(directory);
         return -1;
+    }
 
     /* Read entries in the directory.  */
 
