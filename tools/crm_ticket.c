@@ -41,8 +41,8 @@ const char *attr_value = NULL;
 const char *attr_id = NULL;
 const char *set_name = NULL;
 const char *attr_default = NULL;
+const char *xml_file = NULL;
 char ticket_cmd = 'S';
-char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
 static pe_ticket_t *
@@ -812,7 +812,7 @@ main(int argc, char **argv)
                 do_force = TRUE;
                 break;
             case 'x':
-                xml_file = strdup(optarg);
+                xml_file = optarg;
                 break;
             case 'n':
                 set_name = optarg;
