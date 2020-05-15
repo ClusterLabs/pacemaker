@@ -299,10 +299,13 @@ md5_process_bytes (const void *buffer, size_t len, struct md5_ctx *ctx)
       if (left_over >= 64)
         {
           md5_process_block (ctx->buffer, 64, ctx);
-          left_over -= 64;
+          left_over &= 63; /* same as -= 64 but easier to understand
+                              for static analysis
+                            */
           /* The regions in the following copy operation cannot overlap,
              because left_over ≤ 64.  */
-          memcpy (ctx->buffer, &ctx->buffer[16], left_over);
+          memcpy (ctx->buffer, &(((char *) ctx->buffer)[64]), left_over);
+          /* cast to char * as hint for static analysis */
         }
       ctx->buflen = left_over;
     }

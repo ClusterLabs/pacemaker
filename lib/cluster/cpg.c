@@ -740,6 +740,8 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
             msg->compressed_size = new_size;
 
         } else {
+            // cppcheck seems not to understand the abort logic in realloc_safe
+            // cppcheck-suppress memleak
             msg = realloc_safe(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }

@@ -383,7 +383,11 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         return NULL;
     }
 
-    if (can_run_resources(node) == FALSE) {
+    if (!node) {
+        /* make clang analyzer happy */
+        goto bail;
+
+    } else if (can_run_resources(node) == FALSE) {
         goto bail;
 
     } else if (is_set(rsc->flags, pe_rsc_orphan)) {
@@ -1402,9 +1406,11 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
             pe_node_t *local_node = NULL;
             pe_resource_t *child_rsc = (pe_resource_t *) child_iter->data;
 
-            local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
-            if (local_node && (local_node->details == node->details)) {
-                child = child_rsc;
+            if (child_rsc) { /* make clang analyzer happy */
+                local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+                if (local_node && (local_node->details == node->details)) {
+                    child = child_rsc;
+                }
             }
         }
     }
@@ -1413,6 +1419,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
     if (child == NULL) {
         child = rsc->children->data;
     }
+    CRM_ASSERT(child);
     return child->cmds->create_probe(child, node, complete, force, data_set);
 }
 

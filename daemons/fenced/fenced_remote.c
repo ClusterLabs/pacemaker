@@ -1836,6 +1836,8 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
     st_query_result_t *result = calloc(1, sizeof(st_query_result_t));
     xmlNode *child;
 
+    // cppcheck seems not to understand the abort logic in CRM_CHECK
+    // cppcheck-suppress memleak
     CRM_CHECK(result != NULL, return NULL);
     result->host = strdup(host);
     result->devices = crm_str_table_new();
