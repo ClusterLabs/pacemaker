@@ -1257,7 +1257,8 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
         }
 
-        if (pe__is_guest_node(action->node)) {
+        if (action->node && /* make clang analyzer happy */
+            pe__is_guest_node(action->node)) {
             pe_node_t *host = NULL;
             enum action_tasks task = text2task(action->task);
 

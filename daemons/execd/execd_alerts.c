@@ -93,7 +93,8 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     GHashTable *params = NULL;
     struct alert_cb_s *cb_data = NULL;
 
-    if ((alert_id == NULL) || (alert_path == NULL)) {
+    if ((alert_id == NULL) || (alert_path == NULL) ||
+        (client == NULL) || (client->id == NULL)) { /* hint static analyzer */
         return -EINVAL;
     }
     if (draining_alerts) {
@@ -112,6 +113,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     CRM_CHECK(cb_data != NULL,
               rc = -ENOMEM; goto err);
 
+    /* coverity[deref_ptr] False Positive */
     cb_data->client_id = strdup(client->id);
     CRM_CHECK(cb_data->client_id != NULL,
               rc = -ENOMEM; goto err);
