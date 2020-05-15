@@ -644,9 +644,9 @@ main(int argc, char **argv)
     const char *operation = NULL;
     const char *interval_spec = NULL;
     const char *cib_file = getenv("CIB_file");
+    const char *xml_file = NULL;
     GHashTable *override_params = NULL;
 
-    char *xml_file = NULL;
     xmlNode *cib_xml_copy = NULL;
     pe_resource_t *rsc = NULL;
     bool recursive = FALSE;
@@ -844,7 +844,7 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'x':
-                xml_file = strdup(optarg);
+                xml_file = optarg;
                 break;
             case 'Q':
                 BE_QUIET = TRUE;
@@ -1111,7 +1111,6 @@ main(int argc, char **argv)
     if (require_dataset) {
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
-
         } else {
             rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
         }
