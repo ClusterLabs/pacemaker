@@ -1019,6 +1019,8 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
         *timer_id = timer;
     }
 
+    // timer callback should be taking care of cb_data
+    // cppcheck-suppress memleak
     return pcmk_rc_ok;
 }
 
