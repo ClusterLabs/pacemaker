@@ -340,6 +340,7 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
     if (args->output_dest != NULL) {
         free(args->output_dest);
+        args->output_dest = NULL;
     }
 
     if (optarg != NULL) {
