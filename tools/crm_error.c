@@ -129,7 +129,7 @@ main(int argc, char **argv)
         if (g_strv_length(processed_args) < 2) {
             char *help = g_option_context_get_help(context, TRUE, NULL);
             fprintf(stderr, "%s", help);
-            free(help);
+            g_free(help);
             return CRM_EX_USAGE;
         }
 
