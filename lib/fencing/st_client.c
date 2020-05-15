@@ -418,6 +418,8 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
+    // cppcheck seems not to understand the abort logic behind realloc_safe
+    // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
 
         int adding = strlen(device_list->value);
