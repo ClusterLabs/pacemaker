@@ -2292,6 +2292,8 @@ decompress_file(const char *filename)
     }
 
     rc = BZ_OK;
+    // cppcheck seems not to understand the abort-logic in realloc_safe
+    // cppcheck-suppress memleak
     while (rc == BZ_OK) {
         buffer = realloc_safe(buffer, XML_BUFFER_SIZE + length + 1);
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
@@ -3223,7 +3225,8 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
 
         xmlNodeDumpOutput(xml_buffer, doc, data, 0,
                           (options & xml_log_option_formatted), NULL);
-        xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");  /* final NL */
+        /* attempt adding final NL - failing shouldn't be fatal here */
+        (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
         if (xml_buffer->buffer != NULL) {
             buffer_print(*buffer, *max, *offset, "%s",
                          (char *) xmlBufContent(xml_buffer->buffer));
@@ -3237,7 +3240,8 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         }
 #endif
 
-        xmlOutputBufferClose(xml_buffer);
+        /* asserted allocation before so there should be something to remove */
+        (void) xmlOutputBufferClose(xml_buffer);
         return;
     }
 

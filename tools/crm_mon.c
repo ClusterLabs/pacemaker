@@ -340,6 +340,7 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
     if (args->output_dest != NULL) {
         free(args->output_dest);
+        args->output_dest = NULL;
     }
 
     if (optarg != NULL) {
@@ -1465,6 +1466,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
             nodes_online++;
         } else {
             char *s = crm_strdup_printf("offline node: %s", node->details->uname);
+            /* coverity[leaked_storage] False positive */
             offline_nodes = pcmk__add_word(offline_nodes, s);
             free(s);
             mon_ops |= mon_op_has_warnings;
@@ -1503,6 +1505,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         free(nodes_standby_s);
         free(nodes_maint_s);
     }
+    /* coverity[leaked_storage] False positive */
 }
 
 /*!

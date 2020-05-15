@@ -64,6 +64,8 @@ create_long_opts(pcmk__cli_option_t *long_options)
     long_opts[index].val = '_';
     index++;
 
+    // cppcheck seems not to understand the abort-logic in realloc_safe
+    // cppcheck-suppress memleak
     for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
         if (long_options[lpc].name[0] == '-') {
             continue;

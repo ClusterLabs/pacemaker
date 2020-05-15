@@ -942,6 +942,8 @@ crm_log_args(int argc, char **argv)
 
     logged = 1;
 
+    // cppcheck seems not to understand the abort logic in realloc_safe
+    // cppcheck-suppress memleak
     for (; lpc < argc; lpc++) {
         if (argv[lpc] == NULL) {
             break;
