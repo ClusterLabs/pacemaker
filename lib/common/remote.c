@@ -299,17 +299,19 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     return session;
 
 error:
-    crm_err("Could not initialize %s TLS %s session: %s "
-            CRM_XS " rc=%d priority='%s'",
-            (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
-            (conn_type == GNUTLS_SERVER)? "server" : "client",
-            gnutls_strerror(rc), rc,
+    {
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-            prio
+        const char *prio_s = prio;
 #  else
-            "default"
+        const char *prio_s = "default";
 #  endif
-            );
+
+        crm_err("Could not initialize %s TLS %s session: %s "
+                CRM_XS " rc=%d priority='%s'",
+                (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
+                (conn_type == GNUTLS_SERVER)? "server" : "client",
+                gnutls_strerror(rc), rc, prio_s);
+    }
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
     free(prio);
 #  endif
