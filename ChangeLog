@@ -1,3 +1,33 @@
+* Wed May 27 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.23
+- Changesets: 113
+- Diff:       78 files changed, 2813 insertions(+), 1292 deletions(-)
+
+- Features added since Pacemaker-1.1.22
+  + fencing: improve parameter handling for RHCS-style fence agents
+        - add `port` or `plug` parameter according to metadata
+        - `plug` parameter shown as non-required in the metadata
+  + tools: add stonith_admin --delay option (default = 0) to support enforced
+           fencing delay
+
+- Changes since Pacemaker-1.1.22
+  + crmd: properly detect node info requests from remote nodes
+    (regression introduced in 1.1.19)
+  + crmd: remove node as voter only if lost
+    (regression introduced in 1.1.20)
+  + crmd: clear leaving node's transient attributes even if there is no DC
+  + crmd: don't ack same request twice
+  + crmd: avoid delay when recovering resources after shutdown-lock expiration
+    (BZ#5424)
+  + fencing: remove dangling 'pending' for completed DC fencing (BZ#5401)
+  + fencing: avoid possible use-of-NULL when parsing metadata
+  + fencing: "action" now shown as not required in agent metadata
+  + libcrmcommon: fix parsing ISO 8601 offsets with a plus sign
+  + libcrmcluster: use proper type for corosync id when updating node state
+  + pengine: don't incorporate dependencies' colocations multiple times
+  + pengine: ensure attenuated scores still have some effect
+  + pengine: ignore colocation constraints with 0 score
+  + pengine: make sure cluster-wide maintenance-mode=true overrides per-resource settings
+
 * Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.22
 - Changesets: 216
 - Diff:       106 files changed, 3386 insertions(+), 1493 deletions(-)
