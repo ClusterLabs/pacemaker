@@ -292,7 +292,7 @@ static pcmk__cli_option_t long_options[] = {
         "\t\tDelete resource's history (including failures) so its current "
             "state is rechecked. Optionally filtered by --resource and --node "
             "(otherwise all). If the named resource is part of a group, or one "
-            "numbered instance of a clone or bundled resource, the clean-up "
+            "numbered instance of a clone or bundled resource, the refresh "
             "applies to the whole collective resource unless --force is given.",
         pcmk__option_default
     },
