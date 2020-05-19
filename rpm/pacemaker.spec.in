@@ -75,11 +75,13 @@
 ## Portion of export/dist tarball name after "pacemaker-", and release version
 %if 0%{tag_release}
 %define archive_version %(c=%{commit}; echo ${c:10})
+%define archive_github_url %{commit}#/%{name}-%{archive_version}.tar.gz
 %define pcmk_release %(c=%{commit}; case $c in *-rc[[:digit:]]*%{rparen}
                        echo 0.%{specversion}.${c: -3} ;;
                        *%{rparen} echo %{specversion} ;; esac)
 %else
 %define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
+%define archive_github_url %{archive_version}#/%{name}-%{archive_version}.tar.gz
 %if %{with pre_release}
 %define pcmk_release 0.%{specversion}.%{archive_version}.git
 %else
@@ -204,7 +206,7 @@ Group:         System Environment/Daemons
 # named correctly only for commit IDs, not tagged releases.)
 #
 # You can use "spectool -s 0 pacemaker.spec" (rpmdevtools) to show final URL.
-Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{commit}#/%{name}-%{archive_version}.tar.gz
+Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{archive_github_url}
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
 Requires:      resource-agents
