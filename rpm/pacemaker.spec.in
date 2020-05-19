@@ -1,33 +1,5 @@
-# Define conditionals so that "rpmbuild --with <feature>" and
-# "rpmbuild --without <feature>" can enable and disable specific features
-
-## Add option to enable support for stonith/external fencing agents
-%bcond_with stonithd
-
-## Add option to create binaries suitable for use with profiling tools
-%bcond_with profiling
-
-## Add option to create binaries with coverage analysis
-%bcond_with coverage
-
-## Add option to skip generating documentation
-## (the build tools aren't available everywhere)
-%bcond_without doc
-
-## Add option to prefix package version with "0."
-## (so later "official" packages will be considered updates)
-%bcond_with pre_release
-
-## Add option to ship Upstart job files
-%bcond_with upstart_job
-
-## Add option to turn off hardening of libraries and daemon executables
-%bcond_without hardening
-
-## Add option to disable links for legacy daemon names
-%bcond_without legacy_links
-
-# Globals and defines to control package behavior (configure these as desired)
+# User-configurable globals and defines to control package behavior
+# (these should not test {with X} values, which are declared later)
 
 ## User and group to use for nonprivileged services
 %global uname hacluster
@@ -62,6 +34,35 @@
 ## Python major version to use (2, 3, or 0 for auto-detect)
 %global python_major 0
 
+
+# Define conditionals so that "rpmbuild --with <feature>" and
+# "rpmbuild --without <feature>" can enable and disable specific features
+
+## Add option to enable support for stonith/external fencing agents
+%bcond_with stonithd
+
+## Add option to create binaries suitable for use with profiling tools
+%bcond_with profiling
+
+## Add option to create binaries with coverage analysis
+%bcond_with coverage
+
+## Add option to skip generating documentation
+## (the build tools aren't available everywhere)
+%bcond_without doc
+
+## Add option to prefix package version with "0."
+## (so later "official" packages will be considered updates)
+%bcond_with pre_release
+
+## Add option to ship Upstart job files
+%bcond_with upstart_job
+
+## Add option to turn off hardening of libraries and daemon executables
+%bcond_without hardening
+
+## Add option to disable links for legacy daemon names
+%bcond_without legacy_links
 
 # Define globals for convenient use later
 
