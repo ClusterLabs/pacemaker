@@ -38,25 +38,16 @@ gboolean
 pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
                   crm_time_t *next_change)
 {
-    // If there are no rules, pass by default
-    gboolean ruleset_default = TRUE;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
-         rule != NULL; rule = crm_next_same_xml(rule)) {
-
-        ruleset_default = FALSE;
-        if (pe_test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now, next_change,
-                         NULL)) {
-            /* Only the deprecated "lifetime" element of location constraints
-             * may contain more than one rule at the top level -- the schema
-             * limits a block of nvpairs to a single top-level rule. So, this
-             * effectively means that a lifetime is active if any rule it
-             * contains is active.
-             */
-            return TRUE;
-        }
-    }
-    return ruleset_default;
+    return pe_eval_rules(ruleset, &rule_data, next_change);
 }
 
 gboolean
@@ -64,44 +55,16 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
 {
-    xmlNode *expr = NULL;
-    gboolean test = TRUE;
-    gboolean empty = TRUE;
-    gboolean passed = TRUE;
-    gboolean do_and = TRUE;
-    const char *value = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = role,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    rule = expand_idref(rule, NULL);
-    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
-    if (safe_str_eq(value, "or")) {
-        do_and = FALSE;
-        passed = FALSE;
-    }
-
-    crm_trace("Testing rule %s", ID(rule));
-    for (expr = __xml_first_child_element(rule); expr != NULL;
-         expr = __xml_next_element(expr)) {
-
-        test = pe_test_expression(expr, node_hash, role, now, next_change,
-                                  match_data);
-        empty = FALSE;
-
-        if (test && do_and == FALSE) {
-            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
-            return TRUE;
-
-        } else if (test == FALSE && do_and) {
-            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
-            return FALSE;
-        }
-    }
-
-    if (empty) {
-        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
-    }
-
-    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
-    return passed;
+    return pe_eval_expr(rule, &rule_data, next_change);
 }
 
 /*!
@@ -125,56 +88,16 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now, crm_time_t *next_change,
                    pe_match_data_t *match_data)
 {
-    gboolean accept = FALSE;
-    const char *uname = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = role,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    switch (find_expression_type(expr)) {
-        case nested_rule:
-            accept = pe_test_rule(expr, node_hash, role, now, next_change,
-                                  match_data);
-            break;
-        case attr_expr:
-        case loc_expr:
-            /* these expressions can never succeed if there is
-             * no node to compare with
-             */
-            if (node_hash != NULL) {
-                accept = pe_test_attr_expression(expr, node_hash, now, match_data);
-            }
-            break;
-
-        case time_expr:
-            accept = pe_test_date_expression(expr, now, next_change);
-            break;
-
-        case role_expr:
-            accept = pe_test_role_expression(expr, role, now);
-            break;
-
-#if ENABLE_VERSIONED_ATTRS
-        case version_expr:
-            if (node_hash && g_hash_table_lookup_extended(node_hash,
-                                                          CRM_ATTR_RA_VERSION,
-                                                          NULL, NULL)) {
-                accept = pe_test_attr_expression(expr, node_hash, now, NULL);
-            } else {
-                // we are going to test it when we have ra-version
-                accept = TRUE;
-            }
-            break;
-#endif
-
-        default:
-            CRM_CHECK(FALSE /* bad type */ , return FALSE);
-            accept = FALSE;
-    }
-    if (node_hash) {
-        uname = g_hash_table_lookup(node_hash, CRM_ATTR_UNAME);
-    }
-
-    crm_trace("Expression %s %s on %s",
-              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
-    return accept;
+    return pe_eval_subexpr(expr, &rule_data, next_change);
 }
 
 enum expression_type
@@ -188,6 +111,12 @@ find_expression_type(xmlNode * expr)
 
     if (safe_str_eq(tag, "date_expression")) {
         return time_expr;
+
+    } else if (safe_str_eq(tag, "rsc_expression")) {
+        return rsc_expr;
+
+    } else if (safe_str_eq(tag, "op_expression")) {
+        return op_expr;
 
     } else if (safe_str_eq(tag, XML_TAG_RULE)) {
         return nested_rule;
@@ -213,201 +142,34 @@ find_expression_type(xmlNode * expr)
 }
 
 gboolean
-pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
+pe_test_role_expression(xmlNode *expr, enum rsc_role_e role, crm_time_t *now)
 {
-    gboolean accept = FALSE;
-    const char *op = NULL;
-    const char *value = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = role,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    if (role == RSC_ROLE_UNKNOWN) {
-        return accept;
-    }
-
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-
-    if (safe_str_eq(op, "defined")) {
-        if (role > RSC_ROLE_STARTED) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "not_defined")) {
-        if (role < RSC_ROLE_SLAVE && role > RSC_ROLE_UNKNOWN) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "eq")) {
-        if (text2role(value) == role) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "ne")) {
-        // Test "ne" only with promotable clone roles
-        if (role < RSC_ROLE_SLAVE && role > RSC_ROLE_UNKNOWN) {
-            accept = FALSE;
-
-        } else if (text2role(value) != role) {
-            accept = TRUE;
-        }
-    }
-    return accept;
+    return pe__eval_role_expr(expr, &rule_data);
 }
 
 gboolean
 pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
                         pe_match_data_t *match_data)
 {
-    gboolean accept = FALSE;
-    gboolean attr_allocated = FALSE;
-    int cmp = 0;
-    const char *h_val = NULL;
-    GHashTable *table = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = match_data,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    const char *op = NULL;
-    const char *type = NULL;
-    const char *attr = NULL;
-    const char *value = NULL;
-    const char *value_source = NULL;
-
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
-    type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
-    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
-
-    if (attr == NULL || op == NULL) {
-        pe_err("Invalid attribute or operation in expression"
-               " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
-        return FALSE;
-    }
-
-    if (match_data) {
-        if (match_data->re) {
-            char *resolved_attr = pe_expand_re_matches(attr, match_data->re);
-
-            if (resolved_attr) {
-                attr = (const char *) resolved_attr;
-                attr_allocated = TRUE;
-            }
-        }
-
-        if (safe_str_eq(value_source, "param")) {
-            table = match_data->params;
-        } else if (safe_str_eq(value_source, "meta")) {
-            table = match_data->meta;
-        }
-    }
-
-    if (table) {
-        const char *param_name = value;
-        const char *param_value = NULL;
-
-        if (param_name && param_name[0]) {
-            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
-                value = param_value;
-            }
-        }
-    }
-
-    if (hash != NULL) {
-        h_val = (const char *)g_hash_table_lookup(hash, attr);
-    }
-
-    if (attr_allocated) {
-        free((char *)attr);
-        attr = NULL;
-    }
-
-    if (value != NULL && h_val != NULL) {
-        if (type == NULL) {
-            if (safe_str_eq(op, "lt")
-                || safe_str_eq(op, "lte")
-                || safe_str_eq(op, "gt")
-                || safe_str_eq(op, "gte")) {
-                type = "number";
-
-            } else {
-                type = "string";
-            }
-            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
-        }
-
-        if (safe_str_eq(type, "string")) {
-            cmp = strcasecmp(h_val, value);
-
-        } else if (safe_str_eq(type, "number")) {
-            int h_val_f = crm_parse_int(h_val, NULL);
-            int value_f = crm_parse_int(value, NULL);
-
-            if (h_val_f < value_f) {
-                cmp = -1;
-            } else if (h_val_f > value_f) {
-                cmp = 1;
-            } else {
-                cmp = 0;
-            }
-
-        } else if (safe_str_eq(type, "version")) {
-            cmp = compare_version(h_val, value);
-
-        }
-
-    } else if (value == NULL && h_val == NULL) {
-        cmp = 0;
-    } else if (value == NULL) {
-        cmp = 1;
-    } else {
-        cmp = -1;
-    }
-
-    if (safe_str_eq(op, "defined")) {
-        if (h_val != NULL) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "not_defined")) {
-        if (h_val == NULL) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "eq")) {
-        if ((h_val == value) || cmp == 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "ne")) {
-        if ((h_val == NULL && value != NULL)
-            || (h_val != NULL && value == NULL)
-            || cmp != 0) {
-            accept = TRUE;
-        }
-
-    } else if (value == NULL || h_val == NULL) {
-        // The comparison is meaningless from this point on
-        accept = FALSE;
-
-    } else if (safe_str_eq(op, "lt")) {
-        if (cmp < 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "lte")) {
-        if (cmp <= 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "gt")) {
-        if (cmp > 0) {
-            accept = TRUE;
-        }
-
-    } else if (safe_str_eq(op, "gte")) {
-        if (cmp >= 0) {
-            accept = TRUE;
-        }
-    }
-
-    return accept;
+    return pe__eval_attr_expr(expr, &rule_data);
 }
 
 /* As per the nethack rules:
@@ -581,10 +343,18 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
  * \return TRUE if date expression is in effect at given time, FALSE otherwise
  */
 gboolean
-pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
-                        crm_time_t *next_change)
+pe_test_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
 {
-    switch (pe_eval_date_expression(time_expr, now, next_change)) {
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    switch (pe__eval_date_expr(expr, &rule_data, next_change)) {
         case pcmk_rc_within_range:
         case pcmk_rc_ok:
             return TRUE;
@@ -617,86 +387,18 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
  * \return Standard Pacemaker return code
  */
 int
-pe_eval_date_expression(xmlNode *time_expr, crm_time_t *now,
-                        crm_time_t *next_change)
+pe_eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
 {
-    crm_time_t *start = NULL;
-    crm_time_t *end = NULL;
-    const char *value = NULL;
-    const char *op = crm_element_value(time_expr, "operation");
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    xmlNode *duration_spec = NULL;
-    xmlNode *date_spec = NULL;
-
-    // "undetermined" will also be returned for parsing errors
-    int rc = pcmk_rc_undetermined;
-
-    crm_trace("Testing expression: %s", ID(time_expr));
-
-    duration_spec = first_named_child(time_expr, "duration");
-    date_spec = first_named_child(time_expr, "date_spec");
-
-    value = crm_element_value(time_expr, "start");
-    if (value != NULL) {
-        start = crm_time_new(value);
-    }
-    value = crm_element_value(time_expr, "end");
-    if (value != NULL) {
-        end = crm_time_new(value);
-    }
-
-    if (start != NULL && end == NULL && duration_spec != NULL) {
-        end = pe_parse_xml_duration(start, duration_spec);
-    }
-
-    if ((op == NULL) || safe_str_eq(op, "in_range")) {
-        if ((start == NULL) && (end == NULL)) {
-            // in_range requires at least one of start or end
-        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
-            rc = pcmk_rc_before_range;
-            crm_time_set_if_earlier(next_change, start);
-        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
-            rc = pcmk_rc_after_range;
-        } else {
-            rc = pcmk_rc_within_range;
-            if (end && next_change) {
-                // Evaluation doesn't change until second after end
-                crm_time_add_seconds(end, 1);
-                crm_time_set_if_earlier(next_change, end);
-            }
-        }
-
-    } else if (safe_str_eq(op, "date_spec")) {
-        rc = pe_cron_range_satisfied(now, date_spec);
-        // @TODO set next_change appropriately
-
-    } else if (safe_str_eq(op, "gt")) {
-        if (start == NULL) {
-            // gt requires start
-        } else if (crm_time_compare(now, start) > 0) {
-            rc = pcmk_rc_within_range;
-        } else {
-            rc = pcmk_rc_before_range;
-
-            // Evaluation doesn't change until second after start
-            crm_time_add_seconds(start, 1);
-            crm_time_set_if_earlier(next_change, start);
-        }
-
-    } else if (safe_str_eq(op, "lt")) {
-        if (end == NULL) {
-            // lt requires end
-        } else if (crm_time_compare(now, end) < 0) {
-            rc = pcmk_rc_within_range;
-            crm_time_set_if_earlier(next_change, end);
-        } else {
-            rc = pcmk_rc_after_range;
-        }
-    }
-
-    crm_time_free(start);
-    crm_time_free(end);
-    return rc;
+    return pe__eval_date_expr(expr, &rule_data, next_change);
 }
 
 // Information about a block of nvpair elements
@@ -761,7 +463,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
                 name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
             }
 
-            crm_trace("Setting attribute: %s", name);
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
             if (value == NULL) {
                 value = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_VALUE);
@@ -769,7 +470,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
 
             if (name == NULL || value == NULL) {
                 continue;
-
             }
 
             old_value = g_hash_table_lookup(hash, name);
@@ -782,6 +482,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
                 continue;
 
             } else if (old_value == NULL) {
+                crm_trace("Setting attribute: %s = %s", name, value);
                 g_hash_table_insert(hash, strdup(name), strdup(value));
 
             } else if (overwrite) {
@@ -853,10 +554,9 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
 
 typedef struct unpack_data_s {
     gboolean overwrite;
-    GHashTable *node_hash;
     void *hash;
-    crm_time_t *now;
     crm_time_t *next_change;
+    pe_rule_eval_data_t *rule_data;
     xmlNode *top;
 } unpack_data_t;
 
@@ -866,14 +566,14 @@ unpack_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (!pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
-                           unpack_data->now, unpack_data->next_change)) {
+    if (!pe_eval_rules(pair->attr_set, unpack_data->rule_data,
+                       unpack_data->next_change)) {
         return;
     }
 
 #if ENABLE_VERSIONED_ATTRS
-    if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash,
+    if (get_versioned_rule(pair->attr_set) && !(unpack_data->rule_data->node_hash &&
+        g_hash_table_lookup_extended(unpack_data->rule_data->node_hash,
                                      CRM_ATTR_RA_VERSION, NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
@@ -891,8 +591,8 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
 
-    if (pe_evaluate_rules(pair->attr_set, unpack_data->node_hash,
-                          unpack_data->now, unpack_data->next_change)) {
+    if (pe_eval_rules(pair->attr_set, unpack_data->rule_data,
+                      unpack_data->next_change)) {
         add_versioned_attributes(pair->attr_set, unpack_data->hash);
     }
 }
@@ -956,19 +656,17 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
  * \param[in]  top           XML document root (used to expand id-ref's)
  * \param[in]  xml_obj       XML element containing blocks of nvpair elements
  * \param[in]  set_name      If not NULL, only use blocks of this element type
- * \param[in]  node_hash     Node attributes to use when evaluating rules
  * \param[out] hash          Where to store extracted name/value pairs
  * \param[in]  always_first  If not NULL, process block with this ID first
  * \param[in]  overwrite     Whether to replace existing values with same name
- * \param[in]  now           Time to use when evaluating rules
+ * \param[in]  rule_data     Matching parameters to use when unpacking
  * \param[out] next_change   If not NULL, set to when rule evaluation will change
  * \param[in]  unpack_func   Function to call to unpack each block
  */
 static void
 unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                     GHashTable *node_hash, void *hash,
-                     const char *always_first, gboolean overwrite,
-                     crm_time_t *now, crm_time_t *next_change,
+                     void *hash, const char *always_first, gboolean overwrite,
+                     pe_rule_eval_data_t *rule_data, crm_time_t *next_change,
                      GFunc unpack_func)
 {
     GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
@@ -976,16 +674,25 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     if (pairs) {
         unpack_data_t data = {
             .hash = hash,
-            .node_hash = node_hash,
-            .now = now,
             .overwrite = overwrite,
             .next_change = next_change,
             .top = top,
+            .rule_data = rule_data
         };
 
         g_list_foreach(pairs, unpack_func, &data);
         g_list_free_full(pairs, free);
     }
+}
+
+void
+pe_eval_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                const char *always_first, gboolean overwrite,
+                crm_time_t *next_change)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
+                         overwrite, rule_data, next_change, unpack_attr_set);
 }
 
 /*!
@@ -1007,19 +714,46 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                   const char *always_first, gboolean overwrite,
                   crm_time_t *now, crm_time_t *next_change)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, next_change, unpack_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash,
+                    always_first, overwrite, next_change);
 }
 
 #if ENABLE_VERSIONED_ATTRS
+void
+pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+                             pe_rule_eval_data_t *rule_data, xmlNode *hash,
+                             crm_time_t *next_change)
+{
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE, rule_data,
+                         next_change, unpack_versioned_attr_set);
+}
+
 void
 pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
                                const char *set_name, GHashTable *node_hash,
                                xmlNode *hash, crm_time_t *now,
                                crm_time_t *next_change)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, NULL, FALSE,
-                         now, next_change, unpack_versioned_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE,
+                         &rule_data, next_change, unpack_versioned_attr_set);
 }
 #endif
 
@@ -1105,6 +839,481 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
 }
 #endif
 
+gboolean
+pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    // If there are no rules, pass by default
+    gboolean ruleset_default = TRUE;
+
+    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
+         rule != NULL; rule = crm_next_same_xml(rule)) {
+
+        ruleset_default = FALSE;
+        if (pe_eval_expr(rule, rule_data, next_change)) {
+            /* Only the deprecated "lifetime" element of location constraints
+             * may contain more than one rule at the top level -- the schema
+             * limits a block of nvpairs to a single top-level rule. So, this
+             * effectively means that a lifetime is active if any rule it
+             * contains is active.
+             */
+            return TRUE;
+        }
+    }
+
+    return ruleset_default;
+}
+
+gboolean
+pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    xmlNode *expr = NULL;
+    gboolean test = TRUE;
+    gboolean empty = TRUE;
+    gboolean passed = TRUE;
+    gboolean do_and = TRUE;
+    const char *value = NULL;
+
+    rule = expand_idref(rule, NULL);
+    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
+    if (safe_str_eq(value, "or")) {
+        do_and = FALSE;
+        passed = FALSE;
+    }
+
+    crm_trace("Testing rule %s", ID(rule));
+    for (expr = __xml_first_child_element(rule); expr != NULL;
+         expr = __xml_next_element(expr)) {
+
+        test = pe_eval_subexpr(expr, rule_data, next_change);
+        empty = FALSE;
+
+        if (test && do_and == FALSE) {
+            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
+            return TRUE;
+
+        } else if (test == FALSE && do_and) {
+            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
+            return FALSE;
+        }
+    }
+
+    if (empty) {
+        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
+    }
+
+    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
+    return passed;
+}
+
+gboolean
+pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    gboolean accept = FALSE;
+    const char *uname = NULL;
+
+    switch (find_expression_type(expr)) {
+        case nested_rule:
+            accept = pe_eval_expr(expr, rule_data, next_change);
+            break;
+        case attr_expr:
+        case loc_expr:
+            /* these expressions can never succeed if there is
+             * no node to compare with
+             */
+            if (rule_data->node_hash != NULL) {
+                accept = pe__eval_attr_expr(expr, rule_data);
+            }
+            break;
+
+        case time_expr:
+            accept = pe_test_date_expression(expr, rule_data->now, next_change);
+            break;
+
+        case role_expr:
+            accept = pe__eval_role_expr(expr, rule_data);
+            break;
+
+        case rsc_expr:
+            accept = pe__eval_rsc_expr(expr, rule_data);
+            break;
+
+        case op_expr:
+            accept = pe__eval_op_expr(expr, rule_data);
+            break;
+
+#if ENABLE_VERSIONED_ATTRS
+        case version_expr:
+            if (rule_data->node_hash &&
+                g_hash_table_lookup_extended(rule_data->node_hash,
+                                             CRM_ATTR_RA_VERSION, NULL, NULL)) {
+                accept = pe__eval_attr_expr(expr, rule_data);
+            } else {
+                // we are going to test it when we have ra-version
+                accept = TRUE;
+            }
+            break;
+#endif
+
+        default:
+            CRM_CHECK(FALSE /* bad type */ , return FALSE);
+            accept = FALSE;
+    }
+    if (rule_data->node_hash) {
+        uname = g_hash_table_lookup(rule_data->node_hash, CRM_ATTR_UNAME);
+    }
+
+    crm_trace("Expression %s %s on %s",
+              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
+    return accept;
+}
+
+gboolean
+pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    gboolean accept = FALSE;
+    gboolean attr_allocated = FALSE;
+    int cmp = 0;
+    const char *h_val = NULL;
+    GHashTable *table = NULL;
+
+    const char *op = NULL;
+    const char *type = NULL;
+    const char *attr = NULL;
+    const char *value = NULL;
+    const char *value_source = NULL;
+
+    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
+    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
+
+    if (attr == NULL || op == NULL) {
+        pe_err("Invalid attribute or operation in expression"
+               " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
+        return FALSE;
+    }
+
+    if (rule_data->match_data) {
+        if (rule_data->match_data->re) {
+            char *resolved_attr = pe_expand_re_matches(attr, rule_data->match_data->re);
+
+            if (resolved_attr) {
+                attr = (const char *) resolved_attr;
+                attr_allocated = TRUE;
+            }
+        }
+
+        if (safe_str_eq(value_source, "param")) {
+            table = rule_data->match_data->params;
+        } else if (safe_str_eq(value_source, "meta")) {
+            table = rule_data->match_data->meta;
+        }
+    }
+
+    if (table) {
+        const char *param_name = value;
+        const char *param_value = NULL;
+
+        if (param_name && param_name[0]) {
+            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
+                value = param_value;
+            }
+        }
+    }
+
+    if (rule_data->node_hash != NULL) {
+        h_val = (const char *)g_hash_table_lookup(rule_data->node_hash, attr);
+    }
+
+    if (attr_allocated) {
+        free((char *)attr);
+        attr = NULL;
+    }
+
+    if (value != NULL && h_val != NULL) {
+        if (type == NULL) {
+            if (safe_str_eq(op, "lt")
+                || safe_str_eq(op, "lte")
+                || safe_str_eq(op, "gt")
+                || safe_str_eq(op, "gte")) {
+                type = "number";
+
+            } else {
+                type = "string";
+            }
+            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
+        }
+
+        if (safe_str_eq(type, "string")) {
+            cmp = strcasecmp(h_val, value);
+
+        } else if (safe_str_eq(type, "number")) {
+            int h_val_f = crm_parse_int(h_val, NULL);
+            int value_f = crm_parse_int(value, NULL);
+
+            if (h_val_f < value_f) {
+                cmp = -1;
+            } else if (h_val_f > value_f) {
+                cmp = 1;
+            } else {
+                cmp = 0;
+            }
+
+        } else if (safe_str_eq(type, "version")) {
+            cmp = compare_version(h_val, value);
+
+        }
+
+    } else if (value == NULL && h_val == NULL) {
+        cmp = 0;
+    } else if (value == NULL) {
+        cmp = 1;
+    } else {
+        cmp = -1;
+    }
+
+    if (safe_str_eq(op, "defined")) {
+        if (h_val != NULL) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "not_defined")) {
+        if (h_val == NULL) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "eq")) {
+        if ((h_val == value) || cmp == 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "ne")) {
+        if ((h_val == NULL && value != NULL)
+            || (h_val != NULL && value == NULL)
+            || cmp != 0) {
+            accept = TRUE;
+        }
+
+    } else if (value == NULL || h_val == NULL) {
+        // The comparison is meaningless from this point on
+        accept = FALSE;
+
+    } else if (safe_str_eq(op, "lt")) {
+        if (cmp < 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "lte")) {
+        if (cmp <= 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "gt")) {
+        if (cmp > 0) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "gte")) {
+        if (cmp >= 0) {
+            accept = TRUE;
+        }
+    }
+
+    return accept;
+}
+
+int
+pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+{
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
+    const char *value = NULL;
+    const char *op = crm_element_value(expr, "operation");
+
+    xmlNode *duration_spec = NULL;
+    xmlNode *date_spec = NULL;
+
+    // "undetermined" will also be returned for parsing errors
+    int rc = pcmk_rc_undetermined;
+
+    crm_trace("Testing expression: %s", ID(expr));
+
+    duration_spec = first_named_child(expr, "duration");
+    date_spec = first_named_child(expr, "date_spec");
+
+    value = crm_element_value(expr, "start");
+    if (value != NULL) {
+        start = crm_time_new(value);
+    }
+    value = crm_element_value(expr, "end");
+    if (value != NULL) {
+        end = crm_time_new(value);
+    }
+
+    if (start != NULL && end == NULL && duration_spec != NULL) {
+        end = pe_parse_xml_duration(start, duration_spec);
+    }
+
+    if ((op == NULL) || safe_str_eq(op, "in_range")) {
+        if ((start == NULL) && (end == NULL)) {
+            // in_range requires at least one of start or end
+        } else if ((start != NULL) && (crm_time_compare(rule_data->now, start) < 0)) {
+            rc = pcmk_rc_before_range;
+            crm_time_set_if_earlier(next_change, start);
+        } else if ((end != NULL) && (crm_time_compare(rule_data->now, end) > 0)) {
+            rc = pcmk_rc_after_range;
+        } else {
+            rc = pcmk_rc_within_range;
+            if (end && next_change) {
+                // Evaluation doesn't change until second after end
+                crm_time_add_seconds(end, 1);
+                crm_time_set_if_earlier(next_change, end);
+            }
+        }
+
+    } else if (safe_str_eq(op, "date_spec")) {
+        rc = pe_cron_range_satisfied(rule_data->now, date_spec);
+        // @TODO set next_change appropriately
+
+    } else if (safe_str_eq(op, "gt")) {
+        if (start == NULL) {
+            // gt requires start
+        } else if (crm_time_compare(rule_data->now, start) > 0) {
+            rc = pcmk_rc_within_range;
+        } else {
+            rc = pcmk_rc_before_range;
+
+            // Evaluation doesn't change until second after start
+            crm_time_add_seconds(start, 1);
+            crm_time_set_if_earlier(next_change, start);
+        }
+
+    } else if (safe_str_eq(op, "lt")) {
+        if (end == NULL) {
+            // lt requires end
+        } else if (crm_time_compare(rule_data->now, end) < 0) {
+            rc = pcmk_rc_within_range;
+            crm_time_set_if_earlier(next_change, end);
+        } else {
+            rc = pcmk_rc_after_range;
+        }
+    }
+
+    crm_time_free(start);
+    crm_time_free(end);
+    return rc;
+}
+
+gboolean
+pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
+    const char *name = crm_element_value(expr, XML_NVPAIR_ATTR_NAME);
+    const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
+    guint interval;
+
+    crm_trace("Testing op_defaults expression: %s", ID(expr));
+
+    if (rule_data->op_data == NULL) {
+        crm_trace("No operations data provided");
+        return FALSE;
+    }
+
+    interval = crm_parse_interval_spec(interval_s);
+    if (interval == 0 && errno != 0) {
+        crm_trace("Could not parse interval: %s", interval_s);
+        return FALSE;
+    }
+
+    if (interval_s != NULL && interval != rule_data->op_data->interval) {
+        crm_trace("Interval doesn't match: %d != %d", interval, rule_data->op_data->interval);
+        return FALSE;
+    }
+
+    if (!crm_str_eq(name, rule_data->op_data->op_name, TRUE)) {
+        crm_trace("Name doesn't match: %s != %s", name, rule_data->op_data->op_name);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    gboolean accept = FALSE;
+    const char *op = NULL;
+    const char *value = NULL;
+
+    if (rule_data->role == RSC_ROLE_UNKNOWN) {
+        return accept;
+    }
+
+    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+
+    if (safe_str_eq(op, "defined")) {
+        if (rule_data->role > RSC_ROLE_STARTED) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "not_defined")) {
+        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "eq")) {
+        if (text2role(value) == rule_data->role) {
+            accept = TRUE;
+        }
+
+    } else if (safe_str_eq(op, "ne")) {
+        // Test "ne" only with promotable clone roles
+        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+            accept = FALSE;
+
+        } else if (text2role(value) != rule_data->role) {
+            accept = TRUE;
+        }
+    }
+    return accept;
+}
+
+gboolean
+pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+{
+    const char *class = crm_element_value(expr, XML_AGENT_ATTR_CLASS);
+    const char *provider = crm_element_value(expr, XML_AGENT_ATTR_PROVIDER);
+    const char *type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
+
+    crm_trace("Testing rsc_defaults expression: %s", ID(expr));
+
+    if (rule_data->rsc_data == NULL) {
+        crm_trace("No resource data provided");
+        return FALSE;
+    }
+
+    if (class != NULL &&
+        !crm_str_eq(class, rule_data->rsc_data->standard, TRUE)) {
+        crm_trace("Class doesn't match: %s != %s", class, rule_data->rsc_data->standard);
+        return FALSE;
+    }
+
+    if ((provider == NULL && rule_data->rsc_data->provider != NULL) ||
+        (provider != NULL && rule_data->rsc_data->provider == NULL) ||
+        !crm_str_eq(provider, rule_data->rsc_data->provider, TRUE)) {
+        crm_trace("Provider doesn't match: %s != %s", provider, rule_data->rsc_data->provider);
+        return FALSE;
+    }
+
+    if (type != NULL &&
+        !crm_str_eq(type, rule_data->rsc_data->agent, TRUE)) {
+        crm_trace("Agent doesn't match: %s != %s", type, rule_data->rsc_data->agent);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // Deprecated functions kept only for backward API compatibility
 gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
@@ -1189,6 +1398,15 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                            const char *always_first, gboolean overwrite,
                            crm_time_t *now)
 {
-    unpack_nvpair_blocks(top, xml_obj, set_name, node_hash, hash, always_first,
-                         overwrite, now, NULL, unpack_attr_set);
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_hash,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
+                         overwrite, &rule_data, NULL, unpack_attr_set);
 }

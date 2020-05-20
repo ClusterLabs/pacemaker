@@ -188,9 +188,18 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     const char *value = NULL;
     GHashTable *config_hash = crm_str_table_new();
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     data_set->config_hash = config_hash;
 
-    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, &rule_data, config_hash,
                                CIB_OPTIONS_FIRST, FALSE, data_set);
 
     verify_pe_options(data_set->config_hash);
@@ -515,6 +524,15 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     const char *type = NULL;
     const char *score = NULL;
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     for (xml_obj = __xml_first_child_element(xml_nodes); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
@@ -547,7 +565,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             handle_startup_fencing(data_set, new_node);
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
-            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, NULL,
+            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
                                        new_node->details->utilization, NULL,
                                        FALSE, data_set);
 
@@ -3698,6 +3716,15 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
 {
     const char *cluster_name = NULL;
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     g_hash_table_insert(node->details->attrs,
                         strdup(CRM_ATTR_UNAME), strdup(node->details->uname));
 
@@ -3719,7 +3746,7 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
                             strdup(cluster_name));
     }
 
-    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, NULL,
+    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, &rule_data,
                                node->details->attrs, NULL, overwrite, data_set);
 
     if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {

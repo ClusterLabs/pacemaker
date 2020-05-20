@@ -23,8 +23,8 @@
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                      pe_working_set_t * data_set);
+static void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
+                             pe_working_set_t * data_set, guint interval_ms);
 static xmlNode *find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
@@ -568,9 +568,13 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         }
 
         if (rsc != NULL) {
-            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+            guint interval_ms = 0;
 
-            unpack_operation(action, action->op_entry, rsc->container, data_set);
+            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+            parse_op_key(key, NULL, NULL, &interval_ms);
+
+            unpack_operation(action, action->op_entry, rsc->container, data_set,
+                             interval_ms);
 
             if (save_action) {
                 rsc->actions = g_list_prepend(rsc->actions, action);
@@ -597,10 +601,19 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
             && action->node != NULL && action->op_entry != NULL) {
+            pe_rule_eval_data_t rule_data = {
+                .node_hash = action->node->details->attrs,
+                .role = RSC_ROLE_UNKNOWN,
+                .now = data_set->now,
+                .match_data = NULL,
+                .rsc_data = NULL,
+                .op_data = NULL
+            };
+
             pe_set_action_bit(action, pe_action_have_node_attrs);
             pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
-                                       action->node->details->attrs,
-                                       action->extra, NULL, FALSE, data_set);
+                                       &rule_data, action->extra, NULL,
+                                       FALSE, data_set);
         }
 
         if (is_set(action->flags, pe_action_pseudo)) {
@@ -873,6 +886,15 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     const char *timeout = NULL;
     int timeout_ms = 0;
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          child != NULL; child = crm_next_same_xml(child)) {
         if (safe_str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME))) {
@@ -884,7 +906,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     if (timeout == NULL && data_set->op_defaults) {
         GHashTable *action_meta = crm_str_table_new();
         pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
-                                   NULL, action_meta, NULL, FALSE, data_set);
+                                   &rule_data, action_meta, NULL, FALSE, data_set);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
@@ -945,29 +967,49 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
  * and start delay values as integer milliseconds), requirements, and
  * failure policy.
  *
- * \param[in,out] action     Action to unpack into
- * \param[in]     xml_obj    Operation XML (or NULL if all defaults)
- * \param[in]     container  Resource that contains affected resource, if any
- * \param[in]     data_set   Cluster state
+ * \param[in,out] action      Action to unpack into
+ * \param[in]     xml_obj     Operation XML (or NULL if all defaults)
+ * \param[in]     container   Resource that contains affected resource, if any
+ * \param[in]     data_set    Cluster state
+ * \param[in]     interval_ms How frequently to perform the operation
  */
-void
+static void
 unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                 pe_working_set_t * data_set)
+                 pe_working_set_t * data_set, guint interval_ms)
 {
-    guint interval_ms = 0;
     int timeout = 0;
     char *value_ms = NULL;
     const char *value = NULL;
-    const char *field = NULL;
+    const char *field = XML_LRM_ATTR_INTERVAL;
     char *default_timeout = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
 
+    pe_rsc_eval_data_t rsc_rule_data = {
+        .standard = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_CLASS),
+        .provider = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_PROVIDER),
+        .agent = crm_element_value(action->rsc->xml, XML_EXPR_ATTR_TYPE)
+    };
+
+    pe_op_eval_data_t op_rule_data = {
+        .op_name = action->task,
+        .interval = interval_ms
+    };
+
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = &rsc_rule_data,
+        .op_data = &op_rule_data
+    };
+
     CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, NULL,
+    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,
                                action->meta, NULL, FALSE, data_set);
 
     // Probe timeouts default differently, so handle timeout default later
@@ -981,19 +1023,20 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         xmlAttrPtr xIter = NULL;
 
         // <op> <meta_attributes> take precedence over defaults
-        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, NULL,
+        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, &rule_data,
                                    action->meta, NULL, TRUE, data_set);
 
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
-        pe_unpack_versioned_attributes(data_set->input, xml_obj,
-                                       XML_TAG_ATTR_SETS, NULL,
-                                       rsc_details->versioned_parameters,
-                                       data_set->now, NULL);
-        pe_unpack_versioned_attributes(data_set->input, xml_obj,
-                                       XML_TAG_META_SETS, NULL,
-                                       rsc_details->versioned_meta,
-                                       data_set->now, NULL);
+
+        pe_eval_versioned_attributes(data_set->input, xml_obj,
+                                     XML_TAG_ATTR_SETS, &rule_data,
+                                     rsc_details->versioned_parameters,
+                                     NULL);
+        pe_eval_versioned_attributes(data_set->input, xml_obj,
+                                     XML_TAG_META_SETS, &rule_data,
+                                     rsc_details->versioned_meta,
+                                     NULL);
 #endif
 
         /* Anything set as an <op> XML property has highest precedence.
@@ -1010,23 +1053,11 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     g_hash_table_remove(action->meta, "id");
 
     // Normalize interval to milliseconds
-    field = XML_LRM_ATTR_INTERVAL;
-    value = g_hash_table_lookup(action->meta, field);
-    if (value != NULL) {
-        interval_ms = crm_parse_interval_spec(value);
-
-    } else if ((xml_obj == NULL) && !strcmp(action->task, RSC_STATUS)) {
-        /* An orphaned recurring monitor will not have any XML. However, we
-         * want the interval to be set, so the action can be properly detected
-         * as a recurring monitor. Parse it from the key in this case.
-         */
-        parse_op_key(action->uuid, NULL, NULL, &interval_ms);
-    }
     if (interval_ms > 0) {
         value_ms = crm_strdup_printf("%u", interval_ms);
         g_hash_table_replace(action->meta, strdup(field), value_ms);
 
-    } else if (value) {
+    } else if (g_hash_table_lookup(action->meta, field) != NULL) {
         g_hash_table_remove(action->meta, field);
     }
 
@@ -2693,14 +2724,14 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
  */
 void
 pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
-                           GHashTable *node_hash, GHashTable *hash,
+                           pe_rule_eval_data_t *rule_data, GHashTable *hash,
                            const char *always_first, gboolean overwrite,
                            pe_working_set_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
-    pe_unpack_nvpairs(data_set->input, xml_obj, set_name, node_hash, hash,
-                      always_first, overwrite, data_set->now, next_change);
+    pe_eval_nvpairs(data_set->input, xml_obj, set_name, rule_data, hash,
+                    always_first, overwrite, next_change);
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 

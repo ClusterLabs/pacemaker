@@ -962,6 +962,13 @@ TESTS = [
         [ "shutdown-lock", "Ensure shutdown lock works properly" ],
         [ "shutdown-lock-expiration", "Ensure shutdown lock expiration works properly" ],
     ],
+    [
+        [ "op-defaults", "Test op_defaults conditional expressions" ],
+        [ "op-defaults-2", "Test op_defaults AND'ed conditional expressions" ],
+        [ "op-defaults-3", "Test op_defaults precedence" ],
+        [ "rsc-defaults", "Test rsc_defaults conditional expressions" ],
+        [ "rsc-defaults-2", "Test rsc_defaults conditional expressions without type" ],
+    ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
     #[
