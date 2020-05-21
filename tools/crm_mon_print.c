@@ -208,7 +208,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
             continue;
         }
 
-        if (!pe__rsc_running_on_any_node_in_list(rsc, only_show)) {
+        if (pcmk__rsc_is_filtered(rsc, only_show)) {
             continue;
         }
 

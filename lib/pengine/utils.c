@@ -2783,21 +2783,6 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
 bool
 pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
 {
-    /* If this resource is inactive, we will always return false unless
-     * node_list contains just '*'.  Inactive resources aren't running on
-     * any node.
-     */
-    gboolean is_active = rsc->fns->active(rsc, TRUE);
-    gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-    if (!is_active && !partially_active &&
-        node_list != NULL && strcmp(node_list->data, "*") == 0 && node_list->next == NULL) {
-        return true;
-    }
-
-    /* Otherwise, this resource must be running on one of the nodes in the
-     * given list.
-     */
     for (GListPtr ele = rsc->running_on; ele; ele = ele->next) {
         pe_node_t *node = (pe_node_t *) ele->data;
         if (pcmk__str_in_list(node_list, node->details->uname)) {
@@ -2806,4 +2791,44 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
     }
 
     return false;
+}
+
+bool
+pe__rsc_allowed_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
+{
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+    bool checked_allowed_nodes = false;
+
+    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        if (pcmk__str_in_list(node_list, node->details->uname)) {
+            return true;
+        }
+
+        if (!checked_allowed_nodes) {
+            checked_allowed_nodes = true;
+        }
+    }
+
+    /* Only check the known_on list if allowed_nodes was empty. */
+    if (checked_allowed_nodes) {
+        return false;
+    }
+
+    g_hash_table_iter_init(&iter, rsc->known_on);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        if (pcmk__str_in_list(node_list, node->details->uname)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+pcmk__rsc_is_filtered(pe_resource_t *rsc, GListPtr only_show)
+{
+    return ((rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_show)) ||
+            (!rsc->fns->active(rsc, FALSE) && !pe__rsc_allowed_on_any_node_in_list(rsc, only_show)));
 }
