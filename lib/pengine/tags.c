@@ -15,6 +15,37 @@
 #include <crm/pengine/pe_types.h>
 
 GListPtr
+pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
+{
+    gpointer value;
+    GListPtr retval = NULL;
+
+    if (data_set->tags == NULL) {
+        return retval;
+    }
+
+    value = g_hash_table_lookup(data_set->tags, tag_name);
+
+    if (value == NULL) {
+        return retval;
+    }
+
+    for (GListPtr refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+        const char *id = (const char *) refs->data;
+        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, id,
+                                                         pe_find_renamed|pe_find_any);
+
+        if (!rsc) {
+            continue;
+        }
+
+        retval = g_list_append(retval, strdup(rsc_printable_id(rsc)));
+    }
+
+    return retval;
+}
+
+GListPtr
 pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
 {
     gpointer value;
@@ -44,6 +75,21 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
         retval = g_list_append(retval, strdup(node->details->uname));
     }
 
+    return retval;
+}
+
+bool
+pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc_name, const char *tag_name)
+{
+    GListPtr rscs = pe__rscs_with_tag(data_set, tag_name);
+    bool retval = false;
+
+    if (rscs == NULL) {
+        return retval;
+    }
+
+    retval = g_list_find_custom(rscs, rsc_name, (GCompareFunc) strcmp) != NULL;
+    g_list_free_full(rscs, free);
     return retval;
 }
 
