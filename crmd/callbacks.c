@@ -215,9 +215,32 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
                 } else {
+#if SUPPORT_PLUGIN
+                    /* When legacy CIB mode is in effect, having every node
+                     * clear a leaving DC's attributes causes a (quite likely)
+                     * race condition where another node requests a full CIB
+                     * replacement after the attributes have been cleared, and
+                     * the DC (as CIB master, when its crmd has exited but its
+                     * CIB remains up) responds with a CIB that still contains
+                     * the attributes. This leaves the DC's shutdown attribute
+                     * in effect when it tries to rejoin the cluster later.
+                     *
+                     * As a heuristic, disable that attribute clearing when
+                     * corosync 1 (which always enables legacy CIB mode) is
+                     * used. The only other cases where legacy mode should be in
+                     * effect are when the user has explicitly requested it via
+                     * the undocumented PCMK_legacy environment variable
+                     * (intended solely for developer testing) and when there is
+                     * a rolling upgrade from Pacemaker 1.1.11 in progress.
+                     */
+                    if (AM_I_DC) {
+#endif
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
                                                cib_scope_local);
+#if SUPPORT_PLUGIN
+                    }
+#endif
                 }
             }
             break;
