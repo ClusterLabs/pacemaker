@@ -669,8 +669,13 @@ XML attributes take precedence over +nvpair+ elements if both are specified.
  indexterm:[Action,Property,timeout]
 
 |on-fail
-|restart '(except for +stop+ operations, which default to' fence 'when
- STONITH is enabled and' block 'otherwise)'
+a|Varies by action:
+
+* +stop+: +fence+ if +stonith-enabled+ is true or +block+ otherwise
+* +demote+: +on-fail+ of the +monitor+ action with +role+ set to +Master+, if
+  present, enabled, and configured to a value other than +demote+, or +restart+
+  otherwise
+* all other actions: +restart+
 a|The action to take if this action ever fails. Allowed values:
 
 * +ignore:+ Pretend the resource did not fail.
