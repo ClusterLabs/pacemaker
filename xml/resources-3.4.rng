@@ -388,6 +388,7 @@
                 <choice>
                   <value>ignore</value>
                   <value>block</value>
+                  <value>demote</value>
                   <value>stop</value>
                   <value>restart</value>
                   <value>standby</value>
