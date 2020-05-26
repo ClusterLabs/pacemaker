@@ -59,7 +59,7 @@ endif
 
 noinst_HEADERS	= allocate.h notif.h utils.h pengine.h
 
-libpengine_la_LDFLAGS	= -version-info 16:2:0
+libpengine_la_LDFLAGS	= -version-info 17:0:1
 
 libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

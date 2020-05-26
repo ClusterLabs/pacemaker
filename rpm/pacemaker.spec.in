@@ -1,4 +1,5 @@
-# Globals and defines to control package behavior (configure these as desired)
+# User-configurable globals and defines to control package behavior
+# (these should not test {with X} values, which are declared later)
 
 ## User and group to use for nonprivileged services
 %global uname hacluster
@@ -17,15 +18,48 @@
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
-%global pcmkversion 1.1.22
+%global pcmkversion 1.1.23
 %global specversion 1
 
-## Upstream commit (or git tag, such as "Pacemaker-" plus the
-## {pcmkversion} macro for an official release) to use for this package
+## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
+
+
+# Define conditionals so that "rpmbuild --with <feature>" and
+# "rpmbuild --without <feature>" can enable and disable specific features
+
+## Add option to enable support for stonith/external fencing agents
+%bcond_with stonithd
+
+## Add option to create binaries suitable for use with profiling tools
+%bcond_with profiling
+
+## Add option to create binaries with coverage analysis
+%bcond_with coverage
+
+## Add option to skip generating documentation
+## (the build tools aren't available everywhere)
+%bcond_without doc
+
+## Add option to prefix package version with "0."
+## (so later "official" packages will be considered updates)
+%bcond_with pre_release
+
+## Add option to ship Upstart job files
+%bcond_with upstart_job
+
+## Add option to turn off CMAN support on CMAN-native platforms
+%bcond_without cman
+
+## Add option to turn off SNMP / ESMTP support
+%bcond_without snmp
+%bcond_without esmtp
+
+## Add option to turn off hardening of libraries and daemon executables
+%bcond_without hardening
 
 
 # Define globals for convenient use later
@@ -34,18 +68,26 @@
 %global lparen (
 %global rparen )
 
-## Short version of git commit
-%define shortcommit %(c=%{commit}; case ${c} in
-                      Pacemaker-*%{rparen} echo ${c:10};;
-                      *%{rparen} echo ${c:0:%{commit_abbrev}};; esac)
+## Whether this is a tagged release (final or release candidate)
+%define tag_release %(c=%{commit}; case ${c} in Pacemaker-*%{rparen} echo 1 ;;
+                      *%{rparen} echo 0 ;; esac)
 
-## Whether this is a tagged release
-%define tag_release %([ %{commit} != Pacemaker-%{shortcommit} ]; echo $?)
-
-## Whether this is a release candidate (in case of a tagged release)
-%define pre_release %([ "%{tag_release}" -eq 0 ] || {
-                      case "%{shortcommit}" in *-rc[[:digit:]]*%{rparen} false;;
-                      esac; }; echo $?)
+## Portion of export/dist tarball name after "pacemaker-", and release version
+%if 0%{tag_release}
+%define archive_version %(c=%{commit}; echo ${c:10})
+%define archive_github_url %{commit}#/%{name}-%{archive_version}.tar.gz
+%define pcmk_release %(c=%{commit}; case $c in *-rc[[:digit:]]*%{rparen}
+                       echo 0.%{specversion}.${c: -3} ;;
+                       *%{rparen} echo %{specversion} ;; esac)
+%else
+%define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
+%define archive_github_url %{archive_version}#/%{name}-%{archive_version}.tar.gz
+%if %{with pre_release}
+%define pcmk_release 0.%{specversion}.%{archive_version}.git
+%else
+%define pcmk_release %{specversion}.%{archive_version}.git
+%endif
+%endif
 
 ## Turn off auto-compilation of python files outside site-packages directory,
 ## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
@@ -134,40 +176,6 @@
 %endif
 
 
-# Define conditionals so that "rpmbuild --with <feature>" and
-# "rpmbuild --without <feature>" can enable and disable specific features
-
-## Add option to enable support for stonith/external fencing agents
-%bcond_with stonithd
-
-## Add option to create binaries suitable for use with profiling tools
-%bcond_with profiling
-
-## Add option to create binaries with coverage analysis
-%bcond_with coverage
-
-## Add option to skip generating documentation
-## (the build tools aren't available everywhere)
-%bcond_without doc
-
-## Add option to prefix package version with "0."
-## (so later "official" packages will be considered updates)
-%bcond_with pre_release
-
-## Add option to ship Upstart job files
-%bcond_with upstart_job
-
-## Add option to turn off CMAN support on CMAN-native platforms
-%bcond_without cman
-
-## Add option to turn off SNMP / ESMTP support
-%bcond_without snmp
-%bcond_without esmtp
-
-## Add option to turn off hardening of libraries and daemon executables
-%bcond_without hardening
-
-
 # Keep sane profiling data if requested
 %if %{with profiling}
 
@@ -176,23 +184,6 @@
 
 %endif
 
-
-# Define the release version
-# (do not look at externally enforced pre-release flag for tagged releases
-# as only -rc tags, captured with the second condition, implies that then)
-%if (!%{tag_release} && %{with pre_release}) || 0%{pre_release}
-%if 0%{pre_release}
-%define pcmk_release 0.%{specversion}.%(s=%{shortcommit}; echo ${s: -3})
-%else
-%define pcmk_release 0.%{specversion}.%{shortcommit}.git
-%endif
-%else
-%if 0%{tag_release}
-%define pcmk_release %{specversion}
-%else
-%define pcmk_release %{specversion}.%{shortcommit}.git
-%endif
-%endif
 
 Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
@@ -207,9 +198,15 @@ License:       GPLv2+ and LGPLv2+ and BSD
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-# Hint: use "spectool -s 0 pacemaker.spec" (rpmdevtools) to check the final URL:
-# https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
-Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
+# Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
+# will download pacemaker-e91769e.tar.gz
+#
+# The ending part starting with '#' is ignored by github but necessary for
+# rpmbuild to know what the tar archive name is. (The downloaded file will be
+# named correctly only for commit IDs, not tagged releases.)
+#
+# You can use "spectool -s 0 pacemaker.spec" (rpmdevtools) to show final URL.
+Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{archive_github_url}
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
 Requires:      resource-agents
@@ -405,7 +402,7 @@ Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Corosync, CMAN and/or Linux-HA.
 
 %prep
-%setup -q -n %{name}-%{commit}
+%setup -q -n %{name}-%{archive_version}
 
 # Force the local time
 #

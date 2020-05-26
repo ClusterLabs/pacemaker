@@ -18,7 +18,7 @@ include $(top_srcdir)/Makefile.common
 
 lib_LTLIBRARIES		= liblrmd.la
 
-liblrmd_la_LDFLAGS	= -version-info 6:3:5
+liblrmd_la_LDFLAGS	= -version-info 7:0:6
 
 liblrmd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 liblrmd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
