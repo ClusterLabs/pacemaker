@@ -183,7 +183,9 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
+#ifdef ENABLE_PRIORITY_FENCING_DELAY
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+#endif
 
     crm_notice("Requesting fencing (%s) of node %s "
                CRM_XS " action=%s timeout=%u%s%s",
