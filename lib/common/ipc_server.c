@@ -608,7 +608,7 @@ pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
 
     header = calloc(1, sizeof(pcmk__ipc_header_t));
     if (header == NULL) {
-        return errno;
+       return ENOMEM; /* errno mightn't be set by allocator */
     }
 
     buffer = dump_xml_unformatted(message);
