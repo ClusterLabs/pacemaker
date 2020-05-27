@@ -605,3 +605,251 @@ Full List of Resources:
     * httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by node
+=#=#=#= Begin test: Text output of partially active resources =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 11 resource instances configured
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+=#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active resources
+=#=#=#= Begin test: XML output of partially active resources =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon -1 --output-as=xml">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="4"/>
+    <resources_configured number="11" disabled="0" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="3" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+  </nodes>
+  <resources>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
+    <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <node name="cluster01" id="1" cached="true"/>
+    </resource>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf::heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf::heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf::pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+      </replica>
+      <replica id="1">
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf::heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf::heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf::pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="pingd" value="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="30000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
+        <operation_history call="15" task="start" exec-time="36ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="20" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="10000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="30000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output of partially active resources
+=#=#=#= Begin test: Text output of partially active resources, with inactive resources =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 11 resource instances configured
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Full List of Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 ]
+    * Stopped: [ cluster02 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+=#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active resources, with inactive resources
+=#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 11 resource instances configured
+
+Node List:
+  * Online: [ cluster01 ]
+
+Full List of Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+=#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
+=#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon -1 --output-as=xml --node=cluster01">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="4"/>
+    <resources_configured number="11" disabled="0" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
+  </nodes>
+  <resources>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
+    <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <node name="cluster01" id="1" cached="true"/>
+    </resource>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="1">
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf::heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf::heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf::pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="pingd" value="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster01">
+      <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
+        <operation_history call="15" task="start" exec-time="36ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="20" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="10000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="60000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="3" task="monitor" interval="30000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Text output of partially active resources, filtered by node - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active resources, filtered by node
