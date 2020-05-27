@@ -173,6 +173,32 @@ function test_crm_mon() {
     # XML already includes inactive resources
 
     unset CIB_file
+
+    export CIB_file="$SRCDIR/cts/crm_mon-partial.xml"
+
+    desc="Text output of partially active resources"
+    cmd="crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output of partially active resources"
+    cmd="crm_mon -1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of partially active resources, with inactive resources"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    # XML already includes inactive resources
+
+    desc="Text output of partially active resources, with inactive resources, filtered by node"
+    cmd="crm_mon -1 -r --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of partially active resources, filtered by node"
+    cmd="crm_mon -1 --output-as=xml --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 function test_tools() {
