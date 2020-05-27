@@ -226,12 +226,14 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_debug("Concurrent fencing is %s",
               is_set(data_set->flags, pe_flag_concurrent_fencing) ? "enabled" : "disabled");
 
+#ifdef ENABLE_PRIORITY_FENCING_DELAY
     value = pe_pref(data_set->config_hash,
                     XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
     if (value) {
         data_set->priority_fencing_delay = crm_get_msec(value) / 1000;
         crm_trace("Priority fencing delay is %ds", data_set->priority_fencing_delay);
     }
+#endif
 
     set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
     crm_debug("Stop all active resources: %s",

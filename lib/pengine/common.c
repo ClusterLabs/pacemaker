@@ -121,6 +121,7 @@ pe_cluster_option pe_opts[] = {
 	  "Allow performing fencing operations in parallel", NULL },
 	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
+#ifdef ENABLE_PRIORITY_FENCING_DELAY
     {
         XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
         "0", &check_timer,
@@ -138,6 +139,7 @@ pe_cluster_option pe_opts[] = {
             "twice, the maximum `pcmk_delay_base/max`. By default, priority "
             "fencing delay is disabled."
     },
+#endif
 
 	/* Timeouts etc */
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
