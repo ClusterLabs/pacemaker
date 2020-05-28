@@ -2770,6 +2770,78 @@ last_change_str(xmlNode *xml_op)
     return ((when_s && *when_s)? when_s : "unknown time");
 }
 
+/*!
+ * \internal
+ * \brief Compare two on-fail values
+ *
+ * \param[in] first   One on-fail value to compare
+ * \param[in] second  The other on-fail value to compare
+ *
+ * \return A negative number if second is more severe than first, zero if they
+ *         are equal, or a positive number if first is more severe than second.
+ * \note This is only needed until the action_fail_response values can be
+ *       renumbered at the next API compatibility break.
+ */
+static int
+cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
+{
+    switch (first) {
+        case action_fail_reset_remote:
+            switch (second) {
+                case action_fail_ignore:
+                case action_fail_recover:
+                    return 1;
+                case action_fail_reset_remote:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
+        case action_fail_restart_container:
+            switch (second) {
+                case action_fail_ignore:
+                case action_fail_recover:
+                case action_fail_reset_remote:
+                    return 1;
+                case action_fail_restart_container:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
+        default:
+            break;
+    }
+    switch (second) {
+        case action_fail_reset_remote:
+            switch (first) {
+                case action_fail_ignore:
+                case action_fail_recover:
+                    return -1;
+                default:
+                    return 1;
+            }
+            break;
+
+        case action_fail_restart_container:
+            switch (first) {
+                case action_fail_ignore:
+                case action_fail_recover:
+                case action_fail_reset_remote:
+                    return -1;
+                default:
+                    return 1;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return first - second;
+}
+
 static void
 unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
@@ -2829,10 +2901,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     }
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
-    if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
-        (action->on_fail == action_fail_reset_remote && *on_fail <= action_fail_recover) ||
-        (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) ||
-        (*on_fail == action_fail_restart_container && action->on_fail >= action_fail_migrate)) {
+    if (cmp_on_fail(*on_fail, action->on_fail) < 0) {
         pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)", fail2text(*on_fail),
                      fail2text(action->on_fail), action->uuid, key);
         *on_fail = action->on_fail;
@@ -3675,7 +3744,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
                 record_failed_op(xml_op, node, rsc, data_set);
 
-                if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
+                if ((failure_strategy == action_fail_restart_container)
+                    && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
                     *on_fail = failure_strategy;
                 }
 
