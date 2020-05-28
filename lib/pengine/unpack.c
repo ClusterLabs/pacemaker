@@ -2244,7 +2244,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
-    enum action_fail_response on_fail = FALSE;
+    enum action_fail_response on_fail = action_fail_ignore;
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 
     crm_trace("[%s] Processing %s on %s",
@@ -2287,7 +2287,6 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
 
     /* process operations */
     saved_role = rsc->role;
-    on_fail = action_fail_ignore;
     rsc->role = RSC_ROLE_UNKNOWN;
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
@@ -3376,7 +3375,7 @@ int pe__target_rc_from_xml(xmlNode *xml_op)
 static enum action_fail_response
 get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
 {
-    int result = action_fail_recover;
+    enum action_fail_response result = action_fail_recover;
     pe_action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
 
     result = action->on_fail;
