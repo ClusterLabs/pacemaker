@@ -165,10 +165,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         return rc;
     }
 
-    /* Add a blank line between this section and the one before it. */
-    if (print_spacer) {
-        out->info(out, "%s", "");
-    }
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
 
     print_resources_heading(out, mon_ops);
 
@@ -514,10 +511,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
         }
 
         if (rc == pcmk_rc_no_output) {
-            /* Add a blank line between this section and the one before it. */
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
 
             if (operations) {
                 out->begin_list(out, NULL, NULL, "Operations");
@@ -557,10 +551,7 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
         return pcmk_rc_no_output;
     }
 
-    /* Add a blank line between this section and the one before it. */
-    if (print_spacer) {
-        out->info(out, "%s", "");
-    }
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
 
     /* Print section heading */
     out->begin_list(out, NULL, NULL, "Tickets");
@@ -603,11 +594,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
 
             if (node->weight < 0) {
                 if (rc == pcmk_rc_no_output) {
-                    /* Add a blank line between this section and the one before it. */
-                    if (print_spacer) {
-                        out->info(out, "%s", "");
-                    }
-
+                    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
                     rc = pcmk_rc_ok;
                     out->begin_list(out, NULL, NULL, "Negative Location Constraints");
                 }
@@ -673,11 +660,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
             }
 
             if (rc == pcmk_rc_no_output) {
-                /* Add a blank line between this section and the one before it. */
-                if (print_spacer) {
-                    out->info(out, "%s", "");
-                }
-
+                PCMK__OUTPUT_SPACER_IF(out, print_spacer);
                 rc = pcmk_rc_ok;
                 out->begin_list(out, NULL, NULL, "Node Attributes");
             }
@@ -725,11 +708,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
         }
 
         if (rc == pcmk_rc_no_output) {
-            /* Add a blank line between this section and the one before it. */
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
             rc = pcmk_rc_ok;
             out->begin_list(out, NULL, NULL, "Failed Resource Actions");
         }
@@ -781,9 +760,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     unames = build_uname_list(data_set, only_show);
 
     if (is_set(show, mon_show_nodes) && unames) {
-        if (rc == pcmk_rc_ok) {
-            out->info(out, "%s", "");
-        }
+        PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
 
         x = out->message(out, "node-list", data_set->nodes, unames, print_opts,
                          is_set(mon_ops, mon_op_print_clone_detail),

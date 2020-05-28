@@ -714,6 +714,11 @@ void
 pcmk__html_add_header(xmlNodePtr parent, const char *name, ...)
 G_GNUC_NULL_TERMINATED;
 
+#define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
+    if (cond) {                                 \
+        out_obj->info(out_obj, "%s", "");       \
+    }
+
 #ifdef __cplusplus
 }
 #endif

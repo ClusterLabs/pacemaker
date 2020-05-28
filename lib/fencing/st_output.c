@@ -49,10 +49,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
         }
 
         if (rc == pcmk_rc_no_output) {
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
             rc = pcmk_rc_ok;
             out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
         }
@@ -88,11 +85,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
              * prevent printing headers with empty sections underneath.
              */
             if (rc == pcmk_rc_no_output) {
-                /* Add a blank line between this section and the one before it. */
-                if (print_spacer) {
-                    out->info(out, "%s", "");
-                }
-
+                PCMK__OUTPUT_SPACER_IF(out, print_spacer);
                 rc = pcmk_rc_ok;
                 out->begin_list(out, NULL, NULL, "Fencing History");
             }
@@ -126,11 +119,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
         }
 
         if (rc == pcmk_rc_no_output) {
-            /* Add a blank line between this section and the one before it. */
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
             rc = pcmk_rc_ok;
             out->begin_list(out, NULL, NULL, "Fencing History");
         }
@@ -260,10 +249,7 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
         }
 
         if (rc == pcmk_rc_no_output) {
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
             rc = pcmk_rc_ok;
             out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
         }
