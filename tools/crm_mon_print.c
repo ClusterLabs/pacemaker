@@ -699,6 +699,11 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
     return rc;
 }
 
+#define CHECK_RC(retcode, retval)   \
+    if (retval == pcmk_rc_ok) {     \
+        retcode = pcmk_rc_ok;       \
+    }
+
 /*!
  * \internal
  * \brief Top-level printing function for text/curses output.
@@ -719,85 +724,57 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
-    int x;
 
-    x = out->message(out, "cluster-summary", data_set,
-                     is_set(mon_ops, mon_op_print_clone_detail),
-                     is_set(show, mon_show_stack),
-                     is_set(show, mon_show_dc),
-                     is_set(show, mon_show_times),
-                     is_set(show, mon_show_counts),
-                     is_set(show, mon_show_options));
-
-    if (x == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
-    }
+    CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
+                              is_set(mon_ops, mon_op_print_clone_detail),
+                              is_set(show, mon_show_stack),
+                              is_set(show, mon_show_dc),
+                              is_set(show, mon_show_times),
+                              is_set(show, mon_show_counts),
+                              is_set(show, mon_show_options)));
 
     unames = build_uname_list(data_set, only_show);
 
     if (is_set(show, mon_show_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
-
-        x = out->message(out, "node-list", data_set->nodes, unames, print_opts,
-                         is_set(mon_ops, mon_op_print_clone_detail),
-                         is_set(mon_ops, mon_op_print_brief),
-                         is_set(mon_ops, mon_op_group_by_node));
-
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames, print_opts,
+                                  is_set(mon_ops, mon_op_print_clone_detail),
+                                  is_set(mon_ops, mon_op_print_brief),
+                                  is_set(mon_ops, mon_op_group_by_node)));
     }
 
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
-        x = print_resources(out, data_set, print_opts, mon_ops,
-                            is_set(mon_ops, mon_op_print_brief), TRUE,
-                            unames, rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_resources(out, data_set, print_opts, mon_ops,
+                                     is_set(mon_ops, mon_op_print_brief), TRUE,
+                                     unames, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
-        x =  print_node_attributes(out, data_set, mon_ops, unames,
-                                   rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_node_attributes(out, data_set, mon_ops, unames, rc == pcmk_rc_ok));
     }
 
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
     if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
-        x = print_node_summary(out, data_set, is_set(show, mon_show_operations),
-                               mon_ops, unames, rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_node_summary(out, data_set, is_set(show, mon_show_operations),
+                                        mon_ops, unames, rc == pcmk_rc_ok));
     }
 
     /* If there were any failed actions, print them */
     if (is_set(show, mon_show_failures) && xml_has_children(data_set->failed)) {
-        x = print_failed_actions(out, data_set, unames, rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_failed_actions(out, data_set, unames, rc == pcmk_rc_ok));
     }
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
         for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
             if (hp->state == st_failed) {
-                x = out->message(out, "failed-fencing-history", hp, unames,
-                                 is_set(mon_ops, mon_op_fence_full_history),
-                                 rc == pcmk_rc_ok);
-
-                if (x == pcmk_rc_ok) {
-                    rc = pcmk_rc_ok;
-                }
-
+                CHECK_RC(rc, out->message(out, "failed-fencing-history", hp, unames,
+                                          is_set(mon_ops, mon_op_fence_full_history),
+                                          rc == pcmk_rc_ok));
                 break;
             }
         }
@@ -805,18 +782,12 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print tickets if requested */
     if (is_set(show, mon_show_tickets)) {
-        x = print_cluster_tickets(out, data_set, rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_cluster_tickets(out, data_set, rc == pcmk_rc_ok));
     }
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        x = print_neg_locations(out, data_set, mon_ops, prefix, rc == pcmk_rc_ok);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
+        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, rc == pcmk_rc_ok));
     }
 
     /* Print stonith history */
@@ -824,28 +795,18 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
         if (is_set(show, mon_show_fence_worked)) {
             for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
                 if (hp->state != st_failed) {
-                    x = out->message(out, "fencing-history", hp, unames,
-                                     is_set(mon_ops, mon_op_fence_full_history),
-                                     rc == pcmk_rc_ok);
-
-                    if (x == pcmk_rc_ok) {
-                        rc = pcmk_rc_ok;
-                    }
-
+                    CHECK_RC(rc, out->message(out, "fencing-history", hp, unames,
+                                              is_set(mon_ops, mon_op_fence_full_history),
+                                              rc == pcmk_rc_ok));
                     break;
                 }
             }
         } else if (is_set(show, mon_show_fence_pending)) {
             for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
                 if (hp->state != st_failed && hp->state != st_done) {
-                    x = out->message(out, "pending-fencing-actions", hp, unames,
-                                     is_set(mon_ops, mon_op_fence_full_history),
-                                     rc == pcmk_rc_ok);
-
-                    if (x == pcmk_rc_ok) {
-                        rc = pcmk_rc_ok;
-                    }
-
+                    CHECK_RC(rc, out->message(out, "pending-fencing-actions", hp, unames,
+                                              is_set(mon_ops, mon_op_fence_full_history),
+                                              rc == pcmk_rc_ok));
                     break;
                 }
             }
