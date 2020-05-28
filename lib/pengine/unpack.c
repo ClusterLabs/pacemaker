@@ -108,6 +108,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  */
                 node->details->remote_requires_reset = TRUE;
                 set_bit(rsc->flags, pe_rsc_failed);
+                set_bit(rsc->flags, pe_rsc_stop);
             }
         }
 
@@ -117,6 +118,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  "and guest resource no longer exists",
                  node->details->uname, reason);
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+        set_bit(node->details->remote_rsc->flags, pe_rsc_stop);
 
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
@@ -1914,6 +1916,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
          */
         if (pe__is_guest_node(node)) {
             set_bit(rsc->flags, pe_rsc_failed);
+            set_bit(rsc->flags, pe_rsc_stop);
             should_fence = TRUE;
 
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -1956,6 +1959,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* nothing to do */
             break;
 
+        case action_fail_demote:
+            set_bit(rsc->flags, pe_rsc_failed);
+            demote_action(rsc, node, FALSE);
+            break;
+
         case action_fail_fence:
             /* treat it as if it is still running
              * but also mark the node as unclean
@@ -1992,12 +2000,14 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         case action_fail_recover:
             if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
                 set_bit(rsc->flags, pe_rsc_failed);
+                set_bit(rsc->flags, pe_rsc_stop);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case action_fail_restart_container:
             set_bit(rsc->flags, pe_rsc_failed);
+            set_bit(rsc->flags, pe_rsc_stop);
 
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
@@ -2016,6 +2026,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case action_fail_reset_remote:
             set_bit(rsc->flags, pe_rsc_failed);
+            set_bit(rsc->flags, pe_rsc_stop);
             if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
@@ -2071,8 +2082,17 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
 
         native_add_running(rsc, node, data_set);
-        if (on_fail != action_fail_ignore) {
-            set_bit(rsc->flags, pe_rsc_failed);
+        switch (on_fail) {
+            case action_fail_ignore:
+                break;
+            case action_fail_demote:
+            case action_fail_block:
+                set_bit(rsc->flags, pe_rsc_failed);
+                break;
+            default:
+                set_bit(rsc->flags, pe_rsc_failed);
+                set_bit(rsc->flags, pe_rsc_stop);
+                break;
         }
 
     } else if (rsc->clone_name && strchr(rsc->clone_name, ':') != NULL) {
@@ -2595,6 +2615,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         } else {
             /* Consider it failed here - forces a restart, prevents migration */
             set_bit(rsc->flags, pe_rsc_failed);
+            set_bit(rsc->flags, pe_rsc_stop);
             clear_bit(rsc->flags, pe_rsc_allow_migrate);
         }
     }
@@ -2785,9 +2806,21 @@ static int
 cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 {
     switch (first) {
+        case action_fail_demote:
+            switch (second) {
+                case action_fail_ignore:
+                    return 1;
+                case action_fail_demote:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
         case action_fail_reset_remote:
             switch (second) {
                 case action_fail_ignore:
+                case action_fail_demote:
                 case action_fail_recover:
                     return 1;
                 case action_fail_reset_remote:
@@ -2800,6 +2833,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case action_fail_restart_container:
             switch (second) {
                 case action_fail_ignore:
+                case action_fail_demote:
                 case action_fail_recover:
                 case action_fail_reset_remote:
                     return 1;
@@ -2814,9 +2848,13 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             break;
     }
     switch (second) {
+        case action_fail_demote:
+            return (first == action_fail_ignore)? -1 : 1;
+
         case action_fail_reset_remote:
             switch (first) {
                 case action_fail_ignore:
+                case action_fail_demote:
                 case action_fail_recover:
                     return -1;
                 default:
@@ -2827,6 +2865,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case action_fail_restart_container:
             switch (first) {
                 case action_fail_ignore:
+                case action_fail_demote:
                 case action_fail_recover:
                 case action_fail_reset_remote:
                     return -1;
@@ -3426,7 +3465,11 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
         clear_past_failure = TRUE;
 
     } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-        /* Demote from Master does not clear an error */
+
+        if (*on_fail == action_fail_demote) {
+            // Demote clears an error only if on-fail=demote
+            clear_past_failure = TRUE;
+        }
         rsc->role = RSC_ROLE_SLAVE;
 
     } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
@@ -3454,6 +3497,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
 
             case action_fail_block:
             case action_fail_ignore:
+            case action_fail_demote:
             case action_fail_recover:
             case action_fail_restart_container:
                 *on_fail = action_fail_ignore;
@@ -3714,6 +3758,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  * that, ensure the remote connection is considered failed.
                  */
                 set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+                set_bit(node->details->remote_rsc->flags, pe_rsc_stop);
             }
 
             // fall through

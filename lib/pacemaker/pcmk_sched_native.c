@@ -1205,6 +1205,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_node_t *chosen = NULL;
     pe_node_t *current = NULL;
     gboolean need_stop = FALSE;
+    bool need_promote = FALSE;
     gboolean is_moving = FALSE;
     gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
 
@@ -1309,8 +1310,15 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         need_stop = TRUE;
 
     } else if (is_set(rsc->flags, pe_rsc_failed)) {
-        pe_rsc_trace(rsc, "Recovering %s", rsc->id);
-        need_stop = TRUE;
+        if (is_set(rsc->flags, pe_rsc_stop)) {
+            need_stop = TRUE;
+            pe_rsc_trace(rsc, "Recovering %s", rsc->id);
+        } else {
+            pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
+            if (rsc->next_role == RSC_ROLE_MASTER) {
+                need_promote = TRUE;
+            }
+        }
 
     } else if (is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "Block %s", rsc->id);
@@ -1344,10 +1352,16 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 
     while (rsc->role <= rsc->next_role && role != rsc->role && is_not_set(rsc->flags, pe_rsc_block)) {
+        bool required = need_stop;
+
         next_role = rsc_state_matrix[role][rsc->role];
+        if ((next_role == RSC_ROLE_MASTER) && need_promote) {
+            required = true;
+        }
         pe_rsc_trace(rsc, "Up:   Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
-                     rsc->id, need_stop ? " required" : "");
-        if (rsc_action_matrix[role][next_role] (rsc, chosen, !need_stop, data_set) == FALSE) {
+                     rsc->id, (required? " required" : ""));
+        if (rsc_action_matrix[role][next_role](rsc, chosen, !required,
+                                               data_set) == FALSE) {
             break;
         }
         role = next_role;
@@ -2631,7 +2645,8 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         free(key);
 
-    } else if (stop && is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (stop && is_set(rsc->flags, pe_rsc_failed)
+               && is_set(rsc->flags, pe_rsc_stop)) {
         /* 'stop' may be NULL if the failure was ignored */
         LogAction("Recover", rsc, current, next, stop, start, terminal);
         STOP_SANITY_ASSERT(__LINE__);

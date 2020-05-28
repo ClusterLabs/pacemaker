@@ -326,6 +326,9 @@ fail2text(enum action_fail_response fail)
         case action_fail_ignore:
             result = "ignore";
             break;
+        case action_fail_demote:
+            result = "demote";
+            break;
         case action_fail_block:
             result = "block";
             break;

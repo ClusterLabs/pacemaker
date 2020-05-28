@@ -720,6 +720,7 @@ static bool
 valid_stop_on_fail(const char *value)
 {
     return safe_str_neq(value, "standby")
+           && safe_str_neq(value, "demote")
            && safe_str_neq(value, "stop");
 }
 
@@ -727,6 +728,11 @@ static const char *
 unpack_operation_on_fail(pe_action_t * action)
 {
 
+    const char *name = NULL;
+    const char *role = NULL;
+    const char *on_fail = NULL;
+    const char *interval_spec = NULL;
+    const char *enabled = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
     if (safe_str_eq(action->task, CRMD_ACTION_STOP)
@@ -736,14 +742,10 @@ unpack_operation_on_fail(pe_action_t * action)
                          "action to default value because '%s' is not "
                          "allowed for stop", action->rsc->id, value);
         return NULL;
+
     } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
         /* demote on_fail defaults to master monitor value if present */
         xmlNode *operation = NULL;
-        const char *name = NULL;
-        const char *role = NULL;
-        const char *on_fail = NULL;
-        const char *interval_spec = NULL;
-        const char *enabled = NULL;
 
         CRM_CHECK(action->rsc != NULL, return NULL);
 
@@ -766,12 +768,31 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
+            } else if (safe_str_eq(on_fail, "demote")) {
+                continue;
             }
 
             value = on_fail;
         }
     } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
         value = "ignore";
+
+    } else if (safe_str_eq(value, "demote")) {
+        name = crm_element_value(action->op_entry, "name");
+        role = crm_element_value(action->op_entry, "role");
+        on_fail = crm_element_value(action->op_entry, XML_OP_ATTR_ON_FAIL);
+        interval_spec = crm_element_value(action->op_entry,
+                                          XML_LRM_ATTR_INTERVAL);
+
+        if (safe_str_neq(name, CRMD_ACTION_PROMOTE)
+            && (safe_str_neq(name, CRMD_ACTION_STATUS)
+                || safe_str_neq(role, "Master")
+                || (crm_parse_interval_spec(interval_spec) == 0))) {
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
+                             "action to default value because 'demote' is not "
+                             "allowed for it", action->rsc->id, name);
+            return NULL;
+        }
     }
 
     return value;
@@ -1169,6 +1190,10 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         } else {
             value = NULL;
         }
+
+    } else if (safe_str_eq(value, "demote")) {
+        action->on_fail = action_fail_demote;
+        value = "demote instance";
 
     } else {
         pe_err("Resource %s: Unknown failure type (%s)", action->rsc->id, value);
