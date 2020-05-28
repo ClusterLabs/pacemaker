@@ -716,16 +716,25 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
     return action;
 }
 
+static bool
+valid_stop_on_fail(const char *value)
+{
+    return safe_str_neq(value, "standby")
+           && safe_str_neq(value, "stop");
+}
+
 static const char *
 unpack_operation_on_fail(pe_action_t * action)
 {
 
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
-    if (safe_str_eq(action->task, CRMD_ACTION_STOP) && safe_str_eq(value, "standby")) {
+    if (safe_str_eq(action->task, CRMD_ACTION_STOP)
+        && !valid_stop_on_fail(value)) {
+
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
-                         "action to default value because 'standby' is not "
-                         "allowed for stop", action->rsc->id);
+                         "action to default value because '%s' is not "
+                         "allowed for stop", action->rsc->id, value);
         return NULL;
     } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
         /* demote on_fail defaults to master monitor value if present */
