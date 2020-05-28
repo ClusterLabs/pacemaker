@@ -719,6 +719,13 @@ G_GNUC_NULL_TERMINATED;
         out_obj->info(out_obj, "%s", "");       \
     }
 
+#define PCMK__OUTPUT_LIST_HEADER(out_obj, cond, retcode, title...)  \
+    if (retcode == pcmk_rc_no_output) {                             \
+        PCMK__OUTPUT_SPACER_IF(out_obj, cond);                      \
+        retcode = pcmk_rc_ok;                                       \
+        out_obj->begin_list(out_obj, NULL, NULL, title);            \
+    }
+
 #ifdef __cplusplus
 }
 #endif

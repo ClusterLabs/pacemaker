@@ -12,13 +12,6 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
-#define SUMMARY_HEADER(rc, out) do { \
-        if (rc == pcmk_rc_no_output) { \
-            out->begin_list(out, NULL, NULL, "Cluster Summary"); \
-            rc = pcmk_rc_ok; \
-        } \
-    } while (0)
-
 static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
@@ -227,7 +220,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (show_stack) {
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -241,7 +234,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
 
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
         free(dc_name);
     }
@@ -252,19 +245,19 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (show_counts) {
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 
     if (show_options) {
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-options", data_set);
     }
 
@@ -296,7 +289,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (show_stack) {
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -310,7 +303,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, print_clone_detail) : NULL;
 
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
         free(dc_name);
     }
@@ -321,12 +314,12 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (show_counts) {
-        SUMMARY_HEADER(rc, out);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
@@ -1284,7 +1277,7 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
 
-    gboolean printed_header = FALSE;
+    int rc = pcmk_rc_no_output;
 
     for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1293,20 +1286,17 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (printed_header == FALSE) {
-            printed_header = TRUE;
-            out->begin_list(out, NULL, NULL, "Node List");
-        }
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
         out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
                      print_brief, group_by_node, only_show);
     }
 
-    if (printed_header == TRUE) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
     }
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
@@ -1327,7 +1317,6 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
     char *offline_remote_nodes = NULL;
 
     int rc = pcmk_rc_no_output;
-    gboolean printed_header = FALSE;
 
     for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1339,11 +1328,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (printed_header == FALSE) {
-            out->begin_list(out, NULL, NULL, "Node List");
-            rc = pcmk_rc_ok;
-            printed_header = TRUE;
-        }
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
         /* Get node mode */
         if (node->details->unclean) {
@@ -1441,7 +1426,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
         free(online_guest_nodes);
     }
 
-    if (printed_header == TRUE) {
+    if (rc == pcmk_rc_ok) {
         out->end_list(out);
     }
 

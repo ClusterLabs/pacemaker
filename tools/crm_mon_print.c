@@ -510,17 +510,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-
-            if (operations) {
-                out->begin_list(out, NULL, NULL, "Operations");
-            } else {
-                out->begin_list(out, NULL, NULL, "Migration Summary");
-            }
-
-            rc = pcmk_rc_ok;
-        }
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
 
         print_node_history(out, data_set, node, node_state, operations, mon_ops,
                            only_show);
@@ -593,12 +583,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
             pe_node_t *node = (pe_node_t *) gIter2->data;
 
             if (node->weight < 0) {
-                if (rc == pcmk_rc_no_output) {
-                    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-                    rc = pcmk_rc_ok;
-                    out->begin_list(out, NULL, NULL, "Negative Location Constraints");
-                }
-
+                PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
                 out->message(out, "ban", node, location, is_set(mon_ops, mon_op_print_clone_detail));
             }
         }
@@ -659,11 +644,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                 continue;
             }
 
-            if (rc == pcmk_rc_no_output) {
-                PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Node Attributes");
-            }
+            PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
 
             out->message(out, "node", data.node, get_resource_display_options(mon_ops),
                          FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
@@ -707,12 +688,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Failed Resource Actions");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
         out->message(out, "failed-action", xml_op);
     }
 

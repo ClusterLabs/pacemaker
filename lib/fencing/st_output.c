@@ -48,12 +48,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Fencing Actions");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
@@ -81,15 +76,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
         }
 
         if (hp->state != st_failed) {
-            /* Print the header the first time we have an event to print out to
-             * prevent printing headers with empty sections underneath.
-             */
-            if (rc == pcmk_rc_no_output) {
-                PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Fencing History");
-            }
-
+            PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
             out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
@@ -118,12 +105,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Fencing History");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
@@ -152,11 +134,7 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
                 continue;
             }
 
-            if (rc == pcmk_rc_no_output) {
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Fencing History");
-            }
-
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Fencing History");
             out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
@@ -248,12 +226,7 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
             break;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Pending Fencing Actions");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
