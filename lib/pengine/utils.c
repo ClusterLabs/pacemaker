@@ -481,6 +481,17 @@ sort_rsc_priority(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+static enum pe_quorum_policy
+effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    enum pe_quorum_policy policy = data_set->no_quorum_policy;
+
+    if (is_set(data_set->flags, pe_flag_have_quorum)) {
+        policy = no_quorum_ignore;
+    }
+    return policy;
+}
+
 pe_action_t *
 custom_action(pe_resource_t * rsc, char *key, const char *task,
               pe_node_t * on_node, gboolean optional, gboolean save_action,
@@ -593,6 +604,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
     if (rsc != NULL) {
         enum action_tasks a_task = text2task(action->task);
+        enum pe_quorum_policy quorum_policy = effective_quorum_policy(rsc, data_set);
         int warn_level = LOG_TRACE;
 
         if (save_action) {
@@ -675,13 +687,11 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             crm_trace("Action %s requires only stonith", action->uuid);
             action->runnable = TRUE;
 #endif
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
-                   && data_set->no_quorum_policy == no_quorum_stop) {
+        } else if (quorum_policy == no_quorum_stop) {
             pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "no quorum", pe_action_runnable, TRUE);
             crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
-                   && data_set->no_quorum_policy == no_quorum_freeze) {
+        } else if (quorum_policy == no_quorum_freeze) {
             pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
             if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
                 pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "quorum freeze", pe_action_runnable, TRUE);
