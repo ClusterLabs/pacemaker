@@ -217,7 +217,7 @@ main(int argc, char **argv)
      */
     crm_cluster_disconnect(&crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-    return CRM_EX_OK;
+    crm_exit(CRM_EX_OK);
 }
 
 void
