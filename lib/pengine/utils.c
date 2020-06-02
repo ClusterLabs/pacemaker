@@ -488,6 +488,20 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     if (is_set(data_set->flags, pe_flag_have_quorum)) {
         policy = no_quorum_ignore;
+
+    } else if (data_set->no_quorum_policy == no_quorum_demote) {
+        switch (rsc->role) {
+            case RSC_ROLE_MASTER:
+            case RSC_ROLE_SLAVE:
+                if (rsc->next_role > RSC_ROLE_SLAVE) {
+                    rsc->next_role = RSC_ROLE_SLAVE;
+                }
+                policy = no_quorum_ignore;
+                break;
+            default:
+                policy = no_quorum_stop;
+                break;
+        }
     }
     return policy;
 }

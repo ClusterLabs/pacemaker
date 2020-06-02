@@ -61,7 +61,8 @@ enum pe_quorum_policy {
     no_quorum_freeze,
     no_quorum_stop,
     no_quorum_ignore,
-    no_quorum_suicide
+    no_quorum_suicide,
+    no_quorum_demote
 };
 
 enum node_type {

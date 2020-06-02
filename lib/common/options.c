@@ -407,6 +407,7 @@ pcmk__valid_quorum(const char *value)
     return safe_str_eq(value, "stop")
            || safe_str_eq(value, "freeze")
            || safe_str_eq(value, "ignore")
+           || safe_str_eq(value, "demote")
            || safe_str_eq(value, "suicide");
 }
 

@@ -268,6 +268,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     } else if (safe_str_eq(value, "freeze")) {
         data_set->no_quorum_policy = no_quorum_freeze;
 
+    } else if (safe_str_eq(value, "demote")) {
+        data_set->no_quorum_policy = no_quorum_demote;
+
     } else if (safe_str_eq(value, "suicide")) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             int do_panic = 0;
@@ -296,6 +299,10 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             break;
         case no_quorum_stop:
             crm_debug("On loss of quorum: Stop ALL resources");
+            break;
+        case no_quorum_demote:
+            crm_debug("On loss of quorum: "
+                      "Demote promotable resources and stop other resources");
             break;
         case no_quorum_suicide:
             crm_notice("On loss of quorum: Fence all remaining nodes");

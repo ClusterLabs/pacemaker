@@ -729,6 +729,11 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
+        case no_quorum_demote:
+            out->list_item(out, NULL, "No quorum policy: Demote promotable "
+                           "resources and stop all other resources");
+            break;
+
         case no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
@@ -785,6 +790,11 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
+        case no_quorum_demote:
+            out->list_item(out, NULL, "No quorum policy: Demote promotable "
+                           "resources and stop all other resources");
+            break;
+
         case no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
@@ -815,6 +825,10 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
 
         case no_quorum_stop:
             xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "stop");
+            break;
+
+        case no_quorum_demote:
+            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "demote");
             break;
 
         case no_quorum_ignore:
