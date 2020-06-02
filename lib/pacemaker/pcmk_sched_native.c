@@ -3362,9 +3362,19 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
         return;
 
-    } else if (is_set(rsc->flags, pe_rsc_failed) || is_set(rsc->flags, pe_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
-        stop_action(rsc, node, FALSE); /* Force a full restart, overkill? */
+    } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        /* We don't need to specify any particular actions here, normal failure
+         * recovery will apply.
+         */
+        pe_rsc_trace(rsc, "%s: preventing reload because failed", rsc->id);
+        return;
+
+    } else if (is_set(rsc->flags, pe_rsc_start_pending)) {
+        /* If a resource's configuration changed while a start was pending,
+         * force a full restart.
+         */
+        pe_rsc_trace(rsc, "%s: preventing reload because start pending", rsc->id);
+        stop_action(rsc, node, FALSE);
         return;
 
     } else if (node == NULL) {
