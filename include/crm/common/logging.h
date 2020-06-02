@@ -21,7 +21,9 @@ extern "C" {
 #  define CRM_LOGGING__H
 
 #  include <stdio.h>
+#  include <glib.h>
 #  include <qb/qblog.h>
+#  include <libxml/tree.h>
 
 /* Define custom log priorities.
  *
