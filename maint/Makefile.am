@@ -14,13 +14,16 @@ TESTCC_TARGETS          = testcc_common_acl_h testcc_common_ipc_h \
     testcc_pe_types_h testcc_cib_types_h testcc_cib_util_h testcc_crm_h \
     testcc_cib_h testcc_cluster_h testcc_lrmd_h testcc_msg_xml_h \
     testcc_services_h testcc_stonith_ng_h testcc_pengine_status_h \
-    testcc_pengine_rules_h
-CLEANFILES		= $(TESTCC_TARGETS)
+    testcc_pengine_rules_h testcc_common_logging_h
+CLEANFILES		= $(TESTCC_TARGETS) testcc_helper.cc
 
 EXTRA_SCRIPTS		= bumplibs.sh				\
 			  travisci_build_coverity_scan.sh
 EXTRA_PROGRAMS		= $(TESTCC_TARGETS)
 EXTRA_DIST		= README
+
+testcc_helper.cc:
+	echo "int main() { return 0; }" > $@
 
 nodist_testcc_common_acl_h_SOURCES = testcc_helper.cc
 testcc_common_acl_h_CXXFLAGS = -include "crm/common/acl.h"
@@ -64,7 +67,10 @@ testcc_cib_types_h_CXXFLAGS = -include "crm/cib/cib_types.h"
 nodist_testcc_cib_util_h_SOURCES = testcc_helper.cc
 testcc_cib_util_h_CXXFLAGS = -include "crm/cib/util.h"
 
-# the initial ones except election.h not packaged
+nodist_testcc_common_logging_h_SOURCES = testcc_helper.cc
+testcc_common_logging_h_CXXFLAGS = -include "crm/common/logging.h"
+
+# ones previously in testcc.cc except election.h not packaged
 
 nodist_testcc_crm_h_SOURCES = testcc_helper.cc
 testcc_crm_h_CXXFLAGS = -include "crm/crm.h"
@@ -92,11 +98,6 @@ testcc_pengine_status_h_CXXFLAGS = -include "crm/pengine/status.h"
 
 nodist_testcc_pengine_rules_h_SOURCES = testcc_helper.cc
 testcc_pengine_rules_h_CXXFLAGS = -include "crm/pengine/rules.h"
-
-# headers not pulling in everything they need
-
-nodist_testcc_common_logging_h_SOURCES = testcc_helper.cc
-testcc_common_logging_h_CXXFLAGS = -include "crm/common/logging.h"
 
 # c++-headers but not packaged
 # daemons/controld/controld_membership.h
