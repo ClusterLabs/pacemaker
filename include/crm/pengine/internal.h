@@ -473,4 +473,6 @@ bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char 
 
 bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list);
 
+bool pcmk__rsc_is_filtered(pe_resource_t *rsc, GListPtr only_show);
+
 #endif

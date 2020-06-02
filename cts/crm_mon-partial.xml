@@ -1,0 +1,144 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="37" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.4-1.e97f9675f.git.el7-e97f9675f"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test-cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+    </nodes>
+    <resources>
+      <clone id="ping-clone">
+        <primitive class="ocf" id="ping" provider="pacemaker" type="ping">
+          <instance_attributes id="ping-instance_attributes">
+            <nvpair id="ping-instance_attributes-dampen" name="dampen" value="5s"/>
+            <nvpair id="ping-instance_attributes-host_list" name="host_list" value="192.168.122.1"/>
+            <nvpair id="ping-instance_attributes-multiplier" name="multiplier" value="1000"/>
+          </instance_attributes>
+          <operations>
+            <op id="ping-monitor-interval-10s" interval="10s" name="monitor" timeout="60s"/>
+            <op id="ping-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="ping-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <instance_attributes id="Fencing-instance_attributes">
+          <nvpair id="Fencing-instance_attributes-ip_family" name="ip_family" value="ipv4"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <bundle id="httpd-bundle">
+        <docker image="pcmk:http" replicas="2"/>
+        <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0">
+          <port-mapping id="httpd-port" port="80"/>
+        </network>
+        <storage>
+          <storage-mapping id="httpd-syslog" source-dir="/dev/log" target-dir="/dev/log" options="rw"/>
+          <storage-mapping id="httpd-root" source-dir="/srv/html" target-dir="/var/www/html" options="rw"/>
+          <storage-mapping id="httpd-logs" source-dir-root="/var/log/pacemaker/bundles" target-dir="/etc/httpd/logs" options="rw"/>
+        </storage>
+        <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
+        <meta_attributes id="bundle-meta_attributes">
+          <nvpair id="bundle-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </bundle>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="5:0:7:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:7;5:0:7:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster02" call-id="10" rc-code="7" op-status="0" interval="0" last-rc-change="1588951263" last-run="1588951263" exec-time="3" queue-time="0" op-digest="7da16842ab2328e41f737cab5e5fc89c"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_last_0" operation_key="httpd-bundle-ip-192.168.122.131_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="8656419d4ed26465c724189832393477"/>
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_monitor_60000" operation_key="httpd-bundle-ip-192.168.122.131_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="617f27ac5fff521f401e6707063e2b5e"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-0_last_0" operation_key="httpd-bundle-docker-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="02a1a0b2dfa1cade1893713b56939c55"/>
+            <lrm_rsc_op id="httpd-bundle-docker-0_monitor_60000" operation_key="httpd-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="775c93499f09f739ccbabe79d043f5ef"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.132" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_last_0" operation_key="httpd-bundle-ip-192.168.122.132_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="c3d96a2922c2946905f760df9a177cd1"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-1_last_0" operation_key="httpd-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="2edb33b196e2261c6b3e30ce579e0590"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-0_last_0" operation_key="httpd-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="c535429017a9ee0785106fbef2858a41"/>
+            <lrm_rsc_op id="httpd-bundle-0_monitor_30000" operation_key="httpd-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="6d63e20548871f169e287d33f3711637"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-1_last_0" operation_key="httpd-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="791bcda8f6693465cc318cba5302a8df"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-pingd" name="pingd" value="1000"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="12:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:0;12:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster01" call-id="15" rc-code="0" op-status="0" interval="0" last-rc-change="1588951272" last-run="1588951272" exec-time="36" queue-time="0" op-digest="7da16842ab2328e41f737cab5e5fc89c"/>
+            <lrm_rsc_op id="Fencing_monitor_60000" operation_key="Fencing_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="20:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;20:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="20" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="a88218bb6c7dc47e6586fc75fc2a8d69"/>
+          </lrm_resource>
+          <lrm_resource id="ping" class="ocf" provider="pacemaker" type="ping">
+            <lrm_rsc_op id="ping_last_0" operation_key="ping_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="769dd6f95f1494d416ae9dc690960e17"/>
+            <lrm_rsc_op id="ping_monitor_10000" operation_key="ping_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="7beffd8be749b787fabea4aef5df21c9"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_last_0" operation_key="httpd-bundle-ip-192.168.122.131_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="8656419d4ed26465c724189832393477"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-0_last_0" operation_key="httpd-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="02a1a0b2dfa1cade1893713b56939c55"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.132" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_last_0" operation_key="httpd-bundle-ip-192.168.122.132_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="c3d96a2922c2946905f760df9a177cd1"/>
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_monitor_60000" operation_key="httpd-bundle-ip-192.168.122.132_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="33ef2404fd1954b12433f676cffd08ec"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-1_last_0" operation_key="httpd-bundle-docker-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="2edb33b196e2261c6b3e30ce579e0590"/>
+            <lrm_rsc_op id="httpd-bundle-docker-1_monitor_60000" operation_key="httpd-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="a2605826ef42e23316e4d27d9cb28f8e"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-0_last_0" operation_key="httpd-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="c535429017a9ee0785106fbef2858a41"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-1_last_0" operation_key="httpd-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="791bcda8f6693465cc318cba5302a8df"/>
+            <lrm_rsc_op id="httpd-bundle-1_monitor_30000" operation_key="httpd-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="7592cb10fa1499772a031adfd385f558"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-pingd" name="pingd" value="1000"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="httpd-bundle-0" uname="httpd-bundle-0">
+      <lrm id="httpd-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" last-run="1590608589" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
