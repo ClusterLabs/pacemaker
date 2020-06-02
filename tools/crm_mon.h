@@ -96,14 +96,14 @@ typedef enum mon_output_format_e {
 
 void print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_show);
+                  unsigned int show, char *prefix, char *only_node);
 void print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                       crm_exit_t history_rc, stonith_history_t *stonith_history,
                       unsigned int mon_ops, unsigned int show, char *prefix,
-                      char *only_show);
+                      char *only_node);
 int print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int show, char *prefix, char *only_show);
+                      unsigned int show, char *prefix, char *only_node);
 
 GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
