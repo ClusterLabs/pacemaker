@@ -2810,3 +2810,23 @@ pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node)
 {
     return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_node));
 }
+
+GListPtr
+pe__filter_rsc_list(GListPtr rscs, GListPtr filter)
+{
+    GListPtr retval = NULL;
+
+    for (GListPtr gIter = rscs; gIter; gIter = gIter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+
+        /* I think the second condition is safe here for all callers of this
+         * function.  If not, it needs to move into pe__node_text.
+         */
+        if (pcmk__str_in_list(filter, rsc_printable_id(rsc)) ||
+            (rsc->parent && pcmk__str_in_list(filter, rsc_printable_id(rsc->parent)))) {
+            retval = g_list_prepend(retval, rsc);
+        }
+    }
+
+    return retval;
+}
