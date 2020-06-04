@@ -680,47 +680,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     return TRUE;
 }
 
-int
-cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level)
-{
-    int rc = pcmk_err_generic;
-
-    xmlNode *diff = NULL;
-
-    CRM_ASSERT(event);
-    CRM_ASSERT(input);
-    CRM_ASSERT(output);
-
-    crm_element_value_int(event, F_CIB_RC, &rc);
-    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
-
-    if (rc < pcmk_ok || diff == NULL) {
-        return rc;
-    }
-
-    if (level > LOG_CRIT) {
-        xml_log_patchset(level, "Config update", diff);
-    }
-
-    if (input != NULL) {
-        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output, NULL);
-
-        if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);
-
-            if (rc == -pcmk_err_old_data) {
-                crm_trace("Masking error, we already have the supplied update");
-                return pcmk_ok;
-            }
-            free_xml(*output); *output = NULL;
-
-            return rc;
-        }
-    }
-
-    return rc;
-}
-
 /* v2 and v2 patch formats */
 #define XPATH_CONFIG_CHANGE \
     "//" XML_CIB_TAG_CRMCONFIG " | " \
@@ -759,4 +718,54 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
 #endif
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
+}
+
+// Deprecated functions kept only for backward API compatibility
+int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                          int level);
+
+/*!
+ * \deprecated
+ */
+int
+cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                      int level)
+{
+    int rc = pcmk_err_generic;
+
+    xmlNode *diff = NULL;
+
+    CRM_ASSERT(event);
+    CRM_ASSERT(input);
+    CRM_ASSERT(output);
+
+    crm_element_value_int(event, F_CIB_RC, &rc);
+    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+
+    if (rc < pcmk_ok || diff == NULL) {
+        return rc;
+    }
+
+    if (level > LOG_CRIT) {
+        xml_log_patchset(level, "Config update", diff);
+    }
+
+    if (input != NULL) {
+        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output,
+                              NULL);
+
+        if (rc != pcmk_ok) {
+            crm_debug("Update didn't apply: %s (%d) %p",
+                      pcmk_strerror(rc), rc, *output);
+
+            if (rc == -pcmk_err_old_data) {
+                crm_trace("Masking error, we already have the supplied update");
+                return pcmk_ok;
+            }
+            free_xml(*output);
+            *output = NULL;
+            return rc;
+        }
+    }
+    return rc;
 }

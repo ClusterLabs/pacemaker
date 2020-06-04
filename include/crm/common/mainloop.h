@@ -154,7 +154,7 @@ void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
 #endif

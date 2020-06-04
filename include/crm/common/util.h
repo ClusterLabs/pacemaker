@@ -212,7 +212,7 @@ bool pcmk_str_is_minus_infinity(const char *s);
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 
 //! \deprecated Use crm_parse_interval_spec() instead

@@ -511,7 +511,7 @@ typedef struct pe_action_wrapper_s {
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 
 //!< \deprecated Use pe_action_t instead
