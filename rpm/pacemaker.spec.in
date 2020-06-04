@@ -231,7 +231,7 @@ License:       GPLv2+ and LGPLv2+
 # initscript is Revised BSD
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
-Url:           http://www.clusterlabs.org
+Url:           https://www.clusterlabs.org/
 Group:         System Environment/Daemons
 
 # Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
