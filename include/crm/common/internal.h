@@ -102,6 +102,32 @@ pcmk__open_devnull(int flags)
         crm_warn(fmt);                      \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Execute code depending on whether message would be logged
+ *
+ * This is similar to do_crm_log_unlikely() except instead of logging, it either
+ * continues past this statement or executes else_action depending on whether a
+ * message of the given severity would be logged or not. This allows whole
+ * blocks of code to be skipped if tracing or debugging is turned off.
+ *
+ * \param[in] level        Severity at which to continue past this statement
+ * \param[in] else_action  Code block to execute if severity would not be logged
+ *
+ * \note else_action must not contain a break or continue statement
+ */
+#  define pcmk__log_else(level, else_action) do {                           \
+        static struct qb_log_callsite *trace_cs = NULL;                     \
+                                                                            \
+        if (trace_cs == NULL) {                                             \
+            trace_cs = qb_log_callsite_get(__func__, __FILE__, "log_else",  \
+                                           level, __LINE__, 0);             \
+        }                                                                   \
+        if (!crm_is_callsite_active(trace_cs, level, 0)) {                  \
+            else_action;                                                    \
+        }                                                                   \
+    } while(0)
+
 
 /* internal procfs utilities (from procfs.c) */
 
