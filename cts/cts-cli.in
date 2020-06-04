@@ -99,7 +99,7 @@ function test_assert() {
 }
 
 function test_crm_mon() {
-    export CIB_file="$SRCDIR/cts/crm_mon.xml"
+    export CIB_file="$test_home/cli/crm_mon.xml"
 
     desc="Basic text output"
     cmd="crm_mon -1"
@@ -174,7 +174,7 @@ function test_crm_mon() {
 
     unset CIB_file
 
-    export CIB_file="$SRCDIR/cts/crm_mon-partial.xml"
+    export CIB_file="$test_home/cli/crm_mon-partial.xml"
 
     desc="Text output of partially active resources"
     cmd="crm_mon -1"
