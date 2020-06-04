@@ -41,6 +41,9 @@
 ## Add option to enable support for stonith/external fencing agents
 %bcond_with stonithd
 
+## Add option to enable support for storing sensitive information outside CIB
+%bcond_with cibsecrets
+
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
@@ -309,8 +312,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : coverage doc stonithd hardening pre_release profiling
-                upstart_job
+  --with(out) : cibsecrets coverage doc stonithd hardening pre_release
+                profiling upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -492,6 +495,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_legacy_links: --disable-legacy-links}                          \
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
+        %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{!?with_doc:          --with-brand=}                                   \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}                                            \
@@ -754,6 +758,9 @@ exit 0
 
 %{_sbindir}/attrd_updater
 %{_sbindir}/cibadmin
+%if %{with cibsecrets}
+%{_sbindir}/cibsecret
+%endif
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
 %{_sbindir}/crm_failcount
