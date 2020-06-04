@@ -128,6 +128,30 @@ function test_crm_mon() {
 
     # XML includes everything already so there's no need for a complete test
 
+    desc="Complete text output with detail"
+    cmd="crm_mon -1R --include=all"
+    test_assert $CRM_EX_OK 0
+
+    # XML includes detailed output already
+
+    desc="Complete brief text output"
+    cmd="crm_mon -1 --include=all --brief"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output grouped by node"
+    cmd="crm_mon -1 --include=all --group-by-node"
+    test_assert $CRM_EX_OK 0
+
+    # XML does not have a brief output option
+
+    desc="Complete brief text output grouped by node"
+    cmd="crm_mon -1 --include=all --group-by-node --brief"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output grouped by node"
+    cmd="crm_mon -1 --output-as=xml --group-by-node"
+    test_assert $CRM_EX_OK 0
+
     desc="Complete text output filtered by node"
     cmd="crm_mon -1 --include=all --node=cluster01"
     test_assert $CRM_EX_OK 0
@@ -151,12 +175,6 @@ function test_crm_mon() {
     desc="XML output filtered by node that doesn't exist"
     cmd="crm_mon --output-as=xml --node=blah"
     test_assert $CRM_EX_OK 0
-
-    desc="Detailed text output"
-    cmd="crm_mon -1 --show-detail"
-    test_assert $CRM_EX_OK 0
-
-    # XML already includes extra detail
 
     desc="Basic text output with inactive resources"
     cmd="crm_mon -1 -r"
