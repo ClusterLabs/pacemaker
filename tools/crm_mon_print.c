@@ -206,9 +206,8 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
          */
         } else if (!partially_active && is_not_set(mon_ops, mon_op_inactive_resources)) {
             continue;
-        }
 
-        if (!pe__rsc_running_on_any_node_in_list(rsc, only_show)) {
+        } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_show)) {
             continue;
         }
 

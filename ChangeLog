@@ -1,3 +1,14 @@
+* Wed Jun 03 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4-rc3
+- Changesets: 14
+- Diff: 10 files changed, 21 insertions(+), 26 deletions(-)
+
+- Fixes for regressions / new buggy features introduced in Pacemaker-2.0.4-rc1
+  + libpe_status: Modify filtering of inactive resources.
+
+- Changes since Pacemaker-2.0.4-rc2
+  + based: use crm_exit to free qb-logging on daemon exit.
+  + cts: handle last-run= and last-rc-change= as full date strings.
+
 * Sat May 16 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4-rc2
 - Changesets: 34
 - Diff: 34 files changed, 461 insertions(+), 142 deletions(-)

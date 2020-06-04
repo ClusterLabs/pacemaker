@@ -18,7 +18,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade rules')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -36,7 +36,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools acls validity upgrade rules"
+tests="dates tools crm_mon acls validity upgrade rules"
 do_save=0
 VALGRIND_CMD=
 VALGRIND_OPTS="
@@ -96,6 +96,109 @@ function test_assert() {
         printf "* Passed: %-14s - %s\n" $app "$desc"
         num_passed=$(( $num_passed + 1 ))
     fi
+}
+
+function test_crm_mon() {
+    export CIB_file="$SRCDIR/cts/crm_mon.xml"
+
+    desc="Basic text output"
+    cmd="crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output"
+    cmd="crm_mon --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output without node section"
+    cmd="crm_mon -1 --exclude=nodes"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output without the node section"
+    cmd="crm_mon --output-as=xml --exclude=nodes"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output with only the node section"
+    cmd="crm_mon -1 --exclude=all --include=nodes"
+    test_assert $CRM_EX_OK 0
+
+    # The above test doesn't need to be performed for other output formats.  It's
+    # really just a test to make sure that blank lines are correct.
+
+    desc="Complete text output"
+    cmd="crm_mon -1 --include=all"
+    test_assert $CRM_EX_OK 0
+
+    # XML includes everything already so there's no need for a complete test
+
+    desc="Complete text output filtered by node"
+    cmd="crm_mon -1 --include=all --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by node"
+    cmd="crm_mon --output-as xml --include=all --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by tag"
+    cmd="crm_mon -1 --include=all --node=even-nodes"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by tag"
+    cmd="crm_mon --output-as=xml --include=all --node=even-nodes"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output filtered by node that doesn't exist"
+    cmd="crm_mon -1 --node=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by node that doesn't exist"
+    cmd="crm_mon --output-as=xml --node=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="Detailed text output"
+    cmd="crm_mon -1 --show-detail"
+    test_assert $CRM_EX_OK 0
+
+    # XML already includes extra detail
+
+    desc="Basic text output with inactive resources"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    # XML already includes inactive resources
+
+    desc="Basic text output with inactive resources, filtered by node"
+    cmd="crm_mon -1 -r --node=cluster02"
+    test_assert $CRM_EX_OK 0
+
+    # XML already includes inactive resources
+
+    unset CIB_file
+
+    export CIB_file="$SRCDIR/cts/crm_mon-partial.xml"
+
+    desc="Text output of partially active resources"
+    cmd="crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output of partially active resources"
+    cmd="crm_mon -1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of partially active resources, with inactive resources"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    # XML already includes inactive resources
+
+    desc="Text output of partially active resources, with inactive resources, filtered by node"
+    cmd="crm_mon -1 -r --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of partially active resources, filtered by node"
+    cmd="crm_mon -1 --output-as=xml --node=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 function test_tools() {
@@ -434,6 +537,7 @@ function test_tools() {
     cmd="crm_resource --clear --expired"
     test_assert $CRM_EX_OK
 
+    unset CIB_shadow
     unset CIB_shadow_dir
     rm -f "$TMPXML" "$TMPORIG"
 
@@ -1119,6 +1223,7 @@ for t in $tests; do
         validity) ;;
         upgrade) ;;
         rules) ;;
+        crm_mon) ;;
         *)
             echo "error: unknown test $t"
             echo
@@ -1146,8 +1251,19 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
+    # last-run= and last-rc-change= are always numeric in the CIB.  However,
+    # for the crm_mon test we also need to compare against the XML output of
+    # the crm_mon program.  There, these are shown as human readable strings
+    # (like the output of the `date` command).
     sed -e 's/cib-last-written.*>/>/'\
-        -e 's/ last-run=\"[0-9]*\"//'\
+        -e 's/ last-run=\"[A-Za-z0-9: ]*\"//'\
+        -e 's/Last updated: .*/Last updated:/' \
+        -e 's/Last change: .*/Last change:/' \
+        -e 's/(version .*)/(version)/' \
+        -e 's/last_update time=\".*\"/last_update time=\"\"/' \
+        -e 's/last_change time=\".*\"/last_change time=\"\"/' \
+        -e 's/ version=\".*\" / version=\"\" /' \
+        -e 's/request=\".*crm_mon/request=\"crm_mon/' \
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
@@ -1155,7 +1271,7 @@ for t in $tests; do
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/ last-rc-change=\"[0-9]*\"//'\
+        -e 's/ last-rc-change=\"[A-Za-z0-9: ]*\"//'\
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \

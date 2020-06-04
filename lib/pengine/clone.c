@@ -586,7 +586,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        if (!pe__rsc_running_on_any_node_in_list(child_rsc, only_show)) {
+        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
             continue;
         }
 
@@ -645,7 +645,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
-        if (!pe__rsc_running_on_any_node_in_list(child_rsc, only_show)) {
+        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
             continue;
         }
 
@@ -854,7 +854,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
-        if (!pe__rsc_running_on_any_node_in_list(child_rsc, only_show)) {
+        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
             continue;
         }
 

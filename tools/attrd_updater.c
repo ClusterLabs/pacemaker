@@ -320,6 +320,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
         }
         crm_ipc_close(ipc);
     }
+    crm_ipc_destroy(ipc);
 
     free_xml(query);
     return(rc);

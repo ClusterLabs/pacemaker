@@ -777,7 +777,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
-        if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
+        if (common_unpack(xml_obj, &new_rsc, NULL, data_set) && (new_rsc != NULL)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
