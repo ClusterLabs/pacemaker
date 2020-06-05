@@ -1516,7 +1516,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_node)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1617,7 +1617,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_node)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1646,7 +1646,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            if (pcmk__rsc_is_filtered(replica->container, only_node)) {
+            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
                 continue;
             }
 
@@ -1715,7 +1715,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_node)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1742,7 +1742,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
             out->end_list(out);
         } else {
-            if (pcmk__rsc_is_filtered(replica->container, only_node)) {
+            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
                 continue;
             }
 
