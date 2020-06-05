@@ -156,7 +156,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
             continue;
 
         } else {
-            strncat(hash_file, ".sign", 5);
+            strcat(hash_file, ".sign");
             hash = read_local_file(hash_file);
             if (hash == NULL) {
                 crm_err("md5 sum for rsc %s parameter %s "

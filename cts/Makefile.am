@@ -62,7 +62,10 @@ cts_SCRIPTS		= CTSlab.py		\
 clidir		= $(testdir)/cli
 dist_cli_DATA	= cli/crm_diff_new.xml		\
 		  cli/crm_diff_old.xml		\
+		  cli/crm_mon.xml		\
+		  cli/crm_mon-partial.xml	\
 		  cli/regression.acls.exp	\
+		  cli/regression.crm_mon.exp	\
 		  cli/regression.dates.exp	\
 		  cli/regression.rules.exp	\
 		  cli/regression.tools.exp	\
