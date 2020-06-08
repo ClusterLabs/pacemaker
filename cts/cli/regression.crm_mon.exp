@@ -623,8 +623,8 @@ Active Resources:
     * Started: [ cluster01 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started
-    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -757,8 +757,8 @@ Full List of Resources:
     * Stopped: [ cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started
-    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
@@ -778,7 +778,7 @@ Full List of Resources:
     * Started: [ cluster01 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
 =#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
