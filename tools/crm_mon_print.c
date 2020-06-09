@@ -214,6 +214,7 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
     /* For each resource, display it if appropriate */
     for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
         pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
+        int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
         gboolean is_active = rsc->fns->active(rsc, TRUE);
@@ -244,9 +245,11 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         }
 
         /* Print this resource */
-        rc = pcmk_rc_ok;
-        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
-                     only_node, only_rsc);
+        x = out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
+                         only_node, only_rsc);
+        if (x == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     if (print_summary && rc != pcmk_rc_ok) {
