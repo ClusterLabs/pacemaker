@@ -306,3 +306,28 @@ group_resource_state(const pe_resource_t * rsc, gboolean current)
     pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
     return group_role;
 }
+
+gboolean
+pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    gboolean passes = FALSE;
+
+    if (check_parent && pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+        passes = TRUE;
+    } else if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+        passes = TRUE;
+    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id)) {
+        passes = TRUE;
+    } else {
+        for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+            if (pcmk__str_in_list(only_rsc, rsc_printable_id(child_rsc))) {
+                passes = TRUE;
+                break;
+            }
+        }
+    }
+
+    return !passes;
+}

@@ -1974,3 +1974,36 @@ pe__count_bundle(pe_resource_t *rsc)
         }
     }
 }
+
+gboolean
+pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    gboolean passes = FALSE;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+        passes = TRUE;
+    } else {
+        get_bundle_variant_data(bundle_data, rsc);
+
+        for (GList *gIter = bundle_data->replicas; gIter != NULL; gIter = gIter->next) {
+            pe__bundle_replica_t *replica = gIter->data;
+
+            if (replica->ip != NULL && !replica->ip->fns->is_filtered(replica->ip, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (replica->child != NULL && !replica->child->fns->is_filtered(replica->child, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (!replica->container->fns->is_filtered(replica->container, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (replica->remote != NULL && !replica->remote->fns->is_filtered(replica->remote, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            }
+        }
+    }
+
+    return !passes;
+}

@@ -1461,3 +1461,22 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
 
     return rc;
 }
+
+gboolean
+pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
+        pcmk__str_in_list(only_rsc, rsc->id)) {
+        return FALSE;
+    } else if (check_parent) {
+        pe_resource_t *up = uber_parent(rsc);
+
+        if (pe_rsc_is_bundled(rsc)) {
+            return up->parent->fns->is_filtered(up->parent, only_rsc, FALSE);
+        } else {
+            return up->fns->is_filtered(up, only_rsc, FALSE);
+        }
+    }
+
+    return TRUE;
+}

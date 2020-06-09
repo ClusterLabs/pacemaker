@@ -1108,3 +1108,30 @@ pe__is_universal_clone(pe_resource_t *rsc,
     }
     return FALSE;
 }
+
+gboolean
+pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    gboolean passes = FALSE;
+    clone_variant_data_t *clone_data = NULL;
+
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+        passes = TRUE;
+    } else {
+        get_clone_variant_data(clone_data, rsc);
+        passes = pcmk__str_in_list(only_rsc, ID(clone_data->xml_obj_child));
+
+        if (!passes) {
+            for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+                pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+                if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
+                    passes = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+
+    return !passes;
+}

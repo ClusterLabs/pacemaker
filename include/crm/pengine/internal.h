@@ -478,4 +478,9 @@ GListPtr pe__filter_rsc_list(GListPtr rscs, GListPtr filter);
 
 bool pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node);
 
+gboolean pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+
 #endif
