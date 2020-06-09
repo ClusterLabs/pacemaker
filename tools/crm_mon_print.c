@@ -99,10 +99,16 @@ build_rsc_list(pe_working_set_t *data_set, const char *s) {
                                                          pe_find_renamed|pe_find_any);
 
         if (rsc) {
-            /* The given string was a valid resource name.  Return a
-             * singleton list containing just that.
+            /* A colon in the name we were given means we're being asked to filter
+             * on a specific instance of a cloned resource.  Put that exact string
+             * into the filter list.  Otherwise, use the printable ID of whatever
+             * resource was found that matches what was asked for.
              */
-            resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
+            if (strstr(s, ":") != NULL) {
+                resources = g_list_prepend(resources, strdup(rsc->id));
+            } else {
+                resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
+            }
         } else {
             /* The given string was not a valid resource name.  It's either
              * a tag or it's a typo or something.  See build_uname_list for
@@ -360,14 +366,33 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print history of each of the node's resources */
     for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
+        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
         if (!crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
             continue;
         }
 
+        /* We can't use is_filtered here to filter group resources.  For is_filtered,
+         * we have to decide whether to check the parent or not.  If we check the
+         * parent, all elements of a group will always be printed because that's how
+         * is_filtered works for groups.  If we do not check the parent, sometimes
+         * this will filter everything out.
+         *
+         * For other resource types, is_filtered is okay.
+         */
+        if (uber_parent(rsc)->variant == pe_group) {
+            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
+                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+                continue;
+            }
+        } else {
+            if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+                continue;
+            }
+        }
+
         if (operations == FALSE) {
-            const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-            pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
