@@ -2069,7 +2069,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
                  agent, pcmk_rc_str(rc));
-        rc = pcmk_rc2legacy(rc);
+        // rc is standard return value, don't return it in this function
     }
 #endif
 
