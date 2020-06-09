@@ -274,6 +274,23 @@ get_operation_list(xmlNode *rsc_entry) {
 
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
          rsc_op = __xml_next_element(rsc_op)) {
+        const char *task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        const char *interval_ms_s = crm_element_value(rsc_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
+        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+        int op_rc_i = crm_parse_int(op_rc, "0");
+
+        /* Display 0-interval monitors as "probe" */
+        if (safe_str_eq(task, CRMD_ACTION_STATUS)
+            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+            task = "probe";
+        }
+
+        /* Ignore notifies and some probes */
+        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (op_rc_i == 7))) {
+            continue;
+        }
+
         if (crm_str_eq((const char *) rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_append(op_list, rsc_op);
         }
@@ -316,11 +333,6 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
         if (safe_str_eq(task, CRMD_ACTION_STATUS)
             && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
             task = "probe";
-        }
-
-        /* Ignore notifies and some probes */
-        if (pcmk__str_any_of(task, CRMD_ACTION_NOTIFY, "probe", NULL) && (op_rc_i == 7)) {
-            continue;
         }
 
         /* If this is the first printed operation, print heading for resource */
@@ -399,20 +411,9 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
-            if (failcount > 0) {
-                if (rc == pcmk_rc_no_output) {
-                    rc = pcmk_rc_ok;
-                    out->message(out, "node", node, get_resource_display_options(mon_ops),
-                                 FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                                 is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
-                                 only_node, only_rsc);
-                }
-
-                out->message(out, "resource-history", rsc, rsc_id, FALSE,
-                             failcount, last_failure, FALSE);
+            if (failcount <= 0) {
+                continue;
             }
-        } else {
-            GListPtr op_list = get_operation_list(rsc_entry);
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
@@ -422,9 +423,24 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              only_node, only_rsc);
             }
 
-            if (op_list != NULL) {
-                print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
+            out->message(out, "resource-history", rsc, rsc_id, FALSE,
+                         failcount, last_failure, FALSE);
+        } else {
+            GListPtr op_list = get_operation_list(rsc_entry);
+
+            if (op_list == NULL) {
+                continue;
             }
+
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
+                out->message(out, "node", node, get_resource_display_options(mon_ops),
+                             FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                             is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                             only_node, only_rsc);
+            }
+
+            print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
         }
     }
 
