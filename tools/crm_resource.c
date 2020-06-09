@@ -826,6 +826,10 @@ main(int argc, char **argv)
 
     /* Establish a connection to the CIB */
     cib_conn = cib_new();
+    if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
+        CMD_ERR("Could not create CIB connection: %s", pcmk_strerror(rc));
+        goto bail;
+    }
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         CMD_ERR("Error signing on to the CIB service: %s", pcmk_strerror(rc));
