@@ -1,42 +1,6 @@
-* Wed Jun 03 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4-rc3
-- Changesets: 14
-- Diff: 10 files changed, 21 insertions(+), 26 deletions(-)
-
-- Fixes for regressions / new buggy features introduced in Pacemaker-2.0.4-rc1
-  + libpe_status: Modify filtering of inactive resources.
-
-- Changes since Pacemaker-2.0.4-rc2
-  + based: use crm_exit to free qb-logging on daemon exit.
-  + cts: handle last-run= and last-rc-change= as full date strings.
-
-* Sat May 16 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4-rc2
-- Changesets: 34
-- Diff: 34 files changed, 461 insertions(+), 142 deletions(-)
-
-- Fixes for regressions introduced in Pacemaker-2.0.0
-  + controller: properly detect remote node info requests
-
-- Fixes for regressions / new buggy features introduced in Pacemaker-2.0.4-rc1
-  + libpe_status: Apply node filtering to clone resource lists.
-  + libpe_status: Don't filter in pe__bundle_replica_output_text.
-  + libpe_status: Don't output unnecessary resource headers.
-  + libpe_status: Handle filtering of inactive resources.
-  + tools: get stonith_admin --list-targets working again
-  + tools: Print inactive resources by default with crm_mon xml output.
-
-- Changes since Pacemaker-2.0.4-rc1
-  + fencer: avoid infinite loop if device is removed during operation
-  + fencer: avoid possible use-of-NULL when parsing metadata
-  + libfencing, fencer: Improve parameter handling for RHCS-style fence-agents
-                - add `port` or `plug` parameter according to metadata
-                - `plug` parameter shown as non-required in the metadata
-  + controld: Avoid delay when recovering resources after shutdown-lock
-              expiration. (CLBZ#5424)
-  + fencing: Remove dangling 'pending' for completed DC fencing. (CLBZ#5401)
-
-* Tue Apr 28 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4-rc1
-- Changesets: 442
-- Diff: 269 files changed, 21845 insertions(+), 13363 deletions(-)
+* Mon Jun 15 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4
+- Changesets: 515
+- Diff: 269 files changed, 22560 insertions(+), 13726 deletions(-)
 
 - Features added since Pacemaker-2.0.3
   + build: Add support for glib-based unit tests.
@@ -45,7 +9,7 @@
         locked to it for a configurable time.
         So that it can be restarted with exactly the same resources
         running as before.
-  + controller/fencer/scheduler: add new feature 'priority-fencing-delay'
+  + controller/fencing/scheduler: add new feature 'priority-fencing-delay'
         Optionally derive the priority of a node from the resource-priorities
         of the resources it is running.
         In a fencing-race the node with the highest priority has a certain
@@ -59,13 +23,18 @@
   + tools: Allow more fine grained filtering of fence-history in crm_mon.
   + tools: Allow crm_rule to check some date_specs.
 
+- Fixes for regressions introduced in Pacemaker-2.0.0
+  + tools: ensure that getting the local node name using crm_node
+           always works from Pacemaker Remote node command line
+
 - Changes since Pacemaker-2.0.3
   + build: improve checking headers for C++ fitness
   + build: restore build on latest OpenSUSE
-  + libstonithd: Report an error getting history in output instead of
-                 empty history
-  + libstonithd: Improve parameter handling for RHCS-style fence-agents
+  + fencing: Report an error getting history in output instead of empty history
+  + fencing: Improve parameter handling for RHCS-style fence-agents
                  - make parameter `action` shown as not required
+                 - add `port` or `plug` parameter according to metadata
+                 - `plug` parameter shown as non-required in the metadata
   + controller: clear leaving node's transient attributes even if there is no DC
   + controller: don't ack same request twice
   + iso8601: Fix crm_time_parse_offset() to parse offset with plus sign.
@@ -77,7 +46,7 @@
   + libpe_status: Add node list arg to output messages preventing weird
                   behavior + potential segfaults
   + libpe_status: Update the maint mode message for HTML output.
-  + libstonithd, tools: Fix arguments to stonith-event.
+  + fencing, tools: Fix arguments to stonith-event.
   + scheduler: don't incorporate dependencies' colocations multiple times
   + scheduler: ensure attenuated scores still have some effect
   + scheduler: ignore colocation constraints with 0 score
@@ -97,6 +66,10 @@
   + tools: Use glib for cmdline handling in crm_diff, crm_simulate & crm_error
   + xml: Add a new version of the tags schema.
   + based: populate cib_nodes when 'cibadmin -R -scope=configuration'
+  + cibsecret: don't use pssh -q option unless supported
+  + fencing: avoid infinite loop if device is removed during operation
+  + fencing: avoid possible use-of-NULL when parsing metadata
+  + fencing: Remove dangling 'pending' for completed DC fencing. (CLBZ#5401)
 
 * Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3
 - Changesets: 601
