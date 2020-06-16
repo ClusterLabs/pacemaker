@@ -478,6 +478,10 @@ TESTS = [
         [ "master-score-startup", "Use permanent master scores without LRM history" ],
         [ "failed-demote-recovery", "Recover resource in slave role after demote fails" ],
         [ "failed-demote-recovery-master", "Recover resource in master role after demote fails" ],
+        [ "on_fail_demote1", "Recovery with on-fail=\"demote\" on healthy cluster, remote, guest, and bundle nodes" ],
+        [ "on_fail_demote2", "Recovery with on-fail=\"demote\" with promotion on different node" ],
+        [ "on_fail_demote3", "Recovery with on-fail=\"demote\" with no promotion" ],
+        [ "on_fail_demote4", "Recovery with on-fail=\"demote\" on failed cluster, remote, guest, and bundle nodes" ],
     ],
     [
         [ "history-1", "Correctly parse stateful-1 resource state" ],
