@@ -375,13 +375,13 @@ Node List:
   * Online: [ cluster01 cluster02 ]
 
 Active Resources:
-  *  1	(stonith:fence_xvm):	Active cluster01
   *  1	(ocf::pacemaker:Dummy):	Active cluster02
+  *  1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
   * Resource Group: exim-group:
-    *  1/1	(ocf::heartbeat:IPaddr):	Active cluster02
     *  1/1	(lsb:exim):	Active cluster02
+    *  1/1	(ocf::heartbeat:IPaddr):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
@@ -486,10 +486,10 @@ Node List:
       *  1	(stonith:fence_xvm):	Active 
   * Node cluster02: online:
     * Resources:
-      *  1	(ocf::heartbeat:IPaddr):	Active 
-      *  1	(ocf::pacemaker:ping):	Active 
       *  1	(lsb:exim):	Active 
+      *  1	(ocf::heartbeat:IPaddr):	Active 
       *  1	(ocf::pacemaker:Dummy):	Active 
+      *  1	(ocf::pacemaker:ping):	Active 
   * GuestNode httpd-bundle-0@: OFFLINE:
     * Resources:
   * GuestNode httpd-bundle-1@: OFFLINE:

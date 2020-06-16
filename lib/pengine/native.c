@@ -1387,15 +1387,21 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
     GHashTable *rsc_table = crm_str_table_new();
     GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                                      free, destroy_node_table);
-    GHashTableIter hash_iter;
-    char *type = NULL;
-    int *rsc_counter = NULL;
+    GListPtr sorted_rscs;
     int rc = pcmk_rc_no_output;
 
     get_rscs_brief(rsc_list, rsc_table, active_table);
 
-    g_hash_table_iter_init(&hash_iter, rsc_table);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *)&type, (gpointer *)&rsc_counter)) {
+    /* Make a list of the rsc_table keys so that it can be sorted.  This is to make sure
+     * output order stays consistent between systems.
+     */
+    sorted_rscs = g_hash_table_get_keys(rsc_table);
+    sorted_rscs = g_list_sort(sorted_rscs, (GCompareFunc) strcmp);
+
+    for (GListPtr gIter = sorted_rscs; gIter; gIter = gIter->next) {
+        char *type = (char *) gIter->data;
+        int *rsc_counter = g_hash_table_lookup(rsc_table, type);
+
         GHashTableIter hash_iter2;
         char *node_name = NULL;
         GHashTable *node_table = NULL;
@@ -1445,6 +1451,9 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
     if (active_table) {
         g_hash_table_destroy(active_table);
         active_table = NULL;
+    }
+    if (sorted_rscs) {
+        g_list_free(sorted_rscs);
     }
 
     return rc;
