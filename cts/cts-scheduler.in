@@ -482,6 +482,7 @@ TESTS = [
         [ "on_fail_demote2", "Recovery with on-fail=\"demote\" with promotion on different node" ],
         [ "on_fail_demote3", "Recovery with on-fail=\"demote\" with no promotion" ],
         [ "on_fail_demote4", "Recovery with on-fail=\"demote\" on failed cluster, remote, guest, and bundle nodes" ],
+        [ "no_quorum_demote", "Promotable demotion and primitive stop with no-quorum-policy=\"demote\"" ],
     ],
     [
         [ "history-1", "Correctly parse stateful-1 resource state" ],
