@@ -103,6 +103,13 @@
       <tag id="odd-nodes">
         <obj_ref id="1"/>
       </tag>
+      <tag id="inactive-rscs">
+        <obj_ref id="inactive-dummy"/>
+        <obj_ref id="inactive-clone"/>
+      </tag>
+      <tag id="fencing-rscs">
+        <obj_ref id="Fencing"/>
+      </tag>
     </tags>
     <op_defaults>
       <meta_attributes id="op_defaults-options">

@@ -168,6 +168,14 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --include=all --node=even-nodes"
     test_assert $CRM_EX_OK 0
 
+    desc="Complete text output filtered by resource tag"
+    cmd="crm_mon -1 --include=all --resource=fencing-rscs"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by resource tag"
+    cmd="crm_mon --output-as=xml --include=all --resource=fencing-rscs"
+    test_assert $CRM_EX_OK 0
+
     desc="Basic text output filtered by node that doesn't exist"
     cmd="crm_mon -1 --node=blah"
     test_assert $CRM_EX_OK 0
@@ -242,6 +250,10 @@ function test_crm_mon() {
 
     desc="XML output filtered by resource that doesn't exist"
     cmd="crm_mon --output-as=xml --resource=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by tag"
+    cmd="crm_mon -1 -r --resource=inactive-rscs"
     test_assert $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by bundle resource"
