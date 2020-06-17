@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2013-2018 the Pacemaker project contributors
+# Copyright 2013-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,99 +26,99 @@ working_dir="@CRM_CONFIG_CTS@/lxc"
 run_dirs="/run /var/run /usr/var/run"
 
 SSH_CMD_OPTS="
-	-o StrictHostKeyChecking=no
-	-o ConnectTimeout=30
-	-o BatchMode=yes
-	-l root
-	-T
+    -o StrictHostKeyChecking=no
+    -o ConnectTimeout=30
+    -o BatchMode=yes
+    -l root
+    -T
 "
 # must be on one line b/c used inside quotes
 SSH_RSYNC_OPTS="-o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 function helptext() {
-	echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
-	echo ""
-	echo "Usage: lxc-autogen [options]"
-	echo ""
-	echo "Options:"
-	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
-	echo "-k, --key-gen          Generate pacemaker remote key only."
-	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
-	echo "-p, --restore-cib      Remove cib entries this script generated."
-	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
-	echo ""
-	echo "-A, --allow-anywhere   Allow the containers to live anywhere in the cluster"
-	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
-	echo "-m, --add-master       Add master resource shared between remote-nodes"
-	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
-	echo "-s, --share-configs    Synchronize on all known cluster nodes"
-	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
-	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
-	echo "-v, --verify           Verify environment is capable of running lxc"
-	echo ""
-	exit $1
+    echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
+    echo ""
+    echo "Usage: lxc-autogen [options]"
+    echo ""
+    echo "Options:"
+    echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
+    echo "-k, --key-gen          Generate pacemaker remote key only."
+    echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
+    echo "-p, --restore-cib      Remove cib entries this script generated."
+    echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
+    echo ""
+    echo "-A, --allow-anywhere   Allow the containers to live anywhere in the cluster"
+    echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
+    echo "-m, --add-master       Add master resource shared between remote-nodes"
+    echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
+    echo "-s, --share-configs    Synchronize on all known cluster nodes"
+    echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
+    echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
+    echo "-v, --verify           Verify environment is capable of running lxc"
+    echo ""
+    exit $1
 }
 
 while true ; do
-	case "$1" in
-	--help|-h|-\?) helptext 0;;
-	-c|--containers) containers="$2"; shift; shift;;
-	-d|--download-agent) download=1; shift;;
-	-s|--share-configs) share_configs=1; shift;;
-	-n|--network) addr="$2"; shift; shift;;
-	-r|--restore-libvirt) restore=1; shift;;
-	-p|--restore-cib) restore_pcmk=1; shift;;
-	-R|--restore-all)
-		restore_all=1
-		restore=1
-		restore_pcmk=1
-		shift;;
-	-g|--generate) generate=1; key_gen=1; shift;;
-	-k|--key-gen) key_gen=1; shift;;
-	-a|--add-cib) cib=1; shift;;
-	-A|--allow-anywhere) anywhere=1; shift;;
-	-m|--add-master) add_master=1; shift;;
-	-v|--verify) verify=1; shift;;
-	"") break;;
-	*) helptext 1;;
-	esac
+    case "$1" in
+    --help|-h|-\?) helptext 0;;
+    -c|--containers) containers="$2"; shift; shift;;
+    -d|--download-agent) download=1; shift;;
+    -s|--share-configs) share_configs=1; shift;;
+    -n|--network) addr="$2"; shift; shift;;
+    -r|--restore-libvirt) restore=1; shift;;
+    -p|--restore-cib) restore_pcmk=1; shift;;
+    -R|--restore-all)
+        restore_all=1
+        restore=1
+        restore_pcmk=1
+        shift;;
+    -g|--generate) generate=1; key_gen=1; shift;;
+    -k|--key-gen) key_gen=1; shift;;
+    -a|--add-cib) cib=1; shift;;
+    -A|--allow-anywhere) anywhere=1; shift;;
+    -m|--add-master) add_master=1; shift;;
+    -v|--verify) verify=1; shift;;
+    "") break;;
+    *) helptext 1;;
+    esac
 done
 
 if [ $verify -eq 1 ]; then
-	# verify virsh tool is available and that 
-	# we can connect to lxc driver.
-	virsh -c lxc:/// list --all > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
-		# yum install -y libvirt-daemon-driver-lxc libvirt-daemon-lxc libvirt-login-shell
-		exit 1
-	fi
+    # verify virsh tool is available and that 
+    # we can connect to lxc driver.
+    virsh -c lxc:/// list --all > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
+        # yum install -y libvirt-daemon-driver-lxc libvirt-daemon-lxc libvirt-login-shell
+        exit 1
+    fi
 
 
-	cat /etc/selinux/config  | grep -e "SELINUX.*=.*permissive" -e "SELINUX.*=.*enforcing" > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
-		exit 1
-	fi
+    cat /etc/selinux/config  | grep -e "SELINUX.*=.*permissive" -e "SELINUX.*=.*enforcing" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
+        exit 1
+    fi
 
-	ps x > /tmp/lxc-autogen-libvirt-test.txt
-	grep "libvirtd" /tmp/lxc-autogen-libvirt-test.txt
-	if [ $? -ne 0 ]; then
-		rm -f /tmp/lxc-autogen-libvirt-test.txt
-		echo "libvirtd isn't up."
-		exit 1
-	fi
-	rm -f /tmp/lxc-autogen-libvirt-test.txt
+    ps x > /tmp/lxc-autogen-libvirt-test.txt
+    grep "libvirtd" /tmp/lxc-autogen-libvirt-test.txt
+    if [ $? -ne 0 ]; then
+        rm -f /tmp/lxc-autogen-libvirt-test.txt
+        echo "libvirtd isn't up."
+        exit 1
+    fi
+    rm -f /tmp/lxc-autogen-libvirt-test.txt
 
-	which rsync > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "rsync is required"
-	fi
+    which rsync > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "rsync is required"
+    fi
 
-	which pacemaker-remoted > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "pacemaker-remoted is required"
-	fi
+    which pacemaker-remoted > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "pacemaker-remoted is required"
+    fi
 fi
 
 #strip last digits off addr
@@ -126,50 +126,50 @@ addr=$(echo $addr | awk -F. '{print $1"."$2"."$3}')
 
 this_node()
 {
-	crm_node -n
+    crm_node -n
 }
 
 other_nodes()
 {
-	crm_node -l | awk "\$2 != \"$(this_node)\" {print \$2}"
+    crm_node -l | awk "\$2 != \"$(this_node)\" {print \$2}"
 }
 
 make_directory()
 {
-	# argument must be full path
-	DIR="$1"
+    # argument must be full path
+    DIR="$1"
 
-	mkdir -p "$DIR"
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			ssh $SSH_CMD_OPTS $node mkdir -p "$DIR"
-		done
-	fi
+    mkdir -p "$DIR"
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            ssh $SSH_CMD_OPTS $node mkdir -p "$DIR"
+        done
+    fi
 }
 
 sync_file()
 {
-	TARGET="$1"
+    TARGET="$1"
 
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			rsync -ave "ssh $SSH_RSYNC_OPTS" "$TARGET" "${node}:${TARGET}"
-		done
-	fi
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            rsync -ave "ssh $SSH_RSYNC_OPTS" "$TARGET" "${node}:${TARGET}"
+        done
+    fi
 }
 
 download_agent()
 {
-	wget https://raw.github.com/ClusterLabs/resource-agents/master/heartbeat/VirtualDomain
-	chmod 755 VirtualDomain
-	mv -f VirtualDomain /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
-	sync_file /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
+    wget https://raw.github.com/ClusterLabs/resource-agents/master/heartbeat/VirtualDomain
+    chmod 755 VirtualDomain
+    mv -f VirtualDomain /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
+    sync_file /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
 }
 
 set_network()
 {
-	rm -f cur_network.xml
-	cat << END >> cur_network.xml
+    rm -f cur_network.xml
+    cat << END >> cur_network.xml
 <network>
   <name>default</name>
   <uuid>41ebdb84-7134-1111-a136-91f0f1119225</uuid>
@@ -183,95 +183,95 @@ set_network()
   </ip>
 </network>
 END
-	sync_file ${working_dir}/cur_network.xml
+    sync_file ${working_dir}/cur_network.xml
 }
 
 distribute_configs()
 {
-	for node in $(other_nodes); do
-		rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*.xml ${node}:${working_dir}
-		rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*-filesystem ${node}:${working_dir}
-	done
+    for node in $(other_nodes); do
+        rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*.xml ${node}:${working_dir}
+        rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*-filesystem ${node}:${working_dir}
+    done
 }
 
 start_network()
 {
-	NODE="$1"
+    NODE="$1"
 
-	ssh $SSH_CMD_OPTS $NODE <<-EOF
-	cd $working_dir
-	virsh net-info default >/dev/null 2>&1
-	if [ \$? -eq 0 ]; then
-		if [ ! -f restore_default.xml ]; then
-			virsh net-dumpxml default > restore_default.xml
-		fi
-		virsh net-destroy default
-		virsh net-undefine default
-	fi
-	virsh net-define cur_network.xml
-	virsh net-start default
-	virsh net-autostart default
+    ssh $SSH_CMD_OPTS $NODE <<-EOF
+    cd $working_dir
+    virsh net-info default >/dev/null 2>&1
+    if [ \$? -eq 0 ]; then
+        if [ ! -f restore_default.xml ]; then
+            virsh net-dumpxml default > restore_default.xml
+        fi
+        virsh net-destroy default
+        virsh net-undefine default
+    fi
+    virsh net-define cur_network.xml
+    virsh net-start default
+    virsh net-autostart default
 EOF
 }
 
 start_network_all()
 {
-	start_network "$(this_node)"
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			start_network "$node"
-		done
-	fi
+    start_network "$(this_node)"
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            start_network "$node"
+        done
+    fi
 }
 
 add_hosts_entry()
 {
-	IP="$1"
-	HNAME="$2"
+    IP="$1"
+    HNAME="$2"
 
-	echo $IP $HNAME >>/etc/hosts
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			ssh $SSH_CMD_OPTS $node "echo $IP $HNAME >>/etc/hosts"
-		done
-	fi
+    echo $IP $HNAME >>/etc/hosts
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            ssh $SSH_CMD_OPTS $node "echo $IP $HNAME >>/etc/hosts"
+        done
+    fi
 }
 
 generate_key()
 {
-	if [ ! -e /etc/pacemaker/authkey ]; then
-		make_directory /etc/pacemaker
-		dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
-		sync_file /etc/pacemaker/authkey
-	fi
+    if [ ! -e /etc/pacemaker/authkey ]; then
+        make_directory /etc/pacemaker
+        dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+        sync_file /etc/pacemaker/authkey
+    fi
 }
 
 generate()
 {
-	set_network
+    set_network
 
-	# Generate libvirt domains in xml
-	for (( c=1; c <= $containers; c++ ))
-	do
-		# Clean any previous definition
-		rm -rf lxc$c.xml lxc$c-filesystem
+    # Generate libvirt domains in xml
+    for (( c=1; c <= $containers; c++ ))
+    do
+        # Clean any previous definition
+        rm -rf lxc$c.xml lxc$c-filesystem
 
-		# Create a basic filesystem with run directories
-		for dir in $run_dirs; do
-			mkdir -p lxc$c-filesystem/$dir
-		done
+        # Create a basic filesystem with run directories
+        for dir in $run_dirs; do
+            mkdir -p lxc$c-filesystem/$dir
+        done
 
-		# Create libvirt definition
-		suffix=$((10 + $c))
-		prefix=$(echo $addr | awk -F. '{print $1"."$2}')
-		subnet=$(echo $addr | awk -F. '{print $3}')
-		while [ $suffix -gt 255 ]; do
-		    subnet=$(($subnet + 1))
-		    suffix=$(($subnet - 255))
-		done
-		cip=$prefix.$subnet.$suffix
+        # Create libvirt definition
+        suffix=$((10 + $c))
+        prefix=$(echo $addr | awk -F. '{print $1"."$2}')
+        subnet=$(echo $addr | awk -F. '{print $3}')
+        while [ $suffix -gt 255 ]; do
+            subnet=$(($subnet + 1))
+            suffix=$(($subnet - 255))
+        done
+        cip=$prefix.$subnet.$suffix
 
-		cat << END >> lxc$c.xml
+        cat << END >> lxc$c.xml
 <domain type='lxc'>
   <name>lxc$c</name>
   <memory unit='KiB'>200704</memory>
@@ -286,15 +286,15 @@ generate()
         <target dir='/dev/shm'/>
     </filesystem>
 END
-		for dir in $run_dirs; do
-			cat << END >> lxc$c.xml
+        for dir in $run_dirs; do
+            cat << END >> lxc$c.xml
     <filesystem type='mount'>
       <source dir='$working_dir/lxc$c-filesystem${dir}'/>
       <target dir='$dir'/>
     </filesystem>
 END
-		done
-		cat << END >> lxc$c.xml
+        done
+        cat << END >> lxc$c.xml
     <interface type='network'>
       <mac address='52:54:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9))'/>
       <source network='default'/>
@@ -303,9 +303,9 @@ END
 </domain>
 END
 
-		# Create CIB definition
-		rm -f container$c.cib
-		cat << END >> container$c.cib
+        # Create CIB definition
+        rm -f container$c.cib
+        cat << END >> container$c.cib
       <primitive class="ocf" id="container$c" provider="heartbeat" type="VirtualDomain">
         <instance_attributes id="container$c-instance_attributes">
           <nvpair id="container$c-instance_attributes-force_stop" name="force_stop" value="true"/>
@@ -322,9 +322,9 @@ END
       </primitive>
 END
 
-		# Create container init
-		rm -f lxc$c-filesystem/launch-helper
-		cat << END >> lxc$c-filesystem/launch-helper
+        # Create container init
+        rm -f lxc$c-filesystem/launch-helper
+        cat << END >> lxc$c-filesystem/launch-helper
 #!@BASH_PATH@
 ip -f inet addr add $cip/24 dev eth0
 ip link set eth0 up
@@ -334,14 +334,14 @@ df > $working_dir/lxc$c-filesystem/disk_usage.txt
 export PCMK_debugfile=@CRM_LOG_DIR@/pacemaker_remote_lxc$c.log
 /usr/sbin/pacemaker-remoted
 END
-		chmod 711 lxc$c-filesystem/launch-helper
+        chmod 711 lxc$c-filesystem/launch-helper
 
-		add_hosts_entry $cip lxc$c
-	done
+        add_hosts_entry $cip lxc$c
+    done
 
-	# Create CIB fragment for a master-slave resource
-	rm -f lxc-ms.cib
-	cat << END >> lxc-ms.cib
+    # Create CIB fragment for a master-slave resource
+    rm -f lxc-ms.cib
+    cat << END >> lxc-ms.cib
       <master id="lxc-ms-master">
         <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
           <instance_attributes id="lxc-ms-instance_attributes"/>
@@ -360,138 +360,138 @@ END
 
 apply_cib_master()
 {
-	cibadmin -Q > cur.cib
-	export CIB_file=cur.cib
+    cibadmin -Q > cur.cib
+    export CIB_file=cur.cib
 
-	cibadmin -o resources -Mc -x lxc-ms.cib
-	for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
-		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -Mc -x tmp_constraint
-	done
-	# Make sure the version changes even if the content doesn't
-	cibadmin -B
-	unset CIB_file
+    cibadmin -o resources -Mc -x lxc-ms.cib
+    for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
+        echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
+        cibadmin -o constraints -Mc -x tmp_constraint
+    done
+    # Make sure the version changes even if the content doesn't
+    cibadmin -B
+    unset CIB_file
 
-	cibadmin --replace -o configuration --xml-file cur.cib
-	rm -f cur.cib
+    cibadmin --replace -o configuration --xml-file cur.cib
+    rm -f cur.cib
 }
 
 apply_cib_entries()
 {
-	cibadmin -Q > cur.cib
-	export CIB_file=cur.cib
-	for tmp in container*.cib; do
-		cibadmin -o resources -Mc -x $tmp
+    cibadmin -Q > cur.cib
+    export CIB_file=cur.cib
+    for tmp in container*.cib; do
+        cibadmin -o resources -Mc -x $tmp
 
-		remote_node=$(cat ${tmp} | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')
-		if [ $anywhere -eq 0 ]; then
-			tmp=$(echo $tmp | sed -e 's/\.cib//g')
-			crm_resource -M -r "$tmp" -H "$(this_node)"
-		fi
-		echo "<rsc_location id=\"lxc-ping-location-${remote_node}\" node=\"${remote_node}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
-		# it's fine if applying this constraint fails. it's just to help with cts
-		# when the connectivity resources are in use. those resources fail the remote-nodes.
-		cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
+        remote_node=$(cat ${tmp} | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')
+        if [ $anywhere -eq 0 ]; then
+            tmp=$(echo $tmp | sed -e 's/\.cib//g')
+            crm_resource -M -r "$tmp" -H "$(this_node)"
+        fi
+        echo "<rsc_location id=\"lxc-ping-location-${remote_node}\" node=\"${remote_node}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
+        # it's fine if applying this constraint fails. it's just to help with cts
+        # when the connectivity resources are in use. those resources fail the remote-nodes.
+        cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
 
-		for rsc in $(crm_resource -l | grep rsc_ ); do
-			echo "<rsc_location id=\"lxc-${rsc}-location-${remote_node}\" node=\"${remote_node}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
-			cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
-		done
+        for rsc in $(crm_resource -l | grep rsc_ ); do
+            echo "<rsc_location id=\"lxc-${rsc}-location-${remote_node}\" node=\"${remote_node}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
+            cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
+        done
 
-		rm -f tmp_constraint
-	done
+        rm -f tmp_constraint
+    done
 
-	# Make sure the version changes even if the content doesn't
-	cibadmin -B
+    # Make sure the version changes even if the content doesn't
+    cibadmin -B
 
-	unset CIB_file
+    unset CIB_file
 
-	cibadmin --replace -o configuration --xml-file cur.cib
-	rm -f cur.cib
+    cibadmin --replace -o configuration --xml-file cur.cib
+    rm -f cur.cib
 }
 
 restore_cib()
 {
-	cibadmin -Q > cur.cib
-	export CIB_file=cur.cib
+    cibadmin -Q > cur.cib
+    export CIB_file=cur.cib
 
-	for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
-		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -D -x tmp_constraint
-		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -D -x tmp_constraint
+    for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
+        echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
+        cibadmin -o constraints -D -x tmp_constraint
+        echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
+        cibadmin -o constraints -D -x tmp_constraint
 
-		for rsc in $(crm_resource -l | grep rsc_ ); do
-			echo "<rsc_location id=\"lxc-${rsc}-location-${tmp}\" node=\"${tmp}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
-			cibadmin -o constraints -D -x tmp_constraint
-		done
-		rm -f tmp_constraint
-	done
-	cibadmin -o resources -D -x lxc-ms.cib
+        for rsc in $(crm_resource -l | grep rsc_ ); do
+            echo "<rsc_location id=\"lxc-${rsc}-location-${tmp}\" node=\"${tmp}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
+            cibadmin -o constraints -D -x tmp_constraint
+        done
+        rm -f tmp_constraint
+    done
+    cibadmin -o resources -D -x lxc-ms.cib
 
-	for tmp in container*.cib; do
-		tmp=$(echo $tmp | sed -e 's/\.cib//g')
-		crm_resource -U -r "$tmp" -H "$(this_node)"
-		crm_resource -D -r "$tmp" -t primitive
-	done
-	# Make sure the version changes even if the content doesn't
-	cibadmin -B
-	unset CIB_file
+    for tmp in container*.cib; do
+        tmp=$(echo $tmp | sed -e 's/\.cib//g')
+        crm_resource -U -r "$tmp" -H "$(this_node)"
+        crm_resource -D -r "$tmp" -t primitive
+    done
+    # Make sure the version changes even if the content doesn't
+    cibadmin -B
+    unset CIB_file
 
-	cibadmin --replace -o configuration --xml-file cur.cib
-	rm -f  cur.cib 
+    cibadmin --replace -o configuration --xml-file cur.cib
+    rm -f  cur.cib 
 
-	# Allow the cluster to stabilize before continuing
-	crm_resource --wait
+    # Allow the cluster to stabilize before continuing
+    crm_resource --wait
 
-	# Purge nodes from caches and CIB status section
-	for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
-		crm_node --force --remove $tmp
-	done
+    # Purge nodes from caches and CIB status section
+    for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
+        crm_node --force --remove $tmp
+    done
 }
 
 restore_network()
 {
-	NODE="$1"
+    NODE="$1"
 
-	ssh $SSH_CMD_OPTS $NODE <<-EOF
-	cd $working_dir
-	for tmp in \$(ls lxc*.xml | sed -e 's/\.xml//g'); do
-		virsh -c lxc:/// destroy \$tmp >/dev/null 2>&1
-		virsh -c lxc:/// undefine \$tmp >/dev/null 2>&1
-		sed -i.bak "/...\....\....\..* \${tmp}/d" /etc/hosts
-	done
-	virsh net-destroy default >/dev/null 2>&1
-	virsh net-undefine default >/dev/null 2>&1
-	if [ -f restore_default.xml ]; then
-		virsh net-define restore_default.xml
-		virsh net-start default
-		rm restore_default.xml
-	fi
+    ssh $SSH_CMD_OPTS $NODE <<-EOF
+    cd $working_dir
+    for tmp in \$(ls lxc*.xml | sed -e 's/\.xml//g'); do
+        virsh -c lxc:/// destroy \$tmp >/dev/null 2>&1
+        virsh -c lxc:/// undefine \$tmp >/dev/null 2>&1
+        sed -i.bak "/...\....\....\..* \${tmp}/d" /etc/hosts
+    done
+    virsh net-destroy default >/dev/null 2>&1
+    virsh net-undefine default >/dev/null 2>&1
+    if [ -f restore_default.xml ]; then
+        virsh net-define restore_default.xml
+        virsh net-start default
+        rm restore_default.xml
+    fi
 EOF
-	echo "Containers destroyed and default network restored on $NODE"
+    echo "Containers destroyed and default network restored on $NODE"
 }
 
 restore_libvirt()
 {
-	restore_network "$(this_node)"
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			restore_network $node
-		done
-	fi
+    restore_network "$(this_node)"
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            restore_network $node
+        done
+    fi
 }
 
 restore_files()
 {
-	find . -maxdepth 1 -not -name "lxc*.xml" -a -not -name . -exec rm -rf "{}" ";"
-	if [ $share_configs -eq 1 ]; then
-		for node in $(other_nodes); do
-			ssh $SSH_CMD_OPTS $node rm -rf \
-				$working_dir/lxc*-filesystem \
-				$working_dir/cur_network.xml
-		done
-	fi
+    find . -maxdepth 1 -not -name "lxc*.xml" -a -not -name . -exec rm -rf "{}" ";"
+    if [ $share_configs -eq 1 ]; then
+        for node in $(other_nodes); do
+            ssh $SSH_CMD_OPTS $node rm -rf \
+                $working_dir/lxc*-filesystem \
+                $working_dir/cur_network.xml
+        done
+    fi
 }
 
 make_directory $working_dir
@@ -499,36 +499,38 @@ cd $working_dir || exit 1
 
 # Generate files as requested
 if [ $download -eq 1 ]; then
-	download_agent
+    download_agent
 fi
 if [ $key_gen -eq 1 ]; then
-	generate_key
+    generate_key
 fi
 if [ $generate -eq 1 ]; then
-	generate
+    generate
 fi
 if [ $share_configs -eq 1 ]; then
-	distribute_configs
+    distribute_configs
 fi
 if [ $generate -eq 1 ]; then
-	start_network_all
+    start_network_all
 fi
 
 # Update cluster as requested
 if [ $cib -eq 1 ]; then
-	apply_cib_entries
+    apply_cib_entries
 fi
 if [ $add_master -eq 1 ]; then
-	apply_cib_master
+    apply_cib_master
 fi
 
 # Restore original state as requested
 if [ $restore_pcmk -eq 1 ]; then
-	restore_cib
+    restore_cib
 fi
 if [ $restore -eq 1 ]; then
-	restore_libvirt
+    restore_libvirt
 fi
 if [ $restore_all -eq 1 ]; then
-	restore_files
+    restore_files
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
