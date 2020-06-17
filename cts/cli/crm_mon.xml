@@ -91,7 +91,9 @@
         <primitive id="Email" class="lsb" type="exim"/>
       </group>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="not-on-cluster1" rsc="dummy" node="cluster01" score="-INFINITY"/>
+    </constraints>
     <tags>
       <tag id="all-nodes">
         <obj_ref id="1"/>

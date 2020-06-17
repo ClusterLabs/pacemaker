@@ -49,7 +49,7 @@ static int print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_se
                                  gboolean print_spacer);
 static int print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                unsigned int mon_ops, const char *prefix,
-                               gboolean print_spacer);
+                               GListPtr only_rsc, gboolean print_spacer);
 static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                                  unsigned int mon_ops, GListPtr only_node,
                                  GListPtr only_rsc, gboolean print_spacer);
@@ -636,7 +636,8 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
  */
 static int
 print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
-                    unsigned int mon_ops, const char *prefix, gboolean print_spacer)
+                    unsigned int mon_ops, const char *prefix, GListPtr only_rsc,
+                    gboolean print_spacer)
 {
     GListPtr gIter, gIter2;
     int rc = pcmk_rc_no_output;
@@ -644,8 +645,15 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         pe__location_t *location = gIter->data;
+
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix))
             continue;
+
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+            continue;
+        }
+
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_node_t *node = (pe_node_t *) gIter2->data;
 
@@ -848,7 +856,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, rc == pcmk_rc_ok));
+        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, resources,
+                                         rc == pcmk_rc_ok));
     }
 
     /* Print stonith history */
@@ -954,7 +963,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
+        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);
@@ -1068,7 +1077,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
+        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);

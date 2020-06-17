@@ -127,6 +127,9 @@ Active Resources:
       </resource_history>
     </node>
   </node_history>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output - OK (0) =#=#=#=
@@ -250,6 +253,9 @@ Active Resources:
       </resource_history>
     </node>
   </node_history>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
@@ -308,6 +314,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
@@ -360,6 +369,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01 (1)
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
@@ -411,6 +423,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
@@ -468,6 +483,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
@@ -519,6 +537,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
 =#=#=#= Begin test: XML output grouped by node =#=#=#=
@@ -626,6 +647,9 @@ Operations:
       </resource_history>
     </node>
   </node_history>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output grouped by node - OK (0) =#=#=#=
@@ -662,6 +686,9 @@ Operations:
       * (19) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
 =#=#=#= Begin test: XML output filtered by node =#=#=#=
@@ -734,6 +761,9 @@ Operations:
       </resource_history>
     </node>
   </node_history>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node - OK (0) =#=#=#=
@@ -774,6 +804,9 @@ Operations:
       * (2) start
     * Email: migration-threshold=1000000:
       * (2) start
+
+Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
 =#=#=#= Begin test: XML output filtered by tag =#=#=#=
@@ -856,6 +889,9 @@ Operations:
       </resource_history>
     </node>
   </node_history>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by tag - OK (0) =#=#=#=
@@ -985,6 +1021,9 @@ Active Resources:
       </replica>
     </bundle>
   </resources>
+  <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+  </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node that doesn't exist - OK (0) =#=#=#=
