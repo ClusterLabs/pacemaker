@@ -25,13 +25,6 @@ verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
 run_dirs="/run /var/run /usr/var/run"
 
-SSH_CMD_OPTS="
-    -o StrictHostKeyChecking=no
-    -o ConnectTimeout=30
-    -o BatchMode=yes
-    -l root
-    -T
-"
 # must be on one line b/c used inside quotes
 SSH_RSYNC_OPTS="-o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKeyChecking=no"
 
@@ -56,7 +49,7 @@ function helptext() {
     echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
     echo "-v, --verify           Verify environment is capable of running lxc"
     echo ""
-    exit $1
+    exit "$1"
 }
 
 while true ; do
@@ -122,7 +115,14 @@ if [ $verify -eq 1 ]; then
 fi
 
 #strip last digits off addr
-addr=$(echo $addr | awk -F. '{print $1"."$2"."$3}')
+addr="$(echo "$addr" | awk -F. '{print $1"."$2"."$3}')"
+
+node_exec() {
+    ssh -o StrictHostKeyChecking=no \
+        -o ConnectTimeout=30 \
+        -o BatchMode=yes \
+        -l root -T "$@"
+}
 
 this_node()
 {
@@ -142,7 +142,7 @@ make_directory()
     mkdir -p "$DIR"
     if [ $share_configs -eq 1 ]; then
         for node in $(other_nodes); do
-            ssh $SSH_CMD_OPTS $node mkdir -p "$DIR"
+            node_exec "$node" mkdir -p "$DIR"
         done
     fi
 }
@@ -183,14 +183,14 @@ set_network()
   </ip>
 </network>
 END
-    sync_file ${working_dir}/cur_network.xml
+    sync_file "${working_dir}"/cur_network.xml
 }
 
 distribute_configs()
 {
     for node in $(other_nodes); do
-        rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*.xml ${node}:${working_dir}
-        rsync -ave "ssh $SSH_RSYNC_OPTS" ${working_dir}/lxc*-filesystem ${node}:${working_dir}
+        rsync -ave "ssh $SSH_RSYNC_OPTS" "${working_dir}"/lxc*.xml "${node}:${working_dir}"
+        rsync -ave "ssh $SSH_RSYNC_OPTS" "${working_dir}"/lxc*-filesystem "${node}:${working_dir}"
     done
 }
 
@@ -198,8 +198,8 @@ start_network()
 {
     NODE="$1"
 
-    ssh $SSH_CMD_OPTS $NODE <<-EOF
-    cd $working_dir
+    node_exec "$NODE" <<-EOF
+    cd "$working_dir"
     virsh net-info default >/dev/null 2>&1
     if [ \$? -eq 0 ]; then
         if [ ! -f restore_default.xml ]; then
@@ -229,10 +229,10 @@ add_hosts_entry()
     IP="$1"
     HNAME="$2"
 
-    echo $IP $HNAME >>/etc/hosts
+    echo "$IP $HNAME" >>/etc/hosts
     if [ $share_configs -eq 1 ]; then
         for node in $(other_nodes); do
-            ssh $SSH_CMD_OPTS $node "echo $IP $HNAME >>/etc/hosts"
+            node_exec "$node" "echo $IP $HNAME >>/etc/hosts"
         done
     fi
 }
@@ -254,22 +254,22 @@ generate()
     for (( c=1; c <= $containers; c++ ))
     do
         # Clean any previous definition
-        rm -rf lxc$c.xml lxc$c-filesystem
+        rm -rf "lxc$c.xml" "lxc$c-filesystem"
 
         # Create a basic filesystem with run directories
         for dir in $run_dirs; do
-            mkdir -p lxc$c-filesystem/$dir
+            mkdir -p "lxc$c-filesystem/$dir"
         done
 
         # Create libvirt definition
         suffix=$((10 + $c))
-        prefix=$(echo $addr | awk -F. '{print $1"."$2}')
-        subnet=$(echo $addr | awk -F. '{print $3}')
+        prefix="$(echo "$addr" | awk -F. '{print $1"."$2}')"
+        subnet="$(echo "$addr" | awk -F. '{print $3}')"
         while [ $suffix -gt 255 ]; do
             subnet=$(($subnet + 1))
             suffix=$(($subnet - 255))
         done
-        cip=$prefix.$subnet.$suffix
+        cip="$prefix.$subnet.$suffix"
 
         cat << END >> lxc$c.xml
 <domain type='lxc'>
@@ -304,8 +304,8 @@ END
 END
 
         # Create CIB definition
-        rm -f container$c.cib
-        cat << END >> container$c.cib
+        rm -f "container$c.cib"
+        cat << END >> "container$c.cib"
       <primitive class="ocf" id="container$c" provider="heartbeat" type="VirtualDomain">
         <instance_attributes id="container$c-instance_attributes">
           <nvpair id="container$c-instance_attributes-force_stop" name="force_stop" value="true"/>
@@ -323,20 +323,20 @@ END
 END
 
         # Create container init
-        rm -f lxc$c-filesystem/launch-helper
-        cat << END >> lxc$c-filesystem/launch-helper
+        rm -f "lxc$c-filesystem/launch-helper"
+        cat << END >> "lxc$c-filesystem/launch-helper"
 #!@BASH_PATH@
-ip -f inet addr add $cip/24 dev eth0
+ip -f inet addr add "$cip/24" dev eth0
 ip link set eth0 up
-ip route add default via $addr.1
-hostname lxc$c
-df > $working_dir/lxc$c-filesystem/disk_usage.txt
-export PCMK_debugfile=@CRM_LOG_DIR@/pacemaker_remote_lxc$c.log
+ip route add default via "$addr.1"
+hostname "lxc$c"
+df > "$working_dir/lxc$c-filesystem/disk_usage.txt"
+export PCMK_debugfile="@CRM_LOG_DIR@/pacemaker_remote_lxc$c.log"
 /usr/sbin/pacemaker-remoted
 END
-        chmod 711 lxc$c-filesystem/launch-helper
+        chmod 711 "lxc$c-filesystem/launch-helper"
 
-        add_hosts_entry $cip lxc$c
+        add_hosts_entry "$cip" "lxc$c"
     done
 
     # Create CIB fragment for a master-slave resource
@@ -381,11 +381,11 @@ apply_cib_entries()
     cibadmin -Q > cur.cib
     export CIB_file=cur.cib
     for tmp in container*.cib; do
-        cibadmin -o resources -Mc -x $tmp
+        cibadmin -o resources -Mc -x "$tmp"
 
-        remote_node=$(cat ${tmp} | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')
+        remote_node="$(cat "${tmp}" | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')"
         if [ $anywhere -eq 0 ]; then
-            tmp=$(echo $tmp | sed -e 's/\.cib//g')
+            tmp="$(echo "$tmp" | sed -e 's/\.cib//g')"
             crm_resource -M -r "$tmp" -H "$(this_node)"
         fi
         echo "<rsc_location id=\"lxc-ping-location-${remote_node}\" node=\"${remote_node}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
@@ -430,7 +430,7 @@ restore_cib()
     cibadmin -o resources -D -x lxc-ms.cib
 
     for tmp in container*.cib; do
-        tmp=$(echo $tmp | sed -e 's/\.cib//g')
+        tmp="$(echo "$tmp" | sed -e 's/\.cib//g')"
         crm_resource -U -r "$tmp" -H "$(this_node)"
         crm_resource -D -r "$tmp" -t primitive
     done
@@ -446,7 +446,7 @@ restore_cib()
 
     # Purge nodes from caches and CIB status section
     for tmp in $(ls lxc*.xml | sed -e 's/\.xml//g'); do
-        crm_node --force --remove $tmp
+        crm_node --force --remove "$tmp"
     done
 }
 
@@ -454,11 +454,11 @@ restore_network()
 {
     NODE="$1"
 
-    ssh $SSH_CMD_OPTS $NODE <<-EOF
-    cd $working_dir
+    node_exec "$NODE" <<-EOF
+    cd "$working_dir"
     for tmp in \$(ls lxc*.xml | sed -e 's/\.xml//g'); do
-        virsh -c lxc:/// destroy \$tmp >/dev/null 2>&1
-        virsh -c lxc:/// undefine \$tmp >/dev/null 2>&1
+        virsh -c lxc:/// destroy "\$tmp" >/dev/null 2>&1
+        virsh -c lxc:/// undefine "\$tmp" >/dev/null 2>&1
         sed -i.bak "/...\....\....\..* \${tmp}/d" /etc/hosts
     done
     virsh net-destroy default >/dev/null 2>&1
@@ -477,7 +477,7 @@ restore_libvirt()
     restore_network "$(this_node)"
     if [ $share_configs -eq 1 ]; then
         for node in $(other_nodes); do
-            restore_network $node
+            restore_network "$node"
         done
     fi
 }
@@ -487,15 +487,15 @@ restore_files()
     find . -maxdepth 1 -not -name "lxc*.xml" -a -not -name . -exec rm -rf "{}" ";"
     if [ $share_configs -eq 1 ]; then
         for node in $(other_nodes); do
-            ssh $SSH_CMD_OPTS $node rm -rf \
-                $working_dir/lxc*-filesystem \
-                $working_dir/cur_network.xml
+            node_exec "$node" rm -rf \
+                "$working_dir"/lxc*-filesystem \
+                "$working_dir"/cur_network.xml
         done
     fi
 }
 
-make_directory $working_dir
-cd $working_dir || exit 1
+make_directory "$working_dir"
+cd "$working_dir" || exit 1
 
 # Generate files as requested
 if [ $download -eq 1 ]; then
