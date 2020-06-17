@@ -244,6 +244,46 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --resource=blah"
     test_assert $CRM_EX_OK 0
 
+    desc="Basic text output with inactive resources, filtered by bundle resource"
+    cmd="crm_mon -1 -r --resource=httpd-bundle"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by inactive bundle resource"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled IP address resource"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-ip-192.168.122.131"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled IP address resource"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled container"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-docker-1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled container"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-docker-2"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundle connection"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-0"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundle connection"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-0"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled primitive resource"
+    cmd="crm_mon -1 -r --resource=httpd"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled primitive resource"
+    cmd="crm_mon --output-as=xml --resource=httpd"
+    test_assert $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_mon-partial.xml"

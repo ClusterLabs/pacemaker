@@ -1509,6 +1509,317 @@ Active Resources:
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by resource that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by resource that doesn't exist
+=#=#=#= Begin test: Basic text output with inactive resources, filtered by bundle resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
+    * httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
+=#=#=#= End test: Basic text output with inactive resources, filtered by bundle resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle resource
+=#=#=#= Begin test: XML output filtered by inactive bundle resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=httpd-bundle">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-0" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="1">
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-1" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="2">
+        <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-2" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by inactive bundle resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by inactive bundle resource
+=#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled IP address resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * Replica[0]
+      * httpd-bundle-ip-192.168.122.131	(ocf::heartbeat:IPaddr2):	 Stopped
+=#=#=#= End test: Basic text output with inactive resources, filtered by bundled IP address resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled IP address resource
+=#=#=#= Begin test: XML output filtered by bundled IP address resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="1">
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by bundled IP address resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by bundled IP address resource
+=#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled container =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * Replica[1]
+      * httpd-bundle-docker-1	(ocf::heartbeat:docker):	 Stopped
+=#=#=#= End test: Basic text output with inactive resources, filtered by bundled container - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled container
+=#=#=#= Begin test: XML output filtered by bundled container =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=httpd-bundle-docker-2">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="2">
+        <resource id="httpd-bundle-docker-2" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by bundled container - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by bundled container
+=#=#=#= Begin test: Basic text output with inactive resources, filtered by bundle connection =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * Replica[0]
+      * httpd-bundle-0	(ocf::pacemaker:remote):	 Stopped
+=#=#=#= End test: Basic text output with inactive resources, filtered by bundle connection - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle connection
+=#=#=#= Begin test: XML output filtered by bundle connection =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=httpd-bundle-0">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="httpd-bundle-0" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by bundle connection - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by bundle connection
+=#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled primitive resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * Replica[0]
+      * httpd	(ocf::heartbeat:apache):	 Stopped
+    * Replica[1]
+      * httpd	(ocf::heartbeat:apache):	 Stopped
+    * Replica[2]
+      * httpd	(ocf::heartbeat:apache):	 Stopped
+=#=#=#= End test: Basic text output with inactive resources, filtered by bundled primitive resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled primitive resource
+=#=#=#= Begin test: XML output filtered by bundled primitive resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=httpd">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="1">
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="2">
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by bundled primitive resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by bundled primitive resource
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
