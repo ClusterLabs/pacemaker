@@ -251,7 +251,7 @@ generate()
     set_network
 
     # Generate libvirt domains in xml
-    for (( c=1; c <= $containers; c++ ))
+    for (( c=1; c <= containers; c++ ))
     do
         # Clean any previous definition
         rm -rf "lxc$c.xml" "lxc$c-filesystem"
@@ -262,12 +262,12 @@ generate()
         done
 
         # Create libvirt definition
-        suffix=$((10 + $c))
+        suffix=$((10 + c))
         prefix="$(echo "$addr" | awk -F. '{print $1"."$2}')"
         subnet="$(echo "$addr" | awk -F. '{print $3}')"
         while [ $suffix -gt 255 ]; do
-            subnet=$(($subnet + 1))
-            suffix=$(($subnet - 255))
+            subnet=$((subnet + 1))
+            suffix=$((subnet - 255))
         done
         cip="$prefix.$subnet.$suffix"
 
@@ -296,7 +296,7 @@ END
         done
         cat << END >> lxc$c.xml
     <interface type='network'>
-      <mac address='52:54:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9))'/>
+      <mac address='52:54:$((RANDOM % 9))$((RANDOM % 9)):$((RANDOM % 9))$((RANDOM % 9)):$((RANDOM % 9))$((RANDOM % 9)):$((RANDOM % 9))$((RANDOM % 9))'/>
       <source network='default'/>
     </interface>
   </devices>
