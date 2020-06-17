@@ -29,25 +29,26 @@ run_dirs="/run /var/run /usr/var/run"
 SSH_RSYNC_OPTS="-o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 function helptext() {
-    echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
+    echo "lxc_autogen.sh - generate libvirt LXC containers for testing purposes"
     echo ""
     echo "Usage: lxc-autogen [options]"
     echo ""
     echo "Options:"
-    echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
-    echo "-k, --key-gen          Generate pacemaker remote key only."
-    echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
-    echo "-p, --restore-cib      Remove cib entries this script generated."
-    echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
+    echo "-g, --generate         Generate libvirt LXC environment in directory this script is run from"
+    echo "-k, --key-gen          Generate Pacemaker Remote key only"
+    echo "-r, --restore-libvirt  Restore the default network and libvirt config to before this script ran"
+    echo "-p, --restore-cib      Remove CIB entries this script generated"
+    echo "-R, --restore-all      Restore both libvirt and CIB, and clean working directory"
+    echo "                       (libvirt xml files are not removed, so resource can be stopped properly)"
     echo ""
     echo "-A, --allow-anywhere   Allow the containers to live anywhere in the cluster"
     echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
     echo "-m, --add-master       Add master resource shared between remote-nodes"
-    echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
+    echo "-d, --download-agent   Download and install latest VirtualDomain agent"
     echo "-s, --share-configs    Synchronize on all known cluster nodes"
-    echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
-    echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
-    echo "-v, --verify           Verify environment is capable of running lxc"
+    echo "-c, --containers       Specify number of containers to generate (default $containers; used with -g)"
+    echo "-n, --network          Network to override libvirt default (example: -n 192.168.123.1; used with -g)"
+    echo "-v, --verify           Verify environment is capable of running LXC"
     echo ""
     exit "$1"
 }
@@ -82,7 +83,7 @@ if [ $verify -eq 1 ]; then
     # we can connect to lxc driver.
     virsh -c lxc:/// list --all > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
+        echo "libvirt LXC driver must be installed (could not connect 'virsh -c lxc:///')"
         # yum install -y libvirt-daemon-driver-lxc libvirt-daemon-lxc libvirt-login-shell
         exit 1
     fi
@@ -95,18 +96,18 @@ if [ $verify -eq 1 ]; then
 
     ps ax | grep "[l]ibvirtd"
     if [ $? -ne 0 ]; then
-        echo "libvirtd isn't up."
+        echo "libvirtd must be running"
         exit 1
     fi
 
     which rsync > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo "rsync is required"
+        echo "rsync must be installed"
     fi
 
     which pacemaker-remoted > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo "pacemaker-remoted is required"
+        echo "pacemaker-remoted must be installed"
     fi
 fi
 
