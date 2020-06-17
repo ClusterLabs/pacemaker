@@ -207,8 +207,11 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
     if (brief_output && is_not_set(mon_ops, mon_op_group_by_node)) {
-        pe__rscs_brief_output(out, data_set->resources, print_opts,
+        GListPtr rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
+
+        pe__rscs_brief_output(out, rscs, print_opts,
                               is_set(mon_ops, mon_op_inactive_resources));
+        g_list_free(rscs);
     }
 
     /* For each resource, display it if appropriate */

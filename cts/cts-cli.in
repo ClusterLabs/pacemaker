@@ -302,6 +302,16 @@ function test_crm_mon() {
 
     # XML already includes inactive resources
 
+    desc="Complete brief text output, with inactive resources"
+    cmd="crm_mon -1 -r --include=all --brief"
+    test_assert $CRM_EX_OK 0
+
+    # XML does not have a brief output option
+
+    desc="Complete brief text output grouped by node, with inactive resources"
+    cmd="crm_mon -1 -r --include=all --group-by-node --brief"
+    test_assert $CRM_EX_OK 0
+
     desc="Text output of partially active resources, with inactive resources, filtered by node"
     cmd="crm_mon -1 -r --node=cluster01"
     test_assert $CRM_EX_OK 0

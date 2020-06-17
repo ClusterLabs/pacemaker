@@ -1037,10 +1037,13 @@ pe__node_html(pcmk__output_t *out, va_list args) {
             pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
         }
         if (print_brief && group_by_node) {
-            out->begin_list(out, NULL, NULL, NULL);
-            pe__rscs_brief_output(out, node->details->running_rsc, print_opts | pe_print_rsconly,
-                                  FALSE);
-            out->end_list(out);
+            GListPtr rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
+
+            if (rscs != NULL) {
+                out->begin_list(out, NULL, NULL, NULL);
+                pe__rscs_brief_output(out, rscs, print_opts | pe_print_rsconly, FALSE);
+                out->end_list(out);
+            }
 
         } else if (group_by_node) {
             GListPtr lpc2 = NULL;
@@ -1091,24 +1094,34 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
         /* If we're grouping by node, print its resources */
         if (group_by_node) {
-            out->begin_list(out, NULL, NULL, "%s", buf);
-            out->begin_list(out, NULL, NULL, "Resources");
-
             if (print_brief) {
-                pe__rscs_brief_output(out, node->details->running_rsc,
-                                      print_opts | pe_print_rsconly, FALSE);
+                GListPtr rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
+
+                if (rscs != NULL) {
+                    out->begin_list(out, NULL, NULL, "%s", buf);
+                    out->begin_list(out, NULL, NULL, "Resources");
+
+                    pe__rscs_brief_output(out, rscs, print_opts | pe_print_rsconly, FALSE);
+
+                    out->end_list(out);
+                    out->end_list(out);
+                }
+
             } else {
                 GListPtr gIter2 = NULL;
+
+                out->begin_list(out, NULL, NULL, "%s", buf);
+                out->begin_list(out, NULL, NULL, "Resources");
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
                     pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
                     out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly,
                                  rsc, only_node, only_rsc);
                 }
-            }
 
-            out->end_list(out);
-            out->end_list(out);
+                out->end_list(out);
+                out->end_list(out);
+            }
         } else {
             out->list_item(out, NULL, "%s", buf);
         }
