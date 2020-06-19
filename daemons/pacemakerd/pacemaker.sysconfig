@@ -34,9 +34,8 @@
 # Log all messages from a comma-separated list of functions.
 # PCMK_trace_functions=function1,function2,function3
 
-# Log all messages from a comma-separated list of files (no path).
-# Wildcards are supported, e.g. PCMK_trace_files=prefix*.c
-# PCMK_trace_files=file.c,other.h
+# Log all messages from a comma-separated list of file names (without path).
+# PCMK_trace_files=file1.c,file2.c
 
 # Log all messages matching comma-separated list of formats.
 # PCMK_trace_formats="Sent delete %d"
