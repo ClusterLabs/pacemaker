@@ -542,7 +542,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
         "Zero disables polling, while positive values are an interval in seconds"
             "(unless other units are specified, for example \"5min\")",
         "15min", pcmk__valid_interval_spec,
-        "Polling interval to recheck cluster state and evalute rules "
+        "Polling interval to recheck cluster state and evaluate rules "
             "with date specifications",
         "Pacemaker is primarily event-driven, and looks ahead to know when to "
             "recheck cluster state for failure timeouts and most time-based "
