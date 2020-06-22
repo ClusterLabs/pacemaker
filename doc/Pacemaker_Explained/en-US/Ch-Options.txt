@@ -181,6 +181,8 @@ What to do when the cluster does not have quorum.  Allowed values:
 * +ignore:+ continue all resource management
 * +freeze:+ continue resource management, but don't recover resources from nodes not in the affected partition
 * +stop:+ stop all resources in the affected cluster partition
+* +demote:+ demote promotable resources and stop all other resources in the
+  affected cluster partition
 * +suicide:+ fence all nodes in the affected cluster partition
 
 | batch-limit | 0 |

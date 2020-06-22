@@ -481,6 +481,31 @@ sort_rsc_priority(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+static enum pe_quorum_policy
+effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    enum pe_quorum_policy policy = data_set->no_quorum_policy;
+
+    if (is_set(data_set->flags, pe_flag_have_quorum)) {
+        policy = no_quorum_ignore;
+
+    } else if (data_set->no_quorum_policy == no_quorum_demote) {
+        switch (rsc->role) {
+            case RSC_ROLE_MASTER:
+            case RSC_ROLE_SLAVE:
+                if (rsc->next_role > RSC_ROLE_SLAVE) {
+                    rsc->next_role = RSC_ROLE_SLAVE;
+                }
+                policy = no_quorum_ignore;
+                break;
+            default:
+                policy = no_quorum_stop;
+                break;
+        }
+    }
+    return policy;
+}
+
 pe_action_t *
 custom_action(pe_resource_t * rsc, char *key, const char *task,
               pe_node_t * on_node, gboolean optional, gboolean save_action,
@@ -593,6 +618,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
     if (rsc != NULL) {
         enum action_tasks a_task = text2task(action->task);
+        enum pe_quorum_policy quorum_policy = effective_quorum_policy(rsc, data_set);
         int warn_level = LOG_TRACE;
 
         if (save_action) {
@@ -675,13 +701,11 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             crm_trace("Action %s requires only stonith", action->uuid);
             action->runnable = TRUE;
 #endif
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
-                   && data_set->no_quorum_policy == no_quorum_stop) {
+        } else if (quorum_policy == no_quorum_stop) {
             pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "no quorum", pe_action_runnable, TRUE);
             crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
-                   && data_set->no_quorum_policy == no_quorum_freeze) {
+        } else if (quorum_policy == no_quorum_freeze) {
             pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
             if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
                 pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "quorum freeze", pe_action_runnable, TRUE);
@@ -716,25 +740,36 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
     return action;
 }
 
+static bool
+valid_stop_on_fail(const char *value)
+{
+    return safe_str_neq(value, "standby")
+           && safe_str_neq(value, "demote")
+           && safe_str_neq(value, "stop");
+}
+
 static const char *
 unpack_operation_on_fail(pe_action_t * action)
 {
 
+    const char *name = NULL;
+    const char *role = NULL;
+    const char *on_fail = NULL;
+    const char *interval_spec = NULL;
+    const char *enabled = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
-    if (safe_str_eq(action->task, CRMD_ACTION_STOP) && safe_str_eq(value, "standby")) {
+    if (safe_str_eq(action->task, CRMD_ACTION_STOP)
+        && !valid_stop_on_fail(value)) {
+
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
-                         "action to default value because 'standby' is not "
-                         "allowed for stop", action->rsc->id);
+                         "action to default value because '%s' is not "
+                         "allowed for stop", action->rsc->id, value);
         return NULL;
+
     } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
         /* demote on_fail defaults to master monitor value if present */
         xmlNode *operation = NULL;
-        const char *name = NULL;
-        const char *role = NULL;
-        const char *on_fail = NULL;
-        const char *interval_spec = NULL;
-        const char *enabled = NULL;
 
         CRM_CHECK(action->rsc != NULL, return NULL);
 
@@ -757,12 +792,31 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
+            } else if (safe_str_eq(on_fail, "demote")) {
+                continue;
             }
 
             value = on_fail;
         }
     } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
         value = "ignore";
+
+    } else if (safe_str_eq(value, "demote")) {
+        name = crm_element_value(action->op_entry, "name");
+        role = crm_element_value(action->op_entry, "role");
+        on_fail = crm_element_value(action->op_entry, XML_OP_ATTR_ON_FAIL);
+        interval_spec = crm_element_value(action->op_entry,
+                                          XML_LRM_ATTR_INTERVAL);
+
+        if (safe_str_neq(name, CRMD_ACTION_PROMOTE)
+            && (safe_str_neq(name, CRMD_ACTION_STATUS)
+                || safe_str_neq(role, "Master")
+                || (crm_parse_interval_spec(interval_spec) == 0))) {
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
+                             "action to default value because 'demote' is not "
+                             "allowed for it", action->rsc->id, name);
+            return NULL;
+        }
     }
 
     return value;
@@ -1160,6 +1214,10 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         } else {
             value = NULL;
         }
+
+    } else if (safe_str_eq(value, "demote")) {
+        action->on_fail = action_fail_demote;
+        value = "demote instance";
 
     } else {
         pe_err("Resource %s: Unknown failure type (%s)", action->rsc->id, value);

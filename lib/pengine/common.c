@@ -54,7 +54,7 @@ static pcmk__cluster_option_t pe_opts[] = {
      * long description
      */
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum,
         "What to do when the cluster does not have quorum",
         NULL
@@ -325,6 +325,9 @@ fail2text(enum action_fail_response fail)
     switch (fail) {
         case action_fail_ignore:
             result = "ignore";
+            break;
+        case action_fail_demote:
+            result = "demote";
             break;
         case action_fail_block:
             result = "block";

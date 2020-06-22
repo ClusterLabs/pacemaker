@@ -669,13 +669,22 @@ XML attributes take precedence over +nvpair+ elements if both are specified.
  indexterm:[Action,Property,timeout]
 
 |on-fail
-|restart '(except for +stop+ operations, which default to' fence 'when
- STONITH is enabled and' block 'otherwise)'
+a|Varies by action:
+
+* +stop+: +fence+ if +stonith-enabled+ is true or +block+ otherwise
+* +demote+: +on-fail+ of the +monitor+ action with +role+ set to +Master+, if
+  present, enabled, and configured to a value other than +demote+, or +restart+
+  otherwise
+* all other actions: +restart+
 a|The action to take if this action ever fails. Allowed values:
 
 * +ignore:+ Pretend the resource did not fail.
 * +block:+ Don't perform any further operations on the resource.
 * +stop:+ Stop the resource and do not start it elsewhere.
+* +demote:+ Demote the resource, without a full restart. This is valid only for
+  +promote+ actions, and for +monitor+ actions with both a nonzero +interval+
+  and +role+ set to +Master+; for any other action, a configuration error will
+  be logged, and the default behavior will be used.
 * +restart:+ Stop the resource and start it again (possibly on a different node).
 * +fence:+ STONITH the node on which the resource failed.
 * +standby:+ Move _all_ resources away from the node on which the resource failed.
@@ -713,6 +722,38 @@ indexterm:[Action,Property,on-fail]
  indexterm:[Action,Property,role]
 
 |=========================================================
+
+[NOTE]
+====
+When +on-fail+ is set to +demote+, recovery from failure by a successful demote
+causes the cluster to recalculate whether and where a new instance should be
+promoted. The node with the failure is eligible, so if master scores have not
+changed, it will be promoted again.
+
+There is no direct equivalent of +migration-threshold+ for the master role, but
+the same effect can be achieved with a location constraint using a
+<<ch-rules,rule>> with a node attribute expression for the resource's fail
+count.
+
+For example, to immediately ban the master role from a node with any failed
+promote or master monitor:
+[source,XML]
+----
+<rsc_location id="loc1" rsc="my_primitive">
+    <rule id="rule1" score="-INFINITY" role="Master" boolean-op="or">
+      <expression id="expr1" attribute="fail-count-my_primitive#promote_0"
+        operation="gte" value="1"/>
+      <expression id="expr2" attribute="fail-count-my_primitive#monitor_10000"
+        operation="gte" value="1"/>
+    </rule>
+</rsc_location>
+----
+
+This example assumes that there is a promotable clone of the +my_primitive+
+resource (note that the primitive name, not the clone name, is used in the
+rule), and that there is a recurring 10-second-interval monitor configured for
+the master role (fail count attributes specify the interval in milliseconds).
+====
 
 [[s-resource-monitoring]]
 === Monitoring Resources for Failure ===

@@ -61,7 +61,8 @@ enum pe_quorum_policy {
     no_quorum_freeze,
     no_quorum_stop,
     no_quorum_ignore,
-    no_quorum_suicide
+    no_quorum_suicide,
+    no_quorum_demote
 };
 
 enum node_type {
@@ -246,6 +247,7 @@ struct pe_node_s {
 #  define pe_rsc_allocating                 0x00000200ULL
 #  define pe_rsc_merging                    0x00000400ULL
 
+#  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL
 

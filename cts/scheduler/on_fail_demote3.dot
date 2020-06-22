@@ -1,0 +1,12 @@
+ digraph "g" {
+"Cancel rsc1_monitor_10000 rhel7-4" -> "rsc1_demote_0 rhel7-4" [ style = bold]
+"Cancel rsc1_monitor_10000 rhel7-4" [ style=bold color="green" fontcolor="black"]
+"rsc1-clone_demote_0" -> "rsc1-clone_demoted_0" [ style = bold]
+"rsc1-clone_demote_0" -> "rsc1_demote_0 rhel7-4" [ style = bold]
+"rsc1-clone_demote_0" [ style=bold color="green" fontcolor="orange"]
+"rsc1-clone_demoted_0" [ style=bold color="green" fontcolor="orange"]
+"rsc1_demote_0 rhel7-4" -> "rsc1-clone_demoted_0" [ style = bold]
+"rsc1_demote_0 rhel7-4" -> "rsc1_monitor_11000 rhel7-4" [ style = bold]
+"rsc1_demote_0 rhel7-4" [ style=bold color="green" fontcolor="black"]
+"rsc1_monitor_11000 rhel7-4" [ style=bold color="green" fontcolor="black"]
+}

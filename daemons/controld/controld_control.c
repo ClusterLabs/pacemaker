@@ -626,7 +626,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum, NULL, NULL
     },
     {

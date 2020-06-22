@@ -22,18 +22,29 @@ extern "C" {
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 
-/* order is significant here
- * items listed in order of accending severeness
- * more severe actions take precedent over lower ones
+/* The order is (partially) significant here; the values from action_fail_ignore
+ * through action_fail_fence are in order of increasing severity.
+ *
+ * @COMPAT The values should be ordered and numbered per the "TODO" comments
+ *         below, so all values are in order of severity and there is room for
+ *         future additions, but that would break API compatibility.
+ * @TODO   For now, we just use a function to compare the values specially, but
+ *         at the next compatibility break, we should arrange things properly.
  */
 enum action_fail_response {
-    action_fail_ignore,
-    action_fail_recover,
-    action_fail_migrate,        /* recover by moving it somewhere else */
-    action_fail_block,
-    action_fail_stop,
-    action_fail_standby,
-    action_fail_fence,
+    action_fail_ignore,     // @TODO = 10
+    // @TODO action_fail_demote = 20,
+    action_fail_recover,    // @TODO = 30
+    // @TODO action_fail_reset_remote = 40,
+    // @TODO action_fail_restart_container = 50,
+    action_fail_migrate,    // @TODO = 60
+    action_fail_block,      // @TODO = 70
+    action_fail_stop,       // @TODO = 80
+    action_fail_standby,    // @TODO = 90
+    action_fail_fence,      // @TODO = 100
+
+    // @COMPAT Values below here are out of order for API compatibility
+
     action_fail_restart_container,
 
     /* This is reserved for internal use for remote node connection resources.
@@ -44,6 +55,7 @@ enum action_fail_response {
      */
     action_fail_reset_remote,
 
+    action_fail_demote,
 };
 
 /* the "done" action must be the "pre" action +1 */

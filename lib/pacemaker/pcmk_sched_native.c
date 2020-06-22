@@ -41,27 +41,36 @@ gboolean PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional,
 gboolean RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 
-/* *INDENT-OFF* */
-enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current State */
-/*       Next State:    Unknown 	  Stopped	     Started	        Slave	          Master */
+/* This array says what the *next* role should be when transitioning from one
+ * role to another. For example going from Stopped to Master, the next role is
+ * RSC_ROLE_SLAVE, because the resource must be started before being promoted.
+ * The current state then becomes Started, which is fed into this array again,
+ * giving a next role of RSC_ROLE_MASTER.
+ */
+static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
+    /* Current state  Next state*/
+    /*                Unknown         Stopped           Started           Slave             Master */
     /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
     /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
     /* Started */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Slave */	  { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Slave   */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Master  */ { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
-gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(pe_resource_t*,pe_node_t*,gboolean,pe_working_set_t*) = {
-/* Current State */
-/*       Next State:       Unknown	Stopped		Started		Slave		Master */
-    /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
-    /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
-    /* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,		PromoteRsc, },
-    /* Slave */	        { RoleError,	StopRsc,	StopRsc, 	NullOp,		PromoteRsc, },
-    /* Master */	{ RoleError,	DemoteRsc,	DemoteRsc,	DemoteRsc,	NullOp,     },
+typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
+                                      gboolean optional,
+                                      pe_working_set_t *data_set);
+
+// This array picks the function needed to transition from one role to another
+static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
+    /* Current state  Next state                                        */
+    /*                Unknown  Stopped    Started    Slave      Master  */
+    /* Unknown */ { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
+    /* Stopped */ { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
+    /* Started */ { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
+    /* Slave   */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
+    /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
 };
-/* *INDENT-ON* */
 
 static gboolean
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
@@ -1196,6 +1205,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_node_t *chosen = NULL;
     pe_node_t *current = NULL;
     gboolean need_stop = FALSE;
+    bool need_promote = FALSE;
     gboolean is_moving = FALSE;
     gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
 
@@ -1300,8 +1310,15 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         need_stop = TRUE;
 
     } else if (is_set(rsc->flags, pe_rsc_failed)) {
-        pe_rsc_trace(rsc, "Recovering %s", rsc->id);
-        need_stop = TRUE;
+        if (is_set(rsc->flags, pe_rsc_stop)) {
+            need_stop = TRUE;
+            pe_rsc_trace(rsc, "Recovering %s", rsc->id);
+        } else {
+            pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
+            if (rsc->next_role == RSC_ROLE_MASTER) {
+                need_promote = TRUE;
+            }
+        }
 
     } else if (is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "Block %s", rsc->id);
@@ -1335,10 +1352,16 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 
     while (rsc->role <= rsc->next_role && role != rsc->role && is_not_set(rsc->flags, pe_rsc_block)) {
+        bool required = need_stop;
+
         next_role = rsc_state_matrix[role][rsc->role];
+        if ((next_role == RSC_ROLE_MASTER) && need_promote) {
+            required = true;
+        }
         pe_rsc_trace(rsc, "Up:   Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
-                     rsc->id, need_stop ? " required" : "");
-        if (rsc_action_matrix[role][next_role] (rsc, chosen, !need_stop, data_set) == FALSE) {
+                     rsc->id, (required? " required" : ""));
+        if (rsc_action_matrix[role][next_role](rsc, chosen, !required,
+                                               data_set) == FALSE) {
             break;
         }
         role = next_role;
@@ -2348,8 +2371,6 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         }                                                               \
     } while(0)
 
-static int rsc_width = 5;
-static int detail_width = 5;
 static void
 LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
 {
@@ -2359,6 +2380,9 @@ LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *
     bool same_host = FALSE;
     bool same_role = FALSE;
     bool need_role = FALSE;
+
+    static int rsc_width = 5;
+    static int detail_width = 5;
 
     CRM_ASSERT(action);
     CRM_ASSERT(destination != NULL || origin != NULL);
@@ -2384,36 +2408,40 @@ LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *
         same_role = TRUE;
     }
 
-    if(need_role && origin == NULL) {
-        /* Promoting from Stopped */
+    if (need_role && (origin == NULL)) {
+        /* Starting and promoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
 
-    } else if(need_role && destination == NULL) {
-        /* Demoting a Master or Stopping a Slave */
+    } else if (origin == NULL) {
+        /* Starting a resource */
+        details = crm_strdup_printf("%s", destination->details->uname);
+
+    } else if (need_role && (destination == NULL)) {
+        /* Stopping a promotable clone instance */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
-    } else if(origin == NULL || destination == NULL) {
-        /* Starting or stopping a resource */
-        details = crm_strdup_printf("%s", origin?origin->details->uname:destination->details->uname);
+    } else if (destination == NULL) {
+        /* Stopping a resource */
+        details = crm_strdup_printf("%s", origin->details->uname);
 
-    } else if(need_role && same_role && same_host) {
-        /* Recovering or restarting a promotable clone resource */
+    } else if (need_role && same_role && same_host) {
+        /* Recovering, restarting or re-promoting a promotable clone instance */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
-    } else if(same_role && same_host) {
+    } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
         details = crm_strdup_printf("%s", origin->details->uname);
 
-    } else if(same_role && need_role) {
-        /* Moving a promotable clone resource */
+    } else if (need_role && same_role) {
+        /* Moving a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
 
-    } else if(same_role) {
+    } else if (same_role) {
         /* Moving a normal resource */
         details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
 
-    } else if(same_host) {
-        /* Promoting or demoting a promotable clone resource */
+    } else if (same_host) {
+        /* Promoting or demoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
 
     } else {
@@ -2556,11 +2584,19 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
             LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
-        } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
-            pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role),
-                        next->details->uname);
 
-        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
+        } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
+            if ((demote != NULL) && (promote != NULL)
+                && is_not_set(demote->flags, pe_action_optional)
+                && is_not_set(promote->flags, pe_action_optional)) {
+                LogAction("Re-promote", rsc, current, next, promote, demote,
+                          terminal);
+            } else {
+                pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
+                            role2text(rsc->role), next->details->uname);
+            }
+
+        } else if (is_not_set(start->flags, pe_action_runnable)) {
             LogAction("Stop", rsc, current, NULL, stop,
                       (stop && stop->reason)? stop : start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
@@ -2609,7 +2645,8 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         free(key);
 
-    } else if (stop && is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (stop && is_set(rsc->flags, pe_rsc_failed)
+               && is_set(rsc->flags, pe_rsc_stop)) {
         /* 'stop' may be NULL if the failure was ignored */
         LogAction("Recover", rsc, current, next, stop, start, terminal);
         STOP_SANITY_ASSERT(__LINE__);
@@ -3362,9 +3399,19 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
         return;
 
-    } else if (is_set(rsc->flags, pe_rsc_failed) || is_set(rsc->flags, pe_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
-        stop_action(rsc, node, FALSE); /* Force a full restart, overkill? */
+    } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        /* We don't need to specify any particular actions here, normal failure
+         * recovery will apply.
+         */
+        pe_rsc_trace(rsc, "%s: preventing reload because failed", rsc->id);
+        return;
+
+    } else if (is_set(rsc->flags, pe_rsc_start_pending)) {
+        /* If a resource's configuration changed while a start was pending,
+         * force a full restart.
+         */
+        pe_rsc_trace(rsc, "%s: preventing reload because start pending", rsc->id);
+        stop_action(rsc, node, FALSE);
         return;
 
     } else if (node == NULL) {

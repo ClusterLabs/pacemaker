@@ -359,22 +359,22 @@ native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const c
 gboolean
 native_active(pe_resource_t * rsc, gboolean all)
 {
-    GListPtr gIter = rsc->running_on;
-
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
-            crm_debug("Resource %s: node %s is unclean", rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: node %s is unclean",
+                         rsc->id, a_node->details->uname);
             return TRUE;
         } else if (a_node->details->online == FALSE) {
-            crm_debug("Resource %s: node %s is offline", rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: node %s is offline",
+                         rsc->id, a_node->details->uname);
         } else {
-            crm_debug("Resource %s active on %s", rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s active on %s",
+                         rsc->id, a_node->details->uname);
             return TRUE;
         }
     }
-
     return FALSE;
 }
 
