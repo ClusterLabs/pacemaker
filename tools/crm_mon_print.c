@@ -750,13 +750,13 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
-        for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-            if (hp->state == st_failed) {
-                CHECK_RC(rc, out->message(out, "failed-fencing-history", hp, unames,
-                                          is_set(mon_ops, mon_op_fence_full_history),
-                                          rc == pcmk_rc_ok));
-                break;
-            }
+        stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
+                                                              GINT_TO_POINTER(st_failed));
+
+        if (hp) {
+            CHECK_RC(rc, out->message(out, "failed-fencing-history", hp, unames,
+                                      is_set(mon_ops, mon_op_fence_full_history),
+                                      rc == pcmk_rc_ok));
         }
     }
 
@@ -773,22 +773,21 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
         if (is_set(show, mon_show_fence_worked)) {
-            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-                if (hp->state != st_failed) {
-                    CHECK_RC(rc, out->message(out, "fencing-history", hp, unames,
-                                              is_set(mon_ops, mon_op_fence_full_history),
-                                              rc == pcmk_rc_ok));
-                    break;
-                }
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
+                                                                  GINT_TO_POINTER(st_failed));
+
+            if (hp) {
+                CHECK_RC(rc, out->message(out, "fencing-history", hp, unames,
+                                          is_set(mon_ops, mon_op_fence_full_history),
+                                          rc == pcmk_rc_ok));
             }
         } else if (is_set(show, mon_show_fence_pending)) {
-            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-                if (hp->state != st_failed && hp->state != st_done) {
-                    CHECK_RC(rc, out->message(out, "pending-fencing-actions", hp, unames,
-                                              is_set(mon_ops, mon_op_fence_full_history),
-                                              rc == pcmk_rc_ok));
-                    break;
-                }
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
+
+            if (hp) {
+                CHECK_RC(rc, out->message(out, "pending-fencing-actions", hp, unames,
+                                          is_set(mon_ops, mon_op_fence_full_history),
+                                          rc == pcmk_rc_ok));
             }
         }
     }
@@ -939,34 +938,33 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print failed stonith actions */
     if (is_set(show, mon_show_fence_failed) && is_set(mon_ops, mon_op_fence_history)) {
-        for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-            if (hp->state == st_failed) {
-                out->message(out, "failed-fencing-history", hp, unames,
-                             is_set(mon_ops, mon_op_fence_full_history), FALSE);
-                break;
-            }
+        stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
+                                                              GINT_TO_POINTER(st_failed));
+
+        if (hp) {
+            out->message(out, "failed-fencing-history", hp, unames,
+                         is_set(mon_ops, mon_op_fence_full_history), FALSE);
         }
     }
 
     /* Print stonith history */
     if (is_set(mon_ops, mon_op_fence_history)) {
         if (is_set(show, mon_show_fence_worked)) {
-            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-                if (hp->state != st_failed) {
-                    out->message(out, "fencing-history", hp, unames,
-                                 is_set(mon_ops, mon_op_fence_full_history),
-                                 FALSE);
-                    break;
-                }
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
+                                                                  GINT_TO_POINTER(st_failed));
+
+            if (hp) {
+                out->message(out, "fencing-history", hp, unames,
+                             is_set(mon_ops, mon_op_fence_full_history),
+                             FALSE);
             }
         } else if (is_set(show, mon_show_fence_pending)) {
-            for (stonith_history_t *hp = stonith_history; hp; hp = hp->next) {
-                if (hp->state != st_failed && hp->state != st_done) {
-                    out->message(out, "pending-fencing-actions", hp, unames,
-                                 is_set(mon_ops, mon_op_fence_full_history),
-                                 FALSE);
-                    break;
-                }
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
+
+            if (hp) {
+                out->message(out, "pending-fencing-actions", hp, unames,
+                             is_set(mon_ops, mon_op_fence_full_history),
+                             FALSE);
             }
         }
     }
