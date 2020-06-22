@@ -1,6 +1,6 @@
-* Wed May 27 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.23
-- Changesets: 113
-- Diff:       78 files changed, 2813 insertions(+), 1292 deletions(-)
+* Mon Jun 22 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.23
+- Changesets: 115
+- Diff:       79 files changed, 2818 insertions(+), 1293 deletions(-)
 
 - Features added since Pacemaker-1.1.22
   + fencing: improve parameter handling for RHCS-style fence agents
