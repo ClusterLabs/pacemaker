@@ -193,7 +193,11 @@ cib_tls_close(cib_t * cib)
 static inline int
 cib__tls_client_handshake(pcmk__remote_t *remote)
 {
+#ifdef HAVE_GNUTLS_GNUTLS_H
     return pcmk__tls_client_handshake(remote, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT);
+#else
+    return 0;
+#endif
 }
 
 static int
