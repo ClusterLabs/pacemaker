@@ -53,10 +53,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -82,10 +79,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
         }
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -110,10 +104,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
  
@@ -139,9 +130,7 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
             out->increment_list(out);
         }
 
-        if (rc == pcmk_rc_ok) {
-            out->end_list(out);
-        }
+        PCMK__OUTPUT_LIST_FOOTER(out, rc);
     } else {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_history");
         char *rc_s = crm_itoa(history_rc);
@@ -231,10 +220,7 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 

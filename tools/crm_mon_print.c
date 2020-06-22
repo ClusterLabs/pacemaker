@@ -301,11 +301,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
     /* Free the list we created (no need to free the individual items) */
     g_list_free(op_list);
 
-    /* If we printed anything, close the resource */
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -374,10 +370,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
         }
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -516,10 +509,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                            only_show);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -589,10 +579,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
         }
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -656,11 +643,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
         }
     }
 
-    /* Print section footer */
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -692,10 +675,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
         out->message(out, "failed-action", xml_op);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 

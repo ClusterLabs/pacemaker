@@ -726,6 +726,11 @@ G_GNUC_NULL_TERMINATED;
         out_obj->begin_list(out_obj, NULL, NULL, title);            \
     }
 
+#define PCMK__OUTPUT_LIST_FOOTER(out_obj, retcode)  \
+    if (retcode == pcmk_rc_ok) {                    \
+        out_obj->end_list(out_obj);                 \
+    }
+
 #ifdef __cplusplus
 }
 #endif

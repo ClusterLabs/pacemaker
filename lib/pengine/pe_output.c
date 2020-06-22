@@ -261,9 +261,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-options", data_set);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
@@ -330,17 +328,13 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
          * function so we can put all the options into their own list.  We
          * only want to do this on HTML output, though.
          */
-        if (rc == pcmk_rc_ok) {
-            out->end_list(out);
-        }
+        PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
         out->begin_list(out, NULL, NULL, "Config Options");
         out->message(out, "cluster-options", data_set);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
@@ -1292,10 +1286,7 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
                      print_brief, group_by_node, only_show);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -1426,10 +1417,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
         free(online_guest_nodes);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
