@@ -669,7 +669,9 @@ dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 
 dnl Ensure PYTHON is an absolute path
-AC_PATH_PROG([PYTHON], [$PYTHON])
+if test x"${PYTHON}" != x""; then
+    AC_PATH_PROG([PYTHON], [$PYTHON])
+fi
 
 case "x$PYTHON" in
     x*python3*|x*platform-python*)
