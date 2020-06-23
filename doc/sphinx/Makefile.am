@@ -11,9 +11,10 @@ include $(top_srcdir)/mk/common.mk
 # Things you might want to override on the command line
 
 # Books to generate
-BOOKS		?= Clusters_from_Scratch \
-			   Pacemaker_Administration	\
+BOOKS		?= Clusters_from_Scratch	\
+		   Pacemaker_Administration	\
 		   Pacemaker_Development	\
+		   Pacemaker_Explained		\
 		   Pacemaker_Remote
 
 # Output formats to generate. Possible values:
@@ -58,7 +59,8 @@ BOOK		= none
 DEPS_Clusters_from_Scratch	= shared/pacemaker-intro.rst
 DEPS_Pacemaker_Administration	= shared/pacemaker-intro.rst
 DEPS_Pacemaker_Development	=
-DEPS_Pacemaker_Remote		=  $(wildcard $(srcdir)/Pacemaker_Remote/images/*.png)
+DEPS_Pacemaker_Explained	= shared/pacemaker-intro.rst
+DEPS_Pacemaker_Remote		= $(wildcard $(srcdir)/Pacemaker_Remote/images/*.png)
 
 if BUILD_SPHINX_DOCS
 $(BOOKS:%=%/conf.py): conf.py.in
