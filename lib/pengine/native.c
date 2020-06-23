@@ -1038,13 +1038,14 @@ native_print(pe_resource_t * rsc, const char *pre_text, long options, void *prin
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -1107,13 +1108,14 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
 
@@ -1126,13 +1128,14 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
 

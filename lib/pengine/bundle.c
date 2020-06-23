@@ -1493,13 +1493,14 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
@@ -1538,17 +1539,17 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (replica->ip != NULL) {
-            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node, only_rsc);
         }
 
         if (replica->child != NULL) {
-            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node, only_rsc);
         }
 
-        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node, only_rsc);
 
         if (replica->remote != NULL) {
-            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node, only_rsc);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1589,13 +1590,14 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
@@ -1631,17 +1633,17 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node, only_rsc);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node, only_rsc);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node, only_rsc);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);
@@ -1689,13 +1691,14 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1727,17 +1730,17 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node, only_rsc);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node, only_rsc);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node, only_rsc);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);

@@ -570,13 +570,14 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
 
@@ -604,7 +605,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
     }
 
     if (printed_header) {
@@ -614,13 +615,14 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -712,7 +714,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
         }
     }
 
@@ -823,13 +825,14 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -921,7 +924,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
         }
     }
 

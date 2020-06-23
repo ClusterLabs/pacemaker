@@ -177,13 +177,14 @@ group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
     char *count = crm_itoa(g_list_length(gIter));
@@ -204,7 +205,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
     }
 
     if (printed_header) {
@@ -214,13 +215,14 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__group_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
@@ -230,7 +232,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
     } else {
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
         }
     }
 
@@ -239,13 +241,14 @@ pe__group_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
@@ -256,7 +259,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
         for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node, only_rsc);
         }
     }
     out->end_list(out);
