@@ -513,10 +513,6 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     cib->call_id++;
-    /* prevent call_id from being negative (or zero) and conflicting
-     *    with the cib_errors enum
-     * use 2 because we use it as (cib->call_id - 1) below
-     */
     if (cib->call_id < 1) {
         cib->call_id = 1;
     }

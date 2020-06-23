@@ -1197,7 +1197,7 @@ AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
                AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
                          [Have qb_ipcc_get_buffer_size function]))
 
-dnl libqb not yet released (as of 2018-05)
+dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
 

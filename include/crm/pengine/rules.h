@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -79,7 +79,7 @@ gboolean pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data,
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 
 //! \deprecated Use pe_evaluate_rules() instead

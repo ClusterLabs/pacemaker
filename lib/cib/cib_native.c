@@ -50,8 +50,6 @@ int cib_native_signoff(cib_t * cib);
 int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *event_fd);
 
-bool cib_native_dispatch(cib_t * cib);
-
 int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
 
 cib_t *
@@ -127,36 +125,6 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
 
     free_xml(msg);
     return 0;
-}
-
-bool
-cib_native_dispatch(cib_t * cib)
-{
-    gboolean stay_connected = TRUE;
-    cib_native_opaque_t *native;
-
-    if (cib == NULL) {
-        crm_err("No CIB!");
-        return FALSE;
-    }
-
-    crm_trace("dispatching %p", cib);
-    native = cib->variant_opaque;
-    while (crm_ipc_ready(native->ipc)) {
-
-        if (crm_ipc_read(native->ipc) > 0) {
-            const char *msg = crm_ipc_buffer(native->ipc);
-
-            cib_native_dispatch_internal(msg, strlen(msg), cib);
-        }
-
-        if (crm_ipc_connected(native->ipc) == FALSE) {
-            crm_err("Connection closed");
-            stay_connected = FALSE;
-        }
-    }
-
-    return stay_connected;
 }
 
 static void
@@ -364,10 +332,6 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     }
 
     cib->call_id++;
-    /* prevent call_id from being negative (or zero) and conflicting
-     *    with the cib_errors enum
-     * use 2 because we use it as (cib->call_id - 1) below
-     */
     if (cib->call_id < 1) {
         cib->call_id = 1;
     }
