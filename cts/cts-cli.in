@@ -212,6 +212,30 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --resource=Email"
     test_assert $CRM_EX_OK 0
 
+    desc="Complete text output filtered by clone resource"
+    cmd="crm_mon -1 --include=all --resource=ping-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by clone resource"
+    cmd="crm_mon --output-as=xml --resource=ping-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by clone resource instance"
+    cmd="crm_mon -1 --include=all --resource=ping"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by clone resource instance"
+    cmd="crm_mon --output-as=xml --resource=ping"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by exact clone resource instance"
+    cmd="crm_mon -1 --include=all --show-detail --resource=ping:0"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by exact clone resource instance"
+    cmd="crm_mon --output-as=xml --resource=ping:1"
+    test_assert $CRM_EX_OK 0
+
     desc="Basic text output filtered by resource that doesn't exist"
     cmd="crm_mon -1 --resource=blah"
     test_assert $CRM_EX_OK 0

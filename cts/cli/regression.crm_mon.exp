@@ -1209,6 +1209,257 @@ Operations:
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by group resource member - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by group resource member
+=#=#=#= Begin test: Complete text output filtered by clone resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+=#=#=#= End test: Complete text output filtered by clone resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by clone resource
+=#=#=#= Begin test: XML output filtered by clone resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=ping-clone">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+    </clone>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="11" task="start" exec-time="2044ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="12" task="monitor" interval="10000ms" exec-time="2031ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="17" task="start" exec-time="2038ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="18" task="monitor" interval="10000ms" exec-time="2034ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by clone resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by clone resource
+=#=#=#= Begin test: Complete text output filtered by clone resource instance =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+=#=#=#= End test: Complete text output filtered by clone resource instance - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by clone resource instance
+=#=#=#= Begin test: XML output filtered by clone resource instance =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=ping">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+    </clone>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="11" task="start" exec-time="2044ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="12" task="monitor" interval="10000ms" exec-time="2031ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="17" task="start" exec-time="2038ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="18" task="monitor" interval="10000ms" exec-time="2034ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by clone resource instance - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by clone resource instance
+=#=#=#= Begin test: Complete text output filtered by exact clone resource instance =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (2) (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 (1) cluster02 (2) ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * ping	(ocf::pacemaker:ping):	 Started cluster02
+
+Node Attributes:
+  * Node: cluster01 (1):
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02 (2):
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02 (2):
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+  * Node: cluster01 (1):
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+=#=#=#= End test: Complete text output filtered by exact clone resource instance - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by exact clone resource instance
+=#=#=#= Begin test: XML output filtered by exact clone resource instance =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=ping:1">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+    </clone>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by exact clone resource instance - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by exact clone resource instance
 =#=#=#= Begin test: Basic text output filtered by resource that doesn't exist =#=#=#=
 Cluster Summary:
   * Stack: corosync
