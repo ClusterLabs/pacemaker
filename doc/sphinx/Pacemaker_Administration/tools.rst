@@ -209,7 +209,7 @@ STONITH-related configuration:
 If you wanted to delete the ``primitive`` tag with id ``child_DoFencing``,
 you would run:
 
-.. code-block::
+.. code-block:: none
 
    # cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
 
@@ -486,19 +486,19 @@ defaults, and operation defaults.
 To understand the differences, it helps to understand the various types of node
 attribute.
 
-.. table:: Types of Node Attributes
+.. table:: **Types of Node Attributes**
 
-+-----------+----------+-------------------+------------------+----------------+----------------+
-| Type      | Recorded | Recorded in       | Survive full     | Manageable by  | Manageable by  |
-|           | in CIB?  | attribute manager | cluster restart? | crm_attribute? | attrd_updater? |
-|           |          | memory?           |                  |                |                |
-+===========+==========+===================+==================+================+================+
-| permanent | yes      | no                | yes              | yes            | no             |
-+-----------+----------+-------------------+------------------+----------------+----------------+
-| transient | yes      | yes               | no               | yes            | yes            |
-+-----------+----------+-------------------+------------------+----------------+----------------+
-| private   | no       | yes               | no               | no             | yes            |
-+-----------+----------+-------------------+------------------+----------------+----------------+
+   +-----------+----------+-------------------+------------------+----------------+----------------+
+   | Type      | Recorded | Recorded in       | Survive full     | Manageable by  | Manageable by  |
+   |           | in CIB?  | attribute manager | cluster restart? | crm_attribute? | attrd_updater? |
+   |           |          | memory?           |                  |                |                |
+   +===========+==========+===================+==================+================+================+
+   | permanent | yes      | no                | yes              | yes            | no             |
+   +-----------+----------+-------------------+------------------+----------------+----------------+
+   | transient | yes      | yes               | no               | yes            | yes            |
+   +-----------+----------+-------------------+------------------+----------------+----------------+
+   | private   | no       | yes               | no               | no             | yes            |
+   +-----------+----------+-------------------+------------------+----------------+----------------+
 
 As you can see from the table above, ``crm_attribute`` can manage permanent and
 transient node attributes, while ``attrd_updater`` can manage transient and

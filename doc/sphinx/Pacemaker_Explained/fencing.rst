@@ -1,0 +1,1026 @@
+Fencing
+-------
+
+.. Convert_to_RST:
+   
+   anchor:ch-fencing[Chapter 6, Fencing]
+   indexterm:[Fencing, Configuration]
+   indexterm:[STONITH, Configuration]
+   
+   == What Is Fencing? ==
+   
+   'Fencing' is the ability to make a node unable to run resources, even when that
+   node is unresponsive to cluster commands.
+   
+   Fencing is also known as 'STONITH', an acronym for "Shoot The Other Node In The
+   Head", since the most common fencing method is cutting power to the node.
+   Another method is "fabric fencing", cutting the node's access to some
+   capability required to run resources (such as network access or a shared disk).
+   
+   == Why Is Fencing Necessary? ==
+   
+   Fencing protects your data from being corrupted by malfunctioning nodes or
+   unintentional concurrent access to shared resources.
+   
+   Fencing protects against the "split brain" failure scenario, where cluster
+   nodes have lost the ability to reliably communicate with each other but are
+   still able to run resources. If the cluster just assumed that uncommunicative
+   nodes were down, then multiple instances of a resource could be started on
+   different nodes.
+   
+   The effect of split brain depends on the resource type. For example, an IP
+   address brought up on two hosts on a network will cause packets to randomly be
+   sent to one or the other host, rendering the IP useless. For a database or
+   clustered file system, the effect could be much more severe, causing data
+   corruption or divergence.
+   
+   Fencing also is used when a resource cannot otherwise be stopped. If a failed
+   resource fails to stop, it cannot be recovered elsewhere. Fencing the
+   resource's node is the only way to ensure the resource is recoverable.
+   
+   Users may also configure the +on-fail+ property of any resource operation to
+   +fencing+, in which case the cluster will fence the resource's node if the
+   operation fails.
+   
+   == Fence Devices ==
+   
+   A 'fence device' (or 'fencing device') is a special type of resource that
+   provides the means to fence a node.
+   
+   Examples of fencing devices include intelligent power switches and IPMI devices
+   that accept SNMP commands to cut power to a node, and iSCSI controllers that
+   allow SCSI reservations to be used to cut a node's access to a shared disk.
+   
+   Since fencing devices will be used to recover from loss of networking
+   connectivity to other nodes, it is essential that they do not rely on the same
+   network as the cluster itself, otherwise that network becomes a single point of
+   failure.
+   
+   Since loss of a node due to power outage is indistinguishable from loss of
+   network connectivity to that node, it is also essential that at least one fence
+   device for a node does not share power with that node. For example, an on-board
+   IPMI controller that shares power with its host should not be used as the sole
+   fencing device for that host.
+   
+   Since fencing is used to isolate malfunctioning nodes, no fence device should
+   rely on its target functioning properly. This includes, for example, devices
+   that ssh into a node and issue a shutdown command (such devices might be
+   suitable for testing, but never for production).
+   
+   == Fence Agents ==
+   
+   A 'fence agent' (or 'fencing agent') is a +stonith+-class resource agent.
+   
+   The fence agent standard provides commands (such as +off+ and +reboot+) that
+   the cluster can use to fence nodes. As with other resource agent classes,
+   this allows a layer of abstraction so that Pacemaker doesn't need any knowledge
+   about specific fencing technologies -- that knowledge is isolated in the agent.
+   
+   == When a Fence Device Can Be Used ==
+   
+   Fencing devices do not actually "run" like most services. Typically, they just
+   provide an interface for sending commands to an external device.
+   
+   Additionally, fencing may be initiated by Pacemaker, by other cluster-aware software
+   such as DRBD or DLM, or manually by an administrator, at any point in the
+   cluster life cycle, including before any resources have been started.
+   
+   To accommodate this, Pacemaker does not require the fence device resource to be
+   "started" in order to be used. Whether a fence device is started or not
+   determines whether a node runs any recurring monitor for the device, and gives
+   the node a slight preference for being chosen to execute fencing using that
+   device.
+   
+   By default, any node can execute any fencing device. If a fence device is
+   disabled by setting its +target-role+ to Stopped, then no node can use that
+   device. If mandatory location constraints prevent a specific node from
+   "running" a fence device, then that node will never be chosen to execute
+   fencing using the device. A node may fence itself, but the cluster will choose
+   that only if no other nodes can do the fencing.
+   
+   A common configuration scenario is to have one fence device per target node.
+   In such a case, users often configure anti-location constraints so that
+   the target node does not monitor its own device. The best practice is to make
+   the constraint optional (i.e. a finite negative score rather than +-INFINITY+),
+   so that the node can fence itself if no other nodes can.
+   
+   == Limitations of Fencing Resources ==
+   
+   Fencing resources have certain limitations that other resource classes don't:
+   
+   * They may have only one set of meta-attributes and one set of instance
+     attributes.
+   * If <<ch-rules,rules>> are used to determine fencing resource options, these
+     may only be evaluated when first read, meaning that later changes to the
+     rules will have no effect. Therefore, it is better to avoid confusion and not
+     use rules at all with fencing resources.
+   
+   These limitations could be revisited if there is significant user demand.
+   
+   == Special Options for Fencing Resources ==
+   
+   The table below lists special instance attributes that may be set for any
+   fencing resource ('not' meta-attributes, even though they are interpreted by
+   pacemaker rather than the fence agent). These are also listed in the man page
+   for +pacemaker-fenced+.
+   
+   .Additional Properties of Fencing Resources
+   [width="95%",cols="8m,3,6,<12",options="header",align="center"]
+   |=========================================================
+   
+   |Field
+   |Type
+   |Default
+   |Description
+   
+   |stonith-timeout
+   |NA
+   |NA
+   a|Older versions used this to override the default period to wait for a STONITH (reboot, on, off) action to complete for this device.
+    It has been replaced by the +pcmk_reboot_timeout+ and +pcmk_off_timeout+ properties.
+    indexterm:[stonith-timeout,Fencing]
+    indexterm:[Fencing,Property,stonith-timeout]
+   
+   ////
+    (not yet implemented)
+    priority
+    integer
+    0
+    The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
+    indexterm  priority,Fencing 
+    indexterm  Fencing,Property,priority 
+   ////
+   
+   |provides
+   |string
+   |
+   |Any special capability provided by the fence device. Currently, only one such
+    capability is meaningful: +unfencing+ (see <<s-unfencing>>).
+    indexterm:[provides,Fencing]
+    indexterm:[Fencing,Property,provides]
+   
+   |pcmk_host_map
+   |string
+   |
+   |A mapping of host names to ports numbers for devices that do not support host names.
+    Example: +node1:1;node2:2,3+ tells the cluster to use port 1 for
+    *node1* and ports 2 and 3 for *node2*. If +pcmk_host_check+ is explicitly set
+    to +static-list+, either this or +pcmk_host_list+ must be set.
+    indexterm:[pcmk_host_map,Fencing]
+    indexterm:[Fencing,Property,pcmk_host_map]
+   
+   |pcmk_host_list
+   |string
+   |
+   |A list of machines controlled by this device. If +pcmk_host_check+ is
+    explicitly set to +static-list+, either this or +pcmk_host_map+ must be set.
+    indexterm:[pcmk_host_list,Fencing]
+    indexterm:[Fencing,Property,pcmk_host_list]
+   
+   |pcmk_host_check
+   |string
+   |A value appropriate to other configuration options and
+    device capabilities (see note below)
+   a|How to determine which machines are controlled by the device.
+    Allowed values:
+   
+   * +dynamic-list:+ query the device via the "list" command
+   * +static-list:+ check the +pcmk_host_list+ or +pcmk_host_map+ attribute
+   * +status:+ query the device via the "status" command
+   * +none:+ assume every device can fence every machine
+   
+   indexterm:[pcmk_host_check,Fencing]
+   indexterm:[Fencing,Property,pcmk_host_check]
+   
+   |pcmk_delay_max
+   |time
+   |0s
+   |Enable a random delay of up to the time specified before executing fencing
+   actions. This is sometimes used in two-node clusters to ensure that the
+   nodes don't fence each other at the same time. The overall delay introduced
+   by pacemaker is derived from this random delay value adding a static delay so
+   that the sum is kept below the maximum delay.
+   
+   indexterm:[pcmk_delay_max,Fencing]
+   indexterm:[Fencing,Property,pcmk_delay_max]
+   
+   |pcmk_delay_base
+   |time
+   |0s
+   |Enable a static delay before executing fencing actions. This can be used
+    e.g. in two-node clusters to ensure that the nodes don't fence each other,
+    by having separate fencing resources with different values. The node that is
+    fenced with the shorter delay will lose a fencing race. The overall delay
+    introduced by pacemaker is derived from this value plus a random delay such
+    that the sum is kept below the maximum delay.
+   
+   indexterm:[pcmk_delay_base,Fencing]
+   indexterm:[Fencing,Property,pcmk_delay_base]
+   
+   |pcmk_action_limit
+   |integer
+   |1
+   |The maximum number of actions that can be performed in parallel on this
+    device, if the cluster option +concurrent-fencing+ is +true+. -1 is unlimited.
+   
+   indexterm:[pcmk_action_limit,Fencing]
+   indexterm:[Fencing,Property,pcmk_action_limit]
+   
+   |pcmk_host_argument
+   |string
+   |+port+ otherwise +plug+ if supported according to the metadata of the fence agent
+   |'Advanced use only.' Which parameter should be supplied to the fence agent to
+   identify the node to be fenced. Some devices support neither the standard +plug+
+   nor the deprecated +port+ parameter, or may provide additional ones. Use this to
+   specify an alternate, device-specific parameter. A value of +none+ tells the
+   cluster not to supply any additional parameters.
+    indexterm:[pcmk_host_argument,Fencing]
+    indexterm:[Fencing,Property,pcmk_host_argument]
+   
+   |pcmk_reboot_action
+   |string
+   |reboot
+   |'Advanced use only.' The command to send to the resource agent in order to
+   reboot a node. Some devices do not support the standard commands or may provide
+   additional ones. Use this to specify an alternate, device-specific command.
+    indexterm:[pcmk_reboot_action,Fencing]
+    indexterm:[Fencing,Property,pcmk_reboot_action]
+   
+   |pcmk_reboot_timeout
+   |time
+   |60s
+   |'Advanced use only.' Specify an alternate timeout to use for `reboot` actions
+   instead of the value of +stonith-timeout+. Some devices need much more or less
+   time to complete than normal. Use this to specify an alternate, device-specific
+   timeout.
+    indexterm:[pcmk_reboot_timeout,Fencing]
+    indexterm:[Fencing,Property,pcmk_reboot_timeout]
+    indexterm:[stonith-timeout,Fencing]
+    indexterm:[Fencing,Property,stonith-timeout]
+   
+   |pcmk_reboot_retries
+   |integer
+   |2
+   |'Advanced use only.' The maximum number of times to retry the `reboot` command
+   within the timeout period. Some devices do not support multiple connections, and
+   operations may fail if the device is busy with another task, so Pacemaker will
+   automatically retry the operation, if there is time remaining. Use this option
+   to alter the number of times Pacemaker retries before giving up.
+    indexterm:[pcmk_reboot_retries,Fencing]
+    indexterm:[Fencing,Property,pcmk_reboot_retries]
+   
+   |pcmk_off_action
+   |string
+   |off
+   |'Advanced use only.' The command to send to the resource agent in order to
+   shut down a node. Some devices do not support the standard commands or may provide
+   additional ones. Use this to specify an alternate, device-specific command.
+    indexterm:[pcmk_off_action,Fencing]
+    indexterm:[Fencing,Property,pcmk_off_action]
+   
+   |pcmk_off_timeout
+   |time
+   |60s
+   |'Advanced use only.' Specify an alternate timeout to use for `off` actions
+   instead of the value of +stonith-timeout+. Some devices need much more or less
+   time to complete than normal. Use this to specify an alternate, device-specific
+   timeout.
+    indexterm:[pcmk_off_timeout,Fencing]
+    indexterm:[Fencing,Property,pcmk_off_timeout]
+    indexterm:[stonith-timeout,Fencing]
+    indexterm:[Fencing,Property,stonith-timeout]
+   
+   |pcmk_off_retries
+   |integer
+   |2
+   |'Advanced use only.' The maximum number of times to retry the `off` command
+   within the timeout period. Some devices do not support multiple connections, and
+   operations may fail if the device is busy with another task, so Pacemaker will
+   automatically retry the operation, if there is time remaining. Use this option
+   to alter the number of times Pacemaker retries before giving up.
+    indexterm:[pcmk_off_retries,Fencing]
+    indexterm:[Fencing,Property,pcmk_off_retries]
+   
+   |pcmk_list_action
+   |string
+   |list
+   |'Advanced use only.' The command to send to the resource agent in order to
+   list nodes. Some devices do not support the standard commands or may provide
+   additional ones. Use this to specify an alternate, device-specific command.
+    indexterm:[pcmk_list_action,Fencing]
+    indexterm:[Fencing,Property,pcmk_list_action]
+   
+   |pcmk_list_timeout
+   |time
+   |60s
+   |'Advanced use only.' Specify an alternate timeout to use for `list` actions
+   instead of the value of +stonith-timeout+. Some devices need much more or less
+   time to complete than normal. Use this to specify an alternate, device-specific
+   timeout.
+    indexterm:[pcmk_list_timeout,Fencing]
+    indexterm:[Fencing,Property,pcmk_list_timeout]
+   
+   |pcmk_list_retries
+   |integer
+   |2
+   |'Advanced use only.' The maximum number of times to retry the `list` command
+   within the timeout period. Some devices do not support multiple connections, and
+   operations may fail if the device is busy with another task, so Pacemaker will
+   automatically retry the operation, if there is time remaining. Use this option
+   to alter the number of times Pacemaker retries before giving up.
+    indexterm:[pcmk_list_retries,Fencing]
+    indexterm:[Fencing,Property,pcmk_list_retries]
+   
+   |pcmk_monitor_action
+   |string
+   |monitor
+   |'Advanced use only.' The command to send to the resource agent in order to
+   report extended status. Some devices do not support the standard commands or may provide
+   additional ones. Use this to specify an alternate, device-specific command.
+    indexterm:[pcmk_monitor_action,Fencing]
+    indexterm:[Fencing,Property,pcmk_monitor_action]
+   
+   |pcmk_monitor_timeout
+   |time
+   |60s
+   |'Advanced use only.' Specify an alternate timeout to use for `monitor` actions
+   instead of the value of +stonith-timeout+. Some devices need much more or less
+   time to complete than normal. Use this to specify an alternate, device-specific
+   timeout.
+    indexterm:[pcmk_monitor_timeout,Fencing]
+    indexterm:[Fencing,Property,pcmk_monitor_timeout]
+   
+   |pcmk_monitor_retries
+   |integer
+   |2
+   |'Advanced use only.' The maximum number of times to retry the `monitor` command
+   within the timeout period. Some devices do not support multiple connections, and
+   operations may fail if the device is busy with another task, so Pacemaker will
+   automatically retry the operation, if there is time remaining. Use this option
+   to alter the number of times Pacemaker retries before giving up.
+    indexterm:[pcmk_monitor_retries,Fencing]
+    indexterm:[Fencing,Property,pcmk_monitor_retries]
+   
+   |pcmk_status_action
+   |string
+   |status
+   |'Advanced use only.' The command to send to the resource agent in order to
+   report status. Some devices do not support the standard commands or may provide
+   additional ones. Use this to specify an alternate, device-specific command.
+    indexterm:[pcmk_status_action,Fencing]
+    indexterm:[Fencing,Property,pcmk_status_action]
+   
+   |pcmk_status_timeout
+   |time
+   |60s
+   |'Advanced use only.' Specify an alternate timeout to use for `status` actions
+   instead of the value of +stonith-timeout+. Some devices need much more or less
+   time to complete than normal. Use this to specify an alternate, device-specific
+   timeout.
+    indexterm:[pcmk_status_timeout,Fencing]
+    indexterm:[Fencing,Property,pcmk_status_timeout]
+   
+   |pcmk_status_retries
+   |integer
+   |2
+   |'Advanced use only.' The maximum number of times to retry the `status` command
+   within the timeout period. Some devices do not support multiple connections, and
+   operations may fail if the device is busy with another task, so Pacemaker will
+   automatically retry the operation, if there is time remaining. Use this option
+   to alter the number of times Pacemaker retries before giving up.
+    indexterm:[pcmk_status_retries,Fencing]
+    indexterm:[Fencing,Property,pcmk_status_retries]
+   
+   |=========================================================
+   
+   [NOTE]
+   ====
+   The default value for +pcmk_host_check+ is +static-list+ if either
+   +pcmk_host_list+ or +pcmk_host_map+ is configured. If neither of those are
+   configured, the default is +dynamic-list+ if the fence device supports the list
+   action, or +status+ if the fence device supports the status action but not the
+   list action. If none of those conditions apply, the default is +none+.
+   ====
+   
+   [[s-unfencing]]
+   == Unfencing ==
+   
+   With fabric fencing (such as cutting network or shared disk access rather than
+   power), it is expected that the cluster will fence the node, and
+   then a system administrator must manually investigate what went wrong, correct
+   any issues found, then reboot (or restart the cluster services on) the node.
+   
+   Once the node reboots and rejoins the cluster, some fabric fencing devices
+   require an explicit command to restore the node's access. This capability is
+   called 'unfencing' and is typically implemented as the fence agent's +on+
+   command.
+   
+   If any cluster resource has +requires+ set to +unfencing+, then that resource
+   will not be probed or started on a node until that node has been unfenced.
+   
+   == Fence Devices Dependent on Other Resources ==
+   
+   In some cases, a fence device may require some other cluster resource (such as
+   an IP address) to be active in order to function properly.
+   
+   This is obviously undesirable in general: fencing may be required when the
+   depended-on resource is not active, or fencing may be required because the node
+   running the depended-on resource is no longer responding.
+   
+   However, this may be acceptable under certain conditions:
+   
+   * The dependent fence device should not be able to target any node that is
+     allowed to run the depended-on resource.
+   
+   * The depended-on resource should not be disabled during production operation.
+   
+   * The +concurrent-fencing+ cluster property should be set to +true+. Otherwise,
+     if both the node running the depended-on resource and some node targeted by
+     the dependent fence device need to be fenced, the fencing of the node
+     running the depended-on resource might be ordered first, making the second
+     fencing impossible and blocking further recovery. With concurrent fencing,
+     the dependent fence device might fail at first due to the depended-on
+     resource being unavailable, but it will be retried and eventually succeed
+     once the resource is brought back up.
+   
+   Even under those conditions, there is one unlikely problem scenario. The DC
+   always schedules fencing of itself after any other fencing needed, to avoid
+   unnecessary repeated DC elections. If the dependent fence device targets the
+   DC, and both the DC and a different node running the depended-on resource need
+   to be fenced, the DC fencing will always fail and block further recovery. Note,
+   however, that losing a DC node entirely causes some other node to become DC and
+   schedule the fencing, so this is only a risk when a stop or other operation
+   with +on-fail+ set to +fencing+ fails on the DC.
+   
+   == Configuring Fencing ==
+   
+   . Find the correct driver:
+   +
+   ----
+   # stonith_admin --list-installed
+   ----
+   
+   . Find the required parameters associated with the device
+     (replacing $AGENT_NAME with the name obtained from the previous step):
+   +
+   ----
+   # stonith_admin --metadata --agent $AGENT_NAME
+   ----
+   
+   . Create a file called +stonith.xml+ containing a primitive resource
+     with a class of +stonith+, a type equal to the agent name obtained earlier,
+     and a parameter for each of the values returned in the previous step.
+   
+   . If the device does not know how to fence nodes based on their uname,
+     you may also need to set the special +pcmk_host_map+ parameter.  See
+     `man pacemaker-fenced` for details.
+   
+   . If the device does not support the `list` command, you may also need
+     to set the special +pcmk_host_list+ and/or +pcmk_host_check+
+     parameters.  See `man pacemaker-fenced` for details.
+   
+   . If the device does not expect the victim to be specified with the
+     `port` parameter, you may also need to set the special
+     +pcmk_host_argument+ parameter. See `man pacemaker-fenced` for details.
+   
+   . Upload it into the CIB using cibadmin:
+   +
+   ----
+   # cibadmin -C -o resources --xml-file stonith.xml
+   ----
+   
+   . Set +stonith-enabled+ to true:
+   +
+   ----
+   # crm_attribute -t crm_config -n stonith-enabled -v true
+   ----
+   
+   . Once the stonith resource is running, you can test it by executing the
+     following (although you might want to stop the cluster on that machine
+     first):
+   +
+   ----
+   # stonith_admin --reboot nodename
+   ----
+   
+   === Example Fencing Configuration ===
+   
+   Assume we have a chassis containing four nodes and an IPMI device
+   active on 192.0.2.1. We would choose the `fence_ipmilan` driver,
+   and obtain the following list of parameters:
+   
+   .Obtaining a list of Fence Agent Parameters
+   ====
+   ----
+   # stonith_admin --metadata -a fence_ipmilan
+   ----
+   
+   [source,XML]
+   ----
+   <resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
+     <symlink name="fence_ilo3" shortdesc="Fence agent for HP iLO3"/>
+     <symlink name="fence_ilo4" shortdesc="Fence agent for HP iLO4"/>
+     <symlink name="fence_idrac" shortdesc="Fence agent for Dell iDRAC"/>
+     <symlink name="fence_imm" shortdesc="Fence agent for IBM Integrated Management Module"/>
+     <longdesc>
+     </longdesc>
+     <vendor-url>
+     </vendor-url>
+     <parameters>
+       <parameter name="auth" unique="0" required="0">
+         <getopt mixed="-A"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="ipaddr" unique="0" required="1">
+         <getopt mixed="-a"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="passwd" unique="0" required="0">
+         <getopt mixed="-p"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="passwd_script" unique="0" required="0">
+         <getopt mixed="-S"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="lanplus" unique="0" required="0">
+         <getopt mixed="-P"/>
+         <content type="boolean"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="login" unique="0" required="0">
+         <getopt mixed="-l"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="action" unique="0" required="0">
+         <getopt mixed="-o"/>
+         <content type="string" default="reboot"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="timeout" unique="0" required="0">
+         <getopt mixed="-t"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="cipher" unique="0" required="0">
+         <getopt mixed="-C"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="method" unique="0" required="0">
+         <getopt mixed="-M"/>
+         <content type="string" default="onoff"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="power_wait" unique="0" required="0">
+         <getopt mixed="-T"/>
+         <content type="string" default="2"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="delay" unique="0" required="0">
+         <getopt mixed="-f"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="privlvl" unique="0" required="0">
+         <getopt mixed="-L"/>
+         <content type="string"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+       <parameter name="verbose" unique="0" required="0">
+         <getopt mixed="-v"/>
+         <content type="boolean"/>
+         <shortdesc lang="en">
+         </shortdesc>
+       </parameter>
+     </parameters>
+     <actions>
+       <action name="on"/>
+       <action name="off"/>
+       <action name="reboot"/>
+       <action name="status"/>
+       <action name="diag"/>
+       <action name="list"/>
+       <action name="monitor"/>
+       <action name="metadata"/>
+       <action name="stop" timeout="20s"/>
+       <action name="start" timeout="20s"/>
+     </actions>
+   </resource-agent>
+   ----
+   ====
+   
+   Based on that, we would create a fencing resource fragment that might look
+   like this:
+   
+   .An IPMI-based Fencing Resource
+   ====
+   [source,XML]
+   ----
+   <primitive id="Fencing" class="stonith" type="fence_ipmilan" >
+     <instance_attributes id="Fencing-params" >
+       <nvpair id="Fencing-passwd" name="passwd" value="testuser" />
+       <nvpair id="Fencing-login" name="login" value="abc123" />
+       <nvpair id="Fencing-ipaddr" name="ipaddr" value="192.0.2.1" />
+       <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2" />
+     </instance_attributes>
+     <operations >
+       <op id="Fencing-monitor-10m" interval="10m" name="monitor" timeout="300s" />
+     </operations>
+   </primitive>
+   ----
+   ====
+   
+   Finally, we need to enable fencing:
+   ----
+   # crm_attribute -t crm_config -n stonith-enabled -v true
+   ----
+   
+   == Fencing Topologies ==
+   
+   Pacemaker supports fencing nodes with multiple devices through a feature called
+   'fencing topologies'. Fencing topologies may be used to provide alternative
+   devices in case one fails, or to require multiple devices to all be executed
+   successfully in order to consider the node successfully fenced, or even a
+   combination of the two.
+   
+   Create the individual devices as you normally would, then define one or more
+   +fencing-level+ entries in the +fencing-topology+ section of the configuration.
+   
+   * Each fencing level is attempted in order of ascending +index+. Allowed
+     values are 1 through 9.
+   * If a device fails, processing terminates for the current level.
+     No further devices in that level are exercised, and the next level is attempted instead.
+   * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed.
+   * The operation is finished when a level has passed (success), or all levels have been attempted (failed).
+   * If the operation failed, the next step is determined by the scheduler
+     and/or the controller.
+   
+   Some possible uses of topologies include:
+   
+   * Try on-board IPMI, then an intelligent power switch if that fails
+   * Try fabric fencing of both disk and network, then fall back to power fencing
+     if either fails
+   * Wait up to a certain time for a kernel dump to complete, then cut power to
+     the node
+   
+   .Properties of Fencing Levels
+   [width="95%",cols="1m,<3",options="header",align="center"]
+   |=========================================================
+   
+   |Field
+   |Description
+   
+   |id
+   |A unique name for the level
+    indexterm:[id,fencing-level]
+    indexterm:[Fencing,fencing-level,id]
+   
+   |target
+   |The name of a single node to which this level applies
+    indexterm:[target,fencing-level]
+    indexterm:[Fencing,fencing-level,target]
+   
+   |target-pattern
+   |An extended regular expression (as defined in
+    http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04[POSIX])
+    matching the names of nodes to which this level applies
+    indexterm:[target-pattern,fencing-level]
+    indexterm:[Fencing,fencing-level,target-pattern]
+   
+   |target-attribute
+   |The name of a node attribute that is set (to +target-value+) for nodes to
+    which this level applies
+    indexterm:[target-attribute,fencing-level]
+    indexterm:[Fencing,fencing-level,target-attribute]
+   
+   |target-value
+   |The node attribute value (of +target-attribute+) that is set for nodes to
+    which this level applies
+    indexterm:[target-attribute,fencing-level]
+    indexterm:[Fencing,fencing-level,target-attribute]
+   
+   |index
+   |The order in which to attempt the levels.
+    Levels are attempted in ascending order 'until one succeeds'.
+    Valid values are 1 through 9.
+    indexterm:[index,fencing-level]
+    indexterm:[Fencing,fencing-level,index]
+   
+   |devices
+   |A comma-separated list of devices that must all be tried for this level
+    indexterm:[devices,fencing-level]
+    indexterm:[Fencing,fencing-level,devices]
+   
+   |=========================================================
+   
+   .Fencing topology with different devices for different nodes
+   ====
+   [source,XML]
+   ----
+    <cib crm_feature_set="3.0.6" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
+     <configuration>
+       ...
+       <fencing-topology>
+         <!-- For pcmk-1, try poison-pill and fail back to power -->
+         <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill"/>
+         <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power"/>
+   
+         <!-- For pcmk-2, try disk and network, and fail back to power -->
+         <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,network"/>
+         <fencing-level id="f-p2.2" target="pcmk-2" index="2" devices="power"/>
+       </fencing-topology>
+       ...
+     <configuration>
+     <status/>
+   </cib>
+   ----
+   ====
+   
+   === Example Dual-Layer, Dual-Device Fencing Topologies ===
+   
+   The following example illustrates an advanced use of +fencing-topology+ in a cluster with the following properties:
+   
+   * 3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)
+   * the active nodes have an IPMI-controlled power board reached at 192.0.2.1 and 192.0.2.2
+   * the active nodes also have two independent PSUs (Power Supply Units)
+     connected to two independent PDUs (Power Distribution Units) reached at
+     198.51.100.1 (port 10 and port 11) and 203.0.113.1 (port 10 and port 11)
+   * the first fencing method uses the `fence_ipmi` agent
+   * the second fencing method uses the `fence_apc_snmp` agent targetting 2 fencing devices (one per PSU, either port 10 or 11)
+   * fencing is only implemented for the active nodes and has location constraints
+   * fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
+   
+   In a normal failure scenario, STONITH will first select +fence_ipmi+ to try to kill the faulty node.
+   Using a fencing topology, if that first method fails, STONITH will then move on to selecting +fence_apc_snmp+ twice:
+   
+   * once for the first PDU 
+   * again for the second PDU 
+   
+   The fence action is considered successful only if both PDUs report the required status. If any of them fails, STONITH loops back to the first fencing method, +fence_ipmi+, and so on until the node is fenced or fencing action is cancelled.
+   
+   .First fencing method: single IPMI device
+   
+   Each cluster node has it own dedicated IPMI channel that can be called for fencing using the following primitives:
+   [source,XML]
+   ----
+   <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+     <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+       <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+     </instance_attributes>
+   </primitive>
+   <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+     <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+       <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+     </instance_attributes>
+   </primitive>
+   ----
+   
+   .Second fencing method: dual PDU devices
+   
+   Each cluster node also has two distinct power channels controlled by two
+   distinct PDUs. That means a total of 4 fencing devices configured as follows:
+   
+   - Node 1, PDU 1, PSU 1 @ port 10
+   - Node 1, PDU 2, PSU 2 @ port 10
+   - Node 2, PDU 1, PSU 1 @ port 11
+   - Node 2, PDU 2, PSU 2 @ port 11
+   
+   The matching fencing agents are configured as follows:
+   [source,XML]
+   ----
+   <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+     <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+       <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+     </instance_attributes>
+   </primitive>
+   <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+     <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+       <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+     </instance_attributes>
+   </primitive>
+   <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+     <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+       <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+     </instance_attributes>
+   </primitive>
+   <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+     <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+       <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+     </instance_attributes>
+   </primitive>
+   ----
+   
+   .Location Constraints 
+   
+   To prevent STONITH from trying to run a fencing agent on the same node it is
+   supposed to fence, constraints are placed on all the fencing primitives:
+   [source,XML]
+   ----
+   <constraints>
+     <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
+     <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
+     <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
+     <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
+     <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
+     <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
+   </constraints>
+   ----
+   
+   .Fencing topology
+   
+   Now that all the fencing resources are defined, it's time to create the right topology. 
+   We want to first fence using IPMI and if that does not work, fence both PDUs to effectively and surely kill the node.
+   [source,XML]
+   ----
+   <fencing-topology>
+     <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
+     <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
+     <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
+     <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
+   </fencing-topology>
+   ----
+   Please note, in +fencing-topology+, the lowest +index+ value determines the priority of the first fencing method. 
+   
+   .Final configuration
+   
+   Put together, the configuration looks like this:
+   [source,XML]
+   ----
+   <cib admin_epoch="0" crm_feature_set="3.0.7" epoch="292" have-quorum="1" num_updates="29" validate-with="pacemaker-1.2">
+     <configuration>
+       <crm_config>
+         <cluster_property_set id="cib-bootstrap-options">
+           <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+           <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="off"/>
+           <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
+          ...
+         </cluster_property_set>
+       </crm_config>
+       <nodes>
+         <node id="prod-mysql1" uname="prod-mysql1">
+         <node id="prod-mysql2" uname="prod-mysql2"/>
+         <node id="prod-mysql-rep1" uname="prod-mysql-rep1"/>
+           <instance_attributes id="prod-mysql-rep1">
+             <nvpair id="prod-mysql-rep1-standby" name="standby" value="on"/>
+           </instance_attributes>
+         </node>
+       </nodes>
+       <resources>
+         <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+           <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.1"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+             <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+           </instance_attributes>
+         </primitive>
+         <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+           <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.0.2.2"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+             <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+           </instance_attributes>
+         </primitive>
+         <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+           <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+             <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+           </instance_attributes>
+         </primitive>
+         <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+           <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+             <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+           </instance_attributes>
+         </primitive>
+         <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+           <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="198.51.100.1"/>
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+             <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+           </instance_attributes>
+         </primitive>
+         <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+           <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="203.0.113.1"/>
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+             <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+           </instance_attributes>
+         </primitive>
+      </resources>
+       <constraints>
+         <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
+         <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
+         <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
+         <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
+         <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
+         <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
+       </constraints>
+       <fencing-topology>
+         <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
+         <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
+         <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
+         <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
+       </fencing-topology>
+      ...
+     </configuration>
+   </cib>
+   ----
+   
+   == Remapping Reboots ==
+   
+   When the cluster needs to reboot a node, whether because +stonith-action+ is +reboot+ or because
+   a reboot was manually requested (such as by `stonith_admin --reboot`), it will remap that to
+   other commands in two cases:
+   
+   . If the chosen fencing device does not support the +reboot+ command, the cluster
+     will ask it to perform +off+ instead.
+   
+   . If a fencing topology level with multiple devices must be executed, the cluster
+     will ask all the devices to perform +off+, then ask the devices to perform +on+.
+   
+   To understand the second case, consider the example of a node with redundant
+   power supplies connected to intelligent power switches. Rebooting one switch
+   and then the other would have no effect on the node. Turning both switches off,
+   and then on, actually reboots the node.
+   
+   In such a case, the fencing operation will be treated as successful as long as
+   the +off+ commands succeed, because then it is safe for the cluster to recover
+   any resources that were on the node. Timeouts and errors in the +on+ phase will
+   be logged but ignored.
+   
+   When a reboot operation is remapped, any action-specific timeout for the
+   remapped action will be used (for example, +pcmk_off_timeout+ will be used when
+   executing the +off+ command, not +pcmk_reboot_timeout+).
