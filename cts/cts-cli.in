@@ -196,6 +196,22 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --resource=Fencing"
     test_assert $CRM_EX_OK 0
 
+    desc="Complete text output filtered by group resource"
+    cmd="crm_mon -1 --include=all --resource=exim-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by group resource"
+    cmd="crm_mon --output-as=xml --resource=exim-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by group resource member"
+    cmd="crm_mon -1 --include=all --resource=Public-IP"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by group resource member"
+    cmd="crm_mon --output-as=xml --resource=Email"
+    test_assert $CRM_EX_OK 0
+
     desc="Basic text output filtered by resource that doesn't exist"
     cmd="crm_mon -1 --resource=blah"
     test_assert $CRM_EX_OK 0

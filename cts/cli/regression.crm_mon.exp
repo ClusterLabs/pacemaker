@@ -1052,6 +1052,163 @@ Operations:
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by primitive resource
+=#=#=#= Begin test: Complete text output filtered by group resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+=#=#=#= End test: Complete text output filtered by group resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by group resource
+=#=#=#= Begin test: XML output filtered by group resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=exim-group">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <group id="exim-group" number_resources="2">
+      <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </group>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by group resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by group resource
+=#=#=#= Begin test: Complete text output filtered by group resource member =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+=#=#=#= End test: Complete text output filtered by group resource member - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by group resource member
+=#=#=#= Begin test: XML output filtered by group resource member =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=Email">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <group id="exim-group" number_resources="2">
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </group>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by group resource member - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by group resource member
 =#=#=#= Begin test: Basic text output filtered by resource that doesn't exist =#=#=#=
 Cluster Summary:
   * Stack: corosync
