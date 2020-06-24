@@ -29,7 +29,7 @@ time_t_string(time_t when) {
     return buf;
 }
 
-PCMK__OUTPUT_ARGS("failed-fencing-history", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("failed-fencing-history", "stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -48,27 +48,16 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Fencing Actions");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("fencing-history", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("fencing-history", "stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -84,32 +73,17 @@ stonith__history(pcmk__output_t *out, va_list args) {
         }
 
         if (hp->state != st_failed) {
-            /* Print the header the first time we have an event to print out to
-             * prevent printing headers with empty sections underneath.
-             */
-            if (rc == pcmk_rc_no_output) {
-                /* Add a blank line between this section and the one before it. */
-                if (print_spacer) {
-                    out->info(out, "%s", "");
-                }
-
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Fencing History");
-            }
-
+            PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
             out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__full_history(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
@@ -125,28 +99,16 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            /* Add a blank line between this section and the one before it. */
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Fencing History");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
  
-PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -163,18 +125,12 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
                 continue;
             }
 
-            if (rc == pcmk_rc_no_output) {
-                rc = pcmk_rc_ok;
-                out->begin_list(out, NULL, NULL, "Fencing History");
-            }
-
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Fencing History");
             out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
             out->increment_list(out);
         }
 
-        if (rc == pcmk_rc_ok) {
-            out->end_list(out);
-        }
+        PCMK__OUTPUT_LIST_FOOTER(out, rc);
     } else {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_history");
         char *rc_s = crm_itoa(history_rc);
@@ -239,7 +195,7 @@ stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("pending-fencing-actions", "struct stonith_history_t *", "GListPtr", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("pending-fencing-actions", "stonith_history_t *", "GListPtr", "gboolean", "gboolean")
 int
 stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -259,27 +215,16 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
             break;
         }
 
-        if (rc == pcmk_rc_no_output) {
-            if (print_spacer) {
-                out->info(out, "%s", "");
-            }
-
-            rc = pcmk_rc_ok;
-            out->begin_list(out, NULL, NULL, "Pending Fencing Actions");
-        }
-
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Pending Fencing Actions");
         out->message(out, "stonith-event", hp, full_history, stonith__later_succeeded(hp, history));
         out->increment_list(out);
     }
 
-    if (rc == pcmk_rc_ok) {
-        out->end_list(out);
-    }
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -327,7 +272,7 @@ stonith__event_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -365,7 +310,7 @@ stonith__event_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");

@@ -2619,6 +2619,38 @@ stonith__sort_history(stonith_history_t *history)
     return new;
 }
 
+stonith_history_t *
+stonith__first_matching_event(stonith_history_t *history,
+                              bool (*matching_fn)(stonith_history_t *, void *),
+                              void *user_data)
+{
+    for (stonith_history_t *hp = history; hp; hp = hp->next) {
+        if (matching_fn(hp, user_data)) {
+            return hp;
+        }
+    }
+
+    return NULL;
+}
+
+bool
+stonith__event_state_pending(stonith_history_t *history, void *user_data)
+{
+    return history->state != st_failed && history->state != st_done;
+}
+
+bool
+stonith__event_state_eq(stonith_history_t *history, void *user_data)
+{
+    return history->state == GPOINTER_TO_INT(user_data);
+}
+
+bool
+stonith__event_state_neq(stonith_history_t *history, void *user_data)
+{
+    return history->state != GPOINTER_TO_INT(user_data);
+}
+
 // Deprecated functions kept only for backward API compatibility
 const char *get_stonith_provider(const char *agent, const char *provider);
 

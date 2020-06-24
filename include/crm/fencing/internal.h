@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the Pacemaker project contributors
+ * Copyright 2011-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -183,5 +183,12 @@ int stonith__event_xml(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_html(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_text(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_xml(pcmk__output_t *out, va_list args);
+
+stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
+                                                 bool (*matching_fn)(stonith_history_t *, void *),
+                                                 void *user_data);
+bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
+bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
+bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
 #endif

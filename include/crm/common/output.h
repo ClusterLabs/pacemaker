@@ -714,6 +714,23 @@ void
 pcmk__html_add_header(xmlNodePtr parent, const char *name, ...)
 G_GNUC_NULL_TERMINATED;
 
+#define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
+    if (cond) {                                 \
+        out_obj->info(out_obj, "%s", "");       \
+    }
+
+#define PCMK__OUTPUT_LIST_HEADER(out_obj, cond, retcode, title...)  \
+    if (retcode == pcmk_rc_no_output) {                             \
+        PCMK__OUTPUT_SPACER_IF(out_obj, cond);                      \
+        retcode = pcmk_rc_ok;                                       \
+        out_obj->begin_list(out_obj, NULL, NULL, title);            \
+    }
+
+#define PCMK__OUTPUT_LIST_FOOTER(out_obj, retcode)  \
+    if (retcode == pcmk_rc_ok) {                    \
+        out_obj->end_list(out_obj);                 \
+    }
+
 #ifdef __cplusplus
 }
 #endif
