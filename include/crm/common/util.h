@@ -160,18 +160,54 @@ int compare_version(const char *version1, const char *version2);
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
 
+/*!
+ * \brief Check whether any of specified flags are set in a flag group
+ *
+ * \param[in] flag_group        The flag group being examined
+ * \param[in] flags_to_check    Which flags in flag_group should be checked
+ *
+ * \return true if any of flags_to_check are set in flag_group
+ */
+static inline bool
+pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) != 0;
+}
+
+/*!
+ * \brief Check whether all of specified flags are set in a flag group
+ *
+ * \param[in] flag_group        The flag group being examined
+ * \param[in] flags_to_check    Which flags in flag_group should be checked
+ *
+ * \return true if all of flags_to_check are set in flag_group
+ */
+static inline bool
+pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) == flags_to_check;
+}
+
+/*!
+ * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
+ */
+#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
+
+//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
 static inline gboolean
 is_not_set(long long word, long long bit)
 {
     return ((word & bit) == 0);
 }
 
+//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
 static inline gboolean
 is_set(long long word, long long bit)
 {
     return ((word & bit) == bit);
 }
 
+//! \deprecated Use pcmk_any_flags_set() instead
 static inline gboolean
 is_set_any(long long word, long long bit)
 {
