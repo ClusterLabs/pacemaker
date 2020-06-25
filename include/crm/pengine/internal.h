@@ -22,8 +22,20 @@
 #  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-#  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
-#  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
+
+#define pe_set_action_bit(action, bit) do {                                 \
+        (action)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,        \
+                                             LOG_TRACE,                     \
+                                             "Action", (action)->uuid,      \
+                                             (action)->flags, bit, #bit);   \
+    } while (0)
+
+#define pe_clear_action_bit(action, bit) do {                               \
+        (action)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,      \
+                                               LOG_TRACE,                   \
+                                               "Action", (action)->uuid,    \
+                                               (action)->flags, bit, #bit); \
+    } while (0)
 
 // Some warnings we don't want to print every transition
 

@@ -1224,7 +1224,9 @@ summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
-                flags = crm_clear_bit(__FUNCTION__, __LINE__, action->rsc->id, flags, pe_action_optional);
+                flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,
+                                             "Action summary", action->rsc->id,
+                                             flags, pe_action_optional, NULL);
                 pe_clear_action_bit(action, pe_action_optional);
             }
             if (is_set(child_flags, pe_action_runnable)) {
@@ -1235,7 +1237,9 @@ summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
 
     if (check_runnable && any_runnable == FALSE) {
         pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
-        flags = crm_clear_bit(__FUNCTION__, __LINE__, action->rsc->id, flags, pe_action_runnable);
+        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,
+                                     "Action summary", action->rsc->id,
+                                     flags, pe_action_runnable, NULL);
         if (node == NULL) {
             pe_clear_action_bit(action, pe_action_runnable);
         }

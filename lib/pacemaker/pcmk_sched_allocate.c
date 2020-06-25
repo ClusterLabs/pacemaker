@@ -124,9 +124,13 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        action->flags = crm_clear_bit(source, line, action->uuid, action->flags, flags);
+        action->flags = pcmk__clear_flags_as(source, line, LOG_TRACE, "Action",
+                                             action->uuid, action->flags,
+                                             flags, NULL);
     } else {
-        action->flags = crm_set_bit(source, line, action->uuid, action->flags, flags);
+        action->flags = pcmk__set_flags_as(source, line, LOG_TRACE, "Action",
+                                           action->uuid, action->flags,
+                                           flags, NULL);
     }
 
     if (last != action->flags) {

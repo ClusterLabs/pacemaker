@@ -12,6 +12,7 @@
 
 #include <unistd.h>             // getpid()
 #include <stdbool.h>            // bool
+#include <stdint.h>             // uint8_t, uint64_t
 #include <string.h>             // strcmp()
 #include <sys/types.h>          // uid_t, gid_t, pid_t
 
@@ -19,6 +20,7 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/util.h>    // crm_strdup_printf()
+#include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/strings_internal.h>
 
@@ -188,6 +190,88 @@ char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
                            const char *node);
 void pcmk__filter_op_for_digest(xmlNode *param_set);
 
+
+// bitwise arithmetic utilities
+
+/*!
+ * \internal
+ * \brief Set specified flags in a flag group
+ *
+ * \param[in] function    Function name of caller
+ * \param[in] line        Line number of caller
+ * \param[in] log_level   Log a message at this level
+ * \param[in] flag_type   Label describing this flag group (for logging)
+ * \param[in] target      Name of object whose flags these are (for logging)
+ * \param[in] flag_group  Flag group being manipulated
+ * \param[in] flags       Which flags in the group should be set
+ * \param[in] flags_str   Readable equivalent of \p flags (for logging)
+ *
+ * \return Possibly modified flag group
+ */
+static inline uint64_t
+pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
+                   const char *flag_type, const char *target,
+                   uint64_t flag_group, uint64_t flags, const char *flags_str)
+{
+    uint64_t result = flag_group | flags;
+
+    if (result != flag_group) {
+        do_crm_log_unlikely(log_level,
+                            "%s flags 0x%.8llx (%s) for %s set by %s:%d",
+                            ((flag_type == NULL)? "Group of" : flag_type),
+                            (unsigned long long) flags,
+                            ((flags_str == NULL)? "flags" : flags_str),
+                            ((target == NULL)? "target" : target),
+                            function, line);
+    }
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Clear specified flags in a flag group
+ *
+ * \param[in] function    Function name of caller
+ * \param[in] line        Line number of caller
+ * \param[in] log_level   Log a message at this level
+ * \param[in] flag_type   Label describing this flag group (for logging)
+ * \param[in] target      Name of object whose flags these are (for logging)
+ * \param[in] flag_group  Flag group being manipulated
+ * \param[in] flags       Which flags in the group should be cleared
+ * \param[in] flags_str   Readable equivalent of \p flags (for logging)
+ *
+ * \return Possibly modified flag group
+ */
+static inline uint64_t
+pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
+                     const char *flag_type, const char *target,
+                     uint64_t flag_group, uint64_t flags, const char *flags_str)
+{
+    uint64_t result = flag_group & ~flags;
+
+    if (result != flag_group) {
+        do_crm_log_unlikely(log_level,
+                            "%s flags 0x%.8llx (%s) for %s cleared by %s:%d",
+                            ((flag_type == NULL)? "Group of" : flag_type),
+                            (unsigned long long) flags,
+                            ((flags_str == NULL)? "flags" : flags_str),
+                            ((target == NULL)? "target" : target),
+                            function, line);
+    }
+    return result;
+}
+
+//! \deprecated
+#  define set_bit(word, bit) do {                                       \
+        word = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,    \
+                                  NULL, NULL, word, bit, NULL);         \
+    } while (0)
+
+//! \deprecated
+#  define clear_bit(word, bit) do {                                     \
+        word = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,  \
+                                    NULL, NULL, word, bit, NULL);       \
+    } while (0)
 
 // miscellaneous utilities (from utils.c)
 

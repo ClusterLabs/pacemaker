@@ -2655,13 +2655,17 @@ void pe_action_set_flag_reason(const char *function, long line,
 
     if(unset) {
         if(is_set(action->flags, flags)) {
-            action->flags = crm_clear_bit(function, line, action->uuid, action->flags, flags);
+            action->flags = pcmk__clear_flags_as(function, line, LOG_TRACE,
+                                                 "Action", action->uuid,
+                                                 action->flags, flags, NULL);
             update = TRUE;
         }
 
     } else {
         if(is_not_set(action->flags, flags)) {
-            action->flags = crm_set_bit(function, line, action->uuid, action->flags, flags);
+            action->flags = pcmk__set_flags_as(function, line, LOG_TRACE,
+                                               "Action", action->uuid,
+                                               action->flags, flags, NULL);
             update = TRUE;
         }
     }
