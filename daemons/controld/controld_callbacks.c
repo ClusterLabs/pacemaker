@@ -111,7 +111,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
      * cluster node, indicate that we have it.
      */
     if (!is_remote) {
-        set_bit(fsa_input_register, R_PEER_DATA);
+        controld_set_fsa_input_flags(R_PEER_DATA);
     }
 
     if (node->uname == NULL) {
@@ -328,7 +328,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     // @TODO This should trigger a reconnect, not a shutdown
     crm_crit("Lost connection to the CIB manager, shutting down");
     register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-    clear_bit(fsa_input_register, R_CIB_CONNECTED);
+    controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     return;
 }

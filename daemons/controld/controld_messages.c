@@ -897,7 +897,7 @@ verify_feature_set(xmlNode *msg)
                 CRM_FEATURE_SET, dc_version);
 
         // Nothing is likely to improve without administrator involvement
-        set_bit(fsa_input_register, R_STAYDOWN);
+        controld_set_fsa_input_flags(R_STAYDOWN);
         crmd_exit(CRM_EX_FATAL);
     }
 }
@@ -954,7 +954,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
         } else {
             crm_err("Shutting down controller after unexpected "
                     "shutdown request from %s", host_from);
-            set_bit(fsa_input_register, R_STAYDOWN);
+            controld_set_fsa_input_flags(R_STAYDOWN);
         }
         return I_STOP;
     }

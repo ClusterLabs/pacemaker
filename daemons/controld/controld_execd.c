@@ -53,7 +53,7 @@ lrm_connection_destroy(void)
     if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
 
     } else {
         crm_info("Disconnected from executor");
@@ -342,7 +342,7 @@ do_lrm_control(long long action,
             }
         }
 
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Disconnecting from the executor");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state, FALSE);
@@ -376,7 +376,7 @@ do_lrm_control(long long action,
             return;
         }
 
-        set_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_set_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Connection to the executor established");
     }
 
@@ -2129,7 +2129,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
         }
     }
 
-    set_bit(fsa_input_register, R_SENT_RSC_STOP);
+    controld_set_fsa_input_flags(R_SENT_RSC_STOP);
     g_list_free(lrm_state_list); lrm_state_list = NULL;
     return res;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -193,12 +193,11 @@ do_dc_takeover(long long action,
     pid_t watchdog = pcmk_locate_sbd();
 
     crm_info("Taking over DC status for this partition");
-    set_bit(fsa_input_register, R_THE_DC);
+    controld_set_fsa_input_flags(R_THE_DC);
     execute_stonith_cleanup();
 
     election_reset(fsa_election);
-    set_bit(fsa_input_register, R_JOIN_OK);
-    set_bit(fsa_input_register, R_INVOKE_PE);
+    controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
     fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_scope_local);
 
@@ -241,7 +240,7 @@ do_dc_release(long long action,
 {
     if (action & A_DC_RELEASE) {
         crm_debug("Releasing the role of DC");
-        clear_bit(fsa_input_register, R_THE_DC);
+        controld_clear_fsa_input_flags(R_THE_DC);
         controld_expect_sched_reply(NULL);
 
     } else if (action & A_DC_RELEASED) {

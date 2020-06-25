@@ -654,7 +654,7 @@ controld_trigger_fencer_connect()
                                                  te_connect_stonith,
                                                  GINT_TO_POINTER(TRUE));
     }
-    set_bit(fsa_input_register, R_ST_REQUIRED);
+    controld_set_fsa_input_flags(R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 }
 
@@ -663,7 +663,7 @@ controld_disconnect_fencer(bool destroy)
 {
     if (stonith_api) {
         // Prevent fencer connection from coming up again
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
+        controld_clear_fsa_input_flags(R_ST_REQUIRED);
 
         if (stonith_api->state != stonith_disconnected) {
             stonith_api->cmds->disconnect(stonith_api);

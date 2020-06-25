@@ -28,12 +28,12 @@ static mainloop_io_t *pe_subsystem = NULL;
 void
 pe_subsystem_free(void)
 {
-    clear_bit(fsa_input_register, R_PE_REQUIRED);
+    controld_clear_fsa_input_flags(R_PE_REQUIRED);
     if (pe_subsystem) {
         controld_expect_sched_reply(NULL);
         mainloop_del_ipc_client(pe_subsystem);
         pe_subsystem = NULL;
-        clear_bit(fsa_input_register, R_PE_CONNECTED);
+        controld_clear_fsa_input_flags(R_PE_CONNECTED);
     }
 }
 
@@ -108,7 +108,7 @@ pe_ipc_destroy(gpointer user_data)
         crm_info("Connection to the scheduler released");
     }
 
-    clear_bit(fsa_input_register, R_PE_CONNECTED);
+    controld_clear_fsa_input_flags(R_PE_CONNECTED);
     pe_subsystem = NULL;
     mainloop_set_trigger(fsa_source);
     return;
@@ -150,7 +150,7 @@ pe_subsystem_new(void)
         .destroy = pe_ipc_destroy
     };
 
-    set_bit(fsa_input_register, R_PE_REQUIRED);
+    controld_set_fsa_input_flags(R_PE_REQUIRED);
     pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
                                            G_PRIORITY_DEFAULT,
                                            5 * 1024 * 1024 /* 5MB */,
@@ -158,7 +158,7 @@ pe_subsystem_new(void)
     if (pe_subsystem == NULL) {
         return FALSE;
     }
-    set_bit(fsa_input_register, R_PE_CONNECTED);
+    controld_set_fsa_input_flags(R_PE_CONNECTED);
     return TRUE;
 }
 

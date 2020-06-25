@@ -35,7 +35,7 @@ char *fsa_our_uname = NULL;
 char *fsa_cluster_name = NULL;
 
 gboolean do_fsa_stall = FALSE;
-long long fsa_input_register = 0;
+uint64_t fsa_input_register = 0;
 long long fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
 
@@ -158,7 +158,7 @@ enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
     fsa_data_t *fsa_data = NULL;
-    long long register_copy = fsa_input_register;
+    uint64_t register_copy = fsa_input_register;
     long long new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
 
@@ -256,7 +256,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
     /* cleanup inputs? */
     if (register_copy != fsa_input_register) {
-        long long same = register_copy & fsa_input_register;
+        uint64_t same = register_copy & fsa_input_register;
 
         fsa_dump_inputs(LOG_DEBUG, "Added", fsa_input_register ^ same);
         fsa_dump_inputs(LOG_DEBUG, "Removed", register_copy ^ same);
@@ -629,7 +629,7 @@ do_state_transition(long long actions,
         case S_STOPPING:
         case S_TERMINATE:
             /* possibly redundant */
-            set_bit(fsa_input_register, R_SHUTDOWN);
+            controld_set_fsa_input_flags(R_SHUTDOWN);
             break;
 
         case S_IDLE:

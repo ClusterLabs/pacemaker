@@ -63,7 +63,7 @@ do_cib_control(long long action,
         }
 
         crm_info("Disconnecting from the CIB manager");
-        clear_bit(fsa_input_register, R_CIB_CONNECTED);
+        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
@@ -109,7 +109,7 @@ do_cib_control(long long action,
             crm_err("Could not set CIB notification callback (update)");
 
         } else {
-            set_bit(fsa_input_register, R_CIB_CONNECTED);
+            controld_set_fsa_input_flags(R_CIB_CONNECTED);
             cib_retries = 0;
         }
 

@@ -461,8 +461,26 @@ struct fsa_data_s {
 /* Global FSA stuff */
 extern gboolean do_fsa_stall;
 extern enum crmd_fsa_state fsa_state;
-extern long long fsa_input_register;
+extern uint64_t fsa_input_register;
 extern long long fsa_actions;
+
+#define controld_set_fsa_input_flags(flags_to_set) do {                     \
+        fsa_input_register = pcmk__set_flags_as(__FUNCTION__, __LINE__,     \
+                                                LOG_TRACE,                  \
+                                                "FSA input", "controller",  \
+                                                fsa_input_register,         \
+                                                (flags_to_set),             \
+                                                #flags_to_set);             \
+    } while (0)
+
+#define controld_clear_fsa_input_flags(flags_to_clear) do {                 \
+        fsa_input_register = pcmk__clear_flags_as(__FUNCTION__, __LINE__,   \
+                                                  LOG_TRACE,                \
+                                                  "FSA input", "controller",\
+                                                  fsa_input_register,       \
+                                                  (flags_to_clear),         \
+                                                  #flags_to_clear);         \
+    } while (0)
 
 extern cib_t *fsa_cib_conn;
 
