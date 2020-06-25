@@ -91,7 +91,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     /* Allow remote executor to distinguish between proxied local clients and
      * actual executor API clients
      */
-    set_bit(client->flags, pcmk__client_to_proxy);
+    pcmk__set_client_flags(client, pcmk__client_to_proxy);
 
     g_hash_table_insert(ipc_clients, client->id, client);
 

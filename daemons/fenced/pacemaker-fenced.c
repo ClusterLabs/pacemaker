@@ -260,7 +260,7 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
     }
 }
 
-long long
+uint64_t
 get_stonith_flag(const char *name)
 {
     if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
@@ -301,7 +301,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (client->options & get_stonith_flag(type)) {
+    if (is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event|crm_ipc_server_error);
 

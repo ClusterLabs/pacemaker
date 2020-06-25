@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>                // bool
-#include <stdint.h>                 // uint32_t
+#include <stdint.h>                 // uint32_t, uint64_t, UINT64_C()
 #include <sys/uio.h>                // struct iovec
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
 
@@ -92,14 +92,6 @@ int pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
 
 typedef struct pcmk__client_s pcmk__client_t;
 
-enum pcmk__client_type {
-    PCMK__CLIENT_IPC = 1,
-    PCMK__CLIENT_TCP = 2,
-#  ifdef HAVE_GNUTLS_GNUTLS_H
-    PCMK__CLIENT_TLS = 3,
-#  endif
-};
-
 struct pcmk__remote_s {
     /* Shared */
     char *buffer;
@@ -121,10 +113,22 @@ struct pcmk__remote_s {
 };
 
 enum pcmk__client_flags {
-    pcmk__client_proxied    = (1 << 0), // Remote client behind proxy
-    pcmk__client_privileged = (1 << 1), // root or cluster user
-    pcmk__client_to_proxy   = (1 << 2), // Local client to be proxied
+    // Lower 32 bits are reserved for server (not library) use
+
+    // Next 8 bits are reserved for client type (sort of a cheap enum)
+    pcmk__client_ipc        = (UINT64_C(1) << 32), // Client uses plain IPC
+    pcmk__client_tcp        = (UINT64_C(1) << 33), // Client uses TCP connection
+#  ifdef HAVE_GNUTLS_GNUTLS_H
+    pcmk__client_tls        = (UINT64_C(1) << 34), // Client uses TCP with TLS
+#  endif
+
+    // The rest are client attributes
+    pcmk__client_proxied    = (UINT64_C(1) << 40), // Client IPC is proxied
+    pcmk__client_privileged = (UINT64_C(1) << 41), // root or cluster user
+    pcmk__client_to_proxy   = (UINT64_C(1) << 42), // Local client to be proxied
 };
+
+#define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))
 
 struct pcmk__client_s {
     unsigned int pid;
@@ -135,22 +139,17 @@ struct pcmk__client_s {
     char *id;
     char *name;
     char *user;
-
-    /* Provided for server use (not used by library) */
-    /* @TODO merge options, flags, and kind (reserving lower bits for server) */
-    long long options;
+    uint64_t flags; // Group of pcmk__client_flags
 
     int request_id;
-    uint32_t flags;
     void *userdata;
 
     int event_timer;
     GQueue *event_queue;
 
-    /* Depending on the value of kind, only some of the following
-     * will be populated/valid
+    /* Depending on the client type, only some of the following will be
+     * populated/valid. @TODO Maybe convert to a union.
      */
-    enum pcmk__client_type kind;
 
     qb_ipcs_connection_t *ipcs; /* IPC */
 
@@ -159,6 +158,20 @@ struct pcmk__client_s {
     unsigned int queue_backlog; /* IPC queue length after last flush */
     unsigned int queue_max;     /* Evict client whose queue grows this big */
 };
+
+#define pcmk__set_client_flags(client, flags_to_set) do {               \
+        (client)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,    \
+            LOG_TRACE,                                                  \
+            "Client", ((client)->name? (client)->name : "client"),      \
+            (client)->flags, (flags_to_set), #flags_to_set);            \
+    } while (0)
+
+#define pcmk__clear_client_flags(client, flags_to_clear) do {           \
+        (client)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,  \
+            LOG_TRACE,                                                  \
+            "Client", ((client)->name? (client)->name : "client"),      \
+            (client)->flags, (flags_to_clear), #flags_to_clear);        \
+    } while (0)
 
 guint pcmk__ipc_client_count(void);
 void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
@@ -169,7 +182,7 @@ void pcmk__client_cleanup(void);
 pcmk__client_t *pcmk__find_client(qb_ipcs_connection_t *c);
 pcmk__client_t *pcmk__find_client_by_id(const char *id);
 const char *pcmk__client_name(pcmk__client_t *c);
-const char *pcmk__client_type_str(enum pcmk__client_type client_type);
+const char *pcmk__client_type_str(uint64_t client_type);
 
 pcmk__client_t *pcmk__new_unauth_client(void *key);
 pcmk__client_t *pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid);

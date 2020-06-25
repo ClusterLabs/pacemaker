@@ -186,7 +186,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         }
 #endif
         client->ipcs = c;
-        client->kind = PCMK__CLIENT_IPC;
+        pcmk__set_client_flags(client, pcmk__client_ipc);
         client->pid = pcmk__client_pid(c);
         if (key == NULL) {
             key = c;
@@ -261,7 +261,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 
     if ((uid_client == 0) || (uid_client == uid_cluster)) {
         /* Remember when a connection came from root or hacluster */
-        set_bit(client->flags, pcmk__client_privileged);
+        pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
     crm_debug("New IPC client %s for PID %u with uid %d and gid %d",
@@ -421,7 +421,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
          * Proxy connections responses are sent on the event channel, to avoid
          * blocking the controller serving as proxy.
          */
-        c->flags |= pcmk__client_proxied;
+        pcmk__set_client_flags(c, pcmk__client_proxied);
     }
 
     if (header->size_compressed) {

@@ -153,7 +153,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
                   type, cib_client->name, cib_client->id, on_off ? "on" : "off");
 
         if (!strcmp(type, T_CIB_DIFF_NOTIFY) && on_off) {
-            cib_client->options |= cib_notify_diff;
+            pcmk__set_client_flags(cib_client, cib_notify_diff);
         }
 
         ctxt = (mock_based_context_t *) cib_client->userdata;
