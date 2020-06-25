@@ -124,13 +124,9 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        action->flags = pcmk__clear_flags_as(source, line, LOG_TRACE, "Action",
-                                             action->uuid, action->flags,
-                                             flags, NULL);
+        pe__clear_action_flags_as(source, line, action, flags);
     } else {
-        action->flags = pcmk__set_flags_as(source, line, LOG_TRACE, "Action",
-                                           action->uuid, action->flags,
-                                           flags, NULL);
+        pe__set_action_flags_as(source, line, action, flags);
     }
 
     if (last != action->flags) {
@@ -2499,7 +2495,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         return;
     }
 
-    pe_set_action_bit(after, pe_action_tracking);
+    pe__set_action_flags(after, pe_action_tracking);
 
     crm_trace("Processing based on %s %s -> %s %s",
               probe->uuid,
@@ -2614,7 +2610,7 @@ static void clear_actions_tracking_flag(pe_working_set_t * data_set)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (is_set(action->flags, pe_action_tracking)) {
-            pe_clear_action_bit(action, pe_action_tracking);
+            pe__clear_action_flags(action, pe_action_tracking);
         }
     }
 }

@@ -1200,6 +1200,12 @@ clone_child_action(pe_action_t * action)
     return result;
 }
 
+#define pe__clear_action_summary_flags(flags, action, flag) do {        \
+        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+                                     "Action summary", action->rsc->id, \
+                                     flags, flag, #flag);               \
+    } while (0)
+
 enum pe_action_flags
 summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
 {
@@ -1224,10 +1230,8 @@ summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
-                flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,
-                                             "Action summary", action->rsc->id,
-                                             flags, pe_action_optional, NULL);
-                pe_clear_action_bit(action, pe_action_optional);
+                pe__clear_action_summary_flags(flags, action, pe_action_optional);
+                pe__clear_action_flags(action, pe_action_optional);
             }
             if (is_set(child_flags, pe_action_runnable)) {
                 any_runnable = TRUE;
@@ -1237,11 +1241,9 @@ summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
 
     if (check_runnable && any_runnable == FALSE) {
         pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
-        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,
-                                     "Action summary", action->rsc->id,
-                                     flags, pe_action_runnable, NULL);
+        pe__clear_action_summary_flags(flags, action, pe_action_runnable);
         if (node == NULL) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
         }
     }
 

@@ -535,7 +535,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         if (then->required_runnable_before == 0) {
             then->required_runnable_before = 1;
         }
-        pe_clear_action_bit(then, pe_action_runnable);
+        pe__clear_action_flags(then, pe_action_runnable);
         /* We are relying on the pe_order_one_or_more clause of
          * graph_update_action(), called as part of the:
          *
@@ -738,7 +738,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
 
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
                      node->details->uname);
-        pe_clear_action_bit(action, pe_action_optional);
+        pe__clear_action_flags(action, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional | pe_order_runnable_left, data_set);
@@ -1692,7 +1692,7 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     }
 
 done:
-    pe_clear_action_bit(input->action, pe_action_tracking);
+    pe__clear_action_flags(input->action, pe_action_tracking);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (0x%.6x)",

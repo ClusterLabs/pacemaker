@@ -2202,7 +2202,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if ((first->flags & pe_action_runnable) == FALSE) {
             pe_action_implies(then, first, pe_action_migrate_runnable);
-            pe_clear_action_bit(then, pe_action_pseudo);
+            pe__clear_action_flags(then, pe_action_pseudo);
             pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
 

@@ -398,7 +398,7 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
                 clear_bit(flags, pe_action_optional);
-                pe_clear_action_bit(action, pe_action_optional);
+                pe__clear_action_flags(action, pe_action_optional);
             }
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
                 && is_set(flags, pe_action_runnable)
@@ -406,7 +406,7 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
                              child_action->uuid);
                 clear_bit(flags, pe_action_runnable);
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe__clear_action_flags(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc && task != action_demote) {

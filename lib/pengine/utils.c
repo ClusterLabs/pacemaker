@@ -526,14 +526,14 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
             // Resource history deletion for a node can be done on the DC
-            pe_set_action_bit(action, pe_action_dc);
+            pe__set_action_flags(action, pe_action_dc);
         }
 
-        pe_set_action_bit(action, pe_action_runnable);
+        pe__set_action_flags(action, pe_action_runnable);
         if (optional) {
-            pe_set_action_bit(action, pe_action_optional);
+            pe__set_action_flags(action, pe_action_optional);
         } else {
-            pe_clear_action_bit(action, pe_action_optional);
+            pe__clear_action_flags(action, pe_action_optional);
         }
 
         action->extra = crm_str_table_new();
@@ -567,7 +567,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
     if (!optional && is_set(action->flags, pe_action_optional)) {
         pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
-        pe_clear_action_bit(action, pe_action_optional);
+        pe__clear_action_flags(action, pe_action_optional);
     }
 
     if (rsc != NULL) {
@@ -590,7 +590,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                 .op_data = NULL
             };
 
-            pe_set_action_bit(action, pe_action_have_node_attrs);
+            pe__set_action_flags(action, pe_action_have_node_attrs);
             pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                        &rule_data, action->extra, NULL,
                                        FALSE, data_set);
@@ -601,21 +601,21 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta,
                                           XML_LRM_ATTR_INTERVAL_MS) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
             pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
-            pe_set_action_bit(action, pe_action_optional);
-/*   			action->runnable = FALSE; */
+            pe__set_action_flags(action, pe_action_optional);
+            //pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (is_not_set(action->flags, pe_action_dc)
                    && !(action->node->details->online)
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
@@ -626,7 +626,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         } else if (is_not_set(action->flags, pe_action_dc)
                    && action->node->details->pending) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
                        action->uuid, action->node->details->uname);
 
@@ -640,11 +640,11 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                  * exception: an action cannot be completed if it is on a guest
                  * node whose host is unclean and cannot be fenced.
                  */
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe__clear_action_flags(action, pe_action_runnable);
                 crm_debug("%s\t%s (cancelled : host cannot be fenced)",
                           action->node->details->uname, action->uuid);
             } else {
-                pe_set_action_bit(action, pe_action_runnable);
+                pe__set_action_flags(action, pe_action_runnable);
             }
 #if 0
             /*
@@ -670,7 +670,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         } else if(is_not_set(action->flags, pe_action_runnable)) {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
             //pe_action_set_reason(action, NULL, TRUE);
-            pe_set_action_bit(action, pe_action_runnable);
+            pe__set_action_flags(action, pe_action_runnable);
         }
 
         if (save_action) {
@@ -2655,17 +2655,13 @@ void pe_action_set_flag_reason(const char *function, long line,
 
     if(unset) {
         if(is_set(action->flags, flags)) {
-            action->flags = pcmk__clear_flags_as(function, line, LOG_TRACE,
-                                                 "Action", action->uuid,
-                                                 action->flags, flags, NULL);
+            pe__clear_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
 
     } else {
         if(is_not_set(action->flags, flags)) {
-            action->flags = pcmk__set_flags_as(function, line, LOG_TRACE,
-                                               "Action", action->uuid,
-                                               action->flags, flags, NULL);
+            pe__set_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
     }

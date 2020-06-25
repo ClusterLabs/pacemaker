@@ -23,18 +23,40 @@
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
-#define pe_set_action_bit(action, bit) do {                                 \
+#define pe__set_action_flags(action, flags_to_set) do {                     \
         (action)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,        \
                                              LOG_TRACE,                     \
                                              "Action", (action)->uuid,      \
-                                             (action)->flags, bit, #bit);   \
+                                             (action)->flags,               \
+                                             (flags_to_set),                \
+                                             #flags_to_set);                \
     } while (0)
 
-#define pe_clear_action_bit(action, bit) do {                               \
+#define pe__clear_action_flags(action, flags_to_clear) do {                 \
         (action)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,      \
                                                LOG_TRACE,                   \
                                                "Action", (action)->uuid,    \
-                                               (action)->flags, bit, #bit); \
+                                               (action)->flags,             \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
+    } while (0)
+
+#define pe__set_action_flags_as(function, line, action, flags_to_set) do {  \
+        (action)->flags = pcmk__set_flags_as((function), (line),            \
+                                             LOG_TRACE,                     \
+                                             "Action", (action)->uuid,      \
+                                             (action)->flags,               \
+                                             (flags_to_set),                \
+                                             #flags_to_set);                \
+    } while (0)
+
+#define pe__clear_action_flags_as(function, line, action, flags_to_clear) do { \
+        (action)->flags = pcmk__clear_flags_as((function), (line),          \
+                                               LOG_TRACE,                   \
+                                               "Action", (action)->uuid,    \
+                                               (action)->flags,             \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
     } while (0)
 
 // Some warnings we don't want to print every transition
