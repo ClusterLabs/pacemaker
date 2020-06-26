@@ -669,3 +669,49 @@ pcmk__str_in_list(GList *lst, const gchar *s)
 
     return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
 }
+
+bool
+pcmk__str_any_of(const char *s, ...)
+{
+    bool rc = false;
+    va_list ap;
+
+    va_start(ap, s);
+
+    while (1) {
+        const char *ele = va_arg(ap, const char *);
+
+        if (ele == NULL) {
+            break;
+        } else if (crm_str_eq(s, ele, FALSE)) {
+            rc = true;
+            break;
+        }
+    }
+
+    va_end(ap);
+    return rc;
+}
+
+bool
+pcmk__str_none_of(const char *s, ...)
+{
+    bool rc = true;
+    va_list ap;
+
+    va_start(ap, s);
+
+    while (1) {
+        const char *ele = va_arg(ap, const char *);
+
+        if (ele == NULL) {
+            break;
+        } else if (crm_str_eq(s, ele, FALSE)) {
+            rc = false;
+            break;
+        }
+    }
+
+    va_end(ap);
+    return rc;
+}

@@ -202,6 +202,10 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 *.log
 *.trs
 /lib/common/tests/strings/pcmk__parse_ll_range
+/lib/common/tests/strings/pcmk__str_any_of
+/lib/common/tests/strings/pcmk__str_none_of
+/lib/common/tests/utils/pcmk_str_is_infinity
+/lib/common/tests/utils/pcmk_str_is_minus_infinity
 /lib/pengine/tests/rules/pe_cron_range_satisfied
 
 # Release maintenance detritus
