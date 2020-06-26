@@ -36,7 +36,7 @@ typedef struct stonith_device_s {
     gboolean automatic_unfencing;
     guint priority;
 
-    enum st_device_flags flags;
+    uint32_t flags; // Group of enum st_device_flags
 
     GHashTable *params;
     GHashTable *aliases;

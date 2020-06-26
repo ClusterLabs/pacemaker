@@ -24,6 +24,13 @@ enum st_device_flags
     st_device_supports_parameter_port = 0x0010,
 };
 
+#define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
+        device_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,  \
+                                          "Fence device", device_id,          \
+                                          (device_flags), (flags_to_set),     \
+                                          #flags_to_set);                     \
+    } while (0)
+
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
@@ -66,7 +73,9 @@ GList *stonith__parse_targets(const char *hosts);
 gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
-long long stonith__device_parameter_flags(xmlNode *metadata);
+void stonith__device_parameter_flags(uint32_t *device_flags,
+                                     const char *device_name,
+                                     xmlNode *metadata);
 
 #  define ST_LEVEL_MAX 10
 

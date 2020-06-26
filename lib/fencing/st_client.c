@@ -2664,22 +2664,22 @@ get_stonith_provider(const char *agent, const char *provider)
     return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
-long long
-stonith__device_parameter_flags(xmlNode *metadata)
+void
+stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
+                                xmlNode *metadata)
 {
     xmlXPathObjectPtr xpath = NULL;
     int max = 0;
     int lpc = 0;
-    long long flags = 0;
 
-    CRM_CHECK(metadata != NULL, return 0);
+    CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
 
     xpath = xpath_search(metadata, "//parameter");
     max = numXpathResults(xpath);
 
     if (max <= 0) {
         freeXpathObject(xpath);
-        return 0;
+        return;
     }
 
     for (lpc = 0; lpc < max; lpc++) {
@@ -2694,14 +2694,14 @@ stonith__device_parameter_flags(xmlNode *metadata)
         parameter = crm_element_value(match, "name");
 
         if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
-            set_bit(flags, st_device_supports_parameter_plug);
+            stonith__set_device_flags(*device_flags, device_name,
+                                      st_device_supports_parameter_plug);
 
         } else if (pcmk__str_eq(parameter, "port", pcmk__str_casei)) {
-            set_bit(flags, st_device_supports_parameter_port);
+            stonith__set_device_flags(*device_flags, device_name,
+                                      st_device_supports_parameter_port);
         }
     }
 
     freeXpathObject(xpath);
-
-    return flags;
 }

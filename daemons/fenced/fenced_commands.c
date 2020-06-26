@@ -781,11 +781,14 @@ read_action_metadata(stonith_device_t *device)
         action = crm_element_value(match, "name");
 
         if(pcmk__str_eq(action, "list", pcmk__str_casei)) {
-            set_bit(device->flags, st_device_supports_list);
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_list);
         } else if(pcmk__str_eq(action, "status", pcmk__str_casei)) {
-            set_bit(device->flags, st_device_supports_status);
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_status);
         } else if(pcmk__str_eq(action, "reboot", pcmk__str_casei)) {
-            set_bit(device->flags, st_device_supports_reboot);
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_reboot);
         } else if (pcmk__str_eq(action, "on", pcmk__str_casei)) {
             /* "automatic" means the cluster will unfence node when it joins */
             const char *automatic = crm_element_value(match, "automatic");
@@ -903,8 +906,8 @@ build_device_from_xml(xmlNode * msg)
     device->agent_metadata = get_agent_metadata(device->agent);
     if (device->agent_metadata) {
         read_action_metadata(device);
-        set_bit(device->flags,
-                stonith__device_parameter_flags(device->agent_metadata));
+        stonith__device_parameter_flags(&(device->flags), device->id,
+                                        device->agent_metadata);
     }
 
     value = g_hash_table_lookup(device->params, "nodeid");
