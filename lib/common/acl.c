@@ -280,7 +280,7 @@ pcmk__apply_acl(xmlNode *xml)
                 continue;
             }
 #endif
-            p->flags |= acl->mode;
+            pcmk__set_xml_flags(p, acl->mode);
             free(path);
         }
         crm_trace("Applied %s ACL %s (%d match%s)",
@@ -602,7 +602,7 @@ xml_acl_disable(xmlNode *xml)
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acl(xml);
         pcmk__apply_creation_acl(xml, FALSE);
-        clear_bit(p->flags, xpf_acl_enabled);
+        pcmk__clear_xml_flags(p, xpf_acl_enabled);
     }
 }
 

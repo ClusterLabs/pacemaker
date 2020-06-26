@@ -55,6 +55,18 @@ typedef struct xml_private_s {
         GList *deleted_objs;
 } xml_private_t;
 
+#define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
+        (xml_priv)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,      \
+            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            (flags_to_set), #flags_to_set);                                 \
+    } while (0)
+
+#define pcmk__clear_xml_flags(xml_priv, flags_to_clear) do {                \
+        (xml_priv)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,    \
+            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            (flags_to_clear), #flags_to_clear);                             \
+    } while (0)
+
 G_GNUC_INTERNAL
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
