@@ -95,9 +95,10 @@ cluster_status(pe_working_set_t * data_set)
                                                    XML_ATTR_DC_UUID);
     }
 
-    clear_bit(data_set->flags, pe_flag_have_quorum);
     if (crm_is_true(value)) {
-        set_bit(data_set->flags, pe_flag_have_quorum);
+        pe__set_working_set_flags(data_set, pe_flag_have_quorum);
+    } else {
+        pe__clear_working_set_flags(data_set, pe_flag_have_quorum);
     }
 
     data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
@@ -133,7 +134,7 @@ cluster_status(pe_working_set_t * data_set)
         }
     }
 
-    set_bit(data_set->flags, pe_flag_have_status);
+    pe__set_working_set_flags(data_set, pe_flag_have_status);
     return TRUE;
 }
 
@@ -271,7 +272,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    clear_bit(data_set->flags, pe_flag_have_status);
+    pe__clear_working_set_flags(data_set, pe_flag_have_status);
     if (data_set->config_hash != NULL) {
         g_hash_table_destroy(data_set->config_hash);
     }
@@ -363,12 +364,14 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->no_quorum_policy = no_quorum_stop;
 
     data_set->flags = 0x0ULL;
-    set_bit(data_set->flags, pe_flag_stop_rsc_orphans);
-    set_bit(data_set->flags, pe_flag_symmetric_cluster);
-    set_bit(data_set->flags, pe_flag_stop_action_orphans);
+    pe__set_working_set_flags(data_set,
+                              pe_flag_stop_rsc_orphans
+                              |pe_flag_symmetric_cluster
+                              |pe_flag_stop_action_orphans
 #ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-    set_bit(data_set->flags, pe_flag_concurrent_fencing);
+                              |pe_flag_concurrent_fencing
 #endif
+                              );
 }
 
 pe_resource_t *

@@ -696,8 +696,8 @@ cib_devices_update(void)
     CRM_ASSERT(fenced_data_set != NULL);
     fenced_data_set->input = local_cib;
     fenced_data_set->now = crm_time_new(NULL);
-    fenced_data_set->flags |= pe_flag_quick_location;
     fenced_data_set->localhost = stonith_our_uname;
+    pe__set_working_set_flags(fenced_data_set, pe_flag_quick_location);
 
     cluster_status(fenced_data_set);
     pcmk__schedule_actions(fenced_data_set, NULL, NULL);
@@ -1464,8 +1464,8 @@ main(int argc, char **argv)
 
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
-    set_bit(fenced_data_set->flags, pe_flag_no_counts);
-    set_bit(fenced_data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(fenced_data_set,
+                              pe_flag_no_counts|pe_flag_no_compat);
 
     if (stand_alone == FALSE) {
 

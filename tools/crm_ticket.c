@@ -849,8 +849,7 @@ main(int argc, char **argv)
         exit_code = CRM_EX_OSERR;
         goto bail;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {

@@ -1075,15 +1075,11 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
         return rc;
     }
 
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
-
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_working_set_xml(data_set, cib_xml_copy);
-    if (rc != pcmk_rc_ok) {
-        return rc;
+    if (rc == pcmk_rc_ok) {
+        cluster_status(data_set);
     }
-
-    cluster_status(data_set);
     return rc;
 }
 

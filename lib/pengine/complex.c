@@ -619,7 +619,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        set_bit(data_set->flags, pe_flag_have_stonith_resource);
+        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
     }
 

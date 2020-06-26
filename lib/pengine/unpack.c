@@ -27,15 +27,15 @@
 
 CRM_TRACE_INIT_DATA(pe_status);
 
-#define set_config_flag(data_set, option, flag) do {			\
-	const char *tmp = pe_pref(data_set->config_hash, option);	\
-	if(tmp) {							\
-	    if(crm_is_true(tmp)) {					\
-		set_bit(data_set->flags, flag);			\
-	    } else {							\
-		clear_bit(data_set->flags, flag);		\
-	    }								\
-	}								\
+#define set_config_flag(data_set, option, flag) do {                        \
+        const char *scf_value = pe_pref((data_set)->config_hash, (option)); \
+        if (scf_value != NULL) {                                            \
+            if (crm_is_true(scf_value)) {                                   \
+                pe__set_working_set_flags((data_set), (flag));              \
+            } else {                                                        \
+                pe__clear_working_set_flags((data_set), (flag));            \
+            }                                                               \
+        }                                                                   \
     } while(0)
 
 static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
@@ -169,16 +169,15 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
     "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
-static
-void set_if_xpath(unsigned long long flag, const char *xpath,
-                  pe_working_set_t *data_set)
+static void
+set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
 {
     xmlXPathObjectPtr result = NULL;
 
     if (is_not_set(data_set->flags, flag)) {
         result = xpath_search(data_set->input, xpath);
         if (result && (numXpathResults(result) > 0)) {
-            set_bit(data_set->flags, flag);
+            pe__set_working_set_flags(data_set, flag);
         }
         freeXpathObject(result);
     }
@@ -215,7 +214,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     if (value && crm_is_true(value)) {
         crm_notice("Watchdog will be used via SBD if fencing is required "
                    "and stonith-watchdog-timeout is nonzero");
-        set_bit(data_set->flags, pe_flag_have_stonith_resource);
+        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
@@ -418,7 +417,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;
-        set_bit(data_set->flags, pe_flag_have_remote_nodes);
+        pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
     } else if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
         new_node->details->type = node_member;
     }
