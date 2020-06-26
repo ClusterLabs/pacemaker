@@ -3806,10 +3806,8 @@ can_prune_leaf(xmlNode * xml_node)
     gboolean can_prune = TRUE;
     const char *name = crm_element_name(xml_node);
 
-    if (safe_str_eq(name, XML_TAG_RESOURCE_REF)
-        || safe_str_eq(name, XML_CIB_TAG_OBJ_REF)
-        || safe_str_eq(name, XML_ACL_TAG_ROLE_REF)
-        || safe_str_eq(name, XML_ACL_TAG_ROLE_REFv1)) {
+    if (pcmk__str_any_of(name, XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
+                        XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1, NULL)) {
         return FALSE;
     }
 

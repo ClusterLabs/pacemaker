@@ -257,8 +257,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        magic, add[0], add[1], add[2], fn, line,
                        (transition_graph->complete? "true" : "false"));
 
-        } else if (safe_str_eq(XML_CIB_TAG_STATE, kind)
-                   || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
+        } else if (pcmk__str_any_of(kind, XML_CIB_TAG_STATE, XML_CIB_TAG_NODE, NULL)) {
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "

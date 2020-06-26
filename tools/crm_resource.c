@@ -692,29 +692,24 @@ main(int argc, char **argv)
                     require_resource = FALSE;
                     require_dataset = FALSE;
 
-                } else if (
-                    safe_str_eq("validate", longname)
-                    || safe_str_eq("restart", longname)
-                    || safe_str_eq("force-demote",  longname)
-                    || safe_str_eq("force-stop",    longname)
-                    || safe_str_eq("force-start",   longname)
-                    || safe_str_eq("force-promote", longname)
-                    || safe_str_eq("force-check",   longname)) {
+                } else if (pcmk__str_any_of(longname, "validate", "restart",
+                                           "force-demote", "force-stop", "force-start",
+                                           "force-promote", "force-check", NULL)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
                     find_flags = pe_find_renamed|pe_find_anon;
                     crm_log_args(argc, argv);
 
-                } else if (safe_str_eq("list-ocf-providers", longname)
-                           || safe_str_eq("list-ocf-alternatives", longname)
-                           || safe_str_eq("list-standards", longname)) {
+                } else if (pcmk__str_any_of(longname, "list-ocf-providers",
+                                           "list-ocf-alternatives", "list-standards",
+                                           NULL)) {
                     const char *text = NULL;
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
-                    if (safe_str_eq("list-ocf-providers", longname)
-                        || safe_str_eq("list-ocf-alternatives", longname)) {
+                    if (pcmk__str_any_of(longname, "list-ocf-providers",
+                                        "list-ocf-alternatives", NULL)) {
                         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, optarg, &list);
                         text = "OCF providers";
 

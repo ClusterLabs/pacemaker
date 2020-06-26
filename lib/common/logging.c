@@ -821,7 +821,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     if (crm_is_daemon) {
         const char *user = getenv("USER");
 
-        if (user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+        if (user != NULL && pcmk__str_none_of(user, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Not switching to corefile directory for %s", user);
             crm_is_daemon = FALSE;
         }
@@ -835,8 +835,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pwent == NULL) {
             crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
 
-        } else if (safe_str_neq(pwent->pw_name, "root")
-                   && safe_str_neq(pwent->pw_name, CRM_DAEMON_USER)) {
+        } else if (pcmk__str_none_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
         } else if (chdir(base) < 0) {

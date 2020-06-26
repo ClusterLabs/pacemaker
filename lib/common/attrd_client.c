@@ -280,7 +280,7 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
 const char *
 pcmk__node_attr_target(const char *name)
 {
-    if(safe_str_eq(name, "auto") || safe_str_eq(name, "localhost")) {
+    if (pcmk__str_any_of(name, "auto", "localhost", NULL)) {
         name = NULL;
     }
 

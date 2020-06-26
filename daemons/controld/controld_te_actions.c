@@ -451,8 +451,8 @@ te_update_job_count(crm_action_t * action, int offset)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) &&
-        (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED))) {
+    if ((target == NULL) && pcmk__str_any_of(task, CRMD_ACTION_MIGRATE,
+                                            CRMD_ACTION_MIGRATED, NULL)) {
 
         const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
@@ -498,7 +498,7 @@ te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const ch
         return FALSE;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
-        if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        if (pcmk__str_any_of(task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
             crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
                       target, graph->migration_limit, r->migrate_jobs, id);
             return FALSE;
@@ -527,9 +527,8 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) &&
-        (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED))) {
-
+    if ((target == NULL) && pcmk__str_any_of(task, CRMD_ACTION_MIGRATE,
+                                            CRMD_ACTION_MIGRATED, NULL)) {
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         if(te_should_perform_action_on(graph, action, target) == FALSE) {
             return FALSE;

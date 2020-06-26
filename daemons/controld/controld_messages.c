@@ -411,8 +411,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_trace("Route message %s locally as DC request", ref);
             return FALSE; // More to be done by caller
 
-        } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
-                   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
+        } else if (originated_locally && pcmk__str_none_of(sys_from, CRM_SYSTEM_PENGINE,
+                                                          CRM_SYSTEM_TENGINE, NULL)) {
 
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {

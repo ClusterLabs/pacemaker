@@ -225,11 +225,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         }
         entry->last = lrmd_copy_event(op);
 
-        if (op->params &&
-            (safe_str_eq(CRMD_ACTION_START, op->op_type) ||
-             safe_str_eq("reload", op->op_type) ||
-             safe_str_eq(CRMD_ACTION_STATUS, op->op_type))) {
-
+        if (op->params && pcmk__str_any_of(op->op_type, CRMD_ACTION_START,
+                                          "reload", CRMD_ACTION_STATUS, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
@@ -1593,8 +1590,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
     crm_notice("Forcing the status of all resources to be redetected");
     force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-    if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
-        && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
+    if (pcmk__str_none_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
@@ -1800,8 +1796,7 @@ do_lrm_invoke(long long action,
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
-    } else if (safe_str_eq(operation, CRM_OP_REPROBE)
-               || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+    } else if (pcmk__str_any_of(CRM_OP_REPROBE, operation, crm_op, NULL)) {
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node);
 
@@ -1924,8 +1919,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
 #if ENABLE_VERSIONED_ATTRS
     // Resolve any versioned parameters
-    if (lrm_state && safe_str_neq(op->op_type, RSC_METADATA)
-        && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
+    if (lrm_state && pcmk__str_none_of(op->op_type, RSC_METADATA, CRMD_ACTION_DELETE, NULL)
         && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
 
         // Resource info *should* already be cached, so we don't get executor call
@@ -2017,8 +2011,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->user_data = strdup(transition);
 
     if (op->interval_ms != 0) {
-        if (safe_str_eq(operation, CRMD_ACTION_START)
-            || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+        if (pcmk__str_any_of(operation, CRMD_ACTION_START, CRMD_ACTION_STOP, NULL)) {
             crm_err("Start and Stop actions cannot have an interval: %u",
                     op->interval_ms);
             op->interval_ms = 0;

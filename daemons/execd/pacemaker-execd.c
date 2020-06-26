@@ -467,8 +467,7 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option("logfacility");
-    if (option && safe_str_neq(option, "none")
-        && safe_str_neq(option, "/dev/null")) {
+    if (option && pcmk__str_none_of(option, "none", "/dev/null", NULL)) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 

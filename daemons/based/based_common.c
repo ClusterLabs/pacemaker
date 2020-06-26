@@ -40,9 +40,8 @@ cib_prepare_common(xmlNode * root, const char *section)
     if (root == NULL) {
         return NULL;
 
-    } else if (safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
-               || safe_str_eq(crm_element_name(root), F_CRM_DATA)
-               || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
+    } else if (pcmk__str_any_of(crm_element_name(root), XML_TAG_FRAGMENT,
+                               F_CRM_DATA, F_CIB_CALLDATA, NULL)) {
         data = first_named_child(root, XML_TAG_CIB);
 
     } else {

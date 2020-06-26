@@ -2462,7 +2462,7 @@ parse_list_line(const char *line, int len, GList **output)
                          line + entry_start, entry_start, i);
                 free(entry);
 
-            } else if (safe_str_eq(entry, "on") || safe_str_eq(entry, "off")) {
+            } else if (pcmk__str_any_of(entry, "on", "off", NULL)) {
                 /* Some agents print the target status in the list output,
                  * though none are known now (the separate list-status command
                  * is used for this, but it can also print "UNKNOWN"). To handle

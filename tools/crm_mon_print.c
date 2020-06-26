@@ -280,7 +280,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
         }
 
         /* Ignore notifies and some probes */
-        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (op_rc_i == 7))) {
+        if (pcmk__str_any_of(task, CRMD_ACTION_NOTIFY, "probe", NULL) && (op_rc_i == 7)) {
             continue;
         }
 

@@ -70,8 +70,8 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         node_uuid = NULL;
         set_type = XML_CIB_TAG_PROPSET;
 
-    } else if (safe_str_eq(section, XML_CIB_TAG_OPCONFIG)
-               || safe_str_eq(section, XML_CIB_TAG_RSCCONFIG)) {
+    } else if (pcmk__str_any_of(section, XML_CIB_TAG_OPCONFIG, XML_CIB_TAG_RSCCONFIG,
+                               NULL)) {
         node_uuid = NULL;
         set_type = XML_TAG_META_SETS;
 
@@ -569,7 +569,7 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     CRM_CHECK(uuid != NULL, return -EINVAL);
     CRM_CHECK(standby_value != NULL, return -EINVAL);
 
-    if (safe_str_eq(scope, "reboot") || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {
+    if (pcmk__str_any_of(scope, "reboot", XML_CIB_TAG_STATUS, NULL)) {
         scope = XML_CIB_TAG_STATUS;
         attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 

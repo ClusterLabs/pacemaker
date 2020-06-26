@@ -124,9 +124,7 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_neq(tag, "expression")) {
         return not_expr;
 
-    } else if (safe_str_eq(attr, CRM_ATTR_UNAME)
-               || safe_str_eq(attr, CRM_ATTR_KIND)
-               || safe_str_eq(attr, CRM_ATTR_ID)) {
+    } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
         return loc_expr;
 
     } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
@@ -1033,10 +1031,7 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 
     if (value != NULL && h_val != NULL) {
         if (type == NULL) {
-            if (safe_str_eq(op, "lt")
-                || safe_str_eq(op, "lte")
-                || safe_str_eq(op, "gt")
-                || safe_str_eq(op, "gte")) {
+            if (pcmk__str_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
                 type = "number";
 
             } else {

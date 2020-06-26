@@ -1688,7 +1688,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
     if (!tp) {
         return FALSE;
     }
-    if (safe_str_eq(op->action, "off") || safe_str_eq(op->action, "reboot")) {
+    if (pcmk__str_any_of(op->action, "off", "reboot", NULL)) {
         /* Don't count the devices on the target node if we are killing
          * the target node. */
         skip_target = TRUE;
