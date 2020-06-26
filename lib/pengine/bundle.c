@@ -1021,6 +1021,12 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
     return node->details->uname;
 }
 
+#define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
+        flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,       \
+                                   "Bundle mount", ID(mount_xml), flags,    \
+                                   (flags_to_set), #flags_to_set);          \
+    } while (0)
+
 gboolean
 pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -1146,7 +1152,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (source == NULL) {
             source = crm_element_value(xml_child, "source-dir-root");
-            set_bit(flags, pe__bundle_mount_subdir);
+            pe__set_bundle_mount_flags(xml_child, flags,
+                                       pe__bundle_mount_subdir);
         }
 
         if (source && target) {
