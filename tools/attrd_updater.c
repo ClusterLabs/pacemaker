@@ -314,7 +314,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
         crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
         rc = -ENOTCONN;
     } else {
-        rc = crm_ipc_send(ipc, query, crm_ipc_flags_none|crm_ipc_client_response, 0, reply);
+        rc = crm_ipc_send(ipc, query, crm_ipc_client_response, 0, reply);
         if (rc > 0) {
             rc = pcmk_ok;
         }

@@ -328,7 +328,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     }
 
     if (call_options & cib_sync_call) {
-        ipc_flags |= crm_ipc_client_response;
+        pcmk__set_ipc_flags(ipc_flags, "client", crm_ipc_client_response);
     }
 
     cib->call_id++;

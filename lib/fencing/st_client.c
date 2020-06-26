@@ -1896,7 +1896,8 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
         if (call_options & st_opt_sync_call) {
-            ipc_flags |= crm_ipc_client_response;
+            pcmk__set_ipc_flags(ipc_flags, "stonith command",
+                                crm_ipc_client_response);
         }
         rc = crm_ipc_send(native->ipc, op_msg, ipc_flags,
                           1000 * (timeout + 60), &op_reply);

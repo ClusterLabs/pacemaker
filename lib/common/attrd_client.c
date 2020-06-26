@@ -62,7 +62,7 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
 
     if (ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
-        flags |= crm_ipc_client_response;
+        pcmk__set_ipc_flags(flags, "client", crm_ipc_client_response);
         connected = FALSE;
     }
 

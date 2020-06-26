@@ -253,7 +253,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     /* This ensures that synced request/responses happen over the event channel
      * in the controller, allowing the controller to process the messages async.
      */
-    set_bit(flags, crm_ipc_proxied);
+    pcmk__set_ipc_flags(flags, pcmk__client_name(client), crm_ipc_proxied);
     client->request_id = id;
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);

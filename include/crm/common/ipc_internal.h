@@ -173,6 +173,20 @@ struct pcmk__client_s {
             (client)->flags, (flags_to_clear), #flags_to_clear);        \
     } while (0)
 
+#define pcmk__set_ipc_flags(ipc_flags, ipc_name, flags_to_set) do {         \
+        ipc_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,   \
+                                       "IPC", (ipc_name),                   \
+                                       (ipc_flags), (flags_to_set),         \
+                                       #flags_to_set);                      \
+    } while (0)
+
+#define pcmk__clear_ipc_flags(ipc_flags, ipc_name, flags_to_clear) do {     \
+        ipc_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+                                         "IPC", (ipc_name),                 \
+                                         (ipc_flags), (flags_to_clear),     \
+                                         #flags_to_clear);                  \
+    } while (0)
+
 guint pcmk__ipc_client_count(void);
 void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
 void pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data);

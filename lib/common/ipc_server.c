@@ -638,7 +638,7 @@ pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
                            (unsigned int) max_send_size, &compressed,
                            &new_size) == pcmk_rc_ok) {
 
-            header->flags |= crm_ipc_compressed;
+            pcmk__set_ipc_flags(header->flags, "send data", crm_ipc_compressed);
             header->size_compressed = new_size;
 
             iov[1].iov_len = header->size_compressed;
@@ -685,14 +685,16 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     if (c->flags & pcmk__client_proxied) {
         /* _ALL_ replies to proxied connections need to be sent as events */
         if (is_not_set(flags, crm_ipc_server_event)) {
-            flags |= crm_ipc_server_event;
-            /* this flag lets us know this was originally meant to be a response.
-             * even though we're sending it over the event channel. */
-            flags |= crm_ipc_proxied_relay_response;
+            /* The proxied flag lets us know this was originally meant to be a
+             * response, even though we're sending it over the event channel.
+             */
+            pcmk__set_ipc_flags(flags, "server event",
+                                crm_ipc_server_event
+                                |crm_ipc_proxied_relay_response);
         }
     }
 
-    header->flags |= flags;
+    pcmk__set_ipc_flags(header->flags, "server event", flags);
     if (flags & crm_ipc_server_event) {
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
@@ -765,7 +767,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
     rc = pcmk__ipc_prepare_iov(request, message, crm_ipc_default_buffer_size(),
                                &iov, NULL);
     if (rc == pcmk_rc_ok) {
-        rc = pcmk__ipc_send_iov(c, iov, flags | crm_ipc_server_free);
+        pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+        rc = pcmk__ipc_send_iov(c, iov, flags);
     } else {
         pcmk_free_ipc_event(iov);
         crm_notice("IPC message to pid %d failed: %s " CRM_XS " rc=%d",
