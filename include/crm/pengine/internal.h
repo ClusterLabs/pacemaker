@@ -108,7 +108,9 @@ extern uint32_t pe_wo;
             } else {                            \
                 pe_warn(fmt);                   \
             }                                   \
-            set_bit(pe_wo, pe_wo_bit);          \
+            pe_wo = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,   \
+                                      "Warn-once", "logging", pe_wo,        \
+                                      (pe_wo_bit), #pe_wo_bit);             \
         }                                       \
     } while (0);
 
