@@ -56,7 +56,7 @@ typedef struct xml_private_s {
 } xml_private_t;
 
 G_GNUC_INTERNAL
-void pcmk__set_xml_flag(xmlNode *xml, enum xml_private_flags flag);
+void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);

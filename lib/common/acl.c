@@ -444,7 +444,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     }
 
     pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_flag(target, xpf_acl_enabled);
+    pcmk__set_xml_doc_flag(target, xpf_acl_enabled);
     pcmk__apply_acl(target);
 
     doc = target->doc->_private;
@@ -642,7 +642,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         if (docp->acls == NULL) {
             crm_trace("User '%s' without ACLs denied %s access to %s",
                       docp->user, __xml_acl_to_text(mode), buffer);
-            pcmk__set_xml_flag(xml, xpf_acl_denied);
+            pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
             return FALSE;
         }
 
@@ -668,7 +668,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 crm_trace("%sACL denies user '%s' %s access to %s",
                           (parent != xml) ? "Parent " : "", docp->user,
                           __xml_acl_to_text(mode), buffer);
-                pcmk__set_xml_flag(xml, xpf_acl_denied);
+                pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
                 return FALSE;
             }
             parent = parent->parent;
@@ -676,7 +676,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
         crm_trace("Default ACL denies user '%s' %s access to %s",
                   docp->user, __xml_acl_to_text(mode), buffer);
-        pcmk__set_xml_flag(xml, xpf_acl_denied);
+        pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
         return FALSE;
     }
 #endif

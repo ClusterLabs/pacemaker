@@ -137,7 +137,7 @@ set_parent_flag(xmlNode *xml, long flag)
 }
 
 void
-pcmk__set_xml_flag(xmlNode *xml, enum xml_private_flags flag)
+pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 {
 
     if(xml && xml->doc && xml->doc->_private){
@@ -152,7 +152,7 @@ pcmk__set_xml_flag(xmlNode *xml, enum xml_private_flags flag)
 static void
 __xml_node_dirty(xmlNode *xml) 
 {
-    pcmk__set_xml_flag(xml, xpf_dirty);
+    pcmk__set_xml_doc_flag(xml, xpf_dirty);
     set_parent_flag(xml, xpf_dirty);
 }
 
@@ -300,7 +300,6 @@ pcmkRegisterNode(xmlNodePtr node)
         /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
          * not hooked up at the point we are called
          */
-        pcmk__set_xml_flag(node, xpf_dirty);
         __xml_node_dirty(node);
     }
 }
@@ -310,12 +309,12 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
 {
     xml_accept_changes(xml);
     crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_flag(xml, xpf_tracking);
+    pcmk__set_xml_doc_flag(xml, xpf_tracking);
     if(enforce_acls) {
         if(acl_source == NULL) {
             acl_source = xml;
         }
-        pcmk__set_xml_flag(xml, xpf_acl_enabled);
+        pcmk__set_xml_doc_flag(xml, xpf_acl_enabled);
         pcmk__unpack_acl(acl_source, xml, user);
         pcmk__apply_acl(xml);
     }
@@ -2125,7 +2124,7 @@ free_xml_with_position(xmlNode * child, int position)
 
                     p = doc->_private;
                     p->deleted_objs = g_list_append(p->deleted_objs, deleted_obj);
-                    pcmk__set_xml_flag(child, xpf_dirty);
+                    pcmk__set_xml_doc_flag(child, xpf_dirty);
                 }
             }
             pcmk_free_xml_subtree(child);
@@ -3753,7 +3752,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    pcmk__set_xml_flag(new_xml, xpf_lazy);
+    pcmk__set_xml_doc_flag(new_xml, xpf_lazy);
     xml_calculate_changes(old_xml, new_xml);
 }
 
