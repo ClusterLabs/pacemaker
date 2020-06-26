@@ -370,12 +370,12 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
                     pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-                    clear_bit(r->flags, pe_rsc_allocating);
+                    pe__clear_resource_flags(r, pe_rsc_allocating);
                 }
             }
 
             crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
-            set_bit(rsc->flags, pe_rsc_allocating);
+            pe__set_resource_flags(rsc, pe_rsc_allocating);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
                 pe_resource_t *peer = cons->rsc_lh;

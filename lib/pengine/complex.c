@@ -485,11 +485,10 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 #endif
 
     (*rsc)->flags = 0;
-    set_bit((*rsc)->flags, pe_rsc_runnable);
-    set_bit((*rsc)->flags, pe_rsc_provisional);
+    pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
 
     if (is_not_set(data_set->flags, pe_flag_maintenance_mode)) {
-        set_bit((*rsc)->flags, pe_rsc_managed);
+        pe__set_resource_flags(*rsc, pe_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -508,7 +507,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {
-        set_bit((*rsc)->flags, pe_rsc_notify);
+        pe__set_resource_flags(*rsc, pe_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
@@ -527,7 +526,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     if (crm_is_true(value) && has_versioned_params) {
         pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
     } else if (crm_is_true(value)) {
-        set_bit((*rsc)->flags, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
     } else if ((value == NULL) && remote_node && !has_versioned_params) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -536,38 +535,38 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
          * We don't support migration for versioned resources, though. */
-        set_bit((*rsc)->flags, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
-            set_bit((*rsc)->flags, pe_rsc_managed);
+            pe__set_resource_flags(*rsc, pe_rsc_managed);
         } else {
-            clear_bit((*rsc)->flags, pe_rsc_managed);
+            pe__clear_resource_flags(*rsc, pe_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
     if (crm_is_true(value)) {
-        clear_bit((*rsc)->flags, pe_rsc_managed);
-        set_bit((*rsc)->flags, pe_rsc_maintenance);
+        pe__clear_resource_flags(*rsc, pe_rsc_managed);
+        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        clear_bit((*rsc)->flags, pe_rsc_managed);
-        set_bit((*rsc)->flags, pe_rsc_maintenance);
+        pe__clear_resource_flags(*rsc, pe_rsc_managed);
+        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
 
     if (pe_rsc_is_clone(uber_parent(*rsc))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
-            set_bit((*rsc)->flags, pe_rsc_unique);
+            pe__set_resource_flags(*rsc, pe_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            set_bit((*rsc)->flags, pe_rsc_promotable);
+            pe__set_resource_flags(*rsc, pe_rsc_promotable);
         }
     } else {
-        set_bit((*rsc)->flags, pe_rsc_unique);
+        pe__set_resource_flags(*rsc, pe_rsc_unique);
     }
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
@@ -620,7 +619,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
-        set_bit((*rsc)->flags, pe_rsc_fence_device);
+        pe__set_resource_flags(*rsc, pe_rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
@@ -629,7 +628,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     if (pcmk__str_eq(value, "nothing", pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, "quorum", pcmk__str_casei)) {
-        set_bit((*rsc)->flags, pe_rsc_needs_quorum);
+        pe__set_resource_flags(*rsc, pe_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
         if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
@@ -649,12 +648,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             goto handle_requires_pref;
 
         } else {
-            set_bit((*rsc)->flags, pe_rsc_needs_fencing);
-            set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
+            pe__set_resource_flags(*rsc, pe_rsc_needs_fencing
+                                           |pe_rsc_needs_unfencing);
         }
 
     } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
-        set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+        pe__set_resource_flags(*rsc, pe_rsc_needs_fencing);
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               (*rsc)->id);

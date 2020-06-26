@@ -37,11 +37,11 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     if (group_data->first_child == NULL) {
         // Nothing to allocate
-        clear_bit(rsc->flags, pe_rsc_provisional);
+        pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     rsc->role = group_data->first_child->role;
 
     group_data->first_child->rsc_cons =
@@ -67,8 +67,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     rsc->next_role = group_data->first_child->next_role;
-    clear_bit(rsc->flags, pe_rsc_allocating);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
     if (group_data->colocated) {
         return group_node;
@@ -505,7 +504,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
         return nodes;
     }
 
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     nodes =
         group_data->first_child->cmds->merge_weights(group_data->first_child, rhs, nodes, attr,
@@ -523,7 +522,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                                            flags);
     }
 
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
     return nodes;
 }
 

@@ -109,7 +109,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
     pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
@@ -168,12 +168,13 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                 }
             }
 
-            set_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
             replica->child->cmds->allocate(replica->child, replica->node,
                                            data_set);
-            clear_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe__clear_resource_flags(replica->child->parent,
+                                       pe_rsc_allocating);
         }
     }
 
@@ -193,8 +194,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
     }
 
-    clear_bit(rsc->flags, pe_rsc_allocating);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
     return NULL;
 }
 

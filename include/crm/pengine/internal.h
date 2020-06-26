@@ -35,6 +35,18 @@
             (working_set)->flags, (flags_to_clear), #flags_to_clear);       \
     } while (0)
 
+#define pe__set_resource_flags(resource, flags_to_set) do {                 \
+        (resource)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,      \
+            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
+            (flags_to_set), #flags_to_set);                                 \
+    } while (0)
+
+#define pe__clear_resource_flags(resource, flags_to_clear) do {             \
+        (resource)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,    \
+            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
+            (flags_to_clear), #flags_to_clear);                             \
+    } while (0)
+
 #define pe__set_action_flags(action, flags_to_set) do {                     \
         (action)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,        \
                                              LOG_TRACE,                     \
@@ -479,8 +491,8 @@ void pe_action_set_flag_reason(const char *function, long line, pe_action_t *act
 #define pe_action_required(action, reason, text) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, text, pe_action_optional, FALSE)
 #define pe_action_implies(action, reason, flag) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, NULL, flag, FALSE)
 
-void set_bit_recursive(pe_resource_t * rsc, unsigned long long flag);
-void clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag);
+void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
+void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 

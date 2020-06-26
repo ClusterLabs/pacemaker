@@ -181,7 +181,7 @@ check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
     if (force_restart) {
         /* make sure the restart happens */
         stop_action(rsc, node, FALSE);
-        set_bit(rsc->flags, pe_rsc_start_pending);
+        pe__set_resource_flags(rsc, pe_rsc_start_pending);
         delete_resource = TRUE;
 
     } else if (changed) {

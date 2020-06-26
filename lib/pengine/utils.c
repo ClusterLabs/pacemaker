@@ -676,12 +676,12 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         if (save_action) {
             switch (a_task) {
                 case stop_rsc:
-                    set_bit(rsc->flags, pe_rsc_stopping);
+                    pe__set_resource_flags(rsc, pe_rsc_stopping);
                     break;
                 case start_rsc:
-                    clear_bit(rsc->flags, pe_rsc_starting);
+                    pe__clear_resource_flags(rsc, pe_rsc_starting);
                     if (is_set(action->flags, pe_action_runnable)) {
-                        set_bit(rsc->flags, pe_rsc_starting);
+                        pe__set_resource_flags(rsc, pe_rsc_starting);
                     }
                     break;
                 default:
@@ -1907,15 +1907,9 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
     wrapper->type = order;
-
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
-
-    wrapper = NULL;
-
-/* 	order |= pe_order_implies_then; */
-/* 	order ^= pe_order_implies_then; */
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
@@ -2336,28 +2330,20 @@ const char *rsc_printable_id(pe_resource_t *rsc)
 }
 
 void
-clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
+pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 {
-    GListPtr gIter = rsc->children;
-
-    clear_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        clear_bit_recursive(child_rsc, flag);
+    pe__clear_resource_flags(rsc, flags);
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe__clear_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
     }
 }
 
 void
-set_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
+pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 {
-    GListPtr gIter = rsc->children;
-
-    set_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        set_bit_recursive(child_rsc, flag);
+    pe__set_resource_flags(rsc, flags);
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe__set_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
     }
 }
 

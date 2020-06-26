@@ -1035,7 +1035,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-        clear_bit(r->flags, pe_rsc_allocating);
+        pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
     cli_resource_print_colocation(rsc, TRUE, options.rsc_cmd == 'A', 1);
@@ -1046,7 +1046,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-        clear_bit(r->flags, pe_rsc_allocating);
+        pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
     cli_resource_print_colocation(rsc, FALSE, options.rsc_cmd == 'A', 1);

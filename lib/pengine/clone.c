@@ -94,7 +94,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
-        set_bit_recursive(child_rsc, pe_rsc_orphan);
+        pe__set_resource_flags_recursive(child_rsc, pe_rsc_orphan);
     }
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);

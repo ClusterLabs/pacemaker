@@ -590,7 +590,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
              */
             pe__set_action_flags(other->action, pe_action_optional);
             if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
-                clear_bit(first->rsc->flags, pe_rsc_reload);
+                pe__clear_resource_flags(first->rsc, pe_rsc_reload);
             }
         }
 

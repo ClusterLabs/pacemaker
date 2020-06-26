@@ -358,7 +358,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         pe_rsc_info(rsc, "%s: Breaking dependency loop at %s", rhs, rsc->id);
         return nodes;
     }
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     if (is_set(flags, pe_weights_init)) {
         if (is_nonempty_group(rsc)) {
@@ -453,7 +453,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
                     rhs, rsc->id);
         g_hash_table_destroy(work);
-        clear_bit(rsc->flags, pe_rsc_merging);
+        pe__clear_resource_flags(rsc, pe_rsc_merging);
         return nodes;
     }
 
@@ -474,7 +474,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         g_hash_table_destroy(nodes);
     }
 
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
     return work;
 }
 
@@ -515,7 +515,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         return NULL;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
@@ -584,7 +584,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
-        clear_bit(rsc->flags, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -627,7 +627,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      rsc->allocated_to->details->uname);
     }
 
-    clear_bit(rsc->flags, pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating);
 
     if (rsc->is_remote_node) {
         pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
@@ -2003,8 +2003,8 @@ rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_work
                     return;
                 }
                 if (rsc_lh->running_on != NULL) {
-                    clear_bit(rsc_lh->flags, pe_rsc_managed);
-                    set_bit(rsc_lh->flags, pe_rsc_block);
+                    pe__clear_resource_flags(rsc_lh, pe_rsc_managed);
+                    pe__set_resource_flags(rsc_lh, pe_rsc_block);
                 }
                 break;
         }
@@ -3418,7 +3418,7 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
     }
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
-    set_bit(rsc->flags, pe_rsc_reload);
+    pe__set_resource_flags(rsc, pe_rsc_reload);
 
     reload = custom_action(
         rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);

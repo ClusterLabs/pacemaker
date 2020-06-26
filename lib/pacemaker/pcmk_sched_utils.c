@@ -255,7 +255,7 @@ native_deallocate(pe_resource_t * rsc)
         pe_node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-        set_bit(rsc->flags, pe_rsc_provisional);
+        pe__set_resource_flags(rsc, pe_rsc_provisional);
         rsc->allocated_to = NULL;
 
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
@@ -296,7 +296,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
      */
 
     native_deallocate(rsc);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
         GListPtr gIter = NULL;
@@ -315,7 +315,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
 
             } else if(pcmk__str_eq(RSC_START, op->task, pcmk__str_casei)) {
                 update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
-                /* set_bit(rsc->flags, pe_rsc_block); */
+                //pe__set_resource_flags(rsc, pe_rsc_block);
 
             } else if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
                 if(pcmk__str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC), pcmk__str_casei)) {

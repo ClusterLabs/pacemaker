@@ -107,8 +107,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  * in this transition if the recovery succeeds.
                  */
                 node->details->remote_requires_reset = TRUE;
-                set_bit(rsc->flags, pe_rsc_failed);
-                set_bit(rsc->flags, pe_rsc_stop);
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             }
         }
 
@@ -117,8 +116,8 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  node->details->uname, reason);
-        set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
-        set_bit(node->details->remote_rsc->flags, pe_rsc_stop);
+        pe__set_resource_flags(node->details->remote_rsc,
+                               pe_rsc_failed|pe_rsc_stop);
 
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
@@ -612,7 +611,7 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (container) {
             rsc->container = container;
-            set_bit(container->flags, pe_rsc_is_container);
+            pe__set_resource_flags(container, pe_rsc_is_container);
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
         } else {
@@ -1629,9 +1628,9 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
-        set_bit(rsc->flags, pe_rsc_orphan_container_filler);
+        pe__set_resource_flags(rsc, pe_rsc_orphan_container_filler);
     }
-    set_bit(rsc->flags, pe_rsc_orphan);
+    pe__set_resource_flags(rsc, pe_rsc_orphan);
     data_set->resources = g_list_append(data_set->resources, rsc);
     return rsc;
 }
@@ -1863,7 +1862,7 @@ process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t 
     rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 
     if (is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
-        clear_bit(rsc->flags, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pe_rsc_managed);
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
@@ -1920,8 +1919,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
          * resource to run again once we are sure we know its state.
          */
         if (pe__is_guest_node(node)) {
-            set_bit(rsc->flags, pe_rsc_failed);
-            set_bit(rsc->flags, pe_rsc_stop);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             should_fence = TRUE;
 
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -1965,7 +1963,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_demote:
-            set_bit(rsc->flags, pe_rsc_failed);
+            pe__set_resource_flags(rsc, pe_rsc_failed);
             demote_action(rsc, node, FALSE);
             break;
 
@@ -1987,8 +1985,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
-            clear_bit(rsc->flags, pe_rsc_managed);
-            set_bit(rsc->flags, pe_rsc_block);
+            pe__clear_resource_flags(rsc, pe_rsc_managed);
+            pe__set_resource_flags(rsc, pe_rsc_block);
             break;
 
         case action_fail_migrate:
@@ -2004,16 +2002,13 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case action_fail_recover:
             if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
-                set_bit(rsc->flags, pe_rsc_failed);
-                set_bit(rsc->flags, pe_rsc_stop);
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case action_fail_restart_container:
-            set_bit(rsc->flags, pe_rsc_failed);
-            set_bit(rsc->flags, pe_rsc_stop);
-
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
@@ -2030,8 +2025,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_reset_remote:
-            set_bit(rsc->flags, pe_rsc_failed);
-            set_bit(rsc->flags, pe_rsc_stop);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
@@ -2092,11 +2086,10 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                 break;
             case action_fail_demote:
             case action_fail_block:
-                set_bit(rsc->flags, pe_rsc_failed);
+                pe__set_resource_flags(rsc, pe_rsc_failed);
                 break;
             default:
-                set_bit(rsc->flags, pe_rsc_failed);
-                set_bit(rsc->flags, pe_rsc_stop);
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
                 break;
         }
 
@@ -2619,9 +2612,8 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             }
         } else {
             /* Consider it failed here - forces a restart, prevents migration */
-            set_bit(rsc->flags, pe_rsc_failed);
-            set_bit(rsc->flags, pe_rsc_stop);
-            clear_bit(rsc->flags, pe_rsc_allow_migrate);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
     }
 }
@@ -3160,8 +3152,8 @@ determine_op_status(
                             node->details->uname, services_ocf_exitcode_str(rc),
                             (*exit_reason? ": " : ""), exit_reason,
                             last_change_str(xml_op), rc, ID(xml_op));
-                clear_bit(rsc->flags, pe_rsc_managed);
-                set_bit(rsc->flags, pe_rsc_block);
+                pe__clear_resource_flags(rsc, pe_rsc_managed);
+                pe__set_resource_flags(rsc, pe_rsc_block);
             }
             result = PCMK_LRM_OP_ERROR_HARD;
             break;
@@ -3703,7 +3695,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_LRM_OP_PENDING:
             if (!strcmp(task, CRMD_ACTION_START)) {
-                set_bit(rsc->flags, pe_rsc_start_pending);
+                pe__set_resource_flags(rsc, pe_rsc_start_pending);
                 set_active(rsc);
 
             } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
@@ -3768,8 +3760,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  * fail-safe in case a bug or unusual circumstances do lead to
                  * that, ensure the remote connection is considered failed.
                  */
-                set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
-                set_bit(node->details->remote_rsc->flags, pe_rsc_stop);
+                pe__set_resource_flags(node->details->remote_rsc,
+                                       pe_rsc_failed|pe_rsc_stop);
             }
 
             // fall through
@@ -3795,7 +3787,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
                 update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure, on_fail, data_set);
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-                set_bit(rsc->flags, pe_rsc_failure_ignored);
+                pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
 
                 record_failed_op(xml_op, node, rsc, data_set);
 

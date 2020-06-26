@@ -639,7 +639,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         apply_master_prefs(rsc);
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
 
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
@@ -680,8 +680,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pcmk__set_instance_roles(rsc, data_set);
     }
 
-    clear_bit(rsc->flags, pe_rsc_provisional);
-    clear_bit(rsc->flags, pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
     pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
     return NULL;
 }

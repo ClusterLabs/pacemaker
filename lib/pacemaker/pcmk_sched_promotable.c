@@ -270,7 +270,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
     clone_data->merged_master_weights = TRUE;
     pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -384,7 +384,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     rsc->children = g_list_sort_with_data(rsc->children,
                                           sort_promotable_instance, data_set);
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
 
 static gboolean
