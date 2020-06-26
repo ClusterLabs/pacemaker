@@ -819,7 +819,11 @@ internal_stonith_action_execute(stonith_action_t * action)
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
-    set_bit(svc_action->flags, SVC_ACTION_NON_BLOCKED);
+    svc_action->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,
+                                           LOG_TRACE, "Action",
+                                           svc_action->id, svc_action->flags,
+                                           SVC_ACTION_NON_BLOCKED,
+                                           "SVC_ACTION_NON_BLOCKED");
 
     /* keep retries from executing out of control and free previous results */
     if (is_retry) {
