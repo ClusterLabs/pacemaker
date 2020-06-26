@@ -22,6 +22,9 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
+G_DEFINE_QUARK(pcmk-rc-error-quark, pcmk__rc_error)
+G_DEFINE_QUARK(pcmk-exitc-error-quark, pcmk__exitc_error)
+
 // @COMPAT Legacy function return codes
 
 //! \deprecated Use standard return codes and pcmk_rc_name() instead

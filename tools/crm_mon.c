@@ -212,7 +212,7 @@ apply_exclude(const gchar *excludes, GError **error) {
         } else if (bit != 0) {
             show &= ~bit;
         } else {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, nodes, none, "
@@ -253,7 +253,7 @@ apply_include(const gchar *includes, GError **error) {
         } else if (bit != 0) {
             show |= bit;
         } else {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         "default, failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, nodes, none, operations, "
@@ -395,7 +395,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
-            g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+            g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
             return FALSE;
     }
 }
@@ -458,7 +458,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
     int rc = crm_get_msec(optarg);
 
     if (rc == -1) {
-        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
         options.reconnect_msec = crm_parse_interval_spec(optarg);
@@ -1246,7 +1246,7 @@ main(int argc, char **argv)
             crm_enable_stderr(FALSE);
 
             if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
 
@@ -1281,7 +1281,7 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         // Shouldn't really be possible
-        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Invalid CIB source");
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
         return clean_up(CRM_EX_ERROR);
     }
 
@@ -1299,7 +1299,7 @@ main(int argc, char **argv)
     }
 
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
@@ -1331,13 +1331,13 @@ main(int argc, char **argv)
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
         if (cib && cib->variant == cib_file) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
         } else if (options.daemonize == TRUE) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
     }
@@ -1384,14 +1384,14 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
                         pcmk_strerror(rc));
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
             } else {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
         return clean_up(crm_errno2exit(rc));
@@ -1977,7 +1977,7 @@ mon_refresh_display(gpointer user_data)
             if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
                                   options.only_node) != 0) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
             }

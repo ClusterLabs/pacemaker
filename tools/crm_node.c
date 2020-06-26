@@ -102,7 +102,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     } else if (safe_str_eq("-q", option_name) || safe_str_eq("--quorum", option_name)) {
         options.command = 'q';
     } else {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
         return FALSE;
     }
 
@@ -120,7 +120,7 @@ gboolean
 remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (optarg == NULL) {
         crm_err("-R option requires an argument");
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
         return FALSE;
     }
 
