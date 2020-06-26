@@ -1145,7 +1145,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
     if (pending) {
         if (remove && is_not_set(pending->flags, active_op_remove)) {
-            set_bit(pending->flags, active_op_remove);
+            controld_set_active_op_flags(pending, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
@@ -1154,7 +1154,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
             free(local_key);
             return FALSE;
         }
-        set_bit(pending->flags, active_op_cancelled);
+        controld_set_active_op_flags(pending, active_op_cancelled);
 
     } else {
         crm_info("No pending op found for %s", key);
