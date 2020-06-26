@@ -99,7 +99,7 @@ crm_remote_peer_get(const char *node_name)
     }
 
     /* Populate the essential information */
-    node->flags = crm_remote_node;
+    pcmk__set_peer_flags(node, crm_remote_node);
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
@@ -190,7 +190,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 
     } else if (is_set(node->flags, crm_node_dirty)) {
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_bit(node->flags, crm_node_dirty);
+        pcmk__clear_peer_flags(node, crm_node_dirty);
         if (state) {
             crm_update_peer_state(__FUNCTION__, node, state, 0);
         }
@@ -200,7 +200,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 static void
 mark_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    set_bit(((crm_node_t*)value)->flags, crm_node_dirty);
+    pcmk__set_peer_flags((crm_node_t *) value, crm_node_dirty);
 }
 
 static gboolean
@@ -1122,7 +1122,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         }
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_bit(node->flags, crm_node_dirty);
+        pcmk__clear_peer_flags(node, crm_node_dirty);
     }
 
 }
