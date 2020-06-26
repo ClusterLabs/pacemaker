@@ -134,7 +134,7 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
         changed = TRUE;
         /* Useful for tracking down _who_ changed a specific flag */
         /* CRM_ASSERT(calls != 534); */
-        clear_bit(flags, pe_action_clear);
+        pe__clear_raw_action_flags(flags, "action update", pe_action_clear);
         crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu, %s)",
                   action->uuid, action->node ? action->node->details->uname : "[none]",
                   clear ? "un-" : "", flags, last, action->flags, calls, source);
@@ -316,7 +316,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
-            set_bit(op->flags, pe_action_reschedule);
+            pe__set_action_flags(op, pe_action_reschedule);
 #endif
 
         } else if (digest_restart) {

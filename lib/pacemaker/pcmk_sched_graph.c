@@ -47,8 +47,8 @@ get_action_flags(pe_action_t * action, pe_node_t * node)
              */
             if (is_not_set(clone_flags, pe_action_runnable)
                 && is_set(flags, pe_action_runnable)) {
-                pe_rsc_trace(action->rsc, "Fixing up runnable flag for %s", action->uuid);
-                set_bit(clone_flags, pe_action_runnable);
+                pe__set_raw_action_flags(clone_flags, action->rsc->id,
+                                         pe_action_runnable);
             }
             flags = clone_flags;
         }
@@ -200,7 +200,8 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         node = first->node;
     }
 
-    clear_bit(first_flags, pe_action_pseudo);
+    pe__clear_raw_action_flags(first_flags, "first action update",
+                               pe_action_pseudo);
 
     if (type & pe_order_implies_then) {
         processed = TRUE;
@@ -587,7 +588,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any reload).
              */
-            set_bit(other->action->flags, pe_action_optional);
+            pe__set_action_flags(other->action, pe_action_optional);
             if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
                 clear_bit(first->rsc->flags, pe_rsc_reload);
             }
@@ -922,7 +923,7 @@ add_maintenance_update(pe_working_set_t *data_set)
     if (add_maintenance_nodes(NULL, data_set)) {
         crm_trace("adding maintenance state update pseudo action");
         action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
-        set_bit(action->flags, pe_action_print_always);
+        pe__set_action_flags(action, pe_action_print_always);
     }
 }
 
@@ -1667,7 +1668,7 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
         return true;
     }
 
-    set_bit(input->action->flags, pe_action_tracking);
+    pe__set_action_flags(input->action, pe_action_tracking);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (0x%.6x)"
               "for graph loop with %s@%s ",
@@ -1806,14 +1807,14 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
      */
     if (is_not_set(action->flags, pe_action_dedup)) {
         deduplicate_inputs(action);
-        set_bit(action->flags, pe_action_dedup);
+        pe__set_action_flags(action, pe_action_dedup);
     }
 
     if (should_dump_action(action) == FALSE) {
         return;
     }
 
-    set_bit(action->flags, pe_action_dumped);
+    pe__set_action_flags(action, pe_action_dumped);
 
     syn = create_xml_node(data_set->graph, "synapse");
     set = create_xml_node(syn, "action_set");

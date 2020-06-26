@@ -627,7 +627,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
                 );
         }
 
-        set_bit(action->flags, pe_action_dumped);
+        pe__set_action_flags(action, pe_action_dumped);
         crm_trace("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]",
                 action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",

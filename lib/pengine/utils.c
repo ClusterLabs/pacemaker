@@ -1936,8 +1936,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
     }
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 
     return op;

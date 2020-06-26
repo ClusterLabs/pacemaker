@@ -1131,14 +1131,14 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
 
     if ((migrate_to && migrate_from) || (migrate_from && partial)) {
 
-        set_bit(start->flags, pe_action_migrate_runnable);
-        set_bit(stop->flags, pe_action_migrate_runnable);
+        pe__set_action_flags(start, pe_action_migrate_runnable);
+        pe__set_action_flags(stop, pe_action_migrate_runnable);
 
         update_action_flags(start, pe_action_pseudo, __FUNCTION__, __LINE__);       /* easier than trying to delete it from the graph */
 
         /* order probes before migrations */
         if (partial) {
-            set_bit(migrate_from->flags, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             migrate_from->needs = start->needs;
 
             custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
@@ -1146,8 +1146,8 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
                                 NULL, pe_order_optional, data_set);
 
         } else {
-            set_bit(migrate_from->flags, pe_action_migrate_runnable);
-            set_bit(migrate_to->flags, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
             custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
@@ -1234,7 +1234,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         pe_action_t *stop = stop_action(rsc, dangling_source, FALSE);
 
-        set_bit(stop->flags, pe_action_dangle);
+        pe__set_action_flags(stop, pe_action_dangle);
         pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
                      rsc->id, dangling_source->details->uname);
 
@@ -1298,7 +1298,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_set(rsc->flags, pe_rsc_start_pending)) {
         start = start_action(rsc, chosen, TRUE);
-        set_bit(start->flags, pe_action_print_always);
+        pe__set_action_flags(start, pe_action_print_always);
     }
 
     if (current && chosen && current->details != chosen->details) {

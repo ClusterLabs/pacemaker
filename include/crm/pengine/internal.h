@@ -41,6 +41,22 @@
                                                #flags_to_clear);            \
     } while (0)
 
+#define pe__set_raw_action_flags(action_flags, action_name, flags_to_set) do { \
+        action_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,           \
+                                          LOG_TRACE, "Action", action_name, \
+                                          (action_flags),                   \
+                                          (flags_to_set), #flags_to_set);   \
+    } while (0)
+
+#define pe__clear_raw_action_flags(action_flags, action_name, flags_to_clear) do { \
+        action_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,         \
+                                            LOG_TRACE,                      \
+                                            "Action", action_name,          \
+                                            (action_flags),                 \
+                                            (flags_to_clear),               \
+                                            #flags_to_clear);               \
+    } while (0)
+
 #define pe__set_action_flags_as(function, line, action, flags_to_set) do {  \
         (action)->flags = pcmk__set_flags_as((function), (line),            \
                                              LOG_TRACE,                     \
