@@ -14,6 +14,7 @@
 #  include <crm/common/ipc.h>
 #  include <crm/common/output.h>
 #  include <crm/common/xml.h>
+#  include <crm/stonith-ng.h>
 
 enum st_device_flags
 {
@@ -29,6 +30,20 @@ enum st_device_flags
                                           "Fence device", device_id,          \
                                           (device_flags), (flags_to_set),     \
                                           #flags_to_set);                     \
+    } while (0)
+
+#define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
+        st_call_opts = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+                                          "Fencer call", (call_for),         \
+                                          (st_call_opts), (flags_to_set),    \
+                                          #flags_to_set);                    \
+    } while (0)
+
+#define stonith__clear_call_options(st_call_opts, call_for, flags_to_clear) do { \
+        st_call_opts = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+                                            "Fencer call", (call_for),         \
+                                            (st_call_opts), (flags_to_clear),  \
+                                            #flags_to_clear);                  \
     } while (0)
 
 struct stonith_action_s;

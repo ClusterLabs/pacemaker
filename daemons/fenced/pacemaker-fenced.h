@@ -118,8 +118,8 @@ typedef struct remote_fencing_op_s {
     char *delegate;
     /*! The point at which the remote operation completed */
     time_t completed;
-    /*! The stonith_call_options associated with this remote operation */
-    long long call_options;
+    //! Group of enum stonith_call_options associated with this operation
+    uint32_t call_options;
 
     /*! The current state of the remote operation. This indicates
      * what stage the op is in, query, exec, done, duplicate, failed. */

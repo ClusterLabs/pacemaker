@@ -1111,7 +1111,8 @@ stonith_api_fence(stonith_t * stonith, int call_options, const char *node, const
 static int
 stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
 {
-    return stonith_api_fence(stonith, call_options | st_opt_manual_ack, target, "off", 0, 0);
+    stonith__set_call_options(call_options, target, st_opt_manual_ack);
+    return stonith_api_fence(stonith, call_options, target, "off", 0, 0);
 }
 
 static int
@@ -1130,8 +1131,9 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         crm_xml_add(data, F_STONITH_TARGET, node);
     }
 
+    stonith__set_call_options(call_options, node, st_opt_sync_call);
     rc = stonith_send_command(stonith, STONITH_OP_FENCE_HISTORY, data, &output,
-                              call_options | st_opt_sync_call, timeout);
+                              call_options, timeout);
     free_xml(data);
 
     if (rc == 0) {
@@ -2275,14 +2277,13 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)",
                 action, nodeid, uname, pcmk_strerror(rc), rc);
     } else {
-        char *name = NULL;
-        enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
+        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
+        int opts = 0;
 
-        if (uname != NULL) {
-            name = strdup(uname);
-        } else if (nodeid > 0) {
-            opts |= st_opt_cs_nodeid;
-            name = crm_itoa(nodeid);
+        stonith__set_call_options(opts, name,
+                                  st_opt_sync_call|st_opt_allow_suicide);
+        if ((uname == NULL) && (nodeid > 0)) {
+            stonith__set_call_options(opts, name, st_opt_cs_nodeid);
         }
         rc = st->cmds->fence(st, opts, name, action, timeout, 0);
         free(name);
@@ -2320,14 +2321,12 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         int entries = 0;
         int progress = 0;
         int completed = 0;
-        char *name = NULL;
-        enum stonith_call_options opts = st_opt_sync_call;
+        int opts = 0;
+        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
 
-        if (uname != NULL) {
-            name = strdup(uname);
-        } else if (nodeid > 0) {
-            opts |= st_opt_cs_nodeid;
-            name = crm_itoa(nodeid);
+        stonith__set_call_options(opts, name, st_opt_sync_call);
+        if ((uname == NULL) && (nodeid > 0)) {
+            stonith__set_call_options(opts, name, st_opt_cs_nodeid);
         }
         rc = st->cmds->history(st, opts, name, &history, 120);
         free(name);
