@@ -804,12 +804,18 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
 
     } else if (pcmk__str_eq(status, ONLINESTATUS, pcmk__str_casei)) {
         if ((node->processes & flag) != flag) {
-            set_bit(node->processes, flag);
+            node->processes = pcmk__set_flags_as(__FUNCTION__, __LINE__,
+                                                 LOG_TRACE, "Peer process",
+                                                 node->uname, node->processes,
+                                                 flag, "processes");
             changed = TRUE;
         }
 
     } else if (node->processes & flag) {
-        clear_bit(node->processes, flag);
+        node->processes = pcmk__clear_flags_as(__FUNCTION__, __LINE__,
+                                               LOG_TRACE, "Peer process",
+                                               node->uname, node->processes,
+                                               flag, "processes");
         changed = TRUE;
     }
 
