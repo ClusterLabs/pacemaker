@@ -930,7 +930,9 @@ cib_process_request(xmlNode *request, gboolean force_synchronous,
 
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     if (force_synchronous) {
-        call_options |= cib_sync_call;
+        cib__set_call_options(call_options,
+                              (client_name? client_name : "client"),
+                              cib_sync_call);
     }
 
     if (host != NULL && strlen(host) == 0) {
@@ -1207,7 +1209,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (global_update) {
         /* legacy code */
         manage_counters = FALSE;
-        call_options |= cib_force_diff;
+        cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");
 
         CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
@@ -1224,9 +1226,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
         if (is_not_set(call_options, cib_dryrun) && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
             /* Copying large CIBs accounts for a huge percentage of our CIB usage */
-            call_options |= cib_zero_copy;
+            cib__set_call_options(call_options, "call", cib_zero_copy);
         } else {
-            clear_bit(call_options, cib_zero_copy);
+            cib__clear_call_options(call_options, "call", cib_zero_copy);
         }
 
         /* result_cib must not be modified after cib_perform_op() returns */

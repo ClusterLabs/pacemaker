@@ -811,7 +811,8 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
              (op? op : "invalid"), (section? section : "entire CIB"));
 #endif
 
-    call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
+    cib__set_call_options(call_options, "file operation",
+                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
 
     if (cib->state == cib_disconnected) {
         return -ENOTCONN;

@@ -430,10 +430,12 @@ main(int argc, char **argv)
                 break;
             case 'A':
                 obj_type = optarg;
-                command_options |= cib_xpath;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_xpath);
                 break;
             case 'e':
-                command_options |= cib_xpath_address;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_xpath_address);
                 break;
             case 'u':
                 cib_action = CIB_OP_UPGRADE;
@@ -471,17 +473,20 @@ main(int argc, char **argv)
                 cib_action = "md5-sum-versioned";
                 break;
             case 'c':
-                command_options |= cib_can_create;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_can_create);
                 break;
             case 'n':
-                command_options |= cib_no_children;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_no_children);
                 break;
             case 'B':
                 cib_action = CIB_OP_BUMP;
                 crm_log_args(argc, argv);
                 break;
             case 'V':
-                command_options = command_options | cib_verbose;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_verbose);
                 bump_log_num++;
                 break;
             case '?':
@@ -512,24 +517,28 @@ main(int argc, char **argv)
                 host = strdup(optarg);
                 break;
             case 'l':
-                command_options |= cib_scope_local;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_scope_local);
                 break;
             case 'd':
                 cib_action = CIB_OP_DELETE;
-                command_options |= cib_multiple;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_multiple);
                 dangerous_cmd = TRUE;
                 break;
             case 'b':
                 dangerous_cmd = TRUE;
-                command_options |= cib_inhibit_bcast;
-                command_options |= cib_scope_local;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_inhibit_bcast|cib_scope_local);
                 break;
             case 's':
-                command_options |= cib_sync_call;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_sync_call);
                 break;
             case 'f':
                 force_flag = TRUE;
-                command_options |= cib_quorum_override;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_quorum_override);
                 crm_log_args(argc, argv);
                 break;
             case 'a':

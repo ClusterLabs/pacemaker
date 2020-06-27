@@ -24,6 +24,7 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/common/ipc_controld.h>
+#include <crm/cib/internal.h>
 
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
 
@@ -1492,7 +1493,8 @@ main(int argc, char **argv)
 
     if (options.force) {
         crm_debug("Forcing...");
-        options.cib_options |= cib_quorum_override;
+        cib__set_call_options(options.cib_options, crm_system_name,
+                              cib_quorum_override);
     }
 
     if (options.require_resource && !options.rsc_id) {

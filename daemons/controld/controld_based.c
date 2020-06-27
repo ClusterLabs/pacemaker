@@ -144,7 +144,7 @@ int crmd_cib_smart_opt()
 
     if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
         crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
-        call_opt |= cib_scope_local;
+        cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;
 }
@@ -249,7 +249,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     } else {
         int call_id;
 
-        options |= cib_quorum_override|cib_xpath|cib_multiple;
+        cib__set_call_options(options, "node state deletion",
+                              cib_quorum_override|cib_xpath|cib_multiple);
         call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
