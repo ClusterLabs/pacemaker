@@ -3083,7 +3083,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         /* Prevent the start from occurring if rsc isn't active, but
          * don't cause it to stop if it was active already
          */
-        flags |= pe_order_runnable_left;
+        pe__set_order_flags(flags, pe_order_runnable_left);
     }
 
     custom_action_order(rsc, NULL, probe,

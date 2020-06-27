@@ -185,7 +185,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (last_rsc == NULL) {
             if (group_data->ordered) {
-                stop |= pe_order_optional;
+                pe__set_order_flags(stop, pe_order_optional);
                 stopped = pe_order_implies_then;
             }
 

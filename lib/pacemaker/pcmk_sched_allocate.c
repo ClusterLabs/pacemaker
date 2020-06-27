@@ -1817,7 +1817,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
     if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
         pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid,
                      order->rh_action_task);
-        clear_bit(type, pe_order_implies_then);
+        pe__clear_order_flags(type, pe_order_implies_then);
     }
 
     gIter = rh_actions;
@@ -2130,7 +2130,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                order_opts |= pe_order_implies_then;
+                pe__set_order_flags(order_opts, pe_order_implies_then);
             }
 
             /* Ensure connection is up before running this action */
@@ -2415,11 +2415,12 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         // Preserve the order options for future filtering
         if (is_set(order->type, pe_order_apply_first_non_migratable)) {
-            set_bit(order_type, pe_order_apply_first_non_migratable);
+            pe__set_order_flags(order_type,
+                                pe_order_apply_first_non_migratable);
         }
 
         if (is_set(order->type, pe_order_same_node)) {
-            set_bit(order_type, pe_order_same_node);
+            pe__set_order_flags(order_type, pe_order_same_node);
         }
 
         // Keep the order types for future filtering

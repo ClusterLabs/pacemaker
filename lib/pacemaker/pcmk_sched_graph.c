@@ -195,8 +195,8 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
          * like any other 'pe_order_implies_then'
          */
 
-        clear_bit(type, pe_order_implies_then_on_node);
-        set_bit(type, pe_order_implies_then);
+        pe__clear_order_flags(type, pe_order_implies_then_on_node);
+        pe__set_order_flags(type, pe_order_implies_then);
         node = first->node;
     }
 
@@ -1480,9 +1480,9 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
         return true;
     }
 
-    type &= ~pe_order_implies_first_printed;
-    type &= ~pe_order_implies_then_printed;
-    type &= ~pe_order_optional;
+    pe__clear_order_flags(type, pe_order_implies_first_printed
+                                |pe_order_implies_then_printed
+                                |pe_order_optional);
 
     if (input->type == pe_order_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "

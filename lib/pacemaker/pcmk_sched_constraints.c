@@ -409,13 +409,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
         crm_trace("Upgrade : recovery - implies right");
-        cons_weight |= pe_order_implies_then;
+        pe__set_order_flags(cons_weight, pe_order_implies_then);
     }
 
     if (invert_bool == FALSE) {
-        cons_weight |= get_asymmetrical_flags(kind);
+        pe__set_order_flags(cons_weight, get_asymmetrical_flags(kind));
     } else {
-        cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+        pe__set_order_flags(cons_weight,
+                              get_flags(id, kind, action_first, action_then, FALSE));
     }
 
     if (pe_rsc_is_clone(rsc_first)) {
@@ -495,10 +496,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     cons_weight = pe_order_optional;
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
         crm_trace("Upgrade : recovery - implies left");
-        cons_weight |= pe_order_implies_first;
+        pe__set_order_flags(cons_weight, pe_order_implies_first);
     }
 
-    cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
+    pe__set_order_flags(cons_weight,
+                          get_flags(id, kind, action_first, action_then, TRUE));
 
     order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
 
@@ -1491,7 +1493,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
 
         if (rh_migratable) {
             if (lh_migratable) {
-                flags |= pe_order_apply_first_non_migratable;
+                pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
             }
 
             /* A start then B start
@@ -1507,7 +1509,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         int flags = pe_order_optional;
 
         if (lh_migratable) {
-            flags |= pe_order_apply_first_non_migratable;
+            pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
         }
 
         /* rh side is at the bottom of the stack during a stop. If we have a constraint
@@ -1637,9 +1639,9 @@ get_asymmetrical_flags(enum pe_order_kind kind)
     enum pe_ordering flags = pe_order_optional;
 
     if (kind == pe_order_kind_mandatory) {
-        flags |= pe_order_asymmetrical;
+        pe__set_order_flags(flags, pe_order_asymmetrical);
     } else if (kind == pe_order_kind_serialize) {
-        flags |= pe_order_serialize_only;
+        pe__set_order_flags(flags, pe_order_serialize_only);
     }
     return flags;
 }
@@ -1652,18 +1654,18 @@ get_flags(const char *id, enum pe_order_kind kind,
 
     if (invert && kind == pe_order_kind_mandatory) {
         crm_trace("Upgrade %s: implies left", id);
-        flags |= pe_order_implies_first;
+        pe__set_order_flags(flags, pe_order_implies_first);
 
     } else if (kind == pe_order_kind_mandatory) {
         crm_trace("Upgrade %s: implies right", id);
-        flags |= pe_order_implies_then;
+        pe__set_order_flags(flags, pe_order_implies_then);
         if (pcmk__strcase_any_of(action_first, RSC_START, RSC_PROMOTE, NULL)) {
             crm_trace("Upgrade %s: runnable", id);
-            flags |= pe_order_runnable_left;
+            pe__set_order_flags(flags, pe_order_runnable_left);
         }
 
     } else if (kind == pe_order_kind_serialize) {
-        flags |= pe_order_serialize_only;
+        pe__set_order_flags(flags, pe_order_serialize_only);
     }
 
     return flags;
