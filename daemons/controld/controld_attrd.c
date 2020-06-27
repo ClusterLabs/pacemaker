@@ -84,7 +84,7 @@ update_attrd_helper(const char *host, const char *name, const char *value,
     int attrd_opts = pcmk__node_attr_none;
 
     if (is_remote_node) {
-        attrd_opts |= pcmk__node_attr_remote;
+        pcmk__set_node_attr_flags(attrd_opts, pcmk__node_attr_remote);
     }
 
     if (attrd_ipc == NULL) {

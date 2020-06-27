@@ -222,7 +222,7 @@ main(int argc, char **argv)
                 query_all = TRUE;
                 break;
             case 'p':
-                set_bit(attr_options, pcmk__node_attr_private);
+                pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_private);
                 break;
             case 'q':
                 break;

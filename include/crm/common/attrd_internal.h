@@ -23,6 +23,12 @@ enum pcmk__node_attr_opts {
     pcmk__node_attr_private = (1 << 1),
 };
 
+#define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
+        node_attr_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,    \
+            LOG_TRACE, "Node attribute", crm_system_name,               \
+            (node_attr_flags), (flags_to_set), #flags_to_set);          \
+    } while (0)
+
 int pcmk__node_attr_request(crm_ipc_t * ipc, char command, const char *host,
                             const char *name, const char *value,
                             const char *section, const char *set,
