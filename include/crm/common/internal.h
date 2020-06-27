@@ -261,18 +261,6 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
     return result;
 }
 
-//! \deprecated
-#  define set_bit(word, bit) do {                                       \
-        word = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,    \
-                                  NULL, NULL, word, bit, NULL);         \
-    } while (0)
-
-//! \deprecated
-#  define clear_bit(word, bit) do {                                     \
-        word = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,  \
-                                    NULL, NULL, word, bit, NULL);       \
-    } while (0)
-
 // miscellaneous utilities (from utils.c)
 
 const char *pcmk_message_name(const char *name);
