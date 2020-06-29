@@ -72,6 +72,12 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
 };
 
+#define clear_node_weights_flags(nw_flags, nw_rsc, flags_to_clear) do {     \
+        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,     \
+                                     "Node weight", (nw_rsc)->id, (flags),  \
+                                     (flags_to_clear), #flags_to_clear);    \
+    } while (0)
+
 static gboolean
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
 {
@@ -373,7 +379,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
-        clear_bit(flags, pe_weights_init);
+        clear_node_weights_flags(flags, rsc, pe_weights_init);
 
     } else if (is_nonempty_group(rsc)) {
         /* The first member of the group will recursively incorporate any
