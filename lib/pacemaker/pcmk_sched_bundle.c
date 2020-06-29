@@ -674,7 +674,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if(assign_node(then_child, NULL, TRUE)) {
-                    changed |= pe_graph_updated_then;
+                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
 
@@ -751,7 +751,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                 crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
                           first_action->uuid, is_set(first_action->flags, pe_action_optional),
                           then_action->uuid, is_set(then_action->flags, pe_action_optional), type);
-                changed |= (pe_graph_updated_first | pe_graph_updated_then);
+                pe__set_graph_flags(changed, first,
+                                    pe_graph_updated_first|pe_graph_updated_then);
             }
             if(first_action && then_action) {
                 changed |= then_child->cmds->update_actions(first_action,

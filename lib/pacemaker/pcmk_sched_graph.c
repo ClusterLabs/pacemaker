@@ -212,7 +212,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
 
         } else if (is_set(first_flags, pe_action_optional) == FALSE) {
             if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__)) {
-                changed |= pe_graph_updated_then;
+                pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
         if (changed) {
@@ -248,7 +248,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                          first->uuid, is_set(first_flags, pe_action_optional),
                          then->uuid, is_set(then_flags, pe_action_optional));
             if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-                changed |= pe_graph_updated_first;
+                pe__set_graph_flags(changed, first, pe_graph_updated_first);
             }
         }
 
@@ -295,7 +295,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
              * of "before" runnable actions... mark then as runnable */
             if (then->runnable_before >= then->required_runnable_before) {
                 if (update_action_flags(then, pe_action_runnable, __FUNCTION__, __LINE__)) {
-                    changed |= pe_graph_updated_then;
+                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
         }
@@ -340,7 +340,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         } else if (is_set(first_flags, pe_action_runnable) == FALSE) {
             pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
             if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-                 changed |= pe_graph_updated_then;
+                pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
         if (changed) {
@@ -430,7 +430,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         && is_not_set(first->flags, pe_action_runnable)) {
 
         if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-            changed |= pe_graph_updated_then;
+            pe__set_graph_flags(changed, first, pe_graph_updated_then);
         }
 
         if (changed) {
@@ -580,7 +580,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             continue;
         }
 
-        clear_bit(changed, pe_graph_updated_first);
+        pe__clear_graph_flags(changed, then, pe_graph_updated_first);
 
         if (first->rsc && is_set(other->type, pe_order_then_cancels_first)
             && is_not_set(then->flags, pe_action_optional)) {
@@ -644,13 +644,14 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             /* This was the first time 'first' and 'then' were associated,
              * start again to get the new actions_before list
              */
-            changed |= (pe_graph_updated_then | pe_graph_disable);
+            pe__set_graph_flags(changed, then,
+                                pe_graph_updated_then|pe_graph_disable);
         }
 
         if (changed & pe_graph_disable) {
             crm_trace("Disabled constraint %s -> %s in favor of %s -> %s",
                       other->action->uuid, then->uuid, first->uuid, then->uuid);
-            clear_bit(changed, pe_graph_disable);
+            pe__clear_graph_flags(changed, then, pe_graph_disable);
             other->type = pe_order_none;
         }
 
@@ -675,9 +676,9 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
     if (is_set(then->flags, pe_action_requires_any)) {
         if (last_flags != then->flags) {
-            changed |= pe_graph_updated_then;
+            pe__set_graph_flags(changed, then, pe_graph_updated_then);
         } else {
-            clear_bit(changed, pe_graph_updated_then);
+            pe__clear_graph_flags(changed, then, pe_graph_updated_then);
         }
     }
 

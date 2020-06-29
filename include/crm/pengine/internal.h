@@ -113,6 +113,20 @@
                                            #flags_to_clear);                  \
     } while (0)
 
+#define pe__set_graph_flags(graph_flags, gr_action, flags_to_set) do {      \
+        graph_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,            \
+                                         LOG_TRACE, "Graph",                \
+                                         (gr_action)->uuid, graph_flags,    \
+                                         (flags_to_set), #flags_to_set);    \
+    } while (0)
+
+#define pe__clear_graph_flags(graph_flags, gr_action, flags_to_clear) do {     \
+        graph_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,             \
+                                           LOG_TRACE, "Graph",                 \
+                                           (gr_action)->uuid, graph_flags,     \
+                                           (flags_to_clear), #flags_to_clear); \
+    } while (0)
+
 // Some warnings we don't want to print every transition
 
 enum pe_warn_once_e {
