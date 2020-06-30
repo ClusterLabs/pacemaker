@@ -462,12 +462,8 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
             // Maintenance mode cancels recurring operations
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if ((interval_ms > 0)
-                   || safe_str_eq(task, RSC_STATUS)
-                   || safe_str_eq(task, RSC_START)
-                   || safe_str_eq(task, RSC_PROMOTE)
-                   || safe_str_eq(task, RSC_MIGRATED)) {
-
+        } else if ((interval_ms > 0) || pcmk__str_any_of(task, RSC_STATUS, RSC_START,
+                                                        RSC_PROMOTE, RSC_MIGRATED, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */
@@ -1958,8 +1954,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
               is_set(container->flags, pe_rsc_failed)? "failed " : "",
               container->id);
 
-    if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
+    if (pcmk__str_any_of(action->task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -2121,8 +2116,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
               is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
-    if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
+    if (pcmk__str_any_of(action->task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */

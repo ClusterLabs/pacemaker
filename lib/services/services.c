@@ -106,9 +106,9 @@ init_recurring_actions(void)
 static inline gboolean
 inflight_systemd_or_upstart(svc_action_t *op)
 {
-    return (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD)
-            || safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART))
-            && (g_list_find(inflight_ops, op) != NULL);
+    return pcmk__str_any_of(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                           PCMK_RESOURCE_CLASS_UPSTART, NULL) &&
+           g_list_find(inflight_ops, op) != NULL;
 }
 
 /*!

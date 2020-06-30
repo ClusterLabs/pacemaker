@@ -228,7 +228,7 @@ get_shadow_file(const char *suffix)
                        (user? user : "unprivileged user"), uid);
         }
 
-        if (safe_str_eq(user, "root") || safe_str_eq(user, CRM_DAEMON_USER)) {
+        if (pcmk__str_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
             dir = CRM_CONFIG_DIR;
 
         } else {

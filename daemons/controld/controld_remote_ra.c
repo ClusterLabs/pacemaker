@@ -415,7 +415,7 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (safe_str_neq(cmd->action, "start") && safe_str_neq(cmd->action, "migrate_from")) {
+    if (pcmk__str_none_of(cmd->action, "start", "migrate_from", NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -597,9 +597,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if (op->type == lrmd_event_connect && (safe_str_eq(cmd->action, "start") ||
-                                           safe_str_eq(cmd->action, "migrate_from"))) {
-
+    if (op->type == lrmd_event_connect && pcmk__str_any_of(cmd->action, "start",
+                                                          "migrate_from", NULL)) {
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
@@ -736,8 +735,8 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR) ||
-            safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_SERVER)) {
+        if (pcmk__str_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
+                            XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
             server = tmp->value;
         } else if (safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT)) {
             port = atoi(tmp->value);

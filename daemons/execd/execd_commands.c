@@ -913,8 +913,7 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
         if ((cmd->exec_rc == PCMK_OCF_OK)
-            && (safe_str_eq(cmd->action, "start")
-                || safe_str_eq(cmd->action, "stop"))) {
+            && pcmk__str_any_of(cmd->action, "start", "stop", NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
              * hoops so that we don't report 'complete' to the rest of pacemaker

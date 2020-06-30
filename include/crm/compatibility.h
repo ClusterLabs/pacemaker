@@ -207,8 +207,7 @@ get_resource_type(const char *name)
     } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
         return pe_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
-               || safe_str_eq(name, XML_CIB_TAG_MASTER)) {
+    } else if (pcmk__str_any_of(name, XML_CIB_TAG_INCARNATION, XML_CIB_TAG_MASTER, NULL)) {
         return pe_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {

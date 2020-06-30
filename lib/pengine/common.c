@@ -23,28 +23,21 @@ gboolean was_processing_warning = FALSE;
 static bool
 check_health(const char *value)
 {
-    return safe_str_eq(value, "none")
-            || safe_str_eq(value, "custom")
-            || safe_str_eq(value, "only-green")
-            || safe_str_eq(value, "progressive")
-            || safe_str_eq(value, "migrate-on-red");
+    return pcmk__str_any_of(value, "none", "custom", "only-green", "progressive",
+                           "migrate-on-red", NULL);
 }
 
 static bool
 check_stonith_action(const char *value)
 {
-    return safe_str_eq(value, "reboot")
-           || safe_str_eq(value, "poweroff")
-           || safe_str_eq(value, "off");
+    return pcmk__str_any_of(value, "reboot", "poweroff", "off", NULL);
 }
 
 static bool
 check_placement_strategy(const char *value)
 {
-    return safe_str_eq(value, "default")
-           || safe_str_eq(value, "utilization")
-           || safe_str_eq(value, "minimal")
-           || safe_str_eq(value, "balanced");
+    return pcmk__str_any_of(value, "default", "utilization", "minimal",
+                           "balanced", NULL);
 }
 
 static pcmk__cluster_option_t pe_opts[] = {

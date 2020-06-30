@@ -634,11 +634,8 @@ main(int argc, char **argv)
         ++argerr;
     }
 
-    if (!options.listen &&
-        (safe_str_eq(options.api_call, "metadata") ||
-         safe_str_eq(options.api_call, "list_agents") ||
-         safe_str_eq(options.api_call, "list_standards") ||
-         safe_str_eq(options.api_call, "list_ocf_providers"))) {
+    if (!options.listen && pcmk__str_any_of(options.api_call, "metadata", "list_agents",
+                                           "list_standards", "list_ocf_providers", NULL)) {
         options.no_connect = 1;
     }
 

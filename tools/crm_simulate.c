@@ -533,8 +533,7 @@ create_action_name(pe_action_t *action)
             interval_ms = 0;
         }
 
-        if (safe_str_eq(action->task, RSC_NOTIFY)
-            || safe_str_eq(action->task, RSC_NOTIFIED)) {
+        if (pcmk__str_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED, NULL)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_key_type");
             const char *n_task = g_hash_table_lookup(action->meta, "notify_key_operation");
 
