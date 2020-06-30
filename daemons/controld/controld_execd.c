@@ -2287,7 +2287,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     if(send_nack) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
                    operation, rsc->id, fsa_state2string(fsa_state),
-                   is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
+                   pcmk__btoa(is_set(fsa_input_register, R_SHUTDOWN)));
 
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->op_status = PCMK_LRM_OP_INVALID;
@@ -2798,7 +2798,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                      crm_action_str(op->op_type, op->interval_ms),
                      op->rsc_id, node_name,
                      services_lrm_status_str(op->op_status),
-                     op->call_id, op_key, (removed? "true" : "false"));
+                     op->call_id, op_key, pcmk__btoa(removed));
             break;
 
         case PCMK_LRM_OP_DONE:
@@ -2807,8 +2807,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                        crm_action_str(op->op_type, op->interval_ms),
                        op->rsc_id, node_name,
                        services_ocf_exitcode_str(op->rc), op->rc,
-                       op->call_id, op_key, (removed? "true" : "false"),
-                       update_id);
+                       op->call_id, op_key, pcmk__btoa(removed), update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
@@ -2826,7 +2825,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                     crm_action_str(op->op_type, op->interval_ms),
                     op->rsc_id, node_name,
                     services_lrm_status_str(op->op_status), op->call_id, op_key,
-                    (removed? "true" : "false"), op->op_status, update_id);
+                    pcmk__btoa(removed), op->op_status, update_id);
     }
 
     if (op->output) {

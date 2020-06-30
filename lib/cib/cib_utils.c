@@ -461,7 +461,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    crm_trace("Perform validation: %s", (check_schema? "true" : "false"));
+    crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, TRUE)) {
         const char *current_schema = crm_element_value(scratch,
                                                        XML_ATTR_VALIDATION);

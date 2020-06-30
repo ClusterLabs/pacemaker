@@ -409,7 +409,8 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add(update, XML_ATTR_DC_UUID, fsa_our_uuid);
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
-        crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
+        crm_debug("Updating quorum status to %s (call=%d)",
+                  pcmk__btoa(quorum), call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
         free_xml(update);
 

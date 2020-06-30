@@ -424,7 +424,7 @@ stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
     if (device != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "device", (pcmkXmlStr) device);
     }
-    xmlSetProp(node, (pcmkXmlStr) "valid", (pcmkXmlStr) (rc ? "false" : "true"));
+    xmlSetProp(node, (pcmkXmlStr) "valid", (pcmkXmlStr) pcmk__btoa(rc));
 
     pcmk__output_xml_push_parent(out, node);
     out->subprocess_output(out, rc, output, error_output);

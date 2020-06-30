@@ -491,13 +491,13 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
     }
-    status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
-    status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
-    status_print("blocked=\"%s\" ", is_set(rsc->flags, pe_rsc_block) ? "true" : "false");
-    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
-    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print("active=\"%s\" ", pcmk__btoa(rsc->fns->active(rsc, TRUE)));
+    status_print("orphaned=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_orphan));
+    status_print("blocked=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_block));
+    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+                 pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
 
     if (options & pe_print_pending) {
@@ -510,8 +510,8 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
 
     if (options & pe_print_dev) {
         status_print("provisional=\"%s\" ",
-                     is_set(rsc->flags, pe_rsc_provisional) ? "true" : "false");
-        status_print("runnable=\"%s\" ", is_set(rsc->flags, pe_rsc_runnable) ? "true" : "false");
+                     pe__rsc_bool_str(rsc, pe_rsc_provisional));
+        status_print("runnable=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_runnable));
         status_print("priority=\"%f\" ", (double)rsc->priority);
         status_print("variant=\"%s\" ", crm_element_name(rsc->xml));
     }
@@ -529,7 +529,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
 
             status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
                          node->details->uname, node->details->id,
-                         node->details->online ? "false" : "true");
+                         pcmk__btoa(node->details->online == FALSE));
         }
         status_print("%s</resource>\n", pre_text);
     } else {

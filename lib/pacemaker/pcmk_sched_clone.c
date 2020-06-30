@@ -1476,11 +1476,11 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
     get_clone_variant_data(clone_data, rsc);
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
-    crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_NOTIFY);
-    crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_notify) ? "true" : "false");
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_notify));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);

@@ -251,7 +251,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
     crm_debug("Stop all active resources: %s",
-              is_set(data_set->flags, pe_flag_stop_everything) ? "true" : "false");
+              pcmk__btoa(is_set(data_set->flags, pe_flag_stop_everything)));
 
     set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
@@ -320,11 +320,11 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "remove-after-stop", pe_flag_remove_after_stop);
     crm_trace("Stopped resources are removed from the status section: %s",
-              is_set(data_set->flags, pe_flag_remove_after_stop) ? "true" : "false");
+              pcmk__btoa(is_set(data_set->flags, pe_flag_remove_after_stop)));
 
     set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
     crm_trace("Maintenance mode: %s",
-              is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false");
+              pcmk__btoa(is_set(data_set->flags, pe_flag_maintenance_mode)));
 
     set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
     crm_trace("Start failures are %s",
@@ -2990,7 +2990,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
     pe_rsc_trace(rsc, "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
                  rsc->id, role2text(rsc->role),
-                 node->details->unclean ? "true" : "false",
+                 pcmk__btoa(node->details->unclean),
                  fail2text(action->on_fail), role2text(action->fail_role));
 
     if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {

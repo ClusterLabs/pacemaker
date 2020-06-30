@@ -176,9 +176,9 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
     pe_rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
     pe_rsc_trace(rsc, "\tClone is unique: %s",
-                 is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+                 pe__rsc_bool_str(rsc, pe_rsc_unique));
     pe_rsc_trace(rsc, "\tClone is promotable: %s",
-                 is_set(rsc->flags, pe_rsc_promotable) ? "true" : "false");
+                 pe__rsc_bool_str(rsc, pe_rsc_promotable));
 
     // Clones may contain a single group or primitive
     for (a_child = __xml_first_child_element(xml_obj); a_child != NULL;
@@ -209,7 +209,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
      * inherit when being unpacked, as well as in resource agents' environment.
      */
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
-                   is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+                   pe__rsc_bool_str(rsc, pe_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
@@ -313,12 +313,13 @@ clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
 
     status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-    status_print("multi_state=\"%s\" ", is_set(rsc->flags, pe_rsc_promotable)? "true" : "false");
-    status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
-    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
-    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print("multi_state=\"%s\" ",
+                 pe__rsc_bool_str(rsc, pe_rsc_promotable));
+    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
+    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
+                 pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
     }

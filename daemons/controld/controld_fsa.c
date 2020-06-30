@@ -251,8 +251,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         || do_fsa_stall) {
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
                   g_list_length(fsa_message_queue),
-                  (unsigned long long) fsa_actions,
-                  (do_fsa_stall? "true" : "false"));
+                  (unsigned long long) fsa_actions, pcmk__btoa(do_fsa_stall));
     } else {
         crm_trace("Exiting the FSA");
     }

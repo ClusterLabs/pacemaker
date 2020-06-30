@@ -1198,8 +1198,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         free(value);
 
         crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
-                (bundle_data->nreplicas_per_host > 1)?
-                XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+                              pcmk__btoa(bundle_data->nreplicas_per_host > 1));
 
         if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
@@ -1479,9 +1478,9 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("id=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
-    status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
-    status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
-    status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
+    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
+    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;

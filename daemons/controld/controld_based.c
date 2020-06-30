@@ -31,7 +31,7 @@ do_cib_updated(const char *event, xmlNode * msg)
 static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
-    crm_debug("Updating the CIB after a replace: DC=%s", AM_I_DC ? "true" : "false");
+    crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (AM_I_DC == FALSE) {
         return;
 
