@@ -193,27 +193,6 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  */
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
-//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
-static inline gboolean
-is_not_set(long long word, long long bit)
-{
-    return ((word & bit) == 0);
-}
-
-//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
-static inline gboolean
-is_set(long long word, long long bit)
-{
-    return ((word & bit) == bit);
-}
-
-//! \deprecated Use pcmk_any_flags_set() instead
-static inline gboolean
-is_set_any(long long word, long long bit)
-{
-    return ((word & bit) != 0);
-}
-
 static inline guint
 crm_hash_table_size(GHashTable * hashtable)
 {
@@ -250,6 +229,27 @@ bool pcmk_str_is_minus_infinity(const char *s);
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
+
+//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
+static inline gboolean
+is_not_set(long long word, long long bit)
+{
+    return ((word & bit) == 0);
+}
+
+//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
+static inline gboolean
+is_set(long long word, long long bit)
+{
+    return ((word & bit) == bit);
+}
+
+//! \deprecated Use pcmk_any_flags_set() instead
+static inline gboolean
+is_set_any(long long word, long long bit)
+{
+    return ((word & bit) != 0);
+}
 
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
