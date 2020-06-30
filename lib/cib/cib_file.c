@@ -701,10 +701,10 @@ cib_file_signoff(cib_t * cib)
     cib->type = cib_no_connection;
 
     /* If the in-memory CIB has been changed, write it to disk */
-    if (is_set(private->flags, cib_file_flag_dirty)) {
+    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
-        if (is_set(private->flags, cib_file_flag_live)) {
+        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
             if (cib_file_write_live(private->filename) < 0) {
                 rc = pcmk_err_generic;
             }

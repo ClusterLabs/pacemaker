@@ -90,16 +90,16 @@ get_resource_display_options(unsigned int mon_ops)
 {
     int print_opts = 0;
 
-    if (is_set(mon_ops, mon_op_print_pending)) {
+    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
         print_opts |= pe_print_pending;
     }
-    if (is_set(mon_ops, mon_op_print_clone_detail)) {
+    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
         print_opts |= pe_print_clone_details|pe_print_implicit;
     }
-    if (is_not_set(mon_ops, mon_op_inactive_resources)) {
+    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
         print_opts |= pe_print_clone_active;
     }
-    if (is_set(mon_ops, mon_op_print_brief)) {
+    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
         print_opts |= pe_print_brief;
     }
     return print_opts;

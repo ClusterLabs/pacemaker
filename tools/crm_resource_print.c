@@ -111,7 +111,7 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *rsc = (pe_resource_t *) lpc->data;
 
-        if (is_set(rsc->flags, pe_rsc_orphan)
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
             && rsc->fns->active(rsc, TRUE) == FALSE) {
             continue;
         }
@@ -211,7 +211,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
         list = rsc->rsc_cons_lhs;
     }
 
-    if (is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
         /* Break colocation loops */
         printf("loop %s\n", rsc->id);
         free(prefix);
@@ -229,7 +229,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
             peer = cons->rsc_lh;
         }
 
-        if (is_set(peer->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(peer->flags, pe_rsc_allocating)) {
             if (dependents == FALSE) {
                 fprintf(stdout, "%s%-*s (id=%s - loop)\n", prefix, 80 - (4 * offset), peer->id,
                         cons->id);

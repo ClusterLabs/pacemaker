@@ -70,7 +70,7 @@ migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         return FALSE;
     }
 
@@ -232,7 +232,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
     if (bundle_data->child) {
         bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
 
-        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
             action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
@@ -334,7 +334,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
 
     if (bundle_data->child) {
         bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
-        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
@@ -483,7 +483,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     if (constraint->score == 0) {
         return;
     }
-    if (is_set(rsc->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;
 
@@ -719,7 +719,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             }
 
             if (first_action == NULL) {
-                if (is_not_set(first_child->flags, pe_rsc_orphan)
+                if (!pcmk_is_set(first_child->flags, pe_rsc_orphan)
                     && !pcmk__str_any_of(first_task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (first)",
                             first_task, first_child->id);
@@ -727,14 +727,14 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                 } else {
                     crm_trace("No action found for %s in %s%s (first)",
                               first_task, first_child->id,
-                              is_set(first_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                              pcmk_is_set(first_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
                 }
                 continue;
             }
 
             /* We're only interested if 'then' is neither stopping nor being demoted */ 
             if (then_action == NULL) {
-                if (is_not_set(then_child->flags, pe_rsc_orphan)
+                if (!pcmk_is_set(then_child->flags, pe_rsc_orphan)
                     && !pcmk__str_any_of(then->task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (then)",
                             then->task, then_child->id);
@@ -742,15 +742,18 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                 } else {
                     crm_trace("No action found for %s in %s%s (then)",
                               then->task, then_child->id,
-                              is_set(then_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                              pcmk_is_set(then_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
                 }
                 continue;
             }
 
             if (order_actions(first_action, then_action, type)) {
                 crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
-                          first_action->uuid, is_set(first_action->flags, pe_action_optional),
-                          then_action->uuid, is_set(then_action->flags, pe_action_optional), type);
+                          first_action->uuid,
+                          pcmk_is_set(first_action->flags, pe_action_optional),
+                          then_action->uuid,
+                          pcmk_is_set(then_action->flags, pe_action_optional),
+                          type);
                 pe__set_graph_flags(changed, first,
                                     pe_graph_updated_first|pe_graph_updated_then);
             }
@@ -838,7 +841,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
             if (then_child_action) {
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
 
-                if (is_set(then_child_flags, pe_action_runnable)) {
+                if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
                     then_child_changed |= then_child->cmds->update_actions(first,
                         then_child_action, node, flags, filter, type, data_set);
                 }

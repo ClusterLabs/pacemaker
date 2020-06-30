@@ -768,7 +768,7 @@ ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
         rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL,
                               cib_conn, options.cib_options, options.promoted_role_only);
 
-    } else if (is_set(rsc->flags, pe_rsc_promotable)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         int count = 0;
         GListPtr iter = NULL;
 

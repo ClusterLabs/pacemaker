@@ -60,7 +60,7 @@ do_te_control(long long action,
     if ((action & A_TE_START) == 0) {
         return;
 
-    } else if (is_set(fsa_input_register, R_TE_CONNECTED)) {
+    } else if (pcmk_is_set(fsa_input_register, R_TE_CONNECTED)) {
         crm_debug("The transitioner is already active");
         return;
 

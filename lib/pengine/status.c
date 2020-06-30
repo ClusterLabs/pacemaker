@@ -108,26 +108,26 @@ cluster_status(pe_working_set_t * data_set)
 
     unpack_config(config, data_set);
 
-   if (is_not_set(data_set->flags, pe_flag_quick_location)
-       && is_not_set(data_set->flags, pe_flag_have_quorum)
-       && data_set->no_quorum_policy != no_quorum_ignore) {
+   if (!pcmk_any_flags_set(data_set->flags,
+                           pe_flag_quick_location|pe_flag_have_quorum)
+       && (data_set->no_quorum_policy != no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 
     unpack_nodes(cib_nodes, data_set);
 
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         unpack_remote_nodes(cib_resources, data_set);
     }
 
     unpack_resources(cib_resources, data_set);
     unpack_tags(cib_tags, data_set);
 
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         unpack_status(cib_status, data_set);
     }
 
-    if (is_not_set(data_set->flags, pe_flag_no_counts)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);

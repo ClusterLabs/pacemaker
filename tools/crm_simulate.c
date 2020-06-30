@@ -490,7 +490,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        if (is_set(rsc->flags, pe_rsc_orphan)
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
             && rsc->role == RSC_ROLE_STOPPED) {
             continue;
         }
@@ -510,7 +510,7 @@ create_action_name(pe_action_t *action)
 
     if (action->node) {
         action_host = action->node->details->uname;
-    } else if (is_not_set(action->flags, pe_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -600,22 +600,23 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
         crm_trace("Action %d: %s %s %p", action->id, action_name, action->uuid, action);
 
-        if (is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             font = "orange";
         }
 
-        if (is_set(action->flags, pe_action_dumped)) {
+        if (pcmk_is_set(action->flags, pe_action_dumped)) {
             style = "bold";
             color = "green";
 
-        } else if (action->rsc != NULL && is_not_set(action->rsc->flags, pe_rsc_managed)) {
+        } else if ((action->rsc != NULL)
+                   && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             color = "red";
             font = "purple";
             if (all_actions == FALSE) {
                 goto do_not_write;
             }
 
-        } else if (is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             color = "blue";
             if (all_actions == FALSE) {
                 goto do_not_write;
@@ -623,8 +624,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
         } else {
             color = "red";
-            CRM_CHECK(is_set(action->flags, pe_action_runnable) == FALSE,;
-                );
+            CRM_CHECK(!pcmk_is_set(action->flags, pe_action_runnable), ;);
         }
 
         pe__set_action_flags(action, pe_action_dumped);
@@ -652,13 +652,13 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             if (before->state == pe_link_dumped) {
                 optional = FALSE;
                 style = "bold";
-            } else if (is_set(action->flags, pe_action_pseudo)
+            } else if (pcmk_is_set(action->flags, pe_action_pseudo)
                        && (before->type & pe_order_stonith_stop)) {
                 continue;
             } else if (before->type == pe_order_none) {
                 continue;
-            } else if (is_set(before->action->flags, pe_action_dumped)
-                       && is_set(action->flags, pe_action_dumped)
+            } else if (pcmk_is_set(before->action->flags, pe_action_dumped)
+                       && pcmk_is_set(action->flags, pe_action_dumped)
                        && before->type != pe_order_load) {
                 optional = FALSE;
             }
@@ -977,7 +977,7 @@ main(int argc, char **argv)
     if (quiet == FALSE) {
         int opts = options.print_pending ? pe_print_pending : 0;
 
-        if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
             quiet_log("\n  The cluster will not attempt to start, stop or recover services");
             quiet_log("\n");

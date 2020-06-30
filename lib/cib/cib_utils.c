@@ -219,7 +219,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = FALSE;
 
-    crm_trace("Begin %s%s%s op", is_set(call_options, cib_dryrun)?"dry-run of ":"", is_query ? "read-only " : "", op);
+    crm_trace("Begin %s%s%s op",
+              (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
+              (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
@@ -276,7 +278,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
 
-    if (is_set(call_options, cib_zero_copy)) {
+    if (pcmk_is_set(call_options, cib_zero_copy)) {
         /* Conditional on v2 patch style */
 
         scratch = current_cib;
@@ -359,7 +361,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if (is_set(call_options, cib_zero_copy)) {
+    if (pcmk_is_set(call_options, cib_zero_copy)) {
         /* At this point, current_cib is just the 'cib' tag and its properties,
          *
          * The v1 format would barf on this, but we know the v2 patch
@@ -393,7 +395,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
-    if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
+    if (!pcmk_is_set(call_options, cib_zero_copy) // Original to compare against doesn't exist
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
 
@@ -434,7 +436,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      };
      */
 
-    if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
+    if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
         crm_xml_add_last_written(scratch);

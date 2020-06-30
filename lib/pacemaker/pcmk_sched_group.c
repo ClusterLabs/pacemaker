@@ -27,10 +27,10 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     get_group_variant_data(group_data, rsc);
 
-    if (is_not_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    if (is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
@@ -143,15 +143,17 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (is_set(action->flags, pe_action_optional)) {
+        if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
         }
-        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei) && is_set(action->flags, pe_action_runnable)) {
+        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)
+            && pcmk_is_set(action->flags, pe_action_runnable)) {
+
             group_data->child_stopping = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
 
         } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
-                   && is_set(action->flags, pe_action_runnable)) {
+                   && pcmk_is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
         }
@@ -194,7 +196,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                child_rsc, last_rsc, NULL, NULL, data_set);
         }
 
-        if (is_set(top->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
                           stop | pe_order_implies_first_printed, data_set);
 
@@ -216,7 +218,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (group_data->ordered == FALSE) {
             order_start_start(rsc, child_rsc, start | pe_order_implies_first_printed);
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
                               start | pe_order_implies_first_printed, data_set);
             }
@@ -227,7 +229,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             order_start_start(last_rsc, child_rsc, start);
             order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
                 new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_optional,
                               data_set);
@@ -243,7 +245,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             int flags = pe_order_none;
 
             order_start_start(rsc, child_rsc, flags);
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
             }
 
@@ -271,7 +273,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         order_stop_stop(rsc, last_rsc, stop_stop_flags);
         new_rsc_order(last_rsc, RSC_STOP, rsc, RSC_STOPPED, stop_stopped_flags, data_set);
 
-        if (is_set(top->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
             new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
         }
@@ -341,7 +343,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
                  rsc_rh->id, constraint->id, rsc_lh->id);
 
-    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
@@ -390,8 +392,8 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 
-            if (is_set(flags, pe_action_optional)
-                && is_set(child_flags, pe_action_optional) == FALSE) {
+            if (pcmk_is_set(flags, pe_action_optional)
+                && !pcmk_is_set(child_flags, pe_action_optional)) {
                 pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
@@ -399,8 +401,9 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 pe__clear_action_flags(action, pe_action_optional);
             }
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
-                && is_set(flags, pe_action_runnable)
-                && is_set(child_flags, pe_action_runnable) == FALSE) {
+                && pcmk_is_set(flags, pe_action_runnable)
+                && !pcmk_is_set(child_flags, pe_action_runnable)) {
+
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
                              child_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
@@ -499,7 +502,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     get_group_variant_data(group_data, rsc);
 
-    if (is_set(rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s", rsc->id, rhs);
         return nodes;
     }

@@ -79,7 +79,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 static int
 node_alive(const crm_node_t *node)
 {
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         // Pacemaker Remote nodes can't be partially alive
         return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
 
@@ -87,7 +87,7 @@ node_alive(const crm_node_t *node)
         // Completely up cluster node: both cluster member and peer
         return 1;
 
-    } else if (is_not_set(node->processes, crm_get_cluster_proc())
+    } else if (!pcmk_is_set(node->processes, crm_get_cluster_proc())
                && !pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
         // Completely down cluster node: neither cluster member nor peer
         return -1;
@@ -104,7 +104,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 {
     uint32_t old = 0;
     bool appeared = FALSE;
-    bool is_remote = is_set(node->flags, crm_remote_node);
+    bool is_remote = pcmk_is_set(node->flags, crm_remote_node);
 
     /* The controller waits to receive some information from the membership
      * layer before declaring itself operational. If this is being called for a
@@ -152,14 +152,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         case crm_status_processes:
             CRM_CHECK(data != NULL, return);
             old = *(const uint32_t *)data;
-            appeared = is_set(node->processes, crm_get_cluster_proc());
+            appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
 
             crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=0x%07x new=0x%07x",
                      node->uname, (appeared? "now" : "no longer"),
                      (AM_I_DC? "true" : (fsa_our_dc? fsa_our_dc : "<none>")),
                      old, node->processes);
 
-            if (is_not_set((node->processes ^ old), crm_get_cluster_proc())) {
+            if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
                 /* Peer status did not change. This should not be possible,
                  * since we don't track process flags other than peer status.
                  */
@@ -173,7 +173,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 controld_remove_voter(node->uname);
             }
 
-            if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
+            if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
                 crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
 
@@ -320,7 +320,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     trigger_fsa();
     fsa_cib_conn->state = cib_disconnected;
 
-    if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+    if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Connection to the CIB manager terminated");
         return;
     }

@@ -57,7 +57,7 @@ log_resource_details(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) item->data;
 
         // Log all resources except inactive orphans
-        if (is_not_set(rsc->flags, pe_rsc_orphan)
+        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
             || (rsc->role != RSC_ROLE_STOPPED)) {
             out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
         }
@@ -83,9 +83,9 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
 /*	pe_debug_on(); */
 
-    CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));
+    CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
 
-    if (is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         set_working_set_defaults(data_set);
         data_set->input = xml_input;
         data_set->now = now;
@@ -100,14 +100,14 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
-    if (is_not_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         log_resource_details(data_set);
     }
 
     crm_trace("Applying placement constraints");
     stage2(data_set);
 
-    if(is_set(data_set->flags, pe_flag_quick_location)){
+    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         return NULL;
     }
 
@@ -136,9 +136,10 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *action = (pe_action_t *) gIter->data;
 
-            if (is_set(action->flags, pe_action_optional) == FALSE
-                && is_set(action->flags, pe_action_runnable) == FALSE
-                && is_set(action->flags, pe_action_pseudo) == FALSE) {
+            if (!pcmk_any_flags_set(action->flags,
+                                    pe_action_optional
+                                    |pe_action_runnable
+                                    |pe_action_pseudo)) {
                 log_action(LOG_TRACE, "\t", action, TRUE);
             }
         }

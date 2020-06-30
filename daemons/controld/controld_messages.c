@@ -909,7 +909,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 {
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
         crm_info("Shutting down controller");
         return I_STOP;
@@ -949,7 +949,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
 
     if ((fsa_our_dc == NULL) || (strcmp(host_from, fsa_our_dc) == 0)) {
 
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {

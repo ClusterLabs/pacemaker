@@ -83,7 +83,9 @@ pe_resource_t *
 pe__resource_contains_guest_node(const pe_working_set_t *data_set,
                                  const pe_resource_t *rsc)
 {
-    if (rsc && data_set && is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if ((rsc != NULL) && (data_set != NULL)
+        && pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+
         for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *filler = gIter->data;
 
@@ -125,7 +127,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
     GListPtr iter;
 
     CRM_CHECK(data_set && host && host->details && helper, return);
-    if (!is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {

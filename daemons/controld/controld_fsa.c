@@ -206,13 +206,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         }
 
         /* logging : *before* the state is changed */
-        if (is_set(fsa_actions, A_ERROR)) {
+        if (pcmk_is_set(fsa_actions, A_ERROR)) {
             do_fsa_action(fsa_data, A_ERROR, do_log);
         }
-        if (is_set(fsa_actions, A_WARN)) {
+        if (pcmk_is_set(fsa_actions, A_WARN)) {
             do_fsa_action(fsa_data, A_WARN, do_log);
         }
-        if (is_set(fsa_actions, A_LOG)) {
+        if (pcmk_is_set(fsa_actions, A_LOG)) {
             do_fsa_action(fsa_data, A_LOG, do_log);
         }
 
@@ -589,7 +589,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             election_trigger->counter = 0;
             purge_stonith_cleanup();
 
-            if (is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
@@ -638,7 +638,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
-            if (is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }

@@ -350,13 +350,14 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
+    const char *desc = NULL;
 
     if (action == NULL) {
         crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
         return;
     }
 
-    if (is_set(action->flags, pe_action_pseudo)) {
+    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
         node_uname = NULL;
         node_uuid = NULL;
 
@@ -371,35 +372,45 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
     switch (text2task(action->task)) {
         case stonith_node:
         case shutdown_crm:
+            if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+                desc = "Pseudo ";
+            } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+                desc = "Optional ";
+            } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+                desc = "!!Non-Startable!! ";
+            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
+               desc = "";
+            } else {
+               desc = "(Provisional) ";
+            }
             crm_trace("%s%s%sAction %d: %s%s%s%s%s%s",
-                      pre_text == NULL ? "" : pre_text,
-                      pre_text == NULL ? "" : ": ",
-                      is_set(action->flags,
-                             pe_action_pseudo) ? "Pseudo " : is_set(action->flags,
-                                                                    pe_action_optional) ?
-                      "Optional " : is_set(action->flags,
-                                           pe_action_runnable) ? is_set(action->flags,
-                                                                        pe_action_processed)
-                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                      action->uuid, node_uname ? "\ton " : "",
-                      node_uname ? node_uname : "", node_uuid ? "\t\t(" : "",
-                      node_uuid ? node_uuid : "", node_uuid ? ")" : "");
+                      ((pre_text == NULL)? "" : pre_text),
+                      ((pre_text == NULL)? "" : ": "),
+                      desc, action->id, action->uuid,
+                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
+                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
+                      (node_uuid? ")" : ""));
             break;
         default:
+            if (pcmk_is_set(action->flags, pe_action_optional)) {
+                desc = "Optional ";
+            } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+                desc = "Pseudo ";
+            } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+                desc = "!!Non-Startable!! ";
+            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
+               desc = "";
+            } else {
+               desc = "(Provisional) ";
+            }
             crm_trace("%s%s%sAction %d: %s %s%s%s%s%s%s",
-                      pre_text == NULL ? "" : pre_text,
-                      pre_text == NULL ? "" : ": ",
-                      is_set(action->flags,
-                             pe_action_optional) ? "Optional " : is_set(action->flags,
-                                                                        pe_action_pseudo)
-                      ? "Pseudo " : is_set(action->flags,
-                                           pe_action_runnable) ? is_set(action->flags,
-                                                                        pe_action_processed)
-                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                      action->uuid, action->rsc ? action->rsc->id : "<none>",
-                      node_uname ? "\ton " : "", node_uname ? node_uname : "",
-                      node_uuid ? "\t\t(" : "", node_uuid ? node_uuid : "", node_uuid ? ")" : "");
-
+                      ((pre_text == NULL)? "" : pre_text),
+                      ((pre_text == NULL)? "" : ": "),
+                      desc, action->id, action->uuid,
+                      (action->rsc? action->rsc->id : "<none>"),
+                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
+                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
+                      (node_uuid? ")" : ""));
             break;
     }
 

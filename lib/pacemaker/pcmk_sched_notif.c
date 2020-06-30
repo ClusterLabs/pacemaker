@@ -252,7 +252,7 @@ pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t *
     if (node->details->online == FALSE) {
         pe_rsc_trace(rsc, "Skipping notification for %s: node offline", rsc->id);
         return NULL;
-    } else if (is_set(op->flags, pe_action_runnable) == FALSE) {
+    } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
         pe_rsc_trace(rsc, "Skipping notification for %s: not runnable", op->uuid);
         return NULL;
     }
@@ -264,7 +264,8 @@ pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t *
 
     key = pcmk__notify_key(rsc->id, value, task);
     trigger = custom_action(rsc, key, op->task, node,
-                            is_set(op->flags, pe_action_optional), TRUE, data_set);
+                            pcmk_is_set(op->flags, pe_action_optional),
+                            TRUE, data_set);
     g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
     add_notify_data_to_action_meta(n_data, trigger);
 
@@ -331,7 +332,7 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
     char *key = NULL;
     notify_data_t *n_data = NULL;
 
-    if (is_not_set(rsc->flags, pe_rsc_notify)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_notify)) {
         return NULL;
     }
 
@@ -342,7 +343,8 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
         /* create pre-event notification wrappers */
         key = pcmk__notify_key(rsc->id, "pre", start->task);
         n_data->pre =
-            custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(start->flags, pe_action_optional),
+            custom_action(rsc, key, RSC_NOTIFY, NULL,
+                          pcmk_is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
 
         update_action_flags(n_data->pre, pe_action_pseudo, __FUNCTION__, __LINE__);
@@ -356,9 +358,9 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
 
         /* create pre_notify_complete */
         key = pcmk__notify_key(rsc->id, "confirmed-pre", start->task);
-        n_data->pre_done =
-            custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(start->flags, pe_action_optional),
-                          TRUE, data_set);
+        n_data->pre_done = custom_action(rsc, key, RSC_NOTIFIED, NULL,
+                                         pcmk_is_set(start->flags, pe_action_optional),
+                                         TRUE, data_set);
 
         update_action_flags(n_data->pre_done, pe_action_pseudo, __FUNCTION__, __LINE__);
         update_action_flags(n_data->pre_done, pe_action_runnable, __FUNCTION__, __LINE__);
@@ -376,13 +378,13 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
     if (end) {
         /* create post-event notification wrappers */
         key = pcmk__notify_key(rsc->id, "post", end->task);
-        n_data->post =
-            custom_action(rsc, key, RSC_NOTIFY, NULL, is_set(end->flags, pe_action_optional), TRUE,
-                          data_set);
+        n_data->post = custom_action(rsc, key, RSC_NOTIFY, NULL,
+                                     pcmk_is_set(end->flags, pe_action_optional),
+                                     TRUE, data_set);
 
         n_data->post->priority = INFINITY;
         update_action_flags(n_data->post, pe_action_pseudo, __FUNCTION__, __LINE__);
-        if (is_set(end->flags, pe_action_runnable)) {
+        if (pcmk_is_set(end->flags, pe_action_runnable)) {
             update_action_flags(n_data->post, pe_action_runnable, __FUNCTION__, __LINE__);
         } else {
             update_action_flags(n_data->post, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
@@ -396,13 +398,13 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
 
         /* create post_notify_complete */
         key = pcmk__notify_key(rsc->id, "confirmed-post", end->task);
-        n_data->post_done =
-            custom_action(rsc, key, RSC_NOTIFIED, NULL, is_set(end->flags, pe_action_optional),
-                          TRUE, data_set);
+        n_data->post_done = custom_action(rsc, key, RSC_NOTIFIED, NULL,
+                                          pcmk_is_set(end->flags, pe_action_optional),
+                                          TRUE, data_set);
 
         n_data->post_done->priority = INFINITY;
         update_action_flags(n_data->post_done, pe_action_pseudo, __FUNCTION__, __LINE__);
-        if (is_set(end->flags, pe_action_runnable)) {
+        if (pcmk_is_set(end->flags, pe_action_runnable)) {
             update_action_flags(n_data->post_done, pe_action_runnable, __FUNCTION__, __LINE__);
         } else {
             update_action_flags(n_data->post_done, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
@@ -489,12 +491,14 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
 
-            if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
+            if (!pcmk_is_set(op->flags, pe_action_optional)
+                && (op->node != NULL)) {
+
                 task = text2task(op->task);
 
                 if(task == stop_rsc && op->node->details->unclean) {
                     // Create anyway (additional noise if node can't be fenced)
-                } else if(is_not_set(op->flags, pe_action_runnable)) {
+                } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
                     continue;
                 }
 
@@ -617,7 +621,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
     add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
-    if (is_set(data_set->flags, pe_flag_stdout)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
         /* If printing to stdout, sort the node list, for consistent
          * regression test output (while avoiding the performance hit
          * for the live cluster).
@@ -694,7 +698,9 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *op = (pe_action_t *) gIter->data;
 
-        if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
+        if (!pcmk_is_set(op->flags, pe_action_optional)
+            && (op->node != NULL)) {
+
             enum action_tasks t = text2task(op->task);
 
             switch (t) {
@@ -755,8 +761,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                 /* if this stop action is a pseudo action as a result of the current
                  * node being fenced, this stop action is implied by the fencing 
                  * action. There's no reason to send the fenced node a stop notification */ 
-                if (stop &&
-                    is_set(stop->flags, pe_action_pseudo) &&
+                if (stop && pcmk_is_set(stop->flags, pe_action_pseudo) &&
                     (current_node->details->unclean || current_node->details->remote_requires_reset) ) {
 
                     continue;
@@ -764,7 +769,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
 
                 pe_notify(rsc, current_node, n_data->pre, n_data->pre_done, n_data, data_set);
                 if (task == action_demote || stop == NULL
-                    || is_set(stop->flags, pe_action_optional)) {
+                    || pcmk_is_set(stop->flags, pe_action_optional)) {
                     pe_post_notify(rsc, current_node, n_data, data_set);
                 }
             }
@@ -783,7 +788,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                 pe_action_t *remote_start = find_remote_start(start);
 
                 if (remote_start
-                    && is_not_set(remote_start->flags, pe_action_runnable)) {
+                    && !pcmk_is_set(remote_start->flags, pe_action_runnable)) {
                     /* Start and promote actions for a clone instance behind
                      * a Pacemaker Remote connection happen after the
                      * connection starts. If the connection start is blocked, do
@@ -792,7 +797,9 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                     return;
                 }
             }
-            if (task != start_rsc || start == NULL || is_set(start->flags, pe_action_optional)) {
+            if ((task != start_rsc) || (start == NULL)
+                || pcmk_is_set(start->flags, pe_action_optional)) {
+
                 pe_notify(rsc, rsc->allocated_to, n_data->pre, n_data->pre_done, n_data, data_set);
             }
             pe_post_notify(rsc, rsc->allocated_to, n_data, data_set);

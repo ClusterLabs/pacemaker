@@ -979,9 +979,9 @@ int
 pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 {
     /* If this flag is set, the second string is a regex. */
-    if (is_set(flags, pcmk__str_regex)) {
+    if (pcmk_is_set(flags, pcmk__str_regex)) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
-        int reg_flags = REG_EXTENDED | REG_NOSUB | (is_set(flags, pcmk__str_casei) ? REG_ICASE : 0);
+        int reg_flags = REG_EXTENDED | REG_NOSUB;
         int regcomp_rc = 0;
         int rc = 0;
 
@@ -990,6 +990,9 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
             return 1;
         }
 
+        if (pcmk_is_set(flags, pcmk__str_casei)) {
+            reg_flags |= REG_ICASE;
+        }
         regcomp_rc = regcomp(r_patt, s2, reg_flags);
         if (regcomp_rc != 0) {
             rc = 1;
@@ -1016,7 +1019,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
      * are NULL.  If neither one is NULL, we need to continue and compare
      * them normally.
      */
-    if (is_set(flags, pcmk__str_null_matches)) {
+    if (pcmk_is_set(flags, pcmk__str_null_matches)) {
         if (s1 == NULL || s2 == NULL) {
             return 0;
         }
@@ -1031,7 +1034,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         return 1;
     }
 
-    if (is_set(flags, pcmk__str_casei)) {
+    if (pcmk_is_set(flags, pcmk__str_casei)) {
         return strcasecmp(s1, s2);
     } else {
         return strcmp(s1, s2);

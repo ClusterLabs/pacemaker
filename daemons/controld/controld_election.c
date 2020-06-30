@@ -95,7 +95,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (is_set(fsa_input_register, R_STARTING)) {
+        if (pcmk_is_set(fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -138,7 +138,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if(crm_peer_cache == NULL) {
-        if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -253,7 +253,7 @@ do_dc_release(long long action,
             result = I_SHUTDOWN;
         }
 #endif
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, fsa_our_uname);
 

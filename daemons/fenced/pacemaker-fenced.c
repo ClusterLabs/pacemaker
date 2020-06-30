@@ -122,7 +122,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
               flags, call_options, id, pcmk__client_name(c));
 
-    if (is_set(call_options, st_opt_sync_call)) {
+    if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
         CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
         c->request_id = id;     /* Reply only to the last one */
@@ -301,7 +301,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (is_set(client->flags, get_stonith_flag(type))) {
+    if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event|crm_ipc_server_error);
 
@@ -1244,7 +1244,8 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
+    if ((type != crm_status_processes)
+        && !pcmk_is_set(node->flags, crm_remote_node)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()

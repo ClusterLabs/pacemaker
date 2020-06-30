@@ -95,7 +95,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
     }
 
     pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, node->details->uname,
-                 is_set(rsc->flags, pe_rsc_managed)?"":"(unmanaged)");
+                 pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pe_native) {
@@ -108,7 +108,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_resource_t *p = rsc->parent;
 
         pe_rsc_info(rsc, "resource %s isn't managed", rsc->id);
@@ -201,8 +201,8 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     rsc->variant_opaque = native_data;
 
     // Only some agent standards support unique and promotable clones
-    if (is_not_set(ra_caps, pcmk_ra_cap_unique)
-        && is_set(rsc->flags, pe_rsc_unique) && pe_rsc_is_clone(parent)) {
+    if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
+        && pcmk_is_set(rsc->flags, pe_rsc_unique) && pe_rsc_is_clone(parent)) {
 
         /* @COMPAT We should probably reject this situation as an error (as we
          * do for promotable below) rather than warn and convert, but that would
@@ -219,8 +219,8 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         recursive_clear_unique(parent);
         recursive_clear_unique(rsc);
     }
-    if (is_not_set(ra_caps, pcmk_ra_cap_promotable)
-        && is_set(parent->flags, pe_rsc_promotable)) {
+    if (!pcmk_is_set(ra_caps, pcmk_ra_cap_promotable)
+        && pcmk_is_set(parent->flags, pe_rsc_promotable)) {
 
         pe_err("Resource %s is of type %s and therefore "
                "cannot be used as a promotable clone resource",
@@ -236,7 +236,7 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, node->details->uname);
 
-    if (is_set(flags, pe_find_current) && rsc->running_on) {
+    if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
 
         for (GListPtr iter = rsc->running_on; iter; iter = iter->next) {
             pe_node_t *loc = (pe_node_t *) iter->data;
@@ -246,10 +246,11 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
             }
         }
 
-    } else if (is_set(flags, pe_find_inactive) && (rsc->running_on == NULL)) {
+    } else if (pcmk_is_set(flags, pe_find_inactive)
+               && (rsc->running_on == NULL)) {
         return TRUE;
 
-    } else if (is_not_set(flags, pe_find_current) && rsc->allocated_to
+    } else if (!pcmk_is_set(flags, pe_find_current) && rsc->allocated_to
                && (rsc->allocated_to->details == node->details)) {
         return TRUE;
     }
@@ -278,13 +279,13 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     } else if (!strcmp(id, rsc->id)) {
         match = TRUE;
 
-    } else if (is_set(flags, pe_find_renamed)
+    } else if (pcmk_is_set(flags, pe_find_renamed)
                && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
         match = TRUE;
 
-    } else if (is_set(flags, pe_find_any)
-               || (is_set(flags, pe_find_anon)
-                   && is_not_set(rsc->flags, pe_rsc_unique))) {
+    } else if (pcmk_is_set(flags, pe_find_any)
+               || (pcmk_is_set(flags, pe_find_anon)
+                   && !pcmk_is_set(rsc->flags, pe_rsc_unique))) {
         match = pe_base_name_eq(rsc, id);
     }
 
@@ -448,7 +449,7 @@ native_displayable_role(pe_resource_t *rsc)
     enum rsc_role_e role = rsc->role;
 
     if ((role == RSC_ROLE_STARTED)
-        && is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
+        && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
 
         role = RSC_ROLE_SLAVE;
     }
@@ -584,14 +585,14 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
     CRM_CHECK(kind != NULL, kind = "unknown");
     CRM_CHECK(class != NULL, class = "unknown");
 
-    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
         provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     }
 
     if ((node == NULL) && (rsc->lock_node != NULL)) {
         node = rsc->lock_node;
     }
-    if (is_set(options, pe_print_rsconly)
+    if (pcmk_is_set(options, pe_print_rsconly)
         || pcmk__list_of_multiple(rsc->running_on)) {
         node = NULL;
     }
@@ -611,10 +612,10 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
                     (provider? "::" : ""), (provider? provider : ""), kind);
 
     // State on node
-    if (is_set(rsc->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         g_string_append(outstr, " ORPHANED");
     }
-    if (is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
         if (role > RSC_ROLE_SLAVE) {
@@ -636,7 +637,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
     if (node && (node == rsc->lock_node)) {
         have_flags = add_output_flag(outstr, "LOCKED", have_flags);
     }
-    if (is_set(options, pe_print_pending)) {
+    if (pcmk_is_set(options, pe_print_pending)) {
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
@@ -653,25 +654,25 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
         if (target_role_e == RSC_ROLE_STOPPED) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
-        } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
+        } else if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_SLAVE) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
         }
     }
-    if (is_set(rsc->flags, pe_rsc_block)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
         have_flags = add_output_flag(outstr, "blocked", have_flags);
-    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         have_flags = add_output_flag(outstr, "unmanaged", have_flags);
     }
-    if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
-    if (is_set(options, pe_print_dev)) {
-        if (is_set(options, pe_rsc_provisional)) {
+    if (pcmk_is_set(options, pe_print_dev)) {
+        if (pcmk_is_set(options, pe_rsc_provisional)) {
             have_flags = add_output_flag(outstr, "provisional", have_flags);
         }
-        if (is_not_set(options, pe_rsc_runnable)) {
+        if (!pcmk_is_set(options, pe_rsc_runnable)) {
             have_flags = add_output_flag(outstr, "non-startable", have_flags);
         }
         have_flags = add_output_flag(outstr, "variant:", have_flags);
@@ -684,7 +685,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
     }
 
     // User-supplied description
-    if (is_set(options, pe_print_rsconly)
+    if (pcmk_is_set(options, pe_print_rsconly)
         || pcmk__list_of_multiple(rsc->running_on)) {
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
@@ -693,7 +694,7 @@ native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
         }
     }
 
-    if (show_nodes && is_not_set(options, pe_print_rsconly)
+    if (show_nodes && !pcmk_is_set(options, pe_print_rsconly)
         && pcmk__list_of_multiple(rsc->running_on)) {
         bool have_nodes = false;
 
@@ -727,17 +728,20 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
-        if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
+
+        if (crm_is_true(is_internal)
+            && !pcmk_is_set(options, pe_print_implicit)) {
+
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
         target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         cl = "rsc-managed";
 
-    } else if (is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         cl = "rsc-failed";
 
     } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
@@ -746,7 +750,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
     } else if (pcmk__list_of_multiple(rsc->running_on)) {
         cl = "rsc-multiple";
 
-    } else if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         cl = "rsc-failure-ignored";
 
     } else {
@@ -762,7 +766,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
         g_free(s);
     }
 
-    if (is_set(options, pe_print_details)) {
+    if (pcmk_is_set(options, pe_print_details)) {
         GHashTableIter iter;
         gpointer key, value;
 
@@ -774,7 +778,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
         out->end_list(out);
     }
 
-    if (is_set(options, pe_print_dev)) {
+    if (pcmk_is_set(options, pe_print_dev)) {
         GHashTableIter iter;
         pe_node_t *n = NULL;
 
@@ -786,7 +790,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
         out->end_list(out);
     }
 
-    if (is_set(options, pe_print_max_details)) {
+    if (pcmk_is_set(options, pe_print_max_details)) {
         GHashTableIter iter;
         pe_node_t *n = NULL;
 
@@ -811,7 +815,10 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
-        if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
+
+        if (crm_is_true(is_internal)
+            && !pcmk_is_set(options, pe_print_implicit)) {
+
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
@@ -826,7 +833,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
         g_free(s);
     }
 
-    if (is_set(options, pe_print_details)) {
+    if (pcmk_is_set(options, pe_print_details)) {
         GHashTableIter iter;
         gpointer key, value;
 
@@ -838,7 +845,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
         out->end_list(out);
     }
 
-    if (is_set(options, pe_print_dev)) {
+    if (pcmk_is_set(options, pe_print_dev)) {
         GHashTableIter iter;
         pe_node_t *n = NULL;
 
@@ -850,7 +857,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
         out->end_list(out);
     }
 
-    if (is_set(options, pe_print_max_details)) {
+    if (pcmk_is_set(options, pe_print_max_details)) {
         GHashTableIter iter;
         pe_node_t *n = NULL;
 
@@ -876,7 +883,9 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
         const char *is_internal = g_hash_table_lookup(rsc->meta,
                                                       XML_RSC_ATTR_INTERNAL_RSC);
 
-        if (crm_is_true(is_internal) && is_not_set(options, pe_print_implicit)) {
+        if (crm_is_true(is_internal)
+            && !pcmk_is_set(options, pe_print_implicit)) {
+
             crm_trace("skipping print of internal resource %s", rsc->id);
             return;
         }
@@ -893,10 +902,10 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     }
 
     if (options & pe_print_html) {
-        if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             status_print("<font color=\"yellow\">");
 
-        } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             status_print("<font color=\"red\">");
 
         } else if (rsc->running_on == NULL) {
@@ -905,7 +914,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
         } else if (pcmk__list_of_multiple(rsc->running_on)) {
             status_print("<font color=\"orange\">");
 
-        } else if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
             status_print("<font color=\"yellow\">");
 
         } else {
@@ -921,19 +930,19 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     }
 
 #if CURSES_ENABLED
-    if (is_set(options, pe_print_ncurses)
-        && is_not_set(options, pe_print_rsconly)
+    if (pcmk_is_set(options, pe_print_ncurses)
+        && !pcmk_is_set(options, pe_print_rsconly)
         && !pcmk__list_of_multiple(rsc->running_on)) {
         /* coverity[negative_returns] False positive */
         move(-1, 0);
     }
 #endif
 
-    if (is_set(options, pe_print_html)) {
+    if (pcmk_is_set(options, pe_print_html)) {
         status_print(" </font> ");
     }
 
-    if (is_not_set(options, pe_print_rsconly)
+    if (!pcmk_is_set(options, pe_print_rsconly)
         && pcmk__list_of_multiple(rsc->running_on)) {
 
         GListPtr gIter = rsc->running_on;
@@ -1265,7 +1274,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
+        if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }

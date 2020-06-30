@@ -115,7 +115,7 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
         if (*promoting && *demoting) {
             return;
 
-        } else if (is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
 
         } else if (pcmk__str_eq(RSC_DEMOTE, action->task, pcmk__str_casei)) {
@@ -183,7 +183,7 @@ can_be_master(pe_resource_t * rsc)
         pe_rsc_trace(rsc, "%s cannot be master: not allocated", rsc->id);
         return NULL;
 
-    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
             crm_notice("Forcing unmanaged master %s to remain promoted on %s",
                        rsc->id, node->details->uname);
@@ -209,7 +209,7 @@ can_be_master(pe_resource_t * rsc)
         return NULL;
 
     } else if ((local_node->count < clone_data->promoted_node_max)
-               || is_not_set(rsc->flags, pe_rsc_managed)) {
+               || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         return local_node;
 
     } else {
@@ -367,7 +367,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         chosen = child->fns->location(child, NULL, FALSE);
-        if (is_not_set(child->flags, pe_rsc_managed) && child->next_role == RSC_ROLE_MASTER) {
+        if (!pcmk_is_set(child->flags, pe_rsc_managed)
+            && (child->next_role == RSC_ROLE_MASTER)) {
             child->sort_index = INFINITY;
 
         } else if (chosen == NULL || child->sort_index < 0) {
@@ -479,7 +480,9 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
         return score;
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_unique) && filter_anonymous_instance(rsc, node)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
+        && filter_anonymous_instance(rsc, node)) {
+
         pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
 
     } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
@@ -520,7 +523,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     pe_rsc_trace(rsc, "promotion score for %s on %s = %s",
                  name, node->details->uname, crm_str(attr_value));
 
-    if ((attr_value == NULL) && is_not_set(rsc->flags, pe_rsc_unique)) {
+    if ((attr_value == NULL) && !pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         /* If we don't have any LRM history yet, we won't have clone_name -- in
          * that case, for anonymous clones, try the resource name without any
          * instance number.
@@ -746,7 +749,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
         if (show_scores) {
-            if (is_set(data_set->flags, pe_flag_stdout)) {
+            if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
                 printf("%s promotion score on %s: %s\n",
                        child_rsc->id,
                        (chosen? chosen->details->uname : "none"), score);
@@ -765,7 +768,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
             pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
 
         } else if ((promoted < clone_data->promoted_max)
-                   || is_not_set(rsc->flags, pe_rsc_managed)) {
+                   || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             chosen = can_be_master(child_rsc);
         }
 
@@ -776,7 +779,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
             continue;
 
         } else if(child_rsc->role < RSC_ROLE_MASTER
-              && is_set(data_set->flags, pe_flag_have_quorum) == FALSE
+              && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
               && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                        child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
@@ -969,7 +972,7 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     if (constraint->score == 0) {
         return;
     }
-    if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;
 
         for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {

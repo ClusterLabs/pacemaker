@@ -410,7 +410,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 {
     te_cleanup_stonith_history_sync(st, FALSE);
 
-    if (is_set(fsa_input_register, R_ST_REQUIRED)) {
+    if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
         mainloop_set_trigger(stonith_reconnect);
 
@@ -548,7 +548,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
 
             /* Assume it was our leader if we don't currently have one */
         } else if (pcmk__str_eq(fsa_our_dc, st_event->target, pcmk__str_null_matches | pcmk__str_casei)
-                   && is_not_set(peer->flags, crm_remote_node)) {
+                   && !pcmk_is_set(peer->flags, crm_remote_node)) {
 
             crm_notice("Fencing target %s %s our leader",
                        st_event->target, (fsa_our_dc? "was" : "may have been"));
@@ -568,7 +568,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
          * The connection won't necessarily drop when a remote node is fenced,
          * so the failure might not otherwise be detected until the next poke.
          */
-        if (is_set(peer->flags, crm_remote_node)) {
+        if (pcmk_is_set(peer->flags, crm_remote_node)) {
             remote_ra_fail(st_event->target);
         }
 
@@ -614,7 +614,7 @@ te_connect_stonith(gpointer user_data)
         // Non-blocking (retry failures later in main loop)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
         if (rc != pcmk_ok) {
-            if (is_set(fsa_input_register, R_ST_REQUIRED)) {
+            if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
                            CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);

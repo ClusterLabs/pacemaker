@@ -33,7 +33,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
                 gboolean is_remote, char command, int rc)
 {
     const char *node_type = (is_remote? "Pacemaker Remote" : "cluster");
-    gboolean shutting_down = is_set(fsa_input_register, R_SHUTDOWN);
+    gboolean shutting_down = pcmk_is_set(fsa_input_register, R_SHUTDOWN);
     const char *when = (shutting_down? " at shutdown" : "");
 
     switch (command) {

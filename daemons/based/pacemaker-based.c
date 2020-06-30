@@ -280,7 +280,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     switch (type) {
         case crm_status_processes:
             if (cib_legacy_mode()
-                && is_not_set(node->processes, crm_get_cluster_proc())) {
+                && !pcmk_is_set(node->processes, crm_get_cluster_proc())) {
 
                 uint32_t old = data? *(const uint32_t *)data : 0;
 

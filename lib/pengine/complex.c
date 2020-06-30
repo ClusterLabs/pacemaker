@@ -487,7 +487,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     (*rsc)->flags = 0;
     pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
 
-    if (is_not_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         pe__set_resource_flags(*rsc, pe_rsc_managed);
     }
 
@@ -552,7 +552,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         pe__clear_resource_flags(*rsc, pe_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         pe__clear_resource_flags(*rsc, pe_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
@@ -631,7 +631,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         pe__set_resource_flags(*rsc, pe_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
-        if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
             pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
                               "to 'quorum' because fencing devices cannot "
                               "require unfencing", (*rsc)->id);
@@ -639,7 +639,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             isdefault = TRUE;
             goto handle_requires_pref;
 
-        } else if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
                               "to 'quorum' because fencing is disabled",
                               (*rsc)->id);
@@ -654,7 +654,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
         pe__set_resource_flags(*rsc, pe_rsc_needs_fencing);
-        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               (*rsc)->id);
         }
@@ -663,7 +663,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         const char *orig_value = value;
 
         isdefault = TRUE;
-        if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
             value = "quorum";
 
         } else if (((*rsc)->variant == pe_native)
@@ -673,10 +673,10 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             ) {
             value = "quorum";
 
-        } else if (is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        } else if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
             value = "unfencing";
 
-        } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             value = "fencing";
 
         } else if (data_set->no_quorum_policy == no_quorum_ignore) {
@@ -722,7 +722,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         return FALSE;
     }
 
-    if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
     } else if (guest_node) {
@@ -733,7 +733,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     pe_rsc_trace((*rsc), "\tAction notification: %s",
-                 is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
+                 pcmk_is_set((*rsc)->flags, pe_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = crm_str_table_new();
 
@@ -832,7 +832,7 @@ common_free(pe_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if (rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc->parent == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         free_xml(rsc->xml);
         rsc->xml = NULL;
         free_xml(rsc->orig_xml);
@@ -930,7 +930,7 @@ pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
             } else {
                 keep_looking = TRUE;
             }
-        } else if (is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+        } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
             if (is_happy && (!active || !active->details->online
                              || active->details->unclean)) {
                 // This is the first clean node
@@ -968,7 +968,7 @@ pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
 pe_node_t *
 pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
 {
-    if (rsc && is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+    if (rsc && !pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
         return pe__find_active_on(rsc, NULL, count);
     }
     return pe__find_active_on(rsc, count, NULL);
@@ -982,13 +982,13 @@ pe__count_common(pe_resource_t *rsc)
             ((pe_resource_t *) item->data)->fns->count(item->data);
         }
 
-    } else if (is_not_set(rsc->flags, pe_rsc_orphan)
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
                || (rsc->role > RSC_ROLE_STOPPED)) {
         rsc->cluster->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->cluster->disabled_resources++;
         }
-        if (is_set(rsc->flags, pe_rsc_block)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
             rsc->cluster->blocked_resources++;
         }
     }

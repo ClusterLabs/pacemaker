@@ -134,13 +134,13 @@ extern GHashTable *voted;
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
-    if (is_set(fsa_input_register, R_STAYDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
         crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
                  exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
     } else if ((exit_code == CRM_EX_OK)
-               && is_set(fsa_input_register, R_IN_RECOVERY)) {
+               && pcmk_is_set(fsa_input_register, R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
@@ -448,31 +448,31 @@ do_started(long long action,
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
-    } else if (is_set(fsa_input_register, R_MEMBERSHIP) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_MEMBERSHIP)) {
         crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_READ_CONFIG)) {
         crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_PEER_DATA)) {
 
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
@@ -797,7 +797,7 @@ crm_shutdown(int nsig)
         return;
     }
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         crm_err("Escalating shutdown");
         register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
         return;

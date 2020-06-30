@@ -143,7 +143,7 @@ enum pe_warn_once_e {
 extern uint32_t pe_wo;
 
 #define pe_warn_once(pe_wo_bit, fmt...) do {    \
-        if (is_not_set(pe_wo, pe_wo_bit)) {     \
+        if (!pcmk_is_set(pe_wo, pe_wo_bit)) {  \
             if (pe_wo_bit == pe_wo_blind) {     \
                 crm_warn(fmt);                  \
             } else {                            \
@@ -242,7 +242,7 @@ char *pe__node_display_name(pe_node_t *node, bool print_detail);
 static inline const char *
 pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
 {
-    return pcmk__btoa(is_set(rsc->flags, rsc_flag));
+    return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
 }
 
 int pe__ban_html(pcmk__output_t *out, va_list args);

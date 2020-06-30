@@ -75,10 +75,11 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
 {
     if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
         return FALSE;
-    } else if(is_not_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+    } else if (!pcmk_is_set(((xml_private_t *)xml->doc->_private)->flags,
+                            xpf_tracking)) {
         return FALSE;
-    } else if (lazy && is_not_set(((xml_private_t *)xml->doc->_private)->flags,
-                                  xpf_lazy)) {
+    } else if (lazy && !pcmk_is_set(((xml_private_t *)xml->doc->_private)->flags,
+                                    xpf_lazy)) {
         return FALSE;
     }
     return TRUE;
@@ -176,7 +177,7 @@ crm_node_created(xmlNode *xml)
     xml_private_t *p = xml->_private;
 
     if(p && pcmk__tracking_xml_changes(xml, FALSE)) {
-        if(is_not_set(p->flags, xpf_created)) {
+        if (!pcmk_is_set(p->flags, xpf_created)) {
             pcmk__set_xml_flags(p, xpf_created);
             __xml_node_dirty(xml);
         }
@@ -317,23 +318,16 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
 
 bool xml_tracking_changes(xmlNode * xml)
 {
-    if(xml == NULL) {
-        return FALSE;
-
-    } else if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
-        return TRUE;
-    }
-    return FALSE;
+    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
+           && pcmk_is_set(((xml_private_t *)(xml->doc->_private))->flags,
+                          xpf_tracking);
 }
 
 bool xml_document_dirty(xmlNode *xml) 
 {
-    if(xml != NULL && xml->doc && xml->doc->_private) {
-        xml_private_t *doc = xml->doc->_private;
-
-        return is_set(doc->flags, xpf_dirty);
-    }
-    return FALSE;
+    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
+           && pcmk_is_set(((xml_private_t *)(xml->doc->_private))->flags,
+                          xpf_dirty);
 }
 
 /*
@@ -392,7 +386,7 @@ static int __xml_offset(xmlNode *xml)
     for(cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
 
-        if(is_not_set(p->flags, xpf_skip)) {
+        if (!pcmk_is_set(p->flags, xpf_skip)) {
             position++;
         }
     }
@@ -408,7 +402,7 @@ static int __xml_offset_no_deletions(xmlNode *xml)
     for(cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
 
-        if(is_not_set(p->flags, xpf_deleted)) {
+        if (!pcmk_is_set(p->flags, xpf_deleted)) {
             position++;
         }
     }
@@ -424,7 +418,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
     xmlNode *change = NULL;
     xml_private_t *p = xml->_private;
 
-    if(patchset && is_set(p->flags, xpf_created)) {
+    if (patchset && pcmk_is_set(p->flags, xpf_created)) {
         int offset = 0;
         char buffer[XML_BUFFER_SIZE];
 
@@ -447,7 +441,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         xmlNode *attr = NULL;
 
         p = pIter->_private;
-        if(is_not_set(p->flags, xpf_deleted) && is_not_set(p->flags, xpf_dirty)) {
+        if (!pcmk_any_flags_set(p->flags, xpf_deleted|xpf_dirty)) {
             continue;
         }
 
@@ -490,7 +484,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
             const char *value = crm_element_value(xml, (const char *)pIter->name);
 
             p = pIter->_private;
-            if (is_not_set(p->flags, xpf_deleted)) {
+            if (!pcmk_is_set(p->flags, xpf_deleted)) {
                 crm_xml_add(result, (const char *)pIter->name, value);
             }
         }
@@ -501,7 +495,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
     }
 
     p = xml->_private;
-    if(patchset && is_set(p->flags, xpf_moved)) {
+    if (patchset && pcmk_is_set(p->flags, xpf_moved)) {
         int offset = 0;
         char buffer[XML_BUFFER_SIZE];
 
@@ -556,7 +550,7 @@ is_config_change(xmlNode *xml)
     if(config) {
         p = config->_private;
     }
-    if(p && is_set(p->flags, xpf_dirty)) {
+    if (p && pcmk_is_set(p->flags, xpf_dirty)) {
         return TRUE;
     }
 
@@ -985,7 +979,7 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
     CRM_ASSERT(xml->doc);
 
     doc = xml->doc->_private;
-    if(is_not_set(doc->flags, xpf_dirty)) {
+    if (!pcmk_is_set(doc->flags, xpf_dirty)) {
         return;
     }
 
@@ -1022,7 +1016,7 @@ xml_accept_changes(xmlNode * xml)
 
     __xml_private_clean(xml->doc->_private);
 
-    if(is_not_set(doc->flags, xpf_dirty)) {
+    if (!pcmk_is_set(doc->flags, xpf_dirty)) {
         doc->flags = xpf_none;
         return;
     }
@@ -2094,7 +2088,7 @@ free_xml_with_position(xmlNode * child, int position)
 
         } else {
             if (doc && pcmk__tracking_xml_changes(child, FALSE)
-                && is_not_set(p->flags, xpf_created)) {
+                && !pcmk_is_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
 
@@ -2726,7 +2720,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     }
 
     p = attr->_private;
-    if (p && is_set(p->flags, xpf_deleted)) {
+    if (p && pcmk_is_set(p->flags, xpf_deleted)) {
         return;
     }
 
@@ -2754,7 +2748,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
 
     name = crm_element_name(data);
 
-    if(is_set(options, xml_log_option_open)) {
+    if (pcmk_is_set(options, xml_log_option_open)) {
         char *buffer = NULL;
 
         insert_prefix(options, &buffer, &offset, &max, depth);
@@ -2772,11 +2766,12 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
                 const char *p_value = pcmk__xml_attr_value(pIter);
                 char *p_copy = NULL;
 
-                if(is_set(p->flags, xpf_deleted)) {
+                if (pcmk_is_set(p->flags, xpf_deleted)) {
                     continue;
-                } else if ((is_set(options, xml_log_option_diff_plus)
-                     || is_set(options, xml_log_option_diff_minus))
-                    && strcmp(XML_DIFF_MARKER, p_name) == 0) {
+                } else if (pcmk_any_flags_set(options,
+                                              xml_log_option_diff_plus
+                                              |xml_log_option_diff_minus)
+                           && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
                     continue;
 
                 } else if (hidden != NULL && p_name[0] != 0 && strstr(hidden, p_name) != NULL) {
@@ -2793,7 +2788,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
             if(xml_has_children(data) == FALSE) {
                 buffer_print(buffer, max, offset, "/>");
 
-            } else if(is_set(options, xml_log_option_children)) {
+            } else if (pcmk_is_set(options, xml_log_option_children)) {
                 buffer_print(buffer, max, offset, ">");
 
             } else {
@@ -2811,7 +2806,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     } else if(xml_has_children(data) == FALSE) {
         return;
 
-    } else if(is_set(options, xml_log_option_children)) {
+    } else if (pcmk_is_set(options, xml_log_option_children)) {
         offset = 0;
         max = 0;
 
@@ -2820,7 +2815,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         }
     }
 
-    if(is_set(options, xml_log_option_close)) {
+    if (pcmk_is_set(options, xml_log_option_close)) {
         char *buffer = NULL;
 
         insert_prefix(options, &buffer, &offset, &max, depth);
@@ -2849,12 +2844,12 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
     prefix_m = strdup(prefix);
     prefix_m[1] = '+';
 
-    if(is_set(p->flags, xpf_dirty) && is_set(p->flags, xpf_created)) {
+    if (pcmk_all_flags_set(p->flags, xpf_dirty|xpf_created)) {
         /* Continue and log full subtree */
         __xml_log_element(log_level, file, function, line,
                           prefix_m, data, depth, options|xml_log_option_open|xml_log_option_close|xml_log_option_children);
 
-    } else if(is_set(p->flags, xpf_dirty)) {
+    } else if (pcmk_is_set(p->flags, xpf_dirty)) {
         char *spaces = calloc(80, 1);
         int s_count = 0, s_max = 80;
         char *prefix_del = NULL;
@@ -2868,7 +2863,7 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
         prefix_moved = strdup(prefix);
         prefix_moved[1] = '~';
 
-        if(is_set(p->flags, xpf_moved)) {
+        if (pcmk_is_set(p->flags, xpf_moved)) {
             flags = prefix_moved;
         } else {
             flags = prefix;
@@ -2881,22 +2876,22 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
             const char *aname = (const char*)pIter->name;
 
             p = pIter->_private;
-            if(is_set(p->flags, xpf_deleted)) {
+            if (pcmk_is_set(p->flags, xpf_deleted)) {
                 const char *value = crm_element_value(data, aname);
                 flags = prefix_del;
                 do_crm_log_alias(log_level, file, function, line,
                                  "%s %s @%s=%s", flags, spaces, aname, value);
 
-            } else if(is_set(p->flags, xpf_dirty)) {
+            } else if (pcmk_is_set(p->flags, xpf_dirty)) {
                 const char *value = crm_element_value(data, aname);
 
-                if(is_set(p->flags, xpf_created)) {
+                if (pcmk_is_set(p->flags, xpf_created)) {
                     flags = prefix_m;
 
-                } else if(is_set(p->flags, xpf_modified)) {
+                } else if (pcmk_is_set(p->flags, xpf_modified)) {
                     flags = prefix;
 
-                } else if(is_set(p->flags, xpf_moved)) {
+                } else if (pcmk_is_set(p->flags, xpf_moved)) {
                     flags = prefix_moved;
 
                 } else {
@@ -2950,20 +2945,20 @@ log_data_element(int log_level, const char *file, const char *function, int line
         return;
     }
 
-    if(is_set(options, xml_log_option_dirty_add) || is_set(options, xml_log_option_dirty_add)) {
+    if (pcmk_is_set(options, xml_log_option_dirty_add)) {
         __xml_log_change_element(log_level, file, function, line, prefix, data, depth, options);
         return;
     }
 
-    if (is_set(options, xml_log_option_formatted)) {
-        if (is_set(options, xml_log_option_diff_plus)
+    if (pcmk_is_set(options, xml_log_option_formatted)) {
+        if (pcmk_is_set(options, xml_log_option_diff_plus)
             && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
             options |= xml_log_option_diff_all;
             prefix_m = strdup(prefix);
             prefix_m[1] = '+';
             prefix = prefix_m;
 
-        } else if (is_set(options, xml_log_option_diff_minus)
+        } else if (pcmk_is_set(options, xml_log_option_diff_minus)
                    && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
             options |= xml_log_option_diff_all;
             prefix_m = strdup(prefix);
@@ -2972,8 +2967,8 @@ log_data_element(int log_level, const char *file, const char *function, int line
         }
     }
 
-    if (is_set(options, xml_log_option_diff_short)
-               && is_not_set(options, xml_log_option_diff_all)) {
+    if (pcmk_is_set(options, xml_log_option_diff_short)
+               && !pcmk_is_set(options, xml_log_option_diff_all)) {
         /* Still searching for the actual change */
         for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
@@ -3170,8 +3165,8 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
         return;
     }
 
-    if (is_not_set(options, xml_log_option_filtered)
-            && is_set(options, xml_log_option_full_fledged)) {
+    if (!pcmk_is_set(options, xml_log_option_filtered)
+        && pcmk_is_set(options, xml_log_option_full_fledged)) {
         /* libxml's serialization reuse is a good idea, sadly we cannot
            apply it for the filtered cases (preceding filtering pass
            would preclude further reuse of such in-situ modified XML
@@ -3599,7 +3594,7 @@ mark_created_attrs(xmlNode *new_xml)
         xml_private_t *p = attr_iter->_private;
 
         attr_iter = attr_iter->next;
-        if (is_set(p->flags, xpf_created)) {
+        if (pcmk_is_set(p->flags, xpf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
@@ -3847,7 +3842,7 @@ find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
                 return NULL;
             }
 
-            if (is_set(p->flags, xpf_skip)) {
+            if (pcmk_is_set(p->flags, xpf_skip)) {
                 continue;
             }
         }
@@ -4008,7 +4003,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
         }
 
         right_val = crm_element_value(right, prop_name);
-        if (right_val == NULL || (p && is_set(p->flags, xpf_deleted))) {
+        if ((right_val == NULL) || (p && pcmk_is_set(p->flags, xpf_deleted))) {
             /* new */
             *changed = TRUE;
             if (full) {

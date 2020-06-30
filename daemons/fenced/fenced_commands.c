@@ -185,7 +185,7 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
          * we will remap to "off", so check timeout for "off" instead
          */
         if (pcmk__str_eq(action, "reboot", pcmk__str_casei)
-            && is_not_set(device->flags, st_device_supports_reboot)) {
+            && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
             action = "off";
@@ -404,15 +404,17 @@ stonith_device_execute(stonith_device_t * device)
 #endif
 
     action_str = cmd->action;
-    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei) && is_not_set(device->flags, st_device_supports_reboot)) {
+    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)
+        && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
+
         crm_warn("Agent '%s' does not advertise support for 'reboot', performing 'off' action instead", device->agent);
         action_str = "off";
     }
 
-    if (is_set(device->flags, st_device_supports_parameter_port)) {
+    if (pcmk_is_set(device->flags, st_device_supports_parameter_port)) {
         host_arg = "port";
 
-    } else if (is_set(device->flags, st_device_supports_parameter_plug)) {
+    } else if (pcmk_is_set(device->flags, st_device_supports_parameter_plug)) {
         host_arg = "plug";
     }
 
@@ -948,9 +950,9 @@ target_list_type(stonith_device_t * dev)
             check_type = "static-list";
         } else if (g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
             check_type = "static-list";
-        } else if(is_set(dev->flags, st_device_supports_list)){
+        } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
             check_type = "dynamic-list";
-        } else if(is_set(dev->flags, st_device_supports_status)){
+        } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
             check_type = "status";
         } else {
             check_type = "none";
@@ -1921,7 +1923,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
-        if (is_not_set(device->flags, st_device_supports_reboot)
+        if (!pcmk_is_set(device->flags, st_device_supports_reboot)
             && pcmk__str_eq(query->action, "reboot", pcmk__str_casei)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
                       device->id);
@@ -1943,9 +1945,9 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              * versions will ignore "off" and "on", so they are not a problem.
              */
             add_disallowed(dev, action, device, query->target,
-                           is_set(query->call_options, st_opt_allow_suicide));
+                           pcmk_is_set(query->call_options, st_opt_allow_suicide));
             add_action_reply(dev, "off", device, query->target,
-                             is_set(query->call_options, st_opt_allow_suicide));
+                             pcmk_is_set(query->call_options, st_opt_allow_suicide));
             add_action_reply(dev, "on", device, query->target, FALSE);
         }
 
@@ -2012,7 +2014,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     query->call_options = call_options;
 
     get_capable_devices(target, action, timeout,
-                        is_set(call_options, st_opt_allow_suicide),
+                        pcmk_is_set(call_options, st_opt_allow_suicide),
                         query, stonith_query_capable_device_cb);
 }
 
@@ -2424,7 +2426,7 @@ bool fencing_peer_active(crm_node_t *peer)
         return FALSE;
     } else if (peer->uname == NULL) {
         return FALSE;
-    } else if (is_set(peer->processes, crm_get_cluster_proc())) {
+    } else if (pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
         return TRUE;
     }
     return FALSE;
@@ -2476,7 +2478,9 @@ stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
     if (remote_peer) {
         send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng, reply, FALSE);
     } else {
-        do_local_reply(reply, client_id, is_set(call_options, st_opt_sync_call), remote_peer != NULL);
+        do_local_reply(reply, client_id,
+                       pcmk_is_set(call_options, st_opt_sync_call),
+                       (remote_peer != NULL));
     }
 }
 
@@ -2545,7 +2549,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
-    if (is_set(call_options, st_opt_sync_call)) {
+    if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);
     }
 
@@ -2744,10 +2748,10 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
      * processing is finished */
     if (rc != -EINPROGRESS) {
         crm_trace("Reply handling: %p %u %u %d %d %s", client, client?client->request_id:0,
-                  id, is_set(call_options, st_opt_sync_call), call_options,
+                  id, pcmk_is_set(call_options, st_opt_sync_call), call_options,
                   crm_element_value(request, F_STONITH_CALLOPTS));
 
-        if (is_set(call_options, st_opt_sync_call)) {
+        if (pcmk_is_set(call_options, st_opt_sync_call)) {
             CRM_ASSERT(client == NULL || client->request_id == id);
         }
         reply = stonith_construct_reply(request, output, data, rc);
@@ -2806,7 +2810,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
     crm_debug("Processing %s%s %u from %s (%16x)", op, is_reply ? " reply" : "",
               id, client ? client->name : remote_peer, call_options);
 
-    if (is_set(call_options, st_opt_sync_call)) {
+    if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);
     }
 

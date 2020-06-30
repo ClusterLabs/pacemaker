@@ -955,7 +955,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             break;
 
         case crm_status_processes:
-            if (is_not_set(peer->processes, crm_get_cluster_proc())) {
+            if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 remove_voter = TRUE;
             }
             break;
@@ -966,7 +966,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
                 if (attrd_election_won()
-                    && !is_set(peer->flags, crm_remote_node)) {
+                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
                     attrd_peer_sync(peer, NULL);
                 }
             } else {

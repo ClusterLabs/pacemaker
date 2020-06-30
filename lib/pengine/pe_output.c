@@ -263,7 +263,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
         rc = pcmk_rc_ok;
     }
@@ -336,7 +336,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
         rc = pcmk_rc_ok;
     }
@@ -703,10 +703,10 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     out->list_item(out, NULL, "Cluster is %s",
-                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -731,7 +731,7 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -750,7 +750,7 @@ int
 pe__cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
         return pcmk_rc_ok;
     } else {
@@ -764,10 +764,10 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     out->list_item(out, NULL, "Cluster is %s",
-                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -802,9 +802,9 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     xmlSetProp(node, (pcmkXmlStr) "stonith-enabled",
-               (pcmkXmlStr) pcmk__btoa(is_set(data_set->flags, pe_flag_stonith_enabled)));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)));
     xmlSetProp(node, (pcmkXmlStr) "symmetric-cluster",
-               (pcmkXmlStr) pcmk__btoa(is_set(data_set->flags, pe_flag_symmetric_cluster)));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)));
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -829,7 +829,7 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     xmlSetProp(node, (pcmkXmlStr) "maintenance-mode",
-               (pcmkXmlStr) pcmk__btoa(is_set(data_set->flags, pe_flag_maintenance_mode)));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
 
     return pcmk_rc_ok;
 }

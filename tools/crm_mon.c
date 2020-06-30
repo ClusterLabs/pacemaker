@@ -779,15 +779,17 @@ cib_connect(gboolean full)
         need_pass = FALSE;
     }
 
-    if (is_set(options.mon_ops, mon_op_fence_connect) && st == NULL) {
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
         st = stonith_api_new();
     }
 
-    if (is_set(options.mon_ops, mon_op_fence_connect) && st != NULL && st->state == stonith_disconnected) {
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect)
+        && (st != NULL) && (st->state == stonith_disconnected)) {
+
         rc = st->cmds->connect(st, crm_system_name, NULL);
         if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
-            if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                                 mon_st_callback_event);
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -884,7 +886,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         switch (c) {
             case 'm':
-                if (is_not_set(show, mon_show_fencing_all)) {
+                if (!pcmk_is_set(show, mon_show_fencing_all)) {
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
@@ -892,8 +894,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                     }
                 }
 
-                if (is_set(show, mon_show_fence_failed) || is_set(show, mon_show_fence_pending) ||
-                    is_set(show, mon_show_fence_worked)) {
+                if (pcmk_any_flags_set(show,
+                                       mon_show_fence_failed
+                                       |mon_show_fence_pending
+                                       |mon_show_fence_worked)) {
                     show &= ~mon_show_fencing_all;
                 } else {
                     show |= mon_show_fencing_all;
@@ -911,7 +915,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'o':
                 show ^= mon_show_operations;
-                if (is_not_set(show, mon_show_operations)) {
+                if (!pcmk_is_set(show, mon_show_operations)) {
                     options.mon_ops &= ~mon_op_print_timing;
                 }
                 break;
@@ -923,7 +927,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 't':
                 options.mon_ops ^= mon_op_print_timing;
-                if (is_set(options.mon_ops, mon_op_print_timing)) {
+                if (pcmk_is_set(options.mon_ops, mon_op_print_timing)) {
                     show |= mon_show_operations;
                 }
                 break;
@@ -935,8 +939,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (is_set(show, mon_show_stack) || is_set(show, mon_show_dc) ||
-                    is_set(show, mon_show_times) || is_set(show, mon_show_counts)) {
+                if (pcmk_any_flags_set(show,
+                                       mon_show_stack
+                                       |mon_show_dc
+                                       |mon_show_times
+                                       |mon_show_counts)) {
                     show &= ~mon_show_summary;
                 } else {
                     show |= mon_show_summary;
@@ -963,19 +970,19 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         blank_screen();
 
         out->info(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', is_set(show, mon_show_tickets));
-        print_option_help(out, 'f', is_set(show, mon_show_failcounts));
-        print_option_help(out, 'n', is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(out, 'o', is_set(show, mon_show_operations));
-        print_option_help(out, 'r', is_set(options.mon_ops, mon_op_inactive_resources));
-        print_option_help(out, 't', is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(out, 'A', is_set(show, mon_show_attributes));
-        print_option_help(out, 'L', is_set(show,mon_show_bans));
-        print_option_help(out, 'D', is_not_set(show, mon_show_summary));
-        print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
-        print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
-        print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', is_set(show, mon_show_fencing_all));
+        print_option_help(out, 'c', pcmk_is_set(show, mon_show_tickets));
+        print_option_help(out, 'f', pcmk_is_set(show, mon_show_failcounts));
+        print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
+        print_option_help(out, 'o', pcmk_is_set(show, mon_show_operations));
+        print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
+        print_option_help(out, 't', pcmk_is_set(options.mon_ops, mon_op_print_timing));
+        print_option_help(out, 'A', pcmk_is_set(show, mon_show_attributes));
+        print_option_help(out, 'L', pcmk_is_set(show,mon_show_bans));
+        print_option_help(out, 'D', !pcmk_is_set(show, mon_show_summary));
+        print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
+        print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
+        print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
+        print_option_help(out, 'm', pcmk_is_set(show, mon_show_fencing_all));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -1124,7 +1131,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
         options.mon_ops |= mon_op_one_shot;
-    } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+    } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1196,7 +1203,7 @@ main(int argc, char **argv)
             include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
-        if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
             fence_history_cb("--fence-history", "0", NULL, NULL);
             options.mon_ops |= mon_op_fence_connect;
         }
@@ -1240,7 +1247,7 @@ main(int argc, char **argv)
             }
         }
 
-        if (is_set(options.mon_ops, mon_op_one_shot)) {
+        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
             if (output_format == mon_output_console) {
                 output_format = mon_output_plain;
             }
@@ -1363,12 +1370,12 @@ main(int argc, char **argv)
     if (cib) {
 
         do {
-            if (is_not_set(options.mon_ops, mon_op_one_shot)) {
+            if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
                 print_as(output_format ,"Waiting until cluster is available on this node ...\n");
             }
-            rc = cib_connect(is_not_set(options.mon_ops, mon_op_one_shot));
+            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
 
-            if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
                 break;
 
             } else if (rc != pcmk_ok) {
@@ -1403,7 +1410,7 @@ main(int argc, char **argv)
         return clean_up(crm_errno2exit(rc));
     }
 
-    if (is_set(options.mon_ops, mon_op_one_shot)) {
+    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         return clean_up(CRM_EX_OK);
     }
 
@@ -1482,7 +1489,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         }
     }
 
-    if (is_set(mon_ops, mon_op_has_warnings)) {
+    if (pcmk_is_set(mon_ops, mon_op_has_warnings)) {
         out->info(out, "CLUSTER WARN:%s%s%s",
                   no_dc ? " No DC" : "",
                   no_dc && offline ? "," : "",
@@ -1937,7 +1944,7 @@ mon_refresh_display(gpointer user_data)
 
     /* get the stonith-history if there is evidence we need it
      */
-    while (is_set(options.mon_ops, mon_op_fence_history)) {
+    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
 
@@ -1946,7 +1953,9 @@ mon_refresh_display(gpointer user_data)
                 mon_cib_connection_destroy_error(NULL);
             } else {
                 stonith_history = stonith__sort_history(stonith_history);
-                if (is_not_set(options.mon_ops, mon_op_fence_full_history) && output_format != mon_output_xml) {
+                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                    && (output_format != mon_output_xml)) {
+
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
                 break; /* all other cases are errors */
@@ -1971,7 +1980,7 @@ mon_refresh_display(gpointer user_data)
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (is_set(show, mon_show_bans) || is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, mon_show_bans) || pcmk_is_set(show, mon_show_tickets)) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                    mon_data_set->input);
         unpack_constraints(cib_constraints, mon_data_set);
@@ -1999,7 +2008,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_monitor:
             print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
-            if (is_set(options.mon_ops, mon_op_has_warnings)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
             }

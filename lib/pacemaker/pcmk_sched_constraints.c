@@ -1236,11 +1236,11 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
      * tests)
      */
     if (rsc_constraint1->rsc_lh->variant == pe_clone) {
-        if (is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
-            && is_not_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
             return -1;
-        } else if (is_not_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
-            && is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+        } else if (!pcmk_is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
             return 1;
         }
     }
@@ -1284,11 +1284,11 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
      * tests)
      */
     if (rsc_constraint1->rsc_rh->variant == pe_clone) {
-        if (is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
-            && is_not_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
             return -1;
-        } else if (is_not_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
-            && is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+        } else if (!pcmk_is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
             return 1;
         }
     }
@@ -1459,8 +1459,8 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         return;
     }
 
-    lh_migratable = is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
-    rh_migratable = is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
+    lh_migratable = pcmk_is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
+    rh_migratable = pcmk_is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
 
     /* one of them has to be migratable for
      * the migrate ordering logic to be applied */
@@ -2736,7 +2736,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
     new_rsc_ticket->role_lh = text2role(state_lh);
 
     if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
             pcmk__config_err("Resetting '" XML_TICKET_ATTR_LOSS_POLICY

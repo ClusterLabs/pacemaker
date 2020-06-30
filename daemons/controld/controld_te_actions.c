@@ -619,7 +619,7 @@ notify_crmd(crm_graph_t * graph)
 
         case tg_shutdown:
             type = "shutdown";
-            if (is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
 
             } else {

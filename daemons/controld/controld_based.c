@@ -35,7 +35,8 @@ do_cib_replaced(const char *event, xmlNode * msg)
     if (AM_I_DC == FALSE) {
         return;
 
-    } else if (fsa_state == S_FINALIZE_JOIN && is_set(fsa_input_register, R_CIB_ASKED)) {
+    } else if ((fsa_state == S_FINALIZE_JOIN)
+               && pcmk_is_set(fsa_input_register, R_CIB_ASKED)) {
         /* no need to restart the join - we asked for this replace op */
         return;
     }
@@ -113,7 +114,7 @@ do_cib_control(long long action,
             cib_retries = 0;
         }
 
-        if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
+        if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
 
             cib_retries++;
             crm_warn("Couldn't complete CIB registration %d"
@@ -312,8 +313,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         return rc;
     }
 
-    if (is_set(call_options, cib_sync_call)) {
-        if (is_set(call_options, cib_dryrun)) {
+    if (pcmk_is_set(call_options, cib_sync_call)) {
+        if (pcmk_is_set(call_options, cib_dryrun)) {
             crm_debug("Deletion of %s would succeed", desc);
         } else {
             crm_debug("Deletion of %s succeeded", desc);

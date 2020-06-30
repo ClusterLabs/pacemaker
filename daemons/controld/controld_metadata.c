@@ -237,7 +237,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
             if (p == NULL) {
                 goto err;
             }
-            if (is_set(p->rap_flags, ra_param_private)) {
+            if (pcmk_is_set(p->rap_flags, ra_param_private)) {
                 controld_set_ra_flags(md, key, ra_uses_private);
             }
             md->ra_params = g_list_prepend(md->ra_params, p);

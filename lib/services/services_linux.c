@@ -923,7 +923,7 @@ services_os_action_execute(svc_action_t * op)
         return FALSE;
     }
 
-    if (is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
         if (pipe(stdin_fd) < 0) {
             rc = errno;
 

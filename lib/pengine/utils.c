@@ -101,13 +101,13 @@ pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
         }
         return true;
 
-    } else if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+    } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
         return false; /* Turned off */
 
-    } else if (is_not_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    } else if (!pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
         return false; /* No devices */
 
-    } else if (is_set(data_set->flags, pe_flag_have_quorum)) {
+    } else if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
         return true;
 
     } else if (data_set->no_quorum_policy == no_quorum_ignore) {
@@ -306,7 +306,7 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
                          GHashTable *nodes)
 {
     if (rsc != NULL) {
-        if (is_set(rsc->flags, pe_rsc_orphan)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             // Don't show allocation scores for orphans
             return;
         }
@@ -440,7 +440,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
-    if (is_set(data_set->flags, pe_flag_have_quorum)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
         policy = no_quorum_ignore;
 
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
@@ -565,7 +565,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         }
     }
 
-    if (!optional && is_set(action->flags, pe_action_optional)) {
+    if (!optional && pcmk_is_set(action->flags, pe_action_optional)) {
         pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
         pe__clear_action_flags(action, pe_action_optional);
     }
@@ -579,7 +579,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             warn_level = LOG_WARNING;
         }
 
-        if (is_set(action->flags, pe_action_have_node_attrs) == FALSE
+        if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
             && action->node != NULL && action->op_entry != NULL) {
             pe_rule_eval_data_t rule_data = {
                 .node_hash = action->node->details->attrs,
@@ -596,14 +596,14 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                                        FALSE, data_set);
         }
 
-        if (is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             /* leave untouched */
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
             pe__clear_action_flags(action, pe_action_runnable);
 
-        } else if (is_not_set(rsc->flags, pe_rsc_managed)
+        } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta,
                                           XML_LRM_ATTR_INTERVAL_MS) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
@@ -611,20 +611,20 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             pe__set_action_flags(action, pe_action_optional);
             //pe__clear_action_flags(action, pe_action_runnable);
 
-        } else if (is_not_set(action->flags, pe_action_dc)
+        } else if (!pcmk_is_set(action->flags, pe_action_dc)
                    && !(action->node->details->online)
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
             pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
-            if (is_set(action->rsc->flags, pe_rsc_managed)
+            if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc
                 && action->node->details->unclean == FALSE) {
                 pe_fence_node(data_set, action->node, "resource actions are unrunnable", FALSE);
             }
 
-        } else if (is_not_set(action->flags, pe_action_dc)
+        } else if (!pcmk_is_set(action->flags, pe_action_dc)
                    && action->node->details->pending) {
             pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
@@ -667,7 +667,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                              action->node->details->uname, action->uuid);
             }
 
-        } else if(is_not_set(action->flags, pe_action_runnable)) {
+        } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
             //pe_action_set_reason(action, NULL, TRUE);
             pe__set_action_flags(action, pe_action_runnable);
@@ -680,7 +680,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                     break;
                 case start_rsc:
                     pe__clear_resource_flags(rsc, pe_rsc_starting);
-                    if (is_set(action->flags, pe_action_runnable)) {
+                    if (pcmk_is_set(action->flags, pe_action_runnable)) {
                         pe__set_resource_flags(rsc, pe_rsc_starting);
                     }
                     break;
@@ -1092,8 +1092,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
      * #1 overrides general rule of <op> XML property having highest
      * precedence.
      */
-    if (is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
-               pcmk_ra_cap_fence_params)
+    if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
+                    pcmk_ra_cap_fence_params)
             && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
                     || (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
                             && (interval_ms == 0)))
@@ -1120,11 +1120,11 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->needs = rsc_req_nothing;
         value = "nothing (not start/promote)";
 
-    } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;
         value = "fencing (resource)";
 
-    } else if (is_set(action->rsc->flags, pe_rsc_needs_quorum)) {
+    } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_quorum)) {
         action->needs = rsc_req_quorum;
         value = "quorum (resource)";
 
@@ -1148,7 +1148,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_fence;
         value = "node fencing";
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
@@ -1209,18 +1209,19 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
      * 2. start - a start failure indicates that an active connection does not already
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
-    } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
-                (pe__resource_is_remote_conn(action->rsc, data_set) &&
-               !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei) && (interval_ms == 0)) &&
-               (!pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)))) {
+    } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
+               && pe__resource_is_remote_conn(action->rsc, data_set)
+               && !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei)
+                    && (interval_ms == 0))
+               && !pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
 
-        if (!is_set(action->rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
             action->fail_role = RSC_ROLE_STOPPED;
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
-            if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
@@ -1233,7 +1234,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         }
 
     } else if (value == NULL && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             action->on_fail = action_fail_fence;
             value = "resource fence (default)";
 
@@ -1856,7 +1857,7 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
-        if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
             if (local_role > RSC_ROLE_SLAVE) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -2162,7 +2163,7 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     key = pcmk__op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op,
-                             is_set(data_set->flags, pe_flag_sanitized),
+                             pcmk_is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
 
     data->rc = RSC_DIGEST_MATCH;
@@ -2300,7 +2301,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = RSC_DIGEST_MATCH;
-        if (is_set(data_set->flags, pe_flag_stdout)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
             printf("Only 'private' parameters to %s for unfencing %s changed\n",
                    rsc->id, node->details->uname);
         }
@@ -2309,7 +2310,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = RSC_DIGEST_ALL;
-    if (is_set(data_set->flags, (pe_flag_sanitized|pe_flag_stdout))
+    if (pcmk_is_set(data_set->flags, (pe_flag_sanitized|pe_flag_stdout))
         && data->digest_secure_calc) {
         char *digest = create_unfencing_summary(rsc->id, agent,
                                                 data->digest_secure_calc);
@@ -2323,7 +2324,7 @@ fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
 
 const char *rsc_printable_id(pe_resource_t *rsc)
 {
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         return ID(rsc->xml);
     }
     return rsc->id;
@@ -2357,7 +2358,7 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
 
         if(candidate->children) {
             matches = find_unfencing_devices(candidate->children, matches);
-        } else if (is_not_set(candidate->flags, pe_rsc_fence_device)) {
+        } else if (!pcmk_is_set(candidate->flags, pe_rsc_fence_device)) {
             continue;
 
         } else if (pcmk__str_eq(provides, "unfencing", pcmk__str_casei) || pcmk__str_eq(requires, "unfencing", pcmk__str_casei)) {
@@ -2459,7 +2460,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
         if (pe__is_guest_or_remote_node(node)
-            && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+            && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
             /* Extra work to detect device changes on remotes
              *
              * We may do this for all nodes in the future, but for now
@@ -2483,7 +2484,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
-                    if (is_set(data_set->flags, pe_flag_stdout)) {
+                    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
                         fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
                     }
                 }
@@ -2544,11 +2545,12 @@ void
 trigger_unfencing(
     pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
 {
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */
         return;
 
-    } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
+    } else if ((rsc != NULL)
+               && !pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 
@@ -2619,19 +2621,19 @@ void pe_action_set_flag_reason(const char *function, long line,
     bool update = FALSE;
     const char *change = NULL;
 
-    if(is_set(flags, pe_action_runnable)) {
+    if (pcmk_is_set(flags, pe_action_runnable)) {
         unset = TRUE;
         change = "unrunnable";
-    } else if(is_set(flags, pe_action_optional)) {
+    } else if (pcmk_is_set(flags, pe_action_optional)) {
         unset = TRUE;
         change = "required";
-    } else if(is_set(flags, pe_action_migrate_runnable)) {
+    } else if (pcmk_is_set(flags, pe_action_migrate_runnable)) {
         unset = TRUE;
         overwrite = TRUE;
         change = "unrunnable";
-    } else if(is_set(flags, pe_action_dangle)) {
+    } else if (pcmk_is_set(flags, pe_action_dangle)) {
         change = "dangling";
-    } else if(is_set(flags, pe_action_requires_any)) {
+    } else if (pcmk_is_set(flags, pe_action_requires_any)) {
         change = "required";
     } else {
         crm_err("Unknown flag change to %x by %s: 0x%s",
@@ -2639,13 +2641,13 @@ void pe_action_set_flag_reason(const char *function, long line,
     }
 
     if(unset) {
-        if(is_set(action->flags, flags)) {
+        if (pcmk_is_set(action->flags, flags)) {
             pe__clear_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
 
     } else {
-        if(is_not_set(action->flags, flags)) {
+        if (!pcmk_is_set(action->flags, flags)) {
             pe__set_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
@@ -2761,7 +2763,7 @@ pe__resource_is_disabled(pe_resource_t *rsc)
 
         if ((target_role_e == RSC_ROLE_STOPPED)
             || ((target_role_e == RSC_ROLE_SLAVE)
-                && is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
+                && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
             return true;
         }
     }
