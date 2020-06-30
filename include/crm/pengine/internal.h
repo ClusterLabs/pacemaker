@@ -13,6 +13,7 @@
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/output.h>
+#  include <crm/common/internal.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -237,6 +238,12 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
 char *pe__node_display_name(pe_node_t *node, bool print_detail);
+
+static inline const char *
+pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
+{
+    return pcmk__btoa(is_set(rsc->flags, rsc_flag));
+}
 
 int pe__ban_html(pcmk__output_t *out, va_list args);
 int pe__ban_text(pcmk__output_t *out, va_list args);
@@ -556,7 +563,6 @@ void pe__free_param_checks(pe_working_set_t *data_set);
 bool pe__shutdown_requested(pe_node_t *node);
 void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 
-#define BOOL2STR(x) ((x) ? "true" : "false")
 /*!
  * \internal
  * \brief Register xml formatting message functions.

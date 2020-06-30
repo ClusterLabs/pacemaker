@@ -14,6 +14,7 @@
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
 #include <string.h>             // strcmp()
+#include <fcntl.h>              // open()
 #include <sys/types.h>          // uid_t, gid_t, pid_t
 
 #include <glib.h>               // guint, GList, GHashTable
@@ -277,7 +278,6 @@ GQuark pcmk__exitc_error_quark(void);
 
 #define PCMK__RC_ERROR       pcmk__rc_error_quark()
 #define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
-
 
 static inline char *
 pcmk__getpid_s(void)

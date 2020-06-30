@@ -1551,13 +1551,13 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6
-                         , "id", rsc->id
-                         , "type", container_agent_str(bundle_data->agent_type)
-                         , "image", bundle_data->image
-                         , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
-                         , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
-                         , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed)));
+            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6,
+                     "id", rsc->id,
+                     "type", container_agent_str(bundle_data->agent_type),
+                     "image", bundle_data->image,
+                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
+                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed));
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

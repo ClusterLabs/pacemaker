@@ -604,15 +604,14 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 7
-                     , "id", rsc->id
-                     , "multi_state", BOOL2STR(is_set(rsc->flags, pe_rsc_promotable))
-                     , "unique", BOOL2STR(is_set(rsc->flags, pe_rsc_unique))
-                     , "managed", BOOL2STR(is_set(rsc->flags, pe_rsc_managed))
-                     , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
-                     , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
-                     , "target_role", configured_role_str(rsc));
-
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 7,
+                    "id", rsc->id,
+                    "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
+                    "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                    "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
+                    "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                    "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
+                    "target_role", configured_role_str(rsc));
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

@@ -83,4 +83,11 @@ pcmk__str_empty(const char *s)
     return (s == NULL) || (s[0] == '\0');
 }
 
+// note this returns const not allocated
+static inline const char *
+pcmk__btoa(bool condition)
+{
+    return condition? "true" : "false";
+}
+
 #endif /* PCMK__STRINGS_INTERNAL__H */
