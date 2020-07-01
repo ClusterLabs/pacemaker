@@ -1,1 +1,1 @@
-SUBDIRS = strings utils
+SUBDIRS = flags strings utils
