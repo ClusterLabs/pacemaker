@@ -17,7 +17,9 @@ include $(top_srcdir)/mk/glib-tap.mk
 #
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
 test_programs = pcmk__clear_flags_as		\
-		pcmk__set_flags_as
+		pcmk__set_flags_as		\
+		pcmk_all_flags_set		\
+		pcmk_any_flags_set
 
 # If any extra data needs to be added to the source distribution, add it to the
 # following list.
