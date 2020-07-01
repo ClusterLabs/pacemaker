@@ -31,6 +31,681 @@
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
 
+/*!
+ * \brief Create a new object for using Pacemaker daemon IPC
+ *
+ * \param[out] api     Where to store new IPC object
+ * \param[in]  server  Which Pacemaker daemon the object is for
+ *
+ * \return Standard Pacemaker result code
+ *
+ * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
+ * \note This is intended to supersede crm_ipc_new() but currently only
+ *       supports the controller IPC API.
+ */
+int
+pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
+{
+    size_t max_size = 0;
+
+    if (api == NULL) {
+        return EINVAL;
+    }
+
+    *api = calloc(1, sizeof(pcmk_ipc_api_t));
+    if (*api == NULL) {
+        return errno;
+    }
+
+    (*api)->server = server;
+    if (pcmk_ipc_name(*api, false) == NULL) {
+        pcmk_free_ipc_api(*api);
+        *api = NULL;
+        return EOPNOTSUPP;
+    }
+
+    // Set server methods and max_size (if not default)
+    switch (server) {
+        case pcmk_ipc_attrd:
+            break;
+
+        case pcmk_ipc_based:
+            max_size = 512 * 1024; // 512KB
+            break;
+
+        case pcmk_ipc_controld:
+            (*api)->cmds = pcmk__controld_api_methods();
+            break;
+
+        case pcmk_ipc_execd:
+            break;
+
+        case pcmk_ipc_fenced:
+            break;
+
+        case pcmk_ipc_pacemakerd:
+            break;
+
+        case pcmk_ipc_schedulerd:
+            // @TODO max_size could vary by client, maybe take as argument?
+            max_size = 5 * 1024 * 1024; // 5MB
+            break;
+    }
+    if ((*api)->cmds == NULL) {
+        pcmk_free_ipc_api(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+
+    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), max_size);
+    if ((*api)->ipc == NULL) {
+        pcmk_free_ipc_api(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+
+    // If daemon API has its own data to track, allocate it
+    if ((*api)->cmds->new_data != NULL) {
+        if ((*api)->cmds->new_data(*api) != pcmk_rc_ok) {
+            pcmk_free_ipc_api(*api);
+            *api = NULL;
+            return ENOMEM;
+        }
+    }
+    crm_trace("Created %s API IPC object", pcmk_ipc_name(*api, true));
+    return pcmk_rc_ok;
+}
+
+static void
+free_daemon_specific_data(pcmk_ipc_api_t *api)
+{
+    if ((api != NULL) && (api->cmds != NULL)) {
+        if ((api->cmds->free_data != NULL) && (api->api_data != NULL)) {
+            api->cmds->free_data(api->api_data);
+            api->api_data = NULL;
+        }
+        free(api->cmds);
+        api->cmds = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Call an IPC API event callback, if one is registed
+ *
+ * \param[in] api         IPC API connection
+ * \param[in] event_type  The type of event that occurred
+ * \param[in] status      Event status
+ * \param[in] event_data  Event-specific data
+ */
+void
+pcmk__call_ipc_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
+                        crm_exit_t status, void *event_data)
+{
+    if ((api != NULL) && (api->cb != NULL)) {
+        api->cb(api, event_type, status, event_data, api->user_data);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Clean up after an IPC disconnect
+ *
+ * \param[in]  user_data  IPC API connection that disconnected
+ *
+ * \note This function can be used as a main loop IPC destroy callback.
+ */
+static void
+ipc_post_disconnect(gpointer user_data)
+{
+    pcmk_ipc_api_t *api = user_data;
+
+    crm_info("Disconnected from %s IPC API", pcmk_ipc_name(api, true));
+
+    // Perform any daemon-specific handling needed
+    if ((api->cmds != NULL) && (api->cmds->post_disconnect != NULL)) {
+        api->cmds->post_disconnect(api);
+    }
+
+    // Call client's registered event callback
+    pcmk__call_ipc_callback(api, pcmk_ipc_event_disconnect, CRM_EX_DISCONNECT,
+                            NULL);
+
+    /* If this is being called from a running main loop, mainloop_gio_destroy()
+     * will free ipc and mainloop_io immediately after calling this function.
+     * If this is called from a stopped main loop, these will leak, so the best
+     * practice is to close the connection before stopping the main loop.
+     */
+    api->ipc = NULL;
+    api->mainloop_io = NULL;
+
+    if (api->free_on_disconnect) {
+        /* pcmk_free_ipc_api() has already been called, but did not free api
+         * or api->cmds because this function needed them. Do that now.
+         */
+        free_daemon_specific_data(api);
+        crm_trace("Freeing IPC API object after disconnect");
+        free(api);
+    }
+}
+
+/*!
+ * \brief Free the contents of an IPC API object
+ *
+ * \param[in] api  IPC API object to free
+ */
+void
+pcmk_free_ipc_api(pcmk_ipc_api_t *api)
+{
+    bool free_on_disconnect = false;
+
+    if (api == NULL) {
+        return;
+    }
+    crm_debug("Releasing %s IPC API", pcmk_ipc_name(api, true));
+
+    if (api->ipc != NULL) {
+        if (api->mainloop_io != NULL) {
+            /* We need to keep the api pointer itself around, because it is the
+             * user data for the IPC client destroy callback. That will be
+             * triggered by the pcmk_disconnect_ipc() call below, but it might
+             * happen later in the main loop (if still running).
+             *
+             * This flag tells the destroy callback to free the object. It can't
+             * do that unconditionally, because the application might call this
+             * function after a disconnect that happened by other means.
+             */
+            free_on_disconnect = api->free_on_disconnect = true;
+        }
+        pcmk_disconnect_ipc(api); // Frees api if free_on_disconnect is true
+    }
+    if (!free_on_disconnect) {
+        free_daemon_specific_data(api);
+        crm_trace("Freeing IPC API object");
+        free(api);
+    }
+}
+
+/*!
+ * \brief Get the IPC name used with an IPC API connection
+ *
+ * \param[in] api      IPC API connection
+ * \param[in] for_log  If true, return human-friendly name instead of IPC name
+ *
+ * \return IPC API's human-friendly or connection name, or if none is available,
+ *         "Pacemaker" if for_log is true and NULL if for_log is false
+ */
+const char *
+pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
+{
+    if (api == NULL) {
+        return for_log? "Pacemaker" : NULL;
+    }
+    switch (api->server) {
+        case pcmk_ipc_attrd:
+            return for_log? "attribute manager" : NULL /* T_ATTRD */;
+
+        case pcmk_ipc_based:
+            return for_log? "CIB manager" : NULL /* PCMK__SERVER_BASED_RW */;
+
+        case pcmk_ipc_controld:
+            return for_log? "controller" : CRM_SYSTEM_CRMD;
+
+        case pcmk_ipc_execd:
+            return for_log? "executor" : NULL /* CRM_SYSTEM_LRMD */;
+
+        case pcmk_ipc_fenced:
+            return for_log? "fencer" : NULL /* "stonith-ng" */;
+
+        case pcmk_ipc_pacemakerd:
+            return for_log? "launcher" : NULL /* CRM_SYSTEM_MCP */;
+
+        case pcmk_ipc_schedulerd:
+            return for_log? "scheduler" : NULL /* CRM_SYSTEM_PENGINE */;
+
+        default:
+            return for_log? "Pacemaker" : NULL;
+    }
+}
+
+/*!
+ * \brief Check whether an IPC API connection is active
+ *
+ * \param[in] api  IPC API connection
+ *
+ * \return true if IPC is connected, false otherwise
+ */
+bool
+pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
+{
+    return (api != NULL) && crm_ipc_connected(api->ipc);
+}
+
+/*!
+ * \internal
+ * \brief Call the daemon-specific API's dispatch function
+ *
+ * Perform daemon-specific handling of IPC reply dispatch. It is the daemon
+ * method's responsibility to call the client's registered event callback, as
+ * well as allocate and free any event data.
+ *
+ * \param[in] api  IPC API connection
+ */
+static void
+call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
+{
+    crm_log_xml_trace(message, "ipc-received");
+    if ((api->cmds != NULL) && (api->cmds->dispatch != NULL)) {
+        api->cmds->dispatch(api, message);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Dispatch data read from IPC source
+ *
+ * \param[in] buffer     Data read from IPC
+ * \param[in] length     Number of bytes of data in buffer (ignored)
+ * \param[in] user_data  IPC object
+ *
+ * \return Always 0 (meaning connection is still required)
+ *
+ * \note This function can be used as a main loop IPC dispatch callback.
+ */
+static int
+dispatch_ipc_data(const char *buffer, ssize_t length, gpointer user_data)
+{
+    pcmk_ipc_api_t *api = user_data;
+    xmlNode *msg;
+
+    CRM_CHECK(api != NULL, return 0);
+
+    if (buffer == NULL) {
+        crm_warn("Empty message received from %s IPC",
+                 pcmk_ipc_name(api, true));
+        return 0;
+    }
+
+    msg = string2xml(buffer);
+    if (msg == NULL) {
+        crm_warn("Malformed message received from %s IPC",
+                 pcmk_ipc_name(api, true));
+        return 0;
+    }
+    call_api_dispatch(api, msg);
+    free_xml(msg);
+    return 0;
+}
+
+/*!
+ * \brief Check whether an IPC connection has data available (without main loop)
+ *
+ * \param[in]  api         IPC API connection
+ * \param[in]  timeout_ms  If less than 0, poll indefinitely; if 0, poll once
+ *                         and return immediately; otherwise, poll for up to
+ *                         this many milliseconds
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Callers of pcmk_connect_ipc() using pcmk_ipc_dispatch_poll should call
+ *       this function to check whether IPC data is available. Return values of
+ *       interest include pcmk_rc_ok meaning data is available, and EAGAIN
+ *       meaning no data is available; all other values indicate errors.
+ * \todo This does not allow the caller to poll multiple file descriptors at
+ *       once. If there is demand for that, we could add a wrapper for
+ *       crm_ipc_get_fd(api->ipc), so the caller can call poll() themselves.
+ */
+int
+pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms)
+{
+    int rc;
+    struct pollfd pollfd = { 0, };
+
+    if ((api == NULL) || (api->dispatch_type != pcmk_ipc_dispatch_poll)) {
+        return EINVAL;
+    }
+    pollfd.fd = crm_ipc_get_fd(api->ipc);
+    pollfd.events = POLLIN;
+    rc = poll(&pollfd, 1, timeout_ms);
+    if (rc < 0) {
+        return errno;
+    } else if (rc == 0) {
+        return EAGAIN;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \brief Dispatch available messages on an IPC connection (without main loop)
+ *
+ * \param[in]  api  IPC API connection
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Callers of pcmk_connect_ipc() using pcmk_ipc_dispatch_poll should call
+ *       this function when IPC data is available.
+ */
+void
+pcmk_dispatch_ipc(pcmk_ipc_api_t *api)
+{
+    if (api == NULL) {
+        return;
+    }
+    while (crm_ipc_ready(api->ipc)) {
+        if (crm_ipc_read(api->ipc) > 0) {
+            dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
+        }
+    }
+}
+
+// \return Standard Pacemaker return code
+static int
+connect_with_main_loop(pcmk_ipc_api_t *api)
+{
+    int rc;
+
+    struct ipc_client_callbacks callbacks = {
+        .dispatch = dispatch_ipc_data,
+        .destroy = ipc_post_disconnect,
+    };
+
+    rc = pcmk__add_mainloop_ipc(api->ipc, G_PRIORITY_DEFAULT, api,
+                                &callbacks, &(api->mainloop_io));
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+    crm_debug("Connected to %s IPC (attached to main loop)",
+              pcmk_ipc_name(api, true));
+    /* After this point, api->mainloop_io owns api->ipc, so api->ipc
+     * should not be explicitly freed.
+     */
+    return pcmk_rc_ok;
+}
+
+// \return Standard Pacemaker return code
+static int
+connect_without_main_loop(pcmk_ipc_api_t *api)
+{
+    int rc;
+
+    if (!crm_ipc_connect(api->ipc)) {
+        rc = errno;
+        crm_ipc_close(api->ipc);
+        return rc;
+    }
+    crm_debug("Connected to %s IPC (without main loop)",
+              pcmk_ipc_name(api, true));
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \brief Connect to a Pacemaker daemon via IPC
+ *
+ * \param[in]  api            IPC API instance
+ * \param[out] dispatch_type  How IPC replies should be dispatched
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
+{
+    int rc = pcmk_rc_ok;
+
+    if ((api == NULL) || (api->ipc == NULL)) {
+        crm_err("Cannot connect to uninitialized API object");
+        return EINVAL;
+    }
+
+    if (crm_ipc_connected(api->ipc)) {
+        crm_trace("Already connected to %s IPC API", pcmk_ipc_name(api, true));
+        return pcmk_rc_ok;
+    }
+
+    api->dispatch_type = dispatch_type;
+    switch (dispatch_type) {
+        case pcmk_ipc_dispatch_main:
+            rc = connect_with_main_loop(api);
+            break;
+
+        case pcmk_ipc_dispatch_sync:
+        case pcmk_ipc_dispatch_poll:
+            rc = connect_without_main_loop(api);
+            break;
+    }
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    if ((api->cmds != NULL) && (api->cmds->post_connect != NULL)) {
+        rc = api->cmds->post_connect(api);
+        if (rc != pcmk_rc_ok) {
+            crm_ipc_close(api->ipc);
+        }
+    }
+    return rc;
+}
+
+/*!
+ * \brief Disconnect an IPC API instance
+ *
+ * \param[in]  api  IPC API connection
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If the connection is attached to a main loop, this function should be
+ *       called before quitting the main loop, to ensure that all memory is
+ *       freed.
+ */
+void
+pcmk_disconnect_ipc(pcmk_ipc_api_t *api)
+{
+    if ((api == NULL) || (api->ipc == NULL)) {
+        return;
+    }
+    switch (api->dispatch_type) {
+        case pcmk_ipc_dispatch_main:
+            {
+                mainloop_io_t *mainloop_io = api->mainloop_io;
+
+                // Make sure no code with access to api can use these again
+                api->mainloop_io = NULL;
+                api->ipc = NULL;
+
+                mainloop_del_ipc_client(mainloop_io);
+                // After this point api might have already been freed
+            }
+            break;
+
+        case pcmk_ipc_dispatch_poll:
+        case pcmk_ipc_dispatch_sync:
+            {
+                crm_ipc_t *ipc = api->ipc;
+
+                // Make sure no code with access to api can use ipc again
+                api->ipc = NULL;
+
+                // This should always be the case already, but to be safe
+                api->free_on_disconnect = false;
+
+                crm_ipc_destroy(ipc);
+                ipc_post_disconnect(api);
+            }
+            break;
+    }
+}
+
+/*!
+ * \brief Register a callback for IPC API events
+ *
+ * \param[in] api          IPC API connection
+ * \param[in] callback     Callback to register
+ * \param[in] userdata     Caller data to pass to callback
+ *
+ * \note This function may be called multiple times to update the callback
+ *       and/or user data. The caller remains responsible for freeing
+ *       userdata in any case (after the IPC is disconnected, if the
+ *       user data is still registered with the IPC).
+ */
+void
+pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
+                           void *user_data)
+{
+    if (api == NULL) {
+        return;
+    }
+    api->cb = cb;
+    api->user_data = user_data;
+}
+
+/*!
+ * \internal
+ * \brief Send an XML request across an IPC API connection
+ *
+ * \param[in] api          IPC API connection
+ * \param[in] request      XML request to send
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Daemon-specific IPC API functions should call this function to send
+ *       requests, because it handles different dispatch types appropriately.
+ */
+int
+pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
+{
+    int rc;
+    xmlNode *reply = NULL;
+    enum crm_ipc_flags flags = crm_ipc_flags_none;
+
+    if ((api == NULL) || (api->ipc == NULL) || (request == NULL)) {
+        return EINVAL;
+    }
+    crm_log_xml_trace(request, "ipc-sent");
+
+    // Synchronous dispatch requires waiting for a reply
+    if ((api->dispatch_type == pcmk_ipc_dispatch_sync)
+        && (api->cmds != NULL)
+        && (api->cmds->reply_expected != NULL)
+        && (api->cmds->reply_expected(api, request))) {
+        flags = crm_ipc_client_response;
+    }
+
+    // The 0 here means a default timeout of 5 seconds
+    rc = crm_ipc_send(api->ipc, request, flags, 0, &reply);
+
+    if (rc < 0) {
+        return pcmk_legacy2rc(rc);
+    } else if (rc == 0) {
+        return ENODATA;
+    }
+
+    // With synchronous dispatch, we dispatch any reply now
+    if (reply != NULL) {
+        call_api_dispatch(api, reply);
+        free_xml(reply);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Create the XML for an IPC request to purge a node from the peer cache
+ *
+ * \param[in]  api        IPC API connection
+ * \param[in]  node_name  If not NULL, name of node to purge
+ * \param[in]  nodeid     If not 0, node ID of node to purge
+ *
+ * \return Newly allocated IPC request XML
+ *
+ * \note The controller, fencer, and pacemakerd use the same request syntax, but
+ *       the attribute manager uses a different one. The CIB manager doesn't
+ *       have any syntax for it. The executor and scheduler don't connect to the
+ *       cluster layer and thus don't have or need any syntax for it.
+ *
+ * \todo Modify the attribute manager to accept the common syntax (as well
+ *       as its current one, for compatibility with older clients). Modify
+ *       the CIB manager to accept and honor the common syntax. Modify the
+ *       executor and scheduler to accept the syntax (immediately returning
+ *       success), just for consistency. Modify this function to use the
+ *       common syntax with all daemons if their version supports it.
+ */
+static xmlNode *
+create_purge_node_request(pcmk_ipc_api_t *api, const char *node_name,
+                          uint32_t nodeid)
+{
+    xmlNode *request = NULL;
+    const char *client = crm_system_name? crm_system_name : "client";
+
+    switch (api->server) {
+        case pcmk_ipc_attrd:
+            request = create_xml_node(NULL, __FUNCTION__);
+            crm_xml_add(request, F_TYPE, T_ATTRD);
+            crm_xml_add(request, F_ORIG, crm_system_name);
+            crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node_name);
+            if (nodeid > 0) {
+                crm_xml_add_int(request, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
+            }
+            break;
+
+        case pcmk_ipc_controld:
+        case pcmk_ipc_fenced:
+        case pcmk_ipc_pacemakerd:
+            request = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
+                                     pcmk_ipc_name(api, false), client, NULL);
+            if (nodeid > 0) {
+                crm_xml_set_id(request, "%lu", (unsigned long) nodeid);
+            }
+            crm_xml_add(request, XML_ATTR_UNAME, node_name);
+            break;
+
+        case pcmk_ipc_based:
+        case pcmk_ipc_execd:
+        case pcmk_ipc_schedulerd:
+            break;
+    }
+    return request;
+}
+
+/*!
+ * \brief Ask a Pacemaker daemon to purge a node from its peer cache
+ *
+ * \param[in]  api        IPC API connection
+ * \param[in]  node_name  If not NULL, name of node to purge
+ * \param[in]  nodeid     If not 0, node ID of node to purge
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note At least one of node_name or nodeid must be specified.
+ */
+int
+pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
+{
+    int rc = 0;
+    xmlNode *request = NULL;
+
+    if (api == NULL) {
+        return EINVAL;
+    }
+    if ((node_name == NULL) && (nodeid == 0)) {
+        return EINVAL;
+    }
+
+    request = create_purge_node_request(api, node_name, nodeid);
+    if (request == NULL) {
+        return EOPNOTSUPP;
+    }
+    rc = pcmk__send_ipc_request(api, request);
+    free_xml(request);
+
+    crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
+              pcmk_ipc_name(api, true), node_name, (unsigned long) nodeid, rc);
+    return rc;
+}
+
+/*
+ * Generic IPC API (to eventually be deprecated as public API and made internal)
+ */
+
 struct crm_ipc_s {
     struct pollfd pfd;
     unsigned int max_buf_size; // maximum bytes we can send or receive over IPC
@@ -42,16 +717,44 @@ struct crm_ipc_s {
     qb_ipcc_connection_t *ipc;
 };
 
+/*!
+ * \brief Create a new (legacy) object for using Pacemaker daemon IPC
+ *
+ * \param[in] name      IPC system name to connect to
+ * \param[in] max_size  Use a maximum IPC buffer size of at least this size
+ *
+ * \return Newly allocated IPC object on success, NULL otherwise
+ *
+ * \note The caller is responsible for freeing the result using
+ *       crm_ipc_destroy().
+ * \note This should be considered deprecated for use with daemons supported by
+ *       pcmk_new_ipc_api().
+ */
 crm_ipc_t *
 crm_ipc_new(const char *name, size_t max_size)
 {
     crm_ipc_t *client = NULL;
 
     client = calloc(1, sizeof(crm_ipc_t));
+    if (client == NULL) {
+        crm_err("Could not create IPC connection: %s", strerror(errno));
+        return NULL;
+    }
 
     client->name = strdup(name);
+    if (client->name == NULL) {
+        crm_err("Could not create IPC connection: %s", strerror(errno));
+        free(client);
+        return NULL;
+    }
     client->buf_size = pcmk__ipc_buffer_size(max_size);
     client->buffer = malloc(client->buf_size);
+    if (client->buffer == NULL) {
+        crm_err("Could not create IPC connection: %s", strerror(errno));
+        free(client->name);
+        free(client);
+        return NULL;
+    }
 
     /* Clients initiating connection pick the max buf size */
     client->max_buf_size = client->buf_size;
@@ -143,8 +846,6 @@ void
 crm_ipc_close(crm_ipc_t * client)
 {
     if (client) {
-        crm_trace("Disconnecting %s IPC connection %p (%p)", client->name, client, client->ipc);
-
         if (client->ipc) {
             qb_ipcc_connection_t *ipc = client->ipc;
 
@@ -712,44 +1413,4 @@ bail:
         qb_ipcc_disconnect(c);
     }
     return rc;
-}
-
-xmlNode *
-create_hello_message(const char *uuid,
-                     const char *client_name, const char *major_version, const char *minor_version)
-{
-    xmlNode *hello_node = NULL;
-    xmlNode *hello = NULL;
-
-    if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
-        || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "missing information",
-                client_name? client_name : "unknown client",
-                uuid? uuid : "unknown");
-        return NULL;
-    }
-
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if (hello_node == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Message data creation failed", client_name, uuid);
-        return NULL;
-    }
-
-    crm_xml_add(hello_node, "major_version", major_version);
-    crm_xml_add(hello_node, "minor_version", minor_version);
-    crm_xml_add(hello_node, "client_name", client_name);
-    crm_xml_add(hello_node, "client_uuid", uuid);
-
-    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
-    if (hello == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Request creation failed", client_name, uuid);
-        return NULL;
-    }
-    free_xml(hello_node);
-
-    crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
-    return hello;
 }

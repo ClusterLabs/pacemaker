@@ -834,32 +834,66 @@ mainloop_gio_destroy(gpointer c)
     free(c_name);
 }
 
-mainloop_io_t *
-mainloop_add_ipc_client(const char *name, int priority, size_t max_size, void *userdata,
-                        struct ipc_client_callbacks *callbacks)
+/*!
+ * \brief Connect to IPC and add it as a main loop source
+ *
+ * \param[in]  ipc        IPC connection to add
+ * \param[in]  priority   Event source priority to use for connection
+ * \param[in]  userdata   Data to register with callbacks
+ * \param[in]  callbacks  Dispatch and destroy callbacks for connection
+ * \param[out] source     Newly allocated event source
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On failure, the caller is still responsible for ipc. On success, the
+ *       caller should call mainloop_del_ipc_client() when source is no longer
+ *       needed, which will lead to the disconnection of the IPC later in the
+ *       main loop if it is connected. However the IPC disconnects,
+ *       mainloop_gio_destroy() will free ipc and source after calling the
+ *       destroy callback.
+ */
+int
+pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
+                       struct ipc_client_callbacks *callbacks,
+                       mainloop_io_t **source)
 {
-    mainloop_io_t *client = NULL;
-    crm_ipc_t *conn = crm_ipc_new(name, max_size);
+    CRM_CHECK((ipc != NULL) && (callbacks != NULL), return EINVAL);
 
-    if (conn && crm_ipc_connect(conn)) {
-        int32_t fd = crm_ipc_get_fd(conn);
-
-        client = mainloop_add_fd(name, priority, fd, userdata, NULL);
+    if (!crm_ipc_connect(ipc)) {
+        return ENOTCONN;
     }
+    *source = mainloop_add_fd(crm_ipc_name(ipc), priority, crm_ipc_get_fd(ipc),
+                              userdata, NULL);
+    if (*source == NULL) {
+        int rc = errno;
 
-    if (client == NULL) {
-        crm_perror(LOG_TRACE, "Connection to %s failed", name);
-        if (conn) {
-            crm_ipc_close(conn);
-            crm_ipc_destroy(conn);
+        crm_ipc_close(ipc);
+        return rc;
+    }
+    (*source)->ipc = ipc;
+    (*source)->destroy_fn = callbacks->destroy;
+    (*source)->dispatch_fn_ipc = callbacks->dispatch;
+    return pcmk_rc_ok;
+}
+
+mainloop_io_t *
+mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
+                        void *userdata, struct ipc_client_callbacks *callbacks)
+{
+    crm_ipc_t *ipc = crm_ipc_new(name, max_size);
+    mainloop_io_t *source = NULL;
+    int rc = pcmk__add_mainloop_ipc(ipc, priority, userdata, callbacks,
+                                    &source);
+
+    if (rc != pcmk_rc_ok) {
+        if (crm_log_level == LOG_STDOUT) {
+            fprintf(stderr, "Connection to %s failed: %s",
+                    name, pcmk_rc_str(rc));
         }
+        crm_ipc_destroy(ipc);
         return NULL;
     }
-
-    client->ipc = conn;
-    client->destroy_fn = callbacks->destroy;
-    client->dispatch_fn_ipc = callbacks->dispatch;
-    return client;
+    return source;
 }
 
 void

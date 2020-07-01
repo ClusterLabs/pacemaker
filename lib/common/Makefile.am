@@ -49,6 +49,7 @@ libcrmcommon_la_SOURCES	+= digest.c
 libcrmcommon_la_SOURCES	+= io.c
 libcrmcommon_la_SOURCES	+= ipc_client.c
 libcrmcommon_la_SOURCES	+= ipc_common.c
+libcrmcommon_la_SOURCES	+= ipc_controld.c
 libcrmcommon_la_SOURCES	+= ipc_server.c
 libcrmcommon_la_SOURCES	+= iso8601.c
 libcrmcommon_la_SOURCES	+= logging.c

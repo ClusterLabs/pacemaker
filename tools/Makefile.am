@@ -12,7 +12,7 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_mon.h crm_resource.h crm_resource_controller.h
+noinst_HEADERS		= crm_mon.h crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -115,7 +115,6 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 
 crm_resource_SOURCES	= crm_resource.c		\
 			  crm_resource_ban.c		\
-			  crm_resource_controller.c	\
 			  crm_resource_print.c		\
 			  crm_resource_runtime.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\

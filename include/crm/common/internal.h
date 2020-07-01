@@ -19,6 +19,7 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/util.h>    // crm_strdup_printf()
+#include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 
 // Internal ACL-related utilities (from acl.c)
 
@@ -127,6 +128,13 @@ pcmk__open_devnull(int flags)
             else_action;                                                    \
         }                                                                   \
     } while(0)
+
+
+/* internal main loop utilities (from mainloop.c) */
+
+int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
+                           struct ipc_client_callbacks *callbacks,
+                           mainloop_io_t **source);
 
 
 /* internal procfs utilities (from procfs.c) */
