@@ -12,6 +12,10 @@ class BasePatterns:
 
             # Logging bug in some versions of libvirtd
             r"libvirtd.*: internal error: Failed to parse PCI config address",
+
+            # pcs can log this when node is fenced, but fencing is OK in some
+            # tests (and we will catch it in pacemaker logs when not OK)
+            r"pcs.daemon:No response from: .* request: get_configs, error:",
         ]
         self.BadNews = []
         self.components = {}
