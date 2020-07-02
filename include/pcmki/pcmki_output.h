@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-#  include <crm/common/output.h>
 #  include <libxml/tree.h>
+#  include <crm/common/output_internal.h>
 
 extern pcmk__supported_format_t pcmk__out_formats[];
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>

@@ -12,8 +12,8 @@
 #  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
-#  include <crm/common/output.h>
 #  include <crm/common/internal.h>
+#  include <crm/common/output_internal.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)

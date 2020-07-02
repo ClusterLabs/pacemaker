@@ -34,7 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,9 +15,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <crm/crm.h>
-#include <crm/common/output.h>
 #include <crm/common/xml.h>
+#include <crm/common/output_internal.h>
 
 GOptionEntry pcmk__log_output_entries[] = {
     { NULL }

@@ -16,8 +16,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <crm/crm.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
