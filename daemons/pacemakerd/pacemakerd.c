@@ -975,10 +975,37 @@ init_children_processes(void)
     setenv("PCMK_respawned", "true", 1);
 }
 
+static void
+remove_core_file_limit(void)
+{
+    struct rlimit cores;
+    int rc = getrlimit(RLIMIT_CORE, &cores);
+
+    if (rc < 0) {
+        crm_perror(LOG_ERR, "Cannot determine current maximum core size.");
+        return;
+    }
+
+    if ((cores.rlim_max == 0) && (geteuid() == 0)) {
+        cores.rlim_max = RLIM_INFINITY;
+    } else {
+        crm_info("Maximum core file size is %llu bytes",
+                 (unsigned long long) cores.rlim_max);
+    }
+    cores.rlim_cur = cores.rlim_max;
+
+    rc = setrlimit(RLIMIT_CORE, &cores);
+    if (rc < 0) {
+        crm_perror(LOG_ERR,
+                   "Core file generation will remain disabled."
+                   " Core files are an important diagnostic tool, so"
+                   " please consider enabling them by default.");
+    }
+}
+
 int
 main(int argc, char **argv)
 {
-    int rc;
     int flag;
     int argerr = 0;
 
@@ -987,7 +1014,6 @@ main(int argc, char **argv)
 
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
-    struct rlimit cores;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
@@ -1099,25 +1125,7 @@ main(int argc, char **argv)
                PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_loop_new(NULL, FALSE);
 
-    rc = getrlimit(RLIMIT_CORE, &cores);
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot determine current maximum core size.");
-    } else {
-        if (cores.rlim_max == 0 && geteuid() == 0) {
-            cores.rlim_max = RLIM_INFINITY;
-        } else {
-            crm_info("Maximum core file size is: %lu", (unsigned long)cores.rlim_max);
-        }
-        cores.rlim_cur = cores.rlim_max;
-
-        rc = setrlimit(RLIMIT_CORE, &cores);
-        if (rc < 0) {
-            crm_perror(LOG_ERR,
-                       "Core file generation will remain disabled."
-                       " Core files are an important diagnostic tool, so"
-                       " please consider enabling them by default.");
-        }
-    }
+    remove_core_file_limit();
 
     if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
