@@ -386,7 +386,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Try to move a resource to its existing location"
-    cmd="crm_resource -r dummy --move --host node1"
+    cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_EXISTS
 
     desc="Move a resource from its existing location"
