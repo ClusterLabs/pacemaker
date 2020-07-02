@@ -25,6 +25,18 @@ struct crm_ais_host_s {
 
 } __attribute__ ((packed));
 
+#if SUPPORT_COROSYNC
+#  include <qb/qbipc_common.h>
+#  include <corosync/corotypes.h>
+typedef struct qb_ipc_response_header cs_ipc_header_response_t;
+#else
+typedef struct {
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+    int error __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
+#endif
+
 struct crm_ais_msg_s {
     cs_ipc_header_response_t header __attribute__ ((aligned(8)));
     uint32_t id;
