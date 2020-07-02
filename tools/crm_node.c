@@ -130,6 +130,16 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     return TRUE;
 }
 
+static gint
+sort_node(gconstpointer a, gconstpointer b)
+{
+    const pcmk_controld_api_node_t *node_a = a;
+    const pcmk_controld_api_node_t *node_b = b;
+
+    return pcmk_numeric_strcasecmp((node_a->uname? node_a->uname : ""),
+                                   (node_b->uname? node_b->uname : ""));
+}
+
 static void
 controller_event_cb(pcmk_ipc_api_t *controld_api,
                     enum pcmk_ipc_event event_type, crm_exit_t status,
@@ -157,15 +167,16 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
                 crm_exit_str(status));
         goto done;
     }
-    if (reply->reply_type != pcmk_controld_reply_info) {
-        fprintf(stderr, "error: Unknown reply type %d from controller\n",
-                reply->reply_type);
-        goto done;
-    }
 
     // Parse desired info from reply and display to user
     switch (options.command) {
         case 'i':
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
             if (reply->data.node_info.id == 0) {
                 fprintf(stderr,
                         "error: Controller reply did not contain node ID\n");
@@ -177,6 +188,12 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
 
         case 'n':
         case 'N':
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
             if (reply->data.node_info.uname == NULL) {
                 fprintf(stderr, "Node is not known to cluster\n");
                 exit_code = CRM_EX_NOHOST;
@@ -186,10 +203,46 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
             break;
 
         case 'q':
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
             printf("%d\n", reply->data.node_info.have_quorum);
             if (!(reply->data.node_info.have_quorum)) {
                 exit_code = CRM_EX_QUORUM;
                 goto done;
+            }
+            break;
+
+        case 'l':
+        case 'p':
+            if (reply->reply_type != pcmk_controld_reply_nodes) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
+            reply->data.nodes = g_list_sort(reply->data.nodes, sort_node);
+            for (GList *node_iter = reply->data.nodes;
+                 node_iter != NULL; node_iter = node_iter->next) {
+
+                pcmk_controld_api_node_t *node = node_iter->data;
+                const char *uname = (node->uname? node->uname : "");
+                const char *state = (node->state? node->state : "");
+
+                if (options.command == 'l') {
+                    printf("%lu %s %s\n",
+                           (unsigned long) node->id, uname, state);
+
+                // i.e. CRM_NODE_MEMBER, but we don't want to include cluster.h
+                } else if (!strcmp(state, "member")) {
+                    printf("%s ", uname);
+                }
+            }
+            if (options.command == 'p') {
+                printf("\n");
             }
             break;
 
@@ -207,7 +260,7 @@ done:
 }
 
 static void
-run_controller_mainloop(uint32_t nodeid)
+run_controller_mainloop(uint32_t nodeid, bool list_nodes)
 {
     pcmk_ipc_api_t *controld_api = NULL;
     int rc;
@@ -233,7 +286,11 @@ run_controller_mainloop(uint32_t nodeid)
         return;
     }
 
-    rc = pcmk_controld_api_node_info(controld_api, nodeid);
+    if (list_nodes) {
+        rc = pcmk_controld_api_list_nodes(controld_api);
+    } else {
+        rc = pcmk_controld_api_node_info(controld_api, nodeid);
+    }
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "error: Could not ping controller: %s\n",
                 pcmk_rc_str(rc));
@@ -263,7 +320,7 @@ print_node_name(void)
 
     } else {
         // Otherwise ask the controller
-        run_controller_mainloop(0);
+        run_controller_mainloop(0, false);
     }
 }
 
@@ -444,105 +501,6 @@ remove_node(const char *target_uname)
     exit_code = CRM_EX_OK;
 }
 
-static gint
-compare_node_xml(gconstpointer a, gconstpointer b)
-{
-    const char *a_name = crm_element_value((xmlNode*) a, "uname");
-    const char *b_name = crm_element_value((xmlNode*) b, "uname");
-
-    return strcmp((a_name? a_name : ""), (b_name? b_name : ""));
-}
-
-static int
-node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
-{
-    GList *nodes = NULL;
-    xmlNode *node = NULL;
-    xmlNode *msg = string2xml(buffer);
-    const char *uname;
-    const char *state;
-
-    if (msg == NULL) {
-        fprintf(stderr, "error: Could not understand pacemakerd response\n");
-        exit_code = CRM_EX_PROTOCOL;
-        g_main_loop_quit(mainloop);
-        return 0;
-    }
-
-    crm_log_xml_trace(msg, "message");
-
-    for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-        nodes = g_list_insert_sorted(nodes, node, compare_node_xml);
-    }
-
-    for (GList *iter = nodes; iter; iter = iter->next) {
-        node = (xmlNode*) iter->data;
-        uname = crm_element_value(node, "uname");
-        state = crm_element_value(node, "state");
-
-        if (options.command == 'l') {
-            int id = 0;
-
-            crm_element_value_int(node, "id", &id);
-            printf("%d %s %s\n", id, (uname? uname : ""), (state? state : ""));
-
-        // This is CRM_NODE_MEMBER but we don't want to include cluster header
-        } else if ((options.command == 'p') && safe_str_eq(state, "member")) {
-            printf("%s ", (uname? uname : ""));
-        }
-    }
-    if (options.command == 'p') {
-        fprintf(stdout, "\n");
-    }
-
-    free_xml(msg);
-    exit_code = CRM_EX_OK;
-    g_main_loop_quit(mainloop);
-    return 0;
-}
-
-static void
-lost_pacemakerd(gpointer user_data)
-{
-    fprintf(stderr, "error: Lost connection to cluster\n");
-    exit_code = CRM_EX_DISCONNECT;
-    g_main_loop_quit(mainloop);
-}
-
-static void
-run_pacemakerd_mainloop(void)
-{
-    crm_ipc_t *ipc = NULL;
-    xmlNode *poke = NULL;
-    mainloop_io_t *source = NULL;
-
-    struct ipc_client_callbacks ipc_callbacks = {
-        .dispatch = node_mcp_dispatch,
-        .destroy = lost_pacemakerd
-    };
-
-    source = mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0,
-                                     NULL, &ipc_callbacks);
-    ipc = mainloop_get_ipc_client(source);
-    if (ipc == NULL) {
-        fprintf(stderr,
-                "error: Could not connect to cluster (is it running?)\n");
-        exit_code = CRM_EX_DISCONNECT;
-        return;
-    }
-
-    // Sending anything will get us a list of nodes
-    poke = create_xml_node(NULL, "poke");
-    crm_ipc_send(ipc, poke, 0, 0, NULL);
-    free_xml(poke);
-
-    // Handle reply via node_mcp_dispatch()
-    mainloop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(mainloop);
-    g_main_loop_unref(mainloop);
-    mainloop = NULL;
-}
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
     GOptionContext *context = NULL;
@@ -627,11 +585,11 @@ main(int argc, char **argv)
         case 'i':
         case 'q':
         case 'N':
-            run_controller_mainloop(options.nodeid);
+            run_controller_mainloop(options.nodeid, false);
             break;
         case 'l':
         case 'p':
-            run_pacemakerd_mainloop();
+            run_controller_mainloop(0, true);
             break;
         default:
             break;

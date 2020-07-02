@@ -375,10 +375,11 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 0;
 
         } else if (is_for_crm) {
-            if (safe_str_eq(task, CRM_OP_NODE_INFO)) {
+            if (pcmk__str_any_of(task, CRM_OP_NODE_INFO,
+                                 PCMK__CONTROLD_CMD_NODES, NULL)) {
                 /* Node info requests do not specify a host, which is normally
                  * treated as "all hosts", because the whole point is that the
-                 * client doesn't know the local node name. Always handle these
+                 * client may not know the local node name. Always handle these
                  * requests locally.
                  */
                 is_local = 1;
@@ -784,6 +785,42 @@ handle_ping(xmlNode *msg)
 }
 
 /*!
+ * \brief Handle a PCMK__CONTROLD_CMD_NODES message
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_node_list(xmlNode *request)
+{
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+    xmlNode *reply = NULL;
+    xmlNode *reply_data = NULL;
+
+    // Create message data for reply
+    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+        xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
+
+        crm_xml_add_ll(xml, XML_ATTR_ID, (long long) node->id); // uint32_t
+        crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(xml, XML_NODE_IN_CLUSTER, node->state);
+    }
+
+    // Create and send reply
+    reply = create_reply(request, reply_data);
+    free_xml(reply_data);
+    if (reply) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
+/*!
  * \brief Handle a CRM_OP_NODE_INFO request
  *
  * \param[in] msg  Message XML
@@ -1079,6 +1116,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
 
         remote_ra_process_maintenance_nodes(xml);
+
+    } else if (strcmp(op, PCMK__CONTROLD_CMD_NODES) == 0) {
+        return handle_node_list(stored_msg);
 
         /*========== (NOT_DC)-Only Actions ==========*/
     } else if (!AM_I_DC) {

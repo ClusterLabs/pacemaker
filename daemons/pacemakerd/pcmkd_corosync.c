@@ -28,8 +28,7 @@
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
-enum cluster_type_e stack = pcmk_cluster_unknown;
-static corosync_cfg_handle_t cfg_handle;
+static corosync_cfg_handle_t cfg_handle = 0;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -63,9 +62,8 @@ pcmk_cfg_dispatch(gpointer user_data)
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_err("Connection destroyed");
+    crm_err("Lost connection to Corosync");
     cfg_handle = 0;
-
     pcmk_shutdown(SIGTERM);
 }
 
@@ -85,7 +83,7 @@ cluster_disconnect_cfg(void)
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
-	    crm_debug("Retrying operation after %ds", counter);	\
+	    crm_debug("Retrying Corosync operation after %ds", counter);    \
 	    sleep(counter);				\
 	} else {                                        \
             break;                                      \
@@ -93,13 +91,14 @@ cluster_disconnect_cfg(void)
     } while(counter < max)
 
 gboolean
-cluster_connect_cfg(uint32_t * nodeid)
+cluster_connect_cfg(void)
 {
     cs_error_t rc;
     int fd = -1, retries = 0, rv;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
+    uint32_t nodeid;
 
     static struct mainloop_fd_callbacks cfg_fd_callbacks = {
         .dispatch = pcmk_cfg_dispatch,
@@ -109,47 +108,70 @@ cluster_connect_cfg(uint32_t * nodeid)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_err("corosync cfg init: %s (%d)", cs_strerror(rc), rc);
+        crm_crit("Could not connect to Corosync CFG: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("corosync cfg fd_get: %s (%d)", cs_strerror(rc), rc);
+        crm_crit("Could not get Corosync CFG descriptor: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
         goto bail;
     }
 
     /* CFG provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_err("CFG provider is not authentic:"
-                " process %lld (uid: %lld, gid: %lld)",
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+        crm_crit("Rejecting Corosync CFG provider because process %lld "
+                 "is running as uid %lld gid %lld, not root",
+                  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                 (long long) found_uid, (long long) found_gid);
         goto bail;
     } else if (rv < 0) {
-        crm_err("Could not verify authenticity of CFG provider: %s (%d)",
-                strerror(-rv), -rv);
+        crm_crit("Could not authenticate Corosync CFG provider: %s "
+                 CRM_XS " rc=%d", strerror(-rv), -rv);
         goto bail;
     }
 
     retries = 0;
-    cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, nodeid));
-
+    cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
     if (rc != CS_OK) {
-        crm_err("corosync cfg local_get error %d", rc);
+        crm_crit("Could not get local node ID from Corosync: %s "
+                 CRM_XS " rc=%d", cs_strerror(rc), rc);
         goto bail;
     }
+    crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
 
-    crm_debug("Our nodeid: %d", *nodeid);
     mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
-
     return TRUE;
 
   bail:
     corosync_cfg_finalize(cfg_handle);
     return FALSE;
 }
+
+void
+pcmkd_shutdown_corosync(void)
+{
+    cs_error_t rc;
+
+    if (cfg_handle == 0) {
+        crm_warn("Unable to shut down Corosync: No connection");
+        return;
+    }
+    crm_info("Asking Corosync to shut down");
+    rc = corosync_cfg_try_shutdown(cfg_handle,
+                                    COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
+    if (rc == CS_OK) {
+        corosync_cfg_finalize(cfg_handle);
+        cfg_handle = 0;
+    } else {
+        crm_warn("Corosync shutdown failed: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
+    }
+}
+
 
 /* =::=::=::= Configuration =::=::=::= */
 static int
@@ -183,14 +205,15 @@ mcp_read_config(void)
     gid_t found_gid = 0;
     pid_t found_pid = 0;
     int rv;
+    enum cluster_type_e stack;
 
     // There can be only one possibility
     do {
         rc = cmap_initialize(&local_handle);
         if (rc != CS_OK) {
             retries++;
-            printf("cmap connection setup failed: %s.  Retrying in %ds\n", cs_strerror(rc), retries);
-            crm_info("cmap connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+            crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
+                     CRM_XS " rc=%d", cs_strerror(rc), retries, rc);
             sleep(retries);
 
         } else {
@@ -200,15 +223,15 @@ mcp_read_config(void)
     } while (retries < 5);
 
     if (rc != CS_OK) {
-        printf("Could not connect to Cluster Configuration Database API, error %d\n", rc);
-        crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
+        crm_crit("Could not connect to Corosync CMAP: %s "
+                 CRM_XS " rc=%d", cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                cs_strerror(rc), rc);
+        crm_crit("Could not get Corosync CMAP descriptor: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -216,38 +239,33 @@ mcp_read_config(void)
     /* CMAP provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_err("CMAP provider is not authentic:"
-                " process %lld (uid: %lld, gid: %lld)",
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+        crm_crit("Rejecting Corosync CMAP provider because process %lld "
+                 "is running as uid %lld gid %lld, not root",
+                 (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                 (long long) found_uid, (long long) found_gid);
         cmap_finalize(local_handle);
         return FALSE;
     } else if (rv < 0) {
-        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
-                strerror(-rv), -rv);
+        crm_crit("Could not authenticate Corosync CMAP provider: %s "
+                 CRM_XS " rc=%d", strerror(-rv), -rv);
         cmap_finalize(local_handle);
         return FALSE;
     }
 
     stack = get_cluster_type();
-    crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
-
-    /* =::=::= Should we be here =::=::= */
-    if (stack == pcmk_cluster_corosync) {
-        pcmk__set_env_option("cluster_type", "corosync");
-        pcmk__set_env_option("quorum_type", "corosync");
-
-    } else {
-        crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
+    if (stack != pcmk_cluster_corosync) {
+        crm_crit("Expected corosync stack but detected %s " CRM_XS " stack=%d",
+                 name_for_cluster_type(stack), stack);
         return FALSE;
     }
 
-    /* =::=::= Logging =::=::= */
-    if (pcmk__env_option("debug")) {
-        /* Syslog logging is already setup by crm_log_init() */
+    crm_info("Reading configuration for %s stack",
+             name_for_cluster_type(stack));
+    pcmk__set_env_option("cluster_type", "corosync");
+    pcmk__set_env_option("quorum_type", "corosync");
 
-    } else {
-        /* Check corosync */
+    // If debug logging is not configured, check whether corosync has it
+    if (pcmk__env_option("debug") == NULL) {
         char *debug_enabled = NULL;
 
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
@@ -268,7 +286,7 @@ mcp_read_config(void)
     if(local_handle){
         gid_t gid = 0;
         if (pcmk_daemon_user(NULL, &gid) < 0) {
-            crm_warn("Could not authorize group with corosync " CRM_XS
+            crm_warn("Could not authorize group with Corosync " CRM_XS
                      " No group found for user %s", CRM_DAEMON_USER);
 
         } else {
@@ -276,8 +294,8 @@ mcp_read_config(void)
             snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
             rc = cmap_set_uint8(local_handle, key, 1);
             if (rc != CS_OK) {
-                crm_warn("Could not authorize group with corosync "CRM_XS
-                         " group=%u rc=%d (%s)", gid, rc, ais_error2text(rc));
+                crm_warn("Could not authorize group with Corosync: %s " CRM_XS
+                         " group=%u rc=%d", ais_error2text(rc), gid, rc);
             }
         }
     }
