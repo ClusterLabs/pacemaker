@@ -13,7 +13,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 
-#include <ctype.h>
 #include <glib.h>
 #include <stdbool.h>
 
@@ -214,53 +213,8 @@ pe__node_list2table(GList *list)
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    const char *name_a = ((const pe_node_t *) a)->details->uname;
-    const char *name_b = ((const pe_node_t *) b)->details->uname;
-
-    while (*name_a && *name_b) {
-        if (isdigit(*name_a) && isdigit(*name_b)) {
-            // If node names contain a number, sort numerically
-
-            char *end_a = NULL;
-            char *end_b = NULL;
-            long num_a = strtol(name_a, &end_a, 10);
-            long num_b = strtol(name_b, &end_b, 10);
-
-            // allow ordering e.g. 007 > 7
-            size_t len_a = end_a - name_a;
-            size_t len_b = end_b - name_b;
-
-            if (num_a < num_b) {
-                return -1;
-            } else if (num_a > num_b) {
-                return 1;
-            } else if (len_a < len_b) {
-                return -1;
-            } else if (len_a > len_b) {
-                return 1;
-            }
-            name_a = end_a;
-            name_b = end_b;
-        } else {
-            // Compare non-digits case-insensitively
-            int lower_a = tolower(*name_a);
-            int lower_b = tolower(*name_b);
-
-            if (lower_a < lower_b) {
-                return -1;
-            } else if (lower_a > lower_b) {
-                return 1;
-            }
-            ++name_a;
-            ++name_b;
-        }
-    }
-    if (!*name_a && *name_b) {
-        return -1;
-    } else if (*name_a && !*name_b) {
-        return 1;
-    }
-    return 0;
+    return pcmk_numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
+                                   ((const pe_node_t *) b)->details->uname);
 }
 
 /*!

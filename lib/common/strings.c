@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <limits.h>
 #include <bzlib.h>
 #include <sys/types.h>
@@ -714,4 +715,68 @@ pcmk__str_none_of(const char *s, ...)
 
     va_end(ap);
     return rc;
+}
+
+/*
+ * \brief Sort strings, with numeric portions sorted numerically
+ *
+ * Sort two strings case-insensitively like strcasecmp(), but with any numeric
+ * portions of the string sorted numerically. This is particularly useful for
+ * node names (for example, "node10" will sort higher than "node9" but lower
+ * than "remotenode9").
+ *
+ * \param[in] s1  First string to compare (must not be NULL)
+ * \param[in] s2  Second string to compare (must not be NULL)
+ *
+ * \retval -1 \p s1 comes before \p s2
+ * \retval  0 \p s1 and \p s2 are equal
+ * \retval  1 \p s1 comes after \p s2
+ */
+int
+pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+{
+    while (*s1 && *s2) {
+        if (isdigit(*s1) && isdigit(*s2)) {
+            // If node names contain a number, sort numerically
+
+            char *end1 = NULL;
+            char *end2 = NULL;
+            long num1 = strtol(s1, &end1, 10);
+            long num2 = strtol(s2, &end2, 10);
+
+            // allow ordering e.g. 007 > 7
+            size_t len1 = end1 - s1;
+            size_t len2 = end2 - s2;
+
+            if (num1 < num2) {
+                return -1;
+            } else if (num1 > num2) {
+                return 1;
+            } else if (len1 < len2) {
+                return -1;
+            } else if (len1 > len2) {
+                return 1;
+            }
+            s1 = end1;
+            s2 = end2;
+        } else {
+            // Compare non-digits case-insensitively
+            int lower1 = tolower(*s1);
+            int lower2 = tolower(*s2);
+
+            if (lower1 < lower2) {
+                return -1;
+            } else if (lower1 > lower2) {
+                return 1;
+            }
+            ++s1;
+            ++s2;
+        }
+    }
+    if (!*s1 && *s2) {
+        return -1;
+    } else if (*s1 && !*s2) {
+        return 1;
+    }
+    return 0;
 }
