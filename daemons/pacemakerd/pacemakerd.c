@@ -13,6 +13,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <poll.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/stat.h>
@@ -344,7 +345,7 @@ start_child(pcmk_child_t * child)
 
             // Drop root group access if not needed
             if (!need_root_group && (setgid(gid) < 0)) {
-                crm_perror(LOG_ERR, "Could not set group to %d", gid);
+                crm_warn("Could not set group to %d: %s", gid, strerror(errno));
             }
 
             /* Initialize supplementary groups to only those always granted to
@@ -356,7 +357,8 @@ start_child(pcmk_child_t * child)
         }
 
         if (uid && setuid(uid) < 0) {
-            crm_perror(LOG_ERR, "Could not set user to %d (%s)", uid, child->uid);
+            crm_warn("Could not set user to %s (id %d): %s",
+                     child->uid, uid, strerror(errno));
         }
 
         pcmk__close_fds_in_child(true);
@@ -370,7 +372,7 @@ start_child(pcmk_child_t * child)
         } else {
             (void)execvp(child->command, opts_default);
         }
-        crm_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
+        crm_crit("Could not execute %s: %s", child->command, strerror(errno));
         crm_exit(CRM_EX_FATAL);
     }
     return TRUE;                /* never reached */
@@ -527,8 +529,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
-        /* Time to quit */
-        crm_notice("Shutting down in response to ticket %s (%s)",
+        crm_notice("Shutting down in response to IPC request %s from %s",
                    crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
         pcmk_shutdown(15);
 
@@ -982,7 +983,8 @@ remove_core_file_limit(void)
     int rc = getrlimit(RLIMIT_CORE, &cores);
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot determine current maximum core size.");
+        crm_warn("Cannot determine current maximum core file size: %s",
+                 strerror(errno));
         return;
     }
 
@@ -996,10 +998,8 @@ remove_core_file_limit(void)
 
     rc = setrlimit(RLIMIT_CORE, &cores);
     if (rc < 0) {
-        crm_perror(LOG_ERR,
-                   "Core file generation will remain disabled."
-                   " Core files are an important diagnostic tool, so"
-                   " please consider enabling them by default.");
+        crm_warn("Cannot raise system limit on core file size "
+                 "(consider doing so manually)");
     }
 }
 
@@ -1108,7 +1108,6 @@ main(int argc, char **argv)
     crm_ipc_destroy(old_instance);
 
     if (mcp_read_config() == FALSE) {
-        crm_notice("Could not obtain corosync config data, exiting");
         crm_exit(CRM_EX_UNAVAILABLE);
     }
 
@@ -1169,7 +1168,6 @@ main(int argc, char **argv)
 
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
-        crm_err("Couldn't connect to Corosync's CFG service");
         crm_exit(CRM_EX_PROTOCOL);
     }
 
