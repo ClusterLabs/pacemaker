@@ -59,7 +59,8 @@ parse_cli_lifetime(const char *input)
 }
 
 int
-cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn)
+cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
+                 bool scope_master)
 {
     char *later_s = NULL;
     int rc = pcmk_ok;
@@ -71,7 +72,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         for(; n && rc == pcmk_ok; n = n->next) {
             pe_node_t *target = n->data;
 
-            rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn);
+            rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn, scope_master);
         }
         return rc;
     }
@@ -140,7 +141,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 
 
 int
-cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
+cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool scope_master)
 {
     char *later_s = parse_cli_lifetime(move_lifetime);
     int rc = pcmk_ok;

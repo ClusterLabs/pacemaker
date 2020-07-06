@@ -1261,7 +1261,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  */
 int
 cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                     cib_t *cib)
+                     cib_t *cib, bool scope_master)
 {
     int rc = 0;
     int lpc = 0;
@@ -1339,7 +1339,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
-        rc = cli_resource_ban(rsc_id, host, NULL, cib);
+        rc = cli_resource_ban(rsc_id, host, NULL, cib, scope_master);
 
     } else {
         /* Stop the resource by setting target-role to Stopped.
@@ -1889,7 +1889,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 int
 cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  cib_t *cib, pe_working_set_t *data_set)
+                  cib_t *cib, pe_working_set_t *data_set, bool scope_master)
 {
     int rc = pcmk_ok;
     unsigned int count = 0;
@@ -1911,7 +1911,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
         } else {
             CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
-            scope_master = FALSE;
+            scope_master = false;
         }
     }
 
@@ -1964,7 +1964,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib, TRUE);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib);
+    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, scope_master);
 
     crm_trace("%s%s now prefers node %s%s",
               rsc->id, scope_master?" (master)":"", dest->details->uname, do_force?"(forced)":"");
@@ -1975,7 +1975,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     if(do_force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib);
+            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib, scope_master);
 
         } else if(count > 1) {
             CMD_ERR("Resource '%s' is currently %s in %d locations. "

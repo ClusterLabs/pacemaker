@@ -36,8 +36,8 @@ extern char *move_lifetime;
 extern const char *attr_set_type;
 
 /* ban */
-int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn);
-int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);
+int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool scope_master);
+int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn, bool scope_master);
 int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
                        bool clear_ban_constraints);
 int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool scope_master);
@@ -73,10 +73,10 @@ int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
 int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                         cib_t *cib);
+                         cib_t *cib, bool scope_master);
 int cli_resource_move(pe_resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
-                      pe_working_set_t *data_set);
+                      pe_working_set_t *data_set, bool scope_master);
 int cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                      const char *rsc_prov, const char *rsc_type,
                                      const char *rsc_action, GHashTable *params,
