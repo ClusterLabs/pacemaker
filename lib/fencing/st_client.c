@@ -418,7 +418,7 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
-    // cppcheck seems not to understand the abort logic behind realloc_safe
+    // cppcheck seems not to understand the abort logic behind pcmk__realloc
     // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
 
@@ -428,7 +428,7 @@ create_level_registration_xml(const char *node, const char *pattern,
         }
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
-        list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
+        list = pcmk__realloc(list, len + adding + 1);       /* +1 EOS */
         if (list == NULL) {
             crm_perror(LOG_CRIT, "Could not create device list");
             free_xml(data);

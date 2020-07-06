@@ -96,22 +96,6 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
 
-static inline void *
-realloc_safe(void *ptr, size_t size)
-{
-    void *new_ptr;
-
-    // realloc(p, 0) can replace free(p) but this wrapper can't
-    CRM_ASSERT(size > 0);
-
-    new_ptr = realloc(ptr, size);
-    if (new_ptr == NULL) {
-        free(ptr);
-        abort();
-    }
-    return new_ptr;
-}
-
 const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);

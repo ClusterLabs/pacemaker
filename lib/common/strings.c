@@ -613,7 +613,7 @@ pcmk__add_word(char *list, const char *word)
     if (word != NULL) {
         size_t len = list? strlen(list) : 0;
 
-        list = realloc_safe(list, len + strlen(word) + 2); // 2 = space + EOS
+        list = pcmk__realloc(list, len + strlen(word) + 2); // 2 = space + EOS
         sprintf(list + len, " %s", word);
     }
     return list;

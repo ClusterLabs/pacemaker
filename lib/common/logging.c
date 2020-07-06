@@ -953,7 +953,7 @@ crm_log_args(int argc, char **argv)
 
     logged = 1;
 
-    // cppcheck seems not to understand the abort logic in realloc_safe
+    // cppcheck seems not to understand the abort logic in pcmk__realloc
     // cppcheck-suppress memleak
     for (; lpc < argc; lpc++) {
         if (argv[lpc] == NULL) {
@@ -961,7 +961,7 @@ crm_log_args(int argc, char **argv)
         }
 
         len = 2 + strlen(argv[lpc]);    /* +1 space, +1 EOS */
-        arg_string = realloc_safe(arg_string, len + existing_len);
+        arg_string = pcmk__realloc(arg_string, len + existing_len);
         existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
 

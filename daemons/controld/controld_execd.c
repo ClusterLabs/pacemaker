@@ -538,7 +538,7 @@ build_parameter_list(const lrmd_event_data_t *op,
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
 
             len += strlen(param->rap_name) + 2; // include spaces around
-            list = realloc_safe(list, len + 1); // include null terminator
+            list = pcmk__realloc(list, len + 1); // include null terminator
 
             // spaces before and after make parsing simpler
             sprintf(list + start, " %s ", param->rap_name);

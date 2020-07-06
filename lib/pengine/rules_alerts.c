@@ -133,8 +133,8 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
                         entry->select_attribute_name = NULL;
                     }
                     ++nattrs;
-                    entry->select_attribute_name = realloc_safe(entry->select_attribute_name,
-                                                                (nattrs + 1) * sizeof(char*));
+                    entry->select_attribute_name = pcmk__realloc(entry->select_attribute_name,
+                                                                 (nattrs + 1) * sizeof(char*));
                     entry->select_attribute_name[nattrs - 1] = strdup(attr_name);
                     entry->select_attribute_name[nattrs] = NULL;
                 }

@@ -270,6 +270,34 @@ extern int pcmk__score_red;
 extern int pcmk__score_green;
 extern int pcmk__score_yellow;
 
+/*!
+ * \internal
+ * \brief Resize a dynamically allocated memory block
+ *
+ * \param[in] ptr   Memory block to resize (or NULL to allocate new memory)
+ * \param[in] size  New size of memory block in bytes (must be > 0)
+ *
+ * \return Pointer to resized memory block
+ *
+ * \note This asserts on error, so the result is guaranteed to be non-NULL
+ *       (which is the main advantage of this over directly using realloc()).
+ */
+static inline void *
+pcmk__realloc(void *ptr, size_t size)
+{
+    void *new_ptr;
+
+    // realloc(p, 0) can replace free(p) but this wrapper can't
+    CRM_ASSERT(size > 0);
+
+    new_ptr = realloc(ptr, size);
+    if (new_ptr == NULL) {
+        free(ptr);
+        abort();
+    }
+    return new_ptr;
+}
+
 
 /* Error domains for use with g_set_error (from results.c) */
 

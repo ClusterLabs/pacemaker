@@ -722,7 +722,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     msg->header.size = sizeof(AIS_Message) + msg->size;
 
     if (msg->size < CRM_BZ2_THRESHOLD) {
-        msg = realloc_safe(msg, msg->header.size);
+        msg = pcmk__realloc(msg, msg->header.size);
         memcpy(msg->data, data, msg->size);
 
     } else {
@@ -734,16 +734,16 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                            &compressed, &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
 
             msg->is_compressed = TRUE;
             msg->compressed_size = new_size;
 
         } else {
-            // cppcheck seems not to understand the abort logic in realloc_safe
+            // cppcheck seems not to understand the abort logic in pcmk__realloc
             // cppcheck-suppress memleak
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
 

@@ -713,7 +713,7 @@ read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer_size = 2 * read_len;
         crm_trace("Expanding buffer to %llu bytes",
                   (unsigned long long) remote->buffer_size);
-        remote->buffer = realloc_safe(remote->buffer, remote->buffer_size + 1);
+        remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
