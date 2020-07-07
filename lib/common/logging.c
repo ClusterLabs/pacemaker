@@ -37,7 +37,7 @@ unsigned int crm_log_priority = LOG_NOTICE;
 unsigned int crm_log_level = LOG_INFO;
 static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
-bool crm_is_daemon = 0;
+bool pcmk__is_daemon = false;
 
 GLogFunc glib_log_default;
 
@@ -749,7 +749,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     const char *facility = pcmk__env_option("logfacility");
     const char *f_copy = facility;
 
-    crm_is_daemon = daemon;
+    pcmk__is_daemon = daemon;
     crm_log_preinit(entity, argc, argv);
 
     if (level > LOG_TRACE) {
@@ -761,7 +761,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     /* Should we log to syslog */
     if (facility == NULL) {
-        if(crm_is_daemon) {
+        if (pcmk__is_daemon) {
             facility = "daemon";
         } else {
             facility = "none";
@@ -807,14 +807,15 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     /* Should we log to a file */
     if (pcmk__str_eq("none", logfile, pcmk__str_casei)) {
         /* No soup^Hlogs for you! */
-    } else if(crm_is_daemon) {
+    } else if (pcmk__is_daemon) {
         // Daemons always get a log file, unless explicitly set to "none"
         crm_add_logfile(logfile);
     } else if(logfile) {
         crm_add_logfile(logfile);
     }
 
-    if (crm_is_daemon && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
+    if (pcmk__is_daemon
+        && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
         crm_enable_blackbox(0);
     }
 
@@ -826,20 +827,18 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     crm_update_callsites();
 
     /* Ok, now we can start logging... */
-    if (quiet == FALSE && crm_is_daemon == FALSE) {
-        crm_log_args(argc, argv);
-    }
 
-    if (crm_is_daemon) {
+    // Disable daemon request if user isn't root or Pacemaker daemon user
+    if (pcmk__is_daemon) {
         const char *user = getenv("USER");
 
         if (user != NULL && !pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Not switching to corefile directory for %s", user);
-            crm_is_daemon = FALSE;
+            pcmk__is_daemon = false;
         }
     }
 
-    if (crm_is_daemon) {
+    if (pcmk__is_daemon) {
         int user = getuid();
         const char *base = CRM_CORE_DIR;
         struct passwd *pwent = getpwuid(user);
@@ -879,6 +878,9 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
         mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
         mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+
+    } else if (!quiet) {
+        crm_log_args(argc, argv);
     }
 
     return TRUE;

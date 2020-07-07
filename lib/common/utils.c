@@ -41,6 +41,8 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
+#include "crmcommon_private.h"
+
 #ifndef PW_BUFFER_LEN
 #  define PW_BUFFER_LEN		500
 #endif
@@ -323,8 +325,6 @@ crm_parse_interval_spec(const char *input)
     return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
 }
 
-extern bool crm_is_daemon;
-
 /* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
@@ -337,7 +337,7 @@ crm_abort(const char *file, const char *function, int line,
     /* Implied by the parent's error logging below */
     /* crm_write_blackbox(0); */
 
-    if(crm_is_daemon == FALSE) {
+    if (!pcmk__is_daemon) {
         /* This is a command line tool - do not fork */
 
         /* crm_add_logfile(NULL);   * Record it to a file? */
