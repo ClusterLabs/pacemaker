@@ -97,13 +97,27 @@ pcmk__open_devnull(int flags)
 
 /* internal logging utilities */
 
+/*!
+ * \internal
+ * \brief Log a configuration error
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_err(fmt...) do {     \
-        crm_config_error = TRUE;            \
+        pcmk__config_error = true;          \
         crm_err(fmt);                       \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Log a configuration warning
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_warn(fmt...) do {    \
-        crm_config_warning = TRUE;          \
+        pcmk__config_warning = true;        \
         crm_warn(fmt);                      \
     } while (0)
 

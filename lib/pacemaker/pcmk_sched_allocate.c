@@ -2893,7 +2893,7 @@ pcmk__log_transition_summary(const char *filename)
         crm_notice("Calculated transition %d, saving inputs in %s",
                    transition_id, filename);
     }
-    if (crm_config_error) {
+    if (pcmk__config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }

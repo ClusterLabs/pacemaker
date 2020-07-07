@@ -65,9 +65,14 @@ crm_extended_logging(int t, int e)
 #endif
 
 extern unsigned int crm_log_level;
-extern gboolean crm_config_error;
-extern gboolean crm_config_warning;
 extern unsigned int crm_trace_nonlog;
+
+/* These are set when a configuration issue is found, and turn on extra messages
+ * at the end of processing. They are set via wrapper functions and do not need
+ * to be set directly.
+ */
+extern bool pcmk__config_error;
+extern bool pcmk__config_warning;
 
 enum xml_log_options
 {

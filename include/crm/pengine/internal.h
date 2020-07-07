@@ -19,8 +19,16 @@
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
 
-#  define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
-#  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
+#  define pe_err(fmt...) do {           \
+        was_processing_error = TRUE;    \
+        pcmk__config_err(fmt);          \
+    } while (0)
+
+#  define pe_warn(fmt...) do {          \
+        was_processing_warning = TRUE;  \
+        pcmk__config_warn(fmt);         \
+    } while (0)
+
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
