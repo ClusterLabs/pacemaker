@@ -66,7 +66,7 @@ static filter_t filter[] = {
 
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact);
-static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
+static void add_xml_comment(xmlNode *parent, xmlNode *target, xmlNode *update);
 
 #define CHUNK_SIZE 1024
 
@@ -148,42 +148,44 @@ pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
     }
 }
 
+// Mark document, element, and all element's parents as changed
 static void
-__xml_node_dirty(xmlNode *xml) 
+mark_xml_node_dirty(xmlNode *xml)
 {
     pcmk__set_xml_doc_flag(xml, xpf_dirty);
     set_parent_flag(xml, xpf_dirty);
 }
 
+// Clear flags on XML node and its children
 static void
-__xml_node_clean(xmlNode *xml) 
+reset_xml_node_flags(xmlNode *xml)
 {
     xmlNode *cIter = NULL;
     xml_private_t *p = xml->_private;
 
-    if(p) {
+    if (p) {
         p->flags = 0;
     }
 
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
-        __xml_node_clean(cIter);
+        reset_xml_node_flags(cIter);
     }
 }
 
+// Set xpf_created flag on XML node and any children
 static void
-crm_node_created(xmlNode *xml) 
+mark_xml_node_created(xmlNode *xml)
 {
     xmlNode *cIter = NULL;
     xml_private_t *p = xml->_private;
 
-    if(p && pcmk__tracking_xml_changes(xml, FALSE)) {
+    if (p && pcmk__tracking_xml_changes(xml, FALSE)) {
         if (!pcmk_is_set(p->flags, xpf_created)) {
             pcmk__set_xml_flags(p, xpf_created);
-            __xml_node_dirty(xml);
+            mark_xml_node_dirty(xml);
         }
-
         for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
-           crm_node_created(cIter);
+            mark_xml_node_created(cIter);
         }
     }
 }
@@ -197,20 +199,17 @@ pcmk__mark_xml_attr_dirty(xmlAttr *a)
     p = a->_private;
     pcmk__set_xml_flags(p, xpf_dirty|xpf_modified);
     pcmk__clear_xml_flags(p, xpf_deleted);
-    __xml_node_dirty(parent);
+    mark_xml_node_dirty(parent);
 }
 
-int get_tag_name(const char *input, size_t offset, size_t max);
-int get_attr_name(const char *input, size_t offset, size_t max);
-int get_attr_value(const char *input, size_t offset, size_t max);
-gboolean can_prune_leaf(xmlNode * xml_node);
-
-static int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
+static void add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update,
+                           bool as_diff);
 
 #define XML_PRIVATE_MAGIC (long) 0x81726354
 
+// Free an XML object previously marked as deleted
 static void
-__xml_deleted_obj_free(void *data)
+free_deleted_object(void *data)
 {
     if(data) {
         xml_deleted_obj_t *deleted_obj = data;
@@ -220,8 +219,9 @@ __xml_deleted_obj_free(void *data)
     }
 }
 
+// Free and NULL user, ACLs, and deleted objects in an XML node's private data
 static void
-__xml_private_clean(xml_private_t *p)
+reset_xml_private_data(xml_private_t *p)
 {
     if(p) {
         CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
@@ -235,22 +235,15 @@ __xml_private_clean(xml_private_t *p)
         }
 
         if(p->deleted_objs) {
-            g_list_free_full(p->deleted_objs, __xml_deleted_obj_free);
+            g_list_free_full(p->deleted_objs, free_deleted_object);
             p->deleted_objs = NULL;
         }
     }
 }
 
-
+// Free all private data associated with an XML node
 static void
-__xml_private_free(xml_private_t *p)
-{
-    __xml_private_clean(p);
-    free(p);
-}
-
-static void
-pcmkDeregisterNode(xmlNodePtr node)
+free_private_data(xmlNode *node)
 {
     /* need to explicitly avoid our custom _private field cleanup when
        called from internal XSLT cleanup (xsltApplyStylesheetInternal
@@ -261,12 +254,14 @@ pcmkDeregisterNode(xmlNodePtr node)
        field -- later assert on the XML_PRIVATE_MAGIC would explode */
     if (node->type != XML_DOCUMENT_NODE || node->name == NULL
             || node->name[0] != ' ') {
-        __xml_private_free(node->_private);
+        reset_xml_private_data(node->_private);
+        free(node->_private);
     }
 }
 
+// Allocate and initialize private data for an XML node
 static void
-pcmkRegisterNode(xmlNodePtr node)
+new_private_data(xmlNode *node)
 {
     xml_private_t *p = NULL;
 
@@ -296,7 +291,7 @@ pcmkRegisterNode(xmlNodePtr node)
         /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
          * not hooked up at the point we are called
          */
-        __xml_node_dirty(node);
+        mark_xml_node_dirty(node);
     }
 }
 
@@ -378,7 +373,18 @@ bool xml_document_dirty(xmlNode *xml)
   </change>
 </diff>
  */
-static int __xml_offset(xmlNode *xml) 
+
+/*!
+ * \internal
+ * \brief Return ordinal position of an XML node among its siblings
+ *
+ * \param[in] xml            XML node to check
+ * \param[in] ignore_if_set  Don't count siblings with this flag set
+ *
+ * \return Ordinal position of \p xml (starting with 0)
+ */
+static int
+position_within_parent(xmlNode *xml, enum xml_private_flags ignore_if_set)
 {
     int position = 0;
     xmlNode *cIter = NULL;
@@ -386,7 +392,7 @@ static int __xml_offset(xmlNode *xml)
     for(cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
 
-        if (!pcmk_is_set(p->flags, xpf_skip)) {
+        if (!pcmk_is_set(p->flags, ignore_if_set)) {
             position++;
         }
     }
@@ -394,37 +400,23 @@ static int __xml_offset(xmlNode *xml)
     return position;
 }
 
-static int __xml_offset_no_deletions(xmlNode *xml) 
-{
-    int position = 0;
-    xmlNode *cIter = NULL;
-
-    for(cIter = xml; cIter->prev; cIter = cIter->prev) {
-        xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
-
-        if (!pcmk_is_set(p->flags, xpf_deleted)) {
-            position++;
-        }
-    }
-
-    return position;
-}
-
+// Add changes for specified XML to patchset
 static void
-__xml_build_changes(xmlNode * xml, xmlNode *patchset)
+add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
     xmlNode *change = NULL;
     xml_private_t *p = xml->_private;
 
+    // If this XML node is new, just report that
     if (patchset && pcmk_is_set(p->flags, xpf_created)) {
         int offset = 0;
         char buffer[XML_BUFFER_SIZE];
 
         if (pcmk__element_xpath(NULL, xml->parent, buffer, offset,
                                 sizeof(buffer)) > 0) {
-            int position = __xml_offset_no_deletions(xml);
+            int position = position_within_parent(xml, xpf_deleted);
 
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
@@ -437,6 +429,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         return;
     }
 
+    // Check each of the XML node's attributes for changes
     for (pIter = pcmk__first_xml_attr(xml); pIter != NULL; pIter = pIter->next) {
         xmlNode *attr = NULL;
 
@@ -490,8 +483,9 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         }
     }
 
+    // Now recursively do the same for each child node of this node
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
-        __xml_build_changes(cIter, patchset);
+        add_xml_changes_to_patchset(cIter, patchset);
     }
 
     p = xml->_private;
@@ -499,20 +493,23 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         int offset = 0;
         char buffer[XML_BUFFER_SIZE];
 
-        crm_trace("%s.%s moved to position %d", xml->name, ID(xml), __xml_offset(xml));
+        crm_trace("%s.%s moved to position %d",
+                  xml->name, ID(xml), position_within_parent(xml, xpf_skip));
         if (pcmk__element_xpath(NULL, xml, buffer, offset,
                                 sizeof(buffer)) > 0) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "move");
             crm_xml_add(change, XML_DIFF_PATH, buffer);
-            crm_xml_add_int(change, XML_DIFF_POSITION, __xml_offset_no_deletions(xml));
+            crm_xml_add_int(change, XML_DIFF_POSITION,
+                            position_within_parent(xml, xpf_deleted));
         }
     }
 }
 
+// Remove all attributes marked as deleted from an XML node
 static void
-__xml_accept_changes(xmlNode * xml)
+accept_attr_deletions(xmlNode *xml)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
@@ -536,7 +533,7 @@ __xml_accept_changes(xmlNode * xml)
     }
 
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
-        __xml_accept_changes(cIter);
+        accept_attr_deletions(cIter);
     }
 }
 
@@ -714,7 +711,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         }
     }
 
-    __xml_build_changes(target, patchset);
+    add_xml_changes_to_patchset(target, patchset);
     return patchset;
 }
 
@@ -805,8 +802,8 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool w
 }
 
 static void
-__xml_log_element(int log_level, const char *file, const char *function, int line,
-                  const char *prefix, xmlNode * data, int depth, int options);
+log_xml_element(int log_level, const char *file, const char *function, int line,
+                const char *prefix, xmlNode *data, int depth, int options);
 
 void
 xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
@@ -872,15 +869,18 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                 char *prefix = crm_strdup_printf("++ %s: ", xpath);
 
                 max = strlen(prefix);
-                __xml_log_element(log_level, __FILE__, function, __LINE__, prefix, change->children,
-                                  0, xml_log_option_formatted|xml_log_option_open);
+                log_xml_element(log_level, __FILE__, function, __LINE__, prefix,
+                                change->children, 0,
+                                xml_log_option_formatted|xml_log_option_open);
 
                 for(lpc = 2; lpc < max; lpc++) {
                     prefix[lpc] = ' ';
                 }
 
-                __xml_log_element(log_level, __FILE__, function, __LINE__, prefix, change->children,
-                                  0, xml_log_option_formatted|xml_log_option_close|xml_log_option_children);
+                log_xml_element(log_level, __FILE__, function, __LINE__, prefix,
+                                change->children, 0, xml_log_option_formatted
+                                                     |xml_log_option_close
+                                                     |xml_log_option_children);
                 free(prefix);
 
             } else if(strcmp(op, "move") == 0) {
@@ -1014,7 +1014,7 @@ xml_accept_changes(xmlNode * xml)
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
 
-    __xml_private_clean(xml->doc->_private);
+    reset_xml_private_data(xml->doc->_private);
 
     if (!pcmk_is_set(doc->flags, xpf_dirty)) {
         doc->flags = xpf_none;
@@ -1022,7 +1022,7 @@ xml_accept_changes(xmlNode * xml)
     }
 
     doc->flags = xpf_none;
-    __xml_accept_changes(top);
+    accept_attr_deletions(top);
 }
 
 static xmlNode *
@@ -1034,9 +1034,9 @@ find_element(xmlNode *haystack, xmlNode *needle, gboolean exact)
            : find_entity(haystack, crm_element_name(needle), ID(needle));
 }
 
-/* Simplified version for applying v1-style XML patches */
+// Apply the removals section of an v1 patchset to an XML node
 static void
-__subtract_xml_object(xmlNode * target, xmlNode * patch)
+process_v1_removals(xmlNode *target, xmlNode *patch)
 {
     xmlNode *patch_child = NULL;
     xmlNode *cIter = NULL;
@@ -1088,13 +1088,14 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
 
         cIter = __xml_next(cIter);
         patch_child = find_element(patch, target_child, FALSE);
-        __subtract_xml_object(target_child, patch_child);
+        process_v1_removals(target_child, patch_child);
     }
     free(id);
 }
 
+// Apply the additions section of an v1 patchset to an XML node
 static void
-__add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
+process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 {
     xmlNode *patch_child = NULL;
     xmlNode *target_child = NULL;
@@ -1151,7 +1152,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
          patch_child = __xml_next(patch_child)) {
 
         target_child = find_element(target, patch_child, FALSE);
-        __add_xml_object(target, target_child, patch_child);
+        process_v1_additions(target, target_child, patch_child);
     }
 }
 
@@ -1195,7 +1196,9 @@ find_patch_xml_node(xmlNode *patchset, int format, bool added,
     return TRUE;
 }
 
-bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
+// Get CIB versions used for additions and deletions in a patchset
+bool
+xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
 {
     int lpc = 0;
     int format = 1;
@@ -1235,8 +1238,18 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Check whether patchset can be applied to current CIB
+ *
+ * \param[in] xml       Root of current CIB
+ * \param[in] patchset  Patchset to check
+ * \param[in] format    Patchset version
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format) 
+xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 {
     int lpc = 0;
     bool changed = FALSE;
@@ -1273,13 +1286,13 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         if(this[lpc] < del[lpc]) {
             crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)", vfields[lpc],
                       this[0], this[1], this[2], del[0], del[1], del[2], add[0], add[1], add[2]);
-            return -pcmk_err_diff_resync;
+            return pcmk_rc_diff_resync;
 
         } else if(this[lpc] > del[lpc]) {
             crm_info("Current %s is too high (%d.%d.%d > %d.%d.%d --> %d.%d.%d) %p", vfields[lpc],
                      this[0], this[1], this[2], del[0], del[1], del[2], add[0], add[1], add[2], patchset);
             crm_log_xml_info(patchset, "OldPatch");
-            return -pcmk_err_old_data;
+            return pcmk_rc_old_data;
         }
     }
 
@@ -1291,18 +1304,27 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     if(changed == FALSE) {
         crm_notice("Versions did not change in patch %d.%d.%d", add[0], add[1], add[2]);
-        return -pcmk_err_old_data;
+        return pcmk_rc_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
              add[0], add[1], add[2], this[0], this[1], this[2]);
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Apply a version 1 patchset to an XML node
+ *
+ * \param[in,out] xml       XML to apply patchset to
+ * \param[in]     patchset  Patchset to apply
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
+apply_v1_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     int root_nodes_seen = 0;
 
     xmlNode *child_diff = NULL;
@@ -1315,26 +1337,26 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
          child_diff = __xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
         if (root_nodes_seen == 0) {
-            __subtract_xml_object(xml, child_diff);
+            process_v1_removals(xml, child_diff);
         }
         root_nodes_seen++;
     }
 
     if (root_nodes_seen > 1) {
         crm_err("(-) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
-        rc = -ENOTUNIQ;
+        rc = ENOTUNIQ;
     }
 
     root_nodes_seen = 0;
     crm_trace("Addition Phase");
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         xmlNode *child_diff = NULL;
 
         for (child_diff = __xml_first_child(added); child_diff != NULL;
              child_diff = __xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
             if (root_nodes_seen == 0) {
-                __add_xml_object(NULL, xml, child_diff);
+                process_v1_additions(NULL, xml, child_diff);
             }
             root_nodes_seen++;
         }
@@ -1342,7 +1364,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 
     if (root_nodes_seen > 1) {
         crm_err("(+) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
-        rc = -ENOTUNIQ;
+        rc = ENOTUNIQ;
     }
 
     purge_diff_markers(xml);       /* Purge prior to checking the digest */
@@ -1351,8 +1373,10 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
     return rc;
 }
 
+// Return first child matching element name and optionally id or position
 static xmlNode *
-__first_xml_child_match(xmlNode *parent, const char *name, const char *id, int position)
+first_matching_xml_child(xmlNode *parent, const char *name, const char *id,
+                         int position)
 {
     xmlNode *cIter = NULL;
 
@@ -1369,7 +1393,7 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id, int p
         /* The "position" makes sense only for XML comments for now */
         if (cIter->type == XML_COMMENT_NODE
             && position >= 0
-            && __xml_offset(cIter) != position) {
+            && (position_within_parent(cIter, xpf_skip) != position)) {
             continue;
         }
 
@@ -1392,7 +1416,7 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id, int p
  *       i.e. the only allowed search predicate is [@id='XXX'].
  */
 static xmlNode *
-__xml_find_path(xmlNode *top, const char *key, int target_position)
+search_v2_xpath(xmlNode *top, const char *key, int target_position)
 {
     xmlNode *target = (xmlNode*) top->doc;
     const char *current = key;
@@ -1440,10 +1464,12 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
 
             switch (f) {
                 case 1:
-                    target = __first_xml_child_match(target, tag, NULL, current_position);
+                    target = first_matching_xml_child(target, tag, NULL,
+                                                      current_position);
                     break;
                 case 2:
-                    target = __first_xml_child_match(target, tag, id, current_position);
+                    target = first_matching_xml_child(target, tag, id,
+                                                      current_position);
                     break;
                 default:
                     // This should not be possible
@@ -1497,10 +1523,19 @@ sort_change_obj_by_position(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Apply a version 2 patchset to an XML node
+ *
+ * \param[in,out] xml       XML to apply patchset to
+ * \param[in]     patchset  Patchset to apply
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
+apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *change = NULL;
     GListPtr change_objs = NULL;
     GListPtr gIter = NULL;
@@ -1521,7 +1556,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         if(strcmp(op, "delete") == 0) {
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
         }
-        match = __xml_find_path(xml, xpath, position);
+        match = search_v2_xpath(xml, xpath, position);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL && strcmp(op, "delete") == 0) {
@@ -1530,7 +1565,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 
         } else if(match == NULL) {
             crm_err("No %s match for %s in %p", op, xpath, xml->doc);
-            rc = -pcmk_err_diff_failed;
+            rc = pcmk_rc_diff_failed;
             continue;
 
         } else if (strcmp(op, "create") == 0 || strcmp(op, "move") == 0) {
@@ -1559,7 +1594,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             xmlNode *attrs = __xml_first_child(first_named_child(change, XML_DIFF_RESULT));
 
             if(attrs == NULL) {
-                rc = -ENOMSG;
+                rc = ENOMSG;
                 continue;
             }
             while(pIter != NULL) {
@@ -1578,7 +1613,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 
         } else {
             crm_err("Unknown operation: %s", op);
-            rc = -pcmk_err_diff_failed;
+            rc = pcmk_rc_diff_failed;
         }
     }
 
@@ -1606,7 +1641,8 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             match_child = match->children;
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
 
-            while(match_child && position != __xml_offset(match_child)) {
+            while ((match_child != NULL)
+                   && (position != position_within_parent(match_child, xpf_skip))) {
                 match_child = match_child->next;
             }
 
@@ -1624,30 +1660,33 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
                 CRM_LOG_ASSERT(position == 0);
                 xmlAddChild(match, child);
             }
-            crm_node_created(child);
+            mark_xml_node_created(child);
 
         } else if(strcmp(op, "move") == 0) {
             int position = 0;
 
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
-            if(position != __xml_offset(match)) {
+            if (position != position_within_parent(match, xpf_skip)) {
                 xmlNode *match_child = NULL;
                 int p = position;
 
-                if(p > __xml_offset(match)) {
+                if (p > position_within_parent(match, xpf_skip)) {
                     p++; /* Skip ourselves */
                 }
 
                 CRM_ASSERT(match->parent != NULL);
                 match_child = match->parent->children;
 
-                while(match_child && p != __xml_offset(match_child)) {
+                while ((match_child != NULL)
+                       && (p != position_within_parent(match_child, xpf_skip))) {
                     match_child = match_child->next;
                 }
 
                 crm_trace("Moving %s to position %d (was %d, prev %p, %s %p)",
-                         match->name, position, __xml_offset(match), match->prev,
-                         match_child?"next":"last", match_child?match_child:match->parent->last);
+                          match->name, position,
+                          position_within_parent(match, xpf_skip),
+                          match->prev, (match_child? "next":"last"),
+                          (match_child? match_child : match->parent->last));
 
                 if(match_child) {
                     xmlAddPrevSibling(match_child, match);
@@ -1661,10 +1700,12 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
                 crm_trace("%s is already in position %d", match->name, position);
             }
 
-            if(position != __xml_offset(match)) {
+            if (position != position_within_parent(match, xpf_skip)) {
                 crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, ID(match), __xml_offset(match), position, match->prev);
-                rc = -pcmk_err_diff_failed;
+                        match->name, ID(match),
+                        position_within_parent(match, xpf_skip),
+                        position, match->prev);
+                rc = pcmk_rc_diff_failed;
             }
         }
     }
@@ -1689,7 +1730,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
     crm_element_value_int(patchset, "format", &format);
     if(check_version) {
-        rc = xml_patch_version_check(xml, patchset, format);
+        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset, format));
         if(rc != pcmk_ok) {
             return rc;
         }
@@ -1703,10 +1744,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     if(rc == pcmk_ok) {
         switch(format) {
             case 1:
-                rc = xml_apply_patchset_v1(xml, patchset);
+                rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));
                 break;
             case 2:
-                rc = xml_apply_patchset_v2(xml, patchset);
+                rc = pcmk_rc2legacy(apply_v2_patchset(xml, patchset));
                 break;
             default:
                 crm_err("Unknown patch format: %d", format);
@@ -1950,7 +1991,7 @@ add_node_copy(xmlNode * parent, xmlNode * src_node)
 
     child = xmlDocCopyNode(src_node, doc, 1);
     xmlAddChild(parent, child);
-    crm_node_created(child);
+    mark_xml_node_created(child);
     return child;
 }
 
@@ -1983,7 +2024,7 @@ create_xml_node(xmlNode * parent, const char *name)
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         xmlAddChild(parent, node);
     }
-    crm_node_created(node);
+    mark_xml_node_created(node);
     return node;
 }
 
@@ -2107,7 +2148,7 @@ free_xml_with_position(xmlNode * child, int position)
                             deleted_obj->position = position;
 
                         } else {
-                            deleted_obj->position = __xml_offset(child);
+                            deleted_obj->position = position_within_parent(child, xpf_skip);
                         }
                     }
 
@@ -2140,11 +2181,12 @@ copy_xml(xmlNode * src)
 }
 
 static void
-crm_xml_err(void *ctx, const char *fmt, ...)
+log_xmllib_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
+// Log an XML library error
 static void
-crm_xml_err(void *ctx, const char *fmt, ...)
+log_xmllib_err(void *ctx, const char *fmt, ...)
 {
     va_list ap;
     static struct qb_log_callsite *xml_error_cs = NULL;
@@ -2184,7 +2226,7 @@ string2xml(const char *input)
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, crm_xml_err);
+    xmlSetGenericErrorFunc(ctxt, log_xmllib_err);
     output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
                             PCMK__XML_PARSE_OPTS);
     if (output) {
@@ -2356,7 +2398,7 @@ filename2xml(const char *filename)
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, crm_xml_err);
+    xmlSetGenericErrorFunc(ctxt, log_xmllib_err);
 
     if (filename) {
         uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
@@ -2474,30 +2516,32 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \param[in] filename  Name of file being written (for logging only)
  * \param[in] stream    Open file stream corresponding to filename
  * \param[in] compress  Whether to compress XML before writing
+ * \param[out] nbytes   Number of bytes written
  *
- * \return Number of bytes written on success, -errno otherwise
+ * \return Standard Pacemaker return code
  */
 static int
-write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
+write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
+                 bool compress, unsigned int *nbytes)
 {
-    int res = 0;
+    int rc = pcmk_rc_ok;
     char *buffer = NULL;
-    unsigned int out = 0;
 
+    *nbytes = 0;
     crm_log_xml_trace(xml_node, "writing");
 
     buffer = dump_xml_formatted(xml_node);
     CRM_CHECK(buffer && strlen(buffer),
               crm_log_xml_warn(xml_node, "formatting failed");
-              res = -pcmk_err_generic;
+              rc = pcmk_rc_error;
               goto bail);
 
     if (compress) {
 #if HAVE_BZLIB_H
-        int rc = BZ_OK;
         unsigned int in = 0;
         BZFILE *bz_file = NULL;
 
+        rc = BZ_OK;
         bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
         if (rc != BZ_OK) {
             crm_warn("Not compressing %s: could not prepare file stream: %s "
@@ -2512,52 +2556,53 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
         }
 
         if (rc == BZ_OK) {
-            BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
+            BZ2_bzWriteClose(&rc, bz_file, 0, &in, nbytes);
             if (rc != BZ_OK) {
                 crm_warn("Not compressing %s: could not write compressed data: %s "
                          CRM_XS " bzerror=%d errno=%d",
                          filename, bz2_strerror(rc), rc, errno);
-                out = 0; // retry without compression
+                *nbytes = 0; // retry without compression
             } else {
-                res = (int) out;
                 crm_trace("Compressed XML for %s from %u bytes to %u",
-                          filename, in, out);
+                          filename, in, *nbytes);
             }
         }
+        rc = pcmk_rc_ok; // Either true, or we'll retry without compression
 #else
         crm_warn("Not compressing %s: not built with bzlib support", filename);
 #endif
     }
 
-    if (out == 0) {
-        res = fprintf(stream, "%s", buffer);
-        if (res < 0) {
-            res = -errno;
+    if (*nbytes == 0) {
+        rc = fprintf(stream, "%s", buffer);
+        if (rc < 0) {
+            rc = errno;
             crm_perror(LOG_ERR, "writing %s", filename);
-            goto bail;
+        } else {
+            *nbytes = (unsigned int) rc;
+            rc = pcmk_rc_ok;
         }
     }
 
   bail:
 
     if (fflush(stream) != 0) {
-        res = -errno;
+        rc = errno;
         crm_perror(LOG_ERR, "flushing %s", filename);
     }
 
     /* Don't report error if the file does not support synchronization */
     if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
-        res = -errno;
+        rc = errno;
         crm_perror(LOG_ERR, "synchronizing %s", filename);
     }
 
     fclose(stream);
 
-    crm_trace("Saved %d bytes%s to %s as XML",
-              res, ((out > 0)? " (compressed)" : ""), filename);
+    crm_trace("Saved %d bytes to %s as XML", *nbytes, filename);
     free(buffer);
 
-    return res;
+    return rc;
 }
 
 /*!
@@ -2574,13 +2619,19 @@ int
 write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress)
 {
     FILE *stream = NULL;
+    unsigned int nbytes = 0;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK(xml_node && (fd > 0), return -EINVAL);
     stream = fdopen(fd, "w");
     if (stream == NULL) {
         return -errno;
     }
-    return write_xml_stream(xml_node, filename, stream, compress);
+    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return (int) nbytes;
 }
 
 /*!
@@ -2596,17 +2647,24 @@ int
 write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
 {
     FILE *stream = NULL;
+    unsigned int nbytes = 0;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK(xml_node && filename, return -EINVAL);
     stream = fopen(filename, "w");
     if (stream == NULL) {
         return -errno;
     }
-    return write_xml_stream(xml_node, filename, stream, compress);
+    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return (int) nbytes;
 }
 
+// Replace a portion of a dynamically allocated string (reallocating memory)
 static char *
-crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
+replace_text(char *text, int start, int *length, const char *replace)
 {
     int lpc;
     int offset = strlen(replace) - 1;   /* We have space for 1 char already */
@@ -2650,37 +2708,37 @@ crm_xml_escape(const char *text)
             case 0:
                 break;
             case '<':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "&lt;");
+                copy = replace_text(copy, index, &length, "&lt;");
                 changes++;
                 break;
             case '>':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "&gt;");
+                copy = replace_text(copy, index, &length, "&gt;");
                 changes++;
                 break;
             case '"':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "&quot;");
+                copy = replace_text(copy, index, &length, "&quot;");
                 changes++;
                 break;
             case '\'':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "&apos;");
+                copy = replace_text(copy, index, &length, "&apos;");
                 changes++;
                 break;
             case '&':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "&amp;");
+                copy = replace_text(copy, index, &length, "&amp;");
                 changes++;
                 break;
             case '\t':
                 /* Might as well just expand to a few spaces... */
-                copy = crm_xml_escape_shuffle(copy, index, &length, "    ");
+                copy = replace_text(copy, index, &length, "    ");
                 changes++;
                 break;
             case '\n':
                 /* crm_trace("Convert: \\%.3o", copy[index]); */
-                copy = crm_xml_escape_shuffle(copy, index, &length, "\\n");
+                copy = replace_text(copy, index, &length, "\\n");
                 changes++;
                 break;
             case '\r':
-                copy = crm_xml_escape_shuffle(copy, index, &length, "\\r");
+                copy = replace_text(copy, index, &length, "\\r");
                 changes++;
                 break;
                 /* For debugging...
@@ -2694,7 +2752,7 @@ crm_xml_escape(const char *text)
                     char *replace = crm_strdup_printf("\\%.3o", copy[index]);
 
                     /* crm_trace("Convert to octal: \\%.3o", copy[index]); */
-                    copy = crm_xml_escape_shuffle(copy, index, &length, replace);
+                    copy = replace_text(copy, index, &length, replace);
                     free(replace);
                     changes++;
                 }
@@ -2730,9 +2788,10 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     free(p_value);
 }
 
+// Log an XML element (and any children) in a formatted way
 static void
-__xml_log_element(int log_level, const char *file, const char *function, int line,
-                  const char *prefix, xmlNode * data, int depth, int options)
+log_xml_element(int log_level, const char *file, const char *function, int line,
+                const char *prefix, xmlNode *data, int depth, int options)
 {
     int max = 0;
     int offset = 0;
@@ -2811,7 +2870,9 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         max = 0;
 
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-            __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options|xml_log_option_open|xml_log_option_close);
+            log_xml_element(log_level, file, function, line, prefix, child,
+                            depth + 1,
+                            options|xml_log_option_open|xml_log_option_close);
         }
     }
 
@@ -2826,9 +2887,10 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     }
 }
 
+// Log XML portions that have been marked as changed
 static void
-__xml_log_change_element(int log_level, const char *file, const char *function, int line,
-                         const char *prefix, xmlNode * data, int depth, int options)
+log_xml_changes(int log_level, const char *file, const char *function, int line,
+                const char *prefix, xmlNode *data, int depth, int options)
 {
     xml_private_t *p;
     char *prefix_m = NULL;
@@ -2846,8 +2908,11 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
 
     if (pcmk_all_flags_set(p->flags, xpf_dirty|xpf_created)) {
         /* Continue and log full subtree */
-        __xml_log_element(log_level, file, function, line,
-                          prefix_m, data, depth, options|xml_log_option_open|xml_log_option_close|xml_log_option_children);
+        log_xml_element(log_level, file, function, line, prefix_m, data, depth,
+                        options
+                        |xml_log_option_open
+                        |xml_log_option_close
+                        |xml_log_option_children);
 
     } else if (pcmk_is_set(p->flags, xpf_dirty)) {
         char *spaces = calloc(80, 1);
@@ -2869,8 +2934,8 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
             flags = prefix;
         }
 
-        __xml_log_element(log_level, file, function, line,
-                          flags, data, depth, options|xml_log_option_open);
+        log_xml_element(log_level, file, function, line, flags, data, depth,
+                        options|xml_log_option_open);
 
         for (pIter = pcmk__first_xml_attr(data); pIter != NULL; pIter = pIter->next) {
             const char *aname = (const char*)pIter->name;
@@ -2906,15 +2971,17 @@ __xml_log_change_element(int log_level, const char *file, const char *function, 
         free(spaces);
 
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-            __xml_log_change_element(log_level, file, function, line, prefix, child, depth + 1, options);
+            log_xml_changes(log_level, file, function, line, prefix, child,
+                            depth + 1, options);
         }
 
-        __xml_log_element(log_level, file, function, line,
-                          prefix, data, depth, options|xml_log_option_close);
+        log_xml_element(log_level, file, function, line, prefix, data, depth,
+                        options|xml_log_option_close);
 
     } else {
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-            __xml_log_change_element(log_level, file, function, line, prefix, child, depth + 1, options);
+            log_xml_changes(log_level, file, function, line, prefix, child,
+                            depth + 1, options);
         }
     }
 
@@ -2946,7 +3013,8 @@ log_data_element(int log_level, const char *file, const char *function, int line
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
-        __xml_log_change_element(log_level, file, function, line, prefix, data, depth, options);
+        log_xml_changes(log_level, file, function, line, prefix, data, depth,
+                        options);
         return;
     }
 
@@ -2974,8 +3042,11 @@ log_data_element(int log_level, const char *file, const char *function, int line
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
         }
     } else {
-        __xml_log_element(log_level, file, function, line, prefix, data, depth,
-                          options|xml_log_option_open|xml_log_option_close|xml_log_option_children);
+        log_xml_element(log_level, file, function, line, prefix, data, depth,
+                        options
+                        |xml_log_option_open
+                        |xml_log_option_close
+                        |xml_log_option_children);
     }
     free(prefix_m);
 }
@@ -3124,7 +3195,6 @@ dump_xml_cdata(xmlNode * data, int options, char **buffer, int *offset, int *max
         buffer_print(*buffer, *max, *offset, "\n");
     }
 }
-
 
 static void
 dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
@@ -3407,7 +3477,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
              child_diff = __xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, result = FALSE);
             if (root_nodes_seen == 0) {
-                add_xml_object(NULL, *new_xml, child_diff, TRUE);
+                add_xml_object(NULL, *new_xml, child_diff, true);
             }
             root_nodes_seen++;
         }
@@ -3529,7 +3599,7 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
               old_attr->name, p_old, p_new, element);
 
     // Mark document, element, and all element's parents as changed
-    __xml_node_dirty(new_xml);
+    mark_xml_node_dirty(new_xml);
 
     // Mark attribute as changed
     pcmk__set_xml_flags(p, xpf_dirty|xpf_moved);
@@ -3560,8 +3630,8 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 
         } else {
             xml_private_t *p = new_attr->_private;
-            int new_pos = __xml_offset((xmlNode*) new_attr);
-            int old_pos = __xml_offset((xmlNode*) old_attr);
+            int new_pos = position_within_parent((xmlNode*) new_attr, xpf_skip);
+            int old_pos = position_within_parent((xmlNode*) old_attr, xpf_skip);
             const char *new_value = crm_element_value(new_xml, name);
 
             // This attribute isn't new
@@ -3642,13 +3712,14 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     xmlNode *candidate = add_node_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
-    __xml_node_clean(candidate);
+    reset_xml_node_flags(candidate);
 
     // Check whether ACLs allow the deletion
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
 
     // Remove the child again (which will track it in document's deleted_objs)
-    free_xml_with_position(candidate, __xml_offset(old_child));
+    free_xml_with_position(candidate,
+                           position_within_parent(old_child, xpf_skip));
 
     if (find_element(new_parent, old_child, TRUE) == NULL) {
         pcmk__set_xml_flags((xml_private_t *) (old_child->_private), xpf_skip);
@@ -3664,7 +3735,7 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     crm_trace("Child element %s with id='%s' moved from position %d to %d under %s",
               new_child->name, (ID(new_child)? ID(new_child) : "<no id>"),
               p_old, p_new, new_parent->name);
-    __xml_node_dirty(new_parent);
+    mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(p, xpf_moved);
 
     if (p_old > p_new) {
@@ -3675,15 +3746,16 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     pcmk__set_xml_flags(p, xpf_skip);
 }
 
+// Given original and new XML, mark new XML portions that have changed
 static void
-__xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
+mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
     xmlNode *cIter = NULL;
     xml_private_t *p = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
-        crm_node_created(new_xml);
+        mark_xml_node_created(new_xml);
         pcmk__apply_creation_acl(new_xml, check_top);
         return;
     }
@@ -3706,7 +3778,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 
         cIter = __xml_next(cIter);
         if(new_child) {
-            __xml_diff_object(old_child, new_child, TRUE);
+            mark_xml_changes(old_child, new_child, TRUE);
 
         } else {
             mark_child_deleted(old_child, new_xml);
@@ -3723,12 +3795,12 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
             // This is a newly created child
             p = new_child->_private;
             pcmk__set_xml_flags(p, xpf_skip);
-            __xml_diff_object(old_child, new_child, TRUE);
+            mark_xml_changes(old_child, new_child, TRUE);
 
         } else {
             /* Check for movement, we already checked for differences */
-            int p_new = __xml_offset(new_child);
-            int p_old = __xml_offset(old_child);
+            int p_new = position_within_parent(new_child, xpf_skip);
+            int p_old = position_within_parent(old_child, xpf_skip);
 
             if(p_old != p_new) {
                 mark_child_moved(old_child, new_xml, new_child, p_old, p_new);
@@ -3755,7 +3827,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
         xml_track_changes(new_xml, NULL, NULL, FALSE);
     }
 
-    __xml_diff_object(old_xml, new_xml, FALSE);
+    mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
 xmlNode *
@@ -3826,13 +3898,13 @@ static xmlNode *
 find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
 {
     xmlNode *a_child = NULL;
-    int search_offset = __xml_offset(search_comment);
+    int search_offset = position_within_parent(search_comment, xpf_skip);
 
     CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
 
     for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
         if (exact) {
-            int offset = __xml_offset(a_child);
+            int offset = position_within_parent(a_child, xpf_skip);
             xml_private_t *p = a_child->_private;
 
             if (offset < search_offset) {
@@ -4066,11 +4138,12 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     return diff;
 }
 
-static int
-add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
+// Add or update XML comment "update" to "parent" at "target"
+static void
+add_xml_comment(xmlNode *parent, xmlNode *target, xmlNode *update)
 {
-    CRM_CHECK(update != NULL, return 0);
-    CRM_CHECK(update->type == XML_COMMENT_NODE, return 0);
+    CRM_CHECK(update != NULL, return);
+    CRM_CHECK(update->type == XML_COMMENT_NODE, return);
 
     if (target == NULL) {
         target = find_xml_comment(parent, update, FALSE);
@@ -4079,17 +4152,15 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
     if (target == NULL) {
         add_node_copy(parent, update);
 
-    /* We won't reach here currently */
     } else if (!pcmk__str_eq((const char *)target->content, (const char *)update->content, pcmk__str_casei)) {
         xmlFree(target->content);
         target->content = xmlStrdup(update->content);
     }
-
-    return 0;
 }
 
-static int
-add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff)
+// Add or update XML "update" to "parent" at "target"
+static void
+add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, bool as_diff)
 {
     xmlNode *a_child = NULL;
     const char *object_name = NULL,
@@ -4101,10 +4172,11 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
     crm_log_xml_trace("target:", target);
 #endif
 
-    CRM_CHECK(update != NULL, return 0);
+    CRM_CHECK(update != NULL, return);
 
     if (update->type == XML_COMMENT_NODE) {
-        return add_xml_comment(parent, target, update);
+        add_xml_comment(parent, target, update);
+        return;
     }
 
     object_name = crm_element_name(update);
@@ -4116,8 +4188,8 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
         object_href = (object_href_val == NULL) ? NULL : XML_ATTR_IDREF;
     }
 
-    CRM_CHECK(object_name != NULL, return 0);
-    CRM_CHECK(target != NULL || parent != NULL, return 0);
+    CRM_CHECK(object_name != NULL, return);
+    CRM_CHECK(target != NULL || parent != NULL, return);
 
     if (target == NULL) {
         target = find_entity_by_attr_or_just_name(parent, object_name,
@@ -4126,7 +4198,7 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 
     if (target == NULL) {
         target = create_xml_node(parent, object_name);
-        CRM_CHECK(target != NULL, return 0);
+        CRM_CHECK(target != NULL, return);
 #if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", crm_str(object_name),
                   object_href ? " " : "",
@@ -4143,8 +4215,9 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 #endif
     }
 
-    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(update), pcmk__str_casei),
-              return 0);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(update),
+                           pcmk__str_casei),
+              return);
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
@@ -4182,7 +4255,6 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
               object_href ? "=" : "",
               object_href ? object_href_val : "");
 #endif
-    return 0;
 }
 
 gboolean
@@ -4204,7 +4276,7 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
 #if XML_PARSER_DEBUG
         crm_log_xml_trace(child, "Update match found...");
 #endif
-        add_xml_object(NULL, child, to_update, FALSE);
+        add_xml_object(NULL, child, to_update, false);
     }
 
     for (child_of_child = __xml_first_child(child); child_of_child != NULL;
@@ -4422,8 +4494,8 @@ crm_xml_init(void)
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
         /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(pcmkDeregisterNode);
-        xmlRegisterNodeDefault(pcmkRegisterNode);
+        xmlDeregisterNodeDefault(free_private_data);
+        xmlRegisterNodeDefault(new_private_data);
 
         crm_schema_init();
     }
