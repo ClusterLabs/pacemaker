@@ -1269,7 +1269,7 @@ main(int argc, char **argv)
                  */
                 cib_delete(cib);
                 cib = NULL;
-                crm_make_daemon(crm_system_name, TRUE, options.pid_file);
+                pcmk__daemonize(crm_system_name, options.pid_file);
                 cib = cib_new();
                 if (cib == NULL) {
                     rc = -EINVAL;

@@ -543,7 +543,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     uint32_t id = 0;
     crm_node_t *peer = NULL;
     cpg_handle_t handle = 0;
-    const char *message_name = pcmk_message_name(crm_system_name);
+    const char *message_name = pcmk__message_name(crm_system_name);
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
@@ -777,7 +777,7 @@ text2msg_type(const char *text)
     int type = crm_msg_none;
 
     CRM_CHECK(text != NULL, return type);
-    text = pcmk_message_name(text);
+    text = pcmk__message_name(text);
     if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
         type = crm_msg_ais;
     } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {

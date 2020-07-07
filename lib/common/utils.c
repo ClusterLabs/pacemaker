@@ -183,8 +183,15 @@ pcmk_daemon_user(uid_t *uid, gid_t *gid)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Return the integer equivalent of a portion of a string
+ *
+ * \param[in]  text      Pointer to beginning of string portion
+ * \param[out] end_text  This will point to next character after integer
+ */
 static int
-crm_version_helper(const char *text, const char **end_text)
+version_helper(const char *text, const char **end_text)
 {
     int atoi_result = -1;
 
@@ -243,11 +250,11 @@ compare_version(const char *version1, const char *version2)
         }
 
         if (ver1_iter != NULL) {
-            digit1 = crm_version_helper(ver1_iter, &ver1_iter);
+            digit1 = version_helper(ver1_iter, &ver1_iter);
         }
 
         if (ver2_iter != NULL) {
-            digit2 = crm_version_helper(ver2_iter, &ver2_iter);
+            digit2 = version_helper(ver2_iter, &ver2_iter);
         }
 
         if (digit1 < digit2) {
@@ -388,15 +395,22 @@ crm_abort(const char *file, const char *function, int line,
     crm_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
 }
 
+/*!
+ * \internal
+ * \brief Convert the current process to a daemon process
+ *
+ * Fork a child process, exit the parent, create a PID file with the current
+ * process ID, and close the standard input/output/error file descriptors.
+ * Exit instead if a daemon is already running and using the PID file.
+ *
+ * \param[in] name     Daemon executable name
+ * \param[in] pidfile  File name to use as PID file
+ */
 void
-crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
+pcmk__daemonize(const char *name, const char *pidfile)
 {
     int rc;
     pid_t pid;
-
-    if (daemonize == FALSE) {
-        return;
-    }
 
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
@@ -503,7 +517,7 @@ crm_generate_uuid(void)
  *       that mixed-version clusters are possible during a rolling upgrade.
  */
 const char *
-pcmk_message_name(const char *name)
+pcmk__message_name(const char *name)
 {
     if (name == NULL) {
         return "unknown";
@@ -541,7 +555,7 @@ pcmk_message_name(const char *name)
 bool
 crm_is_daemon_name(const char *name)
 {
-    name = pcmk_message_name(name);
+    name = pcmk__message_name(name);
     return (!strcmp(name, CRM_SYSTEM_CRMD)
             || !strcmp(name, CRM_SYSTEM_STONITHD)
             || !strcmp(name, "stonith-ng")

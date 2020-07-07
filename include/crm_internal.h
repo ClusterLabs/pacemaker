@@ -30,9 +30,6 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-/* Assorted convenience functions */
-void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
-
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);

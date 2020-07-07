@@ -278,7 +278,8 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 // miscellaneous utilities (from utils.c)
 
-const char *pcmk_message_name(const char *name);
+const char *pcmk__message_name(const char *name);
+void pcmk__daemonize(const char *name, const char *pidfile);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;

@@ -180,8 +180,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     proxy->session_id = strdup(session_id);
     proxy->lrm = lrmd;
 
-    if (!strcmp(pcmk_message_name(crm_system_name), CRM_SYSTEM_CRMD)
-        && !strcmp(pcmk_message_name(channel), CRM_SYSTEM_CRMD)) {
+    if (!strcmp(pcmk__message_name(crm_system_name), CRM_SYSTEM_CRMD)
+        && !strcmp(pcmk__message_name(channel), CRM_SYSTEM_CRMD)) {
         // The controller doesn't need to connect to itself
         proxy->is_local = TRUE;
 
