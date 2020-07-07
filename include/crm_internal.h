@@ -31,8 +31,6 @@
 #  include <crm/common/internal.h>
 
 void strip_text_nodes(xmlNode * xml);
-void pcmk_panic(const char *origin);
-pid_t pcmk_locate_sbd(void);
 
 
 /*

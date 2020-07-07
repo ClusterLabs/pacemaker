@@ -372,11 +372,11 @@ stonith_device_execute(stonith_device_t * device)
 
     if(pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT, pcmk__str_casei)) {
         if(pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__FUNCTION__);
             goto done;
 
         } else if(pcmk__str_eq(cmd->action, "off", pcmk__str_casei)) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__FUNCTION__);
             goto done;
 
         } else {

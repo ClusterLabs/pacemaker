@@ -190,7 +190,7 @@ do_dc_takeover(long long action,
     int rc = pcmk_ok;
     xmlNode *cib = NULL;
     const char *cluster_type = name_for_cluster_type(get_cluster_type());
-    pid_t watchdog = pcmk_locate_sbd();
+    pid_t watchdog = pcmk__locate_sbd();
 
     crm_info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);

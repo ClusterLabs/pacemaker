@@ -138,7 +138,7 @@ pcmk_process_exit(pcmk_child_t * child)
 
     } else if (crm_is_true(getenv("PCMK_fail_fast"))) {
         crm_err("Rebooting system because of %s", child->name);
-        pcmk_panic(__FUNCTION__);
+        pcmk__panic(__FUNCTION__);
 
     } else if (child_liveness(child) == pcmk_rc_ok) {
         crm_warn("One-off suppressing strict respawning of a child process %s,"
@@ -188,7 +188,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 crm_emerg("%s[%d] instructed the machine to reset", name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
-                pcmk_panic(__FUNCTION__);
+                pcmk__panic(__FUNCTION__);
                 pcmk_shutdown(SIGTERM);
                 break;
 
@@ -490,7 +490,7 @@ pcmk_ignore(int nsig)
 static void
 pcmk_sigquit(int nsig)
 {
-    pcmk_panic(__FUNCTION__);
+    pcmk__panic(__FUNCTION__);
 }
 
 void
@@ -1231,7 +1231,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    if(pcmk_locate_sbd() > 0) {
+    if (pcmk__locate_sbd() > 0) {
         setenv("PCMK_watchdog", "true", 1);
         running_with_sbd = TRUE;
     } else {

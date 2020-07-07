@@ -280,6 +280,8 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 const char *pcmk__message_name(const char *name);
 void pcmk__daemonize(const char *name, const char *pidfile);
+void pcmk__panic(const char *origin);
+pid_t pcmk__locate_sbd(void);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;

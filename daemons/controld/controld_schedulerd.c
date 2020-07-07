@@ -404,7 +404,7 @@ static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     xmlNode *cmd = NULL;
-    pid_t watchdog = pcmk_locate_sbd();
+    pid_t watchdog = pcmk__locate_sbd();
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "

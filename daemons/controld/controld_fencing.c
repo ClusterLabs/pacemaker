@@ -482,7 +482,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                  st_event->executioner? st_event->executioner : "the cluster",
                  st_event->origin); /* Dumps blackbox if enabled */
         if (fence_reaction_panic) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__FUNCTION__);
         } else {
             crm_exit(CRM_EX_FATAL);
         }
