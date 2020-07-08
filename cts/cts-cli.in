@@ -1325,7 +1325,7 @@ done
 echo -e "\n\nSummary"
 for t in $tests; do
     eval TMPFILE="\$TMPFILE_$t"
-    grep -e '^\*' "$TMPFILE"
+    grep -e '^\* \(Passed\|Failed\)' "$TMPFILE"
 done
 
 if [ $num_errors -ne 0 ]; then
