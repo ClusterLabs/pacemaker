@@ -22,6 +22,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
 
 struct config_root_s {
@@ -358,7 +359,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     crm_trace("Massaging CIB contents");
-    strip_text_nodes(scratch);
+    pcmk__strip_xml_text(scratch);
     fix_plus_plus_recursive(scratch);
 
     if (pcmk_is_set(call_options, cib_zero_copy)) {
@@ -439,7 +440,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        crm_xml_add_last_written(scratch);
+        pcmk__xe_add_last_written(scratch);
         if (schema) {
             static int minimum_schema = 0;
             int current_schema = get_schema_version(schema);

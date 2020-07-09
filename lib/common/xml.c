@@ -26,7 +26,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
+#include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
 #define XML_BUFFER_SIZE	4096
@@ -2198,12 +2198,12 @@ log_xmllib_err(void *ctx, const char *fmt, ...)
 
     va_start(ap, fmt);
     if (xml_error_cs && xml_error_cs->targets) {
-        CRM_XML_LOG_BASE(LOG_ERR, TRUE,
-                         crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error",
-                                   TRUE, TRUE),
-                         "XML Error: ", fmt, ap);
+        PCMK__XML_LOG_BASE(LOG_ERR, TRUE,
+                           crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error",
+                                     TRUE, TRUE),
+                           "XML Error: ", fmt, ap);
     } else {
-        CRM_XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
+        PCMK__XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
     }
     va_end(ap);
 }
@@ -2356,8 +2356,14 @@ decompress_file(const char *filename)
     return buffer;
 }
 
+/*!
+ * \internal
+ * \brief Remove XML text nodes from specified XML and all its children
+ *
+ * \param[in,out] xml  XML to strip text from
+ */
 void
-strip_text_nodes(xmlNode * xml)
+pcmk__strip_xml_text(xmlNode *xml)
 {
     xmlNode *iter = xml->children;
 
@@ -2372,7 +2378,7 @@ strip_text_nodes(xmlNode * xml)
 
             case XML_ELEMENT_NODE:
                 /* Search it */
-                strip_text_nodes(iter);
+                pcmk__strip_xml_text(iter);
                 break;
 
             default:
@@ -2421,7 +2427,7 @@ filename2xml(const char *filename)
     }
 
     if (output && (xml = xmlDocGetRootElement(output))) {
-        strip_text_nodes(xml);
+        pcmk__strip_xml_text(xml);
     }
 
     last_error = xmlCtxtGetLastError(ctxt);
@@ -2448,18 +2454,18 @@ filename2xml(const char *filename)
 
 /*!
  * \internal
- * \brief Add a "last written" attribute to an XML node, set to current time
+ * \brief Add a "last written" attribute to an XML element, set to current time
  *
- * \param[in] xml_node XML node to get attribute
+ * \param[in] xe  XML element to add attribute to
  *
  * \return Value that was set, or NULL on error
  */
 const char *
-crm_xml_add_last_written(xmlNode *xml_node)
+pcmk__xe_add_last_written(xmlNode *xe)
 {
     const char *now_str = pcmk__epoch2str(NULL);
 
-    return crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN,
+    return crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
                        now_str ? now_str : "Could not determine current time");
 }
 
@@ -3130,7 +3136,7 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
     if (data->children) {
         xmlNode *xChild = NULL;
         for(xChild = data->children; xChild != NULL; xChild = xChild->next) {
-            crm_xml_dump(xChild, options, buffer, offset, max, depth + 1);
+            pcmk__xml2text(xChild, options, buffer, offset, max, depth + 1);
         }
 
         insert_prefix(options, buffer, offset, max, depth);
@@ -3226,8 +3232,20 @@ dump_xml_comment(xmlNode * data, int options, char **buffer, int *offset, int *m
 
 #define PCMK__XMLDUMP_STATS 0
 
+/*!
+ * \internal
+ * \brief Create a text representation of an XML object
+ *
+ * \param[in]     data     XML to convert
+ * \param[in]     options  Group of enum xml_log_options flags
+ * \param[in,out] buffer   Buffer to store text in (may be reallocated)
+ * \param[in,out] offset   Current position of null terminator within \p buffer
+ * \param[in,out] max      Current size of \p buffer in bytes
+ * \param[in]     depth    Current indentation level
+ */
 void
-crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
+pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
+               int *max, int depth)
 {
     if(data == NULL) {
         *offset = 0;
@@ -3333,8 +3351,17 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
 
 }
 
+/*!
+ * \internal
+ * \brief Add a single character to a dynamically allocated buffer
+ *
+ * \param[in,out] buffer   Buffer to store text in (may be reallocated)
+ * \param[in,out] offset   Current position of null terminator within \p buffer
+ * \param[in,out] max      Current size of \p buffer in bytes
+ * \param[in]     c        Character to add to \p buffer
+ */
 void
-crm_buffer_add_char(char **buffer, int *offset, int *max, char c)
+pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c)
 {
     buffer_print(*buffer, *max, *offset, "%c", c);
 }
@@ -3345,9 +3372,9 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    crm_xml_dump(an_xml_node,
-                 xml_log_option_formatted|xml_log_option_full_fledged,
-                 &buffer, &offset, &max, 0);
+    pcmk__xml2text(an_xml_node,
+                   xml_log_option_formatted|xml_log_option_full_fledged,
+                   &buffer, &offset, &max, 0);
     return buffer;
 }
 
@@ -3357,7 +3384,8 @@ dump_xml_formatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    crm_xml_dump(an_xml_node, xml_log_option_formatted, &buffer, &offset, &max, 0);
+    pcmk__xml2text(an_xml_node, xml_log_option_formatted, &buffer, &offset,
+                   &max, 0);
     return buffer;
 }
 
@@ -3367,7 +3395,7 @@ dump_xml_unformatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     int offset = 0, max = 0;
 
-    crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
+    pcmk__xml2text(an_xml_node, 0, &buffer, &offset, &max, 0);
     return buffer;
 }
 

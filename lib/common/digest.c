@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include "crmcommon_private.h"
 
 #define BEST_EFFORT_STATUS 0
 
@@ -34,9 +35,9 @@ dump_xml_for_digest(xmlNode * an_xml_node)
     int offset = 0, max = 0;
 
     /* for compatibility with the old result which is used for v1 digests */
-    crm_buffer_add_char(&buffer, &offset, &max, ' ');
-    crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
-    crm_buffer_add_char(&buffer, &offset, &max, '\n');
+    pcmk__buffer_add_char(&buffer, &offset, &max, ' ');
+    pcmk__xml2text(an_xml_node, 0, &buffer, &offset, &max, 0);
+    pcmk__buffer_add_char(&buffer, &offset, &max, '\n');
 
     return buffer;
 }
@@ -110,7 +111,8 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
          */
 
     } else {
-        crm_xml_dump(source, do_filter ? xml_log_option_filtered : 0, &buffer, &offset, &max, 0);
+        pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0),
+                       &buffer, &offset, &max, 0);
     }
 
     CRM_ASSERT(buffer != NULL);

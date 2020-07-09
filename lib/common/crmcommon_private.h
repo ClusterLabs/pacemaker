@@ -68,6 +68,13 @@ typedef struct xml_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+void pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
+                    int *max, int depth);
+
+G_GNUC_INTERNAL
+void pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c);
+
+G_GNUC_INTERNAL
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
 G_GNUC_INTERNAL

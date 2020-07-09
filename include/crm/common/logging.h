@@ -79,7 +79,7 @@ enum xml_log_options
     xml_log_option_filtered   = 0x0001,
     xml_log_option_formatted  = 0x0002,
     xml_log_option_text       = 0x0004, /* add this option to dump text into xml */
-    xml_log_option_full_fledged = 0x0008, /* crm_xml_dump: serialize using libxml */
+    xml_log_option_full_fledged = 0x0008, // Use libxml when converting XML to text
     xml_log_option_diff_plus  = 0x0010,
     xml_log_option_diff_minus = 0x0020,
     xml_log_option_diff_short = 0x0040,

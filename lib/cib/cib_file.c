@@ -25,6 +25,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
@@ -331,7 +332,7 @@ cib_file_prepare_xml(xmlNode *root)
 
     /* Always write out with num_updates=0 and current last-written timestamp */
     crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
-    crm_xml_add_last_written(root);
+    pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because
      * we discard it on startup anyway, and users get confused by it */
