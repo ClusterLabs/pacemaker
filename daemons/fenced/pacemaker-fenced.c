@@ -1407,13 +1407,13 @@ main(int argc, char **argv)
 
             printf("  <parameter name=\"pcmk_%s_timeout\" unique=\"0\">\n", actions[lpc]);
             printf
-                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n",
+                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of the default.</shortdesc>\n",
                  actions[lpc]);
             printf
                 ("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
                  "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n",
                  actions[lpc]);
-            printf("    <content type=\"time\" default=\"60s\"/>\n");
+            printf("    <content type=\"time\" default=\"%ds\"/>\n", safe_str_eq(actions[lpc], "monitor") ? 20 : 120);
             printf("  </parameter>\n");
 
             printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
