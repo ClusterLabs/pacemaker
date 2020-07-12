@@ -1029,8 +1029,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         if (min_interval_mon) {
             value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
             if (value) {
-                crm_trace("\t%s defaults to minimum-interval monitor's timeout "
-                          "'%s'", action->uuid, value);
+                crm_trace("\t%s: Setting default timeout to minimum-interval "
+                          "monitor's timeout '%s'", action->uuid, value);
                 g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
                                      strdup(value));
             }
@@ -1076,6 +1076,38 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                              crm_strdup_printf("%u", interval_ms));
     } else {
         g_hash_table_remove(action->meta, XML_LRM_ATTR_INTERVAL);
+    }
+
+    /*
+     * Timeout order of precedence:
+     *   1. pcmk_monitor_timeout (if rsc has pcmk_ra_cap_fence_params
+     *      and task is start or a probe; pcmk_monitor_timeout works
+     *      by default for a recurring monitor)
+     *   2. explicit op timeout on the primitive
+     *   3. default op timeout
+     *      a. if probe, then min-interval monitor's timeout
+     *      b. else, in XML_CIB_TAG_OPCONFIG
+     *   4. CRM_DEFAULT_OP_TIMEOUT_S
+     *
+     * #1 overrides general rule of <op> XML property having highest
+     * precedence.
+     */
+    if (is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
+               pcmk_ra_cap_fence_params)
+            && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
+                    || (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
+                            && (interval_ms == 0)))
+            && action->rsc->parameters) {
+
+        value = g_hash_table_lookup(action->rsc->parameters,
+                                    "pcmk_monitor_timeout");
+
+        if (value) {
+            crm_trace("\t%s: Setting timeout to pcmk_monitor_timeout '%s', "
+                      "overriding default", action->uuid, value);
+            g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
+                                 strdup(value));
+        }
     }
 
     // Normalize timeout to positive milliseconds
