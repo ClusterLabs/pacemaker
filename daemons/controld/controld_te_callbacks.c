@@ -697,7 +697,8 @@ action_timer_callback(gpointer data)
         crm_err("Node %s did not send %s result (via %s) within %dms "
                 "(action timeout plus cluster-delay)",
                 (on_node? on_node : ""), (task? task : "unknown action"),
-                (via_node? via_node : "controller"), timer->timeout);
+                (via_node? via_node : "controller"),
+                timer->timeout + transition_graph->network_delay);
         print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
 
         timer->action->failed = TRUE;
