@@ -343,7 +343,6 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_LRM_OP_CANCELLED:
         case PCMK_LRM_OP_PENDING:
             return FALSE;
-            break;
 
         case PCMK_LRM_OP_NOTSUPPORTED:
         case PCMK_LRM_OP_TIMEOUT:
@@ -351,7 +350,6 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_LRM_OP_NOT_CONNECTED:
         case PCMK_LRM_OP_INVALID:
             return TRUE;
-            break;
 
         default:
             if (target_rc != op->rc) {
