@@ -806,11 +806,9 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     switch (native->type) {
         case PCMK__CLIENT_IPC:
             return crm_ipc_connected(native->ipc);
-            break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case PCMK__CLIENT_TLS:
             return lrmd_tls_connected(lrmd);
-            break;
 #endif
         default:
             crm_err("Unsupported connection type: %d", native->type);
