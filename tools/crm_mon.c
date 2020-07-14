@@ -146,22 +146,18 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_console:
             return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
                    mon_show_nodes | mon_show_resources | mon_show_failures;
-            break;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
             return all_includes(fmt);
-            break;
 
         case mon_output_html:
         case mon_output_cgi:
             return mon_show_summary | mon_show_nodes | mon_show_resources |
                    mon_show_failures;
-            break;
 
         default:
             return 0;
-            break;
     }
 }
 
