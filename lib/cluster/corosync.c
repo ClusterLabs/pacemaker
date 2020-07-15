@@ -365,7 +365,6 @@ init_cs_connection(crm_cluster_t * cluster)
         switch (rc) {
             case CS_OK:
                 return TRUE;
-                break;
             case CS_ERR_TRY_AGAIN:
             case CS_ERR_QUEUE_FULL:
                 sleep(retries);
