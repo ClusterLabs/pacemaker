@@ -5,7 +5,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -15,6 +15,9 @@ Active Resources:
     * Started: [ cluster01 cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
 =#=#=#= End test: Basic text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output
 =#=#=#= Begin test: XML output =#=#=#=
@@ -25,12 +28,12 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="19" disabled="1" blocked="0"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -75,6 +78,14 @@ Active Resources:
         <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
+    <group id="exim-group" number_resources="2">
+      <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </group>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -94,6 +105,12 @@ Active Resources:
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
         <operation_history call="18" task="start" exec-time="6020ms" queue-time="0ms" rc="0" rc_text="ok"/>
         <operation_history call="19" task="monitor" interval="60000ms" exec-time="6015ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
       </resource_history>
     </node>
     <node name="cluster01">
@@ -121,13 +138,16 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
 =#=#=#= End test: Basic text output without node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output without node section
 =#=#=#= Begin test: XML output without the node section =#=#=#=
@@ -138,7 +158,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="19" disabled="1" blocked="0"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <resources>
@@ -156,6 +176,396 @@ Active Resources:
     <resource id="dummy" resource_agent="ocf::pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
       <node name="cluster02" id="2" cached="true"/>
     </resource>
+    <resource id="inactive-dummy" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <clone id="inactive-clone-master" multi_state="true" unique="false" managed="true" failed="false" failure_ignored="false">
+      <resource id="inactive-clone" resource_agent="ocf::pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="inactive-clone" resource_agent="ocf::pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
+    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-0" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="1">
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-1" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+      <replica id="2">
+        <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf::heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf::heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-docker-2" resource_agent="ocf::heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+    <group id="exim-group" number_resources="2">
+      <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </group>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="11" task="start" exec-time="2044ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="12" task="monitor" interval="10000ms" exec-time="2031ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="dummy" orphan="false" migration-threshold="1000000">
+        <operation_history call="18" task="start" exec-time="6020ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="19" task="monitor" interval="60000ms" exec-time="6015ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="17" task="start" exec-time="2038ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="18" task="monitor" interval="10000ms" exec-time="2034ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
+        <operation_history call="15" task="start" exec-time="36ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="19" task="monitor" interval="60000ms" exec-time="24ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="dummy" orphan="false" migration-threshold="1000000">
+        <operation_history call="16" task="stop" exec-time="6048ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output without the node section
+=#=#=#= Begin test: Text output with only the node section =#=#=#=
+Node List:
+  * Online: [ cluster01 cluster02 ]
+=#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output with only the node section
+=#=#=#= Begin test: Complete text output =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+    * dummy: migration-threshold=1000000:
+      * (18) start
+      * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+    * dummy: migration-threshold=1000000:
+      * (16) stop
+=#=#=#= End test: Complete text output - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output
+=#=#=#= Begin test: Complete text output with detail =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (2) (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 (1) cluster02 (2) ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * ping	(ocf::pacemaker:ping):	 Started cluster02
+    * ping	(ocf::pacemaker:ping):	 Started cluster01
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+
+Node Attributes:
+  * Node: cluster01 (1):
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02 (2):
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02 (2):
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+    * dummy: migration-threshold=1000000:
+      * (18) start
+      * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+  * Node: cluster01 (1):
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+    * dummy: migration-threshold=1000000:
+      * (16) stop
+=#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output with detail
+=#=#=#= Begin test: Complete brief text output =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  *  1	(ocf::pacemaker:Dummy):	Active cluster02
+  *  1	(stonith:fence_xvm):	Active cluster01
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+  * Resource Group: exim-group:
+    *  1/1	(lsb:exim):	Active cluster02
+    *  1/1	(ocf::heartbeat:IPaddr):	Active cluster02
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+    * dummy: migration-threshold=1000000:
+      * (18) start
+      * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+    * dummy: migration-threshold=1000000:
+      * (16) stop
+=#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete brief text output
+=#=#=#= Begin test: Complete text output grouped by node =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Node cluster01: online:
+    * Resources:
+      * ping	(ocf::pacemaker:ping):	 Started
+      * Fencing	(stonith:fence_xvm):	 Started
+  * Node cluster02: online:
+    * Resources:
+      * ping	(ocf::pacemaker:ping):	 Started
+      * dummy	(ocf::pacemaker:Dummy):	 Started
+      * Public-IP	(ocf::heartbeat:IPaddr):	 Started
+      * Email	(lsb:exim):	 Started
+  * GuestNode httpd-bundle-0@: OFFLINE:
+    * Resources:
+  * GuestNode httpd-bundle-1@: OFFLINE:
+    * Resources:
+  * GuestNode httpd-bundle-2@: OFFLINE:
+    * Resources:
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+    * dummy: migration-threshold=1000000:
+      * (18) start
+      * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+    * dummy: migration-threshold=1000000:
+      * (16) stop
+=#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output grouped by node
+=#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Node cluster01: online:
+    * Resources:
+      *  1	(ocf::pacemaker:ping):	Active 
+      *  1	(stonith:fence_xvm):	Active 
+  * Node cluster02: online:
+    * Resources:
+      *  1	(lsb:exim):	Active 
+      *  1	(ocf::heartbeat:IPaddr):	Active 
+      *  1	(ocf::pacemaker:Dummy):	Active 
+      *  1	(ocf::pacemaker:ping):	Active 
+  * GuestNode httpd-bundle-0@: OFFLINE:
+    * Resources:
+  * GuestNode httpd-bundle-1@: OFFLINE:
+    * Resources:
+  * GuestNode httpd-bundle-2@: OFFLINE:
+    * Resources:
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster02:
+    * ping: migration-threshold=1000000:
+      * (11) start
+      * (12) monitor: interval="10000ms"
+    * dummy: migration-threshold=1000000:
+      * (18) start
+      * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
+  * Node: cluster01:
+    * ping: migration-threshold=1000000:
+      * (17) start
+      * (18) monitor: interval="10000ms"
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+    * dummy: migration-threshold=1000000:
+      * (16) stop
+=#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete brief text output grouped by node
+=#=#=#= Begin test: XML output grouped by node =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon -1 --output-as=xml --group-by-node">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+    </node>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member">
+      <resource id="ping" resource_agent="ocf::pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="dummy" resource_agent="ocf::pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </node>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
     <resource id="inactive-dummy" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     <clone id="inactive-clone-master" multi_state="true" unique="false" managed="true" failed="false" failure_ignored="false">
       <resource id="inactive-clone" resource_agent="ocf::pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -201,6 +611,12 @@ Active Resources:
         <operation_history call="18" task="start" exec-time="6020ms" queue-time="0ms" rc="0" rc_text="ok"/>
         <operation_history call="19" task="monitor" interval="60000ms" exec-time="6015ms" queue-time="0ms" rc="0" rc_text="ok"/>
       </resource_history>
+      <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -218,57 +634,8 @@ Active Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output without the node section
-=#=#=#= Begin test: Text output with only the node section =#=#=#=
-Node List:
-  * Online: [ cluster01 cluster02 ]
-=#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output with only the node section
-=#=#=#= Begin test: Complete text output =#=#=#=
-Cluster Summary:
-  * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
-  * Last updated:
-  * Last change:
-  * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
-
-Node List:
-  * Online: [ cluster01 cluster02 ]
-
-Active Resources:
-  * Clone Set: ping-clone [ping]:
-    * Started: [ cluster01 cluster02 ]
-  * Fencing	(stonith:fence_xvm):	 Started cluster01
-  * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
-
-Node Attributes:
-  * Node: cluster01:
-    * location                        	: office    
-    * pingd                           	: 1000      
-  * Node: cluster02:
-    * pingd                           	: 1000      
-
-Operations:
-  * Node: cluster02:
-    * ping: migration-threshold=1000000:
-      * (11) start
-      * (12) monitor: interval="10000ms"
-    * dummy: migration-threshold=1000000:
-      * (18) start
-      * (19) monitor: interval="60000ms"
-  * Node: cluster01:
-    * ping: migration-threshold=1000000:
-      * (17) start
-      * (18) monitor: interval="10000ms"
-    * Fencing: migration-threshold=1000000:
-      * (15) start
-      * (19) monitor: interval="60000ms"
-    * dummy: migration-threshold=1000000:
-      * (16) stop
-=#=#=#= End test: Complete text output - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output
+=#=#=#= End test: XML output grouped by node - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output grouped by node
 =#=#=#= Begin test: Complete text output filtered by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -276,7 +643,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 ]
@@ -311,7 +678,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="19" disabled="1" blocked="0"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes>
@@ -384,7 +751,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -393,6 +760,9 @@ Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster02 ]
   * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
 
 Node Attributes:
   * Node: cluster02:
@@ -406,6 +776,10 @@ Operations:
     * dummy: migration-threshold=1000000:
       * (18) start
       * (19) monitor: interval="60000ms"
+    * Public-IP: migration-threshold=1000000:
+      * (2) start
+    * Email: migration-threshold=1000000:
+      * (2) start
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
 =#=#=#= Begin test: XML output filtered by tag =#=#=#=
@@ -416,11 +790,11 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="19" disabled="1" blocked="0"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
@@ -456,6 +830,14 @@ Operations:
         <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
+    <group id="exim-group" number_resources="2">
+      <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+    </group>
   </resources>
   <node_attributes>
     <node name="cluster02">
@@ -472,6 +854,12 @@ Operations:
         <operation_history call="18" task="start" exec-time="6020ms" queue-time="0ms" rc="0" rc_text="ok"/>
         <operation_history call="19" task="monitor" interval="60000ms" exec-time="6015ms" queue-time="0ms" rc="0" rc_text="ok"/>
       </resource_history>
+      <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="Email" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
     </node>
   </node_history>
   <status code="0" message="OK"/>
@@ -485,7 +873,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Active Resources:
   * No active resources
@@ -499,7 +887,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="19" disabled="1" blocked="0"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes/>
@@ -534,26 +922,6 @@ Active Resources:
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by node that doesn't exist
-=#=#=#= Begin test: Detailed text output =#=#=#=
-Cluster Summary:
-  * Stack: corosync
-  * Current DC: cluster02 (2) (version) - partition with quorum
-  * Last updated:
-  * Last change:
-  * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
-
-Node List:
-  * Online: [ cluster01 (1) cluster02 (2) ]
-
-Active Resources:
-  * Clone Set: ping-clone [ping]:
-    * ping	(ocf::pacemaker:ping):	 Started cluster02
-    * ping	(ocf::pacemaker:ping):	 Started cluster01
-  * Fencing	(stonith:fence_xvm):	 Started cluster01
-  * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
-=#=#=#= End test: Detailed text output - OK (0) =#=#=#=
-* Passed: crm_mon        - Detailed text output
 =#=#=#= Begin test: Basic text output with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -561,7 +929,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -578,6 +946,9 @@ Full List of Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
     * httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
 =#=#=#= End test: Basic text output with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by node =#=#=#=
@@ -587,7 +958,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 19 resource instances configured (1 DISABLED)
+  * 21 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -603,6 +974,9 @@ Full List of Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
     * httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
+  * Resource Group: exim-group:
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by node
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=

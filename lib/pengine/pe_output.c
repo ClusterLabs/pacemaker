@@ -1007,7 +1007,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     char *node_name = pe__node_display_name(node, print_clone_detail);
     char *buf = crm_strdup_printf("Node: %s", node_name);
@@ -1046,7 +1046,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, NULL);
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
             }
             out->end_list(out);
         }
@@ -1069,7 +1069,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     if (full) {
         char *node_name = pe__node_display_name(node, print_clone_detail);
@@ -1097,7 +1097,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
                     pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
-                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
+                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
                 }
             }
 
@@ -1126,7 +1126,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
     gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean print_brief G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     if (full) {
         const char *node_type = "unknown";
@@ -1169,7 +1169,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_show);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
             }
         }
 
@@ -1265,7 +1265,7 @@ PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean
 int
 pe__node_list_html(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1276,14 +1276,14 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
     for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
             continue;
         }
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
         out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
-                     print_brief, group_by_node, only_show);
+                     print_brief, group_by_node, only_node);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -1294,7 +1294,7 @@ PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean
 int
 pe__node_list_text(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1314,7 +1314,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, print_clone_detail);
 
-        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
             free(node_name);
             continue;
         }
@@ -1391,7 +1391,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
         /* If we get here, node is in bad state, or we're grouping by node */
         out->message(out, "node", node, print_opts, TRUE, node_mode, print_clone_detail,
-                     print_brief, group_by_node, only_show);
+                     print_brief, group_by_node, only_node);
         free(node_name);
     }
 
@@ -1425,7 +1425,7 @@ PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean
 int
 pe__node_list_xml(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1435,12 +1435,12 @@ pe__node_list_xml(pcmk__output_t *out, va_list args) {
     for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_show, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
             continue;
         }
 
         out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
-                     print_brief, group_by_node, only_show);
+                     print_brief, group_by_node, only_node);
     }
     out->end_list(out);
 

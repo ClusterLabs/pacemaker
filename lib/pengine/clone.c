@@ -576,7 +576,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
 
@@ -586,7 +586,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
+        if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
         }
 
@@ -604,7 +604,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
+        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
     }
 
     if (printed_header) {
@@ -620,7 +620,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -645,7 +645,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
-        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
+        if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
         }
 
@@ -712,7 +712,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
         }
     }
 
@@ -727,7 +727,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname)) {
             continue;
         }
 
@@ -747,7 +747,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname)) {
             continue;
         }
 
@@ -804,7 +804,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(only_show, node->details->uname)) {
+                    pcmk__str_in_list(only_node, node->details->uname)) {
                     stopped_list = pcmk__add_word(stopped_list,
                                                   node->details->uname);
                 }
@@ -829,7 +829,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -854,7 +854,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
-        if (pcmk__rsc_is_filtered(child_rsc, only_show)) {
+        if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
         }
 
@@ -921,7 +921,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_show);
+            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
         }
     }
 
@@ -936,7 +936,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname)) {
             continue;
         }
 
@@ -956,7 +956,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_show, host->details->uname)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname)) {
             continue;
         }
 
@@ -1012,7 +1012,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(only_show, node->details->uname)) {
+                    pcmk__str_in_list(only_node, node->details->uname)) {
                     stopped_list = pcmk__add_word(stopped_list,
                                                   node->details->uname);
                 }

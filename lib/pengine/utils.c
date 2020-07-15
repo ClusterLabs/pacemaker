@@ -2801,7 +2801,7 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
 }
 
 bool
-pcmk__rsc_is_filtered(pe_resource_t *rsc, GListPtr only_show)
+pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node)
 {
-    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_show));
+    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_node));
 }

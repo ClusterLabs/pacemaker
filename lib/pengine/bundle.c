@@ -1499,7 +1499,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
@@ -1516,7 +1516,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_show)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1538,17 +1538,17 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (replica->ip != NULL) {
-            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_show);
+            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
         }
 
         if (replica->child != NULL) {
-            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_show);
+            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
         }
 
-        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_show);
+        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
 
         if (replica->remote != NULL) {
-            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_show);
+            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1595,7 +1595,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
@@ -1617,7 +1617,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_show)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1631,22 +1631,22 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_show);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_show);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_show);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_show);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
             }
 
             out->end_list(out);
         } else {
-            if (pcmk__rsc_is_filtered(replica->container, only_show)) {
+            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
                 continue;
             }
 
@@ -1695,7 +1695,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_show = va_arg(args, GListPtr);
+    GListPtr only_node = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1715,7 +1715,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
         CRM_ASSERT(replica);
 
-        if (pcmk__rsc_is_filtered(replica->container, only_show)) {
+        if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
             continue;
         }
 
@@ -1727,22 +1727,22 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_show);
+                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
             }
 
             if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_show);
+                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_show);
+            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
 
             if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_show);
+                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
             }
 
             out->end_list(out);
         } else {
-            if (pcmk__rsc_is_filtered(replica->container, only_show)) {
+            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
                 continue;
             }
 
