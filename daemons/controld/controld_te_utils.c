@@ -52,7 +52,6 @@ te_graph_trigger(gpointer user_data)
         case S_STOPPING:
         case S_TERMINATE:
             return TRUE;
-            break;
         default:
             break;
     }
