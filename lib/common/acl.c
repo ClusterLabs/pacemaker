@@ -288,17 +288,6 @@ pcmk__apply_acl(xmlNode *xml)
                   ((max == 1)? "" : "es"));
         freeXpathObject(xpathObj);
     }
-
-    p = xml->_private;
-    if (is_not_set(p->flags, xpf_acl_read)
-        && is_not_set(p->flags, xpf_acl_write)) {
-
-        p->flags |= xpf_acl_deny;
-        p = xml->doc->_private;
-        crm_info("Applied default deny ACL for user '%s' to <%s>",
-                 p->user, crm_element_name(xml));
-    }
-
 }
 
 /*!
