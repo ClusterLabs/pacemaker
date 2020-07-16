@@ -106,16 +106,9 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     xmlNodePtr node;
     private_data_t *priv = out->priv;
-
-    /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
-        return;
-    }
 
     if (legacy_xml) {
         GSList *node = priv->errors;
@@ -148,6 +141,20 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         fprintf(out->dest, "%s", buf);
         free(buf);
     }
+}
+
+static void
+xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    private_data_t *priv = out->priv;
+
+    /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
+     * in the pcmk__output_new path.
+     */
+    if (priv == NULL || priv->root == NULL) {
+        return;
+    }
+
+    finish_reset_common(out, exit_status, print);
 
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
@@ -156,15 +163,10 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 xml_reset(pcmk__output_t *out) {
-    char *buf = NULL;
-
     CRM_ASSERT(out != NULL);
 
     if (out->priv != NULL) {
-        private_data_t *priv = out->priv;
-        buf = dump_xml_formatted_with_text(priv->root);
-        fprintf(out->dest, "%s", buf);
-        free(buf);
+        finish_reset_common(out, CRM_EX_OK, true);
     }
 
     xml_free_priv(out);
