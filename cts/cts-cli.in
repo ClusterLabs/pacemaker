@@ -701,6 +701,7 @@ function test_acl_loop() {
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
 
+    ### no ACL ###
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -718,6 +719,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### deny /cib permission ###
     export CIB_user=l33t-haxor
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -735,6 +737,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### observer role ###
     export CIB_user=niceguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -765,6 +768,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_OK
 
+    ### deny /cib permission ###
     export CIB_user=l33t-haxor
 
     desc="$CIB_user: Create a resource meta attribute"
@@ -779,6 +783,7 @@ function test_acl_loop() {
     cmd="crm_resource -r dummy --meta -d target-role"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### observer role ###
     export CIB_user=niceguy
 
     desc="$CIB_user: Create a resource meta attribute"
@@ -797,11 +802,13 @@ function test_acl_loop() {
     cmd="crm_resource -r dummy --meta -p target-role -v Started"
     test_assert $CRM_EX_OK
 
+    ### read //meta_attributes ###
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK 0
 
+    ### deny /cib, read //meta_attributes ###
     export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
@@ -811,6 +818,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
+    ### observer role ###
     export CIB_user=niceguy
     desc="$CIB_user: Replace - remove acls"
     cmd="cibadmin --replace --xml-file $TMPXML"
@@ -848,12 +856,13 @@ function test_acl_loop() {
     cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### admin role ###
     CIB_user=bob
     CIB_user=root cibadmin -Q > "$TMPXML"
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - create attribute (allow)"
+    desc="$CIB_user: Replace - create attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
@@ -861,7 +870,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - modify attribute (allow)"
+    desc="$CIB_user: Replace - modify attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
@@ -869,9 +878,96 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - delete attribute (allow)"
+    desc="$CIB_user: Replace - delete attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
+
+    ### super_user role ###
+    export CIB_user=joe
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    ### rsc_writer role ###
+    export CIB_user=mike
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    ### rsc_denied role ###
+    export CIB_user=chris
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    # Set as root since setting as chris failed
+    CIB_user=root cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    # Set as root since setting as chris failed
+    CIB_user=root cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 }
 
 function test_acls() {
@@ -895,6 +991,15 @@ function test_acls() {
       <acl_user id="bob">
         <role_ref id="admin"/>
       </acl_user>
+      <acl_user id="joe">
+        <role_ref id="super_user"/>
+      </acl_user>
+      <acl_user id="mike">
+        <role_ref id="rsc_writer"/>
+      </acl_user>
+      <acl_user id="chris">
+        <role_ref id="rsc_denied"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
@@ -903,6 +1008,17 @@ function test_acls() {
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
         <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <write id="super_user-write-1" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <deny id="rsc-writer-deny-1" xpath="/cib"/>
+        <write id="rsc-writer-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <write id="rsc-denied-write-1" xpath="/cib"/>
+        <deny id="rsc-denied-deny-1" xpath="//resources"/>
       </acl_role>
     </acls>
 EOF
