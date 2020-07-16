@@ -44,6 +44,7 @@ log_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->prefixes);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
