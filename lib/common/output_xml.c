@@ -165,6 +165,9 @@ static void
 xml_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     if (out->priv != NULL) {
         finish_reset_common(out, CRM_EX_OK, true);
     }

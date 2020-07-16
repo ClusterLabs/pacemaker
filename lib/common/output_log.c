@@ -72,6 +72,9 @@ static void
 log_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     log_free_priv(out);
     log_init(out);
 }

@@ -2014,6 +2014,10 @@ mon_refresh_display(gpointer user_data)
             break;
     }
 
+    if (options.daemonize) {
+        out->reset(out);
+    }
+
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(mon_data_set);
@@ -2179,6 +2183,11 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
+        if (options.daemonize) {
+            out->dest = freopen(NULL, "w", out->dest);
+            CRM_ASSERT(out->dest != NULL);
+        }
+
         switch (output_format) {
             case mon_output_cgi:
             case mon_output_html:

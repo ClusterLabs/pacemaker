@@ -75,6 +75,9 @@ static void
 text_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     text_free_priv(out);
     text_init(out);
 }
