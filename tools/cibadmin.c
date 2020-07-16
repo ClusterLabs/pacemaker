@@ -195,7 +195,8 @@ static pcmk__cli_option_t long_options[] = {
     {
         "-spacer-", no_argument, NULL, '-',
         "\tValid values: configuration, nodes, resources, constraints, "
-            "crm_config, rsc_defaults, op_defaults, acls, fencing-topology",
+            "crm_config, rsc_defaults, op_defaults, acls, fencing-topology, "
+            "tags, alerts",
         pcmk__option_default
     },
 

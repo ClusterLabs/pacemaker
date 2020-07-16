@@ -37,20 +37,21 @@ struct config_root_s {
   */
 /* *INDENT-OFF* */
 struct config_root_s known_paths[] = {
-    { NULL,			NULL,                 "//cib" },
-    { XML_TAG_CIB,		NULL,                 "//cib" },
-    { XML_CIB_TAG_STATUS,       "/cib",               "//cib/status" },
-    { XML_CIB_TAG_CONFIGURATION,"/cib",               "//cib/configuration" },
-    { XML_CIB_TAG_CRMCONFIG,    "/cib/configuration", "//cib/configuration/crm_config" },
-    { XML_CIB_TAG_NODES,        "/cib/configuration", "//cib/configuration/nodes" },
-    { XML_CIB_TAG_DOMAINS,      "/cib/configuration", "//cib/configuration/domains" },
-    { XML_CIB_TAG_RESOURCES,    "/cib/configuration", "//cib/configuration/resources" },
-    { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
-    { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
-    { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "//cib/configuration/rsc_defaults" },
-    { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
-    { XML_TAG_FENCING_TOPOLOGY,	"/cib/configuration", "//cib/configuration/fencing-topology" },
-    { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
+    { NULL,                         NULL,                 "//cib" },
+    { XML_TAG_CIB,                  NULL,                 "//cib" },
+    { XML_CIB_TAG_STATUS,           "/cib",               "//cib/status" },
+    { XML_CIB_TAG_CONFIGURATION,    "/cib",               "//cib/configuration" },
+    { XML_CIB_TAG_CRMCONFIG,        "/cib/configuration", "//cib/configuration/crm_config" },
+    { XML_CIB_TAG_NODES,            "/cib/configuration", "//cib/configuration/nodes" },
+    { XML_CIB_TAG_RESOURCES,        "/cib/configuration", "//cib/configuration/resources" },
+    { XML_CIB_TAG_CONSTRAINTS,      "/cib/configuration", "//cib/configuration/constraints" },
+    { XML_CIB_TAG_OPCONFIG,         "/cib/configuration", "//cib/configuration/op_defaults" },
+    { XML_CIB_TAG_RSCCONFIG,        "/cib/configuration", "//cib/configuration/rsc_defaults" },
+    { XML_CIB_TAG_ACLS,             "/cib/configuration", "//cib/configuration/acls" },
+    { XML_TAG_FENCING_TOPOLOGY,     "/cib/configuration", "//cib/configuration/fencing-topology" },
+    { XML_CIB_TAG_TAGS,             "/cib/configuration", "//cib/configuration/tags" },
+    { XML_CIB_TAG_ALERTS,           "/cib/configuration", "//cib/configuration/alerts" },
+    { XML_CIB_TAG_SECTION_ALL,      NULL,                 "//cib" },
 };
 /* *INDENT-ON* */
 
