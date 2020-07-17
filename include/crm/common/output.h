@@ -703,15 +703,14 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
  * the following code would generate the tag "<meta http-equiv='refresh' content='19'>":
  *
  * \code
- * pcmk__html_add_header(parent, "meta", "http-equiv", "refresh", "content", "19", NULL);
+ * pcmk__html_add_header("meta", "http-equiv", "refresh", "content", "19", NULL);
  * \endcode
  *
- * \param[in,out] parent The node that will be the parent of the new node.
  * \param[in]     name   The HTML tag for the new node.
  * \param[in]     ...    A NULL-terminated key/value list of attributes.
  */
 void
-pcmk__html_add_header(xmlNodePtr parent, const char *name, ...)
+pcmk__html_add_header(const char *name, ...)
 G_GNUC_NULL_TERMINATED;
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \

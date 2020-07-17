@@ -43,6 +43,7 @@ text_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->parent_q);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -73,6 +74,9 @@ text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 static void
 text_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
+
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
 
     text_free_priv(out);
     text_init(out);

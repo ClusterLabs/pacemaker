@@ -1346,6 +1346,12 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
     }
 
+    if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
+        out->dest != stdout) {
+        pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
+                              crm_itoa(options.reconnect_msec/1000), NULL);
+    }
+
     crm_info("Starting %s", crm_system_name);
 
     if (cib) {
@@ -2014,6 +2020,10 @@ mon_refresh_display(gpointer user_data)
             break;
     }
 
+    if (options.daemonize) {
+        out->reset(out);
+    }
+
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(mon_data_set);
@@ -2102,15 +2112,6 @@ clean_up_connections(void)
     }
 }
 
-static void
-handle_html_output(crm_exit_t exit_code) {
-    xmlNodePtr html = NULL;
-
-    pcmk__html_add_header(html, "meta", "http-equiv", "refresh", "content",
-                          crm_itoa(options.reconnect_msec/1000), NULL);
-    out->finish(out, exit_code, true, (void **) &html);
-}
-
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
@@ -2179,16 +2180,12 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
-        switch (output_format) {
-            case mon_output_cgi:
-            case mon_output_html:
-                handle_html_output(exit_code);
-                break;
-
-            default:
-                out->finish(out, exit_code, true, NULL);
-                break;
+        if (options.daemonize) {
+            out->dest = freopen(NULL, "w", out->dest);
+            CRM_ASSERT(out->dest != NULL);
         }
+
+        out->finish(out, exit_code, true, NULL);
 
         pcmk__output_free(out);
         pcmk__unregister_formats();

@@ -46,6 +46,7 @@ curses_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->parent_q);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool

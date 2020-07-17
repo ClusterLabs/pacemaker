@@ -44,6 +44,7 @@ log_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->prefixes);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -70,6 +71,9 @@ log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 static void
 log_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
+
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
 
     log_free_priv(out);
     log_init(out);

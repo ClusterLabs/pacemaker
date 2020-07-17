@@ -72,6 +72,7 @@ html_free_priv(pcmk__output_t *out) {
     g_queue_free(priv->parent_q);
     g_slist_free(priv->errors);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -112,17 +113,10 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     private_data_t *priv = out->priv;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
-
-    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
-        return;
-    }
 
     if (cgi_output && print) {
         fprintf(out->dest, "Content-Type: text/html\n\n");
@@ -145,7 +139,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     /* Add any extra header nodes the caller might have created. */
     for (int i = 0; i < g_slist_length(extra_headers); i++) {
-        xmlAddChild(head_node, g_slist_nth_data(extra_headers, i));
+        xmlAddChild(head_node, xmlCopyNode(g_slist_nth_data(extra_headers, i), 1));
     }
 
     /* Stylesheets are included two different ways.  The first is via a built-in
@@ -173,23 +167,40 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     if (print) {
         htmlDocDump(out->dest, priv->root->doc);
     }
+}
+
+static void
+html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    private_data_t *priv = out->priv;
+
+    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
+     * in the pcmk__output_new path.
+     */
+    if (priv == NULL || priv->root == NULL) {
+        return;
+    }
+
+    finish_reset_common(out, exit_status, print);
 
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
     }
+
+    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
 }
 
 static void
 html_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     if (out->priv != NULL) {
-        private_data_t *priv = out->priv;
-        htmlDocDump(out->dest, priv->root->doc);
+        finish_reset_common(out, CRM_EX_OK, true);
     }
 
     html_free_priv(out);
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_init(out);
 }
 
@@ -402,7 +413,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 }
 
 void
-pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
+pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;
     va_list ap;
 
