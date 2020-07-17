@@ -139,7 +139,7 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
 
     /* Add any extra header nodes the caller might have created. */
     for (int i = 0; i < g_slist_length(extra_headers); i++) {
-        xmlAddChild(head_node, g_slist_nth_data(extra_headers, i));
+        xmlAddChild(head_node, xmlCopyNode(g_slist_nth_data(extra_headers, i), 1));
     }
 
     /* Stylesheets are included two different ways.  The first is via a built-in
@@ -185,6 +185,8 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
     }
+
+    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
 }
 
 static void
@@ -199,7 +201,6 @@ html_reset(pcmk__output_t *out) {
     }
 
     html_free_priv(out);
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_init(out);
 }
 
@@ -412,7 +413,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 }
 
 void
-pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
+pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;
     va_list ap;
 
