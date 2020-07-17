@@ -194,8 +194,9 @@ static pcmk__cli_option_t long_options[] = {
     },
     {
         "-spacer-", no_argument, NULL, '-',
-        "\tValid values: nodes, resources, constraints, crm_config, "
-            "rsc_defaults, op_defaults, status",
+        "\tValid values: configuration, nodes, resources, constraints, "
+            "crm_config, rsc_defaults, op_defaults, acls, fencing-topology, "
+            "tags, alerts",
         pcmk__option_default
     },
 
@@ -210,7 +211,7 @@ static pcmk__cli_option_t long_options[] = {
     },
     {
         "-spacer-", no_argument, NULL, '-',
-        "(for example, \"/cib/configuration/resources/clone[@id='ms_RH1_SCS']"
+        "\t(for example, \"/cib/configuration/resources/clone[@id='ms_RH1_SCS']"
             "/primitive[@id='prm_RH1_SCS']\")",
         pcmk__option_paragraph
     },
