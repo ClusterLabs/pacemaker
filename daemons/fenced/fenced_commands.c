@@ -2336,22 +2336,8 @@ stonith_fence(xmlNode * msg)
 xmlNode *
 stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, int rc)
 {
-    int lpc = 0;
     xmlNode *reply = NULL;
 
-    const char *name = NULL;
-    const char *value = NULL;
-
-    const char *names[] = {
-        F_STONITH_OPERATION,
-        F_STONITH_CALLID,
-        F_STONITH_CLIENTID,
-        F_STONITH_CLIENTNAME,
-        F_STONITH_REMOTE_OP_ID,
-        F_STONITH_CALLOPTS
-    };
-
-    crm_trace("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __FUNCTION__);
@@ -2359,16 +2345,39 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
     crm_xml_add(reply, "st_output", output);
     crm_xml_add_int(reply, F_STONITH_RC, rc);
 
-    CRM_CHECK(request != NULL, crm_warn("Can't create a sane reply"); return reply);
-    for (lpc = 0; lpc < DIMOF(names); lpc++) {
-        name = names[lpc];
-        value = crm_element_value(request, name);
-        crm_xml_add(reply, name, value);
-    }
+    if (request == NULL) {
+        /* Most likely, this is the result of a stonith operation that was
+         * initiated before we came up. Unfortunately that means we lack enough
+         * information to provide clients with a full result.
+         *
+         * @TODO Maybe synchronize this information at start-up?
+         */
+        crm_warn("Missing request information for client notifications for "
+                 "operation with result %d (initiated before we came up?)", rc);
 
-    if (data != NULL) {
-        crm_trace("Attaching reply output");
-        add_message_xml(reply, F_STONITH_CALLDATA, data);
+    } else {
+        const char *name = NULL;
+        const char *value = NULL;
+
+        const char *names[] = {
+            F_STONITH_OPERATION,
+            F_STONITH_CALLID,
+            F_STONITH_CLIENTID,
+            F_STONITH_CLIENTNAME,
+            F_STONITH_REMOTE_OP_ID,
+            F_STONITH_CALLOPTS
+        };
+
+        crm_trace("Creating a result reply with%s reply output (rc=%d)",
+                  (data? "" : "out"), rc);
+        for (int lpc = 0; lpc < DIMOF(names); lpc++) {
+            name = names[lpc];
+            value = crm_element_value(request, name);
+            crm_xml_add(reply, name, value);
+        }
+        if (data != NULL) {
+            add_message_xml(reply, F_STONITH_CALLDATA, data);
+        }
     }
     return reply;
 }
