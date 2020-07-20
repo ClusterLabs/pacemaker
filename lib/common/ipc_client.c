@@ -392,7 +392,7 @@ pcmk_dispatch_ipc(pcmk_ipc_api_t *api)
     if (api == NULL) {
         return;
     }
-    while (crm_ipc_ready(api->ipc)) {
+    while (crm_ipc_ready(api->ipc) > 0) {
         if (crm_ipc_read(api->ipc) > 0) {
             dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
         }
