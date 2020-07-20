@@ -187,53 +187,51 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         crm_debug("Unrecognizable controller message: invalid message type '%s'",
                   crm_str(value));
         status = CRM_EX_PROTOCOL;
-        reply = NULL;
+        goto done;
     }
 
     if (crm_element_value(reply, XML_ATTR_REFERENCE) == NULL) {
         crm_debug("Unrecognizable controller message: no reference");
         status = CRM_EX_PROTOCOL;
-        reply = NULL;
+        goto done;
     }
 
     value = crm_element_value(reply, F_CRM_TASK);
     if (value == NULL) {
         crm_debug("Unrecognizable controller message: no command name");
         status = CRM_EX_PROTOCOL;
-        reply = NULL;
+        goto done;
     }
 
     // Parse useful info from reply
 
-    if (reply != NULL) {
-        reply_data.feature_set = crm_element_value(reply, XML_ATTR_VERSION);
-        reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
-        msg_data = get_message_xml(reply, F_CRM_DATA);
+    reply_data.feature_set = crm_element_value(reply, XML_ATTR_VERSION);
+    reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
+    msg_data = get_message_xml(reply, F_CRM_DATA);
 
-        if (!strcmp(value, CRM_OP_REPROBE)) {
-            reply_data.reply_type = pcmk_controld_reply_reprobe;
+    if (!strcmp(value, CRM_OP_REPROBE)) {
+        reply_data.reply_type = pcmk_controld_reply_reprobe;
 
-        } else if (!strcmp(value, CRM_OP_NODE_INFO)) {
-            set_node_info_data(&reply_data, msg_data);
+    } else if (!strcmp(value, CRM_OP_NODE_INFO)) {
+        set_node_info_data(&reply_data, msg_data);
 
-        } else if (!strcmp(value, CRM_OP_INVOKE_LRM)) {
-            reply_data.reply_type = pcmk_controld_reply_resource;
-            reply_data.data.resource.node_state = msg_data;
+    } else if (!strcmp(value, CRM_OP_INVOKE_LRM)) {
+        reply_data.reply_type = pcmk_controld_reply_resource;
+        reply_data.data.resource.node_state = msg_data;
 
-        } else if (!strcmp(value, CRM_OP_PING)) {
-            set_ping_data(&reply_data, msg_data);
+    } else if (!strcmp(value, CRM_OP_PING)) {
+        set_ping_data(&reply_data, msg_data);
 
-        } else if (!strcmp(value, PCMK__CONTROLD_CMD_NODES)) {
-            set_nodes_data(&reply_data, msg_data);
+    } else if (!strcmp(value, PCMK__CONTROLD_CMD_NODES)) {
+        set_nodes_data(&reply_data, msg_data);
 
-        } else {
-            crm_debug("Unrecognizable controller message: unknown command '%s'",
-                      value);
-            status = CRM_EX_PROTOCOL;
-            reply = NULL;
-        }
+    } else {
+        crm_debug("Unrecognizable controller message: unknown command '%s'",
+                  value);
+        status = CRM_EX_PROTOCOL;
     }
 
+done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
 
     // Free any reply data that was allocated

@@ -175,7 +175,7 @@ int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
 int pcmk__lock_pidfile(const char *filename, const char *name);
 
 
-/* interal functions related to resource operations (from operations.c) */
+/* internal functions related to resource operations (from operations.c) */
 
 // printf-style format to create operation ID from resource, action, interval
 #define PCMK__OP_FMT "%s_%s_%u"

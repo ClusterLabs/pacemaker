@@ -131,25 +131,6 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
 
-#  if SUPPORT_COROSYNC
-#    include <qb/qbipc_common.h>
-#    include <corosync/corotypes.h>
-typedef struct qb_ipc_request_header cs_ipc_header_request_t;
-typedef struct qb_ipc_response_header cs_ipc_header_response_t;
-#  else
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-} __attribute__ ((aligned(8))) cs_ipc_header_request_t;
-
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-    int error __attribute__ ((aligned(8)));
-} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
-
-#  endif
-
 static inline void *
 realloc_safe(void *ptr, size_t size)
 {
