@@ -457,7 +457,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     }
 
     operation = crm_element_value(event, XML_LRM_ATTR_TASK);
-    if (!strcmp(operation, CRMD_ACTION_NOTIFY)) {
+    if (safe_str_eq(operation, CRMD_ACTION_NOTIFY)) {
         id = crm_element_value(event, XML_ATTR_ID);
     }
     if (id == NULL) {
@@ -470,39 +470,39 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     if (status == PCMK_LRM_OP_INVALID) {
         // We couldn't attempt the action
-        crm_notice("Received result operation %s on %s: %s (rc=%d) "
-                   CRM_XS " Transition %d action %d target-rc=%d call-id=%d",
-                   id, uname, services_lrm_status_str(status), rc,
-                   transition_num, action_num, target_rc, callid);
+        crm_notice("Result of operation %s on %s: %s "
+                   CRM_XS " Transition %d action %d target-rc=%d rc=%d call-id=%d",
+                   id, uname, services_lrm_status_str(status),
+                   transition_num, action_num, target_rc, rc, callid);
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {
-        crm_notice("Received result operation %s on %s: %s (rc=%d) "
-                   CRM_XS " Transition %d action %d target-rc=%d call-id=%d event='%s'",
+        crm_notice("Result of operation %s on %s: %s "
+                   CRM_XS " Transition %d action %d target-rc=%d rc=%d call-id=%d event='%s'",
                    id, uname, status == PCMK_LRM_OP_DONE ?
-                       services_ocf_exitcode_str(rc) : services_lrm_status_str(status), rc,
-                   transition_num, action_num, target_rc, callid, desc);
+                       services_ocf_exitcode_str(rc) : services_lrm_status_str(status),
+                   transition_num, action_num, target_rc, rc, callid, desc);
 
     } else if (desc) {
-        crm_info("Received result operation %s on %s: %s (rc=%d) "
-                 CRM_XS " Transition %d action %d target-rc=%d call-id=%d event='%s'",
-                 id, uname, services_ocf_exitcode_str(rc), rc,
-                 transition_num, action_num, target_rc, callid, desc);
+        crm_info("Result of operation %s on %s: %s "
+                 CRM_XS " Transition %d action %d target-rc=%d rc=%d call-id=%d event='%s'",
+                 id, uname, services_ocf_exitcode_str(rc),
+                 transition_num, action_num, target_rc, rc, callid, desc);
 
     } else if (rc == target_rc) {
-        crm_notice("Received result operation %s on %s: %s (rc=%d) "
-                   CRM_XS " Transition %d action %d call-id=%d",
-                   id, uname, services_ocf_exitcode_str(rc), rc,
-                   transition_num, action_num, callid);
+        crm_notice("Result of operation %s on %s: %s "
+                   CRM_XS " Transition %d action %d rc=%d call-id=%d",
+                   id, uname, services_ocf_exitcode_str(rc),
+                   transition_num, action_num, rc, callid);
 
     } else {
         update_failcount(event, event_node, rc, target_rc,
                          (transition_num == -1), ignore_failures);
-        crm_notice("Received result operation %s on %s: %s (rc=%d) "
-                   CRM_XS " Transition %d action %d target-rc=%d call-id=%d",
+        crm_notice("Result of operation %s on %s: %s "
+                   CRM_XS " Transition %d action %d target-rc=%d rc=%d call-id=%d",
                    id, uname, status == PCMK_LRM_OP_DONE ?
-                       services_ocf_exitcode_str(rc) : services_lrm_status_str(status), rc,
-                   transition_num, action_num, target_rc, callid);
+                       services_ocf_exitcode_str(rc) : services_lrm_status_str(status),
+                   transition_num, action_num, target_rc, rc, callid);
     }
 
   bail:
