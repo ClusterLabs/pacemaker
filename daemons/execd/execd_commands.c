@@ -507,6 +507,15 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
         crm_trace("Skipping notification to client without name");
         return;
     }
+    if (is_set(client->flags, pcmk__client_to_proxy)) {
+        /* We only want to notify clients of the executor IPC API. If we are
+         * running as Pacemaker Remote, we may have clients proxied to other
+         * IPC services in the cluster, so skip those.
+         */
+        crm_trace("Skipping executor API notification to %s IPC client",
+                  client->name);
+        return;
+    }
 
     rc = lrmd_server_send_notify(client, update_msg);
     if (rc == pcmk_rc_ok) {
