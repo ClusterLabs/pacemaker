@@ -454,6 +454,7 @@ pcmk_shutdown_worker(gpointer user_data)
     crm_notice("Shutdown complete");
     pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE;
     if (!fatal_error && running_with_sbd &&
+        pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
         return TRUE;
     }
@@ -1248,10 +1249,15 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
-    if (running_with_sbd) {
+    if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_WAITPING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
+        if (running_with_sbd) {
+            crm_warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
+                     "by your sbd version) improve reliability of "
+                     "interworking between SBD & pacemaker.");
+        }
         pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
         init_children_processes(NULL);
     }

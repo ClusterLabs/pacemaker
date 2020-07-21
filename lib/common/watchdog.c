@@ -227,6 +227,21 @@ pcmk__get_sbd_timeout(void)
     return sbd_timeout;
 }
 
+bool
+pcmk__get_sbd_sync_resource_startup(void)
+{
+    static bool sync_resource_startup = false;
+    static bool checked_sync_resource_startup = false;
+
+    if (!checked_sync_resource_startup) {
+        sync_resource_startup =
+            crm_is_true(getenv("SBD_SYNC_RESOURCE_STARTUP"));
+        checked_sync_resource_startup = true;
+    }
+
+    return sync_resource_startup;
+}
+
 long
 pcmk__auto_watchdog_timeout()
 {
