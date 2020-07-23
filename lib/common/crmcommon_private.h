@@ -175,6 +175,7 @@ typedef struct pcmk__ipc_methods_s {
 struct pcmk_ipc_api_s {
     enum pcmk_ipc_server server;          // Daemon this IPC API instance is for
     enum pcmk_ipc_dispatch dispatch_type; // How replies should be dispatched
+    size_t ipc_size_max;                  // maximum IPC buffer size
     crm_ipc_t *ipc;                       // IPC connection
     mainloop_io_t *mainloop_io;     // If using mainloop, I/O source for IPC
     bool free_on_disconnect;        // Whether disconnect should free object
@@ -208,5 +209,8 @@ bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
 
 G_GNUC_INTERNAL
 pcmk__ipc_methods_t *pcmk__controld_api_methods(void);
+
+G_GNUC_INTERNAL
+pcmk__ipc_methods_t *pcmk__pacemakerd_api_methods(void);
 
 #endif  // CRMCOMMON_PRIVATE__H

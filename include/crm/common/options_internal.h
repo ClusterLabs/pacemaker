@@ -111,6 +111,7 @@ bool pcmk__valid_utilization(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_timeout(void);
+bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
 

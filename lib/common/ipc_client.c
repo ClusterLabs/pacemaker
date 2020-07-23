@@ -41,13 +41,11 @@
  *
  * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
  * \note This is intended to supersede crm_ipc_new() but currently only
- *       supports the controller IPC API.
+ *       supports the controller & pacemakerd IPC API.
  */
 int
 pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
 {
-    size_t max_size = 0;
-
     if (api == NULL) {
         return EINVAL;
     }
@@ -64,13 +62,15 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return EOPNOTSUPP;
     }
 
+    (*api)->ipc_size_max = 0;
+
     // Set server methods and max_size (if not default)
     switch (server) {
         case pcmk_ipc_attrd:
             break;
 
         case pcmk_ipc_based:
-            max_size = 512 * 1024; // 512KB
+            (*api)->ipc_size_max = 512 * 1024; // 512KB
             break;
 
         case pcmk_ipc_controld:
@@ -84,11 +84,12 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         case pcmk_ipc_pacemakerd:
+            (*api)->cmds = pcmk__pacemakerd_api_methods();
             break;
 
         case pcmk_ipc_schedulerd:
             // @TODO max_size could vary by client, maybe take as argument?
-            max_size = 5 * 1024 * 1024; // 5MB
+            (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
     }
     if ((*api)->cmds == NULL) {
@@ -97,7 +98,8 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return ENOMEM;
     }
 
-    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), max_size);
+    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false),
+                              (*api)->ipc_size_max);
     if ((*api)->ipc == NULL) {
         pcmk_free_ipc_api(*api);
         *api = NULL;
@@ -258,7 +260,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
             return for_log? "fencer" : NULL /* "stonith-ng" */;
 
         case pcmk_ipc_pacemakerd:
-            return for_log? "launcher" : NULL /* CRM_SYSTEM_MCP */;
+            return for_log? "launcher" : CRM_SYSTEM_MCP;
 
         case pcmk_ipc_schedulerd:
             return for_log? "scheduler" : NULL /* CRM_SYSTEM_PENGINE */;
@@ -391,7 +393,7 @@ pcmk_dispatch_ipc(pcmk_ipc_api_t *api)
     if (api == NULL) {
         return;
     }
-    while (crm_ipc_ready(api->ipc)) {
+    while (crm_ipc_ready(api->ipc) > 0) {
         if (crm_ipc_read(api->ipc) > 0) {
             dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
         }
@@ -451,9 +453,18 @@ pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 {
     int rc = pcmk_rc_ok;
 
-    if ((api == NULL) || (api->ipc == NULL)) {
+    if (api == NULL) {
         crm_err("Cannot connect to uninitialized API object");
         return EINVAL;
+    }
+
+    if (api->ipc == NULL) {
+        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false),
+                                  api->ipc_size_max);
+        if (api->ipc == NULL) {
+            crm_err("Failed to re-create IPC API");
+            return ENOMEM;
+        }
     }
 
     if (crm_ipc_connected(api->ipc)) {
