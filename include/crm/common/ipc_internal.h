@@ -121,8 +121,9 @@ struct pcmk__remote_s {
 };
 
 enum pcmk__client_flags {
-    pcmk__client_proxied    = 0x00001, /* ipc_proxy code only */
-    pcmk__client_privileged = 0x00002, /* root or cluster user */
+    pcmk__client_proxied    = (1 << 0), // Remote client behind proxy
+    pcmk__client_privileged = (1 << 1), // root or cluster user
+    pcmk__client_to_proxy   = (1 << 2), // Local client to be proxied
 };
 
 struct pcmk__client_s {

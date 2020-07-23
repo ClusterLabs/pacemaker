@@ -88,6 +88,11 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     client->userdata = strdup(ipc_proxy->id);
     client->name = crm_strdup_printf("proxy-%s-%d-%.8s", ipc_channel, client->pid, client->id);
 
+    /* Allow remote executor to distinguish between proxied local clients and
+     * actual executor API clients
+     */
+    set_bit(client->flags, pcmk__client_to_proxy);
+
     g_hash_table_insert(ipc_clients, client->id, client);
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
