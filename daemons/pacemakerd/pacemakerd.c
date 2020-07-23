@@ -456,6 +456,7 @@ pcmk_shutdown_worker(gpointer user_data)
     if (!fatal_error && running_with_sbd &&
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
+        crm_notice("Waiting for SBD to pick up shutdown-complete-state.");
         return TRUE;
     }
 
@@ -546,10 +547,14 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
         if (crm_str_eq(pacemakerd_state,
                        XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
                        TRUE)) {
+            if (pcmk__get_sbd_sync_resource_startup()) {
+                crm_notice("Shutdown-complete-state passed to SBD.");
+            }
             shutdown_complete_state_reported_to = c->pid;
         } else if (crm_str_eq(pacemakerd_state,
                               XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
                               TRUE)) {
+            crm_notice("Received startup-trigger from SBD.");
             pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
@@ -1250,12 +1255,13 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
+        crm_notice("Waiting for startup-trigger from SBD.");
         pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_WAITPING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
             crm_warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
-                     "by your sbd version) improve reliability of "
+                     "by your SBD version) improve reliability of "
                      "interworking between SBD & pacemaker.");
         }
         pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
