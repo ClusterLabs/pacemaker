@@ -250,14 +250,14 @@ class Environment(object):
     def discover(self):
         self.target = random.Random().choice(self["nodes"])
 
-        master = socket.gethostname()
+        main = socket.gethostname()
 
         # Use the IP where possible to avoid name lookup failures
-        for ip in socket.gethostbyname_ex(master)[2]:
+        for ip in socket.gethostbyname_ex(main)[2]:
             if ip != "127.0.0.1":
-                master = ip
+                main = ip
                 break;
-        self["cts-master"] = master
+        self["cts-main"] = main
 
         if not "have_systemd" in self.data:
             self["have_systemd"] = not self.rsh(self.target,

@@ -353,10 +353,10 @@ class CIB12(ConfigBase):
         m.add_op("monitor", "P10S")
         m.commit()
 
-        # Ping the test master
+        # Ping the test main
         p = Resource(self.Factory, "ping-1","ping",  "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host_list"] = self.CM.Env["cts-master"]
+        p["host_list"] = self.CM.Env["cts-main"]
         p["name"] = "connected"
         p["debug"] = "true"
 
@@ -367,7 +367,7 @@ class CIB12(ConfigBase):
         # promotable clone resource
         s = Resource(self.Factory, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
-        s.add_op("monitor", "16s", timeout="60s", role="Master")
+        s.add_op("monitor", "16s", timeout="60s", role="Main")
         ms = Clone(self.Factory, "promotable-1", s)
         ms["promotable"] = "true"
         ms["clone-max"] = self.num_nodes
@@ -399,7 +399,7 @@ class CIB12(ConfigBase):
 
         # Make group depend on the promotable clone
         g.after("promotable-1", first="promote", then="start")
-        g.colocate("promotable-1", "INFINITY", withrole="Master")
+        g.colocate("promotable-1", "INFINITY", withrole="Main")
 
         g.commit()
 
