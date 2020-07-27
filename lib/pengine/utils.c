@@ -1948,7 +1948,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 {
     pe_ticket_t *ticket = NULL;
 
-    if (ticket_id == NULL || strlen(ticket_id) == 0) {
+    if (pcmk__str_empty(ticket_id)) {
         return NULL;
     }
 

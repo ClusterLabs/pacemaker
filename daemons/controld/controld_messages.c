@@ -370,7 +370,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     is_for_crm = (strcasecmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 
     is_local = 0;
-    if (host_to == NULL || strlen(host_to) == 0) {
+    if (pcmk__str_empty(host_to)) {
         if (is_for_dc || is_for_te) {
             is_local = 0;
 

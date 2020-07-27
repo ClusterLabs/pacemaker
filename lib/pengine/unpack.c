@@ -884,7 +884,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
     pe_ticket_t *ticket = NULL;
 
     ticket_id = ID(xml_ticket);
-    if (ticket_id == NULL || strlen(ticket_id) == 0) {
+    if (pcmk__str_empty(ticket_id)) {
         return FALSE;
     }
 

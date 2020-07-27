@@ -1978,7 +1978,7 @@ create_xml_node(xmlNode * parent, const char *name)
     xmlDoc *doc = NULL;
     xmlNode *node = NULL;
 
-    if (name == NULL || name[0] == 0) {
+    if (pcmk__str_empty(name)) {
         CRM_CHECK(name != NULL && name[0] == 0, return NULL);
         return NULL;
     }

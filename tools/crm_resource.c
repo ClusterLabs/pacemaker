@@ -1183,13 +1183,13 @@ set_property()
     int rc = pcmk_rc_ok;
     xmlNode *msg_data = NULL;
 
-    if ((options.rsc_type == NULL) || !strlen(options.rsc_type)) {
+    if (pcmk__str_empty(options.rsc_type)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "Must specify -t with resource type");
         rc = ENXIO;
         return rc;
 
-    } else if ((options.prop_value == NULL) || !strlen(options.prop_value)) {
+    } else if (pcmk__str_empty(options.prop_value)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "Must supply -v with new value");
         rc = EINVAL;
@@ -1670,7 +1670,7 @@ main(int argc, char **argv)
         rc = cli_resource_print_attribute(rsc, options.prop_name, options.attr_set_type, data_set);
 
     } else if (options.rsc_cmd == 'p') {
-        if (options.prop_value == NULL || strlen(options.prop_value) == 0) {
+        if (pcmk__str_empty(options.prop_value)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "You need to supply a value with the -v option");
             rc = EINVAL;
