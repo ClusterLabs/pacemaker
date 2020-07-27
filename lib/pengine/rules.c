@@ -626,7 +626,7 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
          attr_set = __xml_next_element(attr_set)) {
 
         /* Uncertain if set_name == NULL check is strictly necessary here */
-        if (set_name == NULL || crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
+        if (pcmk__str_eq(set_name, (const char *)attr_set->name, pcmk__str_null_matches)) {
             pair = NULL;
             attr_set = expand_idref(attr_set, top);
             if (attr_set == NULL) {
@@ -1150,7 +1150,7 @@ pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *
         end = pe_parse_xml_duration(start, duration_spec);
     }
 
-    if ((op == NULL) || safe_str_eq(op, "in_range")) {
+    if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
         if ((start == NULL) && (end == NULL)) {
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(rule_data->now, start) < 0)) {

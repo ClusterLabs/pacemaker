@@ -1832,7 +1832,7 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
 
     CRM_CHECK(role != NULL, return FALSE);
 
-    if (value == NULL || safe_str_eq("started", value)
+    if (pcmk__str_eq(value, "started", pcmk__str_null_matches | pcmk__str_casei)
         || safe_str_eq("default", value)) {
         return FALSE;
     }
@@ -2710,7 +2710,7 @@ pe__shutdown_requested(pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
-    return shutdown && strcmp(shutdown, "0");
+    return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
 }
 
 /*!

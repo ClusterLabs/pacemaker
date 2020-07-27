@@ -1807,7 +1807,7 @@ find_entity_by_attr_or_just_name(xmlNode *parent, const char *node_name,
 
     for (child = __xml_first_child(parent); child != NULL; child = __xml_next(child)) {
         /* XXX uncertain if the first check is strictly necessary here */
-        if (node_name == NULL || !strcmp((const char *) child->name, node_name)) {
+        if (pcmk__str_eq(node_name, (const char *)child->name, pcmk__str_null_matches)) {
             if (attr_n == NULL
                     || crm_str_eq(crm_element_value(child, attr_n), attr_v, TRUE)) {
                 return child;
@@ -4388,7 +4388,7 @@ first_named_child(const xmlNode *parent, const char *name)
          * semantically incorrect in this function, but may be necessary
          * due to prior use of xml_child_iter_filter
          */
-        if (name == NULL || strcmp((const char *)match->name, name) == 0) {
+        if (pcmk__str_eq(name, (const char *)match->name, pcmk__str_null_matches)) {
             return match;
         }
     }

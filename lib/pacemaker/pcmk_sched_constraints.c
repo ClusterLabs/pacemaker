@@ -1354,11 +1354,11 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
         return FALSE;
     }
 
-    if (state_lh == NULL || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
+    if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
         state_lh = RSC_ROLE_UNKNOWN_S;
     }
 
-    if (state_rh == NULL || safe_str_eq(state_rh, RSC_ROLE_STARTED_S)) {
+    if (pcmk__str_eq(state_rh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
         state_rh = RSC_ROLE_UNKNOWN_S;
     }
 
@@ -2724,7 +2724,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
         return FALSE;
     }
 
-    if (state_lh == NULL || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
+    if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
         state_lh = RSC_ROLE_UNKNOWN_S;
     }
 

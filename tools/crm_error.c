@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/strings_internal.h>
 
 #include <crm/crm.h>
 
@@ -116,7 +117,7 @@ main(int argc, char **argv)
                 rc = pcmk_rc_ok;
             }
             get_strings(rc, &name, &desc);
-            if (!name || !strcmp(name, "Unknown") || !strcmp(name, "CRM_EX_UNKNOWN")) {
+            if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 // Undefined
             } else if(options.with_name) {
                 printf("% .*d: %-26s  %s\n", width, rc, name, desc);

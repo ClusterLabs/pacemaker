@@ -292,7 +292,7 @@ stonith_local_history_diff(GHashTable *remote_history,
                     continue; /* skip entries broadcasted already */
                 }
 
-                if (target && strcmp(op->target, target) != 0) {
+                if (!pcmk__str_eq(target, op->target, pcmk__str_null_matches)) {
                     continue;
                 }
 

@@ -11,6 +11,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/internal.h>
 #include <crm/common/output.h>
+#include <crm/common/strings_internal.h>
 #include <libxml/tree.h>
 
 static GHashTable *formatters = NULL;
@@ -54,7 +55,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         return ENOMEM;
     }
 
-    if (filename == NULL || safe_str_eq(filename, "-")) {
+    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         (*out)->dest = stdout;
     } else {
         (*out)->dest = fopen(filename, "w");

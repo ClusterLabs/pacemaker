@@ -434,7 +434,7 @@ do_dc_join_finalize(long long action,
     }
 
     clear_bit(fsa_input_register, R_HAVE_CIB);
-    if (max_generation_from == NULL || safe_str_eq(max_generation_from, fsa_our_uname)) {
+    if (pcmk__str_eq(max_generation_from, fsa_our_uname, pcmk__str_null_matches | pcmk__str_casei)) {
         set_bit(fsa_input_register, R_HAVE_CIB);
     }
 

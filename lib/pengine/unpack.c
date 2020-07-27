@@ -419,7 +419,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     if (safe_str_eq(type, "remote")) {
         new_node->details->type = node_remote;
         set_bit(data_set->flags, pe_flag_have_remote_nodes);
-    } else if ((type == NULL) || safe_str_eq(type, "member")) {
+    } else if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
         new_node->details->type = node_member;
     }
 

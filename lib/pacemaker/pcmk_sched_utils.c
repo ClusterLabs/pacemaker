@@ -35,7 +35,7 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         new_con->role_filter = RSC_ROLE_UNKNOWN;
 
 
-        if (discover_mode == NULL || safe_str_eq(discover_mode, "always")) {
+        if (pcmk__str_eq(discover_mode, "always", pcmk__str_null_matches | pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_always;
         } else if (safe_str_eq(discover_mode, "never")) {
             new_con->discover_mode = pe_discover_never;

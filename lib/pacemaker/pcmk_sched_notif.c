@@ -302,7 +302,7 @@ pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe
             const char *interval_ms_s = g_hash_table_lookup(mon->meta,
                                                             XML_LRM_ATTR_INTERVAL_MS);
 
-            if ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0")) {
+            if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
                 pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
                 continue;
             } else if (safe_str_eq(mon->task, RSC_CANCEL)) {

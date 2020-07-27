@@ -483,7 +483,7 @@ node_has_been_unfenced(pe_node_t *node)
 {
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
-    return unfenced && strcmp("0", unfenced);
+    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }
 
 static inline bool

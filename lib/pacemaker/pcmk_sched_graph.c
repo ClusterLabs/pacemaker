@@ -1383,7 +1383,7 @@ should_dump_action(pe_action_t *action)
                                                         XML_LRM_ATTR_INTERVAL_MS);
 
         // Cancellation of recurring monitors should still be dumped
-        if ((interval_ms_s == NULL) || !strcmp(interval_ms_s, "0")) {
+        if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)) {
             crm_trace("Ignoring action %s (%d): for unmanaged resource (%s)",
                       action->uuid, action->id, action->rsc->id);
             return false;

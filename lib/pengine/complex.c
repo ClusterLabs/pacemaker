@@ -206,7 +206,7 @@ template_op_key(xmlNode * op)
     const char *role = crm_element_value(op, "role");
     char *key = NULL;
 
-    if (role == NULL || crm_str_eq(role, RSC_ROLE_STARTED_S, TRUE)
+    if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_null_matches)
         || crm_str_eq(role, RSC_ROLE_SLAVE_S, TRUE)) {
         role = RSC_ROLE_UNKNOWN_S;
     }

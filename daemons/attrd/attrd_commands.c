@@ -785,8 +785,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     }
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
-    update_both = ((op == NULL)
-                   || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH));
+    update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                               pcmk__str_null_matches | pcmk__str_casei);
 
     // Look up or create attribute entry
     a = g_hash_table_lookup(attributes, attr);

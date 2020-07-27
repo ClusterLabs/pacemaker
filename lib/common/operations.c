@@ -415,8 +415,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     }
 
     /* Meta-data is only needed for these actions */
-    if (op
-        && strcmp(op, CRMD_ACTION_START)
+    if (!pcmk__str_eq(op, CRMD_ACTION_START, pcmk__str_null_matches)
         && strcmp(op, CRMD_ACTION_STATUS)
         && strcmp(op, CRMD_ACTION_PROMOTE)
         && strcmp(op, CRMD_ACTION_DEMOTE)

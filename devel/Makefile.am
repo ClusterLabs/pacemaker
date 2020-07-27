@@ -11,6 +11,7 @@ EXTRA_SCRIPTS		= coccinelle/test/testrunner.sh
 EXTRA_DIST		= $(EXTRA_SCRIPTS) \
 				  coccinelle/ref-passed-variables-inited.cocci \
 				  coccinelle/string-empty.cocci \
+				  coccinelle/string-null-matches.cocci \
 				  coccinelle/test/ref-passed-variables-inited.input.c \
 				  coccinelle/test/ref-passed-variables-inited.output
 
@@ -32,7 +33,8 @@ EXTRA_DIST		= $(EXTRA_SCRIPTS) \
 #
 # ref-passed-variables-inited.cocci seems to be returning some false positives around
 # GHashTableIters, so it is disabled for the moment.
-COCCI_FILES ?= coccinelle/string-empty.cocci
+COCCI_FILES ?= coccinelle/string-empty.cocci \
+			   coccinelle/string-null-matches.cocci
 
 cocci:
 	for f in $(COCCI_FILES); do \

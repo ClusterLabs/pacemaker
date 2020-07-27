@@ -614,7 +614,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     *end = -1;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring == NULL || strcmp(srcstring, "") == 0 || strcmp(srcstring, "-") == 0) {
+    if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
         return pcmk_rc_unknown_format;
     }
 

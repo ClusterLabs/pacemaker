@@ -544,7 +544,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
             }
 
             /* Assume it was our leader if we don't currently have one */
-        } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
+        } else if (pcmk__str_eq(fsa_our_dc, st_event->target, pcmk__str_null_matches | pcmk__str_casei)
                    && is_not_set(peer->flags, crm_remote_node)) {
 
             crm_notice("Fencing target %s %s our leader",

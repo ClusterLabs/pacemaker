@@ -60,7 +60,7 @@ static GListPtr
 build_uname_list(pe_working_set_t *data_set, const char *s) {
     GListPtr unames = NULL;
 
-    if (s == NULL || strcmp(s, "*") == 0) {
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         /* Nothing was given so return a list of all node names.  Or, '*' was
          * given.  This would normally fall into the pe__unames_with_tag branch
          * where it will return an empty list.  Catch it here instead.
@@ -92,7 +92,7 @@ static GListPtr
 build_rsc_list(pe_working_set_t *data_set, const char *s) {
     GListPtr resources = NULL;
 
-    if (s == NULL || strcmp(s, "*") == 0) {
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
@@ -285,7 +285,7 @@ get_operation_list(xmlNode *rsc_entry) {
 
         /* Display 0-interval monitors as "probe" */
         if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
 
@@ -334,7 +334,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
 
         /* Display 0-interval monitors as "probe" */
         if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
 

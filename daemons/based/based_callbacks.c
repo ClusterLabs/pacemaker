@@ -1363,7 +1363,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, F_ORIG);
 
-    if (cib_legacy_mode() && (originator == NULL || crm_str_eq(originator, cib_our_uname, TRUE))) {
+    if (cib_legacy_mode() && pcmk__str_eq(originator, cib_our_uname, pcmk__str_null_matches)) {
         /* message is from ourselves */
         int bcast_id = 0;
 

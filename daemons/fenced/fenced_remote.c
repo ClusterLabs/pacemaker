@@ -1616,7 +1616,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
 
-        if(stonith_watchdog_timeout_ms && (device == NULL || safe_str_eq(device, "watchdog"))) {
+        if(stonith_watchdog_timeout_ms && pcmk__str_eq(device, "watchdog", pcmk__str_null_matches | pcmk__str_casei)) {
             crm_notice("Waiting %lds for %s to self-fence (%s) for client %s.%.8s",
                      stonith_watchdog_timeout_ms/1000, op->target,
                      op->action, op->client_name, op->id);

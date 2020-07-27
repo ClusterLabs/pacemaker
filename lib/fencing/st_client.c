@@ -128,7 +128,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
         return st_namespace_any;
 
     } else if (!strcmp(namespace_s, "redhat")
@@ -571,7 +571,7 @@ make_args(const char *agent, const char *action, const char *victim,
         }
 
         /* Don't overwrite explictly set values for $param */
-        if (value == NULL || safe_str_eq(value, "dynamic")) {
+        if (pcmk__str_eq(value, "dynamic", pcmk__str_null_matches | pcmk__str_casei)) {
             crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
                       alias);
             append_arg(param, alias, &arg_list);

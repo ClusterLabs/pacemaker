@@ -801,7 +801,7 @@ apply_system_health(pe_working_set_t * data_set)
     const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
     int base_health = 0;
 
-    if (health_strategy == NULL || safe_str_eq(health_strategy, "none")) {
+    if (pcmk__str_eq(health_strategy, "none", pcmk__str_null_matches | pcmk__str_casei)) {
         /* Prevent any accidental health -> score translation */
         pcmk__score_red = 0;
         pcmk__score_yellow = 0;
@@ -998,7 +998,7 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     // Fence devices and remote connections can't be locked
     class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if ((class == NULL) || !strcmp(class, PCMK_RESOURCE_CLASS_STONITH)
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
         || pe__resource_is_remote_conn(rsc, data_set)) {
         return;
     }
