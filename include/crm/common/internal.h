@@ -197,6 +197,15 @@ extern int pcmk__score_green;
 extern int pcmk__score_yellow;
 
 
+/* Error domains for use with g_set_error (from results.c) */
+
+GQuark pcmk__rc_error_quark(void);
+GQuark pcmk__exitc_error_quark(void);
+
+#define PCMK__RC_ERROR       pcmk__rc_error_quark()
+#define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
+
+
 /* internal generic string functions (from strings.c) */
 
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,

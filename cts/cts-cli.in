@@ -361,6 +361,18 @@ function test_tools() {
     cmd="crm_resource -r dummy --meta -d is-managed"
     test_assert $CRM_EX_OK
 
+    desc="Create another resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show why a resource is not running"
+    cmd="crm_resource -Y -r dummy"
+    test_assert $CRM_EX_OK 0
+
+    desc="Remove another resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert $CRM_EX_OK 0
+
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
     test_assert $CRM_EX_OK
@@ -368,6 +380,14 @@ function test_tools() {
     desc="List the configured resources"
     cmd="crm_resource -L"
     test_assert $CRM_EX_OK
+
+    desc="List IDs of instantiated resources"
+    cmd="crm_resource -l"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show XML configuration of resource"
+    cmd="crm_resource -q -r dummy"
+    test_assert $CRM_EX_OK 0
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
@@ -386,7 +406,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Try to move a resource to its existing location"
-    cmd="crm_resource -r dummy --move --host node1"
+    cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_EXISTS
 
     desc="Move a resource from its existing location"
@@ -440,6 +460,14 @@ function test_tools() {
     desc="Ban dummy from node1"
     cmd="crm_resource -r dummy -B -N node1"
     test_assert $CRM_EX_OK
+
+    desc="Show where a resource is running"
+    cmd="crm_resource -r dummy -W"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show constraints on a resource"
+    cmd="crm_resource -a -r dummy"
+    test_assert $CRM_EX_OK 0
 
     desc="Ban dummy from node2"
     cmd="crm_resource -r dummy -B -N node2"
@@ -509,7 +537,7 @@ function test_tools() {
     cmd="cibadmin -Q -o resources > $TMPXML"
     test_assert $CRM_EX_OK 0
 
-    desc="Delete resource paremt meta attribute (force)"
+    desc="Delete resource parent meta attribute (force)"
     cmd="crm_resource -r test-clone --meta -d is-managed --force"
     test_assert $CRM_EX_OK
 
@@ -551,6 +579,17 @@ function test_tools() {
     desc="Remove expired constraints"
     sleep 2
     cmd="crm_resource --clear --expired"
+    test_assert $CRM_EX_OK
+
+    # Clear has already been tested elsewhere, but we need to get rid of the
+    # constraints so testing delete works.  It won't delete if there's still
+    # a reference to the resource somewhere.
+    desc="Clear all implicit constraints for dummy"
+    cmd="crm_resource -r dummy -U"
+    test_assert $CRM_EX_OK
+
+    desc="Delete a resource"
+    cmd="crm_resource -D -r dummy -t primitive"
     test_assert $CRM_EX_OK
 
     unset CIB_shadow
@@ -1325,7 +1364,7 @@ done
 echo -e "\n\nSummary"
 for t in $tests; do
     eval TMPFILE="\$TMPFILE_$t"
-    grep -e '^\*' "$TMPFILE"
+    grep -e '^\* \(Passed\|Failed\)' "$TMPFILE"
 done
 
 if [ $num_errors -ne 0 ]; then

@@ -584,7 +584,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(errno),
+        g_set_error(error, PCMK__RC_ERROR, errno,
                     "Could not open %s for writing: %s", dot_file,
                     pcmk_rc_str(errno));
         return false;
@@ -706,12 +706,12 @@ setup_input(const char *input, const char *output, GError **error)
 
         if (rc != pcmk_rc_ok) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(error, PCMK__RC_ERROR, rc,
                         "Live CIB query failed: %s (%d)", pcmk_rc_str(rc), rc);
             return rc;
 
         } else if (cib_object == NULL) {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_NOINPUT,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_NOINPUT,
                         "Live CIB query failed: empty result");
             return pcmk_rc_no_input;
         }
@@ -752,7 +752,7 @@ setup_input(const char *input, const char *output, GError **error)
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_CANTCREAT,
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));
         return rc;
     } else {
@@ -933,8 +933,7 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         rc = ENOMEM;
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
-                    "Could not allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not allocate working set");
         goto done;
     }
     set_bit(data_set->flags, pe_flag_no_compat);
@@ -954,7 +953,7 @@ main(int argc, char **argv)
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
     if (rc != pcmk_rc_ok) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+        g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
@@ -962,7 +961,7 @@ main(int argc, char **argv)
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
     if (rc != pcmk_rc_ok) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+        g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not get local CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
@@ -1005,7 +1004,7 @@ main(int argc, char **argv)
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != pcmk_rc_ok) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not get modified CIB: %s", pcmk_rc_str(rc));
             goto done;
         }
@@ -1025,7 +1024,7 @@ main(int argc, char **argv)
         rc = write_xml_file(input, options.input_file, FALSE);
         if (rc < 0) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not create '%s': %s", options.input_file, pcmk_rc_str(rc));
             goto done;
         }
