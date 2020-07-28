@@ -1261,7 +1261,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  */
 int
 cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                     cib_t *cib, bool scope_master)
+                     cib_t *cib, bool promoted_role_only)
 {
     int rc = 0;
     int lpc = 0;
@@ -1339,7 +1339,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
-        rc = cli_resource_ban(rsc_id, host, NULL, cib, scope_master);
+        rc = cli_resource_ban(rsc_id, host, NULL, cib, promoted_role_only);
 
     } else {
         /* Stop the resource by setting target-role to Stopped.
@@ -1889,7 +1889,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 int
 cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  cib_t *cib, pe_working_set_t *data_set, bool scope_master)
+                  cib_t *cib, pe_working_set_t *data_set, bool promoted_role_only)
 {
     int rc = pcmk_ok;
     unsigned int count = 0;
@@ -1901,7 +1901,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
         return -pcmk_err_node_unknown;
     }
 
-    if (scope_master && is_not_set(rsc->flags, pe_rsc_promotable)) {
+    if (promoted_role_only && is_not_set(rsc->flags, pe_rsc_promotable)) {
         pe_resource_t *p = uber_parent(rsc);
 
         if (is_set(p->flags, pe_rsc_promotable)) {
@@ -1911,7 +1911,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
         } else {
             CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
-            scope_master = false;
+            promoted_role_only = false;
         }
     }
 
@@ -1932,7 +1932,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                 master_count++;
             }
         }
-        if (scope_master || master_count) {
+        if (promoted_role_only || master_count) {
             count = master_count;
             current = master_node;
         }
@@ -1951,7 +1951,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
         cur_is_dest = TRUE;
         if (do_force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
-                     rsc_id, scope_master?"promoted":"active", dest->details->uname);
+                     rsc_id, promoted_role_only?"promoted":"active", dest->details->uname);
         } else {
             return -pcmk_err_already;
         }
@@ -1964,10 +1964,10 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib, TRUE);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, scope_master);
+    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
-              rsc->id, scope_master?" (master)":"", dest->details->uname, do_force?"(forced)":"");
+              rsc->id, promoted_role_only?" (master)":"", dest->details->uname, do_force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
@@ -1975,16 +1975,16 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     if(do_force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib, scope_master);
+            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib, promoted_role_only);
 
         } else if(count > 1) {
             CMD_ERR("Resource '%s' is currently %s in %d locations. "
                     "One may now move to %s",
-                    rsc_id, (scope_master? "promoted" : "active"),
+                    rsc_id, (promoted_role_only? "promoted" : "active"),
                     count, dest->details->uname);
             CMD_ERR("To prevent '%s' from being %s at a specific location, "
                     "specify a node.",
-                    rsc_id, (scope_master? "promoted" : "active"));
+                    rsc_id, (promoted_role_only? "promoted" : "active"));
 
         } else {
             crm_trace("Not banning %s from its current location: not active", rsc_id);

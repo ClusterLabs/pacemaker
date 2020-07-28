@@ -43,7 +43,7 @@ struct {
     char *rsc_id;
     char *rsc_long_cmd;
     char *rsc_type;
-    bool scope_master;
+    bool promoted_role_only;
     int timeout_ms;
     char *v_agent;
     char *v_class;
@@ -704,7 +704,7 @@ main(int argc, char **argv)
         switch (flag) {
             case 0: /* long options with no short equivalent */
                 if (safe_str_eq("master", longname)) {
-                    options.scope_master = true;
+                    options.promoted_role_only = true;
 
                 } else if(safe_str_eq(longname, "recursive")) {
                     options.recursive = true;
@@ -1282,7 +1282,7 @@ main(int argc, char **argv)
          * lifetime of cli_resource_restart(), but it will reset and update the
          * working set multiple times, so it needs to use its own copy.
          */
-        rc = cli_resource_restart(rsc, options.host_uname, options.timeout_ms, cib_conn, options.scope_master);
+        rc = cli_resource_restart(rsc, options.host_uname, options.timeout_ms, cib_conn, options.promoted_role_only);
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "wait")) {
         rc = wait_till_stable(options.timeout_ms, cib_conn);
@@ -1384,7 +1384,7 @@ main(int argc, char **argv)
         }
 
         if (options.clear_expired) {
-            rc = cli_resource_clear_all_expired(data_set->input, cib_conn, options.rsc_id, options.host_uname, options.scope_master);
+            rc = cli_resource_clear_all_expired(data_set->input, cib_conn, options.rsc_id, options.host_uname, options.promoted_role_only);
 
         } else if (options.host_uname) {
             dest = pe_find_node(data_set->nodes, options.host_uname);
@@ -1425,7 +1425,7 @@ main(int argc, char **argv)
         }
 
     } else if (options.rsc_cmd == 'M' && options.host_uname) {
-        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname, cib_conn, data_set, options.scope_master);
+        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname, cib_conn, data_set, options.promoted_role_only);
 
     } else if (options.rsc_cmd == 'B' && options.host_uname) {
         pe_node_t *dest = pe_find_node(data_set->nodes, options.host_uname);
@@ -1434,7 +1434,7 @@ main(int argc, char **argv)
             rc = -pcmk_err_node_unknown;
             goto bail;
         }
-        rc = cli_resource_ban(options.rsc_id, dest->details->uname, NULL, cib_conn, options.scope_master);
+        rc = cli_resource_ban(options.rsc_id, dest->details->uname, NULL, cib_conn, options.promoted_role_only);
 
     } else if (options.rsc_cmd == 'B' || options.rsc_cmd == 'M') {
         pe_node_t *current = NULL;
@@ -1443,7 +1443,7 @@ main(int argc, char **argv)
         current = pe__find_active_requires(rsc, &nactive);
 
         if (nactive == 1) {
-            rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.scope_master);
+            rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.promoted_role_only);
 
         } else if (is_set(rsc->flags, pe_rsc_promotable)) {
             int count = 0;
@@ -1461,7 +1461,7 @@ main(int argc, char **argv)
             }
 
             if(count == 1 && current) {
-                rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.scope_master);
+                rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.promoted_role_only);
 
             } else {
                 rc = -EINVAL;

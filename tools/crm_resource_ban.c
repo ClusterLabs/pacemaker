@@ -60,7 +60,7 @@ parse_cli_lifetime(const char *input)
 
 int
 cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
-                 bool scope_master)
+                 bool promoted_role_only)
 {
     char *later_s = NULL;
     int rc = pcmk_ok;
@@ -72,7 +72,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         for(; n && rc == pcmk_ok; n = n->next) {
             pe_node_t *target = n->data;
 
-            rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn, scope_master);
+            rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn, promoted_role_only);
         }
         return rc;
     }
@@ -94,13 +94,13 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         CMD_ERR("\tThis will prevent %s from %s on %s until the constraint "
                 "is removed using the clear option or by editing the CIB "
                 "with an appropriate tool",
-                rsc_id, (scope_master? "being promoted" : "running"), host);
+                rsc_id, (promoted_role_only? "being promoted" : "running"), host);
         CMD_ERR("\tThis will be the case even if %s is"
                 " the last node in the cluster", host);
     }
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
-    if(scope_master) {
+    if(promoted_role_only) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
@@ -141,7 +141,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 
 
 int
-cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool scope_master)
+cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool promoted_role_only)
 {
     char *later_s = parse_cli_lifetime(move_lifetime);
     int rc = pcmk_ok;
@@ -163,7 +163,7 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
-    if(scope_master) {
+    if(promoted_role_only) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
@@ -310,7 +310,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
 }
 
 static char *
-build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *node, bool scope_master)
+build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *node, bool promoted_role_only)
 {
     int offset = 0;
     char *xpath_string = NULL;
@@ -332,24 +332,24 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
     first_half = calloc(1, XPATH_MAX);
     offset += snprintf(first_half + offset, XPATH_MAX - offset, "//rsc_location");
 
-    if (node != NULL || rsc != NULL || scope_master == TRUE) {
+    if (node != NULL || rsc != NULL || promoted_role_only == TRUE) {
         offset += snprintf(first_half + offset, XPATH_MAX - offset, "[");
 
         if (node != NULL) {
-            if (rsc != NULL || scope_master == TRUE) {
+            if (rsc != NULL || promoted_role_only == TRUE) {
                 offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s' and ", node);
             } else {
                 offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s'", node);
             }
         }
 
-        if (rsc != NULL && scope_master == TRUE) {
+        if (rsc != NULL && promoted_role_only == TRUE) {
             rsc_role_substr = crm_strdup_printf("@rsc='%s' and @role='%s'", rsc, RSC_ROLE_MASTER_S);
             offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s' and @role='%s']", rsc, RSC_ROLE_MASTER_S);
         } else if (rsc != NULL) {
             rsc_role_substr = crm_strdup_printf("@rsc='%s'", rsc);
             offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s']", rsc);
-        } else if (scope_master == TRUE) {
+        } else if (promoted_role_only == TRUE) {
             rsc_role_substr = crm_strdup_printf("@role='%s'", RSC_ROLE_MASTER_S);
             offset += snprintf(first_half + offset, XPATH_MAX - offset, "@role='%s']", RSC_ROLE_MASTER_S);
         } else {
@@ -377,7 +377,7 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
 }
 
 int
-cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool scope_master)
+cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool promoted_role_only)
 {
     xmlXPathObject *xpathObj = NULL;
     xmlNode *cib_constraints = NULL;
@@ -394,7 +394,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, 
         crm_time_t *end = NULL;
         char *xpath_string = NULL;
 
-        xpath_string = build_clear_xpath_string(constraint_node, rsc, node, scope_master);
+        xpath_string = build_clear_xpath_string(constraint_node, rsc, node, promoted_role_only);
         if (xpath_string == NULL) {
             continue;
         }
