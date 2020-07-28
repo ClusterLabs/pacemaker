@@ -426,8 +426,28 @@ clang:
 	test -e $(CLANG_analyzer)
 	scan-build $(CLANG_checkers:%=-enable-checker %) $(MAKE) $(AM_MAKEFLAGS) clean all
 
+# Coccinelle is a tool that takes special patch-like files (called semantic patches) and
+# applies them throughout a source tree.  This is useful when refactoring, changing APIs,
+# catching dangerous or incorrect code, and other similar tasks.  It's not especially
+# easy to write a semantic patch but most users should only be concerned about running
+# the target and inspecting the results.
+#
+# Documentation (including examples, which are the most useful):
+# http://coccinelle.lip6.fr/documentation.php
+#
+# Run the "make cocci" target to just output what would be done, or "make cocci-inplace"
+# to apply the changes to the source tree.
+#
+# COCCI_FILES may be set on the command line, if you want to test just a single file
+# while it's under development.  Otherwise, it is a list of all the files that are ready
+# to be run.
+#
+# ref-passed-variables-inited.cocci seems to be returning some false positives around
+# GHashTableIters, so it is disabled for the moment.
+COCCI_FILES ?=
+
 cocci:
-	for f in maint/coccinelle/*.cocci; do \
+	for f in $(COCCI_FILES); do \
 	  for d in daemons include lib tools; do \
 	    test $$d = "include" \
 	      && spatch $(_SPATCH_FLAGS) --include-headers --local-includes \
@@ -438,7 +458,7 @@ cocci:
 	done
 
 cocci-inplace:
-	$(MAKE) _SPATCH_FLAGS=--in-place cocci
+	$(MAKE) $(AM_MAKEFLAGS) _SPATCH_FLAGS=--in-place cocci
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
