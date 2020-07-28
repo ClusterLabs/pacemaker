@@ -28,6 +28,7 @@ EXTRA_DIST		= crm_diff.8.inc \
 			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
+			  crm_resource.8.inc \
 			  crm_rule.8.inc \
 			  crm_simulate.8.inc \
 			  fix-manpages \
