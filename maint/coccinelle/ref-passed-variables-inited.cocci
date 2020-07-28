@@ -1,9 +1,10 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * SPDX-License-Identifier: FSFAP
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  *
  *
  * We require each local variable that
