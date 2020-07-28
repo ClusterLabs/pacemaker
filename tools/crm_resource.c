@@ -684,7 +684,6 @@ main(int argc, char **argv)
     pe_resource_t *rsc = NULL;
 
     int rc = pcmk_ok;
-    int is_ocf_rc = 0;
     int option_index = 0;
     int argerr = 0;
     int flag;
@@ -1158,10 +1157,9 @@ main(int argc, char **argv)
         }
 
         if (argerr == 0) {
-            rc = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
-                                                  "validate-all", options.validate_options,
-                                                  options.override_params, options.timeout_ms);
-            exit_code = crm_errno2exit(rc);
+            exit_code = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
+                                                         "validate-all", options.validate_options,
+                                                         options.override_params, options.timeout_ms);
             goto done;
         }
     }
@@ -1289,11 +1287,8 @@ main(int argc, char **argv)
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd) {
         // validate, force-(stop|start|demote|promote|check)
-        rc = cli_resource_execute(rsc, options.rsc_id, options.rsc_long_cmd, options.override_params,
-                                  options.timeout_ms, cib_conn, data_set);
-        if (rc >= 0) {
-            is_ocf_rc = 1;
-        }
+        exit_code = cli_resource_execute(rsc, options.rsc_id, options.rsc_long_cmd, options.override_params,
+                                         options.timeout_ms, cib_conn, data_set);
 
     } else if (options.rsc_cmd == 'A' || options.rsc_cmd == 'a') {
         GListPtr lpc = NULL;
@@ -1632,10 +1627,7 @@ main(int argc, char **argv)
     }
 
 bail:
-    if (is_ocf_rc) {
-        exit_code = rc;
-
-    } else if (rc != pcmk_ok) {
+    if (rc != pcmk_ok) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
         if (rc == -pcmk_err_no_quorum) {
             CMD_ERR("To ignore quorum, use the force option");

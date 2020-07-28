@@ -1679,14 +1679,14 @@ wait_till_stable(int timeout_ms, cib_t * cib)
     return pcmk_ok;
 }
 
-int
+crm_exit_t
 cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                  const char *rsc_prov, const char *rsc_type,
                                  const char *action, GHashTable *params,
                                  GHashTable *override_hash, int timeout_ms)
 {
     GHashTable *params_copy = NULL;
-    int rc = pcmk_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
     if (safe_str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH)) {
@@ -1732,7 +1732,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
         crm_exit(CRM_EX_DATAERR);
-        return rc; // Never reached, but helps static analysis
+        return exit_code; // Never reached, but helps static analysis
     }
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
@@ -1763,7 +1763,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
         int more, lpc, last;
         char *local_copy = NULL;
 
-        rc = op->rc;
+        exit_code = op->rc;
 
         if (op->status == PCMK_LRM_OP_DONE) {
             printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
@@ -1808,22 +1808,22 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
             free(local_copy);
         }
     } else {
-        rc = op->rc == 0 ? pcmk_err_generic : op->rc;
+        exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
     }
 
 done:
     services_action_free(op);
     /* See comment above about why we free params here. */
     g_hash_table_destroy(params);
-    return rc;
+    return exit_code;
 }
 
-int
+crm_exit_t
 cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
                      int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
 {
-    int rc = pcmk_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = NULL;
     const char *rtype = NULL;
     const char *rprov = NULL;
@@ -1845,7 +1845,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            rc = cli_resource_search(rsc, requested_name, data_set);
+            int rc = cli_resource_search(rsc, requested_name, data_set);
             if(rc > 0 && do_force == FALSE) {
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
                         action, rsc->id);
@@ -1882,9 +1882,9 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
 
-    rc = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
-                                          params, override_hash, timeout_ms);
-    return rc;
+    exit_code = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
+                                                 params, override_hash, timeout_ms);
+    return exit_code;
 }
 
 int

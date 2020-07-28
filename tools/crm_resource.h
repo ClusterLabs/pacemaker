@@ -77,14 +77,14 @@ int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 int cli_resource_move(pe_resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
                       pe_working_set_t *data_set, bool promoted_role_only);
-int cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
-                                     const char *rsc_prov, const char *rsc_type,
-                                     const char *rsc_action, GHashTable *params,
-                                     GHashTable *override_hash, int timeout_ms);
-int cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
-                         const char *rsc_action, GHashTable *override_hash,
-                         int timeout_ms, cib_t *cib,
-                         pe_working_set_t *data_set);
+crm_exit_t cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
+                                            const char *rsc_prov, const char *rsc_type,
+                                            const char *rsc_action, GHashTable *params,
+                                            GHashTable *override_hash, int timeout_ms);
+crm_exit_t cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
+                                const char *rsc_action, GHashTable *override_hash,
+                                int timeout_ms, cib_t *cib,
+                                pe_working_set_t *data_set);
 
 int cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                   const char *attr_set, const char *attr_id,
