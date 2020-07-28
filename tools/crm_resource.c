@@ -62,6 +62,7 @@ int cib_options = cib_sync_call;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 // Things that should be cleaned up on exit
+static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
@@ -73,6 +74,11 @@ static pe_working_set_t *data_set = NULL;
 static crm_exit_t
 bye(crm_exit_t ec)
 {
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error->message);
+        g_clear_error(&error);
+    }
+
     if (cib_conn != NULL) {
         cib_t *save_cib_conn = cib_conn;
 
@@ -113,9 +119,13 @@ static gboolean
 resource_ipc_timeout(gpointer data)
 {
     // Start with newline because "Waiting for ..." message doesn't have one
-    fprintf(stderr, "\nAborting because no messages received in %d seconds\n",
-            MESSAGE_TIMEOUT_S);
-    crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
+    if (error != NULL) {
+        g_clear_error(&error);
+    }
+
+    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_TIMEOUT,
+                "\nAborting because no messages received in %d seconds", MESSAGE_TIMEOUT_S);
+
     quit_main_loop(CRM_EX_TIMEOUT);
     return FALSE;
 }
@@ -685,7 +695,6 @@ main(int argc, char **argv)
 
     int rc = pcmk_rc_ok;
     int option_index = 0;
-    int argerr = 0;
     int flag;
 
     crm_log_cli_init("crm_resource");
@@ -753,12 +762,14 @@ main(int argc, char **argv)
                         lrmd_list_freeall(list);
 
                     } else if (optarg) {
-                        fprintf(stderr, "No %s found for %s\n", text, optarg);
                         exit_code = CRM_EX_NOSUCH;
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "No %s found for %s", text, optarg);
 
                     } else {
-                        fprintf(stderr, "No %s found\n", text);
                         exit_code = CRM_EX_NOSUCH;
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "No %s found", text);
                     }
 
                     lrmd_api_delete(lrmd_conn);
@@ -779,18 +790,17 @@ main(int argc, char **argv)
                                                            &metadata, 0);
                         rc = pcmk_legacy2rc(rc);
                     } else {
-                        fprintf(stderr,
-                                "'%s' is not a valid agent specification\n",
-                                optarg);
                         rc = ENXIO;
+                        g_set_error(&error, PCMK__RC_ERROR, rc,
+                                    "'%s' is not a valid agent specification", optarg);
                     }
 
                     if (metadata) {
                         printf("%s\n", metadata);
                     } else {
-                        fprintf(stderr, "Metadata query for %s failed: %s\n",
-                                optarg, pcmk_rc_str(rc));
                         exit_code = crm_errno2exit(rc);
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "Metadata query for %s failed: %s", optarg, pcmk_rc_str(rc));
                     }
                     lrmd_api_delete(lrmd_conn);
                     goto done;
@@ -812,9 +822,10 @@ main(int argc, char **argv)
                         }
                         lrmd_list_freeall(list);
                     } else {
-                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n",
-                                optarg, (provider? provider : "*"));
                         exit_code = CRM_EX_NOSUCH;
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "No agents found for standard=%s, provider=%s",
+                                    optarg, (provider? provider : "*"));
                     }
                     lrmd_api_delete(lrmd_conn);
                     goto done;
@@ -861,8 +872,9 @@ main(int argc, char **argv)
                     crm_info("Scanning: --option %s", optarg);
                     rc = pcmk_scan_nvpair(optarg, &name, &value);
                     if (rc != 2) {
-                        fprintf(stderr, "Invalid option: --option %s: %s", optarg, pcmk_strerror(rc));
-                        argerr++;
+                        g_set_error(&error, PCMK__RC_ERROR, rc,
+                                    "Invalid option: --option %s: %s", optarg, pcmk_strerror(rc));
+                        goto done;
                     } else {
                         crm_info("Got: '%s'='%s'", name, value);
                     }
@@ -1071,8 +1083,9 @@ main(int argc, char **argv)
                 break;
 
             default:
-                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported", flag, flag);
-                ++argerr;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "Argument code 0%o (%c) is not (?yet?) supported", flag, flag);
+                goto done;
                 break;
         }
     }
@@ -1084,8 +1097,8 @@ main(int argc, char **argv)
 
     // --expired without --clear/-U doesn't make sense
     if (options.clear_expired && options.rsc_cmd != 'U') {
-        CMD_ERR("--expired requires --clear or -U");
-        argerr++;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--expired requires --clear or -U");
+        goto done;
     }
 
     if (optind < argc
@@ -1103,25 +1116,45 @@ main(int argc, char **argv)
                 g_hash_table_replace(options.override_params, name, value);
 
             } else {
-                CMD_ERR("Error parsing '%s' as a name=value pair for --%s", argv[optind], options.rsc_long_cmd);
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "Error parsing '%s' as a name=value pair for --%s", argv[optind], options.rsc_long_cmd);
                 free(value);
                 free(name);
-                argerr++;
+                goto done;
             }
             optind++;
         }
 
     } else if (optind < argc && argv[optind] != NULL && options.rsc_cmd == 0) {
-        CMD_ERR("non-option ARGV-elements: ");
+        gchar **strv = calloc(argc-optind, sizeof(char *));
+        gchar *msg = NULL;
+        int i = 1;
+
+        strv[0] = strdup("non-option ARGV-elements:");
+
         while (optind < argc && argv[optind] != NULL) {
-            CMD_ERR("[%d of %d] %s ", optind, argc, argv[optind]);
+			strv[i] = crm_strdup_printf("[%d of %d] %s\n", optind, argc, argv[optind]);
             optind++;
-            argerr++;
+			i++;
         }
+
+        msg = g_strjoinv("", strv);
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "%s", msg);
+
+        for(i = 0; i < argc-optind; i++) {
+            free(strv[i]);
+        }
+
+        g_free(msg);
+        g_free(strv);
+        goto done;
     }
 
     if (optind > argc) {
-        ++argerr;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Invalid option(s) supplied, use --help for valid usage");
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     // Sanity check validating from command line parameters.  If everything checks out,
@@ -1129,36 +1162,36 @@ main(int argc, char **argv)
     if (options.validate_cmdline) {
         // -r cannot be used with any of --class, --agent, or --provider
         if (options.rsc_id != NULL) {
-            CMD_ERR("--resource cannot be used with --class, --agent, and --provider");
-            argerr++;
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--resource cannot be used with --class, --agent, and --provider");
 
         // If --class, --agent, or --provider are given, --validate must also be given.
         } else if (!safe_str_eq(options.rsc_long_cmd, "validate")) {
-            CMD_ERR("--class, --agent, and --provider require --validate");
-            argerr++;
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--class, --agent, and --provider require --validate");
 
         // Not all of --class, --agent, and --provider need to be given.  Not all
         // classes support the concept of a provider.  Check that what we were given
         // is valid.
         } else if (crm_str_eq(options.v_class, "stonith", TRUE)) {
             if (options.v_provider != NULL) {
-                CMD_ERR("stonith does not support providers");
-                argerr++;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "stonith does not support providers");
 
             } else if (stonith_agent_exists(options.v_agent, 0) == FALSE) {
-                CMD_ERR("%s is not a known stonith agent", options.v_agent ? options.v_agent : "");
-                argerr++;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "%s is not a known stonith agent", options.v_agent ? options.v_agent : "");
             }
 
         } else if (resources_agent_exists(options.v_class, options.v_provider, options.v_agent) == FALSE) {
-            CMD_ERR("%s:%s:%s is not a known resource",
-                    options.v_class ? options.v_class : "",
-                    options.v_provider ? options.v_provider : "",
-                    options.v_agent ? options.v_agent : "");
-            argerr++;
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "%s:%s:%s is not a known resource",
+                        options.v_class ? options.v_class : "",
+                        options.v_provider ? options.v_provider : "",
+                        options.v_agent ? options.v_agent : "");
         }
 
-        if (argerr == 0) {
+        if (error == NULL) {
             exit_code = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
                                                          "validate-all", options.validate_options,
                                                          options.override_params, options.timeout_ms);
@@ -1166,8 +1199,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (argerr) {
-        CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
+    if (error != NULL) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -1178,8 +1210,9 @@ main(int argc, char **argv)
     }
 
     if (options.require_resource && !options.rsc_id) {
-        CMD_ERR("Must supply a resource id with -r");
         rc = ENXIO;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Must supply a resource id with -r");
         goto done;
     }
 
@@ -1190,13 +1223,16 @@ main(int argc, char **argv)
     // Establish a connection to the CIB
     cib_conn = cib_new();
     if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
-        CMD_ERR("Could not create CIB connection: %s", pcmk_rc_str(rc));
+        rc = pcmk_rc_error;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_DISCONNECT,
+                    "Could not create CIB connection");
         goto done;
     }
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
-        CMD_ERR("Could not connect to the CIB: %s", pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1233,8 +1269,9 @@ main(int argc, char **argv)
         rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
                                           options.find_flags);
         if (rsc == NULL) {
-            CMD_ERR("Resource '%s' not found", options.rsc_id);
             rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Resource '%s' not found", options.rsc_id);
             goto done;
         }
     }
@@ -1250,7 +1287,8 @@ main(int argc, char **argv)
                                    NULL);
         rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
         if (rc != pcmk_rc_ok) {
-            CMD_ERR("Error connecting to the controller: %s", pcmk_rc_str(rc));
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Error connecting to the controller: %s", pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -1402,7 +1440,8 @@ main(int argc, char **argv)
             rc = pcmk_legacy2rc(rc);
 
             if (rc != pcmk_rc_ok) {
-                CMD_ERR("Could not get modified CIB: %s\n", pcmk_strerror(rc));
+                g_set_error(&error, PCMK__RC_ERROR, rc,
+                            "Could not get modified CIB: %s\n", pcmk_strerror(rc));
                 g_list_free(before);
                 goto done;
             }
@@ -1464,21 +1503,23 @@ main(int argc, char **argv)
             } else {
                 rc = EINVAL;
                 exit_code = CRM_EX_USAGE;
-                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).",
-                        options.rsc_id, nactive, count);
-                CMD_ERR("To prevent '%s' from running on a specific location, "
-                        "specify a node.", options.rsc_id);
-                CMD_ERR("To prevent '%s' from being promoted at a specific "
-                        "location, specify a node and the master option.",
-                        options.rsc_id);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
+                            "To prevent '%s' from running on a specific location, "
+                            "specify a node."
+                            "To prevent '%s' from being promoted at a specific "
+                            "location, specify a node and the master option.",
+                            options.rsc_id, nactive, count, options.rsc_id, options.rsc_id);
             }
 
         } else {
             rc = EINVAL;
             exit_code = CRM_EX_USAGE;
-            CMD_ERR("Resource '%s' not moved: active in %d locations.", options.rsc_id, nactive);
-            CMD_ERR("To prevent '%s' from running on a specific location, "
-                    "specify a node.", options.rsc_id);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Resource '%s' not moved: active in %d locations.\n"
+                        "To prevent '%s' from running on a specific location, "
+                        "specify a node.",
+                        options.rsc_id, nactive, options.rsc_id);
         }
 
     } else if (options.rsc_cmd == 'G') {
@@ -1488,12 +1529,14 @@ main(int argc, char **argv)
         xmlNode *msg_data = NULL;
 
         if ((options.rsc_type == NULL) || !strlen(options.rsc_type)) {
-            CMD_ERR("Must specify -t with resource type");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "Must specify -t with resource type");
             rc = ENXIO;
             goto done;
 
         } else if ((options.prop_value == NULL) || !strlen(options.prop_value)) {
-            CMD_ERR("Must supply -v with new value");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "Must supply -v with new value");
             rc = EINVAL;
             goto done;
         }
@@ -1513,7 +1556,8 @@ main(int argc, char **argv)
 
     } else if (options.rsc_cmd == 'p') {
         if (options.prop_value == NULL || strlen(options.prop_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "You need to supply a value with the -v option");
             rc = EINVAL;
             goto done;
         }
@@ -1583,9 +1627,10 @@ main(int argc, char **argv)
             if (pe__is_guest_or_remote_node(node)) {
                 node = pe__current_node(node->details->remote_rsc);
                 if (node == NULL) {
-                    CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
-                            options.host_uname);
                     rc = ENXIO;
+                    g_set_error(&error, PCMK__RC_ERROR, rc,
+                                "No cluster connection to Pacemaker Remote node %s detected",
+                                options.host_uname);
                     goto done;
                 }
                 router_node = node->details->uname;
@@ -1615,8 +1660,9 @@ main(int argc, char **argv)
         xmlNode *msg_data = NULL;
 
         if (options.rsc_type == NULL) {
-            CMD_ERR("You need to specify a resource type with -t");
             rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "You need to specify a resource type with -t");
             goto done;
         }
 
@@ -1628,15 +1674,27 @@ main(int argc, char **argv)
         free_xml(msg_data);
 
     } else {
-        CMD_ERR("Unknown command: %c", options.rsc_cmd);
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Unknown command: %c", options.rsc_cmd);
     }
 
 done:
     if (rc != pcmk_rc_ok) {
-        CMD_ERR("Error performing operation: %s", pcmk_rc_str(rc));
         if (rc == pcmk_rc_no_quorum) {
-            CMD_ERR("To ignore quorum, use the force option");
+            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
         }
+
+        if (error != NULL) {
+            char *msg = crm_strdup_printf("%s\nError performing operation: %s",
+                                          error->message, pcmk_rc_str(rc));
+            g_clear_error(&error);
+            g_set_error(&error, PCMK__RC_ERROR, rc, "%s", msg);
+            free(msg);
+        } else {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Error performing operation: %s", pcmk_rc_str(rc));
+        }
+
         if (exit_code == CRM_EX_OK) {
             exit_code = pcmk_rc2exitc(rc);
         }
