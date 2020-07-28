@@ -10,11 +10,6 @@
 #include <crm_resource.h>
 #include <crm/common/ipc_controld.h>
 
-int resource_verbose = 0;
-bool do_force = FALSE;
-
-const char *attr_set_type = XML_TAG_ATTR_SETS;
-
 static int
 do_find_resource(const char *rsc, pe_resource_t * the_rsc, pe_working_set_t * data_set)
 {
@@ -79,7 +74,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 static int
-find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const char *set_type,
+find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const char *attr_set_type,
                    const char *set_name, const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
@@ -101,8 +96,8 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
 
     offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
 
-    if (set_type) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
+    if (attr_set_type) {
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", attr_set_type);
         if (set_name) {
             offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
         }
@@ -159,7 +154,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
 /* PRIVATE. Use the find_matching_attr_resources instead. */
 static void
 find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe_resource_t * rsc, const char * rsc_id, 
-		                       const char * attr_set, const char * attr_id,
+                                       const char * attr_set, const char * attr_set_type, const char * attr_id,
                                        const char * attr_name, cib_t * cib, const char * cmd, int depth)
 {
     int rc = pcmk_rc_ok;
@@ -168,7 +163,9 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
 
     /* visit the children */
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
-        find_matching_attr_resources_recursive(result, (pe_resource_t*)gIter->data, rsc_id, attr_set, attr_id, attr_name, cib, cmd, depth+1);
+        find_matching_attr_resources_recursive(result, (pe_resource_t*)gIter->data,
+                                               rsc_id, attr_set, attr_set_type,
+                                               attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
         if(pe_clone == rsc->variant) {
             break;
@@ -190,8 +187,9 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
 
 /* The result is a linearized pre-ordered tree of resources. */
 static GList/*<pe_resource_t*>*/ *
-find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const char * attr_set, const char * attr_id,
-                            const char * attr_name, cib_t * cib, const char * cmd)
+find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const char * attr_set,
+                             const char * attr_set_type, const char * attr_id,
+                             const char * attr_name, cib_t * cib, const char * cmd, bool force)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
@@ -200,7 +198,7 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
-    if(do_force == TRUE) {
+    if(force == true) {
         return g_list_append(result, rsc);
     }
     if(rsc->parent && pe_clone == rsc->parent->variant) {
@@ -236,17 +234,19 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
         return g_list_append(result, rsc);
     }
     /* If the resource is a group ==> children inherit the attribute if defined. */
-    find_matching_attr_resources_recursive(&result, rsc, rsc_id, attr_set, attr_id, attr_name, cib, cmd, 0);
+    find_matching_attr_resources_recursive(&result, rsc, rsc_id, attr_set,
+                                           attr_set_type, attr_id, attr_name,
+                                           cib, cmd, 0);
     return result;
 }
 
 // \return Standard Pacemaker return code
 int
 cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_id,
-                              const char *attr_name, const char *attr_value,
-                              bool recursive, cib_t *cib,
-                              pe_working_set_t *data_set)
+                              const char *attr_set, const char *attr_set_type,
+                              const char *attr_id, const char *attr_name,
+                              const char *attr_value, bool recursive, cib_t *cib,
+                              int cib_options, pe_working_set_t *data_set, bool force)
 {
     int rc = pcmk_rc_ok;
     static bool need_init = TRUE;
@@ -258,14 +258,14 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     const char *common_attr_id = attr_id;
 
     if(attr_id == NULL
-       && do_force == FALSE
+       && force == false
        && find_resource_attr(
            cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
         printf("\n");
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
-        if (do_force == FALSE) {
+        if (force == false) {
             rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
@@ -283,8 +283,8 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         resources = g_list_append(resources, rsc);
 
     } else {
-        resources = find_matching_attr_resources(rsc, requested_name, attr_set,
-                                                 attr_id, attr_name, cib, "update");
+        resources = find_matching_attr_resources(rsc, requested_name, attr_set, attr_set_type,
+                                                 attr_id, attr_name, cib, "update", force);
     }
 
     /* If either attr_set or attr_id is specified,
@@ -384,9 +384,9 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
                     /* Don't get into colocation loops */
                     crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
-                    cli_resource_update_attribute(peer, peer->id, NULL, NULL,
-                                                  attr_name, attr_value, recursive,
-                                                  cib, data_set);
+                    cli_resource_update_attribute(peer, peer->id, NULL, attr_set_type,
+                                                  NULL, attr_name, attr_value, recursive,
+                                                  cib, cib_options, data_set, force);
                 }
             }
         }
@@ -398,23 +398,23 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_id,
-                              const char *attr_name, cib_t *cib,
-                              pe_working_set_t *data_set)
+                              const char *attr_set, const char *attr_set_type,
+                              const char *attr_id, const char *attr_name, cib_t *cib,
+                              int cib_options, pe_working_set_t *data_set, bool force)
 {
     int rc = pcmk_rc_ok;
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
     if(attr_id == NULL
-       && do_force == FALSE
+       && force == false
        && find_resource_attr(
            cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
         printf("\n");
     }
 
     if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-        resources = find_matching_attr_resources(rsc, requested_name, attr_set,
-                                                 attr_id, attr_name, cib, "delete");
+        resources = find_matching_attr_resources(rsc, requested_name, attr_set, attr_set_type,
+                                                 attr_id, attr_name, cib, "delete", force);
     } else {
         resources = g_list_append(resources, rsc);
     }
@@ -696,7 +696,7 @@ int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pe_working_set_t *data_set)
+                    pe_working_set_t *data_set, bool force)
 {
     int rc = pcmk_rc_ok;
     pe_node_t *node = NULL;
@@ -711,7 +711,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             pe_resource_t *child = (pe_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
-                                     interval_spec, just_failures, data_set);
+                                     interval_spec, just_failures, data_set,
+                                     force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
@@ -722,7 +723,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         GListPtr lpc = NULL;
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
-        if(nodes == NULL && do_force) {
+        if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(data_set->nodes, false);
 
         } else if(nodes == NULL && rsc->exclusive_discover) {
@@ -746,7 +747,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             if (node->details->online) {
                 rc = cli_resource_delete(controld_api, node->details->uname,
                                          rsc, operation, interval_spec,
-                                         just_failures, data_set);
+                                         just_failures, data_set, force);
             }
             if (rc != pcmk_rc_ok) {
                 g_list_free(nodes);
@@ -1277,7 +1278,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  */
 int
 cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                     cib_t *cib, bool promoted_role_only)
+                     cib_t *cib, int cib_options, bool promoted_role_only, bool force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1306,9 +1307,6 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
         }
         return ENXIO;
     }
-
-    /* We might set the target-role meta-attribute */
-    attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
     if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
@@ -1355,7 +1353,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
-        rc = cli_resource_ban(rsc_id, host, NULL, cib, promoted_role_only);
+        rc = cli_resource_ban(rsc_id, host, NULL, cib, cib_options, promoted_role_only);
 
     } else {
         /* Stop the resource by setting target-role to Stopped.
@@ -1367,9 +1365,10 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
         find_resource_attr(cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
         free(lookup_id);
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, NULL,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                            XML_RSC_ATTR_TARGET_ROLE,
-                                           RSC_STOPPED, FALSE, cib, data_set);
+                                           RSC_STOPPED, FALSE, cib, cib_options,
+                                           data_set, force);
     }
     if(rc != pcmk_rc_ok) {
         fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
@@ -1437,19 +1436,19 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(rsc_id, host, NULL, cib, TRUE);
+        rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
 
     } else if (orig_target_role) {
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, NULL,
-                                           XML_RSC_ATTR_TARGET_ROLE,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
+                                           NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
-                                           data_set);
+                                           cib_options, data_set, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
-        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, NULL,
+        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                            XML_RSC_ATTR_TARGET_ROLE, cib,
-                                           data_set);
+                                           cib_options, data_set, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1516,15 +1515,16 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(rsc_id, host, NULL, cib, TRUE);
+        cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
     } else if (orig_target_role) {
-        cli_resource_update_attribute(rsc, rsc_id, NULL, NULL,
-                                      XML_RSC_ATTR_TARGET_ROLE,
-                                      orig_target_role, FALSE, cib, data_set);
+        cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+                                      XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
+                                      FALSE, cib, cib_options, data_set, force);
         free(orig_target_role);
     } else {
-        cli_resource_delete_attribute(rsc, rsc_id, NULL, NULL,
-                                      XML_RSC_ATTR_TARGET_ROLE, cib, data_set);
+        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+                                      XML_RSC_ATTR_TARGET_ROLE, cib, cib_options,
+                                      data_set, force);
     }
 
 done:
@@ -1699,7 +1699,8 @@ crm_exit_t
 cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                  const char *rsc_prov, const char *rsc_type,
                                  const char *action, GHashTable *params,
-                                 GHashTable *override_hash, int timeout_ms)
+                                 GHashTable *override_hash, int timeout_ms,
+                                 int resource_verbose, bool force)
 {
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1837,7 +1838,8 @@ done:
 crm_exit_t
 cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
+                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
+                     int resource_verbose, bool force)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = NULL;
@@ -1862,7 +1864,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
         if(pe_rsc_is_clone(rsc)) {
             int rc = cli_resource_search(rsc, requested_name, data_set);
-            if(rc > 0 && do_force == FALSE) {
+            if(rc > 0 && force == FALSE) {
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
                         action, rsc->id);
                 CMD_ERR("Try setting target-role=Stopped first or specifying "
@@ -1899,14 +1901,16 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
 
     exit_code = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
-                                                 params, override_hash, timeout_ms);
+                                                 params, override_hash, timeout_ms,
+                                                 resource_verbose, force);
     return exit_code;
 }
 
 // \return Standard Pacemaker return code
 int
 cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  cib_t *cib, pe_working_set_t *data_set, bool promoted_role_only)
+                  cib_t *cib, int cib_options, pe_working_set_t *data_set,
+                  bool promoted_role_only, bool force)
 {
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
@@ -1966,7 +1970,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
     if (current && (current->details == dest->details)) {
         cur_is_dest = TRUE;
-        if (do_force) {
+        if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                      rsc_id, promoted_role_only?"promoted":"active", dest->details->uname);
         } else {
@@ -1975,24 +1979,27 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, FALSE);
+    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, FALSE, force);
 
     /* Clear any previous ban constraints on 'dest'. */
-    cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib, TRUE);
+    cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib,
+                       cib_options, TRUE, force);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, promoted_role_only);
+    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, cib_options,
+                             promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
-              rsc->id, promoted_role_only?" (master)":"", dest->details->uname, do_force?"(forced)":"");
+              rsc->id, promoted_role_only?" (master)":"", dest->details->uname, force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
      * resource is currently located */
-    if(do_force && (cur_is_dest == FALSE)) {
+    if(force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib, promoted_role_only);
+            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib,
+                                   cib_options, promoted_role_only);
 
         } else if(count > 1) {
             CMD_ERR("Resource '%s' is currently %s in %d locations. "

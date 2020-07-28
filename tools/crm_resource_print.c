@@ -278,7 +278,8 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *attr_set_type,
+                             pe_working_set_t * data_set)
 {
     int rc = ENXIO;
     unsigned int count = 0;

@@ -25,8 +25,11 @@
 #include <crm/common/ipc_controld.h>
 
 struct {
+    const char *attr_set_type;
+    int cib_options;
     bool clear_expired;
     int find_flags;             /* Flags to use when searching for resource */
+    bool force;
     char *host_uname;
     char *interval_spec;
     char *operation;
@@ -39,6 +42,7 @@ struct {
     bool require_crmd;          /* whether command requires controller connection */
     bool require_dataset;       /* whether command requires populated dataset instance */
     bool require_resource;      /* whether command requires that resource be specified */
+    int resource_verbose;
     char rsc_cmd;
     char *rsc_id;
     char *rsc_long_cmd;
@@ -52,13 +56,14 @@ struct {
     GHashTable *validate_options;
     char *xml_file;
 } options = {
+    .attr_set_type = XML_TAG_ATTR_SETS,
+    .cib_options = cib_sync_call,
     .require_dataset = true,
     .require_resource = true,
     .rsc_cmd = 'L'
 };
 
 bool BE_QUIET = FALSE;
-int cib_options = cib_sync_call;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 // Things that should be cleaned up on exit
@@ -694,7 +699,8 @@ ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.promoted_role_only);
+        rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL,
+                              cib_conn, options.cib_options, options.promoted_role_only);
 
     } else if (is_set(rsc->flags, pe_rsc_promotable)) {
         int count = 0;
@@ -712,7 +718,8 @@ ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL, cib_conn, options.promoted_role_only);
+            rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL,
+                                  cib_conn, options.cib_options, options.promoted_role_only);
 
         } else {
             rc = EINVAL;
@@ -744,14 +751,14 @@ cleanup(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (do_force == FALSE) {
+    if (options.force == false) {
         rsc = uber_parent(rsc);
     }
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
     rc = cli_resource_delete(controld_api, options.host_uname, rsc, options.operation,
-                             options.interval_spec, TRUE, data_set);
+                             options.interval_spec, TRUE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !BE_QUIET) {
         // Show any reasons why resource might stay stopped
@@ -778,7 +785,7 @@ clear_constraints(xmlNodePtr *cib_xml_copy)
     }
 
     if (options.clear_expired) {
-        rc = cli_resource_clear_all_expired(data_set->input, cib_conn,
+        rc = cli_resource_clear_all_expired(data_set->input, cib_conn, options.cib_options,
                                             options.rsc_id, options.host_uname,
                                             options.promoted_role_only);
 
@@ -791,10 +798,12 @@ clear_constraints(xmlNodePtr *cib_xml_copy)
             }
             return rc;
         }
-        rc = cli_resource_clear(options.rsc_id, dest->details->uname, NULL, cib_conn, TRUE);
+        rc = cli_resource_clear(options.rsc_id, dest->details->uname, NULL,
+                                cib_conn, options.cib_options, TRUE, options.force);
 
     } else {
-        rc = cli_resource_clear(options.rsc_id, NULL, data_set->nodes, cib_conn, TRUE);
+        rc = cli_resource_clear(options.rsc_id, NULL, data_set->nodes,
+                                cib_conn, options.cib_options, TRUE, options.force);
     }
 
     if (BE_QUIET == FALSE) {
@@ -842,7 +851,8 @@ delete()
     msg_data = create_xml_node(NULL, options.rsc_type);
     crm_xml_add(msg_data, XML_ATTR_ID, options.rsc_id);
 
-    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
+    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,
+                                options.cib_options);
     rc = pcmk_legacy2rc(rc);
     free_xml(msg_data);
     return rc;
@@ -1062,14 +1072,14 @@ refresh_resource(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (do_force == FALSE) {
+    if (options.force == false) {
         rsc = uber_parent(rsc);
     }
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
     rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0, FALSE,
-                             data_set);
+                             data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !BE_QUIET) {
         // Show any reasons why resource might stay stopped
@@ -1127,7 +1137,8 @@ set_property()
     crm_xml_add(msg_data, XML_ATTR_ID, options.rsc_id);
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,
+                                options.cib_options);
     rc = pcmk_legacy2rc(rc);
     free_xml(msg_data);
 
@@ -1207,7 +1218,8 @@ validate_cmdline(crm_exit_t *exit_code)
     if (error == NULL) {
         *exit_code = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
                                                       "validate-all", options.validate_options,
-                                                      options.override_params, options.timeout_ms);
+                                                      options.override_params, options.timeout_ms,
+                                                      options.resource_verbose, options.force);
     }
 }
 
@@ -1323,7 +1335,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'V':
-                resource_verbose++;
+                options.resource_verbose++;
                 crm_bump_log_level(argc, argv);
                 break;
             case '$':
@@ -1341,16 +1353,16 @@ main(int argc, char **argv)
                 BE_QUIET = TRUE;
                 break;
             case 'm':
-                attr_set_type = XML_TAG_META_SETS;
+                options.attr_set_type = XML_TAG_META_SETS;
                 break;
             case 'z':
-                attr_set_type = XML_TAG_UTILIZATION;
+                options.attr_set_type = XML_TAG_UTILIZATION;
                 break;
             case 'u':
                 move_lifetime = strdup(optarg);
                 break;
             case 'f':
-                do_force = TRUE;
+                options.force = true;
                 crm_log_args(argc, argv);
                 break;
             case 'i':
@@ -1606,9 +1618,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (do_force) {
+    if (options.force) {
         crm_debug("Forcing...");
-        cib_options |= cib_quorum_override;
+        options.cib_options |= cib_quorum_override;
     }
 
     if (options.require_resource && !options.rsc_id) {
@@ -1688,7 +1700,9 @@ main(int argc, char **argv)
          * lifetime of cli_resource_restart(), but it will reset and update the
          * working set multiple times, so it needs to use its own copy.
          */
-        rc = cli_resource_restart(rsc, options.host_uname, options.timeout_ms, cib_conn, options.promoted_role_only);
+        rc = cli_resource_restart(rsc, options.host_uname, options.timeout_ms,
+                                  cib_conn, options.cib_options, options.promoted_role_only,
+                                  options.force);
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "wait")) {
         rc = wait_till_stable(options.timeout_ms, cib_conn);
@@ -1696,7 +1710,8 @@ main(int argc, char **argv)
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd) {
         // validate, force-(stop|start|demote|promote|check)
         exit_code = cli_resource_execute(rsc, options.rsc_id, options.rsc_long_cmd, options.override_params,
-                                         options.timeout_ms, cib_conn, data_set);
+                                         options.timeout_ms, cib_conn, data_set, options.resource_verbose,
+                                         options.force);
 
     } else if (options.rsc_cmd == 'A' || options.rsc_cmd == 'a') {
         list_stacks_and_constraints(rsc);
@@ -1752,7 +1767,9 @@ main(int argc, char **argv)
         rc = clear_constraints(&cib_xml_copy);
 
     } else if (options.rsc_cmd == 'M' && options.host_uname) {
-        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname, cib_conn, data_set, options.promoted_role_only);
+        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname, cib_conn,
+                               options.cib_options, data_set, options.promoted_role_only,
+                               options.force);
 
     } else if (options.rsc_cmd == 'B' && options.host_uname) {
         pe_node_t *dest = pe_find_node(data_set->nodes, options.host_uname);
@@ -1761,7 +1778,8 @@ main(int argc, char **argv)
             rc = pcmk_rc_node_unknown;
             goto done;
         }
-        rc = cli_resource_ban(options.rsc_id, dest->details->uname, NULL, cib_conn, options.promoted_role_only);
+        rc = cli_resource_ban(options.rsc_id, dest->details->uname, NULL,
+                              cib_conn, options.cib_options, options.promoted_role_only);
 
     } else if (options.rsc_cmd == 'B' || options.rsc_cmd == 'M') {
         rc = ban_or_move(rsc, &exit_code);
@@ -1773,7 +1791,7 @@ main(int argc, char **argv)
         rc = set_property();
 
     } else if (options.rsc_cmd == 'g') {
-        rc = cli_resource_print_attribute(rsc, options.prop_name, data_set);
+        rc = cli_resource_print_attribute(rsc, options.prop_name, options.attr_set_type, data_set);
 
     } else if (options.rsc_cmd == 'p') {
         if (options.prop_value == NULL || strlen(options.prop_value) == 0) {
@@ -1784,14 +1802,16 @@ main(int argc, char **argv)
         }
 
         /* coverity[var_deref_model] False positive */
-        rc = cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set, options.prop_id,
-                                           options.prop_name, options.prop_value, options.recursive,
-                                           cib_conn, data_set);
+        rc = cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set, options.attr_set_type,
+                                           options.prop_id, options.prop_name, options.prop_value,
+                                           options.recursive, cib_conn, options.cib_options, data_set,
+                                           options.force);
 
     } else if (options.rsc_cmd == 'd') {
         /* coverity[var_deref_model] False positive */
-        rc = cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set, options.prop_id,
-                                           options.prop_name, cib_conn, data_set);
+        rc = cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set, options.attr_set_type,
+                                           options.prop_id, options.prop_name, cib_conn,
+                                           options.cib_options, data_set, options.force);
 
     } else if ((options.rsc_cmd == 'C') && rsc) {
         cleanup(rsc);
