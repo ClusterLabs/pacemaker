@@ -59,7 +59,7 @@ CORE_INSTALL	= replace include lib daemons tools xml
 # Only these will get built with a plain "make" or "make clean"
 CORE		= $(CORE_INSTALL) cts
 
-SUBDIRS	= $(CORE) doc extra maint tests
+SUBDIRS	= $(CORE) devel doc extra maint tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 

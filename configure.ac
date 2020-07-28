@@ -1979,6 +1979,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
+                devel/Makefile                                      \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
