@@ -1177,7 +1177,7 @@ Online: [ node1 ]
 =#=#=#= End test: Bring resources online - OK (0) =#=#=#=
 * Passed: crm_simulate   - Bring resources online
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
-Error performing operation: Situation already as requested
+Error performing operation: Already in requested state
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
 <cib epoch="20" num_updates="4" admin_epoch="1">
   <configuration>

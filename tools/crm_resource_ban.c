@@ -58,18 +58,19 @@ parse_cli_lifetime(const char *input)
     return later_s;
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
                  bool promoted_role_only)
 {
     char *later_s = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
     if(host == NULL) {
         GListPtr n = allnodes;
-        for(; n && rc == pcmk_ok; n = n->next) {
+        for(; n && rc == pcmk_rc_ok; n = n->next) {
             pe_node_t *target = n->data;
 
             rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn, promoted_role_only);
@@ -79,7 +80,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 
     later_s = parse_cli_lifetime(move_lifetime);
     if(move_lifetime && later_s == NULL) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
@@ -133,28 +134,29 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 
     crm_log_xml_notice(fragment, "Modify");
     rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = pcmk_legacy2rc(rc);
 
     free_xml(fragment);
     free(later_s);
     return rc;
 }
 
-
+// \return Standard Pacemaker return code
 int
 cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool promoted_role_only)
 {
     char *later_s = parse_cli_lifetime(move_lifetime);
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *location = NULL;
     xmlNode *fragment = NULL;
 
     if(move_lifetime && later_s == NULL) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     if(cib_conn == NULL) {
         free(later_s);
-        return -ENOTCONN;
+        return ENOTCONN;
     }
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
@@ -196,6 +198,7 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool
 
     crm_log_xml_info(fragment, "Modify");
     rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = pcmk_legacy2rc(rc);
 
     free_xml(fragment);
     free(later_s);
@@ -219,11 +222,13 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn, bool
  * what resource_clear_node_in_location handles.  That XML looks like this:
  *
  * <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+ *
+ * \return Standard Pacemaker return code
  */
 static int
 resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_conn)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     char *xpath_string = NULL;
 
     xpath_string = crm_strdup_printf("//rsc_location[@id='cli-prefer-%s'][rule[@id='cli-prefer-rule-%s']/expression[@attribute='#uname' and @value='%s']]",
@@ -231,18 +236,21 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
 
     rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL, cib_xpath | cib_options);
     if (rc == -ENXIO) {
-        rc = pcmk_ok;
+        rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_legacy2rc(rc);
     }
 
     free(xpath_string);
     return rc;
 }
 
+// \return Standard Pacemaker return code
 static int
 resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
                                 bool clear_ban_constraints)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
@@ -262,21 +270,24 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     crm_log_xml_info(fragment, "Delete");
     rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
     if (rc == -ENXIO) {
-        rc = pcmk_ok;
+        rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_legacy2rc(rc);
     }
 
     free(fragment);
     return rc;
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
                    bool clear_ban_constraints)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     if(cib_conn == NULL) {
-        return -ENOTCONN;
+        return ENOTCONN;
     }
 
     if (host) {
@@ -286,7 +297,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
          * whether it failed or not.  Thus, as long as it did not fail, we need
          * to try the second clear method.
          */
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             rc = resource_clear_node_in_location(rsc_id, host, cib_conn, clear_ban_constraints);
         }
 
@@ -300,7 +311,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
             pe_node_t *target = n->data;
 
             rc = cli_resource_clear(rsc_id, target->details->uname, NULL, cib_conn, clear_ban_constraints);
-            if (rc != pcmk_ok) {
+            if (rc != pcmk_rc_ok) {
                 break;
             }
         }
@@ -376,6 +387,7 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
     return xpath_string;
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool promoted_role_only)
 {
@@ -383,7 +395,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, 
     xmlNode *cib_constraints = NULL;
     crm_time_t *now = crm_time_new(NULL);
     int i;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, root);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
@@ -421,7 +433,9 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, 
 
             rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS,
                                         fragment, cib_options);
-            if (rc != pcmk_ok) {
+            rc = pcmk_legacy2rc(rc);
+
+            if (rc != pcmk_rc_ok) {
                 free(xpath_string);
                 goto bail;
             }
@@ -432,8 +446,6 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, 
         crm_time_free(end);
         free(xpath_string);
     }
-
-    rc = pcmk_ok;
 
 bail:
     freeXpathObject(xpathObj);
