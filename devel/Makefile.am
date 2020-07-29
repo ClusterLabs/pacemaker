@@ -7,10 +7,11 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-EXTRA_SCRIPTS		= coccinelle/test/_testrunner.sh
+EXTRA_SCRIPTS		= coccinelle/test/testrunner.sh
 EXTRA_DIST		= $(EXTRA_SCRIPTS) \
 				  coccinelle/ref-passed-variables-inited.cocci \
-				  coccinelle/test/ref-passed-variables-inited.c
+				  coccinelle/test/ref-passed-variables-inited.input.c \
+				  coccinelle/test/ref-passed-variables-inited.output
 
 # Coccinelle is a tool that takes special patch-like files (called semantic patches) and
 # applies them throughout a source tree.  This is useful when refactoring, changing APIs,
@@ -45,3 +46,8 @@ cocci:
 
 cocci-inplace:
 	$(MAKE) $(AM_MAKEFLAGS) _SPATCH_FLAGS=--in-place cocci
+
+cocci-test:
+	for f in coccinelle/test/*.c; do \
+		coccinelle/test/testrunner.sh $$f; \
+	done
