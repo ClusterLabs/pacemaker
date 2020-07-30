@@ -19,6 +19,9 @@
 # advanced system administrators, and when reporting problems.
 # PCMK_logfile=/var/log/pacemaker/pacemaker.log
 
+# Set the permissions on the above log file to owner/group read/write
+# PCMK_logfile_mode=0660
+
 # Enable logging via syslog, using the specified syslog facility. Messages sent
 # here are of value to all Pacemaker users. This can be disabled using "none",
 # but that is not recommended. The default is "daemon".

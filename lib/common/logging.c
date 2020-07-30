@@ -221,6 +221,8 @@ crm_add_logfile(const char *filename)
         gid_t pcmk_gid = 0;
         gboolean fix = FALSE;
         int logfd = fileno(logfile);
+        const char *modestr;
+        mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
         rc = fstat(logfd, &st);
         if (rc < 0) {
@@ -239,16 +241,26 @@ crm_add_logfile(const char *filename)
             }
         }
 
+        modestr = getenv("PCMK_logfile_mode");
+        if (modestr) {
+            long filemode_l = strtol(modestr, NULL, 8);
+            if (filemode_l != LONG_MIN && filemode_l != LONG_MAX) {
+                filemode = (mode_t)filemode_l;
+	    }
+        }
+
         if (fix) {
             rc = fchown(logfd, pcmk_uid, pcmk_gid);
             if (rc < 0) {
                 crm_warn("Cannot change the ownership of %s to user %s and gid %d",
                          filename, CRM_DAEMON_USER, pcmk_gid);
             }
+	}
 
-            rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	if (filemode) {
+            rc = fchmod(logfd, filemode);
             if (rc < 0) {
-                crm_warn("Cannot change the mode of %s to rw-rw----", filename);
+                crm_warn("Cannot change the mode of %s to %o", filename, filemode);
             }
 
             fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
