@@ -30,11 +30,11 @@
 struct {
     const char *attr_set_type;
     int cib_options;
-    bool clear_expired;
+    gboolean clear_expired;
     char *extra_arg;
     char *extra_option;
     int find_flags;             /* Flags to use when searching for resource */
-    bool force;
+    gboolean force;
     char *host_uname;
     char *interval_spec;
     char *operation;
@@ -43,29 +43,29 @@ struct {
     char *prop_name;
     char *prop_set;
     char *prop_value;
-    bool recursive;
+    gboolean recursive;
     gchar **remainder;
-    bool require_crmd;          /* whether command requires controller connection */
-    bool require_dataset;       /* whether command requires populated dataset instance */
-    bool require_resource;      /* whether command requires that resource be specified */
+    gboolean require_crmd;          /* whether command requires controller connection */
+    gboolean require_dataset;       /* whether command requires populated dataset instance */
+    gboolean require_resource;      /* whether command requires that resource be specified */
     int resource_verbose;
     char rsc_cmd;
     char *rsc_id;
     char *rsc_long_cmd;
     char *rsc_type;
-    bool promoted_role_only;
+    gboolean promoted_role_only;
     int timeout_ms;
     char *v_agent;
     char *v_class;
     char *v_provider;
-    bool validate_cmdline;      /* whether we are just validating based on command line options */
+    gboolean validate_cmdline;      /* whether we are just validating based on command line options */
     GHashTable *validate_options;
     char *xml_file;
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
     .cib_options = cib_sync_call,
-    .require_dataset = true,
-    .require_resource = true,
+    .require_dataset = TRUE,
+    .require_resource = TRUE,
     .rsc_cmd = 'L'
 };
 
@@ -512,8 +512,8 @@ static GOptionEntry addl_entries[] = {
 
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.validate_cmdline = true;
-    options.require_resource = false;
+    options.validate_cmdline = TRUE;
+    options.require_resource = FALSE;
 
     if(safe_str_eq(option_name, "--provider") == TRUE) {
         if (options.v_provider) {
@@ -558,8 +558,8 @@ class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
         options.v_class = strdup(optarg);
     }
 
-    options.validate_cmdline = true;
-    options.require_resource = false;
+    options.validate_cmdline = TRUE;
+    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -571,9 +571,9 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = 'R';
     }
 
-    options.require_resource = false;
+    options.require_resource = FALSE;
     if (getenv("CIB_file") == NULL) {
-        options.require_crmd = true;
+        options.require_crmd = TRUE;
     }
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
@@ -581,7 +581,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_dataset = false;
+    options.require_dataset = FALSE;
     options.rsc_cmd = 'D';
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
@@ -589,8 +589,8 @@ delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 gboolean
 expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.clear_expired = true;
-    options.require_resource = false;
+    options.clear_expired = TRUE;
+    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -615,7 +615,7 @@ extra_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_crmd = true;
+    options.require_crmd = TRUE;
     options.rsc_cmd = 'F';
     return TRUE;
 }
@@ -682,7 +682,7 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         options.rsc_cmd = 'o';
     }
 
-    options.require_resource = false;
+    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -705,7 +705,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_dataset = false;
+    options.require_dataset = FALSE;
 
     if (options.prop_name) {
         free(options.prop_name);
@@ -741,14 +741,14 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         free(options.rsc_long_cmd);
     }
     options.rsc_long_cmd = strdup("wait");
-    options.require_resource = false;
-    options.require_dataset = false;
+    options.require_resource = FALSE;
+    options.require_dataset = FALSE;
     return TRUE;
 }
 
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_resource = false;
+    options.require_resource = FALSE;
     options.rsc_cmd = 'Y';
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
@@ -816,7 +816,7 @@ cleanup(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (options.force == false) {
+    if (options.force == FALSE) {
         rsc = uber_parent(rsc);
     }
 
@@ -1137,7 +1137,7 @@ refresh_resource(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (options.force == false) {
+    if (options.force == FALSE) {
         rsc = uber_parent(rsc);
     }
 
@@ -1411,7 +1411,7 @@ main(int argc, char **argv)
 
     // Catch the case where the user didn't specify a command
     if (options.rsc_cmd == 'L') {
-        options.require_resource = false;
+        options.require_resource = FALSE;
     }
 
     // --expired without --clear/-U doesn't make sense

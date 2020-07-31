@@ -189,7 +189,7 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
 static GList/*<pe_resource_t*>*/ *
 find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
-                             const char * attr_name, cib_t * cib, const char * cmd, bool force)
+                             const char * attr_name, cib_t * cib, const char * cmd, gboolean force)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
@@ -198,7 +198,7 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
-    if(force == true) {
+    if(force == TRUE) {
         return g_list_append(result, rsc);
     }
     if(rsc->parent && pe_clone == rsc->parent->variant) {
@@ -245,8 +245,8 @@ int
 cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              const char *attr_value, bool recursive, cib_t *cib,
-                              int cib_options, pe_working_set_t *data_set, bool force)
+                              const char *attr_value, gboolean recursive, cib_t *cib,
+                              int cib_options, pe_working_set_t *data_set, gboolean force)
 {
     int rc = pcmk_rc_ok;
     static bool need_init = TRUE;
@@ -258,14 +258,14 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     const char *common_attr_id = attr_id;
 
     if(attr_id == NULL
-       && force == false
+       && force == FALSE
        && find_resource_attr(
            cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
         printf("\n");
     }
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
-        if (force == false) {
+        if (force == FALSE) {
             rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
@@ -400,13 +400,13 @@ int
 cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name, cib_t *cib,
-                              int cib_options, pe_working_set_t *data_set, bool force)
+                              int cib_options, pe_working_set_t *data_set, gboolean force)
 {
     int rc = pcmk_rc_ok;
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
     if(attr_id == NULL
-       && force == false
+       && force == FALSE
        && find_resource_attr(
            cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
         printf("\n");
@@ -696,7 +696,7 @@ int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pe_working_set_t *data_set, bool force)
+                    pe_working_set_t *data_set, gboolean force)
 {
     int rc = pcmk_rc_ok;
     pe_node_t *node = NULL;
@@ -1278,7 +1278,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  */
 int
 cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                     cib_t *cib, int cib_options, bool promoted_role_only, bool force)
+                     cib_t *cib, int cib_options, gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1700,7 +1700,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                  const char *rsc_prov, const char *rsc_type,
                                  const char *action, GHashTable *params,
                                  GHashTable *override_hash, int timeout_ms,
-                                 int resource_verbose, bool force)
+                                 int resource_verbose, gboolean force)
 {
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1839,7 +1839,7 @@ crm_exit_t
 cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
                      int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
-                     int resource_verbose, bool force)
+                     int resource_verbose, gboolean force)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = NULL;
@@ -1910,7 +1910,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                   cib_t *cib, int cib_options, pe_working_set_t *data_set,
-                  bool promoted_role_only, bool force)
+                  gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
@@ -1932,7 +1932,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
         } else {
             CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
-            promoted_role_only = false;
+            promoted_role_only = FALSE;
         }
     }
 
