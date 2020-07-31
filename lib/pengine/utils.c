@@ -1078,7 +1078,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     } else {
         // Probe timeouts default to minimum-interval monitor's
-        if (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei) && (interval_ms == 0)) {
+        if (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
+                && (interval_ms == 0)) {
 
             xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
 
@@ -1098,6 +1099,11 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                                 default_timeout);
         }
     }
+
+    value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
+    timeout = unpack_timeout(value);
+    g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
+                         crm_itoa(timeout));
 
     if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
@@ -1267,10 +1273,6 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                                  crm_strdup_printf("%lld", start_delay));
         }
     }
-
-    value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
-    timeout = unpack_timeout(value);
-    g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
 #if ENABLE_VERSIONED_ATTRS
     unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval_ms,
