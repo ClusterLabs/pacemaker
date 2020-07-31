@@ -251,7 +251,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
 // \return Standard Pacemaker return code
 static int
 resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
-                                int cib_options, bool clear_ban_constraints, bool force)
+                                int cib_options, bool clear_ban_constraints, gboolean force)
 {
     int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
@@ -285,7 +285,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 // \return Standard Pacemaker return code
 int
 cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
-                   int cib_options, bool clear_ban_constraints, bool force)
+                   int cib_options, bool clear_ban_constraints, gboolean force)
 {
     int rc = pcmk_rc_ok;
 

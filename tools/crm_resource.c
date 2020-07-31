@@ -34,7 +34,7 @@ struct {
     char *extra_arg;
     char *extra_option;
     int find_flags;             /* Flags to use when searching for resource */
-    bool force;
+    gboolean force;
     char *host_uname;
     char *interval_spec;
     char *operation;
@@ -816,7 +816,7 @@ cleanup(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (options.force == false) {
+    if (!options.force) {
         rsc = uber_parent(rsc);
     }
 
@@ -1137,7 +1137,7 @@ refresh_resource(pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
-    if (options.force == false) {
+    if (!options.force) {
         rsc = uber_parent(rsc);
     }
 
