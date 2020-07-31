@@ -1510,6 +1510,10 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
     get_bundle_variant_data(bundle_data, rsc);
 
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
@@ -1601,10 +1605,15 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
+    int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
 
     pcmk__output_create_xml_node(out, "br");
     out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
@@ -1701,10 +1710,15 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
+    int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
 
     out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
                     (bundle_data->nreplicas > 1)? " set" : "",

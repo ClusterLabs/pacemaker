@@ -1045,7 +1045,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
-    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -1060,6 +1060,10 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc->variant == pe_native);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     /* resource information. */
     sprintf(ra_name, "%s%s%s:%s", class, prov ? "::" : "", prov ? prov : ""
@@ -1115,9 +1119,13 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
-    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -1135,11 +1143,15 @@ pe__resource_text(pcmk__output_t *out, va_list args)
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
-    GListPtr only_rsc G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node

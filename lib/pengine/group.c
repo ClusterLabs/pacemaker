@@ -192,6 +192,10 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
 
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
@@ -224,6 +228,12 @@ pe__group_html(pcmk__output_t *out, va_list args)
     GListPtr only_node = va_arg(args, GListPtr);
     GListPtr only_rsc = va_arg(args, GListPtr);
 
+    int rc = pcmk_rc_no_output;
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 
     if (options & pe_print_brief) {
@@ -249,6 +259,12 @@ pe__group_text(pcmk__output_t *out, va_list args)
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
     GListPtr only_rsc = va_arg(args, GListPtr);
+
+    int rc = pcmk_rc_no_output;
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
 
     out->begin_list(out, NULL, NULL, "Resource Group: %s", rsc->id);
 

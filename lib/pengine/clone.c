@@ -584,6 +584,10 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
 
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
@@ -633,8 +637,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
+    int rc = pcmk_rc_no_output;
 
     get_clone_variant_data(clone_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
 
     out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
@@ -843,8 +852,13 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
+    int rc = pcmk_rc_no_output;
 
     get_clone_variant_data(clone_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
 
     out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),

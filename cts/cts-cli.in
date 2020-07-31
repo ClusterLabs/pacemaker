@@ -188,6 +188,22 @@ function test_crm_mon() {
 
     # XML already includes inactive resources
 
+    desc="Complete text output filtered by primitive resource"
+    cmd="crm_mon -1 --include=all --resource=Fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by primitive resource"
+    cmd="crm_mon --output-as=xml --resource=Fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output filtered by resource that doesn't exist"
+    cmd="crm_mon -1 --resource=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by resource that doesn't exist"
+    cmd="crm_mon --output-as=xml --resource=blah"
+    test_assert $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_mon-partial.xml"

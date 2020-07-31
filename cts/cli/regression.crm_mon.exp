@@ -979,6 +979,128 @@ Full List of Resources:
     * Email	(lsb:exim):	 Started cluster02
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by node
+=#=#=#= Begin test: Complete text output filtered by primitive resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+
+Node Attributes:
+  * Node: cluster01:
+    * location                        	: office    
+    * pingd                           	: 1000      
+  * Node: cluster02:
+    * pingd                           	: 1000      
+
+Operations:
+  * Node: cluster01:
+    * Fencing: migration-threshold=1000000:
+      * (15) start
+      * (19) monitor: interval="60000ms"
+=#=#=#= End test: Complete text output filtered by primitive resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output filtered by primitive resource
+=#=#=#= Begin test: XML output filtered by primitive resource =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=Fencing">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources>
+    <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <node name="cluster01" id="1" cached="true"/>
+    </resource>
+  </resources>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history>
+    <node name="cluster01">
+      <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
+        <operation_history call="15" task="start" exec-time="36ms" queue-time="0ms" rc="0" rc_text="ok"/>
+        <operation_history call="19" task="monitor" interval="60000ms" exec-time="24ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+    </node>
+  </node_history>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by primitive resource - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by primitive resource
+=#=#=#= Begin test: Basic text output filtered by resource that doesn't exist =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 21 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Active Resources:
+  * No active resources
+=#=#=#= End test: Basic text output filtered by resource that doesn't exist - OK (0) =#=#=#=
+* Passed: crm_mon        - Basic text output filtered by resource that doesn't exist
+=#=#=#= Begin test: XML output filtered by resource that doesn't exist =#=#=#=
+<pacemaker-result api-version="2.2" request="crm_mon --output-as=xml --resource=blah">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" with_quorum="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="21" disabled="1" blocked="0"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+  </nodes>
+  <resources/>
+  <node_attributes>
+    <node name="cluster01">
+      <attribute name="location" value="office"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+    <node name="cluster02">
+      <attribute name="pingd" value="1000" expected="1000"/>
+    </node>
+  </node_attributes>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output filtered by resource that doesn't exist - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output filtered by resource that doesn't exist
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
