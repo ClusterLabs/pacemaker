@@ -890,6 +890,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 {
     xmlNode *child = NULL;
     const char *timeout = NULL;
+    GHashTable *action_meta = NULL;
     int timeout_ms = 0;
 
     pe_rule_eval_data_t rule_data = {
@@ -910,7 +911,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     }
 
     if (timeout == NULL && data_set->op_defaults) {
-        GHashTable *action_meta = crm_str_table_new();
+        action_meta = crm_str_table_new();
         pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
                                    &rule_data, action_meta, NULL, FALSE, data_set);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
@@ -922,6 +923,10 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     timeout_ms = crm_get_msec(timeout);
     if (timeout_ms < 0) {
         timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    }
+
+    if (action_meta != NULL) {
+        g_hash_table_destroy(action_meta);
     }
     return timeout_ms;
 }
