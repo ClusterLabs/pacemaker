@@ -99,6 +99,7 @@ cli_resource_print_raw(pe_resource_t * rsc)
     }
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print_list(pe_working_set_t * data_set, bool raw)
 {
@@ -120,12 +121,13 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
 
     if (found == 0) {
         printf("NO resources configured\n");
-        return -ENXIO;
+        return ENXIO;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active,
                          pe_working_set_t * data_set)
@@ -165,7 +167,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 void
@@ -258,6 +260,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
     free(prefix);
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
@@ -270,13 +273,15 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
                                  rsc->orig_xml : rsc->xml);
     fprintf(stdout, "%sxml:\n%s\n", expanded ? "" : "raw ", rsc_xml);
     free(rsc_xml);
-    return 0;
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 int
-cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *attr_set_type,
+                             pe_working_set_t * data_set)
 {
-    int rc = -ENXIO;
+    int rc = ENXIO;
     unsigned int count = 0;
     GHashTable *params = NULL;
     const char *value = NULL;
@@ -306,7 +311,7 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
     value = g_hash_table_lookup(params, attr);
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
-        rc = 0;
+        rc = pcmk_rc_ok;
 
     } else {
         CMD_ERR("Attribute '%s' not found for '%s'", attr, rsc->id);
@@ -316,7 +321,7 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
     return rc;
 }
 
-
+// \return Standard Pacemaker return code
 int
 cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
@@ -324,7 +329,7 @@ cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set
 
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
-        return 0;
+        return pcmk_rc_ok;
     }
-    return -ENXIO;
+    return ENXIO;
 }
