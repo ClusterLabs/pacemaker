@@ -877,20 +877,20 @@ unpack_interval_origin(const char *value, xmlNode *xml_obj, guint interval_ms,
 static int
 unpack_timeout(const char *value)
 {
-    int timeout = crm_get_msec(value);
+    int timeout_ms = crm_get_msec(value);
 
-    if (timeout < 0) {
-        timeout = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    if (timeout_ms < 0) {
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
-    return timeout;
+    return timeout_ms;
 }
 
 int
 pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
 {
     xmlNode *child = NULL;
-    const char *timeout = NULL;
     GHashTable *action_meta = NULL;
+    const char *timeout_spec = NULL;
     int timeout_ms = 0;
 
     pe_rule_eval_data_t rule_data = {
@@ -904,23 +904,24 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 
     for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          child != NULL; child = crm_next_same_xml(child)) {
-        if (pcmk__str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME), pcmk__str_casei)) {
-            timeout = crm_element_value(child, XML_ATTR_TIMEOUT);
+        if (pcmk__str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME),
+                pcmk__str_casei)) {
+            timeout_spec = crm_element_value(child, XML_ATTR_TIMEOUT);
             break;
         }
     }
 
-    if (timeout == NULL && data_set->op_defaults) {
+    if (timeout_spec == NULL && data_set->op_defaults) {
         action_meta = crm_str_table_new();
         pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
                                    &rule_data, action_meta, NULL, FALSE, data_set);
-        timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
+        timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
     // @TODO check meta-attributes (including versioned meta-attributes)
     // @TODO maybe use min-interval monitor timeout as default for monitors
 
-    timeout_ms = crm_get_msec(timeout);
+    timeout_ms = crm_get_msec(timeout_spec);
     if (timeout_ms < 0) {
         timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
@@ -962,9 +963,9 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
                     crm_xml_add_ll(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
                 }
             } else if (pcmk__str_eq(name, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
-                int timeout = unpack_timeout(value);
+                int timeout_ms = unpack_timeout(value);
 
-                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout);
+                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout_ms);
             }
         }
     }
@@ -988,11 +989,11 @@ static void
 unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
                  pe_working_set_t * data_set, guint interval_ms)
 {
-    int timeout = 0;
+    int timeout_ms = 0;
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = XML_LRM_ATTR_INTERVAL;
-    char *default_timeout = NULL;
+    char *default_timeout_spec = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -1024,9 +1025,9 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                                action->meta, NULL, FALSE, data_set);
 
     // Probe timeouts default differently, so handle timeout default later
-    default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
-    if (default_timeout) {
-        default_timeout = strdup(default_timeout);
+    default_timeout_spec = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
+    if (default_timeout_spec) {
+        default_timeout_spec = strdup(default_timeout_spec);
         g_hash_table_remove(action->meta, XML_ATTR_TIMEOUT);
     }
 
@@ -1074,7 +1075,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     // Handle timeout default, now that we know the interval
     if (g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT)) {
-        free(default_timeout);
+        free(default_timeout_spec);
 
     } else {
         // Probe timeouts default to minimum-interval monitor's
@@ -1088,22 +1089,22 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                 if (value) {
                     crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
                               action->uuid, value);
-                    free(default_timeout);
-                    default_timeout = strdup(value);
+                    free(default_timeout_spec);
+                    default_timeout_spec = strdup(value);
                 }
             }
         }
 
-        if (default_timeout) {
+        if (default_timeout_spec) {
             g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
-                                default_timeout);
+                                default_timeout_spec);
         }
     }
 
     value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
-    timeout = unpack_timeout(value);
+    timeout_ms = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
-                         crm_itoa(timeout));
+                         crm_itoa(timeout_ms));
 
     if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
