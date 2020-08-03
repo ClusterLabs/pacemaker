@@ -2248,8 +2248,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     }
 
     /* now do the op */
-    crm_info("Performing key=%s op=" PCMK__OP_FMT,
-             transition, rsc->id, operation, op->interval_ms);
+    crm_notice("Requesting local execution of %s operation for %s on %s "
+               CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
+               crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
+               transition, rsc->id, operation, op->interval_ms);
 
     if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
