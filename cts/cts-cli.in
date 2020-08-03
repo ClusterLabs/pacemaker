@@ -296,6 +296,46 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --resource=httpd"
     test_assert $CRM_EX_OK 0
 
+    desc="Complete text output, filtered by clone name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-clone-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by clone name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-clone-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by group name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by group name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by exact group instance name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by exact group instance name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-group:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by primitive name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by primitive name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-proxy"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by exact primitive instance name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by exact primitive instance name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-proxy:1"
+    test_assert $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_mon-partial.xml"
