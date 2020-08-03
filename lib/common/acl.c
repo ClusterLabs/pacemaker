@@ -439,7 +439,6 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 {
     GListPtr aIter = NULL;
     xmlNode *target = NULL;
-    xml_private_t *p = NULL;
     xml_private_t *doc = NULL;
 
     *result = NULL;
@@ -488,9 +487,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         }
     }
 
-    p = target->_private;
-    if (is_set(p->flags, xpf_acl_deny)
-        && (__xml_purge_attributes(target) == FALSE)) {
+    if (__xml_purge_attributes(target) == FALSE) {
         crm_trace("ACLs deny user '%s' access to entire XML document", user);
         return TRUE;
     }
