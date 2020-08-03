@@ -679,8 +679,9 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 return TRUE;
 
             } else if (is_set(p->flags, xpf_acl_deny)) {
-                crm_trace("Parent ACL denies user '%s' %s access to %s",
-                          docp->user, __xml_acl_to_text(mode), buffer);
+                crm_trace("%sACL denies user '%s' %s access to %s",
+                          (parent != xml) ? "Parent " : "", docp->user,
+                          __xml_acl_to_text(mode), buffer);
                 pcmk__set_xml_flag(xml, xpf_acl_denied);
                 return FALSE;
             }
