@@ -84,49 +84,42 @@ __xml_acl_create(xmlNode *xml, GList *acls, enum xml_private_flags mode)
                   crm_element_name(xml), acl->xpath);
 
     } else {
-        int offset = 0;
-        char buffer[MAX_XPATH_LEN];
+        GString *buffer = g_string_sized_new(MAX_XPATH_LEN);
 
         if (tag) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//%s", tag);
+            g_string_printf(buffer, "//%s", tag);
         } else {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//*");
+            g_string_assign(buffer, "//*");
         }
 
         if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[");
+            g_string_append(buffer, "[");
         }
 
         if (ref) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@id='%s'", ref);
+            g_string_append_printf(buffer, "@id='%s'", ref);
         }
 
         // NOTE: schema currently does not allow this
         if (ref && attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               " and ");
+            g_string_append(buffer, " and ");
         }
 
         if (attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@%s", attr);
+            g_string_append_printf(buffer, "@%s", attr);
         }
 
         if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "]");
+            g_string_append(buffer, "]");
         }
 
-        CRM_LOG_ASSERT(offset > 0);
-        acl->xpath = strdup(buffer);
+        CRM_LOG_ASSERT(buffer->len > 0);
+        acl->xpath = strdup((char *) buffer->str);
         CRM_ASSERT(acl->xpath != NULL);
 
         crm_trace("Unpacked ACL <%s> element as xpath: %s",
                   crm_element_name(xml), acl->xpath);
+        g_string_free(buffer, TRUE);
     }
 
     return g_list_append(acls, acl);
@@ -640,23 +633,23 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
 #if ENABLE_ACL
     if (pcmk__tracking_xml_changes(xml, FALSE) && xml_acl_enabled(xml)) {
-        int offset = 0;
         xmlNode *parent = xml;
-        char buffer[MAX_XPATH_LEN];
         xml_private_t *docp = xml->doc->_private;
+        GString *buffer = g_string_sized_new(MAX_XPATH_LEN);
 
-        offset = pcmk__element_xpath(NULL, xml, buffer, offset,
-                                     sizeof(buffer));
+        pcmk__element_xpath(xml, buffer);
+
         if (name) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[@%s]", name);
+            g_string_append_printf(buffer, "[@%s]", name);
         }
-        CRM_LOG_ASSERT(offset > 0);
+        CRM_LOG_ASSERT(buffer->len > 0);
 
         if (docp->acls == NULL) {
             crm_trace("User '%s' without ACLs denied %s access to %s",
-                      docp->user, __xml_acl_to_text(mode), buffer);
+                      docp->user, __xml_acl_to_text(mode),
+                      (const char *) buffer->str);
             pcmk__set_xml_flag(xml, xpf_acl_denied);
+            g_string_free(buffer, TRUE);
             return FALSE;
         }
 
@@ -676,20 +669,25 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         while (parent && parent->_private) {
             xml_private_t *p = parent->_private;
             if (__xml_acl_mode_test(p->flags, mode)) {
+                g_string_free(buffer, TRUE);
                 return TRUE;
 
             } else if (is_set(p->flags, xpf_acl_deny)) {
                 crm_trace("Parent ACL denies user '%s' %s access to %s",
-                          docp->user, __xml_acl_to_text(mode), buffer);
+                          docp->user, __xml_acl_to_text(mode),
+                          (const char *) buffer->str);
                 pcmk__set_xml_flag(xml, xpf_acl_denied);
+                g_string_free(buffer, TRUE);
                 return FALSE;
             }
             parent = parent->parent;
         }
 
         crm_trace("Default ACL denies user '%s' %s access to %s",
-                  docp->user, __xml_acl_to_text(mode), buffer);
+                  docp->user, __xml_acl_to_text(mode),
+                  (const char *) buffer->str);
         pcmk__set_xml_flag(xml, xpf_acl_denied);
+        g_string_free(buffer, TRUE);
         return FALSE;
     }
 #endif
