@@ -48,7 +48,8 @@ pcmk_get_ra_caps(const char *standard)
          * @TODO Remove pcmk_ra_cap_unique at the next major schema version
          * bump, with a transform to remove globally-unique from the config.
          */
-        return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin;
+        return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin
+               | pcmk_ra_cap_fence_params;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)

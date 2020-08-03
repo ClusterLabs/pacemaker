@@ -144,6 +144,7 @@ enum pcmk_ra_caps {
     pcmk_ra_cap_unique       = (1 << 3), // Supports unique clones
     pcmk_ra_cap_promotable   = (1 << 4), // Supports promotable clones
     pcmk_ra_cap_stdin        = (1 << 5), // Reads from standard input
+    pcmk_ra_cap_fence_params = (1 << 6), // Supports pcmk_monitor_timeout, etc.
 };
 
 uint32_t pcmk_get_ra_caps(const char *standard);
