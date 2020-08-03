@@ -288,17 +288,6 @@ pcmk__apply_acl(xmlNode *xml)
                   ((max == 1)? "" : "es"));
         freeXpathObject(xpathObj);
     }
-
-    p = xml->_private;
-    if (is_not_set(p->flags, xpf_acl_read)
-        && is_not_set(p->flags, xpf_acl_write)) {
-
-        p->flags |= xpf_acl_deny;
-        p = xml->doc->_private;
-        crm_info("Applied default deny ACL for user '%s' to <%s>",
-                 p->user, crm_element_name(xml));
-    }
-
 }
 
 /*!
@@ -439,7 +428,6 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 {
     GListPtr aIter = NULL;
     xmlNode *target = NULL;
-    xml_private_t *p = NULL;
     xml_private_t *doc = NULL;
 
     *result = NULL;
@@ -488,9 +476,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         }
     }
 
-    p = target->_private;
-    if (is_set(p->flags, xpf_acl_deny)
-        && (__xml_purge_attributes(target) == FALSE)) {
+    if (__xml_purge_attributes(target) == FALSE) {
         crm_trace("ACLs deny user '%s' access to entire XML document", user);
         return TRUE;
     }
@@ -679,8 +665,9 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 return TRUE;
 
             } else if (is_set(p->flags, xpf_acl_deny)) {
-                crm_trace("Parent ACL denies user '%s' %s access to %s",
-                          docp->user, __xml_acl_to_text(mode), buffer);
+                crm_trace("%sACL denies user '%s' %s access to %s",
+                          (parent != xml) ? "Parent " : "", docp->user,
+                          __xml_acl_to_text(mode), buffer);
                 pcmk__set_xml_flag(xml, xpf_acl_denied);
                 return FALSE;
             }
