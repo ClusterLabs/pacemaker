@@ -452,7 +452,7 @@ struct fsa_data_s {
     int id;
     enum crmd_fsa_input fsa_input;
     enum crmd_fsa_cause fsa_cause;
-    long long actions;
+    uint64_t actions;
     const char *origin;
     void *data;
     enum fsa_data_type data_type;
@@ -462,7 +462,7 @@ struct fsa_data_s {
 extern gboolean do_fsa_stall;
 extern enum crmd_fsa_state fsa_state;
 extern uint64_t fsa_input_register;
-extern long long fsa_actions;
+extern uint64_t fsa_actions;
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                     \
         fsa_input_register = pcmk__set_flags_as(__FUNCTION__, __LINE__,     \
@@ -480,6 +480,22 @@ extern long long fsa_actions;
                                                   fsa_input_register,       \
                                                   (flags_to_clear),         \
                                                   #flags_to_clear);         \
+    } while (0)
+
+#define controld_set_fsa_action_flags(flags_to_set) do {                    \
+        fsa_actions = pcmk__set_flags_as(__FUNCTION__, __LINE__,            \
+                                         LOG_DEBUG,                         \
+                                         "FSA action", "controller",        \
+                                         fsa_actions, (flags_to_set),       \
+                                         #flags_to_set);                    \
+    } while (0)
+
+#define controld_clear_fsa_action_flags(flags_to_clear) do {                \
+        fsa_actions = pcmk__clear_flags_as(__FUNCTION__, __LINE__,          \
+                                           LOG_DEBUG,                       \
+                                           "FSA action", "controller",      \
+                                           fsa_actions, (flags_to_clear),   \
+                                           #flags_to_clear);                \
     } while (0)
 
 extern cib_t *fsa_cib_conn;

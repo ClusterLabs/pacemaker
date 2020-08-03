@@ -36,7 +36,7 @@ extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_inpu
 #  define register_fsa_error(cause, input, new_data) register_fsa_error_adv(cause, input, msg_data, new_data, __FUNCTION__)
 
 extern int register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                                  void *data, long long with_actions,
+                                  void *data, uint64_t with_actions,
                                   gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
@@ -55,12 +55,6 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
     } while(0)
 
 #  define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
-
-#  define register_fsa_action(action) {					\
-		fsa_actions |= action;					\
-		crm_debug("%s added action %s to the FSA",		\
-			  __FUNCTION__, fsa_action2string(action));	\
-	}
 
 #  define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
 

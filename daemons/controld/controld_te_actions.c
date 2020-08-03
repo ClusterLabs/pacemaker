@@ -612,7 +612,7 @@ notify_crmd(crm_graph_t * graph)
                 }
 
             } else if (fsa_state == S_POLICY_ENGINE) {
-                register_fsa_action(A_PE_INVOKE);
+                controld_set_fsa_action_flags(A_PE_INVOKE);
                 trigger_fsa();
             }
             break;

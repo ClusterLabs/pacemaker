@@ -77,7 +77,7 @@ post_cache_update(int instance)
      * If we lost nodes, we should re-check the election status
      * Safe to call outside of an election
      */
-    register_fsa_action(A_ELECTION_CHECK);
+    controld_set_fsa_action_flags(A_ELECTION_CHECK);
     trigger_fsa();
 
     /* Membership changed, remind everyone we're here.

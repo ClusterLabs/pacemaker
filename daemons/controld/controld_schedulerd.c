@@ -318,7 +318,7 @@ do_pe_invoke(long long action,
         } else {
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
-            register_fsa_action(A_PE_START);
+            controld_set_fsa_action_flags(A_PE_START);
             trigger_fsa();
         }
         return;
@@ -430,7 +430,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
         sleep(1);
-        register_fsa_action(A_PE_INVOKE);
+        controld_set_fsa_action_flags(A_PE_INVOKE);
         trigger_fsa();
         return;
 
