@@ -78,6 +78,7 @@ post_cache_update(int instance)
      * Safe to call outside of an election
      */
     register_fsa_action(A_ELECTION_CHECK);
+    trigger_fsa();
 
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs

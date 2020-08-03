@@ -319,6 +319,7 @@ do_pe_invoke(long long action,
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
             register_fsa_action(A_PE_START);
+            trigger_fsa();
         }
         return;
     }
@@ -430,6 +431,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                   (num_cib_op_callbacks() - 1));
         sleep(1);
         register_fsa_action(A_PE_INVOKE);
+        trigger_fsa();
         return;
 
     } else if (fsa_state != S_POLICY_ENGINE) {

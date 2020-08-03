@@ -145,6 +145,7 @@ do_cl_join_offer_respond(long long action,
     crm_trace("Registered join query callback: %d", query_call_id);
 
     register_fsa_action(A_DC_TIMER_STOP);
+    trigger_fsa();
 }
 
 void

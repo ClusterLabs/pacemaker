@@ -391,7 +391,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         route_message(C_IPC_MESSAGE, msg);
     }
 
-    trigger_fsa(fsa_source);
+    trigger_fsa();
     free_xml(msg);
     return 0;
 }
@@ -407,7 +407,7 @@ crmd_ipc_closed(qb_ipcs_connection_t * c)
                   c, client);
         free(client->userdata);
         pcmk__free_client(client);
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
     return 0;
 }

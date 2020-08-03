@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -718,6 +718,7 @@ update_dc(xmlNode * msg)
             }
 
             register_fsa_action(A_CL_JOIN_QUERY | A_DC_TIMER_START);
+            trigger_fsa();
             return FALSE;
         }
     }

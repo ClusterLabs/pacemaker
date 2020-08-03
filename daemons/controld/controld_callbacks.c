@@ -63,7 +63,7 @@ crmd_ha_msg_filter(xmlNode * msg)
     route_message(C_HA_MESSAGE, msg);
 
   done:
-    trigger_fsa(fsa_source);
+    trigger_fsa();
 }
 
 /*!
@@ -308,7 +308,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         free_xml(update);
     }
 
-    trigger_fsa(fsa_source);
+    trigger_fsa();
 }
 
 void
@@ -317,7 +317,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     CRM_CHECK(user_data == fsa_cib_conn,;);
 
     crm_trace("Invoked");
-    trigger_fsa(fsa_source);
+    trigger_fsa();
     fsa_cib_conn->state = cib_disconnected;
 
     if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {

@@ -2391,7 +2391,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 
     if (call_id == last_resource_update) {
         last_resource_update = 0;
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
 }
 

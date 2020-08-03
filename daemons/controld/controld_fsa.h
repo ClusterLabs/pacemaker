@@ -513,9 +513,11 @@ enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
 #  define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #  define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING) == FALSE)
-#  define trigger_fsa(source) do { \
-        crm_trace("Triggering FSA: %s", __FUNCTION__); \
-        mainloop_set_trigger(source); \
+#  define trigger_fsa() do {                    \
+        if (fsa_source != NULL) {               \
+            crm_trace("Triggering FSA");        \
+            mainloop_set_trigger(fsa_source);   \
+        }                                       \
     } while(0)
 
 /* A_READCONFIG */
