@@ -990,7 +990,6 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                  pe_working_set_t * data_set, guint interval_ms)
 {
     int timeout_ms = 0;
-    char *value_ms = NULL;
     const char *value = NULL;
     const char *field = XML_LRM_ATTR_INTERVAL;
     char *default_timeout_spec = NULL;
@@ -1066,10 +1065,9 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
-        value_ms = crm_strdup_printf("%u", interval_ms);
-        g_hash_table_replace(action->meta, strdup(field), value_ms);
-
-    } else if (g_hash_table_lookup(action->meta, field) != NULL) {
+        g_hash_table_replace(action->meta, strdup(field),
+                             crm_strdup_printf("%u", interval_ms));
+    } else {
         g_hash_table_remove(action->meta, field);
     }
 
