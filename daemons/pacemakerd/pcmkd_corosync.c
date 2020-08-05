@@ -63,6 +63,7 @@ static void
 cfg_connection_destroy(gpointer user_data)
 {
     crm_err("Lost connection to Corosync");
+    corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
     pcmk_shutdown(SIGTERM);
 }
