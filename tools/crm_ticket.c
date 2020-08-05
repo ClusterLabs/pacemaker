@@ -993,14 +993,14 @@ main(int argc, char **argv)
         }
 
         if (attr_value
-            && (attr_name == NULL || strlen(attr_name) == 0)) {
+            && (pcmk__str_empty(attr_name))) {
             CMD_ERR("Must supply attribute name with -S for -v %s", attr_value);
             exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
         if (attr_name
-            && (attr_value == NULL || strlen(attr_value) == 0)) {
+            && (pcmk__str_empty(attr_value))) {
             CMD_ERR("Must supply attribute value with -v for -S %s", attr_name);
             exit_code = CRM_EX_USAGE;
             goto bail;
@@ -1023,7 +1023,7 @@ main(int argc, char **argv)
          * this is just for reporting usage errors
          */
 
-        if (attr_name == NULL || strlen(attr_name) == 0) {
+        if (pcmk__str_empty(attr_name)) {
             // We only get here if ticket_cmd was left as default
             CMD_ERR("Must supply a command");
             exit_code = CRM_EX_USAGE;
@@ -1036,7 +1036,7 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        if (attr_value == NULL || strlen(attr_value) == 0) {
+        if (pcmk__str_empty(attr_value)) {
             CMD_ERR("Must supply value with -v for -S %s", attr_name);
             exit_code = CRM_EX_USAGE;
             goto bail;

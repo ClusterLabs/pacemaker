@@ -1,0 +1,76 @@
+@@ -12,19 +12,19 @@ void zob2(int ***z) {
+ }
+ 
+ void bar0(void) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	baz(i);
+ }
+ 
+ void bar1(void) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	foo(&i);
+ }
+ 
+ void bar2(void) {
+-	int a = 1, b, c = 3;
++	int a = 1, b/*FIXME:initialize me*/, c = 3;
+ 	foo(&a);
+ 	baz(a);
+ 	foo(&b);
+@@ -34,37 +34,37 @@ void bar2(void) {
+ }
+ 
+ void bar3(int *w) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	*w = i;
+ }
+ 
+ void bar4(int **w) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	**w = *i;
+ }
+ 
+ void bar5(int ***w) {
+-	int *i;
++	int *i/*FIXME:initialize me*/;
+ 	zob(&i);
+ 	***w = *i;
+ }
+ 
+ void bar6(int ***w) {
+-	int *i;
++	int *i/*FIXME:initialize me*/;
+ 	zob1(&i);
+ 	***w = *i;
+ }
+ 
+ void bar7(int ****w) {
+-	int **i;
++	int **i/*FIXME:initialize me*/;
+ 	zob1(&i);
+ 	****w = **i;
+ }
+ 
+ int bar8(void) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	return i;
+ }
+@@ -82,7 +82,7 @@ void not1(void) {
+ 
+ /* XXX false positive */
+ void not2(void) {
+-	int i;
++	int i/*FIXME:initialize me*/;
+ 	foo(&i);
+ 	*(&i) = 2;
+ }
