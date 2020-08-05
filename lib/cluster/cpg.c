@@ -237,6 +237,7 @@ pcmk_cpg_dispatch(gpointer user_data)
     rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %s (%d)", ais_error2text(rc), rc);
+        cpg_finalize(cluster->cpg_handle);
         cluster->cpg_handle = 0;
         return -1;
 

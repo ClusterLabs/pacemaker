@@ -189,6 +189,7 @@ pcmk_quorum_dispatch(gpointer user_data)
     rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
     if (rc < 0) {
         crm_err("Connection to the Quorum API failed: %d", rc);
+        quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
         return -1;
     }
