@@ -86,7 +86,7 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
         crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
         dbus_error_free(&error);
 
-    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
         crm_err("Invalid return type for %s", method);
 
     } else {
@@ -186,7 +186,7 @@ upstart_job_listall(void)
         return NULL;
     }
 
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
+    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __func__, __LINE__)) {
         crm_err("Call to %s failed: Message has invalid arguments", method);
         dbus_message_unref(reply);
         return NULL;
@@ -198,7 +198,7 @@ upstart_job_listall(void)
         const char *job = NULL;
         char *path = NULL;
 
-        if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
             continue;
         }
 
@@ -268,13 +268,13 @@ get_first_instance(const gchar * job, int timeout)
         goto done;
     }
 
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
+    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __func__, __LINE__)) {
         crm_err("Call to %s failed: Message has invalid arguments", method);
         goto done;
     }
 
     dbus_message_iter_recurse(&args, &unit);
-    if(pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+    if(pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
         DBusBasicValue value;
 
         dbus_message_iter_get_basic(&unit, &value);
@@ -387,7 +387,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
         op->rc = PCMK_OCF_OK;
 
     } else {
-        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
             crm_warn("Call to %s passed but return type was unexpected", op->action);
             op->rc = PCMK_OCF_OK;
 
@@ -531,7 +531,7 @@ upstart_job_exec(svc_action_t * op)
         /* No return vaue */
         op->rc = PCMK_OCF_OK;
 
-    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
         crm_warn("Call to %s passed but return type was unexpected", op->action);
         op->rc = PCMK_OCF_OK;
 

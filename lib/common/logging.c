@@ -50,7 +50,8 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
     static struct qb_log_callsite *glib_cs = NULL;
 
     if (glib_cs == NULL) {
-        glib_cs = qb_log_callsite_get(__FUNCTION__, __FILE__, "glib-handler", LOG_DEBUG, __LINE__, crm_trace_nonlog);
+        glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
+                                      LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
 
@@ -60,7 +61,7 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 
             if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
                 /* log and record how we got here */
-                crm_abort(__FILE__, __FUNCTION__, __LINE__, message, TRUE, TRUE);
+                crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
             }
             break;
 

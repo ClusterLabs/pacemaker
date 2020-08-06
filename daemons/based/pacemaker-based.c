@@ -269,7 +269,7 @@ cib_cs_destroy(gpointer user_data)
         crm_info("Corosync disconnection complete");
     } else {
         crm_crit("Lost connection to cluster layer, shutting down");
-        terminate_cib(__FUNCTION__, CRM_EX_DISCONNECT);
+        terminate_cib(__func__, CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -298,7 +298,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                 && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
-                terminate_cib(__FUNCTION__, -1);
+                terminate_cib(__func__, -1);
             }
             break;
     }

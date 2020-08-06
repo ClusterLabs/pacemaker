@@ -44,7 +44,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     if (fsa_actions != A_NOTHING) {
         register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
                                I_NULL, cur_data ? cur_data->data : NULL,
-                               fsa_actions, TRUE, __FUNCTION__);
+                               fsa_actions, TRUE, __func__);
     }
 
     /* reset the action list */
@@ -739,7 +739,7 @@ handle_remote_state(xmlNode *msg)
     remote_peer = crm_remote_peer_get(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
-    crm_update_peer_state(__FUNCTION__, remote_peer,
+    crm_update_peer_state(__func__, remote_peer,
                           crm_is_true(remote_is_up)?
                           CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
     return I_NULL;
@@ -982,7 +982,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
         crm_node_t *node = crm_find_peer(0, from);
 
-        crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
             return I_NULL; /* Done */
         }
@@ -1019,7 +1019,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         fsa_input.msg = stored_msg;
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
-                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE, __FUNCTION__);
+                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
+                               __func__);
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
@@ -1040,7 +1041,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         fsa_input.msg = stored_msg;
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
-                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE, __FUNCTION__);
+                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
+                               __func__);
 
         /* Sometimes we _must_ go into S_ELECTION */
         if (fsa_state == S_HALT) {
@@ -1236,7 +1238,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.data = &fsa_input;
         fsa_data.fsa_input = I_MESSAGE;
         fsa_data.fsa_cause = C_IPC_MESSAGE;
-        fsa_data.origin = __FUNCTION__;
+        fsa_data.origin = __func__;
         fsa_data.data_type = fsa_dt_ha_msg;
 
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);

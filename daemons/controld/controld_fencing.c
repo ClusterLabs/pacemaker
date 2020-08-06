@@ -208,7 +208,7 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
     crmd_peer_down(peer, TRUE);
 
     /* Generate a node state update for the CIB */
-    node_state = create_node_state_update(peer, flags, NULL, __FUNCTION__);
+    node_state = create_node_state_update(peer, flags, NULL, __func__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
@@ -482,7 +482,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                  st_event->executioner? st_event->executioner : "the cluster",
                  st_event->origin); /* Dumps blackbox if enabled */
         if (fence_reaction_panic) {
-            pcmk__panic(__FUNCTION__);
+            pcmk__panic(__func__);
         } else {
             crm_exit(CRM_EX_FATAL);
         }

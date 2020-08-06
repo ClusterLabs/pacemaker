@@ -26,21 +26,21 @@ enum st_device_flags
 };
 
 #define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
-        device_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,  \
+        device_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,      \
                                           "Fence device", device_id,          \
                                           (device_flags), (flags_to_set),     \
                                           #flags_to_set);                     \
     } while (0)
 
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
-        st_call_opts = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                           "Fencer call", (call_for),         \
                                           (st_call_opts), (flags_to_set),    \
                                           #flags_to_set);                    \
     } while (0)
 
 #define stonith__clear_call_options(st_call_opts, call_for, flags_to_clear) do { \
-        st_call_opts = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        st_call_opts = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                             "Fencer call", (call_for),         \
                                             (st_call_opts), (flags_to_clear),  \
                                             #flags_to_clear);                  \

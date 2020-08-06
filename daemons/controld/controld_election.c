@@ -257,9 +257,9 @@ do_dc_release(long long action,
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, fsa_our_uname);
 
-            crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+            crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,
-                                              __FUNCTION__);
+                                              __func__);
             fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
             free_xml(update);
         }

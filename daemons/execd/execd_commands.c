@@ -292,7 +292,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
         crm_debug("Setting flag to leave pid group on timeout and "
                   "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
-        cmd->service_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,
+        cmd->service_flags = pcmk__set_flags_as(__func__, __LINE__,
                                                 LOG_TRACE, "Action",
                                                 cmd->action, 0,
                                                 SVC_ACTION_LEAVE_GROUP,
@@ -575,7 +575,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 
-    crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
     crm_xml_add_int(notify, F_LRMD_TIMEOUT, cmd->timeout);
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
@@ -642,7 +642,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
         notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-        crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
+        crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
         crm_xml_add_int(notify, F_LRMD_RC, rc);
         crm_xml_add_int(notify, F_LRMD_CALLID, call_id);
         crm_xml_add(notify, F_LRMD_OPERATION, op);
@@ -831,7 +831,7 @@ notify_of_new_client(pcmk__client_t *new_client)
 
     data.new_client = new_client;
     data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-    crm_xml_add(data.notify, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(data.notify, F_LRMD_ORIGIN, __func__);
     crm_xml_add(data.notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     free_xml(data.notify);
@@ -1521,7 +1521,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
         rc = -EPROTO;
     }
 
-    reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+    reply = create_lrmd_reply(__func__, rc, call_id);
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
     crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
@@ -1575,7 +1575,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
         }
     }
 
-    reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+    reply = create_lrmd_reply(__func__, rc, call_id);
     if (rsc) {
         crm_xml_add(reply, F_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(reply, F_LRMD_CLASS, rsc->class);
@@ -1808,7 +1808,7 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         }
     }
 
-    reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+    reply = create_lrmd_reply(__func__, rc, call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
@@ -1894,7 +1894,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         int send_rc = pcmk_rc_ok;
 
         if (reply == NULL) {
-            reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+            reply = create_lrmd_reply(__func__, rc, call_id);
         }
         send_rc = lrmd_server_send_reply(client, id, reply);
         free_xml(reply);

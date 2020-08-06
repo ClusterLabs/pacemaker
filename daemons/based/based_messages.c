@@ -67,7 +67,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     }
 
     crm_info("Peer %s has acknowledged our shutdown request", host);
-    terminate_cib(__FUNCTION__, 0);
+    terminate_cib(__func__, 0);
     return pcmk_ok;
 }
 
@@ -168,7 +168,8 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
     if (cs == NULL) {
-        cs = qb_log_callsite_get(__func__, __FILE__, __FUNCTION__, LOG_TRACE, __LINE__, crm_trace_nonlog);
+        cs = qb_log_callsite_get(__func__, __FILE__, __func__, LOG_TRACE,
+                                 __LINE__, crm_trace_nonlog);
     }
     if (cs && cs->targets) {
         /* Append additional detail so the reciever can log the differences */
@@ -238,7 +239,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
         if (new_version > current_version) {
-            xmlNode *up = create_xml_node(NULL, __FUNCTION__);
+            xmlNode *up = create_xml_node(NULL, __func__);
 
             rc = pcmk_ok;
             crm_notice("Upgrade request from %s verified", host);
@@ -274,7 +275,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                      (origin? origin->uname : "lost"));
 
             if (origin) {
-                xmlNode *up = create_xml_node(NULL, __FUNCTION__);
+                xmlNode *up = create_xml_node(NULL, __func__);
 
                 crm_xml_add(up, F_TYPE, "cib");
                 crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
@@ -356,7 +357,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if ((rc != pcmk_ok) && !cib_is_master && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
-        xml_log_patchset(LOG_INFO, __FUNCTION__, input);
+        xml_log_patchset(LOG_INFO, __func__, input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);

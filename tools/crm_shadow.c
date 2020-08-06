@@ -522,7 +522,7 @@ main(int argc, char **argv)
 
         diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE);
 
-        xml_log_changes(LOG_INFO, __FUNCTION__, new_config);
+        xml_log_changes(LOG_INFO, __func__, new_config);
         xml_accept_changes(new_config);
 
         if (diff != NULL) {

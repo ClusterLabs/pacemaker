@@ -57,7 +57,9 @@ void crm_time_free(crm_time_t * dt);
 bool crm_time_is_defined(const crm_time_t *t);
 char *crm_time_as_string(crm_time_t * dt, int flags);
 
-#  define crm_time_log(level, prefix, dt, flags) crm_time_log_alias(level, __FILE__, __FUNCTION__, __LINE__, prefix, dt, flags)
+#define crm_time_log(level, prefix, dt, flags)  \
+    crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
+
 void crm_time_log_alias(int log_level, const char *file, const char *function, int line,
                         const char *prefix, crm_time_t * date_time, int flags);
 

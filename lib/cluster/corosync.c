@@ -253,7 +253,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         }
 
         /* Update the node state (including updating last_seen to ring_id) */
-        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, ring_id);
+        crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
     }
 
     /* Remove any peer cache entries we didn't update */

@@ -1685,7 +1685,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    xml_log_patchset(LOG_TRACE, __FUNCTION__, patchset);
+    xml_log_patchset(LOG_TRACE, __func__, patchset);
 
     crm_element_value_int(patchset, "format", &format);
     if(check_version) {
@@ -2192,7 +2192,7 @@ string2xml(const char *input)
     }
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -2384,7 +2384,7 @@ filename2xml(const char *filename)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -4234,7 +4234,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 
     } else {
         if (*children == NULL) {
-            *children = create_xml_node(NULL, __FUNCTION__);
+            *children = create_xml_node(NULL, __func__);
         }
         add_node_copy(*children, root);
         match_found = 1;

@@ -11,25 +11,25 @@
 
 static void
 clear_none(void) {
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0x00f, NULL) == 0x0f0);
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0xf0f, NULL) == 0x0f0);
 }
 
 static void
 clear_some(void) {
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0x020, NULL) == 0x0d0);
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0x030, NULL) == 0x0c0);
 }
 
 static void
 clear_all(void) {
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0x0f0, NULL) == 0x000);
-    g_assert(pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, "Test",
+    g_assert(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
                                   "test", 0x0f0, 0xfff, NULL) == 0x000);
 }
 

@@ -422,7 +422,7 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
               node_name, nodeid, target);
 
     if(pcmk__str_eq(target, T_ATTRD, pcmk__str_casei)) {
-        cmd = create_xml_node(NULL, __FUNCTION__);
+        cmd = create_xml_node(NULL, __func__);
 
         crm_xml_add(cmd, F_TYPE, T_ATTRD);
         crm_xml_add(cmd, F_ORIG, crm_system_name);

@@ -148,7 +148,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         if (flags & crm_ipc_client_response) {
-            xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
+            xmlNode *ack = create_xml_node(NULL, __func__);
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
@@ -348,7 +348,7 @@ process_ping_reply(xmlNode *reply)
             if(remote_cib && remote_cib->children) {
                 /* Additional debug */
                 xml_calculate_changes(the_cib, remote_cib);
-                xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);
+                xml_log_changes(LOG_INFO, __func__, remote_cib);
                 crm_trace("End of differences");
             }
 
@@ -1409,7 +1409,7 @@ static gboolean
 cib_force_exit(gpointer data)
 {
     crm_notice("Forcing exit!");
-    terminate_cib(__FUNCTION__, CRM_EX_ERROR);
+    terminate_cib(__func__, CRM_EX_ERROR);
     return FALSE;
 }
 
@@ -1495,7 +1495,7 @@ initiate_exit(void)
 
     active = crm_active_peers();
     if (active < 2) {
-        terminate_cib(__FUNCTION__, 0);
+        terminate_cib(__func__, 0);
         return;
     }
 

@@ -24,7 +24,7 @@ enum pcmk__node_attr_opts {
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
-        node_attr_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,    \
+        node_attr_flags = pcmk__set_flags_as(__func__, __LINE__,        \
             LOG_TRACE, "Node attribute", crm_system_name,               \
             (node_attr_flags), (flags_to_set), #flags_to_set);          \
     } while (0)

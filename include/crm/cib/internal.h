@@ -99,13 +99,13 @@ struct timer_rec_s {
 };
 
 #define cib__set_call_options(cib_call_opts, call_for, flags_to_set) do {   \
-        cib_call_opts = pcmk__set_flags_as(__FUNCTION__, __LINE__,          \
+        cib_call_opts = pcmk__set_flags_as(__func__, __LINE__,              \
             LOG_TRACE, "CIB call", (call_for), (cib_call_opts),             \
             (flags_to_set), #flags_to_set); \
     } while (0)
 
 #define cib__clear_call_options(cib_call_opts, call_for, flags_to_clear) do {  \
-        cib_call_opts = pcmk__clear_flags_as(__FUNCTION__, __LINE__,           \
+        cib_call_opts = pcmk__clear_flags_as(__func__, __LINE__,               \
             LOG_TRACE, "CIB call", (call_for), (cib_call_opts),                \
             (flags_to_clear), #flags_to_clear);                                \
     } while (0)

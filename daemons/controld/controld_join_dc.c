@@ -77,7 +77,7 @@ start_join_round(void)
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
+        crm_update_peer_join(__func__, peer, crm_join_none);
     }
     if (max_generation_from != NULL) {
         free(max_generation_from);
@@ -135,7 +135,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
              *
              * I'm not happy about this either.
              */
-            crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_DOWN);
+            crm_update_peer_expected(__func__, member, CRMD_JOINSTATE_DOWN);
         }
         return;
     }
@@ -159,7 +159,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    crm_update_peer_join(__FUNCTION__, (crm_node_t*)member, crm_join_none);
+    crm_update_peer_join(__func__, (crm_node_t*)member, crm_join_none);
 
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
@@ -170,7 +170,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     send_cluster_message(member, crm_msg_crmd, offer, TRUE);
     free_xml(offer);
 
-    crm_update_peer_join(__FUNCTION__, member, crm_join_welcomed);
+    crm_update_peer_join(__func__, member, crm_join_welcomed);
 }
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
@@ -188,7 +188,7 @@ do_dc_join_offer_all(long long action,
      */
     current_join_id++;
     start_join_round();
-/* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
+    // do_update_cib_nodes(TRUE, __func__);
 
     update_dc(NULL);
     if (cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
@@ -219,7 +219,7 @@ do_dc_join_offer_one(long long action,
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
         g_hash_table_foreach(crm_peer_cache, join_make_offer, &member);
-        check_join_state(cur_state, __FUNCTION__);
+        check_join_state(cur_state, __func__);
         return;
     }
 
@@ -241,7 +241,7 @@ do_dc_join_offer_one(long long action,
      * due course, or we can re-store the original offer on the client.
      */
 
-    crm_update_peer_join(__FUNCTION__, member, crm_join_none);
+    crm_update_peer_join(__func__, member, crm_join_none);
     join_make_offer(NULL, member, NULL);
 
     /* If the offer isn't to the local node, make an offer to the local node as
@@ -314,7 +314,7 @@ do_dc_join_filter_offer(long long action,
     if (join_id != current_join_id) {
         crm_debug("Ignoring join-%d request from %s because we are on join-%d",
                   join_id, join_from, current_join_id);
-        check_join_state(cur_state, __FUNCTION__);
+        check_join_state(cur_state, __func__);
         return;
     }
 
@@ -382,18 +382,18 @@ do_dc_join_filter_offer(long long action,
     }
 
     if (ack_nack_bool == FALSE) {
-        crm_update_peer_join(__FUNCTION__, join_node, crm_join_nack);
-        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_NACK);
+        crm_update_peer_join(__func__, join_node, crm_join_nack);
+        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
     } else {
-        crm_update_peer_join(__FUNCTION__, join_node, crm_join_integrated);
-        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_MEMBER);
+        crm_update_peer_join(__func__, join_node, crm_join_integrated);
+        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
     }
 
     count = crmd_join_phase_count(crm_join_integrated);
     crm_debug("%d node%s currently integrated in join-%d",
               count, pcmk__plural_s(count), join_id);
 
-    if (check_join_state(cur_state, __FUNCTION__) == FALSE) {
+    if (check_join_state(cur_state, __func__) == FALSE) {
         // Don't waste time by invoking the scheduler yet
         count = crmd_join_phase_count(crm_join_welcomed);
         crm_debug("Waiting on join-%d requests from %d outstanding node%s",
@@ -428,7 +428,7 @@ do_dc_join_finalize(long long action,
         crm_debug("Finalization not needed for join-%d at the current time",
                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
-        check_join_state(fsa_state, __FUNCTION__);
+        check_join_state(fsa_state, __func__);
         return;
     }
 
@@ -479,7 +479,8 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                    (char *) user_data, current_join_id, pcmk_strerror(rc));
 
         /* restart the whole join process */
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL,
+                               __func__);
 
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
@@ -493,7 +494,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         controld_clear_fsa_input_flags(R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
-        if (check_join_state(fsa_state, __FUNCTION__) == FALSE) {
+        if (check_join_state(fsa_state, __func__) == FALSE) {
             int count_integrated = crmd_join_phase_count(crm_join_integrated);
 
             crm_debug("Notifying %d node%s of join-%d results",
@@ -512,7 +513,7 @@ join_update_complete_callback(xmlNode * msg, int call_id, int rc, xmlNode * outp
     if (rc == pcmk_ok) {
         crm_debug("join-%d node history update (via CIB call %d) complete",
                   current_join_id, call_id);
-        check_join_state(fsa_state, __FUNCTION__);
+        check_join_state(fsa_state, __func__);
 
     } else {
         crm_err("join-%d node history update (via CIB call %d) failed: %s "
@@ -574,11 +575,11 @@ do_dc_join_ack(long long action,
         crm_err("Rejecting join-%d confirmation from %s "
                 "because currently on join-%d",
                 join_id, join_from, current_join_id);
-        crm_update_peer_join(__FUNCTION__, peer, crm_join_nack);
+        crm_update_peer_join(__func__, peer, crm_join_nack);
         return;
     }
 
-    crm_update_peer_join(__FUNCTION__, peer, crm_join_confirmed);
+    crm_update_peer_join(__func__, peer, crm_join_confirmed);
 
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB notifies us of the change.
@@ -644,7 +645,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          *
          * All other NACKs (due to versions etc) should still be processed
          */
-        crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_PENDING);
+        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_PENDING);
         return;
     }
 
@@ -653,8 +654,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
               current_join_id, join_to);
     acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
     crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
-    crm_update_peer_join(__FUNCTION__, join_node, crm_join_finalized);
-    crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_MEMBER);
+    crm_update_peer_join(__func__, join_node, crm_join_finalized);
+    crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
 
     send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, acknak, TRUE);
     free_xml(acknak);

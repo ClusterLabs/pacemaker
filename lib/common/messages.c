@@ -60,7 +60,7 @@ create_request_adv(const char *task, xmlNode * msg_data,
     }
 
     // host_from will get set for us if necessary by the controller when routed
-    request = create_xml_node(NULL, __FUNCTION__);
+    request = create_xml_node(NULL, __func__);
     crm_xml_add(request, F_CRM_ORIGIN, origin);
     crm_xml_add(request, F_TYPE, T_CRM);
     crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
@@ -120,7 +120,7 @@ create_reply_adv(xmlNode *original_request, xmlNode *xml_response_data,
         return NULL;
 #endif
     }
-    reply = create_xml_node(NULL, __FUNCTION__);
+    reply = create_xml_node(NULL, __func__);
     if (reply == NULL) {
         crm_err("Cannot create new_message, malloc failed");
         return NULL;

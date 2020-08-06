@@ -139,7 +139,8 @@ crm_timer_popped(gpointer data)
                  crmd_join_phase_count(crm_join_integrated));
         if (crmd_join_phase_count(crm_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
-            register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
+            register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL,
+                                   __func__);
 
         } else {
             register_fsa_input_before(C_TIMER_POPPED, timer->fsa_input, NULL);
@@ -157,7 +158,7 @@ crm_timer_popped(gpointer data)
         register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
     }
 
-    crm_trace("Triggering FSA: %s", __FUNCTION__);
+    crm_trace("Triggering FSA: %s", __func__);
     mainloop_set_trigger(fsa_source);
 
     return TRUE;

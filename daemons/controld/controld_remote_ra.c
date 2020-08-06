@@ -199,7 +199,7 @@ remote_node_up(const char *node_name)
     /* Ensure node is in the remote peer cache with member status */
     node = crm_remote_peer_get(node_name);
     CRM_CHECK(node != NULL, return);
-    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+    crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
     /* pacemaker_remote nodes don't participate in the membership layer,
      * so cluster nodes don't automatically get notified when they come and go.
@@ -211,7 +211,7 @@ remote_node_up(const char *node_name)
 
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     state = create_node_state_update(node, node_update_cluster, update,
-                                     __FUNCTION__);
+                                     __func__);
 
     /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
@@ -270,14 +270,14 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Ensure node is in the remote peer cache with lost state */
     node = crm_remote_peer_get(node_name);
     CRM_CHECK(node != NULL, return);
-    crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+    crm_update_peer_state(__func__, node, CRM_NODE_LOST, 0);
 
     /* Notify DC */
     send_remote_state_message(node_name, FALSE);
 
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    create_node_state_update(node, node_update_cluster, update, __FUNCTION__);
+    create_node_state_update(node, node_update_cluster, update, __func__);
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {
         crm_perror(LOG_ERR, "%s CIB node state update", node_name);
@@ -313,7 +313,7 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
-        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
+        crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
     } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
@@ -1228,7 +1228,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     CRM_CHECK(node != NULL, return);
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     state = create_node_state_update(node, node_update_none, update,
-                                     __FUNCTION__);
+                                     __func__);
     crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id < 0) {

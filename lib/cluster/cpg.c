@@ -456,7 +456,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                      left_list[i].nodeid, left_list[i].pid,
                      cpgreason2str(left_list[i].reason));
             if (peer) {
-                crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg,
+                crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                      OFFLINESTATUS);
             }
         } else if (left_list[i].nodeid == local_nodeid) {
@@ -497,7 +497,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
         /* If the caller left auto-reaping enabled, this will also update the
          * state to member.
          */
-        peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
+                                    ONLINESTATUS);
 
         if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
@@ -517,7 +518,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 // If it persists for more than a minute, update the state
                 crm_warn("Node %u is member of group %s but was believed offline",
                          member_list[i].nodeid, groupName->value);
-                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
+                crm_update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
             }
         }
 
@@ -626,7 +627,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     }
 
     peer = crm_get_peer(id, NULL);
-    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+    crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }
 
