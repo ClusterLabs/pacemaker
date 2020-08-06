@@ -27,13 +27,23 @@
 
 CRM_TRACE_INIT_DATA(pe_status);
 
+/* This uses pcmk__set_flags_as()/pcmk__clear_flags_as() directly rather than
+ * use pe__set_working_set_flags()/pe__clear_working_set_flags() so that the
+ * flag is stringified more readably in log messages.
+ */
 #define set_config_flag(data_set, option, flag) do {                        \
         const char *scf_value = pe_pref((data_set)->config_hash, (option)); \
         if (scf_value != NULL) {                                            \
             if (crm_is_true(scf_value)) {                                   \
-                pe__set_working_set_flags((data_set), (flag));              \
+                (data_set)->flags = pcmk__set_flags_as(__func__, __LINE__,  \
+                                    LOG_TRACE, "Working set",               \
+                                    crm_system_name, (data_set)->flags,     \
+                                    (flag), #flag);                         \
             } else {                                                        \
-                pe__clear_working_set_flags((data_set), (flag));            \
+                (data_set)->flags = pcmk__clear_flags_as(__func__, __LINE__,\
+                                    LOG_TRACE, "Working set",               \
+                                    crm_system_name, (data_set)->flags,     \
+                                    (flag), #flag);                         \
             }                                                               \
         }                                                                   \
     } while(0)
