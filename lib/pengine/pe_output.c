@@ -997,7 +997,8 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
+                  "gboolean", "gboolean", "gboolean", "GListPtr", "GListPtr")
 int
 pe__node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1008,6 +1009,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     char *node_name = pe__node_display_name(node, print_clone_detail);
     char *buf = crm_strdup_printf("Node: %s", node_name);
@@ -1035,10 +1037,13 @@ pe__node_html(pcmk__output_t *out, va_list args) {
             pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
         }
         if (print_brief && group_by_node) {
-            out->begin_list(out, NULL, NULL, NULL);
-            pe__rscs_brief_output(out, node->details->running_rsc, print_opts | pe_print_rsconly,
-                                  FALSE);
-            out->end_list(out);
+            GListPtr rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
+
+            if (rscs != NULL) {
+                out->begin_list(out, NULL, NULL, NULL);
+                pe__rscs_brief_output(out, rscs, print_opts | pe_print_rsconly, FALSE);
+                out->end_list(out);
+            }
 
         } else if (group_by_node) {
             GListPtr lpc2 = NULL;
@@ -1046,7 +1051,8 @@ pe__node_html(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, NULL);
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly,
+                             rsc, only_node, only_rsc);
             }
             out->end_list(out);
         }
@@ -1059,7 +1065,8 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
+                  "gboolean", "gboolean", "gboolean", "GListPtr", "GListPtr")
 int
 pe__node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1070,6 +1077,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     gboolean print_brief = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     if (full) {
         char *node_name = pe__node_display_name(node, print_clone_detail);
@@ -1086,23 +1094,34 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
         /* If we're grouping by node, print its resources */
         if (group_by_node) {
-            out->begin_list(out, NULL, NULL, "%s", buf);
-            out->begin_list(out, NULL, NULL, "Resources");
-
             if (print_brief) {
-                pe__rscs_brief_output(out, node->details->running_rsc,
-                                      print_opts | pe_print_rsconly, FALSE);
+                GListPtr rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
+
+                if (rscs != NULL) {
+                    out->begin_list(out, NULL, NULL, "%s", buf);
+                    out->begin_list(out, NULL, NULL, "Resources");
+
+                    pe__rscs_brief_output(out, rscs, print_opts | pe_print_rsconly, FALSE);
+
+                    out->end_list(out);
+                    out->end_list(out);
+                }
+
             } else {
                 GListPtr gIter2 = NULL;
 
+                out->begin_list(out, NULL, NULL, "%s", buf);
+                out->begin_list(out, NULL, NULL, "Resources");
+
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
                     pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
-                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
+                    out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly,
+                                 rsc, only_node, only_rsc);
                 }
-            }
 
-            out->end_list(out);
-            out->end_list(out);
+                out->end_list(out);
+                out->end_list(out);
+            }
         } else {
             out->list_item(out, NULL, "%s", buf);
         }
@@ -1116,7 +1135,8 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *", "gboolean", "gboolean", "gboolean", "GListPtr")
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
+                  "gboolean", "gboolean", "gboolean", "GListPtr", "GListPtr")
 int
 pe__node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1127,6 +1147,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
     gboolean print_brief G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean group_by_node = va_arg(args, gboolean);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     if (full) {
         const char *node_type = "unknown";
@@ -1169,7 +1190,8 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly, rsc, only_node);
+                out->message(out, crm_map_element_name(rsc->xml), print_opts | pe_print_rsconly,
+                             rsc, only_node, only_rsc);
             }
         }
 
@@ -1261,11 +1283,12 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_html(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1283,18 +1306,19 @@ pe__node_list_html(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
         out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
-                     print_brief, group_by_node, only_node);
+                     print_brief, group_by_node, only_node, only_rsc);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_text(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1391,7 +1415,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
         /* If we get here, node is in bad state, or we're grouping by node */
         out->message(out, "node", node, print_opts, TRUE, node_mode, print_clone_detail,
-                     print_brief, group_by_node, only_node);
+                     print_brief, group_by_node, only_node, only_rsc);
         free(node_name);
     }
 
@@ -1421,11 +1445,12 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GListPtr", "GListPtr", "GListPtr", "unsigned int", "gboolean", "gboolean", "gboolean")
 int
 pe__node_list_xml(pcmk__output_t *out, va_list args) {
     GListPtr nodes = va_arg(args, GListPtr);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_clone_detail = va_arg(args, gboolean);
     gboolean print_brief = va_arg(args, gboolean);
@@ -1440,7 +1465,7 @@ pe__node_list_xml(pcmk__output_t *out, va_list args) {
         }
 
         out->message(out, "node", node, print_opts, TRUE, NULL, print_clone_detail,
-                     print_brief, group_by_node, only_node);
+                     print_brief, group_by_node, only_node, only_rsc);
     }
     out->end_list(out);
 
@@ -1760,9 +1785,9 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
     if (details) {
         char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
-        GListPtr unames = NULL;
+        GListPtr all = NULL;
 
-        unames = g_list_prepend(unames, strdup("*"));
+        all = g_list_prepend(all, strdup("*"));
 
         crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
@@ -1774,9 +1799,9 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
             pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
             out->message(out, crm_map_element_name(rsc->xml),
-                         pe_print_pending, rsc, unames);
+                         pe_print_pending, rsc, all, all);
         }
 
-        g_list_free_full(unames, free);
+        g_list_free_full(all, free);
     }
 }

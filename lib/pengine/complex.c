@@ -26,6 +26,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_location,
          native_free,
          pe__count_common,
+         pe__native_is_filtered,
     },
     {
          group_unpack,
@@ -37,6 +38,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_location,
          group_free,
          pe__count_common,
+         pe__group_is_filtered,
     },
     {
          clone_unpack,
@@ -48,6 +50,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_location,
          clone_free,
          pe__count_common,
+         pe__clone_is_filtered,
     },
     {
          pe__unpack_bundle,
@@ -59,6 +62,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_location,
          pe__free_bundle,
          pe__count_bundle,
+         pe__bundle_is_filtered,
     }
 };
 

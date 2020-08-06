@@ -1038,13 +1038,14 @@ native_print(pe_resource_t * rsc, const char *pre_text, long options, void *prin
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -1059,6 +1060,10 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
 
     CRM_ASSERT(rsc->variant == pe_native);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     /* resource information. */
     sprintf(ra_name, "%s%s%s:%s", class, prov ? "::" : "", prov ? prov : ""
@@ -1107,15 +1112,20 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     CRM_ASSERT(rsc->variant == pe_native);
 
@@ -1126,17 +1136,22 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node G_GNUC_UNUSED = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe_node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return pcmk_rc_no_output;
+    }
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node
@@ -1457,4 +1472,23 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
     }
 
     return rc;
+}
+
+gboolean
+pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
+        pcmk__str_in_list(only_rsc, rsc->id)) {
+        return FALSE;
+    } else if (check_parent) {
+        pe_resource_t *up = uber_parent(rsc);
+
+        if (pe_rsc_is_bundled(rsc)) {
+            return up->parent->fns->is_filtered(up->parent, only_rsc, FALSE);
+        } else {
+            return up->fns->is_filtered(up, only_rsc, FALSE);
+        }
+    }
+
+    return TRUE;
 }

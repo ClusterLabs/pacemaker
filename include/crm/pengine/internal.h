@@ -474,7 +474,13 @@ bool pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc, const char *ta
 bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
 
 bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list);
+GListPtr pe__filter_rsc_list(GListPtr rscs, GListPtr filter);
 
 bool pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node);
+
+gboolean pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
 
 #endif

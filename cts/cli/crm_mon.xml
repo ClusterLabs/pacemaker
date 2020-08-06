@@ -90,8 +90,19 @@
         </primitive>
         <primitive id="Email" class="lsb" type="exim"/>
       </group>
+      <clone id="mysql-clone-group">
+        <group id="mysql-group">
+          <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <operations>
+              <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="not-on-cluster1" rsc="dummy" node="cluster01" score="-INFINITY"/>
+    </constraints>
     <tags>
       <tag id="all-nodes">
         <obj_ref id="1"/>
@@ -102,6 +113,13 @@
       </tag>
       <tag id="odd-nodes">
         <obj_ref id="1"/>
+      </tag>
+      <tag id="inactive-rscs">
+        <obj_ref id="inactive-dummy"/>
+        <obj_ref id="inactive-clone"/>
+      </tag>
+      <tag id="fencing-rscs">
+        <obj_ref id="Fencing"/>
       </tag>
     </tags>
     <op_defaults>
@@ -131,6 +149,10 @@
           <lrm_resource id="Email" class="lsb" type="exim">
             <lrm_rsc_op id="Email_last_0" operation_key="Email_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
+          <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="2">
@@ -158,6 +180,10 @@
           </lrm_resource>
           <lrm_resource id="Email" class="lsb" type="exim">
             <lrm_rsc_op id="Email_last_0" operation_key="Email_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

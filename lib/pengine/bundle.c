@@ -1493,30 +1493,51 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
+    gboolean print_everything = TRUE;
 
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
 
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
+
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
         char *id = crm_itoa(replica->offset);
+        gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
 
         if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
+            continue;
+        }
+
+        print_ip = replica->ip != NULL &&
+                   !replica->ip->fns->is_filtered(replica->ip, only_rsc, print_everything);
+        print_child = replica->child != NULL &&
+                      !replica->child->fns->is_filtered(replica->child, only_rsc, print_everything);
+        print_ctnr = !replica->container->fns->is_filtered(replica->container, only_rsc, print_everything);
+        print_remote = replica->remote != NULL &&
+                       !replica->remote->fns->is_filtered(replica->remote, only_rsc, print_everything);
+
+        if (!print_everything && !print_ip && !print_child && !print_ctnr && !print_remote) {
             continue;
         }
 
@@ -1537,18 +1558,24 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 
-        if (replica->ip != NULL) {
-            out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+        if (print_ip) {
+            out->message(out, crm_map_element_name(replica->ip->xml), options,
+                         replica->ip, only_node, only_rsc);
         }
 
-        if (replica->child != NULL) {
-            out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+        if (print_child) {
+            out->message(out, crm_map_element_name(replica->child->xml), options,
+                         replica->child, only_node, only_rsc);
         }
 
-        out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+        if (print_ctnr) {
+            out->message(out, crm_map_element_name(replica->container->xml), options,
+                         replica->container, only_node, only_rsc);
+        }
 
-        if (replica->remote != NULL) {
-            out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+        if (print_remote) {
+            out->message(out, crm_map_element_name(replica->remote->xml), options,
+                         replica->remote, only_node, only_rsc);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1589,31 +1616,34 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
+    int rc = pcmk_rc_no_output;
+    gboolean print_everything = TRUE;
 
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    pcmk__output_create_xml_node(out, "br");
-    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
-                    (bundle_data->nreplicas > 1)? " set" : "",
-                    rsc->id, bundle_data->image,
-                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
+        gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
 
@@ -1621,8 +1651,33 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        pcmk__output_xml_create_parent(out, "li");
-        if (is_set(options, pe_print_implicit)) {
+        print_ip = replica->ip != NULL &&
+                   !replica->ip->fns->is_filtered(replica->ip, only_rsc, print_everything);
+        print_child = replica->child != NULL &&
+                      !replica->child->fns->is_filtered(replica->child, only_rsc, print_everything);
+        print_ctnr = !replica->container->fns->is_filtered(replica->container, only_rsc, print_everything);
+        print_remote = replica->remote != NULL &&
+                       !replica->remote->fns->is_filtered(replica->remote, only_rsc, print_everything);
+
+        if (is_set(options, pe_print_implicit) ||
+            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+            /* The text output messages used below require pe_print_implicit to
+             * be set to do anything.
+             */
+            unsigned int new_options = is_set(options, pe_print_implicit) ? options : options | pe_print_implicit;
+
+            if (rc == pcmk_rc_no_output) {
+                pcmk__output_create_xml_node(out, "br");
+            }
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+                                     (bundle_data->nreplicas > 1)? " set" : "",
+                                     rsc->id, bundle_data->image,
+                                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+
+            pcmk__output_xml_create_parent(out, "li");
+
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
@@ -1630,25 +1685,35 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             pcmk__output_create_xml_node(out, "br");
             out->begin_list(out, NULL, NULL, NULL);
 
-            if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+            if (print_ip) {
+                out->message(out, crm_map_element_name(replica->ip->xml),
+                             new_options, replica->ip, only_node, only_rsc);
             }
 
-            if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+            if (print_child) {
+                out->message(out, crm_map_element_name(replica->child->xml),
+                             new_options, replica->child, only_node, only_rsc);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+            if (print_ctnr) {
+                out->message(out, crm_map_element_name(replica->container->xml),
+                             new_options, replica->container, only_node, only_rsc);
+            }
 
-            if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+            if (print_remote) {
+                out->message(out, crm_map_element_name(replica->remote->xml),
+                             new_options, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);
+        } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
+            continue;
         } else {
-            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
-                continue;
-            }
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+                                     (bundle_data->nreplicas > 1)? " set" : "",
+                                     rsc->id, bundle_data->image,
+                                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
                                            options);
@@ -1657,8 +1722,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         pcmk__output_xml_pop_parent(out);
     }
 
-    out->end_list(out);
-    return pcmk_rc_ok;
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 static void
@@ -1689,29 +1754,33 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
-
-    CRM_ASSERT(rsc != NULL);
+    int rc = pcmk_rc_no_output;
+    gboolean print_everything = TRUE;
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    out->begin_list(out, NULL, NULL, "Container bundle%s: %s [%s]%s%s",
-                    (bundle_data->nreplicas > 1)? " set" : "",
-                    rsc->id, bundle_data->image,
-                    is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                    is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    CRM_ASSERT(rsc != NULL);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
+        gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
 
@@ -1719,40 +1788,70 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (is_set(options, pe_print_implicit)) {
+        print_ip = replica->ip != NULL &&
+                   !replica->ip->fns->is_filtered(replica->ip, only_rsc, print_everything);
+        print_child = replica->child != NULL &&
+                      !replica->child->fns->is_filtered(replica->child, only_rsc, print_everything);
+        print_ctnr = !replica->container->fns->is_filtered(replica->container, only_rsc, print_everything);
+        print_remote = replica->remote != NULL &&
+                       !replica->remote->fns->is_filtered(replica->remote, only_rsc, print_everything);
+
+        if (is_set(options, pe_print_implicit) ||
+            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+            /* The text output messages used below require pe_print_implicit to
+             * be set to do anything.
+             */
+            unsigned int new_options = is_set(options, pe_print_implicit) ? options : options | pe_print_implicit;
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+                                     (bundle_data->nreplicas > 1)? " set" : "",
+                                     rsc->id, bundle_data->image,
+                                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->list_item(out, NULL, "Replica[%d]", replica->offset);
             }
 
             out->begin_list(out, NULL, NULL, NULL);
 
-            if (replica->ip != NULL) {
-                out->message(out, crm_map_element_name(replica->ip->xml), options, replica->ip, only_node);
+            if (print_ip) {
+                out->message(out, crm_map_element_name(replica->ip->xml),
+                             new_options, replica->ip, only_node, only_rsc);
             }
 
-            if (replica->child != NULL) {
-                out->message(out, crm_map_element_name(replica->child->xml), options, replica->child, only_node);
+            if (print_child) {
+                out->message(out, crm_map_element_name(replica->child->xml),
+                             new_options, replica->child, only_node, only_rsc);
             }
 
-            out->message(out, crm_map_element_name(replica->container->xml), options, replica->container, only_node);
+            if (print_ctnr) {
+                out->message(out, crm_map_element_name(replica->container->xml),
+                             new_options, replica->container, only_node, only_rsc);
+            }
 
-            if (replica->remote != NULL) {
-                out->message(out, crm_map_element_name(replica->remote->xml), options, replica->remote, only_node);
+            if (print_remote) {
+                out->message(out, crm_map_element_name(replica->remote->xml),
+                             new_options, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);
+        } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
+            continue;
         } else {
-            if (pcmk__rsc_filtered_by_node(replica->container, only_node)) {
-                continue;
-            }
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+                                     (bundle_data->nreplicas > 1)? " set" : "",
+                                     rsc->id, bundle_data->image,
+                                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
             pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
                                            options);
         }
     }
 
-    out->end_list(out);
-    return pcmk_rc_ok;
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 static void
@@ -1970,4 +2069,37 @@ pe__count_bundle(pe_resource_t *rsc)
             replica->remote->fns->count(replica->remote);
         }
     }
+}
+
+gboolean
+pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    gboolean passes = FALSE;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+        passes = TRUE;
+    } else {
+        get_bundle_variant_data(bundle_data, rsc);
+
+        for (GList *gIter = bundle_data->replicas; gIter != NULL; gIter = gIter->next) {
+            pe__bundle_replica_t *replica = gIter->data;
+
+            if (replica->ip != NULL && !replica->ip->fns->is_filtered(replica->ip, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (replica->child != NULL && !replica->child->fns->is_filtered(replica->child, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (!replica->container->fns->is_filtered(replica->container, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            } else if (replica->remote != NULL && !replica->remote->fns->is_filtered(replica->remote, only_rsc, FALSE)) {
+                passes = TRUE;
+                break;
+            }
+        }
+    }
+
+    return !passes;
 }

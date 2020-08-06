@@ -31,27 +31,28 @@ static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
 static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
 static int print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                            unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                           gboolean print_summary, GListPtr only_node, gboolean print_spacer);
+                           gboolean print_summary, GListPtr only_node, GListPtr only_rsc,
+                           gboolean print_spacer);
 static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              pe_node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                              GListPtr op_list);
 static int print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               pe_node_t *node, xmlNode *node_state, gboolean operations,
-                              unsigned int mon_ops, GListPtr only_node);
+                              unsigned int mon_ops, GListPtr only_node, GListPtr only_rsc);
 static gboolean add_extra_info(pcmk__output_t *out, pe_node_t * node, GListPtr rsc_list,
                                const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                               gboolean operations, unsigned int mon_ops,
-                              GListPtr only_snow, gboolean print_spacer);
+                              GListPtr only_node, GListPtr only_rsc, gboolean print_spacer);
 static int print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
                                  gboolean print_spacer);
 static int print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
                                unsigned int mon_ops, const char *prefix,
-                               gboolean print_spacer);
+                               GListPtr only_rsc, gboolean print_spacer);
 static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                                  unsigned int mon_ops, GListPtr only_node,
-                                 gboolean print_spacer);
+                                 GListPtr only_rsc, gboolean print_spacer);
 static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
                                 GListPtr only_node, gboolean print_spacer);
 
@@ -85,6 +86,39 @@ build_uname_list(pe_working_set_t *data_set, const char *s) {
     }
 
     return unames;
+}
+
+static GListPtr
+build_rsc_list(pe_working_set_t *data_set, const char *s) {
+    GListPtr resources = NULL;
+
+    if (s == NULL || strcmp(s, "*") == 0) {
+        resources = g_list_prepend(resources, strdup("*"));
+    } else {
+        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
+                                                         pe_find_renamed|pe_find_any);
+
+        if (rsc) {
+            /* A colon in the name we were given means we're being asked to filter
+             * on a specific instance of a cloned resource.  Put that exact string
+             * into the filter list.  Otherwise, use the printable ID of whatever
+             * resource was found that matches what was asked for.
+             */
+            if (strstr(s, ":") != NULL) {
+                resources = g_list_prepend(resources, strdup(rsc->id));
+            } else {
+                resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
+            }
+        } else {
+            /* The given string was not a valid resource name.  It's either
+             * a tag or it's a typo or something.  See build_uname_list for
+             * more detail.
+             */
+            resources = pe__rscs_with_tag(data_set, s);
+        }
+    }
+
+    return resources;
 }
 
 /*!
@@ -153,7 +187,8 @@ print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
 static int
 print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                 unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                gboolean print_summary, GListPtr only_node, gboolean print_spacer)
+                gboolean print_summary, GListPtr only_node, GListPtr only_rsc,
+                gboolean print_spacer)
 {
     GListPtr rsc_iter;
     int rc = pcmk_rc_no_output;
@@ -172,13 +207,17 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
     if (brief_output && is_not_set(mon_ops, mon_op_group_by_node)) {
-        pe__rscs_brief_output(out, data_set->resources, print_opts,
+        GListPtr rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
+
+        pe__rscs_brief_output(out, rscs, print_opts,
                               is_set(mon_ops, mon_op_inactive_resources));
+        g_list_free(rscs);
     }
 
     /* For each resource, display it if appropriate */
     for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
         pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
+        int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
         gboolean is_active = rsc->fns->active(rsc, TRUE);
@@ -209,8 +248,11 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
         }
 
         /* Print this resource */
-        rc = pcmk_rc_ok;
-        out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc, only_node);
+        x = out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
+                         only_node, only_rsc);
+        if (x == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     if (print_summary && rc != pcmk_rc_ok) {
@@ -235,6 +277,23 @@ get_operation_list(xmlNode *rsc_entry) {
 
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
          rsc_op = __xml_next_element(rsc_op)) {
+        const char *task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        const char *interval_ms_s = crm_element_value(rsc_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
+        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+        int op_rc_i = crm_parse_int(op_rc, "0");
+
+        /* Display 0-interval monitors as "probe" */
+        if (safe_str_eq(task, CRMD_ACTION_STATUS)
+            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+            task = "probe";
+        }
+
+        /* Ignore notifies and some probes */
+        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (op_rc_i == 7))) {
+            continue;
+        }
+
         if (crm_str_eq((const char *) rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
             op_list = g_list_append(op_list, rsc_op);
         }
@@ -279,11 +338,6 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
             task = "probe";
         }
 
-        /* Ignore notifies and some probes */
-        if (pcmk__str_any_of(task, CRMD_ACTION_NOTIFY, "probe", NULL) && (op_rc_i == 7)) {
-            continue;
-        }
-
         /* If this is the first printed operation, print heading for resource */
         if (rc == pcmk_rc_no_output) {
             time_t last_failure = 0;
@@ -318,7 +372,7 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
 static int
 print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                    pe_node_t *node, xmlNode *node_state, gboolean operations,
-                   unsigned int mon_ops, GListPtr only_node)
+                   unsigned int mon_ops, GListPtr only_node, GListPtr only_rsc)
 {
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
@@ -330,43 +384,66 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print history of each of the node's resources */
     for (rsc_entry = __xml_first_child_element(lrm_rsc); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
+        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
         if (!crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
             continue;
         }
 
+        /* We can't use is_filtered here to filter group resources.  For is_filtered,
+         * we have to decide whether to check the parent or not.  If we check the
+         * parent, all elements of a group will always be printed because that's how
+         * is_filtered works for groups.  If we do not check the parent, sometimes
+         * this will filter everything out.
+         *
+         * For other resource types, is_filtered is okay.
+         */
+        if (uber_parent(rsc)->variant == pe_group) {
+            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
+                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+                continue;
+            }
+        } else {
+            if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+                continue;
+            }
+        }
+
         if (operations == FALSE) {
-            const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-            pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
             time_t last_failure = 0;
             int failcount = failure_count(data_set, node, rsc, &last_failure);
 
-            if (failcount > 0) {
-                if (rc == pcmk_rc_no_output) {
-                    rc = pcmk_rc_ok;
-                    out->message(out, "node", node, get_resource_display_options(mon_ops),
-                                 FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
-                                 is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
-                                 only_node);
-                }
-
-                out->message(out, "resource-history", rsc, rsc_id, FALSE,
-                             failcount, last_failure, FALSE);
+            if (failcount <= 0) {
+                continue;
             }
-        } else {
-            GListPtr op_list = get_operation_list(rsc_entry);
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
                 out->message(out, "node", node, get_resource_display_options(mon_ops),
                              FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
                              is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
-                             only_node);
+                             only_node, only_rsc);
             }
 
-            if (op_list != NULL) {
-                print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
+            out->message(out, "resource-history", rsc, rsc_id, FALSE,
+                         failcount, last_failure, FALSE);
+        } else {
+            GListPtr op_list = get_operation_list(rsc_entry);
+
+            if (op_list == NULL) {
+                continue;
             }
+
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
+                out->message(out, "node", node, get_resource_display_options(mon_ops),
+                             FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
+                             is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
+                             only_node, only_rsc);
+            }
+
+            print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
         }
     }
 
@@ -474,7 +551,7 @@ print_node_attribute(gpointer name, gpointer user_data)
 static int
 print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
                    gboolean operations, unsigned int mon_ops, GListPtr only_node,
-                   gboolean print_spacer)
+                   GListPtr only_rsc, gboolean print_spacer)
 {
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
@@ -506,7 +583,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
 
         print_node_history(out, data_set, node, node_state, operations, mon_ops,
-                           only_node);
+                           only_node, only_rsc);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -559,7 +636,8 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
  */
 static int
 print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
-                    unsigned int mon_ops, const char *prefix, gboolean print_spacer)
+                    unsigned int mon_ops, const char *prefix, GListPtr only_rsc,
+                    gboolean print_spacer)
 {
     GListPtr gIter, gIter2;
     int rc = pcmk_rc_no_output;
@@ -567,8 +645,15 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         pe__location_t *location = gIter->data;
+
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix))
             continue;
+
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+            continue;
+        }
+
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_node_t *node = (pe_node_t *) gIter2->data;
 
@@ -594,7 +679,7 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
 static int
 print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
                       unsigned int mon_ops, GListPtr only_node,
-                      gboolean print_spacer)
+                      GListPtr only_rsc, gboolean print_spacer)
 {
     GListPtr gIter = NULL;
     int rc = pcmk_rc_no_output;
@@ -636,7 +721,7 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
             out->message(out, "node", data.node, get_resource_display_options(mon_ops),
                          FALSE, NULL, is_set(mon_ops, mon_op_print_clone_detail),
                          is_set(mon_ops, mon_op_print_brief), is_set(mon_ops, mon_op_group_by_node),
-                         only_node);
+                         only_node, only_rsc);
             g_list_foreach(attr_list, print_node_attribute, &data);
             g_list_free(attr_list);
             out->end_list(out);
@@ -698,9 +783,10 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
 void
 print_status(pcmk__output_t *out, pe_working_set_t *data_set,
              stonith_history_t *stonith_history, unsigned int mon_ops,
-             unsigned int show, char *prefix, char *only_node)
+             unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
+    GListPtr resources = NULL;
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
@@ -714,10 +800,12 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                               is_set(show, mon_show_options)));
 
     unames = build_uname_list(data_set, only_node);
+    resources = build_rsc_list(data_set, only_rsc);
 
     if (is_set(show, mon_show_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
-        CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames, print_opts,
+        CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
+                                  resources, print_opts,
                                   is_set(mon_ops, mon_op_print_clone_detail),
                                   is_set(mon_ops, mon_op_print_brief),
                                   is_set(mon_ops, mon_op_group_by_node)));
@@ -727,12 +815,13 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (is_set(show, mon_show_resources)) {
         CHECK_RC(rc, print_resources(out, data_set, print_opts, mon_ops,
                                      is_set(mon_ops, mon_op_print_brief), TRUE,
-                                     unames, rc == pcmk_rc_ok));
+                                     unames, resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
-        CHECK_RC(rc, print_node_attributes(out, data_set, mon_ops, unames, rc == pcmk_rc_ok));
+        CHECK_RC(rc, print_node_attributes(out, data_set, mon_ops, unames, resources,
+                                           rc == pcmk_rc_ok));
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -740,7 +829,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
      */
     if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
         CHECK_RC(rc, print_node_summary(out, data_set, is_set(show, mon_show_operations),
-                                        mon_ops, unames, rc == pcmk_rc_ok));
+                                        mon_ops, unames, resources, rc == pcmk_rc_ok));
     }
 
     /* If there were any failed actions, print them */
@@ -767,7 +856,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, rc == pcmk_rc_ok));
+        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, resources,
+                                         rc == pcmk_rc_ok));
     }
 
     /* Print stonith history */
@@ -810,9 +900,10 @@ void
 print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  crm_exit_t history_rc, stonith_history_t *stonith_history,
                  unsigned int mon_ops, unsigned int show, char *prefix,
-                 char *only_node)
+                 char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
+    GListPtr resources = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
     out->message(out, "cluster-summary", data_set,
@@ -824,10 +915,12 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  is_set(show, mon_show_options));
 
     unames = build_uname_list(data_set, only_node);
+    resources = build_rsc_list(data_set, only_rsc);
 
     /*** NODES ***/
     if (is_set(show, mon_show_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, print_opts,
+        out->message(out, "node-list", data_set->nodes, unames,
+                     resources, print_opts,
                      is_set(mon_ops, mon_op_print_clone_detail),
                      is_set(mon_ops, mon_op_print_brief),
                      is_set(mon_ops, mon_op_group_by_node));
@@ -835,12 +928,13 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
-        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE, unames, FALSE);
+        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE,
+                        unames, resources, FALSE);
     }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
-        print_node_attributes(out, data_set, mon_ops, unames, FALSE);
+        print_node_attributes(out, data_set, mon_ops, unames, resources, FALSE);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -848,7 +942,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
      */
     if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
         print_node_summary(out, data_set, is_set(show, mon_show_operations),
-                           mon_ops, unames, FALSE);
+                           mon_ops, unames, resources, FALSE);
     }
 
     /* If there were any failed actions, print them */
@@ -869,10 +963,11 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
+        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);
+    g_list_free_full(resources, free);
 }
 
 /*!
@@ -889,9 +984,12 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 int
 print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_node)
+                  unsigned int show, char *prefix, char *only_node,
+                  char *only_rsc)
 {
     GListPtr unames = NULL;
+    GListPtr resources = NULL;
+
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
     out->message(out, "cluster-summary", data_set,
@@ -903,10 +1001,12 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                  is_set(show, mon_show_options));
 
     unames = build_uname_list(data_set, only_node);
+    resources = build_rsc_list(data_set, only_rsc);
 
     /*** NODE LIST ***/
     if (is_set(show, mon_show_nodes) && unames) {
-        out->message(out, "node-list", data_set->nodes, unames, print_opts,
+        out->message(out, "node-list", data_set->nodes, unames,
+                     resources, print_opts,
                      is_set(mon_ops, mon_op_print_clone_detail),
                      is_set(mon_ops, mon_op_print_brief),
                      is_set(mon_ops, mon_op_group_by_node));
@@ -915,12 +1015,13 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     /* Print resources section, if needed */
     if (is_set(show, mon_show_resources)) {
         print_resources(out, data_set, print_opts, mon_ops,
-                        is_set(mon_ops, mon_op_print_brief), TRUE, unames, FALSE);
+                        is_set(mon_ops, mon_op_print_brief), TRUE, unames,
+                        resources, FALSE);
     }
 
     /* print Node Attributes section if requested */
     if (is_set(show, mon_show_attributes)) {
-        print_node_attributes(out, data_set, mon_ops, unames, FALSE);
+        print_node_attributes(out, data_set, mon_ops, unames, resources, FALSE);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -928,7 +1029,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
      */
     if (is_set(show, mon_show_operations) || is_set(show, mon_show_failcounts)) {
         print_node_summary(out, data_set, is_set(show, mon_show_operations),
-                           mon_ops, unames, FALSE);
+                           mon_ops, unames, resources, FALSE);
     }
 
     /* If there were any failed actions, print them */
@@ -976,9 +1077,10 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print negative location constraints if requested */
     if (is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, FALSE);
+        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);
+    g_list_free_full(resources, free);
     return 0;
 }

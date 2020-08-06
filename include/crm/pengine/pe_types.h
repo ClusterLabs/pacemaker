@@ -53,6 +53,7 @@ typedef struct resource_object_functions_s {
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
+    gboolean (*is_filtered) (pe_resource_t*, GListPtr, gboolean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;

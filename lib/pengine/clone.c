@@ -570,23 +570,35 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     GListPtr gIter = rsc->children;
-
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
+    gboolean print_everything = TRUE;
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
+            continue;
+        }
+
+        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
             continue;
         }
 
@@ -601,10 +613,12 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                      , "failed", BOOL2STR(is_set(rsc->flags, pe_rsc_failed))
                      , "failure_ignored", BOOL2STR(is_set(rsc->flags, pe_rsc_failure_ignored))
                      , "target_role", configured_role_str(rsc));
+
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+        out->message(out, crm_map_element_name(child_rsc->xml), options,
+                     child_rsc, only_node, only_rsc);
     }
 
     if (printed_header) {
@@ -614,13 +628,14 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -631,14 +646,24 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
+    int rc = pcmk_rc_no_output;
+    gboolean print_everything = TRUE;
 
     get_clone_variant_data(clone_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
     out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
                     is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    rc = pcmk_rc_ok;
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
@@ -646,6 +671,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
+            continue;
+        }
+
+        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
             continue;
         }
 
@@ -712,7 +741,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            GListPtr all = NULL;
+
+            /* Print every resource that's a child of this clone. */
+            all = g_list_prepend(all, strdup("*"));
+            out->message(out, crm_map_element_name(child_rsc->xml), options,
+                         child_rsc, only_node, all);
+            g_list_free_full(all, free);
         }
     }
 
@@ -820,16 +855,17 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     out->end_list(out);
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
 int
 pe__clone_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
@@ -840,14 +876,24 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
+    int rc = pcmk_rc_no_output;
+    gboolean print_everything = TRUE;
 
     get_clone_variant_data(clone_data, rsc);
+
+    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        return rc;
+    }
+
+    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
     out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
                     is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
                     is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+    rc = pcmk_rc_ok;
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
@@ -855,6 +901,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
+            continue;
+        }
+
+        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
             continue;
         }
 
@@ -921,7 +971,13 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            out->message(out, crm_map_element_name(child_rsc->xml), options, child_rsc, only_node);
+            GListPtr all = NULL;
+
+            /* Print every resource that's a child of this clone. */
+            all = g_list_prepend(all, strdup("*"));
+            out->message(out, crm_map_element_name(child_rsc->xml), options,
+                         child_rsc, only_node, all);
+            g_list_free_full(all, free);
         }
     }
 
@@ -1028,7 +1084,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     out->end_list(out);
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
 void
@@ -1104,4 +1160,31 @@ pe__is_universal_clone(pe_resource_t *rsc,
         }
     }
     return FALSE;
+}
+
+gboolean
+pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+{
+    gboolean passes = FALSE;
+    clone_variant_data_t *clone_data = NULL;
+
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+        passes = TRUE;
+    } else {
+        get_clone_variant_data(clone_data, rsc);
+        passes = pcmk__str_in_list(only_rsc, ID(clone_data->xml_obj_child));
+
+        if (!passes) {
+            for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+                pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+                if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
+                    passes = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+
+    return !passes;
 }
